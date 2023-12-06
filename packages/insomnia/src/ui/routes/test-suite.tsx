@@ -2,8 +2,8 @@ import React, { Fragment, useRef, useState } from 'react';
 import {
   Button,
   Heading,
-  Item,
   ListBox,
+  ListBoxItem,
   Popover,
   Select,
   SelectValue,
@@ -121,11 +121,6 @@ const UnitTestItemView = ({
             );
           }}
           selectedKey={unitTest.requestId}
-          items={requests.map(request => ({
-            ...request,
-            id: request._id,
-            key: request._id,
-          }))}
         >
           <Button aria-label='Select a request' className="px-4 py-1 flex flex-1 h-8 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
             <SelectValue<Request> className="flex truncate items-center justify-center gap-2">
@@ -172,9 +167,16 @@ const UnitTestItemView = ({
             <Icon icon="caret-down" />
           </Button>
           <Popover className="min-w-max">
-            <ListBox<Request> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[50vh] focus:outline-none">
+            <ListBox
+              items={requests.map(request => ({
+                ...request,
+                id: request._id,
+                key: request._id,
+              }))}
+              className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[50vh] focus:outline-none"
+            >
               {request => (
-                <Item
+                <ListBoxItem
                   className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                   aria-label={request.name}
                   textValue={request.name}
@@ -219,7 +221,7 @@ const UnitTestItemView = ({
                       )}
                     </Fragment>
                   )}
-                </Item>
+                </ListBoxItem>
               )}
             </ListBox>
           </Popover>

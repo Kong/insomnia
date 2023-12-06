@@ -1,13 +1,14 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { FC, Fragment, Suspense, useState } from 'react';
 import {
+  Breadcrumb,
   Breadcrumbs,
   Button,
   GridList,
   Heading,
-  Item,
   Link,
   ListBox,
+  ListBoxItem,
   Menu,
   MenuTrigger,
   Popover,
@@ -182,20 +183,20 @@ const TestRoute: FC = () => {
         <ErrorBoundary showAlert>
           <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
-            <Breadcrumbs className='react-aria-Breadcrumbs pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
-              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
-                <Link data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                  <NavLink
-                    to={`/organization/${organizationId}/project/${activeProject._id}`}
-                  >
-                    <Icon className='text-xs' icon="chevron-left" />
-                  </NavLink>
-                </Link>
-                <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
-              </Item>
-              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
-                <WorkspaceDropdown />
-              </Item>
+            <Breadcrumbs className='flex flex-wrap list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
+              <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+              <Link data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                <NavLink
+                  to={`/organization/${organizationId}/project/${activeProject._id}`}
+                >
+                  <Icon className='text-xs' icon="chevron-left" />
+                </NavLink>
+              </Link>
+              <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
+              </Breadcrumb>
+              <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+              <WorkspaceDropdown />
+              </Breadcrumb>
             </Breadcrumbs>
             <div className="flex w-full items-center gap-2 justify-between">
               <Select
@@ -212,7 +213,6 @@ const TestRoute: FC = () => {
                   );
                 }}
                 selectedKey={activeEnvironment._id}
-                items={environmentsList}
               >
                 <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                   <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
@@ -260,21 +260,22 @@ const TestRoute: FC = () => {
                   <Icon icon="caret-down" />
                 </Button>
                 <Popover className="min-w-max">
-                  <ListBox<Environment>
-                    key={activeEnvironment._id}
-                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                  >
+                    <ListBox
+                      items={environmentsList}
+                      key={activeEnvironment._id}
+                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                    >
                     {item => (
-                      <Item
-                        id={item._id}
-                        key={item._id}
-                        className={
+                        <ListBoxItem
+                          id={item._id}
+                          key={item._id}
+                          className={
                           `flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item._id === baseEnvironment._id ? '' : 'pl-8'}`
                         }
-                        aria-label={item.name}
-                        textValue={item.name}
-                        value={item}
-                      >
+                          aria-label={item.name}
+                          textValue={item.name}
+                          value={item}
+                        >
                         {({ isSelected }) => (
                           <Fragment>
                             <span
@@ -302,7 +303,7 @@ const TestRoute: FC = () => {
                             )}
                           </Fragment>
                         )}
-                      </Item>
+                        </ListBoxItem>
                     )}
                   </ListBox>
                 </Popover>
@@ -364,7 +365,7 @@ const TestRoute: FC = () => {
             >
               {item => {
                 return (
-                  <Item
+                  <ListBoxItem
                     key={item._id}
                     id={item._id}
                     textValue={item.name}
@@ -412,7 +413,7 @@ const TestRoute: FC = () => {
                             className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                           >
                             {item => (
-                              <Item
+                              <ListBoxItem
                                 key={item.id}
                                 id={item.id}
                                 className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -420,13 +421,13 @@ const TestRoute: FC = () => {
                               >
                                 <Icon icon={item.icon} />
                                 <span>{item.name}</span>
-                              </Item>
+                              </ListBoxItem>
                             )}
                           </Menu>
                         </Popover>
                       </MenuTrigger>
                     </div>
-                  </Item>
+                  </ListBoxItem>
                 );
               }}
             </GridList>

@@ -1,6 +1,6 @@
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { FC, Fragment, useEffect, useState } from 'react';
-import { Button, Collection, Item, Menu, MenuTrigger, Popover, Section, Tooltip, TooltipTrigger } from 'react-aria-components';
+import { Button, Collection, Menu, MenuItem, MenuTrigger, Popover, Section, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
@@ -320,7 +320,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
             <Section className='border-b border-solid border-[--hl-sm] pb-2'>
               <Collection items={switchToGitRepoActionList}>
                 {item => (
-                  <Item
+                  <MenuItem
                     textValue={item.name}
                     className={'group aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent disabled:cursor-not-allowed focus:outline-none transition-colors'}
                     aria-label={item.name}
@@ -329,19 +329,19 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
                       <Icon icon={item.icon} />
                       <div>{item.name}</div>
                     </div>
-                  </Item>
+                  </MenuItem>
                 )}
               </Collection>
             </Section>
             {syncError && (
               <Section className='border-b border-solid border-[--hl-sm]'>
-                <Item
+                <MenuItem
                   className={'flex overflow-hidden gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent disabled:cursor-not-allowed focus:outline-none transition-colors'}
                   aria-label={syncError}
                 >
                   <Icon icon="exclamation-triangle" className="text-[--color-warning]" />
                   <p className='whitespace-normal'>{syncError}</p>
-                </Item>
+                </MenuItem>
               </Section>
             )}
             {!syncError && (
@@ -349,26 +349,26 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
                 <Section className='border-b border-solid border-[--hl-sm]'>
                   <Collection items={localBranchesActionList}>
                     {item => (
-                      <Item
+                      <MenuItem
                         className={`aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item.isActive ? 'font-bold' : ''}`}
                         aria-label={item.name}
                       >
                         <Icon icon={item.icon} className={item.isActive ? 'text-[--color-success]' : ''} />
                         <span className='truncate'>{item.name}</span>
-                      </Item>
+                      </MenuItem>
                     )}
                   </Collection>
                 </Section>
                 <Section>
                   <Collection items={syncMenuActionList}>
                     {item => (
-                      <Item
+                      <MenuItem
                         className={'aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors'}
                         aria-label={item.name}
                       >
                         <Icon icon={item.icon} />
                         <span>{item.name}</span>
-                      </Item>
+                      </MenuItem>
                     )}
                   </Collection>
                 </Section>
