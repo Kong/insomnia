@@ -133,7 +133,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     projectId,
     workspaceId,
   } = useParams() as { organizationId: string; projectId: string; workspaceId?: string };
-  const { organizations } = useOrganizationLoaderData();
+  const organizationData = useOrganizationLoaderData();
+  const organizations = organizationData?.organizations || [];
 
   const untrackedProjectsFetcher = useFetcher<LoaderData>();
 
