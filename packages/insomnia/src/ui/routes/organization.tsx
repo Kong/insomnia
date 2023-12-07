@@ -1,9 +1,9 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import {
   Button,
-  Item,
   Link,
   Menu,
+  MenuItem,
   MenuTrigger,
   Popover,
   Tooltip,
@@ -152,9 +152,9 @@ export const indexLoader: LoaderFunction = async () => {
         sessionId,
       });
 
-      invariant(organizationsResult, 'Failed to load organizations');
-      invariant(user, 'Failed to load user');
-      invariant(currentPlan, 'Failed to load current plan');
+      invariant(organizationsResult && organizationsResult.organizations, 'Failed to load organizations');
+      invariant(user && user.id, 'Failed to load user');
+      invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
 
       const { organizations } = organizationsResult;
 
@@ -282,12 +282,6 @@ export interface FeatureList {
 export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params as { organizationId: string };
 
-  const organization = organizationsData.organizations.find(o => o.id === organizationId);
-
-  if (!organization) {
-    return redirect('/organization');
-  }
-
   const fallbackFeatures = {
     gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
@@ -297,6 +291,12 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
     return {
       features: fallbackFeatures,
     };
+  }
+
+  const organization = organizationsData.organizations.find(o => o.id === organizationId);
+
+  if (!organization) {
+    return redirect('/organization');
   }
 
   try {
@@ -456,7 +456,7 @@ const OrganizationRoute = () => {
                     </span>
                   </Button>
                   <MenuTrigger>
-                    <Button className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                    <Button data-testid='user-dropdown' className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                       <Avatar
                         src={user.picture}
                         alt={user.name}
@@ -499,30 +499,30 @@ const OrganizationRoute = () => {
                           }
                         }}
                       >
-                        <Item
+                        <MenuItem
                           id="manage-organizations"
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                           aria-label="Manage organizations"
                         >
                           <Icon icon="users" />
                           <span>Manage Organizations</span>
-                        </Item>
-                        <Item
+                        </MenuItem>
+                        <MenuItem
                           id="account-settings"
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                           aria-label="Account settings"
                         >
                           <Icon icon="gear" />
                           <span>Account Settings</span>
-                        </Item>
-                        <Item
+                        </MenuItem>
+                        <MenuItem
                           id="logout"
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                           aria-label="logout"
                         >
                           <Icon icon="sign-out" />
                           <span>Log out</span>
-                        </Item>
+                        </MenuItem>
                       </Menu>
                     </Popover>
                   </MenuTrigger>
@@ -639,22 +639,22 @@ const OrganizationRoute = () => {
                     }}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
-                    <Item
+                    <MenuItem
                       id="join-organization"
                       className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                       aria-label="Join an organization"
                     >
                       <Icon icon="city" />
                       <span>Join an organization</span>
-                    </Item>
-                    <Item
+                    </MenuItem>
+                    <MenuItem
                       id="new-organization"
                       className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                       aria-label="Create new organization"
                     >
                       <Icon icon="sign-out" />
                       <span>Create a new organization</span>
-                    </Item>
+                    </MenuItem>
                   </Menu>
                 </Popover>
               </MenuTrigger>

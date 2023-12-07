@@ -60,7 +60,7 @@ export function init(): BaseWebSocketResponse {
   };
 }
 
-export function migrate(doc: Response) {
+export function migrate(doc: WebSocketResponse) {
   return doc;
 }
 

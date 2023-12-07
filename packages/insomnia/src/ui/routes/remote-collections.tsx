@@ -1,4 +1,4 @@
-import { ActionFunction, LoaderFunction } from 'react-router-dom';
+import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 
 import { database, Operation } from '../../common/database';
 import { isNotNullOrUndefined } from '../../common/misc';
@@ -182,11 +182,10 @@ const remoteCompareCache: Record<string, { ahead: number; behind: number }> = {}
 const remoteBackendProjectsCache: Record<string, BackendProject[]> = {};
 
 export const syncDataAction: ActionFunction = async ({ params }) => {
+  const { projectId, workspaceId } = params;
+  invariant(typeof projectId === 'string', 'Project Id is required');
+  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
   try {
-    const { projectId, workspaceId } = params;
-    invariant(typeof projectId === 'string', 'Project Id is required');
-    invariant(typeof workspaceId === 'string', 'Workspace Id is required');
-
     const project = await models.project.getById(projectId);
     invariant(project, 'Project not found');
     invariant(project.remoteId, 'Project is not remote');
@@ -210,6 +209,9 @@ export const syncDataAction: ActionFunction = async ({ params }) => {
     };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Unknown error while syncing data.';
+    delete remoteBranchesCache[workspaceId];
+    delete remoteCompareCache[workspaceId];
+    delete remoteBackendProjectsCache[workspaceId];
     return {
       error: errorMessage,
     };
@@ -267,7 +269,9 @@ export const syncDataLoader: LoaderFunction = async ({ params }): Promise<SyncDa
 };
 
 export const checkoutBranchAction: ActionFunction = async ({ request, params }) => {
-  const { workspaceId } = params;
+  const { organizationId, projectId, workspaceId } = params;
+  invariant(typeof organizationId === 'string', 'Organization Id is required');
+  invariant(typeof projectId === 'string', 'Project Id is required');
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
   const formData = await request.formData();
   const branch = formData.get('branch');
@@ -285,7 +289,7 @@ export const checkoutBranchAction: ActionFunction = async ({ request, params }) 
     };
   }
 
-  return {};
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
 };
 
 export const mergeBranchAction: ActionFunction = async ({ request, params }) => {

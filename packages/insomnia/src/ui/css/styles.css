@@ -33,31 +33,6 @@ html {
     / 50px 1fr;
 }
 
-.react-aria-Breadcrumbs ol {
-  display: flex;
-  flex-wrap: wrap;
-  list-style: none;
-  align-items: center;
-  flex-wrap: nowrap;
-  margin: 0;
-  padding: 0;
-  gap: 0.5rem;
-}
-
-.react-aria-Breadcrumbs .react-aria-Item {
-  display: flex;
-  user-select: none;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--color-font);
-  outline: none;
-  box-shadow: none;
-}
-
-.react-aria-Breadcrumbs .react-aria-Item:focus {
-  outline: none;
-}
-
 input[type="search"]::-webkit-search-cancel-button {
   display: none;
 }
