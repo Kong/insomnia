@@ -583,7 +583,7 @@ export const EXPORT_TYPE_API_SPEC = 'api_spec';
 export const EXPORT_TYPE_PROTO_FILE = 'proto_file';
 export const EXPORT_TYPE_PROTO_DIRECTORY = 'proto_directory';
 
-// pd-dazzle-update
+// nc-dazzle-update
 export const REQUEST_SETTER_EDITOR_TAB = 'REQUEST_SETTER_EDITOR_TAB';
 export const REQUEST_DATASET_EDITOR_TAB = 'REQUEST_DATASET_EDITOR_TAB';
 export const RESPONSE_VISUALIZE_EDITOR_TAB = 'RESPONSE_VISUALIZE_EDITOR_TAB';

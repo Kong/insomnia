@@ -15,6 +15,22 @@ interface Props {
   activeTab: TabType;
 }
 
+const DefaultUtilsEditor: FC = () => (
+  <div className="vertically-center text-center">
+    <p className="pad super-faint text-sm text-center">
+      <i
+        className="fa fa-unlock-alt"
+        style={{
+          fontSize: '8rem',
+          opacity: 0.3,
+        }}
+      />
+      <br />
+      <br />
+      Select an util from above
+    </p>
+  </div>
+);
 export const RequestUtilsEditors: FC<Props> = ({ activeTab }) => {
   switch (activeTab) {
     case REQUEST_DATASET_EDITOR_TAB:
@@ -26,21 +42,6 @@ export const RequestUtilsEditors: FC<Props> = ({ activeTab }) => {
     case REQUEST_SETTING_TAB:
       return <RequestSettingsEditor />;
     default:
-      return (
-        <div className="vertically-center text-center">
-          <p className="pad super-faint text-sm text-center">
-            <i
-              className="fa fa-unlock-alt"
-              style={{
-                fontSize: '8rem',
-                opacity: 0.3,
-              }}
-            />
-            <br />
-            <br />
-            Select an util from above
-          </p>
-        </div>
-      );
+      return <DefaultUtilsEditor />;
   }
 };

@@ -95,7 +95,7 @@ export const RequestPane: FC<Props> = ({
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
     useState(false);
   const patchRequest = useRequestPatcher();
-  // pd-dazzle-update
+  // nc-dazzle-update
   const [activeUtilTab, setActiveUtilTab] = useState<TabType>(
     REQUEST_UTIL_TABS_ORDER[0]
   );
@@ -330,6 +330,7 @@ export const RequestPane: FC<Props> = ({
             )}
           </PanelContainer>
         </TabItem>
+        {/* nc-dazzle-update */}
         <TabItem
           key="requestExtend"
           title={
