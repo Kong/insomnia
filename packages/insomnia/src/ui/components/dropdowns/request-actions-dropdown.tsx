@@ -1,6 +1,6 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useCallback, useState } from 'react';
-import { Button, Item, Menu, MenuTrigger, Popover } from 'react-aria-components';
+import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { exportHarRequest } from '../../../common/har';
@@ -23,6 +23,7 @@ import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
+import { AskModal } from '../modals/ask-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 
@@ -140,12 +141,23 @@ export const RequestActionsDropdown = ({
   };
 
   const deleteRequest = () => {
-    incrementDeletedRequests();
-    requestFetcher.submit({ id: request._id },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
-        method: 'post',
-      });
+    showModal(AskModal, {
+      title: 'Delete Request',
+      message: `Do you really want to delete "${request.name}"?`,
+      yesText: 'Delete',
+      noText: 'Cancel',
+      color: 'danger',
+      onDone: async (isYes: boolean) => {
+        if (isYes) {
+          incrementDeletedRequests();
+          requestFetcher.submit({ id: request._id },
+            {
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
+              method: 'post',
+            });
+        }
+      },
+    });
   };
 
   // Can only generate code for regular requests, not gRPC requests
@@ -240,7 +252,7 @@ export const RequestActionsDropdown = ({
           className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
         >
           {item => (
-            <Item
+            <MenuItem
               key={item.id}
               id={item.id}
               className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -248,7 +260,7 @@ export const RequestActionsDropdown = ({
             >
               <Icon icon={item.icon} />
               <span>{item.name}</span>
-            </Item>
+            </MenuItem>
           )}
         </Menu>
       </Popover>

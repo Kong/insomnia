@@ -1,6 +1,6 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useRef, useState } from 'react';
-import { Button, Item, Menu, MenuTrigger, Popover } from 'react-aria-components';
+import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { toKebabCase } from '../../../common/misc';
@@ -18,6 +18,7 @@ import { WorkspaceLoaderData } from '../../routes/workspace';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
+import { AskModal } from '../modals/ask-modal';
 import { EnvironmentEditModal } from '../modals/environment-edit-modal';
 import { PasteCurlModal } from '../modals/paste-curl-modal';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
@@ -86,12 +87,23 @@ export const RequestGroupActionsDropdown = ({
   };
 
   const handleDeleteFolder = async () => {
-    models.stats.incrementDeletedRequestsForDescendents(requestGroup);
-    requestFetcher.submit({ id: requestGroup._id },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/delete`,
-        method: 'post',
-      });
+    showModal(AskModal, {
+      title: 'Delete Folder',
+      message: `Do you really want to delete "${requestGroup.name}"?`,
+      yesText: 'Delete',
+      noText: 'Cancel',
+      color: 'danger',
+      onDone: async (isYes: boolean) => {
+        if (isYes) {
+          models.stats.incrementDeletedRequestsForDescendents(requestGroup);
+          requestFetcher.submit({ id: requestGroup._id },
+            {
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/delete`,
+              method: 'post',
+            });
+        }
+      },
+    });
   };
 
   const handlePluginClick = async ({ label, plugin, action }: RequestGroupAction) => {
@@ -272,7 +284,7 @@ export const RequestGroupActionsDropdown = ({
           className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
         >
           {item => (
-            <Item
+            <MenuItem
               key={item.id}
               id={item.id}
               className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -280,7 +292,7 @@ export const RequestGroupActionsDropdown = ({
             >
               <Icon icon={item.icon} />
               <span>{item.name}</span>
-            </Item>
+            </MenuItem>
           )}
         </Menu>
       </Popover>

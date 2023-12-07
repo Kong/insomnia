@@ -1,3 +1,5 @@
+import { SentryError } from '@sentry/utils';
+
 const STATE_IN_NUN_VAR = 'nunvar';
 const STATE_IN_NUN_TAG = 'nuntag';
 const STATE_IN_NUN_COM = 'nuncom';
@@ -26,25 +28,41 @@ const NUNJUCKS_CLOSE_STATES: {
   '#}': STATE_IN_NUN_COM,
 };
 
+function ensureStringify(val?: string | Object): string {
+  let defaultVal = '';
+  if (!val) {
+    return defaultVal;
+  }
+
+  if (typeof val === 'object') {
+    try {
+      defaultVal = JSON.stringify(val);
+    } catch (error) {
+      SentryError.captureStackTrace(error);
+    }
+
+    return defaultVal;
+  }
+
+  return val;
+}
+
 /**
  * Format a JSON string without parsing it as JavaScript.
  *
  * Code taken from jsonlint (http://zaa.ch/jsonlint/)
  */
-export const jsonPrettify = (json?: string, indentChars = '\t', replaceUnicode = true) => {
-  if (!json) {
-    return '';
-  }
-
-  if (!json.includes('{') && !json.includes('[') && !json.includes('"')) {
-    return json;
+export const jsonPrettify = (json?: string | Object, indentChars = '\t', replaceUnicode = true) => {
+  let prePrettify = ensureStringify(json);
+  if (!prePrettify.includes('{') && !prePrettify.includes('[') && !prePrettify.includes('"')) {
+    return prePrettify;
   }
 
   // Convert the unicode. To correctly mimic JSON.stringify(JSON.parse(json), null, indentChars)
   // we need to convert all escaped unicode characters to proper unicode characters.
   if (replaceUnicode) {
     try {
-      json = convertUnicode(json);
+      prePrettify = convertUnicode(prePrettify);
     } catch (err) {
       // Just in case (should never happen)
       console.warn('Prettify failed to handle unicode', err);
@@ -52,7 +70,7 @@ export const jsonPrettify = (json?: string, indentChars = '\t', replaceUnicode =
   }
 
   let i = 0;
-  const il = json.length;
+  const il = prePrettify.length;
   const tab = indentChars;
   let newJson = '';
   let indentLevel = 0;
@@ -62,8 +80,8 @@ export const jsonPrettify = (json?: string, indentChars = '\t', replaceUnicode =
   let state = STATE_NONE;
 
   for (; i < il; i += 1) {
-    currentChar = json.charAt(i);
-    nextChar = json.charAt(i + 1) || '';
+    currentChar = prePrettify.charAt(i);
+    nextChar = prePrettify.charAt(i + 1) || '';
     nextTwo = currentChar + nextChar;
 
     if (state === STATE_IN_STRING) {
