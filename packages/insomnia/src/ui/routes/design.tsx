@@ -14,14 +14,17 @@ import React, {
   useState,
 } from 'react';
 import {
+  Breadcrumb,
   Breadcrumbs,
   Button,
   GridList,
+  GridListItem,
   Heading,
-  Item,
   Link,
   ListBox,
+  ListBoxItem,
   Menu,
+  MenuItem,
   MenuTrigger,
   Popover,
   Select,
@@ -392,8 +395,8 @@ const Design: FC = () => {
       renderPageSidebar={
         <div className='flex h-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden'>
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
-            <Breadcrumbs className='react-aria-Breadcrumbs pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
-              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
+            <Breadcrumbs className='flex flex-wrap list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
+              <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                 <Link data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                   <NavLink
                     to={`/organization/${organizationId}/project/${activeProject._id}`}
@@ -402,10 +405,10 @@ const Design: FC = () => {
                   </NavLink>
                 </Link>
                 <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
-              </Item>
-              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
+              </Breadcrumb>
+              <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                 <WorkspaceDropdown />
-              </Item>
+              </Breadcrumb>
             </Breadcrumbs>
             <div className="flex w-full items-center gap-2 justify-between">
               <Select
@@ -422,7 +425,6 @@ const Design: FC = () => {
                   );
                 }}
                 selectedKey={activeEnvironment._id}
-                items={environmentsList}
               >
                 <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                   <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
@@ -470,12 +472,13 @@ const Design: FC = () => {
                   <Icon icon="caret-down" />
                 </Button>
                 <Popover className="min-w-max">
-                  <ListBox<Environment>
+                  <ListBox
                     key={activeEnvironment._id}
+                    items={environmentsList}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         id={item._id}
                         key={item._id}
                         className={
@@ -512,7 +515,7 @@ const Design: FC = () => {
                             )}
                           </Fragment>
                         )}
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 </Popover>
@@ -573,13 +576,13 @@ const Design: FC = () => {
                   className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                 >
                   {item => (
-                    <Item
+                    <MenuItem
                       className="flex gap-2 aria-disabled:text-[--hl-md] aria-disabled:cursor-not-allowed px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                       aria-label={item.name}
                     >
                       {item.icon}
                       <span>{item.name}</span>
-                    </Item>
+                    </MenuItem>
                   )}
                 </Menu>
               </Popover>
@@ -608,34 +611,34 @@ const Design: FC = () => {
                 {/* Info */}
                 {expandedKeys.includes('info') && (
                   <ListBox onAction={key => navigateToPath(key.toString())}>
-                    <Item
+                    <ListBoxItem
                       className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                       id="info.title"
                     >
                       <span className="truncate">Title: {info.title}</span>
-                    </Item>
-                    <Item
+                    </ListBoxItem>
+                    <ListBoxItem
                       className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                       id="info.description"
                     >
                       <span className="truncate">
                         Description: {info.description}
                       </span>
-                    </Item>
-                    <Item
+                    </ListBoxItem>
+                    <ListBoxItem
                       className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                       id="info.version"
                     >
                       <span className="truncate">Version: {info.version}</span>
-                    </Item>
-                    <Item
+                    </ListBoxItem>
+                    <ListBoxItem
                       className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                       id="info.license"
                     >
                       <span className="truncate">
                         License: {info.license?.name}
                       </span>
-                    </Item>
+                    </ListBoxItem>
                   </ListBox>
                 )}
               </div>
@@ -670,12 +673,12 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         id={`servers.${item.path}`}
                       >
                         {item.url}
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 )}
@@ -712,7 +715,7 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <GridListItem
                         className="group outline-none select-none"
                         id={`paths.${item.path}`}
                       >
@@ -731,7 +734,7 @@ const Design: FC = () => {
                             </Button>
                           ))}
                         </div>
-                      </Item>
+                      </GridListItem>
                     )}
                   </GridList>
                 )}
@@ -772,12 +775,12 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         id={`components.requestBodies.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 )}
@@ -816,12 +819,12 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         id={`components.responses.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 )}
@@ -860,12 +863,12 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         id={`components.parameters.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 )}
@@ -904,12 +907,12 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         id={`components.headers.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 )}
@@ -948,12 +951,12 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         id={`components.schemas.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 )}
@@ -994,12 +997,12 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         id={`components.securitySchemes.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 )}
@@ -1130,7 +1133,7 @@ const Design: FC = () => {
                 }))}
               >
                 {item => (
-                  <Item className="even:bg-[--hl-xs] p-[--padding-sm] focus-within:bg-[--hl-md] data-[focused]:bg-[--hl-md] outline-none flex items-center gap-2 text-xs transition-colors">
+                  <ListBoxItem className="even:bg-[--hl-xs] p-[--padding-sm] focus-within:bg-[--hl-md] data-[focused]:bg-[--hl-md] outline-none flex items-center gap-2 text-xs transition-colors">
                     <Icon
                       className={
                         item.type === 'error'
@@ -1147,7 +1150,7 @@ const Design: FC = () => {
                     <span className="flex-shrink-0 text-[--hl-lg]">
                       [Ln {item.line}]
                     </span>
-                  </Item>
+                  </ListBoxItem>
                 )}
               </ListBox>
             )}

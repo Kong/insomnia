@@ -5,12 +5,14 @@ import {
   Dialog,
   DialogTrigger,
   GridList,
+  GridListItem,
   Heading,
   Input,
-  Item,
   Label,
   ListBox,
+  ListBoxItem,
   Menu,
+  MenuItem,
   MenuTrigger,
   Modal,
   ModalOverlay,
@@ -718,7 +720,6 @@ const ProjectRoute: FC = () => {
                     navigate(`/organization/${id}`);
                   }}
                   selectedKey={organizationId}
-                  items={organizations}
                 >
                   <Button className="px-4 py-1 font-bold flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                     <SelectValue<Organization> className="flex truncate items-center justify-center gap-2">
@@ -729,9 +730,12 @@ const ProjectRoute: FC = () => {
                     <Icon icon="caret-down" />
                   </Button>
                   <Popover className="min-w-max">
-                    <ListBox<Organization> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
+                    <ListBox
+                      items={organizations}
+                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                    >
                       {item => (
-                        <Item
+                        <ListBoxItem
                           id={item.id}
                           key={item.id}
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -750,7 +754,7 @@ const ProjectRoute: FC = () => {
                               )}
                             </Fragment>
                           )}
-                        </Item>
+                        </ListBoxItem>
                       )}
                     </ListBox>
                   </Popover>
@@ -905,7 +909,7 @@ const ProjectRoute: FC = () => {
                 >
                   {item => {
                     return (
-                      <Item
+                      <GridListItem
                         key={item._id}
                         id={item._id}
                         textValue={item.name}
@@ -927,7 +931,7 @@ const ProjectRoute: FC = () => {
                           />
                           {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} />}
                         </div>
-                      </Item>
+                      </GridListItem>
                     );
                   }}
                 </GridList>
@@ -951,7 +955,7 @@ const ProjectRoute: FC = () => {
               >
                 {item => {
                   return (
-                    <Item textValue={item.label} className="group outline-none select-none">
+                    <GridListItem textValue={item.label} className="group outline-none select-none">
                       <div
                         className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-12 w-full overflow-hidden text-[--hl]"
                       >
@@ -973,7 +977,7 @@ const ProjectRoute: FC = () => {
                           </Button>
                         )}
                       </div>
-                    </Item>
+                    </GridListItem>
                   );
                 }}
               </GridList>
@@ -1037,12 +1041,6 @@ const ProjectRoute: FC = () => {
                       sortOrder: order.toString(),
                     })
                   }
-                  items={DASHBOARD_SORT_ORDERS.map(order => {
-                    return {
-                      id: order,
-                      name: dashboardSortOrderName[order],
-                    };
-                  })}
                 >
                   <Button
                     aria-label="Select sort order"
@@ -1051,13 +1049,17 @@ const ProjectRoute: FC = () => {
                     <Icon icon="sort" />
                   </Button>
                   <Popover className="min-w-max">
-                    <ListBox<{
-                      id: string;
-                      name: string;
-                    }> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                    <ListBox
+                      items={DASHBOARD_SORT_ORDERS.map(order => {
+                        return {
+                          id: order,
+                          name: dashboardSortOrderName[order],
+                        };
+                      })}
+                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                     >
                       {item => (
-                        <Item
+                        <ListBoxItem
                           id={item.id}
                           key={item.id}
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -1076,7 +1078,7 @@ const ProjectRoute: FC = () => {
                               )}
                             </Fragment>
                           )}
-                        </Item>
+                        </ListBoxItem>
                       )}
                     </ListBox>
                   </Popover>
@@ -1105,7 +1107,7 @@ const ProjectRoute: FC = () => {
                       className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                     >
                       {item => (
-                        <Item
+                        <MenuItem
                           key={item.id}
                           id={item.id}
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -1113,7 +1115,7 @@ const ProjectRoute: FC = () => {
                         >
                           <Icon icon={item.icon} />
                           <span>{item.name}</span>
-                        </Item>
+                        </MenuItem>
                       )}
                     </Menu>
                   </Popover>
@@ -1158,11 +1160,11 @@ const ProjectRoute: FC = () => {
               >
                 {item => {
                   return (
-                    <Item
+                    <GridListItem
                       key={item._id}
                       id={item._id}
                       textValue={item.name}
-                      className="[&_[role=gridcell]]:flex-1 [&_[role=gridcell]]:overflow-hidden [&_[role=gridcell]]:flex [&_[role=gridcell]]:flex-col outline-none p-[--padding-md] flex select-none w-full rounded-sm hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
+                      className="flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-sm hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
                     >
                       <div className="flex gap-2 h-[20px]">
                         <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
@@ -1244,7 +1246,7 @@ const ProjectRoute: FC = () => {
                           </div>
                         )}
                       </div>
-                    </Item>
+                    </GridListItem>
                   );
                 }}
               </GridList>
