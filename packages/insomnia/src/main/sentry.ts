@@ -4,6 +4,7 @@ import type { SentryRequestType } from '@sentry/types';
 import * as session from '../account/session';
 import { ChangeBufferEvent, database as db } from '../common/database';
 import { SENTRY_OPTIONS } from '../common/sentry';
+import { ExceptionCallback, registerCaptureException } from '../models/capture-exception.util';
 import * as models from '../models/index';
 import { isSettings } from '../models/settings';
 
@@ -44,4 +45,8 @@ export function initializeSentry() {
     ...SENTRY_OPTIONS,
     transport: ElectronSwitchableTransport,
   });
+
+  // this is a hack for logging the sentry error synthetically made for database parent id null issue
+  // currently the database modules are used in the inso-cli as well as it uses NeDB (why?)
+  registerCaptureException(Sentry.captureException as ExceptionCallback);
 }

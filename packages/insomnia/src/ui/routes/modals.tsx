@@ -80,14 +80,12 @@ const Modals: FC = () => {
           ref={instance => registerModal(instance, 'EnvironmentEditModal')}
         />
 
-        {activeWorkspace ? (
-          <SyncMergeModal
-            ref={instance => registerModal(instance, 'SyncMergeModal')}
-          />
-        ) : null}
-
         <AddKeyCombinationModal
           ref={instance => registerModal(instance, 'AddKeyCombinationModal')}
+        />
+
+        <SyncMergeModal
+          ref={instance => registerModal(instance, 'SyncMergeModal')}
         />
 
       </ErrorBoundary>

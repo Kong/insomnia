@@ -1,6 +1,6 @@
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { FC, Fragment, useEffect, useState } from 'react';
-import { Button, Collection, Item, Menu, MenuTrigger, Popover, Section, Tooltip, TooltipTrigger } from 'react-aria-components';
+import { Button, Collection, Menu, MenuItem, MenuTrigger, Popover, Section, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
@@ -41,16 +41,20 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
   const pullFetcher = useFetcher();
   const rollbackFetcher = useFetcher();
   const checkoutFetcher = useFetcher();
-  const syncDataFetcher = useFetcher<SyncDataLoaderData>();
+  const syncDataLoaderFetcher = useFetcher<SyncDataLoaderData>();
+  const syncDataActionFetcher = useFetcher();
 
   useEffect(() => {
-    if (syncDataFetcher.state === 'idle' && !syncDataFetcher.data) {
-      syncDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`);
+    if (syncDataLoaderFetcher.state === 'idle' && !syncDataLoaderFetcher.data) {
+      syncDataLoaderFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`);
     }
-  }, [organizationId, projectId, syncDataFetcher, workspaceId]);
+  }, [organizationId, projectId, syncDataLoaderFetcher, workspaceId]);
 
   useInterval(() => {
-    syncDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`);
+    syncDataActionFetcher.submit({}, {
+      method: 'POST',
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
+    });
   }, ONE_MINUTE_IN_MS);
 
   const error = checkoutFetcher.data?.error || pullFetcher.data?.error || pushFetcher.data?.error || rollbackFetcher.data?.error;
@@ -64,7 +68,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
     }
   }, [error]);
 
-  if (syncDataFetcher.state !== 'idle' && !syncDataFetcher.data) {
+  if (syncDataLoaderFetcher.state !== 'idle' && !syncDataLoaderFetcher.data) {
     return (
       <Button className="flex items-center h-9 gap-4 px-[--padding-md] w-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
         <Icon icon="refresh" className="animate-spin" /> Initializing
@@ -88,8 +92,8 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
     compare: { ahead: 0, behind: 0 },
   };
 
-  if (syncDataFetcher.data && !('error' in syncDataFetcher.data)) {
-    syncData = syncDataFetcher.data;
+  if (syncDataLoaderFetcher.data && !('error' in syncDataLoaderFetcher.data)) {
+    syncData = syncDataLoaderFetcher.data;
   }
 
   const {
@@ -247,7 +251,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
   const isSyncing = checkoutFetcher.state !== 'idle' || pullFetcher.state !== 'idle' || pushFetcher.state !== 'idle' || rollbackFetcher.state !== 'idle';
 
   const allSyncMenuActionList = [...switchToGitRepoActionList, ...localBranchesActionList, ...syncMenuActionList];
-
+  const syncError = syncDataLoaderFetcher.data && 'error' in syncDataLoaderFetcher.data ? syncDataLoaderFetcher.data.error : null;
   return (
     <Fragment>
       <MenuTrigger>
@@ -257,10 +261,10 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
             className="flex-1 flex items-center gap-2 truncate"
           >
             <Icon
-              icon={isSyncing ? 'refresh' : 'cloud'}
-              className={`w-5 ${isSyncing ? 'animate-spin' : ''}`}
+              icon={syncError ? 'warning' : isSyncing ? 'refresh' : 'cloud'}
+              className={`w-5 ${syncError ? 'text-[--color-warning]' : isSyncing ? 'animate-spin' : ''}`}
             />
-            <span>{currentBranch}</span>
+            <span className={`truncate ${syncError ? 'text-[--color-warning]' : ''}`}>{syncError ? 'Error syncing with Insomnia Cloud' : currentBranch}</span>
           </Button>
           <div className="flex items-center gap-2">
             <TooltipTrigger>
@@ -302,7 +306,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
             </TooltipTrigger>
           </div>
         </div>
-        <Popover className="min-w-max" placement='top end' offset={8}>
+        <Popover className="min-w-max max-w-lg overflow-hidden" placement='top end' offset={8}>
           <Menu
             aria-label="Insomnia Sync Menu"
             selectionMode="single"
@@ -311,50 +315,65 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
               const item = allSyncMenuActionList.find(item => item.id === key);
               item?.action();
             }}
-            className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+            className="border max-w-lg select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
           >
             <Section className='border-b border-solid border-[--hl-sm] pb-2'>
               <Collection items={switchToGitRepoActionList}>
                 {item => (
-                  <Item
+                  <MenuItem
                     textValue={item.name}
                     className={'group aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent disabled:cursor-not-allowed focus:outline-none transition-colors'}
                     aria-label={item.name}
                   >
-                    <div className="px-4 text-[--color-font-surprise] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 group-pressed:opacity-80 group-hover:bg-opacity-80 group-focus:bg-opacity-80 group-focus:ring-inset group-hover:ring-inset focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                    <div className="px-4 text-[--color-font-surprise] w-full bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 group-pressed:opacity-80 group-hover:bg-opacity-80 group-focus:bg-opacity-80 group-focus:ring-inset group-hover:ring-inset focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                       <Icon icon={item.icon} />
-                      <span>{item.name}</span>
+                      <div>{item.name}</div>
                     </div>
-                  </Item>
+                  </MenuItem>
                 )}
               </Collection>
             </Section>
-            <Section className='border-b border-solid border-[--hl-sm]'>
-              <Collection items={localBranchesActionList}>
-                {item => (
-                  <Item
-                    className={`aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item.isActive ? 'font-bold' : ''}`}
-                    aria-label={item.name}
-                  >
-                    <Icon icon={item.icon} className={item.isActive ? 'text-[--color-success]' : ''} />
-                    <span>{item.name}</span>
-                  </Item>
-                )}
-              </Collection>
-            </Section>
-            <Section>
-              <Collection items={syncMenuActionList}>
-                {item => (
-                  <Item
-                    className={'aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors'}
-                    aria-label={item.name}
-                  >
-                    <Icon icon={item.icon} />
-                    <span>{item.name}</span>
-                  </Item>
-                )}
-              </Collection>
-            </Section>
+            {syncError && (
+              <Section className='border-b border-solid border-[--hl-sm]'>
+                <MenuItem
+                  className={'flex overflow-hidden gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent disabled:cursor-not-allowed focus:outline-none transition-colors'}
+                  aria-label={syncError}
+                >
+                  <Icon icon="exclamation-triangle" className="text-[--color-warning]" />
+                  <p className='whitespace-normal'>{syncError}</p>
+                </MenuItem>
+              </Section>
+            )}
+            {!syncError && (
+              <Fragment>
+                <Section className='border-b border-solid border-[--hl-sm]'>
+                  <Collection items={localBranchesActionList}>
+                    {item => (
+                      <MenuItem
+                        className={`aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item.isActive ? 'font-bold' : ''}`}
+                        aria-label={item.name}
+                      >
+                        <Icon icon={item.icon} className={item.isActive ? 'text-[--color-success]' : ''} />
+                        <span className='truncate'>{item.name}</span>
+                      </MenuItem>
+                    )}
+                  </Collection>
+                </Section>
+                <Section>
+                  <Collection items={syncMenuActionList}>
+                    {item => (
+                      <MenuItem
+                        className={'aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors'}
+                        aria-label={item.name}
+                      >
+                        <Icon icon={item.icon} />
+                        <span>{item.name}</span>
+                      </MenuItem>
+                    )}
+                  </Collection>
+                </Section>
+              </Fragment>
+            )}
           </Menu>
         </Popover>
       </MenuTrigger>

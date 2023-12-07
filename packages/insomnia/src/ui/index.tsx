@@ -119,6 +119,7 @@ const router = createMemoryRouter(
         {
           path: 'onboarding/*',
           element: <Onboarding />,
+          errorElement: <ErrorRoute />,
         },
         {
           path: 'onboarding/migrate',
@@ -159,6 +160,7 @@ const router = createMemoryRouter(
           id: '/organization',
           loader: async (...args) => (await import('./routes/organization')).loader(...args),
           element: <Suspense fallback={<AppLoadingIndicator />}><Organization /></Suspense>,
+          errorElement: <ErrorRoute defaultMessage='A temporarily unexpected error occurred, please reload to try again' />,
           children: [
             {
               index: true,
@@ -181,6 +183,13 @@ const router = createMemoryRouter(
                   index: true,
                   loader: async (...args) =>
                     (await import('./routes/project')).indexLoader(...args),
+                },
+                {
+                  path: 'sync-projects',
+                  action: async (...args) =>
+                    (
+                      await import('./routes/project')
+                    ).syncProjectsAction(...args),
                 },
                 {
                   path: 'ai/access',
@@ -842,6 +851,10 @@ const router = createMemoryRouter(
                                 },
                                 {
                                   path: 'sync-data',
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/remote-collections')
+                                    ).syncDataAction(...args),
                                   loader: async (...args) =>
                                     (
                                       await import('./routes/remote-collections')
@@ -976,6 +989,7 @@ const router = createMemoryRouter(
           element: <Suspense fallback={<AppLoadingIndicator />}>
             <Auth />
           </Suspense>,
+          errorElement: <ErrorRoute defaultMessage='A temporarily unexpected error occurred, please reload to try again' />,
           children: [
             {
               path: 'login',

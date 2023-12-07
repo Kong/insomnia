@@ -106,6 +106,7 @@ test.describe('Debug-Sidebar', async () => {
       await requestLocator.click();
       await requestLocator.getByLabel('Request Actions').click();
       await page.getByRole('menuitemradio', { name: 'Delete' }).click();
+      await page.locator('.modal__content').getByRole('button', { name: 'Delete' }).click();
       await expect(page.locator('.app')).not.toContainText('example http');
     });
 

@@ -112,13 +112,15 @@ export const Shortcuts: FC = () => {
                                 withPrompt
                                 onClick={() => {
                                   let toBeRemovedIndex = -1;
-                                  keyCombosForThisPlatform.forEach((existingKeyComb, index) => {
+                                  const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[keyboardShortcut]);
+                                  keyCombs.forEach((existingKeyComb, index) => {
                                     if (areSameKeyCombinations(existingKeyComb, keyComb)) {
                                       toBeRemovedIndex = index;
                                     }
                                   });
                                   if (toBeRemovedIndex >= 0) {
-                                    keyCombosForThisPlatform.splice(toBeRemovedIndex, 1);
+                                    keyCombs.splice(toBeRemovedIndex, 1);
+
                                     patchSettings({ hotKeyRegistry });
                                   }
                                 }}

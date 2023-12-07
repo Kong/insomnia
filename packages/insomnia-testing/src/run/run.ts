@@ -22,6 +22,9 @@ const runInternal = async <TReturn, TNetworkResponse>(
   // This is the only way to add new globals to the Mocha environment as far as I can tell
   // @ts-expect-error -- global hack
   global.insomnia = new Insomnia(options);
+
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  chai.use(require('chai-json-schema'));
   // @ts-expect-error -- global hack
   global.chai = chai;
 
