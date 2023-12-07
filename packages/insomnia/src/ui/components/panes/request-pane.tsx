@@ -2,18 +2,28 @@ import React, { FC, useState } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { getContentTypeFromHeaders } from '../../../common/constants';
+import {
+  getContentTypeFromHeaders,
+  REQUEST_UTIL_TABS_ORDER,
+} from '../../../common/constants';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import type { Settings } from '../../../models/settings';
-import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
+import {
+  deconstructQueryStringToParams,
+  extractQueryStringFromUrl,
+} from '../../../utils/url/querystring';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
-import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
+import {
+  useActiveRequestSyncVCSVersion,
+  useGitVCSVersion,
+} from '../../hooks/use-vcs-version';
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
+import { RequestExtendTabDropdown } from '../dropdowns/request-extend-tab-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
 import {
@@ -70,12 +80,23 @@ export const RequestPane: FC<Props> = ({
   setLoading,
   onPaste,
 }) => {
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData(
+    'request/:requestId'
+  ) as RequestLoaderData;
+  const { workspaceId, requestId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+    requestId: string;
+  };
   const patchSettings = useSettingsPatcher();
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
     useState(false);
   const patchRequest = useRequestPatcher();
+  // pd-dazzle-update
+  const [activeUtilTab, setActiveUtilTab] = useState(
+    REQUEST_UTIL_TABS_ORDER[0]
+  );
 
   useState(false);
   const handleImportQueryFromUrl = () => {
@@ -104,7 +125,7 @@ export const RequestPane: FC<Props> = ({
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
 
   const { activeEnvironment } = useRouteLoaderData(
-    ':workspaceId',
+    ':workspaceId'
   ) as WorkspaceLoaderData;
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
@@ -114,7 +135,7 @@ export const RequestPane: FC<Props> = ({
   }
 
   const numParameters = activeRequest.parameters.filter(
-    p => !p.disabled,
+    p => !p.disabled
   ).length;
   const numHeaders = activeRequest.headers.filter(h => !h.disabled).length;
   const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
@@ -128,7 +149,9 @@ export const RequestPane: FC<Props> = ({
           <RequestUrlBar
             key={requestId}
             uniquenessKey={uniqueKey}
-            handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)}
+            handleAutocompleteUrls={() =>
+              queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)
+            }
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             setLoading={setLoading}
             onPaste={onPaste}
@@ -304,6 +327,22 @@ export const RequestPane: FC<Props> = ({
               </div>
             )}
           </PanelContainer>
+        </TabItem>
+        <TabItem
+          key="requestExtend"
+          title={
+            <RequestExtendTabDropdown
+              activeTab={activeUtilTab}
+              onChange={setActiveUtilTab}
+            />
+          }
+        >
+          <ErrorBoundary
+            key={uniqueKey}
+            errorClassName="font-error pad text-center"
+          >
+            <AuthWrapper />
+          </ErrorBoundary>
         </TabItem>
       </Tabs>
       {isRequestSettingsModalOpen && (
