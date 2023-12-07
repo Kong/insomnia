@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import {
   getContentTypeFromHeaders,
   REQUEST_UTIL_TABS_ORDER,
+  TabType,
 } from '../../../common/constants';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
@@ -33,6 +34,7 @@ import {
 } from '../editors/query-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
+import { RequestUtilsEditors } from '../editors/utils/request-utils-editors';
 import { ErrorBoundary } from '../error-boundary';
 import { MarkdownPreview } from '../markdown-preview';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
@@ -94,7 +96,7 @@ export const RequestPane: FC<Props> = ({
     useState(false);
   const patchRequest = useRequestPatcher();
   // pd-dazzle-update
-  const [activeUtilTab, setActiveUtilTab] = useState(
+  const [activeUtilTab, setActiveUtilTab] = useState<TabType>(
     REQUEST_UTIL_TABS_ORDER[0]
   );
 
@@ -333,7 +335,7 @@ export const RequestPane: FC<Props> = ({
           title={
             <RequestExtendTabDropdown
               activeTab={activeUtilTab}
-              onChange={setActiveUtilTab}
+              onChange={tab => setActiveUtilTab(tab)}
             />
           }
         >
@@ -341,7 +343,7 @@ export const RequestPane: FC<Props> = ({
             key={uniqueKey}
             errorClassName="font-error pad text-center"
           >
-            <AuthWrapper />
+            <RequestUtilsEditors activeTab={activeUtilTab} />
           </ErrorBoundary>
         </TabItem>
       </Tabs>

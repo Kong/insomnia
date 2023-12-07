@@ -3,6 +3,7 @@ import React, { FC } from 'react';
 import {
   REQUEST_UTIL_TABS_ORDER,
   REQUEST_UTIL_TABS_TITLE,
+  TabType,
 } from '../../../common/constants';
 import {
   Dropdown,
@@ -13,8 +14,8 @@ import {
 } from '../base/dropdown';
 
 interface Props {
-  activeTab: typeof REQUEST_UTIL_TABS_ORDER[number];
-  onChange: (tab: string) => void;
+  activeTab: TabType;
+  onChange: (tab: TabType) => void;
 }
 
 export const RequestExtendTabDropdown: FC<Props> = ({

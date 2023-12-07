@@ -600,3 +600,4 @@ export const REQUEST_UTIL_TABS_ORDER = [
   RESPONSE_VISUALIZE_EDITOR_TAB,
   REQUEST_SETTING_TAB,
 ] as const;
+export type TabType = typeof REQUEST_UTIL_TABS_ORDER[number];
