@@ -7,7 +7,10 @@ import {
   RESPONSE_VISUALIZE_EDITOR_TAB,
   TabType,
 } from '../../../../common/constants';
-
+import { ResponseVisualizeEditor } from './reponse-visualize-editor';
+import { RequestDatasetEditor } from './request-dataset-editor';
+import { RequestEventSetterEditor } from './request-event-setter-editor';
+import { RequestSettingsEditor } from './request-settings-editor';
 interface Props {
   activeTab: TabType;
 }
@@ -15,13 +18,13 @@ interface Props {
 export const RequestUtilsEditors: FC<Props> = ({ activeTab }) => {
   switch (activeTab) {
     case REQUEST_DATASET_EDITOR_TAB:
-      return <div>Dataset</div>;
+      return <RequestDatasetEditor />;
     case REQUEST_SETTER_EDITOR_TAB:
-      return <div>Setter</div>;
+      return <RequestEventSetterEditor />;
     case RESPONSE_VISUALIZE_EDITOR_TAB:
-      return <div>Visualize</div>;
+      return <ResponseVisualizeEditor />;
     case REQUEST_SETTING_TAB:
-      return <div>Setting</div>;
+      return <RequestSettingsEditor />;
     default:
       return (
         <div className="vertically-center text-center">
