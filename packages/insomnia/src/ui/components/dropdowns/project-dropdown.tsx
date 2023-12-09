@@ -5,9 +5,9 @@ import {
   Dialog,
   Heading,
   Input,
-  Item,
   Label,
   Menu,
+  MenuItem,
   MenuTrigger,
   Modal,
   ModalOverlay,
@@ -108,7 +108,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
             className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
           >
             {item => (
-              <Item
+              <MenuItem
                 key={item.id}
                 id={item.id}
                 className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -116,7 +116,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
               >
                 <Icon icon={item.icon} />
                 <span>{item.name}</span>
-              </Item>
+              </MenuItem>
             )}
           </Menu>
         </Popover>
@@ -130,12 +130,14 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
         isDismissable
         className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
       >
-        <Modal className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
+        <Modal
+          onOpenChange={isOpen => {
+            setProjectType('');
+            setIsProjectSettingsModalOpen(isOpen);
+          }}
+          className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]"
+        >
           <Dialog
-            onClose={() => {
-              setIsProjectSettingsModalOpen(false);
-              setProjectType('');
-            }}
             className="outline-none"
           >
             {({ close }) => (

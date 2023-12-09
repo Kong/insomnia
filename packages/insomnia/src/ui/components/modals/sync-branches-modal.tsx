@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Dialog, GridList, Heading, Input, Item, Label, Modal, ModalOverlay, TextField } from 'react-aria-components';
+import { Button, Dialog, GridList, GridListItem, Heading, Input, Label, Modal, ModalOverlay, TextField } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { PromptButton } from '../base/prompt-button';
@@ -169,9 +169,13 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
       isDismissable
       className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
     >
-      <Modal className="flex flex-col max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
+      <Modal
+        onOpenChange={isOpen => {
+          !isOpen && onClose();
+        }}
+        className="flex flex-col max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]"
+      >
         <Dialog
-          onClose={onClose}
           className="outline-none flex-1 h-full flex flex-col overflow-hidden"
         >
           {({ close }) => (
@@ -230,14 +234,14 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
                   className="divide-y divide-solid divide-[--hl-sm] flex flex-col focus:outline-none overflow-y-auto flex-1 data-[empty]:py-0"
                 >
                   {item => (
-                    <Item
+                    <GridListItem
                       id={item.id}
                       key={item.key}
                       textValue={item.name}
                       className="p-2 w-full focus:outline-none focus:bg-[--hl-sm] transition-colors"
                     >
                       <LocalBranchItem branch={item.name} isCurrent={item.isCurrent} organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
-                    </Item>
+                    </GridListItem>
                   )}
                 </GridList>
               </div>
@@ -257,14 +261,14 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
                     className="divide-y divide-solid divide-[--hl-sm] flex flex-col focus:outline-none overflow-y-auto flex-1 data-[empty]:py-0"
                   >
                     {item => (
-                      <Item
+                      <GridListItem
                         id={item.id}
                         key={item.key}
                         textValue={item.name}
                         className="p-2 w-full focus:outline-none focus:bg-[--hl-sm] transition-colors"
                       >
                         <RemoteBranchItem branch={item.name} isCurrent={item.isCurrent} organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
-                      </Item>
+                      </GridListItem>
                     )}
                   </GridList>
                 </div>

@@ -3,15 +3,18 @@ import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
 import {
+  Breadcrumb,
   Breadcrumbs,
   Button,
   DropIndicator,
   GridList,
+  GridListItem,
   Input,
-  Item,
   Link,
   ListBox,
+  ListBoxItem,
   Menu,
+  MenuItem,
   MenuTrigger,
   Popover,
   SearchField,
@@ -636,8 +639,8 @@ export const Debug: FC = () => {
       renderPageSidebar={
         <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
-            <Breadcrumbs className='react-aria-Breadcrumbs pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
-              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
+            <Breadcrumbs className='flex flex-wrap list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
+              <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                 <Link data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                   <NavLink
                     to={`/organization/${organizationId}/project/${activeProject._id}`}
@@ -646,10 +649,10 @@ export const Debug: FC = () => {
                   </NavLink>
                 </Link>
                 <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
-              </Item>
-              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
+              </Breadcrumb>
+              <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                 <WorkspaceDropdown />
-              </Item>
+              </Breadcrumb>
             </Breadcrumbs>
             <div className="flex w-full items-center gap-2 justify-between">
               <Select
@@ -666,7 +669,6 @@ export const Debug: FC = () => {
                   );
                 }}
                 selectedKey={activeEnvironment._id}
-                items={environmentsList}
               >
                 <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                   <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
@@ -714,12 +716,13 @@ export const Debug: FC = () => {
                   <Icon icon="caret-down" />
                 </Button>
                 <Popover className="min-w-max">
-                  <ListBox<Environment>
+                  <ListBox
                     key={activeEnvironment._id}
+                    items={environmentsList}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         id={item._id}
                         key={item._id}
                         className={
@@ -756,7 +759,7 @@ export const Debug: FC = () => {
                             )}
                           </Fragment>
                         )}
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 </Popover>
@@ -811,12 +814,6 @@ export const Debug: FC = () => {
                     sortOrder: order.toString(),
                   })
                 }
-                items={SORT_ORDERS.map(order => {
-                  return {
-                    id: order,
-                    name: sortOrderName[order],
-                  };
-                })}
               >
                 <Button
                   aria-label="Select sort order"
@@ -825,9 +822,17 @@ export const Debug: FC = () => {
                   <Icon icon="sort" />
                 </Button>
                 <Popover className="min-w-max">
-                  <ListBox<{ id: string; name: string }> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
+                  <ListBox
+                    items={SORT_ORDERS.map(order => {
+                      return {
+                        id: order,
+                        name: sortOrderName[order],
+                      };
+                    })}
+                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                  >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         id={item.id}
                         key={item.id}
                         className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -846,7 +851,7 @@ export const Debug: FC = () => {
                             )}
                           </Fragment>
                         )}
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 </Popover>
@@ -873,7 +878,7 @@ export const Debug: FC = () => {
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
                     {item => (
-                      <Item
+                      <MenuItem
                         key={item.id}
                         id={item.id}
                         className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -881,7 +886,7 @@ export const Debug: FC = () => {
                       >
                         <Icon icon={item.icon} />
                         <span>{item.name}</span>
-                      </Item>
+                      </MenuItem>
                     )}
                   </Menu>
                 </Popover>
@@ -907,7 +912,7 @@ export const Debug: FC = () => {
               {item => {
 
                 return (
-                  <Item
+                  <GridListItem
                     key={item.doc._id}
                     id={item.doc._id}
                     className="group outline-none select-none"
@@ -980,7 +985,7 @@ export const Debug: FC = () => {
                         />
                       )}
                     </div>
-                  </Item>
+                  </GridListItem>
                 );
               }}
             </GridList>
@@ -1017,7 +1022,7 @@ export const Debug: FC = () => {
                 {virtualItem => {
                   const item = visibleCollection[virtualItem.index];
                   return (
-                    <Item
+                    <GridListItem
                       className="group outline-none absolute top-0 left-0 select-none w-full"
                       textValue={item.doc.name}
                       data-testid={item.doc.name}
@@ -1108,7 +1113,7 @@ export const Debug: FC = () => {
                           />
                         )}
                       </div>
-                    </Item>
+                    </GridListItem>
                   );
                 }}
               </GridList>

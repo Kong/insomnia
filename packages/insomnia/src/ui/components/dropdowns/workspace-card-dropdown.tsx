@@ -224,11 +224,13 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           isDismissable
           className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
         >
-          <Modal className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
+          <Modal
+            onOpenChange={() => {
+              setIsDeleteRemoteWorkspaceModalOpen(false);
+            }}
+            className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]"
+          >
             <Dialog
-              onClose={() => {
-                setIsDeleteRemoteWorkspaceModalOpen(false);
-              }}
               className="outline-none"
             >
               {({ close }) => (
