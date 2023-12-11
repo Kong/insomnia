@@ -48,10 +48,7 @@ class WindowMessageHandler {
     };
 
     // startUtilityProcessHandler = async (ev: MessageEvent) => {
-
     // };
-
-    // TODO: registerMessagePortEventHandler
 
     register = (actionName: string, handler: MessageHandler) => {
         this.actionHandlers.set(actionName, handler);
