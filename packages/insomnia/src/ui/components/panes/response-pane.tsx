@@ -24,6 +24,7 @@ import { ResponseCookiesViewer } from '../viewers/response-cookies-viewer';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
+import { ResponseVisualizeViewer } from '../viewers/response-visualizer-viewer';
 import { BlankPane } from './blank-pane';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
@@ -222,6 +223,23 @@ export const ResponsePane: FC<Props> = ({
               timeline={timeline}
             />
           </ErrorBoundary>
+        </TabItem>
+        <TabItem
+          key="visualizer"
+          title={
+            <>
+              Visualizer
+              {/* {activeResponse.headers.length > 0 && (
+                <span className="bubble">{activeResponse.headers.length}</span>
+              )} */}
+            </>
+          }
+        >
+          <PanelContainer className="pad">
+            <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
+              <ResponseVisualizeViewer />
+            </ErrorBoundary>
+          </PanelContainer>
         </TabItem>
       </Tabs>
       <ErrorBoundary errorClassName="font-error pad text-center">
