@@ -1,6 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Suspense } from 'react';
-import { Breadcrumbs, Button, GridList, Item, Link, Menu, MenuTrigger, Popover } from 'react-aria-components';
+import { Breadcrumb, Breadcrumbs, Button, GridList, GridListItem, Link, Menu, MenuTrigger, Popover } from 'react-aria-components';
 import { LoaderFunction, NavLink, Route, Routes, useFetcher, useLoaderData, useNavigate, useParams } from 'react-router-dom';
 
 import * as models from '../../models';
@@ -112,8 +112,8 @@ const MockServerRoute = () => {
     renderPageSidebar={
       <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
         <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
-          <Breadcrumbs className='react-aria-Breadcrumbs pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
-            <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
+          <Breadcrumbs className='flex flex-wrap list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
+            <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
               <Link data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                 <NavLink
                   to={`/organization/${organizationId}/project/${projectId}`}
@@ -122,10 +122,10 @@ const MockServerRoute = () => {
                 </NavLink>
               </Link>
               <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
-            </Item>
-            <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
+            </Breadcrumb>
+            <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
               <WorkspaceDropdown />
-            </Item>
+            </Breadcrumb>
           </Breadcrumbs>
         </div>
         <div className="p-[--padding-sm]">
@@ -171,7 +171,7 @@ const MockServerRoute = () => {
         >
           {item => {
             return (
-              <Item
+              <GridListItem
                 key={item._id}
                 id={item._id}
                 textValue={item.name}
@@ -199,7 +199,12 @@ const MockServerRoute = () => {
                     value={item.name}
                     name="name"
                     ariaLabel="Mock route name"
-                    onChange={name => {
+                    onSingleClick={() => {
+                      navigate({
+                        pathname: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${item._id}`,
+                      });
+                    }}
+                    onSubmit={name => {
                       name && fetcher.submit(
                         { name },
                         {
@@ -231,7 +236,7 @@ const MockServerRoute = () => {
                         className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                       >
                         {item => (
-                          <Item
+                          <Breadcrumb
                             key={item.id}
                             id={item.id}
                             className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -239,13 +244,13 @@ const MockServerRoute = () => {
                           >
                             <Icon icon={item.icon} />
                             <span>{item.name}</span>
-                          </Item>
+                          </Breadcrumb>
                         )}
                       </Menu>
                     </Popover>
                   </MenuTrigger>
                 </div>
-              </Item>
+              </GridListItem>
             );
           }}
         </GridList>
