@@ -7,10 +7,11 @@ import styled from 'styled-components';
 interface StyledTabProps {
   isNested?: boolean;
   isSelected?: boolean;
+  shouldRender?: boolean;
 }
 
-const StyledTab = styled.div<StyledTabProps>(({ isNested, isSelected }) => ({
-  display: 'flex',
+const StyledTab = styled.div<StyledTabProps>(({ isNested, isSelected, shouldRender }) => ({
+  display: shouldRender ? 'flex' : 'none',
   alignItems: 'center',
   justifyContent: 'center',
   whiteSpace: 'nowrap',
@@ -80,9 +81,9 @@ const StyledTabPanel = styled.div({
 });
 
 const StyledTabsContainer = styled.div({
+  display: 'grid',
   width: '100%',
   height: '100%',
-  display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr)',
   gridTemplateColumns: '100%',
   alignContent: 'stretch',
@@ -90,15 +91,16 @@ const StyledTabsContainer = styled.div({
 
 interface StyledTabListProps {
   isNested?: boolean;
+  shouldRender?: boolean;
 }
 
 const StyledTabList = styled.div<StyledTabListProps>(({ isNested }) => ({
   display: 'flex',
+  backgroundColor: 'var(--color-bg)',
   flexDirection: 'row',
   width: '100%',
   height: '100%',
   boxSizing: 'border-box',
-  backgroundColor: 'var(--color-bg)',
   overflow: 'auto',
 
   '&::-webkit-scrollbar': {
@@ -145,15 +147,15 @@ interface TabProps {
   state: TabListState<TabItemProps>;
   orientation?: Orientation;
   isNested?: boolean;
+  shouldRender?: boolean;
 }
 
-const Tab: FC<TabProps> = ({ item, state, isNested }) => {
+const Tab: FC<TabProps> = ({ item, state, isNested, shouldRender }) => {
   const { key, rendered } = item;
   const ref = createRef<HTMLDivElement>();
   const { tabProps, isSelected } = useTab({ key }, state, ref);
-
   return (
-    <StyledTab {...tabProps} ref={ref} isSelected={isSelected} isNested={isNested}>
+    <StyledTab shouldRender={shouldRender} {...tabProps} ref={ref} isSelected={isSelected} isNested={isNested} >
       {rendered}
     </StyledTab>
   );
@@ -166,7 +168,6 @@ interface TabPanelProps extends AriaTabPanelProps {
 const TabPanel: FC<TabPanelProps> = ({ state, ...props }) => {
   const ref = createRef<HTMLDivElement>();
   const { tabPanelProps } = useTabPanel(props, state, ref);
-
   return (
     <StyledTabPanel {...tabPanelProps} ref={ref}>
       {state.selectedItem?.props.children}
@@ -176,25 +177,31 @@ const TabPanel: FC<TabPanelProps> = ({ state, ...props }) => {
 
 interface TabsProps extends AriaTabListProps<TabItemProps> {
   isNested?: boolean;
+  shouldRender?: boolean;
 }
 
 const Tabs: FC<TabsProps> = props => {
   const state = useTabListState(props);
   const ref = createRef<HTMLDivElement>();
   const { tabListProps } = useTabList(props, state, ref);
+  const { shouldRender } = props;
 
   return (
-    <StyledTabsContainer>
-      <StyledTabList {...tabListProps} ref={ref} isNested={props.isNested}>
-        {[...state.collection].map((item: Node<TabItemProps>) => (
+    <StyledTabsContainer >
+      <StyledTabList {...tabListProps} ref={ref} isNested={props.isNested} shouldRender={props.shouldRender}>
+        {[...state.collection].map((item: Node<TabItemProps>) => {
+          const shouldRenderCondition = item.rendered === 'Visualizer' ? !!shouldRender : true;
+          return (
           <Tab
             key={item.key}
             item={item}
             state={state}
             orientation={props.orientation}
             isNested={props.isNested}
-          />
-        ))}
+            shouldRender={shouldRenderCondition}
+          />);
+        }
+        )}
       </StyledTabList>
       <TabPanel
         key={state.selectedItem?.key}

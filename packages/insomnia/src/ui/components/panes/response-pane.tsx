@@ -32,6 +32,7 @@ import { PlaceholderResponsePane } from './placeholder-response-pane';
 interface Props {
   runningRequests: Record<string, boolean>;
 }
+
 export const ResponsePane: FC<Props> = ({
   runningRequests,
 }) => {
@@ -150,7 +151,10 @@ export const ResponsePane: FC<Props> = ({
           />
         </PaneHeader>
       )}
-      <Tabs aria-label="Response pane tabs">
+      <Tabs
+        shouldRender={!!activeRequest.settingResponseVisualize}
+        aria-label="Response pane tabs"
+      >
         <TabItem
           key="preview"
           title={
@@ -226,18 +230,11 @@ export const ResponsePane: FC<Props> = ({
         </TabItem>
         <TabItem
           key="visualizer"
-          title={
-            <>
-              Visualizer
-              {/* {activeResponse.headers.length > 0 && (
-                <span className="bubble">{activeResponse.headers.length}</span>
-              )} */}
-            </>
-          }
+          title={'Visualizer'}
         >
           <PanelContainer className="pad">
             <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
-              <ResponseVisualizeViewer />
+              {!!activeRequest.settingResponseVisualize && <ResponseVisualizeViewer />}
             </ErrorBoundary>
           </PanelContainer>
         </TabItem>
