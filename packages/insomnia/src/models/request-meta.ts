@@ -21,13 +21,15 @@ export interface BaseRequestMeta {
   lastActive: number;
   downloadPath: string | null;
   expandedAccordionKeys: Partial<Record<RequestAccordionKeys, boolean>>;
+  // nc-dazzle-update
+  visualizeTemplate: string | null;
 }
 
 export type RequestMeta = BaseModel & BaseRequestMeta;
 
-export const isRequestMeta = (model: Pick<BaseModel, 'type'>): model is RequestMeta => (
-  model.type === type
-);
+export const isRequestMeta = (
+  model: Pick<BaseModel, 'type'>
+): model is RequestMeta => model.type === type;
 
 export function init() {
   return {
@@ -41,6 +43,8 @@ export function init() {
     lastActive: 0,
     downloadPath: null,
     expandedAccordionKeys: {},
+    // nc-dazzle-update
+    visualizeTemplate: null,
   };
 }
 

@@ -107,6 +107,8 @@ export interface BaseRequest {
   settingEncodeUrl: boolean;
   settingRebuildPath: boolean;
   settingFollowRedirects: 'global' | 'on' | 'off';
+  // nc-dazzle-update
+  settingResponseVisualize: boolean | null;
 }
 
 export type Request = BaseModel & BaseRequest;
@@ -142,6 +144,8 @@ export function init(): BaseRequest {
     settingEncodeUrl: true,
     settingRebuildPath: true,
     settingFollowRedirects: 'global',
+    // nc-dazzle-update
+    settingResponseVisualize: false,
   };
 }
 
