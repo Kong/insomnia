@@ -274,6 +274,7 @@ test.describe('test utility process', async () => {
       }
 
       if (localStorage) { // just for suppressing ts complaint
+        console.log(localStorage[`test_result:${tc.id}`], localStorage[`test_result:${tc.id}`]);
         expect(JSON.parse(localStorage[`test_result:${tc.id}`])).toEqual(tc.expectedResult);
       }
 
