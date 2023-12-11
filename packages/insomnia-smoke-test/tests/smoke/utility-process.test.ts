@@ -264,6 +264,8 @@ test.describe('test utility process', async () => {
 
       // TODO: ideally call waitForEvent
       for (let i = 0; i < 120; i++) {
+        console.log('waiting', i);
+
         localStorage = await mainWindow?.evaluate(() => window.localStorage);
         expect(localStorage).toBeDefined();
 
@@ -274,7 +276,7 @@ test.describe('test utility process', async () => {
       }
 
       if (localStorage) { // just for suppressing ts complaint
-        console.log(localStorage[`test_result:${tc.id}`], localStorage[`test_result:${tc.id}`]);
+        console.log(localStorage);
         expect(JSON.parse(localStorage[`test_result:${tc.id}`])).toEqual(tc.expectedResult);
       }
 
