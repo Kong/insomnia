@@ -49,7 +49,7 @@ export type GitRepoLoaderData =
       errors: string[];
     };
 
-export const gitRepoAction: ActionFunction = async ({
+export const gitRepoLoader: ActionFunction = async ({
   params,
 }): Promise<GitRepoLoaderData> => {
   try {

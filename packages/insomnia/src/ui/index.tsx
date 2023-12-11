@@ -790,10 +790,10 @@ const router = createMemoryRouter(
                                 },
                                 {
                                   path: 'repo',
-                                  action: async (...args) =>
+                                  loader: async (...args) =>
                                     (
                                       await import('./routes/git-actions')
-                                    ).gitRepoAction(...args),
+                                    ).gitRepoLoader(...args),
                                 },
                                 {
                                   path: 'update',

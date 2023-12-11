@@ -72,10 +72,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
       !gitRepoDataFetcher.data
     ) {
       console.log('[git:fetcher] Fetching git repo data');
-      gitRepoDataFetcher.submit({}, {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/repo`,
-        method: 'post',
-      });
+      gitRepoDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/repo`);
     }
   }, [
     gitRepoDataFetcher,
