@@ -28,6 +28,18 @@ describe('queryXPath()', () => {
     ]);
   });
 
+  it('handles number query', () => {
+    expect(queryXPath('<x><y>1</y>/x>', 'number(//y[1])')).toEqual([
+      { inner: 1, outer: 1 },
+    ]);
+  });
+
+  it('handles boolean query', () => {
+    expect(queryXPath('<x><y>1</y></x>', '//y[1]/text() = "1"')).toEqual([
+      { inner: true, outer: true },
+    ]);
+  });
+
   it('handles text() query', () => {
     expect(queryXPath('<book><title>Harry</title><title>Potter</title></book>', 'local-name(/book)'))
       .toEqual([{ 'inner': 'book', 'outer': 'book' }]);
