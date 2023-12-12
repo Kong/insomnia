@@ -31,11 +31,13 @@ async function init() {
                     result,
                 });
             } catch (e) {
-                console.log(JSON.stringify(e));
+                const message = e.message;
+                const stacktrace = e.stacktrace;
+
                 channel.port1.postMessage({
                     action: action === executeAction ? 'message-port://caller/respond' : 'message-port://caller/debug/respond',
                     id: action === executeAction ? undefined : ev.data.options.id,
-                    error: JSON.stringify(e),
+                    error: JSON.stringify({ message, stacktrace }),
                 });
             }
         } else {
