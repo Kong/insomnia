@@ -1,5 +1,38 @@
 import { getHttpRequestSender, getIntepolator, HttpRequestSender, PmHttpRequest, PmHttpResponse } from './static-modules';
 
+export type EventName = 'prerequest' | 'test';
+class RequestInfo {
+    public eventName: EventName;
+    public iteration: number;
+    public iterationCount: number;
+    public requestName: string;
+    public requestId: string;
+
+    constructor(input: {
+        eventName?: EventName;
+        iteration?: number;
+        iterationCount?: number;
+        requestName?: string;
+        requestId?: string;
+    }) {
+        this.eventName = input.eventName || 'prerequest';
+        this.iteration = input.iteration || 1;
+        this.iterationCount = input.iterationCount || 1;
+        this.requestName = input.requestName || '';
+        this.requestId = input.requestId || '';
+    }
+
+    toObject = () => {
+        return Object.fromEntries([
+            ['eventName', this.eventName],
+            ['iteration', this.iteration],
+            ['iterationCount', this.iterationCount],
+            ['requestName', this.requestName],
+            ['requestId', this.requestId],
+        ]);
+    };
+}
+
 class BaseKV {
     private kvs = new Map<string, boolean | number | string>();
 
@@ -126,6 +159,7 @@ class InsomniaObject {
     public environment: Environment;
     public iterationData: Environment;
     public variables: Variables;
+    public info: RequestInfo;
 
     private httpRequestSender: HttpRequestSender = getHttpRequestSender();
 
@@ -135,12 +169,14 @@ class InsomniaObject {
         environment: Environment;
         iterationData: Environment;
         variables: Variables;
+        requestInfo: RequestInfo;
     }) {
         this.globals = input.globals;
         this.collectionVariables = input.collectionVariables;
         this.environment = input.environment;
         this.iterationData = input.iterationData;
         this.variables = input.variables;
+        this.info = input.requestInfo;
     }
 
     toObject = () => {
@@ -150,6 +186,7 @@ class InsomniaObject {
             environment: this.environment.toObject(),
             collectionVariables: this.collectionVariables.toObject(),
             iterationData: this.iterationData.toObject(),
+            info: this.info.toObject(),
         };
     };
 
@@ -163,6 +200,7 @@ interface RawObject {
     environment?: object;
     collectionVariables?: object;
     iterationData?: object;
+    requestInfo?: object;
 }
 
 export function initPm(rawObj: RawObject) {
@@ -171,6 +209,7 @@ export function initPm(rawObj: RawObject) {
     const collectionVariables = new Environment(rawObj.collectionVariables);
     const iterationData = new Environment(rawObj.iterationData);
     const local = new Environment({});
+    const requestInfo = new RequestInfo(rawObj.requestInfo || {});
 
     const variables = new Variables({
         globals,
@@ -186,5 +225,6 @@ export function initPm(rawObj: RawObject) {
         collectionVariables,
         iterationData,
         variables,
+        requestInfo,
     });
 };
