@@ -67,6 +67,13 @@ test.describe('test utility process', async () => {
           'newObject.str': 'str',
           'rendered': 'false-11-strr',
         },
+        info: {
+          'eventName': 'prerequest',
+          'iteration': 1,
+          'iterationCount': 1,
+          'requestId': '',
+          'requestName': '',
+        },
       },
     },
     {
@@ -130,6 +137,13 @@ test.describe('test utility process', async () => {
           'newObject.num': 1,
           'newObject.str': 'str',
           'rendered': 'false-11-strr',
+        },
+        info: {
+          'eventName': 'prerequest',
+          'iteration': 1,
+          'iterationCount': 1,
+          'requestId': '',
+          'requestName': '',
         },
       },
     },
@@ -198,6 +212,20 @@ test.describe('test utility process', async () => {
           num: 3,
           'str': 'iter',
         },
+        info: {
+          'eventName': 'prerequest',
+          'iteration': 1,
+          'iterationCount': 1,
+          'requestId': '',
+          'requestName': '',
+        },
+      },
+      info: {
+        'eventName': 'prerequest',
+        'iteration': 1,
+        'iterationCount': 1,
+        'requestId': '',
+        'requestName': '',
       },
     },
     {
@@ -232,6 +260,48 @@ test.describe('test utility process', async () => {
         },
         environment: {},
         collectionVariables: {},
+        info: {
+          'eventName': 'prerequest',
+          'iteration': 1,
+          'iterationCount': 1,
+          'requestId': '',
+          'requestName': '',
+        },
+      },
+    },
+    {
+      id: 'requestInfo tests',
+      code: `
+        const eventName = pm.info.eventName;
+        const iteration = pm.info.iteration;
+        const iterationCount = pm.info.iterationCount;
+        const requestName = pm.info.requestName;
+        const requestId = pm.info.requestId;
+        `,
+      context: {
+        pm: {
+          requestInfo: {
+            eventName: 'prerequest',
+            iteration: 1,
+            iterationCount: 1,
+            requestName: 'req',
+            requestId: 'req-1',
+          },
+        },
+      },
+      expectedResult: {
+        globals: {},
+        iterationData: {},
+        variables: {},
+        environment: {},
+        collectionVariables: {},
+        info: {
+          eventName: 'prerequest',
+          iteration: 1,
+          iterationCount: 1,
+          requestName: 'req',
+          requestId: 'req-1',
+        },
       },
     },
   ];
