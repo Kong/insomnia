@@ -71,7 +71,11 @@ class WindowMessageHandler {
                 return;
             }
 
-            handler(ev);
+            try {
+                handler(ev);
+            } catch (e) {
+                console.error(`failed to handle event message (${ev.data.action}): ${e.message}`);
+            }
         };
     };
 
