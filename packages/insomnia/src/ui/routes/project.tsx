@@ -80,7 +80,7 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
-import { type FeatureList, useOrganizationLoaderData } from './organization';
+import { Billing, type FeatureList, useOrganizationLoaderData } from './organization';
 
 interface TeamProject {
   id: string;
@@ -475,7 +475,7 @@ const ProjectRoute: FC = () => {
 
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
-  const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
+  const { features, billing } = useRouteLoaderData(':organizationId') as { features: FeatureList; billing: Billing };
 
   const accountId = getAccountId();
 
@@ -1013,7 +1013,7 @@ const ProjectRoute: FC = () => {
           }
           renderPaneOne={
             <div className="w-full h-full flex flex-col overflow-hidden">
-              <div className='p-[--padding-md] pb-0'>
+              {billing.isActive ? null : <div className='p-[--padding-md] pb-0'>
                 <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
                   <p className='text-base'>
                     <Icon icon="exclamation-triangle" className='mr-2' />
@@ -1021,7 +1021,7 @@ const ProjectRoute: FC = () => {
                   </p>
                   {isUserOwner && <Button className="px-4 text-[--color-bg] bg-opacity-100 bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">Update payment method</Button>}
                 </div>
-              </div>
+              </div>}
               <div className="flex justify-between w-full gap-1 p-[--padding-md]">
                 <SearchField
                   aria-label="Workspaces filter"

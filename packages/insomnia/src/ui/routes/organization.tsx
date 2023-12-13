@@ -279,6 +279,10 @@ export interface FeatureList {
   orgBasicRbac: FeatureStatus;
 }
 
+export interface Billing {
+  isActive: boolean;
+}
+
 export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params as { organizationId: string };
 
@@ -300,7 +304,7 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   }
 
   try {
-    const response = await window.main.insomniaFetch<{ features: FeatureList } | undefined>({
+    const response = await window.main.insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
       method: 'GET',
       path: `/v1/organizations/${organizationId}/features`,
       sessionId: session.getCurrentSessionId(),
@@ -308,10 +312,12 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
 
     return {
       features: response?.features || fallbackFeatures,
+      billing: response?.billing || { isActive: false },
     };
   } catch (err) {
     return {
       features: fallbackFeatures,
+      billing: { isActive: false },
     };
   }
 };
