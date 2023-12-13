@@ -23,7 +23,7 @@ test('can send request with custom ca root certificate', async ({ app, page }) =
   const workspaceId = await page.getByTestId('workspace-id').textContent();
   const fixturePath = getFixturePath('certificates');
   await page.evaluate(async ({ workspaceId, fixturePath }) => {
-    window.models.caCertificate.create({
+    window.main.database.caCertificate.create({
       parentId: workspaceId,
       path: fixturePath + '/rootCA.pem',
     });
