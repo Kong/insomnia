@@ -31,6 +31,10 @@ export default defineConfig(({ mode }) => {
       brotliSize: false,
       emptyOutDir: false,
       rollupOptions: {
+        input: {
+          main: path.join(__dirname, 'src/index.html'),
+          utilityProcess: path.join(__dirname, 'src/renderers/utility-process/index.html'),
+        },
         external: ['@getinsomnia/node-libcurl'],
       },
     },
