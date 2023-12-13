@@ -59,7 +59,8 @@ export function createIsolatedProcess(parent?: electron.BrowserWindow) {
   });
 
   const utilityProcessPath = path.resolve(__dirname, './renderers/utility-process/index.html');
-  const utilityProcessUrl = pathToFileURL(utilityProcessPath).href;
+  const utilityProcessUrl = process.env.UTILITY_PROCESS_URL || pathToFileURL(utilityProcessPath).href;
+  console.log('[main] loading utility process:', process.env.UTILITY_PROCESS_URL, pathToFileURL(utilityProcessPath).href);
   isolatedUtilityProcess.loadURL(utilityProcessUrl);
 
   isolatedUtilityProcess.once('ready-to-show', () => {
