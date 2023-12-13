@@ -226,7 +226,7 @@ resources:
     parentId: wrk_5b5ab67830944ffcbec47528366ef403
     modified: 1643892278711
     created: 1643892270079
-    url: https://localhost/pets/1
+    url: https://localhost:4011/pets/1
     name: sends request with certs
     description: ""
     method: GET

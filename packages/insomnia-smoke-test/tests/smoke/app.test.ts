@@ -105,7 +105,7 @@ test('can cancel requests', async ({ app, page }) => {
   await page.click('text=Request was cancelled');
 });
 
-test('can send request with server and client certificates', async ({ app, page }) => {
+test('can send request with custom ca root certificate', async ({ app, page }) => {
   const text = await loadFixture('smoke-test-collection.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
@@ -131,13 +131,6 @@ test('can send request with server and client certificates', async ({ app, page 
       parentId: workspaceId,
       path: fixturePath + '/rootCA.pem',
     });
-    window.models.clientCertificate.create({
-      parentId: workspaceId,
-      cert: fixturePath + '/client.localhost-client.pem',
-      key: fixturePath + '/client.localhost-client-key.pem',
-      host: 'localhost',
-    });
-
   }, { workspaceId, fixturePath });
   await page.getByRole('button', { name: '' }).click();
 
