@@ -579,7 +579,7 @@ const OrganizationRoute = () => {
             <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
               {organizations.map(organization => (
                 <TooltipTrigger key={organization.id}>
-                  <Link>
+                  <Link className="outline-none">
                     <NavLink
                       className={({ isActive, isPending }) =>
                         `select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${isActive
