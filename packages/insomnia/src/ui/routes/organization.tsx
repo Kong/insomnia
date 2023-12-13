@@ -291,9 +291,14 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
   };
 
+  const fallbackBilling = {
+    isActive: true,
+  };
+
   if (isScratchpadOrganizationId(organizationId)) {
     return {
       features: fallbackFeatures,
+      billing: fallbackBilling,
     };
   }
 
@@ -310,14 +315,16 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
       sessionId: session.getCurrentSessionId(),
     });
 
+    console.log('response', response);
+
     return {
       features: response?.features || fallbackFeatures,
-      billing: response?.billing || { isActive: false },
+      billing: response?.billing || fallbackBilling,
     };
   } catch (err) {
     return {
       features: fallbackFeatures,
-      billing: { isActive: false },
+      billing: fallbackBilling,
     };
   }
 };
