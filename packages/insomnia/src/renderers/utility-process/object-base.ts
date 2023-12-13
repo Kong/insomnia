@@ -154,7 +154,7 @@ export class Property extends PropertyBase {
 }
 
 export class PropertyList<T extends Property> {
-    list: T[] = [];
+    protected list: T[] = [];
 
     constructor(
         public readonly typeClass: { new(...arg: any): T },
@@ -170,19 +170,28 @@ export class PropertyList<T extends Property> {
     }
 
     all() {
-        return this.list.map(pp => pp.toJSON());
+        return new Map(
+            this.list.map(
+                pp => [pp.id, pp.toJSON()]
+            ),
+        );
     }
 
     append(item: T) {
+        // it doesn't move item to the end of list for avoiding side effect
         this.add(item);
     }
 
-    // TODO: also support PropertyList<T>
-    assimilate(source: T[], prune?: boolean) {
+    assimilate(source: T[] | PropertyList<T>, prune?: boolean) {
+    // it doesn't update values from a source list
         if (prune) {
             this.clear();
         }
-        this.list.push(...source);
+        if ('list' in source) { // it is PropertyList<T>
+            this.list.push(...source.list);
+        } else {
+            this.list.push(...source);
+        }
     }
 
     clear() {
@@ -218,8 +227,8 @@ export class PropertyList<T extends Property> {
         return this.list.filter(it);
     }
 
+    // TODO: support returning {Item|ItemGroup}
     find(rule: (item: T) => boolean, context?: object) {
-        // TODO should return {Item|ItemGroup}
         interface Finder {
             context?: object;
             (item: T): boolean;
@@ -230,7 +239,7 @@ export class PropertyList<T extends Property> {
         return this.list.find(finder);
     }
 
-    // it does not return underlying type of the item because there is no underlying type
+    // it does not return underlying type of the item because they are not supported
     get(key: string) {
         return this.one(key);
     }
@@ -248,11 +257,16 @@ export class PropertyList<T extends Property> {
         return undefined;
     }
 
-    // item: string | T
-    indexOf(item: T) {
+    indexOf(item: string | T) {
         for (let i = 0; i < this.list.length; i++) {
-            if (equal(item, this.list[i])) {
-                return i;
+            if (typeof item === 'string') {
+                if (item === this.list[i].id) {
+                    return i;
+                }
+            } else {
+                if (equal(item, this.list[i])) {
+                    return i;
+                }
             }
         }
         return -1;
