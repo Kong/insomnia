@@ -83,6 +83,7 @@ export const ResponseVisualizeEditor = () => {
         content={activeRequestMeta.visualizeTemplate || ''}
         contentType={'xml'}
         uniquenessKey={uniqueKey}
+        isVisualizeEditor
       />
     </Container>
   );

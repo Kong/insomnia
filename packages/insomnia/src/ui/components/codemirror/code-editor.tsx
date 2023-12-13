@@ -100,6 +100,8 @@ export interface CodeEditorProps {
   // NOTE: for caching scroll and marks
   uniquenessKey?: string;
   updateFilter?: (filter: string) => void;
+  // pd-dazzle-update
+  isVisualizeEditor?: boolean;
 }
 
 const normalizeMimeType = (mode?: string) => {
@@ -164,6 +166,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   style,
   uniquenessKey,
   updateFilter,
+  isVisualizeEditor,
 }, ref) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -412,7 +415,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     // Clear history so we can't undo the initial set
     codeMirror.current?.clearHistory();
     // Setup nunjucks listeners
-    if (!readOnly && handleRender && !settings.nunjucksPowerUserMode) {
+    if (!readOnly && handleRender && !isVisualizeEditor && !settings.nunjucksPowerUserMode) {
       codeMirror.current?.enableNunjucksTags(
         handleRender,
         handleGetRenderContext,

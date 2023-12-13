@@ -8,6 +8,8 @@ interface Props {
   contentType: string;
   uniquenessKey: string;
   className?: string;
+  // pd-dazzle-update
+  isVisualizeEditor?: boolean;
 }
 
 export const RawEditor: FC<Props> = ({
@@ -16,6 +18,7 @@ export const RawEditor: FC<Props> = ({
   contentType,
   onChange,
   uniquenessKey,
+  isVisualizeEditor,
 }) => (
   <Fragment>
     <CodeEditor
@@ -28,6 +31,7 @@ export const RawEditor: FC<Props> = ({
       onChange={onChange}
       mode={contentType}
       placeholder="..."
+      isVisualizeEditor={isVisualizeEditor}
     />
   </Fragment>
 );
