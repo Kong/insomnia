@@ -278,3 +278,12 @@ function migrateBodyCompression(doc: Response) {
 
   return doc;
 }
+
+export async function getAvailablesForRequest(
+  requestId: string,
+  top: number,
+  environmentId: string | null,
+) {
+  const responses = await _findRecentForRequest(requestId, environmentId, top);
+  return responses.slice(0, top);
+};

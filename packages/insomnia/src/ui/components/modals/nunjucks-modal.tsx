@@ -63,7 +63,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
   if (isTag) {
     editor = <TagEditor onChange={handleTemplateChange} defaultValue={template} workspace={workspace} />;
   } else {
-    editor = <VariableEditor onChange={handleTemplateChange} defaultValue={template} />;
+    editor = <VariableEditor workspace={workspace} onChange={handleTemplateChange} defaultValue={template} />;
   }
 
   return (

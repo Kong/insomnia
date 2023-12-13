@@ -2,9 +2,16 @@ import { type Environment } from 'nunjucks';
 import nunjucks from 'nunjucks/browser/nunjucks';
 
 import * as plugins from '../plugins/index';
+import { TemplateFilter } from '../plugins/index';
 import { localTemplateTags } from '../ui/components/templating/local-template-tags';
 import BaseExtension from './base-extension';
-import type { NunjucksParsedTag } from './utils';
+import BaseFilter from './base-filter';
+import { defaultFilters } from './default-filters';
+import customFilters from './filters';
+import type { NunjucksParsedFilter, NunjucksParsedTag } from './utils';
+
+export const CURRENT_REQUEST_PROPERTY_NAME = '__current_request_id__';
+export const STATIC_CONTEXT_SOURCE_NAME = 'Static context';
 
 export class RenderError extends Error {
   // TODO: unsound definite assignment assertions
@@ -130,6 +137,32 @@ export async function getTagDefinitions() {
     }));
 }
 
+/**
+ * Get definitions of template filters
+ */
+export async function getFilterDefinitions() {
+  const env = await getNunjucks(RENDER_ALL);
+  // @ts-expect-error -- TSCONVERSION investigate why `extensions` isn't on Environment
+  return Object.keys(env.filters)
+    .map(k => ({ name: k, filter: defaultFilters.find(f => f.name === k) }))
+    .map(k => ({ name: k.name, filter: k.filter || (env as any).filtersList?.find((f: any) => f.getName() === k.name) }))
+    .map<NunjucksParsedFilter>(filter => ({
+      name: filter.name,
+      description: filter.filter?.description || (filter.filter?.getDescription && filter.filter?.getDescription()),
+      displayName: filter.filter?.displayName || (filter.filter?.getDisplayName && filter.filter?.getDisplayName()),
+      args: filter.filter?.args || (filter.filter?.getArgs && filter.filter?.getArgs()),
+      isPlugin: (filter.filter instanceof BaseFilter && (filter.filter as BaseFilter)._plugin != null),
+    }));
+}
+
+/**
+ * Get definitions of template filters
+ */
+export async function getTestDefinitions() {
+  const env = await getNunjucks(RENDER_ALL);
+  return Object.keys((env as any).tests);
+}
+
 async function getNunjucks(renderMode: string): Promise<NunjucksEnvironment> {
   if (renderMode === RENDER_VARS && nunjucksVariablesOnly) {
     return nunjucksVariablesOnly;
@@ -180,6 +213,8 @@ async function getNunjucks(renderMode: string): Promise<NunjucksEnvironment> {
 
   const pluginTemplateTags = await plugins.getTemplateTags();
 
+  const pluginTemplateTagFilter: TemplateFilter[] = await plugins.getTemplateFilter();
+
   const allExtensions = [...pluginTemplateTags, ...localTemplateTags];
 
   for (const extension of allExtensions) {
@@ -191,6 +226,14 @@ async function getNunjucks(renderMode: string): Promise<NunjucksEnvironment> {
     // Hidden helper filter to debug complicated things
     // eg. `{{ foo | urlencode | debug | upper }}`
     nunjucksEnvironment.addFilter('debug', (o: any) => o);
+  }
+  for (let i = 0; i < customFilters.length; i++) {
+    const templateFilter = customFilters[i];
+    BaseFilter.newCustomFilter(templateFilter, nunjucksEnvironment);
+  }
+  for (let i = 0; i < pluginTemplateTagFilter.length; i++) {
+    const { templateFilter, plugin } = pluginTemplateTagFilter[i];
+    BaseFilter.newFilter(templateFilter, plugin, nunjucksEnvironment);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~ //

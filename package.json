@@ -72,5 +72,8 @@
     "tslib": "2.0.1",
     "type-fest": "^2.12.0",
     "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "jmespath": "^0.16.0"
   }
 }

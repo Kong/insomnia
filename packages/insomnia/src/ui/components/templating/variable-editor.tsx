@@ -1,10 +1,12 @@
 import React, { FC, useEffect, useState } from 'react';
 
+import { Workspace } from '../../../models/workspace';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 
 interface Props {
   defaultValue: string;
   onChange: Function;
+  workspace: Workspace;
 }
 
 export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {

@@ -1,6 +1,11 @@
+
 import { ExtraRenderInfo } from '../../common/render';
+import { BaseModel } from '../../models';
+import { CookieJar } from '../../models/cookie-jar';
+import { OAuth2Token } from '../../models/o-auth-2-token';
 import type { Request } from '../../models/request';
 import type { Response } from '../../models/response';
+import { Workspace } from '../../models/workspace';
 import {
   PluginStore,
 } from '../../plugins/context';
@@ -85,6 +90,36 @@ export type PluginTemplateTagContext = HelperContext & {
   };
 };
 
+export interface PluginTemplateFilterContext {
+  meta: {
+    requestId: string;
+    environmentId: string;
+    workspaceId: string;
+  };
+  context: any;
+  util: {
+    render: (str: string, extContext: object) => string | Promise<string | null>;
+    models: {
+      request: {
+        getById: (id: string) => Promise<Request | null>;
+        getAncestors: (request: BaseModel) => Promise<BaseModel[]>;
+      };
+      workspace: {
+        getById: (id?: string | undefined) => Promise<Workspace | null>;
+      };
+      oAuth2Token: { getByRequestId: (parentId: string) => Promise<OAuth2Token | null> };
+      cookieJar: {
+        getOrCreateForWorkspace: (workspace: Workspace) => Promise<CookieJar>;
+      };
+      response: {
+        getLatestForRequestId: (requestId: string, environmentId: string | null) => Promise<Response | null>;
+        getAvailablesRequestId: (requestId: string, top: number, environmentId: string | null) => Promise<Response[]>;
+        getBodyBuffer: (response?: { bodyPath?: string; bodyCompression?: 'zip' | null }, readFailureValue?: string) => Buffer | string | null;
+      };
+    };
+  };
+}
+
 export interface PluginTemplateTagActionContext {
   store: PluginStore;
 }
@@ -106,4 +141,12 @@ export interface PluginTemplateTag {
   deprecated?: boolean;
   validate?: (value: any) => string | null;
   priority?: number;
+}
+
+export interface PluginTemplateFilter {
+  name: string;
+  displayName: string;
+  args: PluginArgument[];
+  description: string;
+  run: (context: PluginTemplateFilterContext, input: any, ...arg: any[]) => Promise<any> | any;
 }
