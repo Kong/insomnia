@@ -36,7 +36,7 @@ export class PropertyBase {
         return this._parent;
     }
 
-    forEachParent(options: { withRoot?: boolean }, iterator: (obj: PropertyBase) => boolean) {
+    forEachParent(_options: { withRoot?: boolean }, iterator: (obj: PropertyBase) => boolean) {
         const currentParent = this.parent();
         if (!currentParent) {
             return;
