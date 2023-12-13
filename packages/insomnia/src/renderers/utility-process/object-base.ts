@@ -236,6 +236,7 @@ export class PropertyList<T extends Property> {
     }
 
     // TODO: value is not used as its usage is unknown
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     has(item: T, _value: any) {
         return this.indexOf(item) >= 0;
     }
