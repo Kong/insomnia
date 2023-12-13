@@ -141,16 +141,16 @@ export const WorkspaceDropdown: FC = () => {
               ),
           });
         },
+      },
+      {
+        id: 'delete',
+        name: 'Delete',
+        icon: <Icon icon='trash' />,
+        action: () => {
+          setIsDeleteRemoteWorkspaceModalOpen(true);
+        },
       }] : [],
       {
-      id: 'delete',
-      name: 'Delete',
-      icon: <Icon icon='trash' />,
-      action: () => {
-        setIsDeleteRemoteWorkspaceModalOpen(true);
-      },
-    },
-    {
         id: 'import',
         name: 'Import',
         icon: <Icon icon='file-import' />,
