@@ -4,6 +4,7 @@ import { Curl, CurlFeature, CurlInfoDebug, HeaderInfo } from '@getinsomnia/node-
 import electron, { BrowserWindow, ipcMain } from 'electron';
 import fs from 'fs';
 import path from 'path';
+import tls from 'tls';
 import { v4 as uuidV4 } from 'uuid';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
@@ -122,8 +123,9 @@ const openCurlConnection = async (
   const responseEnvironmentId = environment ? environment._id : null;
 
   const caCert = await models.caCertificate.findByParentId(options.workspaceId);
-  const caCertficatePath = caCert?.path || null;
-  const caCertificate = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString());
+  const caCertficatePath = caCert?.path;
+  // attempt to read CA Certificate PEM from disk, fallback to root certificates
+  const caCertificate = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
 
   try {
     if (!options.url) {

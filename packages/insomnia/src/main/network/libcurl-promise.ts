@@ -3,11 +3,12 @@
 import { invariant } from '../../utils/invariant';
 invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
 
-import { Curl, CurlAuth, CurlCode, CurlFeature, CurlHttpVersion, CurlInfoDebug, CurlNetrc, CurlSslOpt } from '@getinsomnia/node-libcurl';
+import { Curl, CurlAuth, CurlCode, CurlFeature, CurlHttpVersion, CurlInfoDebug, CurlNetrc } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { Readable, Writable } from 'stream';
+import tls from 'tls';
 import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -101,7 +102,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
 
     const { requestId, req, finalUrl, settings, certificates, caCertficatePath, socketPath, authHeader } = options;
-    const caCert = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString());
+    const caCert = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
 
     const { curl, debugTimeline } = createConfiguredCurlInstance({
       req,
@@ -258,7 +259,7 @@ export const createConfiguredCurlInstance = ({
   finalUrl: string;
   settings: SettingsUsedHere;
   certificates: ClientCertificate[];
-  caCert: string | null;
+  caCert: string;
   socketPath?: string;
 }) => {
   const debugTimeline: ResponseTimelineEntry[] = [];
@@ -269,11 +270,8 @@ export const createConfiguredCurlInstance = ({
   curl.setOpt(Curl.option.VERBOSE, true); // Set all the basic options
   curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
   curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
-  // fallback to root certificates or leave unset to use keychain on macOS
-  if (caCert) {
-    curl.setOpt(Curl.option.CAINFO_BLOB, caCert);
-  }
-  curl.setOpt(Curl.option.SSL_OPTIONS, CurlSslOpt.NativeCa);
+  // attempt to read CA Certificate PEM from disk, fallback to root certificates
+  curl.setOpt(Curl.option.CAINFO_BLOB, caCert);
   certificates.forEach(validCert => {
     const { passphrase, cert, key, pfx } = validCert;
     if (cert) {

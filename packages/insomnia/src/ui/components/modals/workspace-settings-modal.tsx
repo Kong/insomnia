@@ -310,7 +310,7 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
                       <label>
                         CA Certificate
                         <HelpTooltip position="right" className="space-left">
-                          One or more PEM format certificates in a single file to pass to curl. Overrides the root CA certificate and macOS keychain.
+                          One or more PEM format certificates in a single file to pass to curl. Overrides the root CA certificate.
                         </HelpTooltip>
                       </label>
                       <div className="row-spaced">

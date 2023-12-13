@@ -7,7 +7,7 @@
   "main": "dist/index.js",
   "types": "dist/send-request/index.d.ts",
   "dependencies": {
-    "@getinsomnia/node-libcurl": "^2.4.1-4",
+    "@getinsomnia/node-libcurl": "2.3.6-21",
     "@segment/analytics-node": "1.0.0",
     "@stoplight/spectral-core": "^1.18.2",
     "@stoplight/spectral-formats": "^1.5.0",
