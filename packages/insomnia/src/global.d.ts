@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import type { MainBridgeAPI } from './main/ipc/main';
+import type { UtilityProcessAPI } from './main/ipc/utility-process';
 
 declare global {
   interface Window {
@@ -8,6 +9,7 @@ declare global {
     app: Pick<Electron.App, 'getPath' | 'getAppPath'>;
     shell: Pick<Electron.Shell, 'showItemInFolder'>;
     clipboard: Pick<Electron.Clipboard, 'readText' | 'writeText' | 'clear'>;
+    utilityProcess: UtilityProcessAPI;
   }
 }
 

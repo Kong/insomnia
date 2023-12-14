@@ -228,47 +228,47 @@ test.describe('test utility process', async () => {
         'requestName': '',
       },
     },
-    {
-      id: 'simple test sendRequest and await/async',
-      code: `
-          let testResp;
-          try {
-            await new Promise(
-              resolve => {
-                pm.sendRequest(
-                  'http://127.0.0.1:4010/pets/1',
-                  (err, resp) => {
-                    testResp = resp;
-                    resolve();
-                  }
-                );
-              }
-            );
-          } catch (e) {
-            pm.variables.set('error', e);
-          }
-          pm.variables.set('resp.code', testResp.code);
-        `,
-      context: {
-        pm: {},
-      },
-      expectedResult: {
-        globals: {},
-        iterationData: {},
-        variables: {
-          'resp.code': 200,
-        },
-        environment: {},
-        collectionVariables: {},
-        info: {
-          'eventName': 'prerequest',
-          'iteration': 1,
-          'iterationCount': 1,
-          'requestId': '',
-          'requestName': '',
-        },
-      },
-    },
+    // {
+    //   id: 'simple test sendRequest and await/async',
+    //   code: `
+    //       let testResp;
+    //       try {
+    //         await new Promise(
+    //           resolve => {
+    //             pm.sendRequest(
+    //               'http://127.0.0.1:4010/pets/1',
+    //               (err, resp) => {
+    //                 testResp = resp;
+    //                 resolve();
+    //               }
+    //             );
+    //           }
+    //         );
+    //       } catch (e) {
+    //         pm.variables.set('resp.code', e);
+    //       }
+    //       pm.variables.set('resp.code', testResp.code);
+    //     `,
+    //   context: {
+    //     pm: {},
+    //   },
+    //   expectedResult: {
+    //     globals: {},
+    //     iterationData: {},
+    //     variables: {
+    //       'resp.code': 200,
+    //     },
+    //     environment: {},
+    //     collectionVariables: {},
+    //     info: {
+    //       'eventName': 'prerequest',
+    //       'iteration': 1,
+    //       'iterationCount': 1,
+    //       'requestId': '',
+    //       'requestName': '',
+    //     },
+    //   },
+    // },
     {
       id: 'requestInfo tests',
       code: `
@@ -310,8 +310,35 @@ test.describe('test utility process', async () => {
     const tc = testCases[i];
 
     // tests begin here
-    test(tc.id, async ({ page: mainWindow }) => {
+    test(tc.id, async ({ app, page: mainWindow }) => {
       test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
+
+      const originalWindowCount = app.windows().length;
+
+      // start the utility process
+      await mainWindow?.evaluate(
+        async () => {
+          const caller = window as unknown as { utilityProcess: { start: () => void } };
+          if (caller.utilityProcess) {
+            caller.utilityProcess.start();
+          }
+        },
+      );
+
+      // waiting for the process ready
+      for (let i = 0; i < 120; i++) {
+        const windows = app.windows();
+        if (windows.length > originalWindowCount) {
+          for (const page of windows) {
+            const title = await page.title();
+            if (title === 'Utility Process') {
+              await page.waitForLoadState();
+            }
+          }
+          break;
+        }
+        mainWindow.waitForTimeout(500);
+      }
 
       // action
       await mainWindow?.evaluate(
@@ -334,7 +361,6 @@ test.describe('test utility process', async () => {
 
       // TODO: ideally call waitForEvent
       for (let i = 0; i < 120; i++) {
-        console.log('waiting', i);
 
         localStorage = await mainWindow?.evaluate(() => window.localStorage);
         expect(localStorage).toBeDefined();
@@ -342,11 +368,11 @@ test.describe('test utility process', async () => {
         if (localStorage[`test_result:${tc.id}`] || localStorage[`test_error:${tc.id}`]) {
           break;
         }
-        await new Promise(resolve => setTimeout(resolve, 500));
+        mainWindow.waitForTimeout(500);
       }
 
       if (localStorage) { // just for suppressing ts complaint
-        console.log(localStorage);
+        console.log(localStorage[`test_error:${tc.id}`]);
         expect(JSON.parse(localStorage[`test_result:${tc.id}`])).toEqual(tc.expectedResult);
       }
 

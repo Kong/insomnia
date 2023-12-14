@@ -16,7 +16,7 @@ import {
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
 import * as log from '../common/log';
-import { registerUtilityProcessConsumer } from './ipc/message-channel';
+import { registerUtilityProcessConsumer, registerUtilityProcessController } from './ipc/utility-process';
 import LocalStorage from './local-storage';
 
 const { app, Menu, shell, dialog, clipboard, BrowserWindow } = electron;
@@ -43,9 +43,8 @@ export function init() {
   initLocalStorage();
 }
 
-export function createIsolatedProcess(parent?: electron.BrowserWindow) {
+export function createUtilityProcess() {
   isolatedUtilityProcess = new BrowserWindow({
-    parent,
     show: false,
     title: 'UtilityProcess',
     webPreferences: {
@@ -63,22 +62,14 @@ export function createIsolatedProcess(parent?: electron.BrowserWindow) {
   console.log('[main] loading utility process:', process.env.UTILITY_PROCESS_URL, pathToFileURL(utilityProcessPath).href);
   isolatedUtilityProcess.loadURL(utilityProcessUrl);
 
-  isolatedUtilityProcess.once('ready-to-show', () => {
-    if (isolatedUtilityProcess) {
-      isolatedUtilityProcess.show();
-      if (parent) {
-        parent.webContents.openDevTools();
-      }
-      isolatedUtilityProcess.webContents.openDevTools();
-    }
-  });
-
   isolatedUtilityProcess?.on('closed', () => {
     if (isolatedUtilityProcess) {
       processes.delete(isolatedUtilityProcess);
       isolatedUtilityProcess = processes.values().next().value || null;
     }
   });
+
+  processes.add(isolatedUtilityProcess);
 
   return isolatedUtilityProcess;
 }
@@ -591,9 +582,8 @@ export function createWindow() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
   windows.add(newWindow);
 
-  const isolatedProcess = createIsolatedProcess(newWindow);
-  processes.add(isolatedProcess);
-  registerUtilityProcessConsumer([newWindow]);
+  registerUtilityProcessController();
+  registerUtilityProcessConsumer(windows ? Array.from(windows.values()) : []);
 
   return newWindow;
 }

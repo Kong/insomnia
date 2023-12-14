@@ -50,8 +50,7 @@ initializeLogging();
 document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
 
-const windowMessageHandler = getWindowMessageHandler();
-windowMessageHandler.start();
+getWindowMessageHandler().start();
 
 try {
   // In order to run playwight tests that simulate a logged in user
