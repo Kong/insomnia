@@ -56,8 +56,7 @@ export default async function build(options: Options) {
   });
   const utilityProcess = esbuild.build({
     entryPoints: ['./src/renderers/utility-process/index.ts'],
-    // utility process always is always outputs to 'src' as index.html requires a built bundle
-    // because require is not avaiable in sandbox mode
+    // utility process is always outputed to 'src' as index.html requires a built bundle
     outfile: path.join(__dirname, 'src', 'renderers/utility-process/utility-process.js'),
     target: 'esnext',
     bundle: true,

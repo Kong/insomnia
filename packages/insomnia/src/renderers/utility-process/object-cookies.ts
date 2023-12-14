@@ -135,6 +135,7 @@ export class Cookie extends Property {
 }
 
 export class CookieList extends PropertyList<Cookie> {
+    kind: string = 'CookieList';
     cookies: Cookie[];
 
     constructor(parent: object, cookies: Cookie[]) {
@@ -142,6 +143,7 @@ export class CookieList extends PropertyList<Cookie> {
         this.cookies = cookies;
     }
 
-    // (static) isCookieList(obj) → {Boolean}
-
+    static isCookieList(obj: object) {
+        return 'kind' in obj && obj.kind === 'CookieList';
+    }
 }
