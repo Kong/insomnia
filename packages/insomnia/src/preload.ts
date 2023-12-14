@@ -87,26 +87,27 @@ const clipboard: Window['clipboard'] = {
   clear: () => ipcRenderer.send('clear'),
 };
 
+const utilityProcess: Window['utilityProcess'] = {
+  start: () => ipcRenderer.invoke('ipc://main/utility-process/start'),
+};
+
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);
   contextBridge.exposeInMainWorld('dialog', dialog);
   contextBridge.exposeInMainWorld('app', app);
   contextBridge.exposeInMainWorld('shell', shell);
   contextBridge.exposeInMainWorld('clipboard', clipboard);
+  contextBridge.exposeInMainWorld('utilityProcess', utilityProcess);
 } else {
   window.main = main;
   window.dialog = dialog;
   window.app = app;
   window.shell = shell;
   window.clipboard = clipboard;
+  window.utilityProcess = utilityProcess;
 }
 
 // it is different from window.main.on, it requires events to pass ports
 ipcRenderer.on('ipc://renderers/publish-port', async (ev: IpcRendererEvent) => {
-  const windowLoaded = new Promise(resolve => {
-    window.onload = resolve;
-  });
-  await windowLoaded;
-
   window.postMessage({ action: 'message-event://renderers/publish-port' }, '*', ev.ports);
 });
