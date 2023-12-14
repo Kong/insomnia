@@ -39,6 +39,9 @@ const CertificateField: FC<{
   privateText,
   optional,
 }) => {
+  if (!value) {
+    return null;
+  }
   if (optional && value === null) {
     return null;
   }
@@ -47,7 +50,8 @@ const CertificateField: FC<{
   if (privateText) {
     display = <PasswordViewer text={value} />;
   } else {
-    display = <span className="monospace selectable">{value}</span>;
+    const filename = value.split('/').pop();
+    display = <span className="monospace selectable" title={value}>{filename}</span>;
   }
 
     return (
@@ -244,7 +248,7 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
         {workspace ?
           <ModalHeader key={`header::${workspace._id}`}>
             {getWorkspaceLabel(workspace).singular} Settings{' '}
-            <div className="txt-sm selectable faint monospace">{workspace ? workspace._id : ''}</div>
+            <div data-testid="workspace-id" className="txt-sm selectable faint monospace">{workspace ? workspace._id : ''}</div>
           </ModalHeader> : null}
         {workspace ?
           <ModalBody key={`body::${workspace._id}`} noScroll>

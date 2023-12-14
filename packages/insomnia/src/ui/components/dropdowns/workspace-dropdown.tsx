@@ -195,6 +195,7 @@ export const WorkspaceDropdown: FC = () => {
       <MenuTrigger onOpenChange={isOpen => isOpen && handleDropdownOpen()}>
         <Button
           aria-label="Workspace actions"
+          data-testid="workspace-context-dropdown"
           className="px-3 py-1 h-7 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
         >
           <span className="truncate">{activeWorkspaceName}</span>
