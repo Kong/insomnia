@@ -3,7 +3,7 @@
 import { invariant } from '../../utils/invariant';
 invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
 
-import { Curl, CurlAuth, CurlCode, CurlFeature, CurlHttpVersion, CurlInfoDebug, CurlNetrc } from '@getinsomnia/node-libcurl';
+import { Curl, CurlAuth, CurlCode, CurlFeature, CurlHttpVersion, CurlInfoDebug, CurlNetrc, CurlSslOpt } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
@@ -273,6 +273,7 @@ export const createConfiguredCurlInstance = ({
   if (caCert) {
     curl.setOpt(Curl.option.CAINFO_BLOB, caCert);
   }
+  curl.setOpt(Curl.option.SSL_OPTIONS, CurlSslOpt.NativeCa);
   certificates.forEach(validCert => {
     const { passphrase, cert, key, pfx } = validCert;
     if (cert) {

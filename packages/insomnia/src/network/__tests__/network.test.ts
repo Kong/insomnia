@@ -140,6 +140,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         URL: 'http://localhost/?foo%20bar=hello%26world',
         USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
+        SSL_OPTIONS: 'NativeCa',
       },
     });
   });
@@ -210,7 +211,8 @@ describe('sendCurlAndWriteTimeline()', () => {
         URL: 'http://localhost/',
         USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
-      },
+        SSL_OPTIONS: 'NativeCa',
+     },
     });
   });
 
@@ -311,6 +313,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         URL: 'http://localhost/?foo%20bar=hello%26world',
         USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
+        SSL_OPTIONS: 'NativeCa',
       },
     });
   });
@@ -375,6 +378,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         URL: 'http://localhost/',
         USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
+        SSL_OPTIONS: 'NativeCa',
       },
     });
   });
@@ -468,6 +472,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         UPLOAD: 1,
         USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
+        SSL_OPTIONS: 'NativeCa',
       },
     });
   });
@@ -509,6 +514,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         UNIX_SOCKET_PATH: '/my/socket',
         USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
+        SSL_OPTIONS: 'NativeCa',
       },
     });
   });
@@ -549,6 +555,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         URL: 'http://localhost:3000/foo/bar',
         USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
+        SSL_OPTIONS: 'NativeCa',
       },
     });
   });
@@ -589,6 +596,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         URL: 'http://unix:3000/my/path',
         USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
+        SSL_OPTIONS: 'NativeCa',
       },
     });
   });
@@ -631,6 +639,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         URL: '',
         USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
+        SSL_OPTIONS: 'NativeCa',
       },
     });
   });
@@ -743,6 +752,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         URL: 'http://localhost/?foo%20bar=hello%26world',
         USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
+        SSL_OPTIONS: 'NativeCa',
       },
     });
   });
