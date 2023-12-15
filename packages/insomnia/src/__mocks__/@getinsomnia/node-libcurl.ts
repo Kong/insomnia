@@ -6,6 +6,7 @@ import { CurlFeature } from '@getinsomnia/node-libcurl/dist/enum/CurlFeature';
 import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
 import { CurlInfoDebug } from '@getinsomnia/node-libcurl/dist/enum/CurlInfoDebug';
 import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
+import { CurlSslOpt } from '@getinsomnia/node-libcurl/dist/enum/CurlSslOpt';
 import { EventEmitter } from 'events';
 import fs from 'fs';
 
@@ -63,6 +64,7 @@ class Curl extends EventEmitter {
     VERBOSE: 'VERBOSE',
     WRITEFUNCTION: 'WRITEFUNCTION',
     XFERINFOFUNCTION: 'XFERINFOFUNCTION',
+    SSL_OPTIONS: 'SSL_OPTIONS',
   };
 
   static getVersion() {
@@ -200,4 +202,5 @@ module.exports = {
   CurlFeature: getTsEnumOnlyWithNamedMembers(CurlFeature),
   CurlNetrc: getTsEnumOnlyWithNamedMembers(CurlNetrc),
   CurlHttpVersion: getTsEnumOnlyWithNamedMembers(CurlHttpVersion),
+  CurlSslOpt: getTsEnumOnlyWithNamedMembers(CurlSslOpt),
 };

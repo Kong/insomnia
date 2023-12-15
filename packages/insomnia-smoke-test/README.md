@@ -128,3 +128,13 @@ Non recurring / non-CI tests, like pre-release ones, can be run using [Playwrigh
 ```shell
 npm run test:dev -w packages/insomnia-smoke-test -- preferences-interactions
 ```
+
+### Refresh certs
+
+The certs might need to be replaced after 2026 to fix the custom ca cert test
+
+```sh
+mkcert -install
+mkcert localhost
+mkcert -CAROOT
+```
