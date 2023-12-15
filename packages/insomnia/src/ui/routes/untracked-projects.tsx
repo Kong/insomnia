@@ -3,10 +3,12 @@ import { LoaderFunction } from 'react-router-dom';
 import { database } from '../../common/database';
 import { SCRATCHPAD_ORGANIZATION_ID } from '../../models/organization';
 import { Project } from '../../models/project';
+import { Workspace } from '../../models/workspace';
 import { organizationsData } from './organization';
 
 export interface LoaderData {
   untrackedProjects: (Project & { workspacesCount: number })[];
+  untrackedWorkspaces: Workspace[];
 }
 
 export const loader: LoaderFunction = async () => {
@@ -30,7 +32,12 @@ export const loader: LoaderFunction = async () => {
     });
   }
 
+  const untrackedWorkspaces = await database.find<Workspace>('Workspace', {
+    parentId: null,
+  });
+
   return {
     untrackedProjects,
+    untrackedWorkspaces,
   };
 };

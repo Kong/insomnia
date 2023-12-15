@@ -4,7 +4,6 @@ import type { SentryRequestType } from '@sentry/types';
 import * as session from '../account/session';
 import { ChangeBufferEvent, database as db } from '../common/database';
 import { SENTRY_OPTIONS } from '../common/sentry';
-import { ExceptionCallback, registerCaptureException } from '../models/capture-exception.util';
 import * as models from '../models/index';
 import { isSettings } from '../models/settings';
 
@@ -23,6 +22,12 @@ export function sentryWatchAnalyticsEnabled() {
       const [event, doc] = change;
       if (isSettings(doc) && event === 'update') {
         enabled = doc.enableAnalytics || session.isLoggedIn();
+      }
+
+      if (event === 'insert' || event === 'update') {
+        if ([models.workspace.type, models.project.type].includes(doc.type) && !doc.parentId) {
+          Sentry.captureException(new Error(`Missing parent ID for ${doc.type} on ${event}`));
+        }
       }
     }
   });
@@ -45,8 +50,4 @@ export function initializeSentry() {
     ...SENTRY_OPTIONS,
     transport: ElectronSwitchableTransport,
   });
-
-  // this is a hack for logging the sentry error synthetically made for database parent id null issue
-  // currently the database modules are used in the inso-cli as well as it uses NeDB (why?)
-  registerCaptureException(Sentry.captureException as ExceptionCallback);
 }
