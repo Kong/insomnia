@@ -11,7 +11,7 @@ import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import { isScratchpadOrganizationId, Organization } from '../../../models/organization';
 import { Project } from '../../../models/project';
-import { isScratchpad } from '../../../models/workspace';
+import { isScratchpad, Workspace } from '../../../models/workspace';
 import { SegmentEvent } from '../../analytics';
 import { useOrganizationLoaderData } from '../../routes/organization';
 import { ProjectLoaderData } from '../../routes/project';
@@ -123,6 +123,106 @@ const UntrackedProject = ({
   );
 };
 
+const UntrackedWorkspace = ({
+  workspace,
+  organizationId,
+  projects,
+}: {
+  workspace: Workspace;
+  organizationId: string;
+  projects: Project[];
+}) => {
+  const moveWorkspaceFetcher = useFetcher();
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+
+  return (
+    <div key={workspace._id} className="flex items-center gap-2 justify-between py-2">
+      <div className='flex flex-col gap-1'>
+        <Heading className='text-base font-semibold flex items-center gap-2'>
+          {workspace.name}
+          <span className='text-xs text-[--hl]'>
+            Id: {workspace._id}
+          </span>
+        </Heading>
+      </div>
+      <moveWorkspaceFetcher.Form
+        action={`/organization/${organizationId}/project/${selectedProjectId}/move-workspace`}
+        method='POST'
+        className='group flex items-center gap-2'
+      >
+        <input type="hidden" name="workspaceId" value={workspace._id} />
+        <Select
+          aria-label="Select a project"
+          name="projectId"
+          onSelectionChange={key => {
+            setSelectedProjectId(key.toString());
+          }}
+          selectedKey={selectedProjectId}
+          isDisabled={projects.length === 0}
+        >
+          <Button className="px-4 py-1 disabled:bg-[--hl-xs] disabled:cursor-not-allowed font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] data-[pressed]:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+            <SelectValue<Project> className="flex truncate items-center justify-center gap-2">
+              {({ selectedItem }) => {
+                if (!selectedItem) {
+                  return (
+                    <Fragment>
+                      <span>
+                        Select a project
+                      </span>
+                    </Fragment>
+                  );
+                }
+
+                return (
+                  <Fragment>
+                    {selectedItem.name}
+                  </Fragment>
+                );
+              }}
+            </SelectValue>
+            <Icon icon="caret-down" />
+          </Button>
+          <Popover className="min-w-max">
+            <ListBox
+              className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+              items={projects.map(project => ({
+                ...project,
+                id: project._id,
+              }))}
+            >
+              {item => (
+                <ListBoxItem
+                  id={item.id}
+                  key={item.id}
+                  className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                  aria-label={item.name}
+                  textValue={item.name}
+                  value={item}
+                >
+                  {({ isSelected }) => (
+                    <Fragment>
+                      {item.name}
+                      {isSelected && (
+                        <Icon
+                          icon="check"
+                          className="text-[--color-success] justify-self-end"
+                        />
+                      )}
+                    </Fragment>
+                  )}
+                </ListBoxItem>
+              )}
+            </ListBox>
+          </Popover>
+        </Select>
+        <Button isDisabled={projects.length === 0 || !selectedProjectId || moveWorkspaceFetcher.state !== 'idle'} type="submit" className="px-4 py-1 group-invalid:opacity-30 disabled:bg-[--hl-xs] disabled:cursor-not-allowed font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+          Move
+        </Button>
+      </moveWorkspaceFetcher.Form>
+    </div>
+  );
+};
+
 interface Props {
   hideSettingsModal: () => void;
 }
@@ -146,6 +246,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   }, [untrackedProjectsFetcher, organizationId]);
 
   const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
+  const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
 
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
@@ -160,6 +261,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData | undefined;
   const workspacesForActiveProject = projectLoaderData?.workspaces.map(w => w.workspace) || [];
   const projectName = projectLoaderData?.activeProject.name ?? getProductName();
+  const projects = projectLoaderData?.projects || [];
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -299,6 +401,24 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                 project={project}
                 organizationId={organizationId}
                 organizations={organizations}
+              />
+            ))}
+          </div>
+        </div>}
+        {untrackedWorkspaces.length > 0 && projects.length > 0 && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
+          <div className='flex flex-col gap-1'>
+            <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="cancel" /> Untracked files ({untrackedWorkspaces.length})</Heading>
+            <p className='text-[--hl] text-sm'>
+              <Icon icon="info-circle" /> These files are not associated with any project in your account. You can move them to a project in your current organization bellow.
+            </p>
+          </div>
+          <div className='flex flex-col gap-1 overflow-y-auto divide-y divide-solid divide-[--hl-md]'>
+            {untrackedWorkspaces.map(workspace => (
+              <UntrackedWorkspace
+                key={workspace._id}
+                workspace={workspace}
+                organizationId={organizationId}
+                projects={projects}
               />
             ))}
           </div>
