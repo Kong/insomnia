@@ -55,49 +55,45 @@ test.describe('Environment Editor', async () => {
     await page.getByText('subenvB1').click();
   });
 
-  // test('Add new variables to an existing environment', async ({ page }) => {
-  //   // Rename the environment
-  //   await page.getByLabel('Manage Environments').click();
-  //   // add a new string environment variable
-  //   await page.locator('pre').filter({ hasText: '{' }).first().click();
-  //   await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
-  //   await page.getByTestId('CodeEditor').getByRole('textbox').fill('"testNumber":9000,');
-  //   await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
-  //   await page.getByTestId('CodeEditor').getByRole('textbox').fill('"testString":"Gandalf",');
-  //   await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
+  test('Add new variables to an existing environment', async ({ page }) => {
+    // Rename the environment
+    await page.getByLabel('Manage Environments').click();
+    // add a new string environment variable
+    await page.locator('pre').filter({ hasText: '"exampleNumber": 1111,' }).click();
+    await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
+    await page.getByTestId('CodeEditor').getByRole('textbox').fill('"testNumber":9000,');
+    await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
+    await page.getByTestId('CodeEditor').getByRole('textbox').fill('"testString":"Gandalf",');
+    await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
 
-  //   // Open request
-  //   await page.getByRole('button', { name: 'Close' }).click();
-  //   await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
+    // Open request
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
 
-  //   // Add number variable to request body
-  //   await page.locator('pre').filter({ hasText: '_.exampleObject.anotherNumber' }).click();
-  //   await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
-  //   await page.getByTestId('CodeEditor').getByRole('textbox').press('Control+ ');
-  //   // await page.getByText('_.testNumber').click();
-  //   // await page.locator('#cm-complete-0-5').getByText('_.testString').click();
-  //   await page.getByLabel('Environment Variable-- Custom --_.exampleNumber_.exampleObject.anotherNumber_.exampleObject.anotherString_.exampleString_.testNumber_.testString').click();
+    // Add number variable to request body
+    await page.locator('pre').filter({ hasText: '_.exampleObject.anotherNumber' }).click();
+    await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
+    await page.getByTestId('CodeEditor').getByRole('textbox').press('Control+ ');
+    await page.getByText('_.testNumber').click();
 
-  //   // Add string variable to request body
-  //   await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
-  //   await page.getByTestId('CodeEditor').getByRole('textbox').press('Control+ ');
-  //   // await page.getByText('_.testString').click();
-  //   await page.getByLabel('Environment Variable-- Custom --_.exampleNumber_.exampleObject.anotherNumber_.exampleObject.anotherString_.exampleString_.testNumber_.testString').click();
-  //   await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
+    // Add string variable to request body
+    await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
+    await page.getByTestId('CodeEditor').getByRole('textbox').press('Control+ ');
+    await page.getByText('_.testString').click();
+    await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
 
-  //   // TODO(filipe) add an environment variable that returns value of a nunjucks template (e.g. timestamp)
+    // TODO(filipe) add an environment variable that returns value of a nunjucks template (e.g. timestamp)
 
-  //   // Check new variables are in the timeline
-  //   await page.getByRole('button', { name: 'Send' }).click();
-  //   await page.getByRole('tab', { name: 'Timeline' }).click();
+    // Check new variables are in the timeline
+    await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByRole('tab', { name: 'Timeline' }).click();
 
-  //   page.waitForTimeout(60000);
+    // FIXME(filipe) - adding variables to request body can be so fast they don't get picked up when sending request
 
-  //   // FIXME(filipe) - adding variables to request body can be so fast they don't get picked up when sending request
+    // await page.locator('pre').filter({ hasText: '| 9000' }).click();
 
-  //   // await page.locator('pre').filter({ hasText: '| 9000' }).click();
+    // NOTE - Test fails due to actual bug - the variables are not being added to the request body when the request is sent
+    // await page.locator('pre').filter({ hasText: '| Gandalf' }).click();
 
-  //   // NOTE - Test fails due to actual bug - the variables are not being added to the request body when the request is sent
-  //   // await page.locator('pre').filter({ hasText: '| Gandalf' }).click();
-  // });
+  });
 });
