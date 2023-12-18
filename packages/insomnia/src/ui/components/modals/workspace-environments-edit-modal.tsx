@@ -7,6 +7,7 @@ import { docsTemplateTags } from '../../../common/documentation';
 import { debounce } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
 import { WorkspaceLoaderData } from '../../routes/workspace';
+import { EditableInput } from '../editable-input';
 import { EnvironmentEditor, EnvironmentEditorHandle, EnvironmentInfo } from '../editors/environment-editor';
 import { Icon } from '../icon';
 import { showAlert } from '.';
@@ -208,11 +209,11 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className='rounded w-full divide-x divide-solid divide-[--hl-md] basis-96 flex border border-solid border-[--hl-sm] select-none overflow-y-auto max-h-96'>
+              <div className='rounded w-full overflow-hidden divide-x divide-solid divide-[--hl-md] basis-96 flex border border-solid border-[--hl-sm] select-none overflow-y-auto max-h-96'>
                 <GridList
                   aria-label="Environments"
                   items={[baseEnvironment, ...subEnvironments]}
-                  className="overflow-y-auto flex-shrink-0 data-[empty]:py-0 py-[--padding-xs]"
+                  className="overflow-y-auto max-w-xs flex-shrink-0 data-[empty]:py-0 py-[--padding-xs]"
                   disallowEmptySelection
                   selectionMode="single"
                   selectionBehavior='replace'
@@ -242,8 +243,29 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                               color: item.color || undefined,
                             }}
                           />
-                          <span className="truncate">{item.name}</span>
-                          <span className="flex-1" />
+                          {item.parentId === workspaceId ? <span className='truncate flex-1'>{item.name}</span> : (
+                            <EditableInput
+                              value={item.name}
+                              name="name"
+                              ariaLabel="Environment name"
+                              className="px-1 flex-1"
+                              onSingleClick={() => {
+                                setSelectedEnvironmentId(item._id);
+                              }}
+                              onSubmit={name => {
+                                name && updateEnvironmentFetcher.submit({
+                                  patch: {
+                                    name,
+                                  },
+                                  environmentId: item._id,
+                                }, {
+                                  method: 'post',
+                                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
+                                  encType: 'application/json',
+                                });
+                              }}
+                            />
+                          )}
                           {item.parentId !== workspaceId && <MenuTrigger>
                             <Button
                               aria-label="Project Actions"
@@ -317,13 +339,34 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                     );
                   }}
                 </GridList>
-                <div className='flex-1 flex flex-col divide-solid divide-y divide-[--hl-md]'>
-                  <div className='flex items-center justify-between gap-2'>
-                    <Heading className='flex items-center gap-2 text-lg py-2 px-4'>
-                      <Icon className='w-4' icon={selectedEnvironment?.isPrivate ? 'lock' : 'refresh'} /> {selectedEnvironment?.name}
+                <div className='flex-1 flex flex-col divide-solid divide-y divide-[--hl-md] overflow-hidden'>
+                  <div className='flex items-center justify-between gap-2 w-full overflow-hidden'>
+                    <Heading className='flex items-center gap-2 text-lg py-2 px-4 overflow-hidden'>
+                      <Icon className='w-4' icon={selectedEnvironment?.isPrivate ? 'lock' : 'refresh'} />
+                      <EditableInput
+                        value={selectedEnvironment?.name || ''}
+                        name="name"
+                        ariaLabel="Environment name"
+                        className="px-1 flex-1"
+                        onSingleClick={() => {
+                          setSelectedEnvironmentId(selectedEnvironmentId);
+                        }}
+                        onSubmit={name => {
+                          name && updateEnvironmentFetcher.submit({
+                            patch: {
+                              name,
+                            },
+                            environmentId: selectedEnvironmentId,
+                          }, {
+                            method: 'post',
+                            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
+                            encType: 'application/json',
+                          });
+                        }}
+                      />
                     </Heading>
                     {selectedEnvironment && selectedEnvironment.parentId !== workspaceId && (
-                      <Label className='mr-2 flex items-center gap-2 py-1 px-2 bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'>
+                      <Label className='mr-2 flex-shrink-0 flex items-center gap-2 py-1 px-2 bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'>
                         <span>Color:</span>
                         <input
                           onChange={e => {
