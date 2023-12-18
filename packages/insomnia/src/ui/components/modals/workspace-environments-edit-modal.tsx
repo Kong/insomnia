@@ -1,6 +1,6 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { useRef, useState } from 'react';
-import { Button, Dialog, GridList, GridListItem, Heading, Label, ListBoxItem, Menu, MenuTrigger, Modal, ModalOverlay, Popover, useDragAndDrop } from 'react-aria-components';
+import { Button, Dialog, DropIndicator, GridList, GridListItem, Heading, Label, ListBoxItem, Menu, MenuTrigger, Modal, ModalOverlay, Popover, useDragAndDrop } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { docsTemplateTags } from '../../../common/documentation';
@@ -157,6 +157,25 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
         encType: 'application/json',
       });
+    },
+    renderDropIndicator(target) {
+      if (target.type === 'item') {
+        if (target.dropPosition === 'before' && target.key === baseEnvironment._id) {
+          return <DropIndicator
+            target={target}
+            className="hidden"
+          />;
+        }
+        return <DropIndicator
+          target={target}
+          className="outline-[--color-surprise] outline-1 outline"
+        />;
+      }
+
+      return <DropIndicator
+        target={target}
+        className="outline-[--color-surprise] outline-1 outline"
+      />;
     },
   });
 
