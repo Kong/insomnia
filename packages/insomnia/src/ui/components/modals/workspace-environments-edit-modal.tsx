@@ -401,10 +401,16 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                   )}
                 </div>
               </div>
-              <div>
+              <div className='flex items-center gap-2 justify-between'>
                 <p className='text-sm italic'>
                   * Environment data can be used for <a href={docsTemplateTags}>Nunjucks Templating</a> in your requests.
                 </p>
+                <Button
+                  onPress={close}
+                  className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                >
+                  Close
+                </Button>
               </div>
             </div>
           )}
