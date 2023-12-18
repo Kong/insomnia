@@ -280,6 +280,7 @@ export interface FeatureList {
 }
 
 export interface Billing {
+  // If true, the user has paid for the current period
   isActive: boolean;
 }
 
@@ -291,6 +292,7 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
   };
 
+  // If network unreachable assume user has paid for the current period
   const fallbackBilling = {
     isActive: true,
   };
@@ -314,8 +316,6 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
       path: `/v1/organizations/${organizationId}/features`,
       sessionId: session.getCurrentSessionId(),
     });
-
-    console.log('response', response);
 
     return {
       features: response?.features || fallbackFeatures,
