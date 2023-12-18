@@ -279,6 +279,11 @@ export interface FeatureList {
   orgBasicRbac: FeatureStatus;
 }
 
+export interface Billing {
+  // If true, the user has paid for the current period
+  isActive: boolean;
+}
+
 export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params as { organizationId: string };
 
@@ -287,9 +292,15 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
   };
 
+  // If network unreachable assume user has paid for the current period
+  const fallbackBilling = {
+    isActive: true,
+  };
+
   if (isScratchpadOrganizationId(organizationId)) {
     return {
       features: fallbackFeatures,
+      billing: fallbackBilling,
     };
   }
 
@@ -300,7 +311,7 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   }
 
   try {
-    const response = await window.main.insomniaFetch<{ features: FeatureList } | undefined>({
+    const response = await window.main.insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
       method: 'GET',
       path: `/v1/organizations/${organizationId}/features`,
       sessionId: session.getCurrentSessionId(),
@@ -308,10 +319,12 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
 
     return {
       features: response?.features || fallbackFeatures,
+      billing: response?.billing || fallbackBilling,
     };
   } catch (err) {
     return {
       features: fallbackFeatures,
+      billing: fallbackBilling,
     };
   }
 };

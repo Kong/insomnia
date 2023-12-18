@@ -54,7 +54,7 @@ import { ApiSpec } from '../../models/api-spec';
 import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
-import { isOwnerOfOrganization, isScratchpadOrganizationId } from '../../models/organization';
+import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
 import { Organization } from '../../models/organization';
 import {
   isRemoteProject,
@@ -80,7 +80,7 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
-import { type FeatureList, useOrganizationLoaderData } from './organization';
+import { Billing, type FeatureList, useOrganizationLoaderData } from './organization';
 
 interface TeamProject {
   id: string;
@@ -475,7 +475,7 @@ const ProjectRoute: FC = () => {
 
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
-  const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
+  const { features, billing } = useRouteLoaderData(':organizationId') as { features: FeatureList; billing: Billing };
 
   const accountId = getAccountId();
 
@@ -705,6 +705,10 @@ const ProjectRoute: FC = () => {
       },
     },
   ];
+
+  const organization = organizations.find(o => o.id === organizationId);
+  const isUserOwner = organization && accountId && isOwnerOfOrganization({ organization, accountId });
+  const isPersonalOrg = organization && isPersonalOrganization(organization);
 
   return (
     <ErrorBoundary>
@@ -1009,6 +1013,15 @@ const ProjectRoute: FC = () => {
           }
           renderPaneOne={
             <div className="w-full h-full flex flex-col overflow-hidden">
+              {billing.isActive ? null : <div className='p-[--padding-md] pb-0'>
+                <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
+                  <p className='text-base'>
+                    <Icon icon="exclamation-triangle" className='mr-2' />
+                    {isUserOwner ? `Your ${isPersonalOrg ? 'personal account' : 'organization'} has unpaid past invoices. Please enter a new payment method to continue using Insomnia.` : 'This organization has unpaid past invoices. Please ask the organization owner to enter a new payment method to continue using Insomnia.'}
+                  </p>
+                  {isUserOwner && <Button className="px-4 text-[--color-bg] bg-opacity-100 bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">Update payment method</Button>}
+                </div>
+              </div>}
               <div className="flex justify-between w-full gap-1 p-[--padding-md]">
                 <SearchField
                   aria-label="Workspaces filter"
