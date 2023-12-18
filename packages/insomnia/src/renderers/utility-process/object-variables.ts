@@ -7,12 +7,12 @@ export class Variable extends Property {
     kind: string = 'Variable';
 
     constructor(def?: {
-        id: string;
+        id?: string;
         key: string;
-        name: string;
+        name?: string;
         value: string;
-        type: string;
-        disabled: boolean;
+        type?: string;
+        disabled?: boolean;
     }) {
         super();
 
@@ -20,7 +20,7 @@ export class Variable extends Property {
         this.key = def ? def.key : '';
         this.name = def ? def.name : '';
         this.value = def ? def.value : '';
-        this.type = def ? def.type : '';
+        this.type = def && def.type ? def.type : 'Variable';
         this.disabled = def ? def.disabled : false;
     }
 
