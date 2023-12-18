@@ -1124,7 +1124,7 @@ export const Debug: FC = () => {
 
           {isEnvironmentModalOpen && (
             <WorkspaceEnvironmentsEditModal
-              onHide={() => setEnvironmentModalOpen(false)}
+              onClose={() => setEnvironmentModalOpen(false)}
             />
           )}
           {isCookieModalOpen && (

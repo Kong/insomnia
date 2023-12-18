@@ -1012,7 +1012,7 @@ const Design: FC = () => {
           <WorkspaceSyncDropdown />
           {isEnvironmentModalOpen && (
             <WorkspaceEnvironmentsEditModal
-              onHide={() => setEnvironmentModalOpen(false)}
+              onClose={() => setEnvironmentModalOpen(false)}
             />
           )}
           {isCookieModalOpen && (
