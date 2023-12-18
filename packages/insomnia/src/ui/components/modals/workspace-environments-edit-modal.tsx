@@ -144,10 +144,22 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
       }
       const dropPosition = e.target.dropPosition;
       if (dropPosition === 'before') {
-        sourceEnv.metaSortKey = targetEnv.metaSortKey - 1;
+        const currentEnvIndex = subEnvironments.findIndex(evt => evt._id === targetEnv._id);
+        const previousEnv = subEnvironments[currentEnvIndex - 1];
+        if (!previousEnv) {
+          sourceEnv.metaSortKey = targetEnv.metaSortKey - 1;
+        } else {
+          sourceEnv.metaSortKey = (previousEnv.metaSortKey + targetEnv.metaSortKey) / 2;
+        }
       }
       if (dropPosition === 'after') {
-        sourceEnv.metaSortKey = targetEnv.metaSortKey + 1;
+        const currentEnvIndex = subEnvironments.findIndex(evt => evt._id === targetEnv._id);
+        const nextEnv = subEnvironments[currentEnvIndex + 1];
+        if (!nextEnv) {
+          sourceEnv.metaSortKey = targetEnv.metaSortKey + 1;
+        } else {
+          sourceEnv.metaSortKey = (nextEnv.metaSortKey + targetEnv.metaSortKey) / 2;
+        }
       }
 
       updateEnvironmentFetcher.submit({
