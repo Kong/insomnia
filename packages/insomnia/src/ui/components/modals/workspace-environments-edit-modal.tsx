@@ -12,8 +12,6 @@ import { EnvironmentEditor, EnvironmentEditorHandle, EnvironmentInfo } from '../
 import { Icon } from '../icon';
 import { showAlert } from '.';
 
-// const ROOT_ENVIRONMENT_NAME = 'Base Environment';
-
 export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
   onClose: () => void;
 }) => {
@@ -315,6 +313,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                             <MenuTrigger>
                               <Button
                                 aria-label="Create Environment"
+                                data-testId="CreateEnvironmentDropdown"
                                 className="items-center flex justify-center h-6 aspect-square data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                               >
                                 <Icon icon="plus-circle" />
