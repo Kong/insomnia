@@ -347,6 +347,18 @@ export class UrlMatchPattern extends Property {
 
     constructor(pattern: string) {
         super();
+
+        const patternObj = UrlMatchPattern.parseAndValidate(pattern);
+        this.scheme = patternObj.scheme;
+        this.host = patternObj.host.join('/');
+        this.path = patternObj.path.join('/');
+    }
+
+    static parseAndValidate(pattern: string): {
+        scheme: 'http:' | 'https:' | '*' | 'file:';
+        host: string[];
+        path: string[];
+    } {
         // TODO: validate the pattern
         const urlObj = Url.parse(pattern);
 
@@ -354,25 +366,74 @@ export class UrlMatchPattern extends Property {
             throw Error(`match pattern (${pattern}) is invalid and failed to parse`);
         }
 
-        if (urlObj.protocol === 'http:' || urlObj.protocol === 'https:' || urlObj.protocol === '*' || urlObj.protocol === 'file:') {
-            this.scheme = urlObj.protocol;
-        } else {
+        if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:' && urlObj.protocol !== '*' && urlObj.protocol !== 'file:') {
             throw Error(`scheme (${urlObj.protocol}) is invalid and failed to parse`);
         }
 
-        this.host = urlObj.host.join('/');
-        this.path = urlObj.path.join('/');
+        return { scheme: urlObj.protocol, host: urlObj.host, path: urlObj.path };
     }
 
-    // (static, readonly) MATCH_ALL_URLS :String
-    // (static) pattern :String
-    // (static, readonly) PROTOCOL_DELIMITER :String
-    // getProtocols() → {Array.<String>}
+    static readonly MATCH_ALL_URLS: string = '<all_urls>';
+    static pattern: string | undefined = undefined; // TODO: unknown usage
+    static readonly PROTOCOL_DELIMITER: string = '+';
+
+    // TODO: the url can not start with -
+    private readonly starRegPattern = '[a-zA-Z0-9\-]*';
+
+    getProtocols(): string[] {
+        switch (this.scheme) {
+            case 'http:':
+                return ['http'];
+            case 'https:':
+                return ['https'];
+            case '*':
+                return ['http', 'https'];
+            case 'file:':
+                return ['file'];
+            default:
+                throw `invalid scheme ${this.scheme}`;
+        }
+    }
+
     // test(urlStropt) → {Boolean}
-    // testHost(hostopt) → {Boolean}
-    // testHost(hostopt) → {Boolean}
-    // testPort(port, protocol) → {Boolean}
-    // testProtocol(protocolopt) → {Boolean}
-    // toString() → {String}
-    // update(pattern: string)
+    testHost(host: string) {
+        const hostRegPattern = new RegExp(this.host.replace('*', this.starRegPattern), 'ig');
+        return hostRegPattern.test(host);
+    }
+
+    testPath(path: string) {
+        const pathRegPattern = new RegExp(this.path.replace('*', this.starRegPattern), 'ig');
+        return pathRegPattern.test(path);
+    }
+
+    // testPort(port, protocol) {
+    //     const pathRegPattern = new RegExp(path.replace('*', this.starRegPattern), 'ig');
+    //     return pathRegPattern.test(path);
+    // }
+
+    testProtocol(protocol: string) {
+        switch (protocol) {
+            case 'http:':
+                return this.scheme === 'http:' || this.scheme === '*';
+            case 'https:':
+                return this.scheme === 'https:' || this.scheme === '*';
+            case '*':
+                return this.scheme === 'http:' || this.scheme === 'https:' || this.scheme === '*';
+            case 'file:':
+                return this.scheme === 'file:';
+            default:
+                throw `invalid scheme ${protocol}`;
+        }
+    }
+
+    toString() {
+        return `${this.scheme}//${this.host}${this.path}`;
+    }
+
+    update(pattern: string) {
+        const patternObj = UrlMatchPattern.parseAndValidate(pattern);
+        this.scheme = patternObj.scheme;
+        this.host = patternObj.host.join('/');
+        this.path = patternObj.path.join('/');
+    }
 }
