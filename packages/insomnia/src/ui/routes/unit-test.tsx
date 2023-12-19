@@ -6,7 +6,6 @@ import {
   Button,
   GridList,
   Heading,
-  Link,
   ListBox,
   ListBoxItem,
   Menu,
@@ -185,17 +184,17 @@ const TestRoute: FC = () => {
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
             <Breadcrumbs className='flex flex-wrap list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
               <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
-              <Link data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                 <NavLink
+                  data-testid="project"
+                  className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   to={`/organization/${organizationId}/project/${activeProject._id}`}
                 >
                   <Icon className='text-xs' icon="chevron-left" />
                 </NavLink>
-              </Link>
-              <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
+                <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
               </Breadcrumb>
               <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
-              <WorkspaceDropdown />
+                <WorkspaceDropdown />
               </Breadcrumb>
             </Breadcrumbs>
             <div className="flex w-full items-center gap-2 justify-between">
