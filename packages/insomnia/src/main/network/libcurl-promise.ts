@@ -332,7 +332,9 @@ export const createConfiguredCurlInstance = ({
   }
   const { validateSSL } = settings;
   if (!validateSSL) {
-    curl.setOpt(Curl.option.SSL_VERIFYHOST, 0);
+    if (process.platform !== 'darwin') {
+      curl.setOpt(Curl.option.SSL_VERIFYHOST, 0);
+    }
     curl.setOpt(Curl.option.SSL_VERIFYPEER, 0);
   }
   debugTimeline.push({ value: `${validateSSL ? 'Enable' : 'Disable'} SSL validation`, name: 'Text', timestamp: Date.now() });
