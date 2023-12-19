@@ -332,12 +332,16 @@ export class UrlMatchPattern extends Property {
     // scheme
     scheme: 'http:' | 'https:' | '*' | 'file:';
     // host
-    // Wildcard: If you use a wildcard in the host pattern, it must be the first or only character, and it must be followed by a period (.) or forward slash (/).
+    // About wildcard:
+    // If you use a wildcard in the host pattern
+    // it must be the first or only character, and it must be followed by a period (.) or forward slash (/).
     host: string;
     // path:
     // Must contain at least a forward slash
     // The slash by itself matches any path.
     path: string;
+
+    private port: string;
 
     // Special cases: https://developer.chrome.com/docs/extensions/develop/concepts/match-patterns#special
     // "<all_urls>"
@@ -352,12 +356,14 @@ export class UrlMatchPattern extends Property {
         this.scheme = patternObj.scheme;
         this.host = patternObj.host.join('/');
         this.path = patternObj.path.join('/');
+        this.port = patternObj.port;
     }
 
     static parseAndValidate(pattern: string): {
         scheme: 'http:' | 'https:' | '*' | 'file:';
         host: string[];
         path: string[];
+        port: string;
     } {
         // TODO: validate the pattern
         const urlObj = Url.parse(pattern);
@@ -370,11 +376,11 @@ export class UrlMatchPattern extends Property {
             throw Error(`scheme (${urlObj.protocol}) is invalid and failed to parse`);
         }
 
-        return { scheme: urlObj.protocol, host: urlObj.host, path: urlObj.path };
+        return { scheme: urlObj.protocol, host: urlObj.host, path: urlObj.path, port: `${urlObj.port}` };
     }
 
     static readonly MATCH_ALL_URLS: string = '<all_urls>';
-    static pattern: string | undefined = undefined; // TODO: unknown usage
+    static pattern: string | undefined = undefined; // TODO: its usage is unknown
     static readonly PROTOCOL_DELIMITER: string = '+';
 
     // TODO: the url can not start with -
@@ -395,7 +401,18 @@ export class UrlMatchPattern extends Property {
         }
     }
 
-    // test(urlStropt) → {Boolean}
+    test(urlStr: string) {
+        const urlObj = Url.parse(urlStr);
+        if (!urlObj) {
+            return false;
+        }
+
+        return this.testProtocol(urlObj.protocol)
+            && this.testHost(urlObj.host.join('/'))
+            && this.testPort(urlObj.port, urlObj.protocol)
+            && this.testPath(urlObj.path.join('/'));
+    }
+
     testHost(host: string) {
         const hostRegPattern = new RegExp(this.host.replace('*', this.starRegPattern), 'ig');
         return hostRegPattern.test(host);
@@ -406,10 +423,20 @@ export class UrlMatchPattern extends Property {
         return pathRegPattern.test(path);
     }
 
-    // testPort(port, protocol) {
-    //     const pathRegPattern = new RegExp(path.replace('*', this.starRegPattern), 'ig');
-    //     return pathRegPattern.test(path);
-    // }
+    // TODO: it is confused to verify both port and protocol
+    // testPort verifies both port and protocol, but not the relationship between them
+    testPort(port: string, protocol: string) {
+        if (!this.testProtocol(protocol)) {
+            return false;
+        }
+
+        const portRegPattern = new RegExp(this.port.replace('*', this.starRegPattern), 'ig');
+        if (!portRegPattern.test(port)) {
+            return false;
+        }
+
+        return true;
+    }
 
     testProtocol(protocol: string) {
         switch (protocol) {
@@ -435,5 +462,28 @@ export class UrlMatchPattern extends Property {
         this.scheme = patternObj.scheme;
         this.host = patternObj.host.join('/');
         this.path = patternObj.path.join('/');
+        this.port = patternObj.port;
+    }
+}
+
+export class UrlMatchPatternList<T extends UrlMatchPattern> extends PropertyList<T> {
+    kind: string = 'UrlMatchPatternList';
+
+    constructor(parent: PropertyList<T> | undefined, populate: T[]) {
+        super(populate);
+        this._parent = parent;
+    }
+
+    static isUrlMatchPatternList(obj: any) {
+        return 'kind' in obj && obj.kind === 'UrlMatchPatternList';
+    }
+
+    // TODO: unsupported yet
+    // toObject(excludeDisabledopt, nullable, caseSensitiveopt, nullable, multiValueopt, nullable, sanitizeKeysopt) → {Object}
+
+    test(urlStr: string) {
+        return this
+            .filter(matchPattern => matchPattern.test(urlStr), {})
+            .length > 0;
     }
 }

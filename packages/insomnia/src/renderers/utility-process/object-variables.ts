@@ -46,6 +46,8 @@ export class Variable extends Property {
 }
 
 export class VariableList<T extends Variable> extends PropertyList<T> {
+    kind: string = 'VariableList';
+
     constructor(parent: PropertyList<T> | undefined, populate: T[]) {
         super(populate);
         this._parent = parent;
