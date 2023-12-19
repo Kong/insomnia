@@ -107,7 +107,7 @@ test.describe('Debug-Sidebar', async () => {
       await requestLocator.getByLabel('Request Actions').click();
       await page.getByRole('menuitemradio', { name: 'Delete' }).click();
       await page.locator('.modal__content').getByRole('button', { name: 'Delete' }).click();
-      await expect(page.locator('.app')).not.toContainText('example http');
+      await expect(page.getByLabel('Request Collection')).not.toContainText('example http');
     });
 
     test('Rename a request', async ({ page }) => {
@@ -140,7 +140,7 @@ test.describe('Debug-Sidebar', async () => {
     test('Create a new HTTP request', async ({ page }) => {
       await page.getByLabel('Create in collection').click();
       await page.getByRole('menuitemradio', { name: 'Http Request' }).click();
-      await expect(page.locator('.app')).toContainText('New Request');
+      await expect(page.getByLabel('Request Collection')).toContainText('New Request');
     });
 
   // TODO: more scenarios will be added in follow-up iterations of increasing test coverage
