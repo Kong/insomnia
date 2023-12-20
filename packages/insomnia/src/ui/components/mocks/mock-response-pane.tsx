@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
+import { HarRequest } from '../../../common/har';
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models';
 import { MockRouteLoaderData } from '../../routes/mock-route';
@@ -23,21 +24,7 @@ interface MockbinLogOutput {
       {
         startedDateTime: string;
         clientIPAddress: string;
-        request: {
-          'method': string;
-          'url': string;
-          'httpVersion': string;
-          'cookies': { name: string; value: string }[];
-          'headers': { name: string; value: string }[];
-          'queryString': { name: string; value: string }[];
-          'postData': {
-            'mimeType': string;
-            'text': string;
-            'params': { name: string; value: string }[];
-          };
-          'headersSize': number;
-          'bodySize': number;
-        };
+        request: HarRequest;
       }
     ];
   };
