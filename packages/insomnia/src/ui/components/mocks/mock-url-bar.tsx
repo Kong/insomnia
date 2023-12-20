@@ -4,7 +4,7 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { CONTENT_TYPE_PLAINTEXT, HTTP_METHODS, RESPONSE_CODE_REASONS } from '../../../common/constants';
-import { MockbinInput } from '../../../models/mock-route';
+import { HarResponse } from '../../../common/har';
 import { RequestHeader } from '../../../models/request';
 import { invariant } from '../../../utils/invariant';
 import { MockRouteLoaderData } from '../../routes/mock-route';
@@ -22,27 +22,40 @@ export const MockUrlBar = () => {
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   console.log(mockRoute._id, { mockRoute });
   const patchMockRoute = useMockRoutePatcher();
-  const formToMockBin = async ({ statusCode, headersArray, body }: { statusCode: number; headersArray: RequestHeader[]; body: string }): Promise<MockbinInput> => {
+  const formToMockBin = async ({ statusCode, headersArray, body }: { statusCode: number; headersArray: RequestHeader[]; body: string }): Promise<HarResponse> => {
     const contentType = headersArray.find(h => h.name.toLowerCase() === 'content-type')?.value || CONTENT_TYPE_PLAINTEXT;
     return {
-      'status': +statusCode,
-      'statusText': RESPONSE_CODE_REASONS[+statusCode] || '',
-      'httpVersion': 'HTTP/1.1',
-      'headers': headersArray.filter(({ name }) => !!name),
+      status: +statusCode,
+      statusText: RESPONSE_CODE_REASONS[+statusCode] || '',
+      httpVersion: 'HTTP/1.1',
+      headers: headersArray.filter(({ name }) => !!name),
       // NOTE: cookies are sent as headers by insomnia
-      'cookies': [],
-      'content': {
-        'size': Buffer.byteLength(body),
-        'mimeType': contentType,
-        'text': body,
-        'compression': 0,
+      cookies: [],
+      content: {
+        size: Buffer.byteLength(body),
+        mimeType: contentType,
+        text: body,
+        compression: 0,
       },
-      'bodySize': 0,
+      bodySize: 0,
+      redirectURL: '',
+      headersSize: 0,
     };
   };
-  const createBinOnRemoteFromResponse = async (mockbinInput: MockbinInput): Promise<string> => {
+  const createBinOnRemoteFromResponse = async (mockbinInput: HarResponse, binId: string | null): Promise<string> => {
     console.log({ mockbinInput });
     try {
+      if (binId) {
+        const bin = await window.main.axiosRequest({
+          url: mockbinUrl + `/bin/${binId}`,
+          method: 'put',
+          data: mockbinInput,
+        });
+        console.log({ bin });
+        if (bin?.data) {
+          return bin.data;
+        }
+      }
       const bin = await window.main.axiosRequest({
         url: mockbinUrl + '/bin/create',
         method: 'post',
@@ -64,8 +77,8 @@ export const MockUrlBar = () => {
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
-  const createandSendRequest = ({ url, parentId, bin }: { url: string; parentId: string; bin?: Partial<MockbinInput> }) =>
-    requestFetcher.submit(JSON.stringify({ url, parentId, bin }),
+  const createandSendRequest = ({ url, parentId, binResponse }: { url: string; parentId: string; binResponse?: Partial<HarResponse> }) =>
+    requestFetcher.submit(JSON.stringify({ url, parentId, binResponse }),
       {
         encType: 'application/json',
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new-mock-send`,
@@ -73,33 +86,21 @@ export const MockUrlBar = () => {
       });
   const test = async () => {
     console.log('test', mockRoute);
-    const bin = await formToMockBin({
+    const binResponse = await formToMockBin({
       statusCode: 200,
       headersArray: mockRoute.headers,
       body: mockRoute.body,
     });
-    // compare bin to mockRoute bins to see if it already exists
-    // if it does, use that id, heres a dumb way
-    const alreadyCreatedBin = mockRoute.bins.find(b => {
-      return b.content.text === bin.content.text
-        && b.content.mimeType === bin.content.mimeType
-        && b.status === bin.status
-        && b.statusText === bin.statusText
-        && b.headers.length === bin.headers.length
-        && b.headers.every(h => bin.headers.some(h2 => h.name === h2.name && h.value === h2.value));
-    });
-    let id = alreadyCreatedBin?.binId;
-    if (!alreadyCreatedBin) {
-      id = await createBinOnRemoteFromResponse(bin);
-    }
+
+    const id = await createBinOnRemoteFromResponse(binResponse, mockRoute?.binId);
     const url = mockbinUrl + '/bin/' + id;
     invariant(id, 'mockbin failed to return an id, its possible it does not support something within the request body');
     console.log('test', url);
-    patchMockRoute(mockRoute._id, { path: url, bins: [...mockRoute.bins, { binId: id, ...bin }] });
+    patchMockRoute(mockRoute._id, { path: url, binId: id, binResponse });
     createandSendRequest({
       url,
       parentId: mockRoute._id,
-      bin,
+      binResponse,
     });
   };
   return (<div className='w-full flex justify-between urlbar'>

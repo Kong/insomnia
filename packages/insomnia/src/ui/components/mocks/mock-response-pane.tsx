@@ -60,12 +60,15 @@ export const MockResponsePane = () => {
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   useEffect(() => {
     const fn = async () => {
-      const logs = await getLogById(mockRoute.bins?.[mockRoute.bins.length - 1]?.binId);
+      if (!mockRoute?.binId) {
+        return;
+      }
+      const logs = await getLogById(mockRoute.binId);
       console.log(logs?.log.entries);
       setLogs(logs);
     };
     fn();
-  }, [mockRoute.bins]);
+  }, [mockRoute.binId]);
   useEffect(() => {
     const fn = async () => {
       if (activeResponse) {
@@ -89,8 +92,8 @@ export const MockResponsePane = () => {
               </tr>
             </thead>
             <tbody>
-              {logs?.log.entries?.map((row, i) => (
-                <tr key={i}>
+              {logs?.log.entries?.map(row => (
+                <tr key={row.startedDateTime}>
                   <td>{row.request.method}</td>
                   <td>{row.startedDateTime}</td>
                   <td>{row.clientIPAddress}</td>

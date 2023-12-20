@@ -8,6 +8,7 @@ import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 import { version } from '../../../package.json';
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import { ChangeBufferEvent, database } from '../../common/database';
+import { HarResponse } from '../../common/har';
 import { getContentDispositionHeader } from '../../common/misc';
 import { RENDER_PURPOSE_SEND } from '../../common/render';
 import { ResponsePatch } from '../../main/network/libcurl-promise';
@@ -17,7 +18,7 @@ import { CookieJar } from '../../models/cookie-jar';
 import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { MockbinInput, MockRoute } from '../../models/mock-route';
+import { MockRoute } from '../../models/mock-route';
 import { MockServer } from '../../models/mock-server';
 import { getPathParametersFromUrl, isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { isRequestMeta, RequestMeta } from '../../models/request-meta';
@@ -429,17 +430,17 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   }
 };
 export const createAndSendToMockbinAction: ActionFunction = async ({ request }) => {
-  const { url, parentId, bin } = await request.json() as { url: string; parentId: string; bin: Partial<MockbinInput> };
+  const { url, parentId, binResponse } = await request.json() as { url: string; parentId: string; binResponse: Partial<HarResponse> };
   invariant(typeof url === 'string', 'URL is required');
   invariant(typeof parentId === 'string', 'mock route ID is required');
-  invariant(bin.content, 'bin content is required');
+  invariant(binResponse.content, 'bin content is required');
 
   const req = await models.request.create({
     url,
-    headers: bin.headers,
+    headers: binResponse.headers,
     body: {
-      mimeType: bin.content.mimeType,
-      text: bin.content.text,
+      mimeType: binResponse.content.mimeType,
+      text: binResponse.content.text,
     },
     isPrivate: true,
     parentId,

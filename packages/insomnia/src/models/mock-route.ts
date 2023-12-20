@@ -1,4 +1,5 @@
 import { database as db } from '../common/database';
+import { HarResponse } from '../common/har';
 import type { BaseModel } from './index';
 import { RequestHeader } from './request';
 
@@ -11,27 +12,7 @@ export const prefix = 'mock';
 export const canDuplicate = true;
 
 export const canSync = true;
-export interface MockbinInput {
-  status: number;
-  statusText: string;
-  httpVersion: string;
-  headers: {
-    name: string;
-    value: string;
-  }[];
-  cookies: {
-    name: string;
-    value: string;
-  }[];
-  content: {
-    size: number;
-    // todo: test default here
-    mimeType: string;
-    text: string;
-    compression: number;
-  };
-  bodySize: number;
-};
+
 interface BaseMockRoute {
   body: string;
   headers: RequestHeader[];
@@ -41,7 +22,8 @@ interface BaseMockRoute {
   statusCode: number;
   name: string;
   mimeType: string | null;
-  bins: (MockbinInput & { binId: string })[];
+  binId: string | null;
+  binResponse: HarResponse | null;
 }
 
 export type MockRoute = BaseModel & BaseMockRoute;
@@ -56,7 +38,8 @@ export function init(): BaseMockRoute {
     statusCode: 200,
     name: '',
     mimeType: null,
-    bins: [],
+    binId: '',
+    binResponse: null,
   };
 }
 
