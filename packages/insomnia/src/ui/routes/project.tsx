@@ -1021,7 +1021,7 @@ const ProjectRoute: FC = () => {
                   </p>
                   {isUserOwner && (
                     <a
-                      href={`${getAppWebsiteBaseURL()}/app/dashboard/organizations`}
+                      href={`${getAppWebsiteBaseURL()}/app/subscription/past-due`}
                       className="px-4 text-[--color-bg] bg-opacity-100 bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                     >
                       Update payment method
