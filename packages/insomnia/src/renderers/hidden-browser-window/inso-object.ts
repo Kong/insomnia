@@ -1,4 +1,4 @@
-import { getHttpRequestSender, getIntepolator, HttpRequestSender, PmHttpRequest, PmHttpResponse } from './static-modules';
+import { getIntepolator } from './intepolator';
 
 export type EventName = 'prerequest' | 'test';
 class RequestInfo {
@@ -161,8 +161,6 @@ class InsomniaObject {
     public variables: Variables;
     public info: RequestInfo;
 
-    private httpRequestSender: HttpRequestSender = getHttpRequestSender();
-
     constructor(input: {
         globals: Environment;
         collectionVariables: Environment;
@@ -189,10 +187,6 @@ class InsomniaObject {
             info: this.info.toObject(),
         };
     };
-
-    sendRequest = async (req: string | PmHttpRequest, callback: (e?: Error, resp?: PmHttpResponse) => void) => {
-        return await this.httpRequestSender.sendRequest(req, callback);
-    };
 }
 
 interface RawObject {
@@ -203,7 +197,7 @@ interface RawObject {
     requestInfo?: object;
 }
 
-export function initPm(rawObj: RawObject) {
+export function initGlobalObject(rawObj: RawObject) {
     const globals = new Environment(rawObj.globals);
     const environment = new Environment(rawObj.environment);
     const collectionVariables = new Environment(rawObj.collectionVariables);

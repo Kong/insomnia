@@ -16,14 +16,16 @@ class WindowMessageHandler {
         this.hiddenBrowserWindowPort = ev.ports[0];
 
         this.hiddenBrowserWindowPort.onmessage = ev => {
-            if (ev.data.action === 'message-port://caller/respond') {
+            if (ev.data.action === 'message-channel://caller/respond') {
                 // TODO: hook to UI and display result
                 console.log('[main] result from hidden browser window:', ev.data.result);
-            } else if (ev.data.action === 'message-port://caller/debug/respond') {
+            } else if (ev.data.action === 'message-channel://caller/debug/respond') {
                 if (ev.data.result) {
                     window.localStorage.setItem(`test_result:${ev.data.id}`, JSON.stringify(ev.data.result));
+                    console.log(ev.data.result);
                 } else {
                     window.localStorage.setItem(`test_error:${ev.data.id}`, JSON.stringify(ev.data.error));
+                    console.error(ev.data.error);
                 }
             } else {
                 console.error(`unknown action ${ev}`);
@@ -37,8 +39,9 @@ class WindowMessageHandler {
             return;
         }
 
+        console.info('sending script to hidden browser window');
         this.hiddenBrowserWindowPort.postMessage({
-            action: 'message-port://hidden.browser-window/debug',
+            action: 'message-channel://hidden.browser-window/debug',
             options: {
                 id: ev.data.id,
                 code: ev.data.code,
