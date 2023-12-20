@@ -21,12 +21,12 @@ const mockbinUrl = 'http://localhost:8080';
 export const MockUrlBar = () => {
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
-  const formToHar = async ({ statusCode, headersArray, body }: { statusCode: number; headersArray: RequestHeader[]; body: string }): Promise<HarResponse> => {
+  const formToHar = async ({ statusCode, statusText, headersArray, body }: { statusCode: number; statusText: string; headersArray: RequestHeader[]; body: string }): Promise<HarResponse> => {
     const contentType = headersArray.find(h => h.name.toLowerCase() === 'content-type')?.value || CONTENT_TYPE_PLAINTEXT;
     const validHeaders = headersArray.filter(({ name }) => !!name);
     return {
       status: +statusCode,
-      statusText: RESPONSE_CODE_REASONS[+statusCode] || '',
+      statusText: statusText || RESPONSE_CODE_REASONS[+statusCode] || '',
       httpVersion: 'HTTP/1.1',
       headers: validHeaders,
       cookies: getResponseCookiesFromHeaders(validHeaders),
@@ -83,6 +83,7 @@ export const MockUrlBar = () => {
   const upsertMockbinHarAndTestIt = async () => {
     const binResponse = await formToHar({
       statusCode: mockRoute.statusCode,
+      statusText: mockRoute.statusText,
       headersArray: mockRoute.headers,
       body: mockRoute.body,
     });

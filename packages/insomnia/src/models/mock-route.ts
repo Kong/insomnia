@@ -20,6 +20,7 @@ interface BaseMockRoute {
   parentId: string;
   path: string;
   statusCode: number;
+  statusText: string;
   name: string;
   mimeType: string | null;
   binId: string | null;
@@ -36,6 +37,7 @@ export function init(): BaseMockRoute {
     parentId: '',
     path: '',
     statusCode: 200,
+    statusText: 'OK',
     name: '',
     mimeType: null,
     binId: '',

@@ -104,14 +104,28 @@ export const MockRouteRoute = () => {
             <PanelContainer className="pad">
               <div className="form-row">
                 <div className='form-control form-control--outlined'>
-                  <label htmlFor="mock-response-status-editor">
+                  <label htmlFor="mock-response-status-code-editor">
                     <small>Status Code</small>
                     <input
-                      id="mock-response-status-editor"
+                      id="mock-response-status-code-editor"
                       type="number"
                       defaultValue={mockRoute.statusCode}
                       onChange={e => patchMockRoute(mockRoute._id, { statusCode: parseInt(e.currentTarget.value, 10) })}
                       placeholder="200"
+                    />
+                  </label>
+                </div>
+              </div>
+              <div className="form-row">
+                <div className='form-control form-control--outlined'>
+                  <label htmlFor="mock-response-status-text-editor">
+                    <small>Status Text</small>
+                    <input
+                      id="mock-response-status-text-editor"
+                      type="string"
+                      defaultValue={mockRoute.statusText}
+                      onChange={e => patchMockRoute(mockRoute._id, { statusText: e.currentTarget.value })}
+                      placeholder="OK"
                     />
                   </label>
                 </div>
