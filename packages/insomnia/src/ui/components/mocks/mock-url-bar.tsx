@@ -82,7 +82,7 @@ export const MockUrlBar = () => {
 
   const upsertMockbinHarAndTestIt = async () => {
     const binResponse = await formToHar({
-      statusCode: 200,
+      statusCode: mockRoute.statusCode,
       headersArray: mockRoute.headers,
       body: mockRoute.body,
     });

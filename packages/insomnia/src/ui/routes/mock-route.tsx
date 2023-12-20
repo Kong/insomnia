@@ -8,8 +8,9 @@ import { MockRoute } from '../../models/mock-route';
 import { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
-import { TabItem, Tabs } from '../components/base/tabs';
+import { PanelContainer, TabItem, Tabs } from '../components/base/tabs';
 import { CodeEditor } from '../components/codemirror/code-editor';
+import { OneLineEditor } from '../components/codemirror/one-line-editor';
 import { MockResponseHeadersEditor, useMockRoutePatcher } from '../components/editors/mock-response-headers-editor';
 import { MockResponsePane } from '../components/mocks/mock-response-pane';
 import { MockUrlBar } from '../components/mocks/mock-url-bar';
@@ -98,6 +99,24 @@ export const MockRouteRoute = () => {
             <MockResponseHeadersEditor
               bulk={false}
             />
+          </TabItem>
+          <TabItem key="status" title="Response Status">
+            <PanelContainer className="pad">
+              <div className="form-row">
+                <div className='form-control form-control--outlined'>
+                  <label htmlFor="mock-response-status-editor">
+                    <small>Status Code</small>
+                    <input
+                      id="mock-response-status-editor"
+                      type="number"
+                      defaultValue={mockRoute.statusCode}
+                      onChange={e => patchMockRoute(mockRoute._id, { statusCode: parseInt(e.currentTarget.value, 10) })}
+                      placeholder="200"
+                    />
+                  </label>
+                </div>
+              </div>
+            </PanelContainer>
           </TabItem>
         </Tabs>
       </PaneBody>
