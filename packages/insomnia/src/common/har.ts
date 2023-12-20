@@ -414,9 +414,8 @@ function getRequestCookies(renderedRequest: RenderedRequest) {
   return harCookies;
 }
 
-function getResponseCookies(response: Response) {
-  const headers = response.headers.filter(Boolean) as HarCookie[];
-  const responseCookies = getSetCookieHeaders(headers)
+export function getResponseCookiesFromHeaders(headers: HarCookie[]) {
+  return getSetCookieHeaders(headers)
     .reduce((accumulator, harCookie) => {
       let cookie: null | undefined | ToughCookie = null;
 
@@ -433,7 +432,11 @@ function getResponseCookies(response: Response) {
         mapCookie(cookie),
       ];
     }, [] as HarCookie[]);
-  return responseCookies;
+}
+
+function getResponseCookies(response: Response) {
+  const headers = response.headers.filter(Boolean);
+  return getResponseCookiesFromHeaders(headers);
 }
 
 function mapCookie(cookie: ToughCookie) {

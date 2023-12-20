@@ -4,7 +4,7 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { CONTENT_TYPE_PLAINTEXT, HTTP_METHODS, RESPONSE_CODE_REASONS } from '../../../common/constants';
-import { HarResponse } from '../../../common/har';
+import { getResponseCookiesFromHeaders, HarResponse } from '../../../common/har';
 import { RequestHeader } from '../../../models/request';
 import { invariant } from '../../../utils/invariant';
 import { MockRouteLoaderData } from '../../routes/mock-route';
@@ -20,38 +20,35 @@ const mockbinUrl = 'http://localhost:8080';
 
 export const MockUrlBar = () => {
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
-  console.log(mockRoute._id, { mockRoute });
   const patchMockRoute = useMockRoutePatcher();
-  const formToMockBin = async ({ statusCode, headersArray, body }: { statusCode: number; headersArray: RequestHeader[]; body: string }): Promise<HarResponse> => {
+  const formToHar = async ({ statusCode, headersArray, body }: { statusCode: number; headersArray: RequestHeader[]; body: string }): Promise<HarResponse> => {
     const contentType = headersArray.find(h => h.name.toLowerCase() === 'content-type')?.value || CONTENT_TYPE_PLAINTEXT;
+    const validHeaders = headersArray.filter(({ name }) => !!name);
     return {
       status: +statusCode,
       statusText: RESPONSE_CODE_REASONS[+statusCode] || '',
       httpVersion: 'HTTP/1.1',
-      headers: headersArray.filter(({ name }) => !!name),
-      // NOTE: cookies are sent as headers by insomnia
-      cookies: [],
+      headers: validHeaders,
+      cookies: getResponseCookiesFromHeaders(validHeaders),
       content: {
         size: Buffer.byteLength(body),
         mimeType: contentType,
         text: body,
         compression: 0,
       },
-      bodySize: 0,
+      headersSize: -1,
+      bodySize: -1,
       redirectURL: '',
-      headersSize: 0,
     };
   };
-  const createBinOnRemoteFromResponse = async (mockbinInput: HarResponse, binId: string | null): Promise<string> => {
-    console.log({ mockbinInput });
+  const upsertBinOnRemoteFromResponse = async (binResponse: HarResponse, binId: string | null): Promise<string> => {
     try {
       if (binId) {
         const bin = await window.main.axiosRequest({
           url: mockbinUrl + `/bin/${binId}`,
           method: 'put',
-          data: mockbinInput,
+          data: binResponse,
         });
-        console.log({ bin });
         if (bin?.data) {
           return bin.data;
         }
@@ -59,15 +56,13 @@ export const MockUrlBar = () => {
       const bin = await window.main.axiosRequest({
         url: mockbinUrl + '/bin/create',
         method: 'post',
-        data: mockbinInput,
+        data: binResponse,
       });
-      // todo: handle error better
-      // todo create/update current bin url
-      console.log({ bin });
       if (bin?.data) {
         return bin.data;
       }
     } catch (e) {
+      // todo: handle error better
       console.log(e);
     }
     console.log('Error: creating bin on remote');
@@ -84,18 +79,16 @@ export const MockUrlBar = () => {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new-mock-send`,
         method: 'post',
       });
-  const test = async () => {
-    console.log('test', mockRoute);
-    const binResponse = await formToMockBin({
+
+  const upsertMockbinHarAndTestIt = async () => {
+    const binResponse = await formToHar({
       statusCode: 200,
       headersArray: mockRoute.headers,
       body: mockRoute.body,
     });
-
-    const id = await createBinOnRemoteFromResponse(binResponse, mockRoute?.binId);
+    const id = await upsertBinOnRemoteFromResponse(binResponse, mockRoute?.binId);
     const url = mockbinUrl + '/bin/' + id;
     invariant(id, 'mockbin failed to return an id, its possible it does not support something within the request body');
-    console.log('test', url);
     patchMockRoute(mockRoute._id, { path: url, binId: id, binResponse });
     createandSendRequest({
       url,
@@ -136,7 +129,7 @@ export const MockUrlBar = () => {
     <div className='flex p-1'>
       <Button
         className="urlbar__send-btn rounded-sm"
-        onPress={test}
+        onPress={upsertMockbinHarAndTestIt}
       >
         Test
       </Button>
