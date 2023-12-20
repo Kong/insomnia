@@ -16,7 +16,7 @@ import {
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
 import * as log from '../common/log';
-import { registerUtilityProcessConsumer, registerUtilityProcessController } from './ipc/utility-process';
+import { registerHiddenBrowserWindowConsumer, registerHiddenBrowserWindowController } from './ipc/hidden-browser-window';
 import LocalStorage from './local-storage';
 
 const { app, Menu, shell, dialog, clipboard, BrowserWindow } = electron;
@@ -27,7 +27,7 @@ const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 
 let newWindow: ElectronBrowserWindow | null = null;
-let isolatedUtilityProcess: ElectronBrowserWindow | null = null;
+let hiddenBrowserWindow: ElectronBrowserWindow | null = null;
 const windows = new Set<ElectronBrowserWindow>();
 const processes = new Set<ElectronBrowserWindow>();
 let localStorage: LocalStorage | null = null;
@@ -43,35 +43,35 @@ export function init() {
   initLocalStorage();
 }
 
-export function createUtilityProcess() {
-  isolatedUtilityProcess = new BrowserWindow({
+export function createHiddenBrowserWindow() {
+  hiddenBrowserWindow = new BrowserWindow({
     show: false,
-    title: 'UtilityProcess',
+    title: 'HiddenBrowserWindow',
     webPreferences: {
       sandbox: true,
       contextIsolation: true,
       nodeIntegration: false,
       webSecurity: true,
-      preload: path.join(__dirname, 'renderers/utility-process/preload-utility-process.js'),
+      preload: path.join(__dirname, 'renderers/hidden-browser-window/preload-hidden-browser-window.js'),
       spellcheck: false,
     },
   });
 
-  const utilityProcessPath = path.resolve(__dirname, './renderers/utility-process/index.html');
-  const utilityProcessUrl = process.env.UTILITY_PROCESS_URL || pathToFileURL(utilityProcessPath).href;
-  console.log('[main] loading utility process:', process.env.UTILITY_PROCESS_URL, pathToFileURL(utilityProcessPath).href);
-  isolatedUtilityProcess.loadURL(utilityProcessUrl);
+  const hiddenBrowserWindowPath = path.resolve(__dirname, './renderers/hidden-browser-window/index.html');
+  const hiddenBrowserWindowUrl = process.env.HIDDEN_BROWSER_WINDOW_URL || pathToFileURL(hiddenBrowserWindowPath).href;
+  hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
+  console.log('[main] loading hidden browser window:', process.env.HIDDEN_BROWSER_WINDOW_URL, pathToFileURL(hiddenBrowserWindowPath).href);
 
-  isolatedUtilityProcess?.on('closed', () => {
-    if (isolatedUtilityProcess) {
-      processes.delete(isolatedUtilityProcess);
-      isolatedUtilityProcess = processes.values().next().value || null;
+  hiddenBrowserWindow?.on('closed', () => {
+    if (hiddenBrowserWindow) {
+      processes.delete(hiddenBrowserWindow);
+      hiddenBrowserWindow = processes.values().next().value || null;
     }
   });
 
-  processes.add(isolatedUtilityProcess);
+  processes.add(hiddenBrowserWindow);
 
-  return isolatedUtilityProcess;
+  return hiddenBrowserWindow;
 }
 
 export function createWindow() {
@@ -476,9 +476,10 @@ export function createWindow() {
     );
   } else {
     // @ts-expect-error -- TSCONVERSION type splitting
-    helpMenu.submenu?.push({
-      type: 'separator',
-    },
+    helpMenu.submenu?.push(
+      {
+        type: 'separator',
+      },
       {
         label: `${MNEMONIC_SYM}About`,
         click: aboutMenuClickHandler,
@@ -582,8 +583,8 @@ export function createWindow() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
   windows.add(newWindow);
 
-  registerUtilityProcessController();
-  registerUtilityProcessConsumer(windows ? Array.from(windows.values()) : []);
+  registerHiddenBrowserWindowController();
+  registerHiddenBrowserWindowConsumer(windows ? Array.from(windows.values()) : []);
 
   return newWindow;
 }

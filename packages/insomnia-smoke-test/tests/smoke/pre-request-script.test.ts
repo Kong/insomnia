@@ -2,7 +2,7 @@ import { expect } from '@playwright/test';
 
 import { test } from '../../playwright/test';;
 
-test.describe('test utility process', async () => {
+test.describe('test pre-request script execution', async () => {
 
   const testCases = [
     {
@@ -315,12 +315,13 @@ test.describe('test utility process', async () => {
 
       const originalWindowCount = app.windows().length;
 
-      // start the utility process
+      // start the sandbox
       await mainWindow?.evaluate(
         async () => {
-          const caller = window as unknown as { utilityProcess: { start: () => void } };
-          if (caller.utilityProcess) {
-            caller.utilityProcess.start();
+          // it suppresses the type checking error
+          const caller = window as unknown as { hiddenBrowserWindow: { start: () => void } };
+          if (caller.hiddenBrowserWindow) {
+            caller.hiddenBrowserWindow.start();
           }
         },
       );
@@ -331,13 +332,13 @@ test.describe('test utility process', async () => {
         if (windows.length > originalWindowCount) {
           for (const page of windows) {
             const title = await page.title();
-            if (title === 'Utility Process') {
+            if (title === 'Hidden Browser Window') {
               await page.waitForLoadState();
             }
           }
           break;
         }
-        mainWindow.waitForTimeout(500);
+        await mainWindow.waitForTimeout(500);
       }
 
       // action
@@ -345,7 +346,7 @@ test.describe('test utility process', async () => {
         async (tc: any) => {
           window.postMessage(
             {
-              action: 'message-event://utility.process/debug',
+              action: 'message-event://hidden.browser-window/debug',
               id: tc.id,
               code: tc.code,
               context: tc.context,
@@ -368,8 +369,10 @@ test.describe('test utility process', async () => {
         if (localStorage[`test_result:${tc.id}`] || localStorage[`test_error:${tc.id}`]) {
           break;
         }
-        mainWindow.waitForTimeout(500);
+        await mainWindow.waitForTimeout(500);
       }
+
+      // await mainWindow.waitForTimeout(300000);
 
       if (localStorage) { // just for suppressing ts complaint
         console.log(localStorage[`test_error:${tc.id}`]);

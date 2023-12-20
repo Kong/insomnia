@@ -87,8 +87,8 @@ const clipboard: Window['clipboard'] = {
   clear: () => ipcRenderer.send('clear'),
 };
 
-const utilityProcess: Window['utilityProcess'] = {
-  start: () => ipcRenderer.invoke('ipc://main/utility-process/start'),
+const hiddenBrowserWindow: Window['hiddenBrowserWindow'] = {
+  start: () => ipcRenderer.invoke('ipc://main/hidden-browser-window/start'),
 };
 
 if (process.contextIsolated) {
@@ -97,14 +97,14 @@ if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('app', app);
   contextBridge.exposeInMainWorld('shell', shell);
   contextBridge.exposeInMainWorld('clipboard', clipboard);
-  contextBridge.exposeInMainWorld('utilityProcess', utilityProcess);
+  contextBridge.exposeInMainWorld('hiddenBrowserWindow', hiddenBrowserWindow);
 } else {
   window.main = main;
   window.dialog = dialog;
   window.app = app;
   window.shell = shell;
   window.clipboard = clipboard;
-  window.utilityProcess = utilityProcess;
+  window.hiddenBrowserWindow = hiddenBrowserWindow;
 }
 
 // it is different from window.main.on, it requires events to pass ports

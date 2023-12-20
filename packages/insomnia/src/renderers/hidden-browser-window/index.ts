@@ -1,6 +1,6 @@
 import { initPm } from './inso-object';
 
-const executeAction = 'message-port://utility.process/execute';
+const executeAction = 'message-port://hidden.browser-window/execute';
 
 async function init() {
     const channel = new MessageChannel();
@@ -8,7 +8,7 @@ async function init() {
     channel.port1.onmessage = async (ev: MessageEvent) => {
         const action = ev.data.action;
 
-        if (action === executeAction || action === 'message-port://utility.process/debug') {
+        if (action === executeAction || action === 'message-port://hidden.browser-window/debug') {
             try {
                 const getPm = new Function('pm', 'return pm;');
                 const rawPm = getPm(ev.data.options.context.pm);
