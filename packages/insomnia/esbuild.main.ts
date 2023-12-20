@@ -22,8 +22,8 @@ export default async function build(options: Options) {
       'process.env.APP_RENDER_URL': JSON.stringify(
         `http://localhost:${PORT}/index.html`
       ),
-      'process.env.UTILITY_PROCESS_URL': JSON.stringify(
-        `http://localhost:${PORT}/renderers/utility-process/index.html`
+      'process.env.HIDDEN_BROWSER_WINDOW_URL': JSON.stringify(
+        `http://localhost:${PORT}/renderers/hidden-browser-window/index.html`
       ),
       'process.env.NODE_ENV': JSON.stringify('development'),
       'process.env.INSOMNIA_ENV': JSON.stringify('development'),
@@ -44,9 +44,9 @@ export default async function build(options: Options) {
     format: 'cjs',
     external: ['electron'],
   });
-  const preloadUtilityProcess = esbuild.build({
-    entryPoints: ['./src/renderers/utility-process/preload.ts'],
-    outfile: path.join(outdir, 'renderers/utility-process/preload-utility-process.js'),
+  const preloadHiddenBrowserWindow = esbuild.build({
+    entryPoints: ['./src/renderers/hidden-browser-window/preload.ts'],
+    outfile: path.join(outdir, 'renderers/hidden-browser-window/preload-hidden-browser-window.js'),
     target: 'esnext',
     bundle: true,
     platform: 'node',
@@ -54,10 +54,10 @@ export default async function build(options: Options) {
     format: 'cjs',
     external: ['electron'],
   });
-  const utilityProcess = esbuild.build({
-    entryPoints: ['./src/renderers/utility-process/index.ts'],
-    // utility process is always outputed to 'src' as index.html requires a built bundle
-    outfile: path.join(__dirname, 'src', 'renderers/utility-process/utility-process.js'),
+  const hiddenBrowserWindow = esbuild.build({
+    entryPoints: ['./src/renderers/hidden-browser-window/index.ts'],
+    // the hidden browser window script is always outputed to 'src' as index.html requires a built bundle
+    outfile: path.join(__dirname, 'src', 'renderers/hidden-browser-window/index.js'),
     target: 'esnext',
     bundle: true,
     platform: 'browser',
@@ -81,7 +81,7 @@ export default async function build(options: Options) {
     ],
   });
 
-  return Promise.all([main, preload, preloadUtilityProcess, utilityProcess]);
+  return Promise.all([main, preload, preloadHiddenBrowserWindow, hiddenBrowserWindow]);
 }
 
 // Build if ran as a cli script

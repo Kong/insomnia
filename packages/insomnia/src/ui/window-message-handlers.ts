@@ -2,7 +2,7 @@
 type MessageHandler = (ev: MessageEvent) => Promise<void>;
 
 class WindowMessageHandler {
-    private utilityProcessPort: MessagePort | undefined;
+    private hiddenBrowserWindowPort: MessagePort | undefined;
     private actionHandlers: Map<string, MessageHandler> = new Map();
 
     constructor() { }
@@ -13,12 +13,12 @@ class WindowMessageHandler {
             return;
         }
 
-        this.utilityProcessPort = ev.ports[0];
+        this.hiddenBrowserWindowPort = ev.ports[0];
 
-        this.utilityProcessPort.onmessage = ev => {
+        this.hiddenBrowserWindowPort.onmessage = ev => {
             if (ev.data.action === 'message-port://caller/respond') {
                 // TODO: hook to UI and display result
-                console.log('[main] result from utility process:', ev.data.result);
+                console.log('[main] result from hidden browser window:', ev.data.result);
             } else if (ev.data.action === 'message-port://caller/debug/respond') {
                 if (ev.data.result) {
                     window.localStorage.setItem(`test_result:${ev.data.id}`, JSON.stringify(ev.data.result));
@@ -32,13 +32,13 @@ class WindowMessageHandler {
     };
 
     debugEventHandler = async (ev: MessageEvent) => {
-        if (!this.utilityProcessPort) {
-            console.error('utility process port is not inited');
+        if (!this.hiddenBrowserWindowPort) {
+            console.error('hidden browser window port is not inited');
             return;
         }
 
-        this.utilityProcessPort.postMessage({
-            action: 'message-port://utility.process/debug',
+        this.hiddenBrowserWindowPort.postMessage({
+            action: 'message-port://hidden.browser-window/debug',
             options: {
                 id: ev.data.id,
                 code: ev.data.code,
@@ -47,16 +47,13 @@ class WindowMessageHandler {
         });
     };
 
-    // startUtilityProcessHandler = async (ev: MessageEvent) => {
-    // };
-
     register = (actionName: string, handler: MessageHandler) => {
         this.actionHandlers.set(actionName, handler);
     };
 
     start = () => {
         this.register('message-event://renderers/publish-port', this.publishPortHandler);
-        this.register('message-event://utility.process/debug', this.debugEventHandler);
+        this.register('message-event://hidden.browser-window/debug', this.debugEventHandler);
 
         window.onmessage = (ev: MessageEvent) => {
             const action = ev.data.action;

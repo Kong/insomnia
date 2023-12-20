@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           main: path.join(__dirname, 'src/index.html'),
-          utilityProcess: path.join(__dirname, 'src/renderers/utility-process/index.html'),
+          hiddenBrowserWindow: path.join(__dirname, 'src/renderers/hidden-browser-window/index.html'),
         },
         external: ['@getinsomnia/node-libcurl'],
       },
