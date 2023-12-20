@@ -31,7 +31,7 @@ test.describe('test pre-request script execution', async () => {
             pm.environment.set('rendered', vals);
           `,
       context: {
-        pm: {
+        insomnia: {
           environment: {
             bool1: true,
             num1: 1,
@@ -102,7 +102,7 @@ test.describe('test pre-request script execution', async () => {
             pm.collectionVariables.set('rendered', vals);
           `,
       context: {
-        pm: {
+        insomnia: {
           collectionVariables: {
             bool1: true,
             num1: 1,
@@ -164,7 +164,7 @@ test.describe('test pre-request script execution', async () => {
             pm.variables.set('rendered', rendered);
           `,
       context: {
-        pm: {
+        insomnia: {
           globals: {
             bool: false,
             num: 1,
@@ -228,47 +228,6 @@ test.describe('test pre-request script execution', async () => {
         'requestName': '',
       },
     },
-    // {
-    //   id: 'simple test sendRequest and await/async',
-    //   code: `
-    //       let testResp;
-    //       try {
-    //         await new Promise(
-    //           resolve => {
-    //             pm.sendRequest(
-    //               'http://127.0.0.1:4010/pets/1',
-    //               (err, resp) => {
-    //                 testResp = resp;
-    //                 resolve();
-    //               }
-    //             );
-    //           }
-    //         );
-    //       } catch (e) {
-    //         pm.variables.set('resp.code', e);
-    //       }
-    //       pm.variables.set('resp.code', testResp.code);
-    //     `,
-    //   context: {
-    //     pm: {},
-    //   },
-    //   expectedResult: {
-    //     globals: {},
-    //     iterationData: {},
-    //     variables: {
-    //       'resp.code': 200,
-    //     },
-    //     environment: {},
-    //     collectionVariables: {},
-    //     info: {
-    //       'eventName': 'prerequest',
-    //       'iteration': 1,
-    //       'iterationCount': 1,
-    //       'requestId': '',
-    //       'requestName': '',
-    //     },
-    //   },
-    // },
     {
       id: 'requestInfo tests',
       code: `
@@ -279,7 +238,7 @@ test.describe('test pre-request script execution', async () => {
         const requestId = pm.info.requestId;
         `,
       context: {
-        pm: {
+        insomnia: {
           requestInfo: {
             eventName: 'prerequest',
             iteration: 1,
@@ -326,7 +285,7 @@ test.describe('test pre-request script execution', async () => {
         },
       );
 
-      // waiting for the process ready
+      // waiting for the hidden browser ready
       for (let i = 0; i < 120; i++) {
         const windows = app.windows();
         if (windows.length > originalWindowCount) {
@@ -371,8 +330,6 @@ test.describe('test pre-request script execution', async () => {
         }
         await mainWindow.waitForTimeout(500);
       }
-
-      // await mainWindow.waitForTimeout(300000);
 
       if (localStorage) { // just for suppressing ts complaint
         console.log(localStorage[`test_error:${tc.id}`]);
