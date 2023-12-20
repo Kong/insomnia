@@ -1019,7 +1019,14 @@ const ProjectRoute: FC = () => {
                     <Icon icon="exclamation-triangle" className='mr-2' />
                     {isUserOwner ? `Your ${isPersonalOrg ? 'personal account' : 'organization'} has unpaid past invoices. Please enter a new payment method to continue using Insomnia.` : 'This organization has unpaid past invoices. Please ask the organization owner to enter a new payment method to continue using Insomnia.'}
                   </p>
-                  {isUserOwner && <Button className="px-4 text-[--color-bg] bg-opacity-100 bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">Update payment method</Button>}
+                  {isUserOwner && (
+                    <a
+                      href={`${getAppWebsiteBaseURL()}/app/dashboard/organizations`}
+                      className="px-4 text-[--color-bg] bg-opacity-100 bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    >
+                      Update payment method
+                    </a>
+                  )}
                 </div>
               </div>}
               <div className="flex justify-between w-full gap-1 p-[--padding-md]">
