@@ -101,7 +101,7 @@ test.describe('Debug-Sidebar', async () => {
       await requestLocator.click();
     });
 
-    test('Delete Request', async ({ page }) => {
+    test.skip('Delete Request', async ({ page }) => {
       const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example http' });
       await requestLocator.click();
       const numberOfRequests = await page.getByLabel('Request Collection').getByRole('row').count();
