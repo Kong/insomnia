@@ -196,7 +196,6 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      isDismissable
       className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
     >
       <Modal
