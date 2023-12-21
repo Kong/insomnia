@@ -64,7 +64,8 @@ test.describe('Environment Editor', async () => {
     await page.getByTestId('CodeEditor').getByRole('textbox').fill('"testNumber":9000,');
     await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
     await page.getByTestId('CodeEditor').getByRole('textbox').fill('"testString":"Gandalf",');
-    await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
+    // Let debounce finish
+    await page.waitForTimeout(1500);
 
     // Open request
     await page.getByRole('button', { name: 'Close' }).click();
