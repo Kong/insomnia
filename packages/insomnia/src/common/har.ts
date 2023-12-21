@@ -325,6 +325,20 @@ export async function exportHarWithRequest(
       renderResult.request,
       renderResult.context,
     );
+
+    // TODO: remove this temporary hack to support GraphQL variables in the request body properly
+    if (renderedRequest && renderedRequest.body?.text && renderedRequest.body?.mimeType === 'application/graphql') {
+      try {
+        const parsedBody = JSON.parse(renderedRequest.body.text);
+        if (typeof parsedBody.variables === 'string') {
+          parsedBody.variables = JSON.parse(parsedBody.variables);
+          renderedRequest.body.text = JSON.stringify(parsedBody, null, 2);
+        }
+      } catch (e) {
+        console.error('Failed to parse GraphQL variables', e);
+      }
+    }
+
     return exportHarWithRenderedRequest(renderedRequest, addContentLength);
   } catch (err) {
     if (err instanceof RenderError) {
