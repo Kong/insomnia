@@ -196,20 +196,19 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      isDismissable
       className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
-        className="flex flex-col max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]"
+        className="flex flex-col w-[calc(100%-var(--padding-xl))] h-[calc(100%-var(--padding-xl))] rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] bg-[--color-bg] text-[--color-font]"
       >
         <Dialog
           className="outline-none flex-1 h-full flex flex-col overflow-hidden"
         >
           {({ close }) => (
-            <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
+            <div className='flex-1 flex flex-col gap-4 overflow-hidden h-full'>
               <div className='flex gap-2 items-center justify-between'>
                 <Heading slot="title" className='text-2xl'>Manage Environments</Heading>
                 <Button
@@ -219,11 +218,11 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className='rounded w-full overflow-hidden divide-x divide-solid divide-[--hl-md] basis-96 flex border border-solid border-[--hl-sm] select-none overflow-y-auto max-h-96'>
+              <div className='rounded flex-1 w-full overflow-hidden divide-x divide-solid divide-[--hl-md] basis-96 flex border border-solid border-[--hl-sm] select-none overflow-y-auto'>
                 <GridList
                   aria-label="Environments"
                   items={[baseEnvironment, ...subEnvironments]}
-                  className="overflow-y-auto max-w-xs flex-shrink-0 data-[empty]:py-0 py-[--padding-xs]"
+                  className="overflow-y-auto max-w-xs w-full flex-shrink-0 data-[empty]:py-0 py-[--padding-xs]"
                   disallowEmptySelection
                   selectionMode="single"
                   selectionBehavior='replace'
