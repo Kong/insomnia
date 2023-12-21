@@ -24,7 +24,7 @@
     "@grpc/grpc-js": "^1.6.7",
     "@grpc/proto-loader": "^0.7.7",
     "@jest/globals": "^28.1.0",
-    "@playwright/test": "^1.36.0",
+    "@playwright/test": "1.41.0-alpha-dec-20-2023",
     "@ravanallc/grpc-server-reflection": "^0.1.6",
     "@types/concurrently": "^6.0.1",
     "@types/express": "^4.17.11",
