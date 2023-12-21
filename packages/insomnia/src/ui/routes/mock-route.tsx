@@ -1,7 +1,7 @@
 import React from 'react';
 import { LoaderFunction, useRouteLoaderData } from 'react-router-dom';
 
-import { contentTypesMap } from '../../common/constants';
+import { contentTypesMap, RESPONSE_CODE_REASONS } from '../../common/constants';
 import { database as db } from '../../common/database';
 import * as models from '../../models';
 import { MockRoute } from '../../models/mock-route';
@@ -10,7 +10,6 @@ import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
 import { PanelContainer, TabItem, Tabs } from '../components/base/tabs';
 import { CodeEditor } from '../components/codemirror/code-editor';
-import { OneLineEditor } from '../components/codemirror/one-line-editor';
 import { MockResponseHeadersEditor, useMockRoutePatcher } from '../components/editors/mock-response-headers-editor';
 import { MockResponsePane } from '../components/mocks/mock-response-pane';
 import { MockUrlBar } from '../components/mocks/mock-url-bar';
@@ -125,7 +124,7 @@ export const MockRouteRoute = () => {
                       type="string"
                       defaultValue={mockRoute.statusText}
                       onChange={e => patchMockRoute(mockRoute._id, { statusText: e.currentTarget.value })}
-                      placeholder="OK"
+                      placeholder={RESPONSE_CODE_REASONS[mockRoute.statusCode || 200] || 'Unknown'}
                     />
                   </label>
                 </div>
