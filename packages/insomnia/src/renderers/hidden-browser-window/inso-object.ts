@@ -1,6 +1,7 @@
 import { getIntepolator } from './intepolator';
 
 export type EventName = 'prerequest' | 'test';
+
 class RequestInfo {
     public eventName: EventName;
     public iteration: number;
@@ -78,19 +79,19 @@ class Environment extends BaseKV {
 
 class Variables {
     // TODO: support vars for all levels
-    private globals: BaseKV;
-    private collection: BaseKV;
-    private environment: BaseKV;
-    private data: BaseKV;
-    private local: BaseKV;
+    private globals: Environment;
+    private collection: Environment;
+    private environment: Environment;
+    private data: Environment;
+    private local: Environment;
 
     constructor(
         args: {
-            globals: BaseKV;
-            collection: BaseKV;
-            environment: BaseKV;
-            data: BaseKV;
-            local: BaseKV;
+            globals: Environment;
+            collection: Environment;
+            environment: Environment;
+            data: Environment;
+            local: Environment;
         },
     ) {
         this.globals = args.globals;

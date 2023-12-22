@@ -1,4 +1,5 @@
 import { test } from '../../playwright/test';
+
 test('Clone from github', async ({ page }) => {
   await page.getByLabel('Clone git repository').click();
   await page.getByRole('tab', { name: ' Git' }).click();
@@ -10,6 +11,7 @@ test('Clone from github', async ({ page }) => {
   await page.getByTestId('git-repository-settings-modal__sync-btn').click();
   await page.getByLabel('Toggle preview').click();
 });
+
 test('Sign in with GitHub', async ({ app, page }) => {
   await page.getByRole('button', { name: 'New Document' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();

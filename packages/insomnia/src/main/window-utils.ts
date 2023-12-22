@@ -45,7 +45,7 @@ export function init() {
 
 export function createHiddenBrowserWindow() {
   hiddenBrowserWindow = new BrowserWindow({
-    show: true,
+    show: false,
     title: 'HiddenBrowserWindow',
     webPreferences: {
       sandbox: true,

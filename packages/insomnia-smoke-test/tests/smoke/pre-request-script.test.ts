@@ -2,6 +2,20 @@ import { expect } from '@playwright/test';
 
 import { test } from '../../playwright/test';;
 
+async function waitForTrue(timeout: number, func: () => Promise<boolean>) {
+  const pollInterval = 500;
+
+  for (let i = 0; i < timeout / pollInterval; i++) {
+    const ready = await func();
+
+    if (ready) {
+      break;
+    } else {
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
+    }
+  }
+}
+
 test.describe('test pre-request script execution', async () => {
 
   const testCases = [
@@ -286,21 +300,22 @@ test.describe('test pre-request script execution', async () => {
       );
 
       // waiting for the hidden browser ready
-      for (let i = 0; i < 120; i++) {
+      await waitForTrue(60000, async () => {
         const windows = app.windows();
+
         if (windows.length > originalWindowCount) {
           for (const page of windows) {
-            const title = await page.title();
-            if (title === 'Hidden Browser Window') {
+            if (await page.title() === 'Hidden Browser Window') {
               await page.waitForLoadState();
+              return true;
             }
           }
-          break;
         }
-        await mainWindow.waitForTimeout(500);
-      }
 
-      // action
+        return false;
+      });
+
+      // execute the command
       await mainWindow?.evaluate(
         async (tc: any) => {
           window.postMessage(
@@ -316,20 +331,15 @@ test.describe('test pre-request script execution', async () => {
         tc,
       );
 
-      // assert
+      // verify
       let localStorage;
 
-      // TODO: ideally call waitForEvent
-      for (let i = 0; i < 120; i++) {
-
+      await waitForTrue(60000, async () => {
         localStorage = await mainWindow?.evaluate(() => window.localStorage);
         expect(localStorage).toBeDefined();
 
-        if (localStorage[`test_result:${tc.id}`] || localStorage[`test_error:${tc.id}`]) {
-          break;
-        }
-        await mainWindow.waitForTimeout(500);
-      }
+        return localStorage[`test_result:${tc.id}`] || localStorage[`test_error:${tc.id}`];
+      });
 
       if (localStorage) { // just for suppressing ts complaint
         console.log(localStorage[`test_error:${tc.id}`]);
