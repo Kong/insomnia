@@ -227,11 +227,11 @@ test.describe('test pre-request script execution', async () => {
           'str': 'iter',
         },
         info: {
-          'eventName': 'prerequest',
-          'iteration': 1,
-          'iterationCount': 1,
-          'requestId': '',
-          'requestName': '',
+          eventName: 'prerequest',
+          iteration: 1,
+          iterationCount: 1,
+          requestId: '',
+          requestName: '',
         },
       },
       info: {
@@ -275,6 +275,30 @@ test.describe('test pre-request script execution', async () => {
           requestName: 'req',
           requestId: 'req-1',
         },
+      },
+    },
+    {
+      id: 'execution timeout (default timeout 3s)',
+      code: `
+        await new Promise(resolve => setTimeout(resolve, 4000));
+        `,
+      context: {
+        insomnia: {},
+      },
+      expectedResult: {
+        message: 'executing script timeout:3000ms',
+      },
+    },
+    {
+      id: 'invalid result is returned',
+      code: `
+        resolve();
+        `,
+      context: {
+        insomnia: {},
+      },
+      expectedResult: {
+        message: 'result is invalid, probably custom value is returned',
       },
     },
   ];
@@ -342,11 +366,16 @@ test.describe('test pre-request script execution', async () => {
       });
 
       if (localStorage) { // just for suppressing ts complaint
-        console.log(localStorage[`test_error:${tc.id}`]);
-        expect(JSON.parse(localStorage[`test_result:${tc.id}`])).toEqual(tc.expectedResult);
+        const result = localStorage[`test_result:${tc.id}`];
+        const error = localStorage[`test_error:${tc.id}`];
+
+        if (result) {
+          expect(JSON.parse(result)).toEqual(tc.expectedResult);
+        } else {
+          expect(JSON.parse(error)).toEqual(tc.expectedResult);
+        }
       }
 
     });
-
   }
 });

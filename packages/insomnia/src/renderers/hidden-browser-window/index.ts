@@ -1,7 +1,9 @@
 import { initGlobalObject } from './inso-object';
 
+const ErrorTimeout = 'executing script timeout';
+const ErrorInvalidResult = 'result is invalid, probably custom value is returned';
+
 const executeAction = 'message-channel://hidden.browser-window/execute';
-const ErrorTimeout = 'execution timeout';
 
 async function init() {
     const channel = new MessageChannel();
@@ -18,11 +20,12 @@ async function init() {
                 const AsyncFunction = (async () => { }).constructor;
                 const executeScript = AsyncFunction(
                     'insomnia',
+                    // if possible, avoid adding code to the following part
                     `
                         return new Promise(async (resolve, reject) => {
                             const $ = insomnia;
                             const pm = insomnia;
-                            const alertTimeout = () => reject({ message: '${ErrorTimeout}' });
+                            const alertTimeout = () => reject({ message: '${ErrorTimeout}:${timeout}ms' });
                             const timeoutChecker = setTimeout(alertTimeout, ${timeout});
 
                             ${ev.data.options.code};
@@ -33,9 +36,10 @@ async function init() {
                     `
                 );
 
-                const result = await executeScript(
-                    insomniaObject,
-                );
+                const result = await executeScript(insomniaObject);
+                if (!result) {
+                    throw { message: ErrorInvalidResult };
+                }
 
                 channel.port1.postMessage({
                     action: action === executeAction ? 'message-channel://caller/respond' : 'message-channel://caller/debug/respond',
@@ -48,14 +52,14 @@ async function init() {
                 channel.port1.postMessage({
                     action: action === executeAction ? 'message-channel://caller/respond' : 'message-channel://caller/debug/respond',
                     id: action === executeAction ? undefined : ev.data.options.id,
-                    error: JSON.stringify({ message }),
+                    error: { message: message || 'unknown error' },
                 });
             }
         } else {
             console.error(`unknown action ${ev.data}`);
         }
-    }
-        ;
+    };
+
     window.postMessage('message-event://preload/publish-port', '*', [channel.port2]);
 }
 
