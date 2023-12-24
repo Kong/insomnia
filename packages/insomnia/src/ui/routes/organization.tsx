@@ -44,13 +44,14 @@ import { GitHubStarsButton } from '../components/github-stars-button';
 import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';
 import { InsomniaAILogo } from '../components/insomnia-icon';
-import { showAlert } from '../components/modals';
-import { showSettingsModal } from '../components/modals/settings-modal';
+import { showAlert, showModal } from '../components/modals';
+import { SettingsModal, showSettingsModal } from '../components/modals/settings-modal';
 import { OrganizationAvatar } from '../components/organization-avatar';
 import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
 import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-stream-context';
 import { useRootLoaderData } from './root';
+import { UntrackedProjectsLoaderData } from './untracked-projects';
 import { WorkspaceLoaderData } from './workspace';
 
 export interface OrganizationsResponse {
@@ -279,6 +280,11 @@ export interface FeatureList {
   orgBasicRbac: FeatureStatus;
 }
 
+export interface Billing {
+  // If true, the user has paid for the current period
+  isActive: boolean;
+}
+
 export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params as { organizationId: string };
 
@@ -287,9 +293,15 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
   };
 
+  // If network unreachable assume user has paid for the current period
+  const fallbackBilling = {
+    isActive: true,
+  };
+
   if (isScratchpadOrganizationId(organizationId)) {
     return {
       features: fallbackFeatures,
+      billing: fallbackBilling,
     };
   }
 
@@ -300,7 +312,7 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   }
 
   try {
-    const response = await window.main.insomniaFetch<{ features: FeatureList } | undefined>({
+    const response = await window.main.insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
       method: 'GET',
       path: `/v1/organizations/${organizationId}/features`,
       sessionId: session.getCurrentSessionId(),
@@ -308,10 +320,12 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
 
     return {
       features: response?.features || fallbackFeatures,
+      billing: response?.billing || fallbackBilling,
     };
   } catch (err) {
     return {
       features: fallbackFeatures,
+      billing: fallbackBilling,
     };
   }
 };
@@ -383,13 +397,24 @@ const OrganizationRoute = () => {
     workspaceData?.activeWorkspace &&
     isScratchpad(workspaceData.activeWorkspace);
   const isScratchPadBannerVisible = !isScratchPadBannerDismissed && isScratchpadWorkspace;
-
+  const untrackedProjectsFetcher = useFetcher<UntrackedProjectsLoaderData>();
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId?: string;
     workspaceId?: string;
   };
   const [status, setStatus] = useState<'online' | 'offline'>('online');
+
+  useEffect(() => {
+    const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
+    if (isIdleAndUninitialized) {
+      untrackedProjectsFetcher.load('/untracked-projects');
+    }
+  }, [untrackedProjectsFetcher, organizationId]);
+
+  const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
+  const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
+  const hasUntrackedData = untrackedProjects.length > 0 || untrackedWorkspaces.length > 0;
 
   useEffect(() => {
     const handleOnline = () => setStatus('online');
@@ -684,6 +709,14 @@ const OrganizationRoute = () => {
                   />
                 </Tooltip>
               </TooltipTrigger>
+              {hasUntrackedData ? <div>
+                <Button
+                  className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                  onPress={() => showModal(SettingsModal, { tab: 'data' })}
+                >
+                  <Icon icon="exclamation-circle" /> You have untracked data in your computer
+                </Button>
+              </div> : null}
             </div>
             <div className='flex items-center gap-2 divide divide-y-[--hl-sm]'>
               <TooltipTrigger>

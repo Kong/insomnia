@@ -1,5 +1,6 @@
 import classnames from 'classnames';
 import React, { forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { FocusScope } from 'react-aria';
 
 import { createKeybindingsHandler } from '../keydown-binder';
 // Keep global z-index reference so that every modal will
@@ -93,22 +94,24 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
   }, [handleKeydown]);
 
   return (open ?
-    <div
-      ref={containerRef}
-      onKeyDown={handleKeydown}
-      tabIndex={-1}
-      className={classes}
-      style={{ zIndex }}
-      aria-hidden={false}
-      role="dialog"
-    >
-      <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
-      <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
-        <div className="modal__content">
-          {children}
+    <FocusScope autoFocus>
+      <div
+        ref={containerRef}
+        onKeyDown={handleKeydown}
+        tabIndex={-1}
+        className={classes}
+        style={{ zIndex }}
+        aria-hidden={false}
+        role="dialog"
+      >
+        <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
+        <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
+          <div className="modal__content">
+            {children}
+          </div>
         </div>
       </div>
-    </div>
+    </FocusScope>
     : null
   );
 });

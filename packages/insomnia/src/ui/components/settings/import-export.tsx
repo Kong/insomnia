@@ -16,7 +16,7 @@ import { SegmentEvent } from '../../analytics';
 import { useOrganizationLoaderData } from '../../routes/organization';
 import { ProjectLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
-import { LoaderData } from '../../routes/untracked-projects';
+import { UntrackedProjectsLoaderData } from '../../routes/untracked-projects';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
@@ -236,7 +236,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const organizationData = useOrganizationLoaderData();
   const organizations = organizationData?.organizations || [];
 
-  const untrackedProjectsFetcher = useFetcher<LoaderData>();
+  const untrackedProjectsFetcher = useFetcher<UntrackedProjectsLoaderData>();
 
   useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;

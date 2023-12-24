@@ -332,7 +332,10 @@ export const createConfiguredCurlInstance = ({
   }
   const { validateSSL } = settings;
   if (!validateSSL) {
-    curl.setOpt(Curl.option.SSL_VERIFYHOST, 0);
+    // node-libcurl 2.4.1-4 macOS is build with `--with-secure-transport` TLS backend (in order to read the keychain) which interferes with disabling VERIFY_HOST curl option
+    if (process.platform !== 'darwin') {
+      curl.setOpt(Curl.option.SSL_VERIFYHOST, 0);
+    }
     curl.setOpt(Curl.option.SSL_VERIFYPEER, 0);
   }
   debugTimeline.push({ value: `${validateSSL ? 'Enable' : 'Disable'} SSL validation`, name: 'Text', timestamp: Date.now() });
