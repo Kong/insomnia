@@ -145,4 +145,6 @@ export interface Settings {
   useBulkParametersEditor: boolean;
   validateAuthSSL: boolean;
   validateSSL: boolean;
+
+  experimentalFlagPreRequestScript: boolean;
 }

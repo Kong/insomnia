@@ -96,6 +96,23 @@ class WindowMessageHandler {
         console.error(logPrefix, 'the hidden window is still not ready');
     };
 
+    waitUntilHiddenBrowserWindowReady = async () => {
+        window.hiddenBrowserWindow.start();
+
+        // TODO: find a better way to wait for hidden browser window ready
+        // the hiddenBrowserWindow may be still in starting
+        // this is relatively simpler than receiving a 'ready' message from hidden browser window
+        for (let i = 0; i < 100; i++) {
+            if (this.hiddenBrowserWindowPort) {
+                break;
+            } else {
+                await new Promise<void>(resolve => setTimeout(resolve, 100));
+            }
+        }
+
+        console.error('the hidden window is still not ready');
+    };
+
     debugEventHandler = async (ev: MessageEvent) => {
         if (!this.hiddenBrowserWindowPort) {
             console.error(logPrefix, 'hidden browser window port is not inited, restarting');
@@ -118,6 +135,8 @@ class WindowMessageHandler {
     };
 
     start = () => {
+        window.hiddenBrowserWindow.start();
+
         this.register('message-event://renderers/publish-port', this.publishPortHandler);
         this.register('message-event://hidden.browser-window/debug', this.debugEventHandler);
 

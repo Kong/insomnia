@@ -100,6 +100,7 @@ export interface BaseRequest {
   authentication: RequestAuthentication;
   metaSortKey: number;
   isPrivate: boolean;
+  preRequestScript?: string;
   // Settings
   settingStoreCookies: boolean;
   settingSendCookies: boolean;
@@ -135,6 +136,7 @@ export function init(): BaseRequest {
     authentication: {},
     metaSortKey: -1 * Date.now(),
     isPrivate: false,
+    preRequestScript: '',
     // Settings
     settingStoreCookies: true,
     settingSendCookies: true,

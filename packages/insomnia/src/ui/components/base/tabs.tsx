@@ -186,7 +186,11 @@ const Tabs: FC<TabsProps> = props => {
   return (
     <StyledTabsContainer>
       <StyledTabList {...tabListProps} ref={ref} isNested={props.isNested}>
-        {[...state.collection].map((item: Node<TabItemProps>) => (
+        {[...state.collection]
+          .filter(item => (
+            item['aria-label'] !== 'experimental'
+          ))
+          .map((item: Node<TabItemProps>) => (
           <Tab
             key={item.key}
             item={item}

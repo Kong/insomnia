@@ -16,6 +16,7 @@ import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
+import { PreRequestScriptEditor } from '../editors/pre-request-script-editor';
 import {
   QueryEditor,
   QueryEditorContainer,
@@ -100,6 +101,11 @@ export const RequestPane: FC<Props> = ({
       patchRequest(requestId, { url, parameters });
     }
   };
+
+  const handlePreRequestScriptChange = (content: string) => {
+    patchRequest(requestId, { preRequestScript: content });
+  };
+
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
 
@@ -121,6 +127,7 @@ export const RequestPane: FC<Props> = ({
   const contentType =
     getContentTypeFromHeaders(activeRequest.headers) ||
     activeRequest.body.mimeType;
+
   return (
     <Pane type="request">
       <PaneHeader>
@@ -150,6 +157,19 @@ export const RequestPane: FC<Props> = ({
           >
             <AuthWrapper />
           </ErrorBoundary>
+        </TabItem>
+        <TabItem
+          key="pre-request-script"
+          title={'Pre-request Script'}
+          aria-label={settings.experimentalFlagPreRequestScript ? '' : 'experimental'}
+        >
+          <PreRequestScriptEditor
+            uniquenessKey={uniqueKey}
+            contentType='text/javascript'
+            content={activeRequest.preRequestScript || ''}
+            onChange={handlePreRequestScriptChange}
+          />
+          )
         </TabItem>
         <TabItem
           key="query"

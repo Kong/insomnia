@@ -24,6 +24,7 @@ import { Response } from '../../models/response';
 import { isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { RequestSender } from '../../network/request-sender';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
@@ -290,7 +291,7 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
     });
   });
 };
-const writeToDownloadPath = (downloadPathAndName: string, responsePatch: ResponsePatch, requestMeta: RequestMeta, maxHistoryResponses: number) => {
+export const writeToDownloadPath = (downloadPathAndName: string, responsePatch: ResponsePatch, requestMeta: RequestMeta, maxHistoryResponses: number) => {
   invariant(downloadPathAndName, 'filename should be set by now');
 
   const to = createWriteStream(downloadPathAndName);
@@ -398,6 +399,46 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     return redirect(`${url.pathname}?${url.searchParams}`);
   }
 };
+
+export const sendAction2: ActionFunction = async ({ request, params }) => {
+  const { requestId, workspaceId } = params;
+  invariant(typeof requestId === 'string', 'Request ID is required');
+  invariant(workspaceId, 'Workspace ID is required');
+
+  const req = await requestOperations.getById(requestId) as Request;
+  invariant(req, 'Request not found');
+
+  const {
+    environment,
+    settings,
+    clientCertificates,
+    caCert,
+    workspace,
+  } = await fetchRequestData(requestId);
+  const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
+
+  const baseEnvironment = await models.environment.getOrCreateForParentId(
+    workspace ? workspace._id : 'n/a',
+  );
+
+  const sender = new RequestSender(
+    req,
+    shouldPromptForPathAfterResponse,
+    baseEnvironment,
+    environment,
+    settings,
+    clientCertificates,
+    caCert,
+    req.preRequestScript || '',
+  );
+
+  await sender.start();
+
+  const callbackUrl = new URL(request.url.replace('/send2', ''));
+  callbackUrl.searchParams.set('callback', req._id);
+  return redirect(`${callbackUrl.pathname}?${callbackUrl.searchParams}`);
+};
+
 export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {
   const { workspaceId, requestId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');

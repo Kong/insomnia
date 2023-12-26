@@ -7,6 +7,7 @@ import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { AI } from '../settings/ai';
+import { Experiments } from '../settings/experiments';
 import { General } from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import { Plugins } from '../settings/plugins';
@@ -79,6 +80,11 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           <TabItem key="ai" title="AI">
             <PanelContainer className="pad">
               <AI />
+            </PanelContainer>
+          </TabItem>
+          <TabItem key="experiments" title="Experiments">
+            <PanelContainer className="pad">
+              <Experiments />
             </PanelContainer>
           </TabItem>
         </Tabs>

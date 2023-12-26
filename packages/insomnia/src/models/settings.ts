@@ -69,6 +69,7 @@ export function init(): BaseSettings {
     useBulkParametersEditor: false,
     validateAuthSSL: true,
     validateSSL: true,
+    experimentalFlagPreRequestScript: false,
   };
 }
 

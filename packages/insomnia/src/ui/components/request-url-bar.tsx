@@ -68,6 +68,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     searchParams.delete('error');
     setSearchParams({});
   }
+  if (searchParams.has('callback')) {
+    // clean up params
+    searchParams.delete('callback');
+    setSearchParams({});
+
+    // setLoading(false);
+  }
 
   const {
     activeWorkspace,
@@ -113,13 +120,17 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       });
   }, [fetcher, organizationId, projectId, requestId, workspaceId]);
   const send = useCallback((sendParams: SendActionParams) => {
+    const url = settings.experimentalFlagPreRequestScript ?
+      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/send2` :
+      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/send`;
+
     fetcher.submit(JSON.stringify(sendParams),
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/send`,
+        action: url,
         method: 'post',
         encType: 'application/json',
       });
-  }, [fetcher, organizationId, projectId, requestId, workspaceId]);
+  }, [fetcher, organizationId, projectId, requestId, workspaceId, settings]);
 
   const sendOrConnect = useCallback(async (shouldPromptForPathAfterResponse?: boolean) => {
     models.stats.incrementExecutedRequests();

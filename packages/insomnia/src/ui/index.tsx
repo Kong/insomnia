@@ -310,6 +310,13 @@ const router = createMemoryRouter(
                                         ).sendAction(...args),
                                     },
                                     {
+                                      path: 'send2',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/request')
+                                        ).sendAction2(...args),
+                                    },
+                                    {
                                       path: 'connect',
                                       action: async (...args) =>
                                         (

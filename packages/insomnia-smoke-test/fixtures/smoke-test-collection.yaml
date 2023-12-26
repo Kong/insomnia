@@ -176,12 +176,34 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df3c
+    parentId: wrk_5b5ab67830944ffcbec47528366ef403
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: echo pre-request script result
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request    
   - _id: env_afc214be117853a024cce22f194c500e68dac13f
     parentId: wrk_5b5ab67830944ffcbec47528366ef403
     modified: 1636140994432
     created: 1636140994432
     name: Base Environment
-    data: {}
+    data:
+      predefined: base
     dataPropertyOrder: null
     color: null
     isPrivate: false

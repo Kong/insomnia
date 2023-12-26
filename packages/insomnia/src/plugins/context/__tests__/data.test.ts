@@ -195,6 +195,7 @@ describe('app.export.*', () => {
           modified: 222,
           name: 'New Request',
           parameters: [],
+          preRequestScript: '',
           parentId: 'wrk_1',
           settingDisableRenderRequestBody: false,
           settingEncodeUrl: true,

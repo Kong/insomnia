@@ -316,11 +316,11 @@ export async function exportHarRequest(
 
 export async function exportHarWithRequest(
   request: Request,
-  environmentId?: string,
+  environment?: string,
   addContentLength = false,
 ) {
   try {
-    const renderResult = await getRenderedRequestAndContext({ request, environmentId });
+    const renderResult = await getRenderedRequestAndContext({ request, environment });
     const renderedRequest = await _applyRequestPluginHooks(
       renderResult.request,
       renderResult.context,
