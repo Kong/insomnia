@@ -18,6 +18,7 @@ import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
+import { RequestDataSet } from '../../models/request-dataset';
 import { isRequestMeta, RequestMeta } from '../../models/request-meta';
 import { RequestVersion } from '../../models/request-version';
 import { Response } from '../../models/response';
@@ -319,6 +320,7 @@ const writeToDownloadPath = (downloadPathAndName: string, responsePatch: Respons
 export interface SendActionParams {
   requestId: string;
   shouldPromptForPathAfterResponse?: boolean;
+  datasetId?: string;
 }
 export const sendAction: ActionFunction = async ({ request, params }) => {
   const { requestId, workspaceId } = params;
@@ -336,8 +338,13 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     activeEnvironmentId,
   } = await fetchRequestData(requestId);
   try {
-    const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
-    const renderedResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
+    const { shouldPromptForPathAfterResponse, datasetId } = await request.json() as SendActionParams;
+    const dataset: RequestDataSet | null = await models.requestDataset.getById(datasetId || 'n/a');
+          let backupDataset: RequestDataSet | null = null;
+          if (dataset) {
+            backupDataset = (await models.initModel(models.requestDataset.type, dataset)) as RequestDataSet;
+          }
+    const renderedResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND, undefined, dataset);
     const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
 
     // TODO: remove this temporary hack to support GraphQL variables in the request body properly
@@ -363,6 +370,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const requestMeta = await models.requestMeta.getByParentId(requestId);
     invariant(requestMeta, 'RequestMeta not found');
     const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderedResult.context);
+    responsePatch.dataset = backupDataset;
     const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
     const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
     if (!shouldWriteToFile) {

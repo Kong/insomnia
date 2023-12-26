@@ -2,3 +2,4 @@ export { Item as DropdownItem, Section as DropdownSection } from '@react-stately
 export { DropdownButton } from './dropdown-button';
 export { type DropdownHandle, type DropdownProps, Dropdown } from './dropdown';
 export { ItemContent } from './item-content';
+export { DropdownDivider } from './dropdown-divider';

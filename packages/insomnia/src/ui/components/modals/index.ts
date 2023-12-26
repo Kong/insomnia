@@ -1,3 +1,4 @@
+import { RequestDataSet } from '../../../models/request-dataset';
 import { invariant } from '../../../utils/invariant';
 import { ModalProps } from '../base/modal';
 import { AlertModal, AlertModalOptions } from './alert-modal';
@@ -31,7 +32,7 @@ type ModalHandleShowOptions<TModalHandle> = TModalHandle extends {
 export function showModal<TModalProps extends ModalProps & React.RefAttributes<{
   show:(options: any) => void;
 }>>(
-  modalComponent: ModalComponent<TModalProps>, config?: ModalHandleShowOptions<GetRefHandleFromProps<TModalProps>>,
+  modalComponent: ModalComponent<TModalProps>, config?: ModalHandleShowOptions<GetRefHandleFromProps<TModalProps>> & { dataset?: RequestDataSet },
 ) {
   const name = modalComponent.name || modalComponent.displayName;
   invariant(name, 'Modal must have a name or displayName');

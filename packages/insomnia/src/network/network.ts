@@ -20,6 +20,7 @@ import * as models from '../models';
 import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
 import type { Request, RequestAuthentication, RequestParameter } from '../models/request';
+import { RequestDataSet } from '../models/request-dataset';
 import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
@@ -64,13 +65,14 @@ export const fetchRequestData = async (requestId: string) => {
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId };
 };
 
-export const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
+export const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo, dataset?: RequestDataSet | null) => {
   try {
     return await getRenderedRequestAndContext({
       request: request,
       environmentId,
       purpose,
       extraInfo,
+      dataset,
     });
   } catch (err) {
     if ('type' in err && err.type === 'render') {

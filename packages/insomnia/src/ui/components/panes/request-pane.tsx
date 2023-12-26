@@ -344,7 +344,7 @@ export const RequestPane: FC<Props> = ({
             key={uniqueKey}
             errorClassName="font-error pad text-center"
           >
-            <RequestUtilsEditors activeTab={activeUtilTab} />
+            <RequestUtilsEditors activeTab={activeUtilTab} setLoading={setLoading} />
           </ErrorBoundary>
         </TabItem>
       </Tabs>

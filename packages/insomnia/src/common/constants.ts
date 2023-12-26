@@ -170,6 +170,12 @@ export const MAX_INTERFACE_FONT_SIZE = 24;
 export const MIN_EDITOR_FONT_SIZE = 8;
 export const MAX_EDITOR_FONT_SIZE = 24;
 
+// dataset ui stuff
+export const MIN_DATASET_PANE_PERCENTAGE_WIDTH = 0.1;
+export const MAX_DATASET_PANE_PERCENTAGE_WIDTH = 0.9;
+export const MIN_DATASET_PANE_FIXED_WIDTH = 20;
+export const MAX_DATASET_PANE_FIXED_WIDTH = -20;
+
 // Activities
 export type GlobalActivity =
   | 'spec'
@@ -601,3 +607,7 @@ export const REQUEST_UTIL_TABS_ORDER = [
   REQUEST_SETTING_TAB,
 ] as const;
 export type TabType = typeof REQUEST_UTIL_TABS_ORDER[number];
+
+export const EXPORT_TYPE_REQUEST_DATASET = 'request_dataset';
+export const DATASET_WIDTH_TYPE_PERCENTAGE = 'percentage';
+export const DATASET_WIDTH_TYPE_FIX_LEFT = 'fix_left';

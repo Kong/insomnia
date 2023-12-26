@@ -6,6 +6,7 @@ import {
   EXPORT_TYPE_PROTO_DIRECTORY,
   EXPORT_TYPE_PROTO_FILE,
   EXPORT_TYPE_REQUEST,
+  EXPORT_TYPE_REQUEST_DATASET,
   EXPORT_TYPE_REQUEST_GROUP,
   EXPORT_TYPE_UNIT_TEST,
   EXPORT_TYPE_UNIT_TEST_SUITE,
@@ -29,6 +30,7 @@ import * as _project from './project';
 import * as _protoDirectory from './proto-directory';
 import * as _protoFile from './proto-file';
 import * as _request from './request';
+import * as _requestDataset from './request-dataset';
 import * as _requestGroup from './request-group';
 import * as _requestGroupMeta from './request-group-meta';
 import * as _requestMeta from './request-meta';
@@ -88,6 +90,7 @@ export const webSocketRequest = _webSocketRequest;
 export const webSocketResponse = _webSocketResponse;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
+export const requestDataset = _requestDataset;
 export * as organization from './organization';
 
 export function all() {
@@ -124,6 +127,7 @@ export function all() {
     webSocketPayload,
     webSocketRequest,
     webSocketResponse,
+    requestDataset,
   ] as const;
 }
 
@@ -153,7 +157,9 @@ export function mustGetModel(type: string) {
   const model = getModel(type);
 
   if (!model) {
-    throw new Error(`The model type ${type} must exist but could not be found.`);
+    throw new Error(
+      `The model type ${type} must exist but could not be found.`
+    );
   }
 
   return model;
@@ -165,7 +171,10 @@ export function canDuplicate(type: string) {
 }
 
 const assertModelWithParentId = (model: BaseModel, info: string) => {
-  if ((model.type === 'Project' || model.type === 'Workspace') && !model.parentId) {
+  if (
+    (model.type === 'Project' || model.type === 'Workspace') &&
+    !model.parentId
+  ) {
     const msg = `[bug] parent id is set null unexpectedly ${model.type} - ${model._id}. ${info}`;
     console.warn(msg);
 
@@ -175,14 +184,19 @@ const assertModelWithParentId = (model: BaseModel, info: string) => {
   }
 };
 
-export async function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {
+export async function initModel<T extends BaseModel>(
+  type: string,
+  ...sources: Record<string, any>[]
+): Promise<T> {
   const model = getModel(type);
 
   if (!model) {
     const choices = all()
       .map(m => m.type)
       .join(', ');
-    throw new Error(`Tried to init invalid model "${type}". Choices are ${choices}`);
+    throw new Error(
+      `Tried to init invalid model "${type}". Choices are ${choices}`
+    );
   }
 
   // Define global default fields
@@ -195,7 +209,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
       modified: Date.now(),
       created: Date.now(),
     },
-    model.init(),
+    model.init()
   );
   const fullObject = Object.assign({}, objectDefaults, ...sources);
   assertModelWithParentId(fullObject, 'initModel');
@@ -237,4 +251,5 @@ export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {
   [EXPORT_TYPE_API_SPEC]: apiSpec,
   [EXPORT_TYPE_PROTO_FILE]: protoFile,
   [EXPORT_TYPE_PROTO_DIRECTORY]: protoDirectory,
+  [EXPORT_TYPE_REQUEST_DATASET]: requestDataset,
 };

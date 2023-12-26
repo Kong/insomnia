@@ -45,6 +45,9 @@ export function init() {
     expandedAccordionKeys: {},
     // nc-dazzle-update
     visualizeTemplate: null,
+    datasetWidth: null,
+    datasetWidthType: null,
+    datasetShowAll: null,
   };
 }
 

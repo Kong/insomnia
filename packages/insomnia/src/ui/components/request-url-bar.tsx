@@ -5,6 +5,7 @@ import styled from 'styled-components';
 
 import * as models from '../../models';
 import { isEventStreamRequest } from '../../models/request';
+import { RequestDataSet } from '../../models/request-dataset';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
@@ -102,7 +103,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     } else {
       setLoading(false);
     }
-  }, [fetcher.state, setLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetcher.state]);
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const connect = useCallback((connectParams: ConnectActionParams) => {
     fetcher.submit(JSON.stringify(connectParams),
@@ -121,7 +123,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       });
   }, [fetcher, organizationId, projectId, requestId, workspaceId]);
 
-  const sendOrConnect = useCallback(async (shouldPromptForPathAfterResponse?: boolean) => {
+  const sendOrConnect = useCallback(async (shouldPromptForPathAfterResponse?: boolean, dataset?: RequestDataSet) => {
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
       event: SegmentEvent.requestExecute,
@@ -133,6 +135,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     });
     // reset timeout
     setCurrentTimeout(undefined);
+
+    if (!dataset) {
+      dataset = await models.requestDataset.getOrCreateForRequest(activeRequest);
+    }
 
     if (isEventStreamRequest(activeRequest)) {
       const startListening = async () => {
@@ -164,7 +170,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     }
 
     try {
-      send({ requestId, shouldPromptForPathAfterResponse });
+      send({ requestId, shouldPromptForPathAfterResponse, datasetId: dataset._id });
     } catch (err) {
       showAlert({
         title: 'Unexpected Request Failure',

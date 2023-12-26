@@ -13,6 +13,7 @@ import { RequestEventSetterEditor } from './request-event-setter-editor';
 import { RequestSettingsEditor } from './request-settings-editor';
 interface Props {
   activeTab: TabType;
+  setLoading: (l: boolean) => void;
 }
 
 const DefaultUtilsEditor: FC = () => (
@@ -31,10 +32,10 @@ const DefaultUtilsEditor: FC = () => (
     </p>
   </div>
 );
-export const RequestUtilsEditors: FC<Props> = ({ activeTab }) => {
+export const RequestUtilsEditors: FC<Props> = ({ activeTab, setLoading }) => {
   switch (activeTab) {
     case REQUEST_DATASET_EDITOR_TAB:
-      return <RequestDatasetEditor />;
+      return <RequestDatasetEditor setLoading={setLoading} />;
     case REQUEST_SETTER_EDITOR_TAB:
       return <RequestEventSetterEditor />;
     case RESPONSE_VISUALIZE_EDITOR_TAB:

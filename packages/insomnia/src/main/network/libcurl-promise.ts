@@ -17,6 +17,7 @@ import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DAT
 import { describeByteSize, hasAuthHeader } from '../../common/misc';
 import { ClientCertificate } from '../../models/client-certificate';
 import { RequestHeader } from '../../models/request';
+import { RequestDataSet } from '../../models/request-dataset';
 import { ResponseHeader } from '../../models/response';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';
@@ -88,6 +89,7 @@ export interface ResponsePatch {
   statusMessage?: string;
   timelinePath?: string;
   url?: string;
+  dataset?: RequestDataSet | null;
 }
 const getDataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
 

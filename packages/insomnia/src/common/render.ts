@@ -7,6 +7,7 @@ import type { Environment } from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
 import { isProject, Project } from '../models/project';
 import { isRequest, type Request } from '../models/request';
+import { isRequestDataset, RequestDataSet } from '../models/request-dataset';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
 import { isResponse } from '../models/response';
 import { WebSocketRequest } from '../models/websocket-request';
@@ -18,6 +19,7 @@ import { META_KEY } from '../templating/utils';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
+import { metaSortKeySort } from './sorting';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
@@ -357,6 +359,7 @@ interface BaseRenderContextOptions {
   environmentId?: string;
   purpose?: RenderPurpose;
   extraInfo?: ExtraRenderInfo;
+  dataset?: RequestDataSet | null;
 }
 
 interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
@@ -369,6 +372,7 @@ export async function getRenderContext(
     ancestors: _ancestors,
     purpose,
     extraInfo,
+    dataset,
   }: RenderContextOptions,
 ): Promise<Record<string, any>> {
   const ancestors = _ancestors || await getRenderContextAncestors(request);
@@ -419,11 +423,35 @@ export async function getRenderContext(
 
   // Get Keys from ancestors (e.g. Folders)
   if (ancestors) {
+    if (dataset && dataset.environment) {
+      const currentDataset = ancestors.find(isRequestDataset) || dataset;
+      currentDataset.environmentPropertyOrder = {
+        '&': Object.values(dataset.environment).sort(metaSortKeySort).map(ds => ds.name),
+      };
+      currentDataset.environment = Object.keys(dataset.environment)
+        .reduce((env, key) => Object.assign(
+          env, { [dataset.environment[key].name]: dataset.environment[key].value },
+        ), {});
+      if (currentDataset === dataset) {
+        if (request) {
+          const index = ancestors.indexOf(request);
+          ancestors.splice(index + 1, 0, dataset);
+        } else {
+          ancestors.push(dataset);
+        }
+      }
+    }
     for (let index = 0; index < ancestors.length; index++) {
       const ancestor: any = ancestors[index] || {};
 
       if (
         isRequestGroup(ancestor) &&
+        ancestor.hasOwnProperty('environment') &&
+        ancestor.hasOwnProperty('name')
+      ) {
+        getKeySource(ancestor.environment || {}, inKey, ancestor.name || '');
+      } else if (
+        isRequestDataset(ancestor) &&
         ancestor.hasOwnProperty('environment') &&
         ancestor.hasOwnProperty('name')
       ) {
@@ -524,13 +552,16 @@ export async function getRenderedRequestAndContext(
     environmentId,
     extraInfo,
     purpose,
+    dataset,
   }: RenderRequestOptions,
 ): Promise<RequestAndContext> {
   const ancestors = await getRenderContextAncestors(request);
   const workspace = ancestors.find(isWorkspace);
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
-  const renderContext = await getRenderContext({ request, environmentId, ancestors, purpose, extraInfo });
+  const backupDataset: RequestDataSet | null = dataset ? clone(dataset) : null;
+
+  const renderContext = await getRenderContext({ request, environmentId, ancestors, purpose, extraInfo, dataset: backupDataset });
 
   // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
   // https://github.com/kong/insomnia/issues/895
@@ -603,6 +634,7 @@ export async function getRenderedRequestAndContext(
       settingResponseVisualize: renderedRequest.settingResponseVisualize,
       type: renderedRequest.type,
       url: renderedRequest.url,
+      settingDatasetFilter: renderedRequest.settingDatasetFilter,
     },
   };
 }
@@ -629,7 +661,7 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): st
   });
 }
 
-type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project;
+type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project | RequestDataSet;
 export async function getRenderContextAncestors(base?: Request | GrpcRequest | WebSocketRequest | Workspace): Promise<RenderContextAncestor[]> {
   return await db.withAncestors<RenderContextAncestor>(base || null, [
     models.request.type,

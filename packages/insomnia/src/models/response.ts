@@ -7,6 +7,7 @@ import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as requestOperations from '../models/helpers/request-operations';
 import type { BaseModel } from './index';
 import * as models from './index';
+import { RequestDataSet } from './request-dataset';
 
 export const name = 'Response';
 
@@ -46,6 +47,7 @@ export interface BaseResponse {
   // Things from the request
   settingStoreCookies: boolean | null;
   settingSendCookies: boolean | null;
+  dataset: RequestDataSet | null;
 }
 
 export type Response = BaseModel & BaseResponse;
@@ -80,6 +82,7 @@ export function init(): BaseResponse {
     // Responses sent before environment filtering will have a special value
     // so they don't show up at all when filtering is on.
     environmentId: '__LEGACY__',
+    dataset: null,
   };
 }
 
@@ -171,6 +174,8 @@ export async function create(patch: Partial<Response> = {}, maxResponses = 20): 
     throw new Error('New Response missing `parentId`');
   }
 
+  const onCreated = patch.onCreated;
+
   const { parentId } = patch;
   // Create request version snapshot
   const request = await requestOperations.getById(parentId);
@@ -194,7 +199,10 @@ export async function create(patch: Partial<Response> = {}, maxResponses = 20): 
     },
   });
   // Actually create the new response
-  return db.docCreate(type, patch);
+  const response = db.docCreate(type, patch);
+  onCreated && onCreated();
+
+  return response;
 }
 
 export function getLatestByParentId(parentId: string) {
