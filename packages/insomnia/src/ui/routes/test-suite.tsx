@@ -2,8 +2,8 @@ import React, { Fragment, useRef, useState } from 'react';
 import {
   Button,
   Heading,
-  Item,
   ListBox,
+  ListBoxItem,
   Popover,
   Select,
   SelectValue,
@@ -31,6 +31,8 @@ import {
 } from '../components/codemirror/code-editor';
 import { EditableInput } from '../components/editable-input';
 import { Icon } from '../components/icon';
+import { showModal } from '../components/modals';
+import { AskModal } from '../components/modals/ask-modal';
 import { getMethodShortHand } from '../components/tags/method-tag';
 
 const UnitTestItemView = ({
@@ -83,7 +85,8 @@ const UnitTestItemView = ({
         </Button>
         <Heading className="flex-1 truncate">
           <EditableInput
-            onChange={name => {
+            className='w-full px-1'
+            onSubmit={name => {
               if (name) {
                 updateUnitTestFetcher.submit(
                   {
@@ -118,11 +121,6 @@ const UnitTestItemView = ({
             );
           }}
           selectedKey={unitTest.requestId}
-          items={requests.map(request => ({
-            ...request,
-            id: request._id,
-            key: request._id,
-          }))}
         >
           <Button aria-label='Select a request' className="px-4 py-1 flex flex-1 h-8 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
             <SelectValue<Request> className="flex truncate items-center justify-center gap-2">
@@ -169,9 +167,16 @@ const UnitTestItemView = ({
             <Icon icon="caret-down" />
           </Button>
           <Popover className="min-w-max">
-            <ListBox<Request> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[50vh] focus:outline-none">
+            <ListBox
+              items={requests.map(request => ({
+                ...request,
+                id: request._id,
+                key: request._id,
+              }))}
+              className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[50vh] focus:outline-none"
+            >
               {request => (
-                <Item
+                <ListBoxItem
                   className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                   aria-label={request.name}
                   textValue={request.name}
@@ -216,22 +221,32 @@ const UnitTestItemView = ({
                       )}
                     </Fragment>
                   )}
-                </Item>
+                </ListBoxItem>
               )}
             </ListBox>
           </Popover>
         </Select>
-
         <Button
           className="flex flex-shrink-0 items-center justify-center aspect-square h-8 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => {
-            deleteUnitTestFetcher.submit(
-              {},
-              {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/delete`,
-                method: 'POST',
-              }
-            );
+            showModal(AskModal, {
+              title: 'Delete Test',
+              message: `Do you really want to delete "${unitTest.name}"?`,
+              yesText: 'Delete',
+              noText: 'Cancel',
+              color: 'danger',
+              onDone: async (isYes: boolean) => {
+                if (isYes) {
+                  deleteUnitTestFetcher.submit(
+                    {},
+                    {
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/delete`,
+                      method: 'POST',
+                    }
+                  );
+                }
+              },
+            });
           }}
         >
           <Icon icon="trash" />
@@ -404,7 +419,8 @@ const TestSuiteRoute = () => {
       <div className="flex flex-shrink-0 gap-2 p-[--padding-md]">
         <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full truncate flex-1">
           <EditableInput
-            onChange={name =>
+            className='w-full px-1'
+            onSubmit={name =>
               name &&
               renameTestSuiteFetcher.submit(
                 { name },

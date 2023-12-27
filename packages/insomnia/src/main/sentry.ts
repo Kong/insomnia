@@ -23,6 +23,12 @@ export function sentryWatchAnalyticsEnabled() {
       if (isSettings(doc) && event === 'update') {
         enabled = doc.enableAnalytics || session.isLoggedIn();
       }
+
+      if (event === 'insert' || event === 'update') {
+        if ([models.workspace.type, models.project.type].includes(doc.type) && !doc.parentId) {
+          Sentry.captureException(new Error(`Missing parent ID for ${doc.type} on ${event}`));
+        }
+      }
     }
   });
 }

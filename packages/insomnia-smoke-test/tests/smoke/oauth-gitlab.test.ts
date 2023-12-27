@@ -4,7 +4,7 @@ test('Sign in with Gitlab', async ({ app, page }) => {
   await page.getByRole('button', { name: 'New Document' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
   await page.getByLabel('Insomnia Sync').click();
-  await page.getByLabel('Setup Git Sync').click();
+  await page.getByRole('menuitemradio', { name: 'Switch to Git Repository' }).click();
   await page.getByRole('tab', { name: 'GitLab' }).click();
 
   const fakeGitLabOAuthWebFlow = app.evaluate(electron => {

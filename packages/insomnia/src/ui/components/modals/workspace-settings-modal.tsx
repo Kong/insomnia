@@ -39,6 +39,9 @@ const CertificateField: FC<{
   privateText,
   optional,
 }) => {
+  if (!value) {
+    return null;
+  }
   if (optional && value === null) {
     return null;
   }
@@ -47,7 +50,8 @@ const CertificateField: FC<{
   if (privateText) {
     display = <PasswordViewer text={value} />;
   } else {
-    display = <span className="monospace selectable">{value}</span>;
+    const filename = value.split('/').pop();
+    display = <span className="monospace selectable" title={value}>{filename}</span>;
   }
 
     return (
@@ -144,13 +148,6 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
       pfx: pfxPath || null,
     });
     _handleToggleCertificateForm();
-  };
-  const _handleRemoveWorkspace = async () => {
-    const workspaceId = workspace._id;
-    workspaceFetcher.submit({ workspaceId }, {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/delete`,
-      method: 'post',
-    });
   };
 
   const renderCertificate = (certificate: ClientCertificate) => {
@@ -251,7 +248,7 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
         {workspace ?
           <ModalHeader key={`header::${workspace._id}`}>
             {getWorkspaceLabel(workspace).singular} Settings{' '}
-            <div className="txt-sm selectable faint monospace">{workspace ? workspace._id : ''}</div>
+            <div data-testid="workspace-id" className="txt-sm selectable faint monospace">{workspace ? workspace._id : ''}</div>
           </ModalHeader> : null}
         {workspace ?
           <ModalBody key={`body::${workspace._id}`} noScroll>
@@ -301,14 +298,6 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
                   </div>
                   <h2>Actions</h2>
                   <div className="form-control form-control--padded">
-                    {!isScratchpadWorkspace && (
-                      <PromptButton
-                        onClick={_handleRemoveWorkspace}
-                        className="width-auto btn btn--clicky inline-block"
-                      >
-                        <i className="fa fa-trash-o" /> Delete
-                      </PromptButton>
-                    )}
                     <PromptButton
                       onClick={_handleClearAllResponses}
                       className="width-auto btn btn--clicky inline-block space-left"
@@ -317,14 +306,15 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
                     </PromptButton>
                   </div>
                 </PanelContainer>,
-              }, {
-                  title: 'Client Certificates',
+              },
+                {
+                  title: 'Certificates',
                   children: <PanelContainer className="pad">
                     <div className="form-control form-control--outlined">
                       <label>
                         CA Certificate
                         <HelpTooltip position="right" className="space-left">
-                          One or more PEM format certificates to trust when making requests.
+                          One or more PEM format certificates in a single file to pass to curl. Overrides the root CA certificate and macOS keychain.
                         </HelpTooltip>
                       </label>
                       <div className="row-spaced">
@@ -362,6 +352,11 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
                         </div>
                       </div>
                     </div>
+                  </PanelContainer>,
+                },
+                {
+                  title: 'Client Certificates',
+                  children: <PanelContainer className="pad">
                     {!showAddCertificateForm ? (
                       <div>
                         {clientCertificates.length === 0 ? (
@@ -399,7 +394,7 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
                             className="btn btn--clicky auto"
                             onClick={_handleToggleCertificateForm}
                           >
-                            New Certificate
+                            New Client Certificate
                           </button>
                         </div>
                       </div>

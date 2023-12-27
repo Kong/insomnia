@@ -1,6 +1,6 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { FC, ReactNode, useCallback, useState } from 'react';
-import { Button, Item, Menu, MenuTrigger, Popover } from 'react-aria-components';
+import { Button, Dialog, Heading, Menu, MenuItem, MenuTrigger, Modal, ModalOverlay, Popover } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { isLoggedIn } from '../../../account/session';
@@ -8,6 +8,7 @@ import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
+import { isRemoteProject } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
 import { isDesign, isScratchpad, Workspace } from '../../../models/workspace';
@@ -53,7 +54,8 @@ export const WorkspaceDropdown: FC = () => {
   const workspaceName = activeWorkspace.name;
   const projectName = activeProject.name ?? getProductName();
   const fetcher = useFetcher();
-
+  const [isDeleteRemoteWorkspaceModalOpen, setIsDeleteRemoteWorkspaceModalOpen] = useState(false);
+  const deleteWorkspaceFetcher = useFetcher();
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
 
@@ -139,6 +141,14 @@ export const WorkspaceDropdown: FC = () => {
               ),
           });
         },
+      },
+      {
+        id: 'delete',
+        name: 'Delete',
+        icon: <Icon icon='trash' />,
+        action: () => {
+          setIsDeleteRemoteWorkspaceModalOpen(true);
+        },
       }] : [],
       {
         id: 'import',
@@ -185,7 +195,8 @@ export const WorkspaceDropdown: FC = () => {
       <MenuTrigger onOpenChange={isOpen => isOpen && handleDropdownOpen()}>
         <Button
           aria-label="Workspace actions"
-          className="px-3 py-1 h-7 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          data-testid="workspace-context-dropdown"
+          className="px-3 py-1 h-7 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm truncate"
         >
           <span className="truncate">{activeWorkspaceName}</span>
           <Icon icon="caret-down" />
@@ -206,7 +217,7 @@ export const WorkspaceDropdown: FC = () => {
             className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
           >
             {item => (
-              <Item
+              <MenuItem
                 key={item.id}
                 id={item.id}
                 className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -214,7 +225,7 @@ export const WorkspaceDropdown: FC = () => {
               >
                 {item.icon}
                 <span>{item.name}</span>
-              </Item>
+              </MenuItem>
             )}
           </Menu>
         </Popover>
@@ -251,6 +262,65 @@ export const WorkspaceDropdown: FC = () => {
           caCertificate={caCertificate}
           onHide={() => setIsSettingsModalOpen(false)}
         />
+      )}
+      {isDeleteRemoteWorkspaceModalOpen && (
+        <ModalOverlay
+          isOpen
+          onOpenChange={() => {
+            setIsDeleteRemoteWorkspaceModalOpen(false);
+          }}
+          isDismissable
+          className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
+        >
+          <Modal
+            onOpenChange={() => {
+              setIsDeleteRemoteWorkspaceModalOpen(false);
+            }}
+            className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]"
+          >
+            <Dialog
+              className="outline-none"
+            >
+              {({ close }) => (
+                <div className='flex flex-col gap-4'>
+                  <div className='flex gap-2 items-center justify-between'>
+                    <Heading className='text-2xl'>Delete {getWorkspaceLabel(activeWorkspace).singular}</Heading>
+                    <Button
+                      className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                      onPress={close}
+                    >
+                      <Icon icon="x" />
+                    </Button>
+                  </div>
+                  <deleteWorkspaceFetcher.Form
+                    action={`/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/delete`}
+                    method="POST"
+                    className='flex flex-col gap-4'
+                  >
+                    <input type="hidden" name="workspaceId" value={activeWorkspace._id} />
+                    <p>
+                      This will permanently delete the {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>}{' '}
+                      {getWorkspaceLabel(activeWorkspace).singular} {isRemoteProject(activeProject) ? 'remotely' : ''}.
+                    </p>
+                    {deleteWorkspaceFetcher.data && deleteWorkspaceFetcher.data.error && (
+                      <p className="notice error margin-bottom-sm no-margin-top">
+                        {deleteWorkspaceFetcher.data.error}
+                      </p>
+                    )}
+                    <div className="flex justify-end">
+                      <Button
+                        type="submit"
+                        className="hover:no-underline bg-[--color-danger] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-danger] transition-colors rounded-sm"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </deleteWorkspaceFetcher.Form>
+                </div>
+              )}
+            </Dialog>
+          </Modal>
+        </ModalOverlay>
       )}
     </>
   );

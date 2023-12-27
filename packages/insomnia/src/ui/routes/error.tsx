@@ -11,22 +11,29 @@ import {
 
 import { Icon } from '../components/icon';
 
-export const ErrorRoute: FC = () => {
+export const ErrorRoute: FC<{ defaultMessage?: string }> = ({ defaultMessage }) => {
   const error = useRouteError();
   const getErrorMessage = (err: any) => {
     if (isRouteErrorResponse(err)) {
       return err.data;
     }
-    if (err instanceof Error) {
-      return err.message;
+
+    if (err?.message) {
+      return err?.message;
     }
 
-    return err?.message || 'Unknown error';
+    if (defaultMessage) {
+      return defaultMessage;
+    }
+
+    return 'Unknown error';
   };
+
   const getErrorStack = (err: any) => {
-    if (isRouteErrorResponse(err)) {
+    if ('error' in err) {
       return err.error?.stack;
     }
+
     return err?.stack;
   };
 

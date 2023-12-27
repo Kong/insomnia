@@ -5,12 +5,14 @@ import {
   Dialog,
   DialogTrigger,
   GridList,
+  GridListItem,
   Heading,
   Input,
-  Item,
   Label,
   ListBox,
+  ListBoxItem,
   Menu,
+  MenuItem,
   MenuTrigger,
   Modal,
   ModalOverlay,
@@ -23,6 +25,7 @@ import {
   TextField,
 } from 'react-aria-components';
 import {
+  ActionFunction,
   LoaderFunction,
   matchPath,
   redirect,
@@ -33,6 +36,7 @@ import {
   useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
+import { useLocalStorage } from 'react-use';
 
 import { getAccountId, getCurrentSessionId, isLoggedIn, logout } from '../../account/session';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
@@ -50,7 +54,7 @@ import { ApiSpec } from '../../models/api-spec';
 import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
-import { isOwnerOfOrganization, isScratchpadOrganizationId } from '../../models/organization';
+import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
 import { Organization } from '../../models/organization';
 import {
   isRemoteProject,
@@ -75,8 +79,8 @@ import { ImportModal } from '../components/modals/import-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
-import { usePresenceContext } from '../context/app/presence-context';
-import { type FeatureList, useOrganizationLoaderData } from './organization';
+import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
+import { Billing, type FeatureList, useOrganizationLoaderData } from './organization';
 
 interface TeamProject {
   id: string;
@@ -184,6 +188,19 @@ async function syncTeamProjects({
   }));
 }
 
+export const syncProjectsAction: ActionFunction = async ({ params }) => {
+  const { organizationId } = params;
+  invariant(organizationId, 'Organization ID is required');
+
+  const teamProjects = await getAllTeamProjects(organizationId);
+  await syncTeamProjects({
+    organizationId,
+    teamProjects,
+  });
+
+  return null;
+};
+
 export const indexLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
@@ -241,30 +258,6 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
 };
 
-export interface ProjectsLoaderData {
-  activeProject: Project;
-}
-
-export const projectLoader: LoaderFunction = async ({ request }) => {
-  try {
-    const url = new URL(request.url);
-    const projectPath = matchPath('/organization/:organizationId/project/:projectId', url.pathname);
-
-    if (!projectPath || !projectPath.params.projectId) {
-      return null;
-    }
-
-    const activeProject = await models.project.getById(projectPath.params.projectId);
-    invariant(activeProject, `Project was not found ${projectPath.params.projectId}`);
-
-    return {
-      activeProject,
-    };
-  } catch (err) {
-    return null;
-  }
-};
-
 export interface ProjectLoaderData {
   workspaces: WorkspaceWithMetadata[];
   allFilesCount: number;
@@ -273,6 +266,13 @@ export interface ProjectLoaderData {
   projectsCount: number;
   activeProject: Project;
   projects: Project[];
+  learningFeature: {
+    active: boolean;
+    title: string;
+    message: string;
+    cta: string;
+    url: string;
+  };
 }
 
 export const loader: LoaderFunction = async ({
@@ -413,8 +413,36 @@ export const loader: LoaderFunction = async ({
     p.name?.toLowerCase().includes(projectName.toLowerCase())
   );
 
+  let learningFeature = {
+    active: false,
+    title: '',
+    message: '',
+    cta: '',
+    url: '',
+  };
+
+  if (!window.localStorage.getItem('learning-feature-dismissed')) {
+    try {
+      learningFeature = await window.main.insomniaFetch<{
+        active: boolean;
+        title: string;
+        message: string;
+        cta: string;
+        url: string;
+      }>({
+        method: 'GET',
+        path: '/insomnia-production-public-assets/inapp-learning.json',
+        origin: 'https://storage.googleapis.com',
+        sessionId: '',
+      });
+    } catch (err) {
+      console.log('Could not fetch learning feature data.');
+    }
+  }
+
   return {
     workspaces,
+    learningFeature,
     projects,
     projectsCount: organizationProjects.length,
     activeProject: project,
@@ -437,16 +465,17 @@ const ProjectRoute: FC = () => {
     collectionsCount,
     documentsCount,
     projectsCount,
+    learningFeature,
   } = useLoaderData() as ProjectLoaderData;
-
+  const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = useLocalStorage('learning-feature-dismissed', '');
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
   };
 
   const { organizations } = useOrganizationLoaderData();
-  const { presence } = usePresenceContext();
-  const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
+  const { presence } = useInsomniaEventStreamContext();
+  const { features, billing } = useRouteLoaderData(':organizationId') as { features: FeatureList; billing: Billing };
 
   const accountId = getAccountId();
 
@@ -644,7 +673,6 @@ const ProjectRoute: FC = () => {
     id: string;
     label: string;
     icon: IconName;
-    level: number;
     action?: {
       icon: IconName;
       label: string;
@@ -654,13 +682,11 @@ const ProjectRoute: FC = () => {
     {
       id: 'all',
       label: `All files (${allFilesCount})`,
-      icon: 'folder',
-      level: 0,
+      icon: 'border-all',
     },
     {
       id: 'design',
       label: `Documents (${documentsCount})`,
-      level: 1,
       icon: 'file',
       action: {
         icon: 'plus',
@@ -671,7 +697,6 @@ const ProjectRoute: FC = () => {
     {
       id: 'collection',
       label: `Collections (${collectionsCount})`,
-      level: 1,
       icon: 'bars',
       action: {
         icon: 'plus',
@@ -680,6 +705,10 @@ const ProjectRoute: FC = () => {
       },
     },
   ];
+
+  const organization = organizations.find(o => o.id === organizationId);
+  const isUserOwner = organization && accountId && isOwnerOfOrganization({ organization, accountId });
+  const isPersonalOrg = organization && isPersonalOrganization(organization);
 
   return (
     <ErrorBoundary>
@@ -695,7 +724,6 @@ const ProjectRoute: FC = () => {
                     navigate(`/organization/${id}`);
                   }}
                   selectedKey={organizationId}
-                  items={organizations}
                 >
                   <Button className="px-4 py-1 font-bold flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                     <SelectValue<Organization> className="flex truncate items-center justify-center gap-2">
@@ -706,9 +734,12 @@ const ProjectRoute: FC = () => {
                     <Icon icon="caret-down" />
                   </Button>
                   <Popover className="min-w-max">
-                    <ListBox<Organization> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
+                    <ListBox
+                      items={organizations}
+                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                    >
                       {item => (
-                        <Item
+                        <ListBoxItem
                           id={item.id}
                           key={item.id}
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -727,7 +758,7 @@ const ProjectRoute: FC = () => {
                               )}
                             </Fragment>
                           )}
-                        </Item>
+                        </ListBoxItem>
                       )}
                     </ListBox>
                   </Popover>
@@ -812,7 +843,7 @@ const ProjectRoute: FC = () => {
                                   <div className="flex gap-2">
                                     <Radio
                                       value="remote"
-                                      className="data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
                                       <Icon icon="globe" />
                                       <Heading className="text-lg font-bold">Secure Cloud</Heading>
@@ -822,7 +853,7 @@ const ProjectRoute: FC = () => {
                                     </Radio>
                                     <Radio
                                       value="local"
-                                      className="data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
                                       <Icon icon="laptop" />
                                       <Heading className="text-lg font-bold">Local Vault</Heading>
@@ -832,13 +863,27 @@ const ProjectRoute: FC = () => {
                                     </Radio>
                                   </div>
                                 </RadioGroup>
-                                <div className="flex justify-end">
-                                  <Button
-                                    type="submit"
-                                    className="hover:no-underline bg-[#4000BF] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
-                                  >
-                                    Create
-                                  </Button>
+                                <div className="flex justify-between gap-2 items-center">
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <Icon icon="info-circle" />
+                                    <span>
+                                      For both project types you can optionally enable Git Sync
+                                    </span>
+                                  </div>
+                                  <div className='flex items-center gap-2'>
+                                    <Button
+                                      onPress={close}
+                                      className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      type="submit"
+                                      className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                                    >
+                                      Create
+                                    </Button>
+                                  </div>
                                 </div>
                               </form>
                             </div>
@@ -868,7 +913,7 @@ const ProjectRoute: FC = () => {
                 >
                   {item => {
                     return (
-                      <Item
+                      <GridListItem
                         key={item._id}
                         id={item._id}
                         textValue={item.name}
@@ -890,7 +935,7 @@ const ProjectRoute: FC = () => {
                           />
                           {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} />}
                         </div>
-                      </Item>
+                      </GridListItem>
                     );
                   }}
                 </GridList>
@@ -898,7 +943,7 @@ const ProjectRoute: FC = () => {
               <GridList
                 aria-label="Scope filter"
                 items={scopeActionList}
-                className="overflow-y-auto flex-shrink-0 data-[empty]:py-0 py-[--padding-sm]"
+                className="overflow-y-auto flex-shrink-0 flex-1 data-[empty]:py-0 py-[--padding-sm]"
                 disallowEmptySelection
                 selectedKeys={[searchParams.get('scope') || 'all']}
                 selectionMode="single"
@@ -914,14 +959,13 @@ const ProjectRoute: FC = () => {
               >
                 {item => {
                   return (
-                    <Item textValue={item.label} className="group outline-none select-none">
+                    <GridListItem textValue={item.label} className="group outline-none select-none">
                       <div
-                        className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                        style={{
-                          paddingLeft: `${item.level + 1}rem`,
-                        }}
+                        className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-12 w-full overflow-hidden text-[--hl]"
                       >
-                        <Icon icon={item.icon} />
+                        <span className='w-6 h-6 flex items-center justify-center'>
+                          <Icon icon={item.icon} className='w-6' />
+                        </span>
 
                         <span className="truncate capitalize">
                           {item.label}
@@ -937,29 +981,54 @@ const ProjectRoute: FC = () => {
                           </Button>
                         )}
                       </div>
-                    </Item>
+                    </GridListItem>
                   );
                 }}
               </GridList>
-              <div className='flex flex-shrink-0 flex-col py-[--padding-sm]'>
-                <Button
-                  aria-label="Help and Feedback"
-                  className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                  onPress={() => {
-                    window.main.openInBrowser('https://insomnia.rest/support');
-                  }}
-                >
-                  <Icon icon="message" />
-
-                  <span className="truncate">
-                    Help and feedback
-                  </span>
-                </Button>
-              </div>
+              {!isLearningFeatureDismissed && learningFeature.active && (
+                <div className='flex flex-shrink-0 flex-col gap-2 p-[--padding-sm]'>
+                  <div className='flex items-center justify-between gap-2'>
+                    <Heading className='text-base'>
+                      <Icon icon="graduation-cap" />
+                      <span className="ml-2">{learningFeature.title}</span>
+                    </Heading>
+                    <Button
+                      onPress={() => {
+                        setIsLearningFeatureDismissed('true');
+                      }}
+                    >
+                      <Icon icon="close" />
+                    </Button>
+                  </div>
+                  <p className='text-[--hl] text-sm'>
+                    {learningFeature.message}
+                  </p>
+                  <a href={learningFeature.url} className='flex items-center gap-2 underline text-sm'>
+                    {learningFeature.cta}
+                    <Icon icon="arrow-up-right-from-square" />
+                  </a>
+                </div>
+              )}
             </div>
           }
           renderPaneOne={
             <div className="w-full h-full flex flex-col overflow-hidden">
+              {billing.isActive ? null : <div className='p-[--padding-md] pb-0'>
+                <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
+                  <p className='text-base'>
+                    <Icon icon="exclamation-triangle" className='mr-2' />
+                    {isUserOwner ? `Your ${isPersonalOrg ? 'personal account' : 'organization'} has unpaid past invoices. Please enter a new payment method to continue using Insomnia.` : 'This organization has unpaid past invoices. Please ask the organization owner to enter a new payment method to continue using Insomnia.'}
+                  </p>
+                  {isUserOwner && (
+                    <a
+                      href={`${getAppWebsiteBaseURL()}/app/subscription/past-due`}
+                      className="px-4 text-[--color-bg] bg-opacity-100 bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    >
+                      Update payment method
+                    </a>
+                  )}
+                </div>
+              </div>}
               <div className="flex justify-between w-full gap-1 p-[--padding-md]">
                 <SearchField
                   aria-label="Workspaces filter"
@@ -992,12 +1061,6 @@ const ProjectRoute: FC = () => {
                       sortOrder: order.toString(),
                     })
                   }
-                  items={DASHBOARD_SORT_ORDERS.map(order => {
-                    return {
-                      id: order,
-                      name: dashboardSortOrderName[order],
-                    };
-                  })}
                 >
                   <Button
                     aria-label="Select sort order"
@@ -1006,13 +1069,17 @@ const ProjectRoute: FC = () => {
                     <Icon icon="sort" />
                   </Button>
                   <Popover className="min-w-max">
-                    <ListBox<{
-                      id: string;
-                      name: string;
-                    }> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                    <ListBox
+                      items={DASHBOARD_SORT_ORDERS.map(order => {
+                        return {
+                          id: order,
+                          name: dashboardSortOrderName[order],
+                        };
+                      })}
+                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                     >
                       {item => (
-                        <Item
+                        <ListBoxItem
                           id={item.id}
                           key={item.id}
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -1031,7 +1098,7 @@ const ProjectRoute: FC = () => {
                               )}
                             </Fragment>
                           )}
-                        </Item>
+                        </ListBoxItem>
                       )}
                     </ListBox>
                   </Popover>
@@ -1060,7 +1127,7 @@ const ProjectRoute: FC = () => {
                       className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                     >
                       {item => (
-                        <Item
+                        <MenuItem
                           key={item.id}
                           id={item.id}
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -1068,7 +1135,7 @@ const ProjectRoute: FC = () => {
                         >
                           <Icon icon={item.icon} />
                           <span>{item.name}</span>
-                        </Item>
+                        </MenuItem>
                       )}
                     </Menu>
                   </Popover>
@@ -1113,11 +1180,11 @@ const ProjectRoute: FC = () => {
               >
                 {item => {
                   return (
-                    <Item
+                    <GridListItem
                       key={item._id}
                       id={item._id}
                       textValue={item.name}
-                      className="[&_[role=gridcell]]:flex-1 [&_[role=gridcell]]:overflow-hidden [&_[role=gridcell]]:flex [&_[role=gridcell]]:flex-col outline-none p-[--padding-md] flex select-none w-full rounded-sm hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
+                      className="flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-sm hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
                     >
                       <div className="flex gap-2 h-[20px]">
                         <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
@@ -1199,7 +1266,7 @@ const ProjectRoute: FC = () => {
                           </div>
                         )}
                       </div>
-                    </Item>
+                    </GridListItem>
                   );
                 }}
               </GridList>

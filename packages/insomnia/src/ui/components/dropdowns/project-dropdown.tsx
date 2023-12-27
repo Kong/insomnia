@@ -5,9 +5,9 @@ import {
   Dialog,
   Heading,
   Input,
-  Item,
   Label,
   Menu,
+  MenuItem,
   MenuTrigger,
   Modal,
   ModalOverlay,
@@ -23,7 +23,8 @@ import {
   Project,
 } from '../../../models/project';
 import { Icon } from '../icon';
-import { showAlert } from '../modals';
+import { showAlert, showModal } from '../modals';
+import { AskModal } from '../modals/ask-modal';
 
 interface Props {
   project: Project;
@@ -34,7 +35,7 @@ interface ProjectActionItem {
   id: string;
   name: string;
   icon: IconName;
-  action: (projectId: string) => void;
+  action: (projectId: string, projectName: string) => void;
 }
 
 export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
@@ -55,14 +56,26 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
       id: 'delete',
       name: 'Delete',
       icon: 'trash',
-      action: projectId =>
-        deleteProjectFetcher.submit(
-          {},
-          {
-            method: 'post',
-            action: `/organization/${organizationId}/project/${projectId}/delete`,
-          }
-        ),
+      action: (projectId: string, projectName: string) => {
+        showModal(AskModal, {
+          title: 'Delete Project',
+          message: `You are deleting the project "${projectName}" that may have collaborators. As a result of this, the project will be permanently deleted for every collaborator of the organization. Do you really want to continue?`,
+          yesText: 'Delete',
+          noText: 'Cancel',
+          color: 'danger',
+          onDone: async (isYes: boolean) => {
+            if (isYes) {
+              deleteProjectFetcher.submit(
+                {},
+                {
+                  method: 'post',
+                  action: `/organization/${organizationId}/project/${projectId}/delete`,
+                }
+              );
+            }
+          },
+        });
+      },
     }] satisfies ProjectActionItem[] : [],
   ];
 
@@ -89,13 +102,13 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
             aria-label="Project Actions Menu"
             selectionMode="single"
             onAction={key => {
-              projectActionList.find(({ id }) => key === id)?.action(project._id);
+              projectActionList.find(({ id }) => key === id)?.action(project._id, project.name);
             }}
             items={projectActionList}
             className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
           >
             {item => (
-              <Item
+              <MenuItem
                 key={item.id}
                 id={item.id}
                 className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -103,7 +116,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
               >
                 <Icon icon={item.icon} />
                 <span>{item.name}</span>
-              </Item>
+              </MenuItem>
             )}
           </Menu>
         </Popover>
@@ -117,12 +130,14 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
         isDismissable
         className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
       >
-        <Modal className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
+        <Modal
+          onOpenChange={isOpen => {
+            setProjectType('');
+            setIsProjectSettingsModalOpen(isOpen);
+          }}
+          className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]"
+        >
           <Dialog
-            onClose={() => {
-              setIsProjectSettingsModalOpen(false);
-              setProjectType('');
-            }}
             className="outline-none"
           >
             {({ close }) => (
@@ -244,25 +259,33 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
                       </div>
                     </div>
                   )}
-                  <div className="flex justify-end gap-2 items-center">
-                    <Button
-                      onPress={() => {
-                        if (projectType) {
-                          setProjectType('');
-                        } else {
-                          close();
-                        }
-                      }}
-                      className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-                    >
-                      {projectType ? 'Confirm' : 'Update'}
-                    </Button>
+                  <div className="flex justify-between gap-2 items-center">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Icon icon="info-circle" />
+                      <span>
+                        For both project types you can optionally enable Git Sync
+                      </span>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <Button
+                        onPress={() => {
+                          if (projectType) {
+                            setProjectType('');
+                          } else {
+                            close();
+                          }
+                        }}
+                        className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                      >
+                        {projectType ? 'Confirm' : 'Update'}
+                      </Button>
+                    </div>
                   </div>
                 </form>
               </div>

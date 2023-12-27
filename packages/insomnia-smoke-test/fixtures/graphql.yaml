@@ -29,6 +29,58 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     _type: request
+  - _id: req_63e5c8a8d1674bb39ba6df1d0eb452a1
+    parentId: wrk_d8bfe72fd18b42daa55d2ccc08c9eecb
+    modified: 1655289849596
+    created: 1655289826760
+    url: localhost:4010/graphql
+    name: GraphQL request with number
+    description: ""
+    method: POST
+    body:
+      mimeType: application/graphql
+      text: '{"query": "query($inputVar: Int) { echoNum(intVar: $inputVar)}", "variables": "{ \"inputVar\": {{ _.intVar }} }"}'
+    parameters: []
+    headers:
+      - name: Content-Type
+        value: application/json
+        id: pair_91da32f74847489ab06da669db0b425f
+    authentication: {}
+    metaSortKey: -1655289826761
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_63e5c8a8d1674bb39ba6df1d0eb452a2
+    parentId: wrk_d8bfe72fd18b42daa55d2ccc08c9eecb
+    modified: 1655289849596
+    created: 1655289826760
+    url: localhost:4010/graphql
+    name: GraphQL request with variables
+    description: ""
+    method: POST
+    body:
+      mimeType: application/graphql
+      text: '{"query":"query($vars: VarsInput) {\n\techoVars(vars: $vars) {\n\t\tstringVar \n\t\tintVar\n\t}\n}", "variables":{"vars":{"stringVar":"3","intVar": 3}} }'
+    parameters: []
+    headers:
+      - name: Content-Type
+        value: application/json
+        id: pair_91da32f74847489ab06da669db0b425f
+    authentication: {}
+    metaSortKey: -1655289826761
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
   - _id: wrk_d8bfe72fd18b42daa55d2ccc08c9eecb
     parentId: null
     modified: 1655289816535
@@ -42,7 +94,8 @@ resources:
     modified: 1655289816558
     created: 1655289816558
     name: Base Environment
-    data: {}
+    data:
+      intVar: 3
     dataPropertyOrder: null
     color: null
     isPrivate: false

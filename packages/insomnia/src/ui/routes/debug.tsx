@@ -3,15 +3,17 @@ import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
 import {
+  Breadcrumb,
   Breadcrumbs,
   Button,
   DropIndicator,
   GridList,
+  GridListItem,
   Input,
-  Item,
-  Link,
   ListBox,
+  ListBoxItem,
   Menu,
+  MenuItem,
   MenuTrigger,
   Popover,
   SearchField,
@@ -57,6 +59,7 @@ import { RequestActionsDropdown } from '../components/dropdowns/request-actions-
 import { RequestGroupActionsDropdown } from '../components/dropdowns/request-group-actions-dropdown';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
+import { EditableInput } from '../components/editable-input';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
@@ -82,7 +85,9 @@ import { useReadyState } from '../hooks/use-ready-state';
 import {
   CreateRequestType,
   useRequestGroupMetaPatcher,
+  useRequestGroupPatcher,
   useRequestMetaPatcher,
+  useRequestPatcher,
 } from '../hooks/use-request';
 import {
   GrpcRequestLoaderData,
@@ -188,6 +193,8 @@ export const Debug: FC = () => {
     useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
 
+  const patchRequest = useRequestPatcher();
+  const patchGroup = useRequestGroupPatcher();
   const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
@@ -308,6 +315,7 @@ export const Debug: FC = () => {
         showModal(AskModal, {
           title: 'Delete Request?',
           message: `Really delete ${activeRequest.name}?`,
+          color: 'danger',
           onDone: async (confirmed: boolean) => {
             if (confirmed) {
               requestFetcher.submit(
@@ -608,10 +616,9 @@ export const Debug: FC = () => {
       },
     ];
 
-  const environmentsList = [baseEnvironment, ...subEnvironments].map(e => ({
-    id: e._id,
-    name: e.name,
-    color: e.color,
+  const environmentsList = [baseEnvironment, ...subEnvironments].map(environment => ({
+    id: environment._id,
+    ...environment,
   }));
 
   const visibleCollection = collection.filter(item => !item.hidden);
@@ -631,24 +638,25 @@ export const Debug: FC = () => {
       renderPageSidebar={
         <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
-            <Breadcrumbs className='react-aria-Breadcrumbs pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
-              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
-                <Link data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                  <NavLink
-                    to={`/organization/${organizationId}/project/${activeProject._id}`}
-                  >
-                    <Icon className='text-xs' icon="chevron-left" />
-                  </NavLink>
-                </Link>
+            <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
+              <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+                <NavLink
+                  data-testid="project"
+                  className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  to={`/organization/${organizationId}/project/${activeProject._id}`}
+                >
+                  <Icon className='text-xs' icon="chevron-left" />
+                </NavLink>
                 <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
-              </Item>
-              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
+              </Breadcrumb>
+              <Breadcrumb className="flex truncate select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                 <WorkspaceDropdown />
-              </Item>
+              </Breadcrumb>
             </Breadcrumbs>
             <div className="flex w-full items-center gap-2 justify-between">
               <Select
                 aria-label="Select an environment"
+                className="overflow-hidden"
                 onSelectionChange={environmentId => {
                   setActiveEnvironmentFetcher.submit(
                     {
@@ -661,9 +669,8 @@ export const Debug: FC = () => {
                   );
                 }}
                 selectedKey={activeEnvironment._id}
-                items={environmentsList}
               >
-                <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden w-full">
                   <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
                     {({ isPlaceholder, selectedItem }) => {
                       if (
@@ -674,20 +681,35 @@ export const Debug: FC = () => {
                       ) {
                         return (
                           <Fragment>
-                            <Icon icon="cancel" />
-                            No Environment
+                            <span
+                              style={{
+                                borderColor: 'var(--color-font)',
+                              }}
+                            >
+                              <Icon className='text-xs w-5' icon="refresh" />
+                            </span>
+                            <span className='truncate'>
+                              {baseEnvironment.name}
+                            </span>
                           </Fragment>
                         );
                       }
 
                       return (
                         <Fragment>
+                          <span
+                            style={{
+                              borderColor: selectedItem.color ?? 'var(--color-font)',
+                            }}
+                          >
                           <Icon
-                            icon="circle"
+                            icon={selectedItem.isPrivate ? 'lock' : 'refresh'}
                             style={{
                               color: selectedItem.color ?? 'var(--color-font)',
                             }}
+                            className='text-xs w-5'
                           />
+                          </span>
                           {selectedItem.name}
                         </Fragment>
                       );
@@ -696,35 +718,40 @@ export const Debug: FC = () => {
                   <Icon icon="caret-down" />
                 </Button>
                 <Popover className="min-w-max">
-                  <ListBox<Environment>
+                  <ListBox
                     key={activeEnvironment._id}
+                    items={environmentsList}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         id={item._id}
                         key={item._id}
-                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                        className={
+                          `flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item._id === baseEnvironment._id ? '' : 'pl-8'}`
+                        }
                         aria-label={item.name}
                         textValue={item.name}
                         value={item}
                       >
                         {({ isSelected }) => (
                           <Fragment>
-                            <Icon
-                              icon={
-                                item._id === baseEnvironment._id
-                                  ? 'cancel'
-                                  : 'circle'
-                              }
+                            <span
+                              // className='p-1 border-solid border w-5 h-5 rounded bg-[--hl-sm] flex-shrink-0 flex items-center justify-center'
                               style={{
-                                color: item.color ?? 'var(--color-font)',
+                                borderColor: item.color ?? 'var(--color-font)',
                               }}
-                            />
-                            <span>
-                              {item._id === baseEnvironment._id
-                                ? 'No Environment'
-                                : item.name}
+                            >
+                              <Icon
+                                icon={item.isPrivate ? 'lock' : 'refresh'}
+                                className='text-xs'
+                                style={{
+                                  color: item.color ?? 'var(--color-font)',
+                                }}
+                              />
+                            </span>
+                            <span className='flex-1 truncate'>
+                              {item.name}
                             </span>
                             {isSelected && (
                               <Icon
@@ -734,7 +761,7 @@ export const Debug: FC = () => {
                             )}
                           </Fragment>
                         )}
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 </Popover>
@@ -749,10 +776,10 @@ export const Debug: FC = () => {
             </div>
             <Button
               onPress={() => setIsCookieModalOpen(true)}
-              className="px-4 py-1 flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             >
-              <Icon icon="cookie-bite" />
-              {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies
+              <Icon icon="cookie-bite" className='w-5' />
+              <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
             </Button>
           </div>
 
@@ -789,12 +816,6 @@ export const Debug: FC = () => {
                     sortOrder: order.toString(),
                   })
                 }
-                items={SORT_ORDERS.map(order => {
-                  return {
-                    id: order,
-                    name: sortOrderName[order],
-                  };
-                })}
               >
                 <Button
                   aria-label="Select sort order"
@@ -803,9 +824,17 @@ export const Debug: FC = () => {
                   <Icon icon="sort" />
                 </Button>
                 <Popover className="min-w-max">
-                  <ListBox<{ id: string; name: string }> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
+                  <ListBox
+                    items={SORT_ORDERS.map(order => {
+                      return {
+                        id: order,
+                        name: sortOrderName[order],
+                      };
+                    })}
+                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                  >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         id={item.id}
                         key={item.id}
                         className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -824,7 +853,7 @@ export const Debug: FC = () => {
                             )}
                           </Fragment>
                         )}
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 </Popover>
@@ -851,7 +880,7 @@ export const Debug: FC = () => {
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
                     {item => (
-                      <Item
+                      <MenuItem
                         key={item.id}
                         id={item.id}
                         className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -859,7 +888,7 @@ export const Debug: FC = () => {
                       >
                         <Icon icon={item.icon} />
                         <span>{item.name}</span>
-                      </Item>
+                      </MenuItem>
                     )}
                   </Menu>
                 </Popover>
@@ -868,7 +897,7 @@ export const Debug: FC = () => {
 
             <GridList
               className="overflow-y-auto border-b border-t data-[empty]:py-0 py-[--padding-sm] data-[empty]:border-none border-solid border-[--hl-sm]"
-              items={collection.filter(item => !item.hidden && item.pinned)}
+              items={collection.filter(item => item.pinned)}
               aria-label="Pinned Requests"
               disallowEmptySelection
               selectedKeys={[requestId]}
@@ -885,10 +914,12 @@ export const Debug: FC = () => {
               {item => {
 
                 return (
-                  <Item
+                  <GridListItem
                     key={item.doc._id}
                     id={item.doc._id}
                     className="group outline-none select-none"
+                    textValue={item.doc.name}
+                    data-testid={item.doc.name}
                   >
                     <div
                       className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
@@ -922,8 +953,28 @@ export const Debug: FC = () => {
                           gRPC
                         </span>
                       )}
-                      <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
-                      <span className="flex-1" />
+                      <EditableInput
+                        value={getRequestNameOrFallback(item.doc)}
+                        name="request name"
+                        ariaLabel="request name"
+                        className="px-1 flex-1"
+                        onSingleClick={() => {
+                          if (item && isRequestGroup(item.doc)) {
+                            groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
+                          } else {
+                            navigate(
+                              `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}?${searchParams.toString()}`
+                            );
+                          }
+                        }}
+                        onSubmit={name => {
+                          if (isRequestGroup(item.doc)) {
+                            patchGroup(item.doc._id, { name });
+                          } else {
+                            patchRequest(item.doc._id, { name });
+                          }
+                        }}
+                      />
                       {item.pinned && (
                         <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
                       )}
@@ -936,13 +987,14 @@ export const Debug: FC = () => {
                         />
                       )}
                     </div>
-                  </Item>
+                  </GridListItem>
                 );
               }}
             </GridList>
 
-            <div className='flex-1 overflow-y-auto' ref={parentRef}>
+            <div className='flex-1 overflow-y-auto' ref={parentRef} >
               <GridList
+                id="sidebar-request-gridlist"
                 style={{ height: virtualizer.getTotalSize() }}
                 items={virtualizer.getVirtualItems()}
                 className="relative"
@@ -972,9 +1024,10 @@ export const Debug: FC = () => {
                 {virtualItem => {
                   const item = visibleCollection[virtualItem.index];
                   return (
-                    <Item
+                    <GridListItem
                       className="group outline-none absolute top-0 left-0 select-none w-full"
                       textValue={item.doc.name}
+                      data-testid={item.doc.name}
                       style={{
                         height: `${virtualItem.size}`,
                         transform: `translateY(${virtualItem.start}px)`,
@@ -1007,7 +1060,7 @@ export const Debug: FC = () => {
                           </span>
                         )}
                         {isWebSocketRequest(item.doc) && (
-                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center info justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
                             WS
                           </span>
                         )}
@@ -1022,8 +1075,28 @@ export const Debug: FC = () => {
                             icon={item.collapsed ? 'folder' : 'folder-open'}
                           />
                         )}
-                        <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
-                        <span className="flex-1" />
+                        <EditableInput
+                          value={getRequestNameOrFallback(item.doc)}
+                          name="request name"
+                          ariaLabel="request name"
+                          className="px-1 flex-1"
+                          onSingleClick={() => {
+                            if (item && isRequestGroup(item.doc)) {
+                              groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
+                            } else {
+                              navigate(
+                                `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}?${searchParams.toString()}`
+                              );
+                            }
+                          }}
+                          onSubmit={name => {
+                            if (isRequestGroup(item.doc)) {
+                              patchGroup(item.doc._id, { name });
+                            } else {
+                              patchRequest(item.doc._id, { name });
+                            }
+                          }}
+                        />
                         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
                         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
                         {item.pinned && (
@@ -1042,7 +1115,7 @@ export const Debug: FC = () => {
                           />
                         )}
                       </div>
-                    </Item>
+                    </GridListItem>
                   );
                 }}
               </GridList>
@@ -1053,7 +1126,7 @@ export const Debug: FC = () => {
 
           {isEnvironmentModalOpen && (
             <WorkspaceEnvironmentsEditModal
-              onHide={() => setEnvironmentModalOpen(false)}
+              onClose={() => setEnvironmentModalOpen(false)}
             />
           )}
           {isCookieModalOpen && (

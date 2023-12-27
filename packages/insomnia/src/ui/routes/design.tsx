@@ -14,14 +14,16 @@ import React, {
   useState,
 } from 'react';
 import {
+  Breadcrumb,
   Breadcrumbs,
   Button,
   GridList,
+  GridListItem,
   Heading,
-  Item,
-  Link,
   ListBox,
+  ListBoxItem,
   Menu,
+  MenuItem,
   MenuTrigger,
   Popover,
   Select,
@@ -207,10 +209,10 @@ const Design: FC = () => {
     baseEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const setActiveEnvironmentFetcher = useFetcher();
-  const environmentsList = [baseEnvironment, ...subEnvironments].map(e => ({
-    id: e._id,
-    name: e.name,
-    color: e.color,
+
+  const environmentsList = [baseEnvironment, ...subEnvironments].map(environment => ({
+    id: environment._id,
+    ...environment,
   }));
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
@@ -355,7 +357,7 @@ const Design: FC = () => {
     },
     {
       id: 'generate-request-collection',
-      name: 'Generate requests from spec',
+      name: 'Generate collection',
       icon: <Icon className='w-3' icon="file-code" />,
       isDisabled:
         !apiSpec.contents ||
@@ -392,24 +394,25 @@ const Design: FC = () => {
       renderPageSidebar={
         <div className='flex h-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden'>
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
-            <Breadcrumbs className='react-aria-Breadcrumbs pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
-              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
-                <Link data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                  <NavLink
-                    to={`/organization/${organizationId}/project/${activeProject._id}`}
-                  >
-                    <Icon className='text-xs' icon="chevron-left" />
-                  </NavLink>
-                </Link>
+            <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
+              <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+                <NavLink
+                  data-testid="project"
+                  className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  to={`/organization/${organizationId}/project/${activeProject._id}`}
+                >
+                  <Icon className='text-xs' icon="chevron-left" />
+                </NavLink>
                 <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
-              </Item>
-              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
+              </Breadcrumb>
+              <Breadcrumb className="flex truncate select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                 <WorkspaceDropdown />
-              </Item>
+              </Breadcrumb>
             </Breadcrumbs>
             <div className="flex w-full items-center gap-2 justify-between">
               <Select
                 aria-label="Select an environment"
+                className="overflow-hidden"
                 onSelectionChange={environmentId => {
                   setActiveEnvironmentFetcher.submit(
                     {
@@ -422,9 +425,8 @@ const Design: FC = () => {
                   );
                 }}
                 selectedKey={activeEnvironment._id}
-                items={environmentsList}
               >
-                <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden w-full">
                   <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
                     {({ isPlaceholder, selectedItem }) => {
                       if (
@@ -435,20 +437,35 @@ const Design: FC = () => {
                       ) {
                         return (
                           <Fragment>
-                            <Icon icon="cancel" />
-                            No Environment
+                            <span
+                              style={{
+                                borderColor: 'var(--color-font)',
+                              }}
+                            >
+                              <Icon className='text-xs w-5' icon="refresh" />
+                            </span>
+                            <span className='truncate'>
+                              {baseEnvironment.name}
+                            </span>
                           </Fragment>
                         );
                       }
 
                       return (
                         <Fragment>
+                          <span
+                            style={{
+                              borderColor: selectedItem.color ?? 'var(--color-font)',
+                            }}
+                          >
                           <Icon
-                            icon="circle"
+                            icon={selectedItem.isPrivate ? 'lock' : 'refresh'}
                             style={{
                               color: selectedItem.color ?? 'var(--color-font)',
                             }}
+                            className='text-xs w-5'
                           />
+                          </span>
                           {selectedItem.name}
                         </Fragment>
                       );
@@ -457,35 +474,40 @@ const Design: FC = () => {
                   <Icon icon="caret-down" />
                 </Button>
                 <Popover className="min-w-max">
-                  <ListBox<Environment>
+                  <ListBox
                     key={activeEnvironment._id}
+                    items={environmentsList}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         id={item._id}
                         key={item._id}
-                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                        className={
+                          `flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item._id === baseEnvironment._id ? '' : 'pl-8'}`
+                        }
                         aria-label={item.name}
                         textValue={item.name}
                         value={item}
                       >
                         {({ isSelected }) => (
                           <Fragment>
-                            <Icon
-                              icon={
-                                item._id === baseEnvironment._id
-                                  ? 'cancel'
-                                  : 'circle'
-                              }
+                            <span
+                              // className='p-1 border-solid border w-5 h-5 rounded bg-[--hl-sm] flex-shrink-0 flex items-center justify-center'
                               style={{
-                                color: item.color ?? 'var(--color-font)',
+                                borderColor: item.color ?? 'var(--color-font)',
                               }}
-                            />
-                            <span>
-                              {item._id === baseEnvironment._id
-                                ? 'No Environment'
-                                : item.name}
+                            >
+                              <Icon
+                                icon={item.isPrivate ? 'lock' : 'refresh'}
+                                className='text-xs'
+                                style={{
+                                  color: item.color ?? 'var(--color-font)',
+                                }}
+                              />
+                            </span>
+                            <span className='flex-1 truncate'>
+                              {item.name}
                             </span>
                             {isSelected && (
                               <Icon
@@ -495,7 +517,7 @@ const Design: FC = () => {
                             )}
                           </Fragment>
                         )}
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 </Popover>
@@ -510,10 +532,10 @@ const Design: FC = () => {
             </div>
             <Button
               onPress={() => setIsCookieModalOpen(true)}
-              className="px-4 py-1 flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             >
-              <Icon icon="cookie-bite" />
-              {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies
+              <Icon icon="cookie-bite" className='w-5' />
+              <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
             </Button>
           </div>
           <div className="flex flex-shrink-0 items-center gap-2 p-[--padding-sm]">
@@ -556,13 +578,13 @@ const Design: FC = () => {
                   className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                 >
                   {item => (
-                    <Item
+                    <MenuItem
                       className="flex gap-2 aria-disabled:text-[--hl-md] aria-disabled:cursor-not-allowed px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                       aria-label={item.name}
                     >
                       {item.icon}
                       <span>{item.name}</span>
-                    </Item>
+                    </MenuItem>
                   )}
                 </Menu>
               </Popover>
@@ -591,34 +613,34 @@ const Design: FC = () => {
                 {/* Info */}
                 {expandedKeys.includes('info') && (
                   <ListBox onAction={key => navigateToPath(key.toString())}>
-                    <Item
+                    <ListBoxItem
                       className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                       id="info.title"
                     >
                       <span className="truncate">Title: {info.title}</span>
-                    </Item>
-                    <Item
+                    </ListBoxItem>
+                    <ListBoxItem
                       className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                       id="info.description"
                     >
                       <span className="truncate">
                         Description: {info.description}
                       </span>
-                    </Item>
-                    <Item
+                    </ListBoxItem>
+                    <ListBoxItem
                       className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                       id="info.version"
                     >
                       <span className="truncate">Version: {info.version}</span>
-                    </Item>
-                    <Item
+                    </ListBoxItem>
+                    <ListBoxItem
                       className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                       id="info.license"
                     >
                       <span className="truncate">
                         License: {info.license?.name}
                       </span>
-                    </Item>
+                    </ListBoxItem>
                   </ListBox>
                 )}
               </div>
@@ -653,12 +675,12 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         id={`servers.${item.path}`}
                       >
                         {item.url}
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 )}
@@ -695,7 +717,7 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <GridListItem
                         className="group outline-none select-none"
                         id={`paths.${item.path}`}
                       >
@@ -714,7 +736,7 @@ const Design: FC = () => {
                             </Button>
                           ))}
                         </div>
-                      </Item>
+                      </GridListItem>
                     )}
                   </GridList>
                 )}
@@ -755,12 +777,12 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         id={`components.requestBodies.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 )}
@@ -799,12 +821,12 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         id={`components.responses.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 )}
@@ -843,12 +865,12 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         id={`components.parameters.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 )}
@@ -887,12 +909,12 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         id={`components.headers.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 )}
@@ -931,12 +953,12 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         id={`components.schemas.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 )}
@@ -977,12 +999,12 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <Item
+                      <ListBoxItem
                         className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         id={`components.securitySchemes.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
-                      </Item>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 )}
@@ -992,7 +1014,7 @@ const Design: FC = () => {
           <WorkspaceSyncDropdown />
           {isEnvironmentModalOpen && (
             <WorkspaceEnvironmentsEditModal
-              onHide={() => setEnvironmentModalOpen(false)}
+              onClose={() => setEnvironmentModalOpen(false)}
             />
           )}
           {isCookieModalOpen && (
@@ -1113,7 +1135,7 @@ const Design: FC = () => {
                 }))}
               >
                 {item => (
-                  <Item className="even:bg-[--hl-xs] p-[--padding-sm] focus-within:bg-[--hl-md] data-[focused]:bg-[--hl-md] outline-none flex items-center gap-2 text-xs transition-colors">
+                  <ListBoxItem className="even:bg-[--hl-xs] p-[--padding-sm] focus-within:bg-[--hl-md] data-[focused]:bg-[--hl-md] outline-none flex items-center gap-2 text-xs transition-colors">
                     <Icon
                       className={
                         item.type === 'error'
@@ -1130,7 +1152,7 @@ const Design: FC = () => {
                     <span className="flex-shrink-0 text-[--hl-lg]">
                       [Ln {item.line}]
                     </span>
-                  </Item>
+                  </ListBoxItem>
                 )}
               </ListBox>
             )}

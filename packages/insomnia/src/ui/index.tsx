@@ -119,6 +119,7 @@ const router = createMemoryRouter(
         {
           path: 'onboarding/*',
           element: <Onboarding />,
+          errorElement: <ErrorRoute />,
         },
         {
           path: 'onboarding/migrate',
@@ -159,6 +160,7 @@ const router = createMemoryRouter(
           id: '/organization',
           loader: async (...args) => (await import('./routes/organization')).loader(...args),
           element: <Suspense fallback={<AppLoadingIndicator />}><Organization /></Suspense>,
+          errorElement: <ErrorRoute defaultMessage='A temporarily unexpected error occurred, please reload to try again' />,
           children: [
             {
               index: true,
@@ -183,6 +185,13 @@ const router = createMemoryRouter(
                     (await import('./routes/project')).indexLoader(...args),
                 },
                 {
+                  path: 'sync-projects',
+                  action: async (...args) =>
+                    (
+                      await import('./routes/project')
+                    ).syncProjectsAction(...args),
+                },
+                {
                   path: 'ai/access',
                   action: async (...args) =>
                     (
@@ -192,7 +201,6 @@ const router = createMemoryRouter(
                 {
                   path: 'project',
                   id: '/project',
-                  loader: async (...args) => (await import('./routes/project')).projectLoader(...args),
                   children: [
                     {
                       path: ':projectId',
@@ -218,6 +226,13 @@ const router = createMemoryRouter(
                             (
                               await import('./routes/actions')
                             ).moveProjectAction(...args),
+                        },
+                        {
+                          path: 'move-workspace',
+                          action: async (...args) =>
+                            (
+                              await import('./routes/actions')
+                            ).moveWorkspaceIntoProjectAction(...args),
                         },
                         {
                           path: 'update',
@@ -692,46 +707,64 @@ const router = createMemoryRouter(
                               path: 'git',
                               children: [
                                 {
-                                  path: 'status',
-                                  action: async (...args) =>
-                                    (
-                                      await import('./routes/git-actions')
-                                    ).gitStatusAction(...args),
+                                  path: 'repo',
+                                  loader: async (...args) =>
+                                    (await import('./routes/git-actions')).gitRepoLoader(...args),
                                 },
                                 {
                                   path: 'changes',
                                   loader: async (...args) =>
-                                    (
-                                      await import('./routes/git-actions')
-                                    ).gitChangesLoader(...args),
-                                },
-                                {
-                                  path: 'commit',
-                                  action: async (...args) =>
-                                    (
-                                      await import('./routes/git-actions')
-                                    ).commitToGitRepoAction(...args),
-                                },
-                                {
-                                  path: 'branches',
-                                  loader: async (...args) =>
-                                    (
-                                      await import('./routes/git-actions')
-                                    ).gitBranchesLoader(...args),
+                                    (await import('./routes/git-actions')).gitChangesLoader(...args),
                                 },
                                 {
                                   path: 'log',
                                   loader: async (...args) =>
-                                    (
-                                      await import('./routes/git-actions')
-                                    ).gitLogLoader(...args),
+                                    (await import('./routes/git-actions')).gitLogLoader(...args),
+                                },
+                                {
+                                  path: 'branches',
+                                  loader: async (...args) =>
+                                    (await import('./routes/git-actions')).gitBranchesLoader(...args),
+                                },
+                                {
+                                  path: 'status',
+                                  action: async (...args) =>
+                                    (await import('./routes/git-actions')).gitStatusAction(...args),
+                                },
+                                {
+                                  path: 'commit',
+                                  action: async (...args) =>
+                                    (await import('./routes/git-actions')).commitToGitRepoAction(...args),
                                 },
                                 {
                                   path: 'fetch',
                                   action: async (...args) =>
-                                    (
-                                      await import('./routes/git-actions')
-                                    ).gitFetchAction(...args),
+                                    (await import('./routes/git-actions')).gitFetchAction(...args),
+                                },
+                                {
+                                  path: 'rollback',
+                                  action: async (...args) =>
+                                    (await import('./routes/git-actions')).gitRollbackChangesAction(...args),
+                                },
+                                {
+                                  path: 'update',
+                                  action: async (...args) =>
+                                    (await import('./routes/git-actions')).updateGitRepoAction(...args),
+                                },
+                                {
+                                  path: 'reset',
+                                  action: async (...args) =>
+                                    (await import('./routes/git-actions')).resetGitRepoAction(...args),
+                                },
+                                {
+                                  path: 'pull',
+                                  action: async (...args) =>
+                                    (await import('./routes/git-actions')).pullFromGitRemoteAction(...args),
+                                },
+                                {
+                                  path: 'push',
+                                  action: async (...args) =>
+                                    (await import('./routes/git-actions')).pushToGitRemoteAction(...args),
                                 },
                                 {
                                   path: 'branch',
@@ -739,74 +772,101 @@ const router = createMemoryRouter(
                                     {
                                       path: 'new',
                                       action: async (...args) =>
-                                        (
-                                          await import('./routes/git-actions')
-                                        ).createNewGitBranchAction(...args),
+                                        (await import('./routes/git-actions')).createNewGitBranchAction(...args),
                                     },
                                     {
                                       path: 'delete',
                                       action: async (...args) =>
-                                        (
-                                          await import('./routes/git-actions')
-                                        ).deleteGitBranchAction(...args),
+                                        (await import('./routes/git-actions')).deleteGitBranchAction(...args),
                                     },
                                     {
                                       path: 'checkout',
                                       action: async (...args) =>
-                                        (
-                                          await import('./routes/git-actions')
-                                        ).checkoutGitBranchAction(...args),
+                                        (await import('./routes/git-actions')).checkoutGitBranchAction(...args),
                                     },
                                     {
                                       path: 'merge',
                                       action: async (...args) =>
-                                        (
-                                          await import('./routes/git-actions')
-                                        ).mergeGitBranchAction(...args),
+                                        (await import('./routes/git-actions')).mergeGitBranchAction(...args),
                                     },
                                   ],
                                 },
+                              ],
+                            },
+                            {
+                              path: 'insomnia-sync',
+                              children: [
                                 {
-                                  path: 'rollback',
+                                  path: 'sync-data',
                                   action: async (...args) =>
-                                    (
-                                      await import('./routes/git-actions')
-                                    ).gitRollbackChangesAction(...args),
-                                },
-                                {
-                                  path: 'repo',
-                                  action: async (...args) =>
-                                    (
-                                      await import('./routes/git-actions')
-                                    ).gitRepoAction(...args),
-                                },
-                                {
-                                  path: 'update',
-                                  action: async (...args) =>
-                                    (
-                                      await import('./routes/git-actions')
-                                    ).updateGitRepoAction(...args),
-                                },
-                                {
-                                  path: 'reset',
-                                  action: async (...args) =>
-                                    (
-                                      await import('./routes/git-actions')
-                                    ).resetGitRepoAction(...args),
+                                    (await import('./routes/remote-collections')).syncDataAction(...args),
+                                  loader: async (...args) =>
+                                    (await import('./routes/remote-collections')).syncDataLoader(...args),
                                 },
                                 {
                                   path: 'pull',
                                   action: async (...args) =>
-                                    (
-                                      await import('./routes/git-actions')
-                                    ).pullFromGitRemoteAction(...args),
+                                    (await import('./routes/remote-collections')).pullFromRemoteAction(...args),
                                 },
                                 {
                                   path: 'push',
                                   action: async (...args) =>
-                                    (
-                                      await import('./routes/git-actions')
-                                    ).pushToGitRemoteAction(...args),
+                                    (await import('./routes/remote-collections')).pushToRemoteAction(...args),
+                                },
+                                {
+                                  path: 'rollback',
+                                  action: async (...args) =>
+                                    (await import('./routes/remote-collections')).rollbackChangesAction(...args),
+                                },
+                                {
+                                  path: 'restore',
+                                  action: async (...args) =>
+                                    (await import('./routes/remote-collections')).restoreChangesAction(...args),
+                                },
+                                {
+                                  path: 'branch',
+                                  children: [
+                                    {
+                                      path: 'checkout',
+                                      action: async (...args) =>
+                                        (await import('./routes/remote-collections')).checkoutBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'create',
+                                      action: async (...args) =>
+                                        (await import('./routes/remote-collections')).createBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'fetch',
+                                      action: async (...args) =>
+                                        (await import('./routes/remote-collections')).fetchRemoteBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'delete',
+                                      action: async (...args) =>
+                                        (await import('./routes/remote-collections')).deleteBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'merge',
+                                      action: async (...args) =>
+                                        (await import('./routes/remote-collections')).mergeBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'create-snapshot',
+                                      action: async (...args) =>
+                                        (await import('./routes/remote-collections')).createSnapshotAction(...args),
+                                    },
+                                    {
+                                      path: 'create-snapshot-and-push',
+                                      action: async (...args) =>
+                                        (await import('./routes/remote-collections')).createSnapshotAndPushAction(...args),
+                                    },
+                                    {
+                                      path: 'rollback',
+                                      action: async (...args) =>
+                                        (await import('./routes/remote-collections')).rollbackChangesAction(...args),
+                                    },
+                                  ],
                                 },
                               ],
                             },
@@ -854,7 +914,7 @@ const router = createMemoryRouter(
                       loader: async (...args) =>
                         (
                           await import('./routes/remote-collections')
-                        ).remoteCollectionsLoader(...args),
+                        ).remoteLoader(...args),
                       children: [
                         {
                           path: 'pull',
@@ -876,6 +936,7 @@ const router = createMemoryRouter(
           element: <Suspense fallback={<AppLoadingIndicator />}>
             <Auth />
           </Suspense>,
+          errorElement: <ErrorRoute defaultMessage='A temporarily unexpected error occurred, please reload to try again' />,
           children: [
             {
               path: 'login',
