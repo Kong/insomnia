@@ -195,12 +195,18 @@ export const indexLoader: LoaderFunction = async () => {
         }
       }
 
-      if (personalOrganization) {
-        return redirect(`/organization/${personalOrganization.id}`);
-      }
-
-      if (organizations.length > 0) {
-        return redirect(`/organization/${organizations[0].id}`);
+      const organizationId = personalOrganization?.id || organizations?.[0]?.id;
+      if (organizationId) {
+        const prevOrganizationLocation = localStorage.getItem(
+          `locationHistoryEntry:${organizationId}`
+        );
+        if (prevOrganizationLocation) {
+          console.log('Redirecting to last visited location', prevOrganizationLocation);
+          // Don't check if the resources referenced in location exist, such as project, workspace, etc.
+          // Leave that to the respective loaders, show more friendly notices and be able to fallback to home page.
+          return redirect(prevOrganizationLocation);
+        }
+        return redirect(`/organization/${organizationId}`);
       }
     } catch (error) {
       console.log('Failed to load Organizations', error);
