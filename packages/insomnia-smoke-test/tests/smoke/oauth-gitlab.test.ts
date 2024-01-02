@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test';
+
 import { test } from '../../playwright/test';
 
 test('Sign in with Gitlab', async ({ app, page }) => {
@@ -8,11 +10,21 @@ test('Sign in with Gitlab', async ({ app, page }) => {
   await page.getByRole('tab', { name: 'GitLab' }).click();
 
   const fakeGitLabOAuthWebFlow = app.evaluate(electron => {
-    return new Promise<{ redirectUrl: string }>(resolve => {
-      const webContents = electron.BrowserWindow.getAllWindows()[0].webContents;
+    return new Promise<{ redirectUrl: string }>((resolve, reject) => {
+      const wins = electron.BrowserWindow.getAllWindows();
+      let mainWin = undefined;
+      for (let i = 0; i < wins.length; i++) {
+        mainWin = wins[i].title === 'Insomnia' ? wins[i] : undefined;
+      }
+
+      if (!mainWin) {
+        reject('main window is not found, probably the title of the mainWindow is modified');
+      }
+
+      const webContents = mainWin?.webContents;
       // Remove all navigation listeners so that only the one we inject will run
-      webContents.removeAllListeners('will-navigate');
-      webContents.on('will-navigate', (event: Event, url: string) => {
+      webContents?.removeAllListeners('will-navigate');
+      webContents?.on('will-navigate', (event: Event, url: string) => {
         event.preventDefault();
         const parsedUrl = new URL(url);
         // We use the same state parameter that the app created to assert that we prevent CSRF
