@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^28.1.0",
-    "@types/nedb": "^1.8.11",
+    "@types/nedb": "^1.8.16",
     "@types/node": "^20.3.3",
     "concurrently": "^8.2.0",
     "cross-env": "^7.0.3",
@@ -59,7 +59,7 @@
     "cosmiconfig": "^6.0.0",
     "enquirer": "^2.3.6",
     "insomnia-send-request": "../insomnia-send-request",
-    "nedb": "^1.8.0",
+    "@seald-io/nedb": "^4.0.3",
     "string-argv": "^0.3.2",
     "yaml": "^2.3.1"
   }
