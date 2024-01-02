@@ -89,7 +89,7 @@
     "yaml-source-map": "^2.1.1"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-class-properties": "^7.4.0",
+    "@babel/plugin-transform-class-properties": "^7.23.3",
     "@develohpanda/fluent-builder": "^2.1.2",
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
     "@fortawesome/free-brands-svg-icons": "^6.4.2",
@@ -151,7 +151,7 @@
     "esbuild-plugin-alias": "0.2.1",
     "esbuild-runner": "^2.2.2",
     "fuzzysort": "^1.2.1",
-    "graphql": "^16.7.1",
+    "graphql": "^16.8.1",
     "highlight.js": "^11.5.1",
     "httplease-asap": "^0.6.0",
     "jest": "^28.1.0",
