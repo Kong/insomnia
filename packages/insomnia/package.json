@@ -100,7 +100,7 @@
     "@tailwindcss/typography": "^0.5.9",
     "@tanstack/react-virtual": "3.0.0-beta.18",
     "@testing-library/dom": "^8.13.0",
-    "@testing-library/jest-dom": "^5.16.4",
+    "@testing-library/jest-dom": "^6.1.6",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.2.0",
     "@types/aws4": "^1.11.1",
