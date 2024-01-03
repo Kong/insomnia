@@ -89,6 +89,7 @@ const clipboard: Window['clipboard'] = {
 
 const hiddenBrowserWindow: Window['hiddenBrowserWindow'] = {
   start: () => ipcRenderer.invoke('ipc://main/hidden-browser-window/start'),
+  stop: () => ipcRenderer.invoke('ipc://main/hidden-browser-window/stop'),
 };
 
 if (process.contextIsolated) {

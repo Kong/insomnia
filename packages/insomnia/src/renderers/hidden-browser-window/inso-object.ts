@@ -154,7 +154,7 @@ class Variables {
     };
 }
 
-class InsomniaObject {
+export class InsomniaObject {
     public globals: Environment;
     public collectionVariables: Environment;
     public environment: Environment;
@@ -190,7 +190,7 @@ class InsomniaObject {
     };
 }
 
-interface RawObject {
+export interface RawObject {
     globals?: object;
     environment?: object;
     collectionVariables?: object;

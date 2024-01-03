@@ -1,6 +1,7 @@
 import { expect } from '@playwright/test';
+import { ScriptError } from 'insomnia/src/ui/window-message-handlers';
 
-import { test } from '../../playwright/test';;
+import { test } from '../../playwright/test';
 
 async function waitForTrue(timeout: number, func: () => Promise<boolean>) {
   const pollInterval = 500;
@@ -16,7 +17,76 @@ async function waitForTrue(timeout: number, func: () => Promise<boolean>) {
   }
 }
 
-test.describe('test pre-request script execution', async () => {
+async function runTests(testCases: {
+  id: string;
+  code: string;
+  context: object;
+  expectedResult: any;
+}[]) {
+  for (let i = 0; i < testCases.length; i++) {
+    const tc = testCases[i];
+
+    // tests begin here
+    test(tc.id, async ({ app, page: mainWindow }) => {
+      test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
+
+      // start the sandbox
+      await mainWindow?.evaluate(
+        async () => {
+          // it suppresses the type checking error
+          const caller = window as unknown as { hiddenBrowserWindow: { start: () => void } };
+          if (caller.hiddenBrowserWindow) {
+            caller.hiddenBrowserWindow.start();
+          }
+        },
+      );
+
+      // execute the command
+      await mainWindow?.evaluate(
+        async (tc: any) => {
+          window.postMessage(
+            {
+              action: 'message-event://hidden.browser-window/debug',
+              id: tc.id,
+              code: tc.code,
+              context: tc.context,
+            },
+            '*',
+          );
+        },
+        tc,
+      );
+
+      // verify
+      let localStorage;
+
+      await waitForTrue(60000, async () => {
+        localStorage = await mainWindow?.evaluate(() => window.localStorage);
+        expect(localStorage).toBeDefined();
+
+        return localStorage[`test_result:${tc.id}`] || localStorage[`test_error:${tc.id}`];
+      });
+
+      expect(localStorage).toBeDefined(); // or no output is found
+
+      if (localStorage) { // just for suppressing ts complaint
+        const result = localStorage[`test_result:${tc.id}`];
+        const error = localStorage[`test_error:${tc.id}`];
+
+        if (result) {
+          expect(JSON.parse(result)).toEqual(tc.expectedResult);
+        } else {
+          const scriptError = JSON.parse(error) as ScriptError;
+          expect(scriptError.message).toEqual(tc.expectedResult.message);
+          // TODO: stack field is not checked as its content is complex
+        }
+      }
+
+    });
+  }
+}
+
+test.describe('basic operations', async () => {
 
   const testCases = [
     {
@@ -277,6 +347,13 @@ test.describe('test pre-request script execution', async () => {
         },
       },
     },
+  ];
+
+  await runTests(testCases);
+});
+
+test.describe('unhappy paths', async () => {
+  const testCases = [
     {
       id: 'execution timeout (default timeout 3s)',
       code: `
@@ -292,90 +369,16 @@ test.describe('test pre-request script execution', async () => {
     {
       id: 'invalid result is returned',
       code: `
-        resolve();
+        return;
         `,
       context: {
         insomnia: {},
       },
       expectedResult: {
-        message: 'result is invalid, probably custom value is returned',
+        message: 'result is invalid, null or custom value may be returned',
       },
     },
   ];
 
-  for (let i = 0; i < testCases.length; i++) {
-    const tc = testCases[i];
-
-    // tests begin here
-    test(tc.id, async ({ app, page: mainWindow }) => {
-      test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
-
-      const originalWindowCount = app.windows().length;
-
-      // start the sandbox
-      await mainWindow?.evaluate(
-        async () => {
-          // it suppresses the type checking error
-          const caller = window as unknown as { hiddenBrowserWindow: { start: () => void } };
-          if (caller.hiddenBrowserWindow) {
-            caller.hiddenBrowserWindow.start();
-          }
-        },
-      );
-
-      // waiting for the hidden browser ready
-      await waitForTrue(60000, async () => {
-        const windows = app.windows();
-
-        if (windows.length > originalWindowCount) {
-          for (const page of windows) {
-            if (await page.title() === 'Hidden Browser Window') {
-              await page.waitForLoadState();
-              return true;
-            }
-          }
-        }
-
-        return false;
-      });
-
-      // execute the command
-      await mainWindow?.evaluate(
-        async (tc: any) => {
-          window.postMessage(
-            {
-              action: 'message-event://hidden.browser-window/debug',
-              id: tc.id,
-              code: tc.code,
-              context: tc.context,
-            },
-            '*',
-          );
-        },
-        tc,
-      );
-
-      // verify
-      let localStorage;
-
-      await waitForTrue(60000, async () => {
-        localStorage = await mainWindow?.evaluate(() => window.localStorage);
-        expect(localStorage).toBeDefined();
-
-        return localStorage[`test_result:${tc.id}`] || localStorage[`test_error:${tc.id}`];
-      });
-
-      if (localStorage) { // just for suppressing ts complaint
-        const result = localStorage[`test_result:${tc.id}`];
-        const error = localStorage[`test_error:${tc.id}`];
-
-        if (result) {
-          expect(JSON.parse(result)).toEqual(tc.expectedResult);
-        } else {
-          expect(JSON.parse(error)).toEqual(tc.expectedResult);
-        }
-      }
-
-    });
-  }
+  await runTests(testCases);
 });
