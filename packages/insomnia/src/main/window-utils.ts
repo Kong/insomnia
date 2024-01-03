@@ -16,6 +16,7 @@ import {
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
 import * as log from '../common/log';
+import { invariant } from '../utils/invariant';
 import { registerHiddenBrowserWindowConsumer, registerHiddenBrowserWindowController } from './ipc/hidden-browser-window';
 import LocalStorage from './local-storage';
 
@@ -29,7 +30,7 @@ const MINIMUM_HEIGHT = 400;
 let newWindow: ElectronBrowserWindow | null = null;
 let hiddenBrowserWindow: ElectronBrowserWindow | null = null;
 const windows = new Set<ElectronBrowserWindow>();
-const processes = new Set<ElectronBrowserWindow>();
+const processes = new Map<number, ElectronBrowserWindow>();
 let localStorage: LocalStorage | null = null;
 
 interface Bounds {
@@ -43,7 +44,25 @@ export function init() {
   initLocalStorage();
 }
 
-export function createHiddenBrowserWindow() {
+export async function createHiddenBrowserWindow() {
+  if (hiddenBrowserWindow) {
+    await new Promise<void>(resolve => {
+      invariant(hiddenBrowserWindow, 'hiddenBrowserWindow is running');
+
+      // overwrite the closed handler
+      hiddenBrowserWindow.on('closed', () => {
+        if (hiddenBrowserWindow) {
+          console.log('[hidden window] restarting hidden browser window:', hiddenBrowserWindow.id);
+          processes.delete(hiddenBrowserWindow.id);
+          hiddenBrowserWindow = null;
+        }
+        resolve();
+      });
+
+      stopHiddenBrowserWindow();
+    });
+  }
+
   hiddenBrowserWindow = new BrowserWindow({
     show: false,
     title: 'HiddenBrowserWindow',
@@ -60,18 +79,28 @@ export function createHiddenBrowserWindow() {
   const hiddenBrowserWindowPath = path.resolve(__dirname, './renderers/hidden-browser-window/index.html');
   const hiddenBrowserWindowUrl = process.env.HIDDEN_BROWSER_WINDOW_URL || pathToFileURL(hiddenBrowserWindowPath).href;
   hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
-  console.log('[main] loading hidden browser window:', process.env.HIDDEN_BROWSER_WINDOW_URL, pathToFileURL(hiddenBrowserWindowPath).href);
+
+  console.log(
+    `[hidden window] starting hidden browser window: ${hiddenBrowserWindow.id}`,
+    process.env.HIDDEN_BROWSER_WINDOW_URL,
+    pathToFileURL(hiddenBrowserWindowPath).href,
+  );
 
   hiddenBrowserWindow?.on('closed', () => {
     if (hiddenBrowserWindow) {
-      processes.delete(hiddenBrowserWindow);
-      hiddenBrowserWindow = processes.values().next().value || null;
+      console.log('[hidden window] closing hidden browser window: ', hiddenBrowserWindow.id);
+      processes.delete(hiddenBrowserWindow.id);
+      hiddenBrowserWindow = null;
     }
   });
 
-  processes.add(hiddenBrowserWindow);
+  processes.set(hiddenBrowserWindow.id, hiddenBrowserWindow);
 
   return hiddenBrowserWindow;
+}
+
+export function stopHiddenBrowserWindow() {
+  hiddenBrowserWindow?.close();
 }
 
 export function createWindow() {

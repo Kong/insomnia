@@ -1,9 +1,10 @@
 import { BrowserWindow, ipcMain } from 'electron';
 
-import { createHiddenBrowserWindow } from '../window-utils';
+import { createHiddenBrowserWindow, stopHiddenBrowserWindow } from '../window-utils';
 
 export interface HiddenBrowserWindowAPI {
     start: () => void;
+    stop: () => void;
 }
 
 // registerHiddenBrowserWindowConsumer broadcasts message ports to observer windows
@@ -16,7 +17,10 @@ export function registerHiddenBrowserWindowConsumer(consumerWindows: BrowserWind
 }
 
 export function registerHiddenBrowserWindowController() {
-    ipcMain.handle('ipc://main/hidden-browser-window/start', () => {
-        createHiddenBrowserWindow();
+    ipcMain.handle('ipc://main/hidden-browser-window/start', async () => {
+        await createHiddenBrowserWindow();
+    });
+    ipcMain.handle('ipc://main/hidden-browser-window/stop', () => {
+        stopHiddenBrowserWindow();
     });
 }
