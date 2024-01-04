@@ -134,8 +134,8 @@ export const CommandPalette = () => {
                             className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-data-[focused]:bg-[--hl-sm] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
                           >
                             {item.icon}
-                            <Text className="flex-1 px-1" slot="label">{item.name}</Text>
-                            <Text className="flex-1 px-1" slot="description">{item.description}</Text>
+                            <Text className="flex-1 px-1 truncate" slot="label">{item.name}</Text>
+                            <Text className="flex-1 px-1 truncate" slot="description">{item.description}</Text>
                           </div>
                         </ListBoxItem>
                       )}
