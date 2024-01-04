@@ -40,6 +40,7 @@ import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization 
 import { invariant } from '../../utils/invariant';
 import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
+import { CommandPalette } from '../components/command-palette';
 import { GitHubStarsButton } from '../components/github-stars-button';
 import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';
@@ -769,6 +770,7 @@ const OrganizationRoute = () => {
         </div>
         <Toast />
       </div>
+      {workspaceId && <CommandPalette />}
     </InsomniaEventStreamProvider>
   );
 };
