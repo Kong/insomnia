@@ -30,7 +30,6 @@ interface Props {
   className?: string;
   descriptionPlaceholder?: string;
   handleGetAutocompleteNameConstants?: AutocompleteHandler;
-  handleGetAutocompleteValueConstants?: AutocompleteHandler;
   hideButtons?: boolean;
   namePlaceholder?: string;
   onChange: (pair: Pair) => void;
@@ -41,6 +40,11 @@ interface Props {
   onClick?: () => void;
   onKeydown?: (e: React.KeyboardEvent) => void;
   showDescription: boolean;
+  // nc update
+  noToggle?: boolean;
+  keyWidth?: React.CSSProperties;
+  readOnlyKey?: boolean;
+  ignoreSuggestKey?: boolean;
 }
 
 export const Row: FC<Props> = ({
@@ -49,7 +53,6 @@ export const Row: FC<Props> = ({
   className,
   descriptionPlaceholder,
   handleGetAutocompleteNameConstants,
-  handleGetAutocompleteValueConstants,
   hideButtons,
   namePlaceholder,
   onChange,
@@ -60,6 +63,10 @@ export const Row: FC<Props> = ({
   onKeydown,
   valuePlaceholder,
   showDescription,
+  noToggle,
+  keyWidth,
+  readOnlyKey,
+  ignoreSuggestKey,
 }) => {
   const { enabled } = useNunjucksEnabled();
 
@@ -77,6 +84,11 @@ export const Row: FC<Props> = ({
   const isMultiline = pair.type === 'text' && pair.multiline;
   const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
 
+  const keyContainerStyle: React.CSSProperties = {};
+  if (keyWidth) {
+    Object.assign(keyContainerStyle, keyWidth);
+  }
+
   return (
     <li onKeyDown={onKeydown} onClick={onClick} className={classes}>
       <div className="key-value-editor__row">
@@ -84,13 +96,14 @@ export const Row: FC<Props> = ({
           className={classnames('form-control form-control--underlined form-control--wide', {
             'form-control--inactive': pair.disabled,
           })}
+          style={keyContainerStyle}
         >
           <OneLineEditor
             id={'key-value-editor__name' + pair.id}
             placeholder={namePlaceholder || 'Name'}
             defaultValue={pair.name}
-            getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
-            readOnly={readOnly}
+            getAutocompleteConstants={ignoreSuggestKey ? undefined : () => handleGetAutocompleteNameConstants?.(pair) || []}
+            readOnly={readOnly || readOnlyKey}
             onChange={name => onChange({ ...pair, name })}
           />
         </div>
@@ -114,6 +127,8 @@ export const Row: FC<Props> = ({
                 submitName: 'Done',
                 title: `Edit ${pair.name}`,
                 defaultValue: pair.value,
+                enableEditFontSize: true,
+                hideLineNumbers: false,
                 onChange: (value: string) => onChange({ ...pair, value }),
                 enableRender: enabled,
                 mode: pair.multiline && typeof pair.multiline === 'string' ? pair.multiline : 'text/plain',
@@ -126,12 +141,12 @@ export const Row: FC<Props> = ({
           ) : (
             <OneLineEditor
               id={'key-value-editor__value' + pair.id}
-              type="text"
-              readOnly={readOnly}
+                  type="text"
               placeholder={valuePlaceholder || 'Value'}
               defaultValue={pair.value}
               onChange={value => onChange({ ...pair, value })}
-              getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
+                  getAutocompleteConstants={ignoreSuggestKey ? undefined : () => handleGetAutocompleteNameConstants?.(pair) || []}
+                  readOnly={readOnly || readOnlyKey}
             />
           )
           }
@@ -187,7 +202,7 @@ export const Row: FC<Props> = ({
           </Dropdown>
         ) : null}
 
-        {!hideButtons ? (
+        {!noToggle && !hideButtons ? (
           <button
             onClick={() => onChange({ ...pair, disabled: !pair.disabled })}
             title={pair.disabled ? 'Enable item' : 'Disable item'}

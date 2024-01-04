@@ -609,5 +609,6 @@ export const REQUEST_UTIL_TABS_ORDER = [
 export type TabType = typeof REQUEST_UTIL_TABS_ORDER[number];
 
 export const EXPORT_TYPE_REQUEST_DATASET = 'request_dataset';
+export const EXPORT_TYPE_REQUEST_SETTER = 'request_setter';
 export const DATASET_WIDTH_TYPE_PERCENTAGE = 'percentage';
 export const DATASET_WIDTH_TYPE_FIX_LEFT = 'fix_left';

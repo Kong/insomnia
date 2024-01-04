@@ -8,6 +8,7 @@ import {
   EXPORT_TYPE_REQUEST,
   EXPORT_TYPE_REQUEST_DATASET,
   EXPORT_TYPE_REQUEST_GROUP,
+  EXPORT_TYPE_REQUEST_SETTER,
   EXPORT_TYPE_UNIT_TEST,
   EXPORT_TYPE_UNIT_TEST_SUITE,
   EXPORT_TYPE_WEBSOCKET_PAYLOAD,
@@ -34,6 +35,7 @@ import * as _requestDataset from './request-dataset';
 import * as _requestGroup from './request-group';
 import * as _requestGroupMeta from './request-group-meta';
 import * as _requestMeta from './request-meta';
+import * as _requestSetter from './request-setter';
 import * as _requestVersion from './request-version';
 import * as _response from './response';
 import * as _settings from './settings';
@@ -91,6 +93,7 @@ export const webSocketResponse = _webSocketResponse;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
 export const requestDataset = _requestDataset;
+export const requestSetter = _requestSetter;
 export * as organization from './organization';
 
 export function all() {
@@ -128,6 +131,7 @@ export function all() {
     webSocketRequest,
     webSocketResponse,
     requestDataset,
+    requestSetter,
   ] as const;
 }
 
@@ -252,4 +256,5 @@ export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {
   [EXPORT_TYPE_PROTO_FILE]: protoFile,
   [EXPORT_TYPE_PROTO_DIRECTORY]: protoDirectory,
   [EXPORT_TYPE_REQUEST_DATASET]: requestDataset,
+  [EXPORT_TYPE_REQUEST_SETTER]: requestSetter,
 };

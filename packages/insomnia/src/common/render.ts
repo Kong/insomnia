@@ -1,5 +1,6 @@
 import clone from 'clone';
 import orderedJSON from 'json-order';
+import jsonpath from 'jsonpath';
 
 import * as models from '../models';
 import type { CookieJar } from '../models/cookie-jar';
@@ -9,6 +10,7 @@ import { isProject, Project } from '../models/project';
 import { isRequest, type Request } from '../models/request';
 import { isRequestDataset, RequestDataSet } from '../models/request-dataset';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
+import { RequestSetter, SetterEventType } from '../models/request-setter';
 import { isResponse } from '../models/response';
 import { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, Workspace } from '../models/workspace';
@@ -360,6 +362,7 @@ interface BaseRenderContextOptions {
   purpose?: RenderPurpose;
   extraInfo?: ExtraRenderInfo;
   dataset?: RequestDataSet | null;
+  requestSetters?: RequestSetter[] | null;
 }
 
 interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
@@ -553,16 +556,39 @@ export async function getRenderedRequestAndContext(
     extraInfo,
     purpose,
     dataset,
+    requestSetters,
   }: RenderRequestOptions,
 ): Promise<RequestAndContext> {
   const ancestors = await getRenderContextAncestors(request);
   const workspace = ancestors.find(isWorkspace);
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
-  const backupDataset: RequestDataSet | null = dataset ? clone(dataset) : null;
+  let backupDataset: RequestDataSet | null = dataset ? clone(dataset) : null;
+  const beforeSendSetters = requestSetters
+    ?.filter(s => s.event === SetterEventType.BEFORE_SEND_REQUEST)
+    ?.sort(models.requestSetter.sort) || [];
+  const duringSendSetters = requestSetters
+    ?.filter(s => s.event === SetterEventType.DURING_SEND_REQUEST)
+    ?.sort(models.requestSetter.sort) || [];
 
-  const renderContext = await getRenderContext({ request, environmentId, ancestors, purpose, extraInfo, dataset: backupDataset });
+  let renderContext = await getRenderContext({ request, environmentId, ancestors, purpose, extraInfo, dataset: backupDataset });
 
+  await executeSetter(
+    beforeSendSetters,
+    renderContext,
+    ancestors,
+    environmentId,
+    dataset,
+  );
+  backupDataset = dataset ? clone(dataset) : null;
+  renderContext = await getRenderContext({
+    request,
+    environmentId,
+    ancestors,
+    purpose,
+    extraInfo,
+    dataset: backupDataset,
+  });
   // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
   // https://github.com/kong/insomnia/issues/895
   try {
@@ -606,6 +632,24 @@ export async function getRenderedRequestAndContext(
 
   // Default the proto if it doesn't exist
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
+  await executeSetter(
+    duringSendSetters,
+    renderContext,
+    ancestors,
+    environmentId,
+    dataset,
+  );
+
+  backupDataset = dataset ? clone(dataset) : null;
+  renderContext = await getRenderContext({
+    request,
+    environmentId,
+    ancestors,
+    purpose,
+    extraInfo,
+    dataset: backupDataset,
+  });
+
   return {
     context: renderContext,
     request: {
@@ -672,3 +716,85 @@ export async function getRenderContextAncestors(base?: Request | GrpcRequest | W
     models.project.type,
   ]);
 }
+
+export async function executeSetter(
+  setters: RequestSetter[],
+  renderContext: any,
+  ancestors: models.BaseModel[],
+  environmentId?: string | null,
+  dataset?: RequestDataSet | null,
+) {
+  const workspace = ancestors.find(isWorkspace);
+  const rootEnvironment = await models.environment.getOrCreateForParentId(
+    workspace ? workspace._id : 'n/a',
+  );
+  const subEnvironment = await models.environment.getById(environmentId || 'n/a');
+  const updatedSources: { [id: string]: models.BaseModel } = {};
+  const keys = templatingUtils.getKeys(renderContext, templating.NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME);
+  for (const setter of setters.filter(s => s.enabled)) {
+    try {
+      if (setter.objectKey) {
+        const keyMatched = keys.find(k => k.name === setter.objectKey);
+        if (keyMatched) {
+          const value = await render(
+            setter.setterValue,
+            renderContext,
+          );
+          const contextPaths = jsonpath.paths(renderContext, setter.objectKey.replace(/^_/, '$'))[0];
+          objectPathSetter(renderContext, contextPaths, value);
+          const sourceId = keyMatched.meta?.id;
+          const sourceType = keyMatched.meta?.type;
+          const matchSource = ancestors.find(a => a._id === sourceId && a.type === sourceType);
+          if (
+            !matchSource &&
+            sourceType === models.environment.type
+          ) {
+            let matchEnv: Environment | null = null;
+            if (rootEnvironment && sourceId === rootEnvironment._id) {
+              matchEnv = rootEnvironment;
+            } else if (subEnvironment && sourceId === subEnvironment._id) {
+              matchEnv = subEnvironment;
+            }
+            if (matchEnv) {
+              const paths = jsonpath.paths(matchEnv.data, setter.objectKey.replace(/^_/, '$'))[0];
+              if (paths) {
+                objectPathSetter(matchEnv.data, paths, value);
+                updatedSources[matchEnv._id] = matchEnv;
+              }
+            }
+          } else if (dataset && sourceType === models.requestDataset.type) {
+            Object.values(dataset.environment).forEach(kp => {
+              if (`_.${kp.name}` === setter.objectKey) {
+                kp.value = value;
+              }
+            });
+            updatedSources[dataset._id] = dataset;
+          } else if (matchSource && matchSource.hasOwnProperty('environment')) {
+            const sourceEnv = (matchSource as any).environment;
+            const paths = jsonpath.paths(sourceEnv, setter.objectKey.replace(/^_/, '$'))[0];
+            objectPathSetter(sourceEnv, paths, value);
+            updatedSources[matchSource._id] = matchSource;
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Setter error', err);
+    }
+  }
+  await Promise.all(
+    Object.values(updatedSources)
+      .map(m => db.docUpdate(m, m)),
+  );
+};
+
+function objectPathSetter(obj: any, paths: any[], value: any) {
+  if (obj && paths && paths.length) {
+    if (paths.length === 1) {
+      obj[paths[0]] = value;
+    } else if (paths[0] === '$') {
+      objectPathSetter(obj, paths.slice(1), value);
+    } else {
+      objectPathSetter(obj[paths[0]], paths.slice(1), value);
+    }
+  }
+};
