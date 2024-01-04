@@ -64,8 +64,6 @@ async function init() {
                     stack: e.stack,
                 },
             });
-        } finally {
-
         }
     };
 

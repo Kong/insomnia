@@ -378,6 +378,18 @@ test.describe('unhappy paths', async () => {
         message: 'result is invalid, null or custom value may be returned',
       },
     },
+    {
+      id: 'custom error is returned',
+      code: `
+        throw Error('my custom error');
+        `,
+      context: {
+        insomnia: {},
+      },
+      expectedResult: {
+        message: 'my custom error',
+      },
+    },
   ];
 
   await runTests(testCases);

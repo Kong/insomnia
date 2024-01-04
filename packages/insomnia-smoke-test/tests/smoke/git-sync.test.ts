@@ -3,7 +3,7 @@ import { test } from '../../playwright/test';
 test('Clone from github', async ({ page }) => {
   await page.getByLabel('Clone git repository').click();
   await page.getByRole('tab', { name: ' Git' }).click();
-  await page.getByPlaceholder('https://github.com/org/repo.git').fill('https://github.com/ihexxa/insomnia-git-example.git');
+  await page.getByPlaceholder('https://github.com/org/repo.git').fill('https://github.com/jackkav/insomnia-git-example.git');
   await page.getByPlaceholder('Name').fill('J');
   await page.getByPlaceholder('Email').fill('J');
   await page.getByPlaceholder('MyUser').fill('J');
@@ -26,13 +26,14 @@ test('Sign in with GitHub', async ({ app, page }) => {
   // https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps#web-application-flow
   const fakeGitHubOAuthWebFlow = app.evaluate(electron => {
     return new Promise<{ redirectUrl: string }>((resolve, reject) => {
+
       const wins = electron.BrowserWindow.getAllWindows();
       let mainWin = undefined;
       for (let i = 0; i < wins.length; i++) {
         mainWin = wins[i].title === 'Insomnia' ? wins[i] : undefined;
       }
       if (!mainWin) {
-        reject('main window is not found, probably the title of the mainWindow is modified');
+        reject('main window is not found, probably the title of the mainWindow is modified or it is not started');
       }
 
       const webContents = mainWin?.webContents;

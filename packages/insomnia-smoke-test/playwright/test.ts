@@ -1,7 +1,8 @@
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
-import { ElectronApplication, expect, Page, test as baseTest, TraceMode } from '@playwright/test';
+import { ElectronApplication, test as baseTest, TraceMode } from '@playwright/test';
 import path from 'path';
 
+import { getLoadedPage } from '../playwright/utils';
 import {
   bundleType,
   cwd,
@@ -98,38 +99,18 @@ export const test = baseTest.extend<{
 
     await electronApp.close();
   },
+
   page: async ({ app }, use) => {
-    // getMainPage waits main renderer loaded
-    const getMainPage = async () => {
-      for (let i = 0; i < 100; i++) {
-        const wins = app.windows();
-
-        for (const page of wins) {
-          const title = await page.title();
-          if (title === 'Insomnia') {
-            return page;
-          }
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-
-      return undefined;
-    };
-
-    const page = await getMainPage();
-    if (!page) {
-      expect(page).toBeDefined();
-    } else {
-      await page.waitForLoadState();
-      await use(page);
-    }
+    const page = await getLoadedPage(app, 'Insomnia');
+    await use(page);
   },
+
   dataPath: async ({ }, use) => {
     const insomniaDataPath = randomDataPath();
 
     await use(insomniaDataPath);
   },
+
   userConfig: async ({ }, use) => {
     await use({
       skipOnboarding: true,
