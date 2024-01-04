@@ -18,7 +18,7 @@ test('Sign in with Gitlab', async ({ app, page }) => {
       }
 
       if (!mainWin) {
-        reject('main window is not found, probably the title of the mainWindow is modified');
+        reject('main window is not found, probably the title of the mainWindow is modified or it is not started');
       }
 
       const webContents = mainWin?.webContents;
