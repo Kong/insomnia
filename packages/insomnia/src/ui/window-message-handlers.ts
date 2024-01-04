@@ -113,8 +113,6 @@ class WindowMessageHandler {
     };
 
     start = () => {
-        window.hiddenBrowserWindow.start();
-
         this.register('message-event://renderers/publish-port', this.publishPortHandler);
         this.register('message-event://hidden.browser-window/debug', this.debugEventHandler);
 
