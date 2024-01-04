@@ -13,6 +13,7 @@ export function registerHiddenBrowserWindowConsumer(consumerWindows: BrowserWind
         consumerWindows.forEach(win => {
             win.webContents.postMessage('ipc://renderers/publish-port', null, ev.ports);
         });
+        console.log('[main][init hidden win step 5/6]: the main.js handed message port over to the main renderer');
     });
 }
 

@@ -111,4 +111,5 @@ if (process.contextIsolated) {
 // it is different from window.main.on, it requires events to pass ports
 ipcRenderer.on('ipc://renderers/publish-port', async (ev: IpcRendererEvent) => {
   window.postMessage({ action: 'message-event://renderers/publish-port' }, '*', ev.ports);
+  console.log('[preload-main][init hidden win step 2/6]: ipc "publishing port to the main renderer" is ready');
 });
