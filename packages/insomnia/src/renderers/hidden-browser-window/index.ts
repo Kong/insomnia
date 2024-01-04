@@ -68,6 +68,7 @@ async function init() {
     };
 
     window.postMessage('message-event://preload/publish-port', '*', [channel.port2]);
+    console.log('[hidden-browser-window][init hidden win step 4/6]: message channel is created');
 
     window.onbeforeunload = () => {
         channel.port1.postMessage({

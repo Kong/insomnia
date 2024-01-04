@@ -72,6 +72,8 @@ class WindowMessageHandler {
                 console.error(`unknown action ${ev}`);
             }
         };
+
+        console.log('[main][init hidden win step 6/6]: message port handler is set up in the main renderer');
     };
 
     waitUntilHiddenBrowserWindowReady = async () => {

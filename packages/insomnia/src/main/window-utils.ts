@@ -81,14 +81,14 @@ export async function createHiddenBrowserWindow() {
   hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
 
   console.log(
-    `[hidden window] starting hidden browser window: ${hiddenBrowserWindow.id}`,
+    `[main][init hidden win step 1/6]: starting hidden browser window(id=${hiddenBrowserWindow.id}): `,
     process.env.HIDDEN_BROWSER_WINDOW_URL,
     pathToFileURL(hiddenBrowserWindowPath).href,
   );
 
   hiddenBrowserWindow?.on('closed', () => {
     if (hiddenBrowserWindow) {
-      console.log('[hidden window] closing hidden browser window: ', hiddenBrowserWindow.id);
+      console.log(`[main] closing hidden browser window(id=${hiddenBrowserWindow.id})`);
       processes.delete(hiddenBrowserWindow.id);
       hiddenBrowserWindow = null;
     }
