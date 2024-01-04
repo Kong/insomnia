@@ -49,7 +49,7 @@
     "apiconnect-wsdl": "1.8.31",
     "aws4": "^1.12.0",
     "axios": "^1.6.3",
-    "chai": "^5.0.0",
+    "chai": "^4.3.4",
     "chai-json-schema": "1.5.1",
     "change-case": "^4.1.2",
     "clone": "^2.1.0",
