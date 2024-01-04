@@ -109,7 +109,7 @@ export interface BaseRequest {
   settingFollowRedirects: 'global' | 'on' | 'off';
   // nc-dazzle-update
   settingResponseVisualize: boolean | null;
-  settingDatasetFilter: boolean | null;
+  settingDatasetFilter: boolean;
 }
 
 export type Request = BaseModel & BaseRequest;

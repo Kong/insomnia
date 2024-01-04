@@ -30,7 +30,6 @@ interface Props {
   onDeleteDataset?: (dataset: RequestDataSet) => void;
   onPromoteToDefault?: (dataset: RequestDataSet) => void;
   onDuplicate?: (dataset: RequestDataSet) => void;
-  onSendWithDataset?: (dataset: RequestDataSet) => void;
   onGenerateCodeWithDataset?: (dataset: RequestDataSet) => void;
   onToggleChanged?: (dataset: RequestDataSet, toggle: boolean) => void;
   setLoading: (l: boolean) => void;
@@ -38,6 +37,7 @@ interface Props {
 
 const StyledResultListItem = styled.li`
   padding: 0 var(--padding-sm);
+  list-style-type: none;
 
   > div:first-of-type {
     display: grid;
@@ -109,20 +109,14 @@ const DatasetRowEditor: FC<Props> = ({
   onDuplicate,
   setLoading,
 }) => {
-  const {
-    activeEnvironment: globalActiveEnvironment,
-    activeWorkspace,
-    baseEnvironment,
-    subEnvironments,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeWorkspace, baseEnvironment, subEnvironments } =
+    useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const { activeRequest } = useRouteLoaderData(
     'request/:requestId'
   ) as RequestLoaderData;
   const { settings } = useRootLoaderData();
-  const [isToggled, setIsToggled] = useState(false);
   const [datasetName, setDatasetName] = useState('');
   const [datasetKey, setDatasetKey] = useState(0);
-  const [activeEnvironment, setActiveEnvironment] = useState<Environment>();
   const [baseDataset, setBaseDataset] = useState<
     {
       id: string;
@@ -134,10 +128,15 @@ const DatasetRowEditor: FC<Props> = ({
       type: string;
     }[]
   >();
+  const environments = [baseEnvironment, ...subEnvironments];
+  const [activeEnvironment, setActiveEnvironment] = useState<
+    Environment | undefined
+  >(environments.find(e => e._id === dataset.applyEnv)); // define active environment for each dataset, not active environment in workspace
+  const isOpenDataset: boolean =
+    dataset.settings?.[REQUEST_DATASET_SETTING_COLLAPSE] || false;
   const fetcher = useFetcher();
 
   const toggleIconRotation = -90;
-  const environments = [baseEnvironment, ...subEnvironments];
   // const isPercentageType = datasetPaneWidthType === DATASET_WIDTH_TYPE_PERCENTAGE;
   // const isFixedType = datasetPaneWidthType === DATASET_WIDTH_TYPE_FIX_LEFT;
   const isPercentageType = true;
@@ -159,84 +158,118 @@ const DatasetRowEditor: FC<Props> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetcher.state]);
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-  const connect = useCallback((connectParams: ConnectActionParams) => {
-    fetcher.submit(JSON.stringify(connectParams),
-      {
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+    requestId: string;
+  };
+  const connect = useCallback(
+    (connectParams: ConnectActionParams) => {
+      fetcher.submit(JSON.stringify(connectParams), {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/connect`,
         method: 'post',
         encType: 'application/json',
       });
-  }, [fetcher, organizationId, projectId, requestId, workspaceId]);
-  const send = useCallback((sendParams: SendActionParams) => {
-    fetcher.submit(JSON.stringify(sendParams),
-      {
+    },
+    [fetcher, organizationId, projectId, requestId, workspaceId]
+  );
+  const send = useCallback(
+    (sendParams: SendActionParams) => {
+      fetcher.submit(JSON.stringify(sendParams), {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/send`,
         method: 'post',
         encType: 'application/json',
       });
-  }, [fetcher, organizationId, projectId, requestId, workspaceId]);
+    },
+    [fetcher, organizationId, projectId, requestId, workspaceId]
+  );
 
-  const sendOrConnect = useCallback(async (shouldPromptForPathAfterResponse?: boolean, dataset?: RequestDataSet) => {
-    models.stats.incrementExecutedRequests();
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.requestExecute,
-      properties: {
-        preferredHttpVersion: settings.preferredHttpVersion,
-        authenticationType: activeRequest.authentication?.type,
-        mimeType: activeRequest.body.mimeType,
-      },
-    });
-
-    if (!dataset) {
-      dataset = await models.requestDataset.getOrCreateForRequest(activeRequest);
-    }
-
-    if (isEventStreamRequest(activeRequest)) {
-      const startListening = async () => {
-        const environmentId = activeEnvironment?._id || '';
-        const workspaceId = activeWorkspace._id;
-        // Render any nunjucks tags in the url/headers/authentication settings/cookies
-        const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-        const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
-          request: activeRequest,
-          environmentId,
-          payload: {
-            url: activeRequest.url,
-            headers: activeRequest.headers,
-            authentication: activeRequest.authentication,
-            parameters: activeRequest.parameters.filter(p => !p.disabled),
-            workspaceCookieJar,
-          },
-        });
-        rendered && connect({
-          url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
-          headers: rendered.headers,
-          authentication: rendered.authentication,
-          cookieJar: rendered.workspaceCookieJar,
-          suppressUserAgent: rendered.suppressUserAgent,
-        });
-      };
-      startListening();
-      return;
-    }
-
-    try {
-      send({ requestId, shouldPromptForPathAfterResponse, datasetId: dataset._id });
-    } catch (err) {
-      showAlert({
-        title: 'Unexpected Request Failure',
-        message: (
-          <div>
-            <p>The request failed due to an unhandled error:</p>
-            <code className="wide selectable">
-              <pre>{err.message}</pre>
-            </code>
-          </div>
-        ),
+  const sendOrConnect = useCallback(
+    async (
+      shouldPromptForPathAfterResponse?: boolean,
+      dataset?: RequestDataSet
+    ) => {
+      models.stats.incrementExecutedRequests();
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.requestExecute,
+        properties: {
+          preferredHttpVersion: settings.preferredHttpVersion,
+          authenticationType: activeRequest.authentication?.type,
+          mimeType: activeRequest.body.mimeType,
+        },
       });
-    }
-  }, [activeEnvironment?._id, activeRequest, activeWorkspace._id, connect, requestId, send, settings.preferredHttpVersion]);
+
+      if (!dataset) {
+        dataset = await models.requestDataset.getOrCreateForRequest(
+          activeRequest
+        );
+      }
+
+      if (isEventStreamRequest(activeRequest)) {
+        const startListening = async () => {
+          const environmentId = activeEnvironment?._id || '';
+          const workspaceId = activeWorkspace._id;
+          // Render any nunjucks tags in the url/headers/authentication settings/cookies
+          const workspaceCookieJar =
+            await models.cookieJar.getOrCreateForParentId(workspaceId);
+          const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
+            request: activeRequest,
+            environmentId,
+            payload: {
+              url: activeRequest.url,
+              headers: activeRequest.headers,
+              authentication: activeRequest.authentication,
+              parameters: activeRequest.parameters.filter(p => !p.disabled),
+              workspaceCookieJar,
+            },
+          });
+          rendered &&
+            connect({
+              url: joinUrlAndQueryString(
+                rendered.url,
+                buildQueryStringFromParams(rendered.parameters)
+              ),
+              headers: rendered.headers,
+              authentication: rendered.authentication,
+              cookieJar: rendered.workspaceCookieJar,
+              suppressUserAgent: rendered.suppressUserAgent,
+            });
+        };
+        startListening();
+        return;
+      }
+
+      try {
+        send({
+          requestId,
+          shouldPromptForPathAfterResponse,
+          datasetId: dataset._id,
+        });
+      } catch (err) {
+        showAlert({
+          title: 'Unexpected Request Failure',
+          message: (
+            <div>
+              <p>The request failed due to an unhandled error:</p>
+              <code className="wide selectable">
+                <pre>{err.message}</pre>
+              </code>
+            </div>
+          ),
+        });
+      }
+    },
+    [
+      activeEnvironment?._id,
+      activeRequest,
+      activeWorkspace._id,
+      connect,
+      requestId,
+      send,
+      settings.preferredHttpVersion,
+    ]
+  );
 
   useEffect(() => {
     const datasetList = Object.keys(dataset.environment)
@@ -251,11 +284,6 @@ const DatasetRowEditor: FC<Props> = ({
         type: 'text',
       }))
       .sort(metaSortKeySort);
-    let isToggled = false;
-    if (dataset.settings) {
-      isToggled = dataset.settings[REQUEST_DATASET_SETTING_COLLAPSE] || false;
-    }
-    setIsToggled(isToggled);
     setBaseDataset(datasetList);
     setDatasetName(dataset.name);
     setActiveEnvironment(activeEnvironment);
@@ -299,8 +327,7 @@ const DatasetRowEditor: FC<Props> = ({
   };
 
   const toggle = () => {
-    onToggleChanged && onToggleChanged(dataset, !isToggled);
-    setIsToggled(!isToggled);
+    onToggleChanged && onToggleChanged(dataset, !isOpenDataset);
   };
 
   const handleOnDeleteDataset = () => {
@@ -328,7 +355,7 @@ const DatasetRowEditor: FC<Props> = ({
 
   const handleOnSendWithDataset = () => {
     const thisDataset = prepareDataset();
-      sendOrConnect(undefined, thisDataset);
+    sendOrConnect(undefined, thisDataset);
   };
 
   const handleOnGenerateCode = () => {
@@ -347,13 +374,11 @@ const DatasetRowEditor: FC<Props> = ({
   const handleChangeEnvironment = (environmentId: string) => {
     dataset.applyEnv = environmentId;
     onChanged(dataset);
-    setActiveEnvironment(globalActiveEnvironment);
+    setActiveEnvironment(environments.find(e => e._id === environmentId));
   };
 
   const handleOnSetDefaultDataset = () => {
-    if (onPromoteToDefault) {
-      onPromoteToDefault(dataset);
-    }
+   onPromoteToDefault && onPromoteToDefault(dataset);
   };
 
   const handleOnDuplicate = () => {
@@ -400,7 +425,9 @@ const DatasetRowEditor: FC<Props> = ({
           onClick={toggle}
           variant="text"
           style={
-            isToggled ? {} : { transform: `rotate(${toggleIconRotation}deg)` }
+            isOpenDataset
+              ? {}
+              : { transform: `rotate(${toggleIconRotation}deg)` }
           }
         >
           <SvgIcon icon="chevron-down" />
@@ -421,7 +448,6 @@ const DatasetRowEditor: FC<Props> = ({
             activeEnvironment={activeEnvironment}
             environments={environments}
             workspace={activeWorkspace}
-            hotKeyRegistry={settings.hotKeyRegistry}
           />
         )}
         <PromptButton
@@ -455,7 +481,7 @@ const DatasetRowEditor: FC<Props> = ({
         </Button>
       </div>
 
-      {isToggled && (
+      {isOpenDataset && (
         <div>
           {baseDataset?.length && (
             <KeyValueEditor

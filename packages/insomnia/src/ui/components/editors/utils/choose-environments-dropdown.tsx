@@ -1,16 +1,14 @@
-import React, { FC, useRef } from 'react';
+import React, { FC } from 'react';
 import styled from 'styled-components';
 
-import { HotKeyRegistry } from '../../../../common/settings';
 import { Environment } from '../../../../models/environment';
 import { Workspace } from '../../../../models/workspace';
 import {
   Dropdown,
   DropdownButton,
-  DropdownDivider,
   DropdownItem,
+  ItemContent,
 } from '../../base/dropdown';
-import { Tooltip } from '../../tooltip';
 
 const StyledDropdownContainer = styled.div`
   display: flex;
@@ -35,8 +33,6 @@ interface Props {
   handleChangeEnvironment: Function;
   workspace: Workspace;
   environments: Environment[];
-  hotKeyRegistry: HotKeyRegistry;
-  className?: string;
   activeEnvironment?: Environment | null;
 }
 
@@ -44,11 +40,8 @@ export const ChooseEnvironmentsDropdown: FC<Props> = ({
   handleChangeEnvironment,
   workspace,
   environments,
-  className,
   activeEnvironment,
 }) => {
-  const dropdownRef = useRef<typeof Dropdown>(null);
-
   const baseEnvironment = environments.find(e => e.parentId === workspace._id);
   const subEnvironments = environments
     .filter(e => e.parentId === (baseEnvironment && baseEnvironment._id))
@@ -61,76 +54,65 @@ export const ChooseEnvironmentsDropdown: FC<Props> = ({
     description = activeEnvironment.name;
   }
 
-  const handleActivateEnvironment = (environmentId: string) => {
-    handleChangeEnvironment(environmentId);
-  };
-
-  const handleKeydown = (e: KeyboardEvent) => {
-    executeHotKey(e, hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU, () => {
-      dropdownRef.current?.toggle(true);
-    });
-  };
-
   const renderEnvironmentItem = (environment: Environment) => {
     return (
       <DropdownItem
         key={environment._id}
         textValue={environment._id}
-        onClick={handleActivateEnvironment}
+        onClick={handleChangeEnvironment}
       >
-        <i
-          className="fa fa-random"
-          style={{
-            // @ts-expect-error -- TSCONVERSION don't set color if undefined
-            color: environment.color,
-          }}
+        <ItemContent
+          icon={
+            <i
+              className="fa fa-random"
+              style={{
+                // @ts-expect-error -- TSCONVERSION don't set color if undefined
+                color: environment.color,
+                marginRight: 10,
+              }}
+            />
+          }
+          label={
+            <span>
+              Use <strong>{environment.name}</strong>
+            </span>
+          }
+          onClick={() => handleChangeEnvironment(environment._id)}
         />
-        Use <strong>{environment.name}</strong>
       </DropdownItem>
     );
   };
 
   return (
-    // <KeydownBinder onKeydown={handleKeydown}>
     <Dropdown
-      ref={dropdownRef}
-      // {...(other as Record<string, any>)}
-      className={className}
+      triggerButton={
+        <DropdownButton>
+          <StyledDropdownContainer>
+            <div>
+              {activeEnvironment?.color ? (
+                <i
+                  className="fa fa-tags space-right"
+                  style={{
+                    color: activeEnvironment.color,
+                  }}
+                />
+              ) : null}
+              {description}
+            </div>
+            <i className="space-left fa fa-caret-down" />
+          </StyledDropdownContainer>
+        </DropdownButton>
+      }
     >
-      <DropdownButton className="btn btn--super-compact no-wrap">
-        <StyledDropdownContainer>
-          {!activeEnvironment && subEnvironments.length > 0 && (
-            <Tooltip
-              message="No environments active. Please select one to use."
-              className="space-right"
-              position="right"
-            >
-              <i className="fa fa-exclamation-triangle notice" />
-            </Tooltip>
-          )}
-          <div className="dropdown__text">
-            {/* {activeEnvironment?.color &&
-            environmentHighlightColorStyle === 'sidebar-indicator' ? (
-              <i
-                className="fa fa-tags space-right"
-                style={{
-                  color: activeEnvironment.color,
-                }}
-              />
-            ) : null} */}
-            {description}
-          </div>
-          <i className="space-left fa fa-caret-down" />
-        </StyledDropdownContainer>
-      </DropdownButton>
-
-      <DropdownDivider>Activate Environment</DropdownDivider>
       {subEnvironments.map(renderEnvironmentItem)}
 
-      <DropdownItem textValue="" onClick={handleActivateEnvironment}>
-        <i className="fa fa-empty" /> No Environment
+      <DropdownItem textValue={null}>
+        <ItemContent
+          icon={<i className="fa fa-empty" />}
+          label="No Environment"
+          onClick={() => handleChangeEnvironment(null)}
+        />
       </DropdownItem>
     </Dropdown>
-    // </KeydownBinder>
   );
 };

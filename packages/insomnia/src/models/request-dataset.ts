@@ -18,7 +18,7 @@ export const REQUEST_DATASET_SETTING_COLLAPSE = 'collapse';
 
 interface BaseRequestDataset {
   name: string;
-  applyEnv?: string;
+  applyEnv?: string | null;
   environment: Record<string, any>;
   environmentPropertyOrder: Record<string, any> | null;
   description?: string;
@@ -40,6 +40,8 @@ export function init(): BaseRequestDataset {
     environmentPropertyOrder: null,
     default: false,
     selected: false,
+    applyEnv: null,
+    settings: {},
   };
 }
 
