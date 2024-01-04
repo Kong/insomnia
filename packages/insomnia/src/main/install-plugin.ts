@@ -107,7 +107,7 @@ async function _isInsomniaPlugin(lookupName: string) {
         shell: true,
         env: {
           NODE_ENV: 'production',
-          ELECTRON_RUN_AS_NODE: 'true',
+          ELECTRON_RUN_AS_NODE: 'false',
         },
       },
       (err, stdout, stderr) => {
@@ -185,7 +185,7 @@ async function _installPluginToTmpDir(lookupName: string) {
         // Some package installs require a shell
         env: {
           NODE_ENV: 'production',
-          ELECTRON_RUN_AS_NODE: 'true',
+          ELECTRON_RUN_AS_NODE: 'false',
         },
       },
       (err, stdout, stderr) => {

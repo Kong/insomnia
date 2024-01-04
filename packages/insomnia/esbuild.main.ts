@@ -30,6 +30,7 @@ export default async function build(options: Options) {
       'process.env.NODE_ENV': JSON.stringify('production'),
       'process.env.INSOMNIA_ENV': JSON.stringify('production'),
       'process.env.BUILD_DATE': JSON.stringify(new Date()),
+      'process.env.ELECTRON_RUN_AS_NODE': JSON.stringify(0),
     };
   const preload = esbuild.build({
     entryPoints: ['./src/preload.ts'],
