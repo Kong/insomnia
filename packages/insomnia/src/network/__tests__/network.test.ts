@@ -1,5 +1,3 @@
-import { skip } from 'node:test';
-
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import electron from 'electron';
