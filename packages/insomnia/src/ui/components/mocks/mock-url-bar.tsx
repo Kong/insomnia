@@ -116,8 +116,8 @@ export const MockUrlBar = () => {
       </DropdownItem>
     ))}
     </Dropdown>
-    <div className='flex p-1 truncate items-center opacity-50 cursor-not-allowed'>
-      {mockRoute.path}
+    <div className='flex p-1 align-middle'>
+      <div className="opacity-50 cursor-copy" onClick={() => window.clipboard.writeText(mockRoute.path)}>{mockRoute.path}</div>
       {/* <OneLineEditor
               id="grpc-url"
               type="text"
@@ -126,7 +126,9 @@ export const MockUrlBar = () => {
             // onChange={url => patchRequest(requestId, { url })}
             // getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, requestId)}
             /> */}
+      <div><input defaultValue="/path" /></div>
     </div>
+    <span className='flex-1' />
     <div className='flex p-1'>
       <Button
         className="urlbar__send-btn rounded-sm"
