@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import { ScriptError } from 'insomnia/src/ui/window-message-handlers';
+import { NIL } from 'uuid';
 
 import { test } from '../../playwright/test';
 
@@ -27,7 +28,7 @@ async function runTests(testCases: {
     const tc = testCases[i];
 
     // tests begin here
-    test(tc.id, async ({ app, page: mainWindow }) => {
+    test(tc.id, async ({ page: mainWindow }) => {
       test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
       // start the sandbox
@@ -347,6 +348,39 @@ test.describe('basic operations', async () => {
         },
       },
     },
+    {
+      id: 'require browser module',
+      code: `
+        const { NIL, v4 } = require('uuid');
+        insomnia.environment.set('nil_uuid', NIL);
+
+        const randomID = v4();
+        insomnia.environment.set('compare', randomID === NIL);
+        `,
+      context: {
+        insomnia: {},
+      },
+      expectedResult: {
+        globals: {},
+        iterationData: {},
+        variables: {
+          nil_uuid: NIL,
+          compare: false,
+        },
+        environment: {
+          nil_uuid: NIL,
+          compare: false,
+        },
+        collectionVariables: {},
+        info: {
+          eventName: 'prerequest',
+          iteration: 1,
+          iterationCount: 1,
+          requestName: '',
+          requestId: '',
+        },
+      },
+    },
   ];
 
   await runTests(testCases);
@@ -388,6 +422,18 @@ test.describe('unhappy paths', async () => {
       },
       expectedResult: {
         message: 'my custom error',
+      },
+    },
+    {
+      id: 'syntax error',
+      code: `
+        insomnia.INVALID_FIELD.set('', '')
+        `,
+      context: {
+        insomnia: {},
+      },
+      expectedResult: {
+        message: "Cannot read properties of undefined (reading 'set')",
       },
     },
   ];

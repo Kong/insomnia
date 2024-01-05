@@ -1,4 +1,4 @@
-import { initGlobalObject, InsomniaObject } from './inso-object';
+import { initGlobalObject, InsomniaObject, require } from './inso-object';
 
 const ErrorTimeout = 'executing script timeout';
 const ErrorInvalidResult = 'result is invalid, null or custom value may be returned';
@@ -21,6 +21,7 @@ async function init() {
                 const AsyncFunction = (async () => { }).constructor;
                 const executeScript = AsyncFunction(
                     'insomnia',
+                    'require',
                     // if possible, avoid adding code to the following part
                     `
                         const $ = insomnia, pm = insomnia;
@@ -35,7 +36,10 @@ async function init() {
                     const timeoutChecker = setTimeout(alertTimeout, timeout);
 
                     try {
-                        const insoObject = await executeScript(insomniaObject);
+                        const insoObject = await executeScript(
+                            insomniaObject,
+                            require,
+                        );
                         clearTimeout(timeoutChecker);
                         if (insoObject instanceof InsomniaObject) {
                             resolve(insoObject.toObject());
