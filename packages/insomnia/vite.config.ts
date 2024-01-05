@@ -54,7 +54,7 @@ export default defineConfig(({ mode }) => {
         babel: {
           plugins: [
             // We need to have these plugins installed in our dependencies
-            ['@babel/plugin-proposal-class-properties', { loose: true }],
+            ['@babel/plugin-transform-class-properties', { loose: true }],
           ],
         },
       }),
