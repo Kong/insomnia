@@ -126,7 +126,7 @@ export const CommandPalette = () => {
               >
                 {section => (
                   <Section className='flex-1 flex flex-col'>
-                    <Header className='p-2 text-xs uppercase text-[--hl]'>{section.name}</Header>
+                    <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
                     <Collection items={section.children}>
                       {item => (
                         <ListBoxItem textValue={item.textValue} className="group outline-none select-none">
