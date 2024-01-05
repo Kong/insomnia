@@ -28,7 +28,8 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
 
   await page.getByLabel('Smoke tests').click();
   await page.getByTestId('sends request with cookie and get cookie in response').getByLabel('request name').click();
-  await page.locator('body').press('Meta+p');
+  const requestSwitchKeyboardShortcut = process.platform === 'darwin' ? 'Meta+p' : 'Control+p';
+  await page.locator('body').press(requestSwitchKeyboardShortcut);
   await page.getByPlaceholder('Search and switch between').fill('send js');
   await page.getByPlaceholder('Search and switch between').press('ArrowDown');
   await page.getByPlaceholder('Search and switch between').press('Enter');
@@ -36,7 +37,7 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
   await page.getByRole('button', { name: 'Send' }).click();
   await page.getByText('200 OK').click();
 
-  await page.locator('body').press('Meta+p');
+  await page.locator('body').press(requestSwitchKeyboardShortcut);
   await page.getByPlaceholder('Search and switch between').press('ArrowUp');
   await page.getByPlaceholder('Search and switch between').press('ArrowUp');
   await page.getByPlaceholder('Search and switch between').press('Enter');
