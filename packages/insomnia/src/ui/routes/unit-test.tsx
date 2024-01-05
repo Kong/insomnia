@@ -6,7 +6,6 @@ import {
   Button,
   GridList,
   Heading,
-  Link,
   ListBox,
   ListBoxItem,
   Menu,
@@ -183,24 +182,25 @@ const TestRoute: FC = () => {
         <ErrorBoundary showAlert>
           <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
-            <Breadcrumbs className='flex flex-wrap list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
+              <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
               <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
-              <Link data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                 <NavLink
+                  data-testid="project"
+                  className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   to={`/organization/${organizationId}/project/${activeProject._id}`}
                 >
                   <Icon className='text-xs' icon="chevron-left" />
                 </NavLink>
-              </Link>
-              <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
+                <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
               </Breadcrumb>
-              <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
-              <WorkspaceDropdown />
+                <Breadcrumb className="flex truncate select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+                <WorkspaceDropdown />
               </Breadcrumb>
             </Breadcrumbs>
             <div className="flex w-full items-center gap-2 justify-between">
               <Select
                 aria-label="Select an environment"
+                className="overflow-hidden"
                 onSelectionChange={environmentId => {
                   setActiveEnvironmentFetcher.submit(
                     {
@@ -214,7 +214,7 @@ const TestRoute: FC = () => {
                 }}
                 selectedKey={activeEnvironment._id}
               >
-                <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                  <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden w-full">
                   <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
                     {({ isPlaceholder, selectedItem }) => {
                       if (
@@ -232,7 +232,9 @@ const TestRoute: FC = () => {
                             >
                               <Icon className='text-xs w-5' icon="refresh" />
                             </span>
-                            {baseEnvironment.name}
+                            <span className='truncate'>
+                              {baseEnvironment.name}
+                            </span>
                           </Fragment>
                         );
                       }
@@ -318,10 +320,10 @@ const TestRoute: FC = () => {
             </div>
             <Button
               onPress={() => setIsCookieModalOpen(true)}
-              className="px-4 py-1 flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             >
               <Icon icon="cookie-bite" className='w-5' />
-              {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies
+                <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
             </Button>
           </div>
             <div className="p-[--padding-sm]">
@@ -435,7 +437,7 @@ const TestRoute: FC = () => {
           <WorkspaceSyncDropdown />
           {isEnvironmentModalOpen && (
             <WorkspaceEnvironmentsEditModal
-              onHide={() => setEnvironmentModalOpen(false)}
+              onClose={() => setEnvironmentModalOpen(false)}
             />
           )}
           {isCookieModalOpen && (

@@ -7,6 +7,7 @@ import { oas } from '@stoplight/spectral-rulesets';
 import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
+import * as models from '../../models';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
@@ -42,6 +43,11 @@ export interface MainBridgeAPI {
   axiosRequest: typeof axiosRequest;
   insomniaFetch: typeof insomniaFetch;
   showContextMenu: (options: { key: string }) => void;
+  database: {
+    caCertificate: {
+      create: (options: { parentId: string; path: string }) => Promise<string>;
+    };
+  };
 }
 export function registerMainHandlers() {
   ipcMain.handle('insomniaFetch', async (_, options: Parameters<typeof insomniaFetch>[0]) => {
@@ -49,6 +55,9 @@ export function registerMainHandlers() {
   });
   ipcMain.handle('axiosRequest', async (_, options: Parameters<typeof axiosRequest>[0]) => {
     return axiosRequest(options);
+  });
+  ipcMain.handle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
+    return models.caCertificate.create(options);
   });
   ipcMain.on('loginStateChange', async () => {
     BrowserWindow.getAllWindows().forEach(w => {

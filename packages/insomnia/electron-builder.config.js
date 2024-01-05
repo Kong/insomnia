@@ -62,6 +62,7 @@ const config = {
         arch: 'universal',
       },
     ],
+    mergeASARs: false,
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,
     },

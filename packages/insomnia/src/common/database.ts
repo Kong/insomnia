@@ -1,6 +1,6 @@
 /* eslint-disable prefer-rest-params -- don't want to change ...arguments usage for these sensitive functions without more testing */
+import NeDB from '@seald-io/nedb';
 import electron from 'electron';
-import NeDB from 'nedb';
 import fsPath from 'path';
 import { v4 as uuidv4 } from 'uuid';
 

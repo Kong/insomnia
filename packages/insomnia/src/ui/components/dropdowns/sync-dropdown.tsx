@@ -336,7 +336,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
             {syncError && (
               <Section className='border-b border-solid border-[--hl-sm]'>
                 <MenuItem
-                  className={'flex overflow-hidden gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent disabled:cursor-not-allowed focus:outline-none transition-colors'}
+                  className={'flex overflow-hidden gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] w-full text-md whitespace-nowrap bg-transparent disabled:cursor-not-allowed focus:outline-none transition-colors'}
                   aria-label={syncError}
                 >
                   <Icon icon="exclamation-triangle" className="text-[--color-warning]" />
