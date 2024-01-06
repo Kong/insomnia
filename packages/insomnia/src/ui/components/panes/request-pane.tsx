@@ -341,7 +341,7 @@ export const RequestPane: FC<Props> = ({
           }
         >
           <ErrorBoundary
-            key="requestExtend"
+            key={requestId}
             errorClassName="font-error pad text-center"
           >
             <RequestUtilsEditors
