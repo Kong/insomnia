@@ -43,24 +43,19 @@ export const MockUrlBar = () => {
   };
   const upsertBinOnRemoteFromResponse = async (binResponse: HarResponse, binId: string | null): Promise<string> => {
     try {
-      if (binId) {
         const bin = await window.main.axiosRequest({
           url: mockbinUrl + `/bin/${binId}`,
           method: 'put',
           data: binResponse,
         });
-        if (bin?.data) {
-          return bin.data;
-        }
+      if (bin?.data?.errors) {
+        console.error('error response', bin?.data?.errors);
       }
-      const bin = await window.main.axiosRequest({
-        url: mockbinUrl + '/bin/create',
-        method: 'post',
-        data: binResponse,
-      });
-      if (bin?.data) {
+      if (bin?.data?.length) {
+        console.log('RES', bin.data);
         return bin.data;
       }
+
     } catch (e) {
       // todo: handle error better
       console.log(e);
@@ -87,10 +82,12 @@ export const MockUrlBar = () => {
       headersArray: mockRoute.headers,
       body: mockRoute.body,
     });
-    const id = await upsertBinOnRemoteFromResponse(binResponse, mockRoute?.binId);
+    // only pass paths when set to /something
+    const binId = mockRoute.path.length > 1 ? mockRoute._id + mockRoute.path : mockRoute._id;
+    const id = await upsertBinOnRemoteFromResponse(binResponse, binId);
     const url = mockbinUrl + '/bin/' + id;
     invariant(id, 'mockbin failed to return an id, its possible it does not support something within the request body');
-    patchMockRoute(mockRoute._id, { path: url, binId: id, binResponse });
+    patchMockRoute(mockRoute._id, { url, binId: id, binResponse });
     createandSendRequest({
       url,
       parentId: mockRoute._id,
@@ -117,7 +114,7 @@ export const MockUrlBar = () => {
     ))}
     </Dropdown>
     <div className='flex p-1 align-middle'>
-      <div className="opacity-50 cursor-copy" onClick={() => window.clipboard.writeText(mockRoute.path)}>{mockRoute.path}</div>
+      <div className="opacity-50 cursor-copy" onClick={() => window.clipboard.writeText(mockRoute.url)}>{mockRoute.url}</div>
       {/* <OneLineEditor
               id="grpc-url"
               type="text"
@@ -126,7 +123,7 @@ export const MockUrlBar = () => {
             // onChange={url => patchRequest(requestId, { url })}
             // getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, requestId)}
             /> */}
-      <div><input defaultValue="/path" /></div>
+      <div><input value={mockRoute.path} onChange={e => patchMockRoute(mockRoute._id, { path: e.currentTarget.value })} /></div>
     </div>
     <span className='flex-1' />
     <div className='flex p-1'>
