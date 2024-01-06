@@ -71,7 +71,6 @@ export function findByParentId(parentId: string) {
 
 export async function findByProjectId(projectId: string) {
   const workspaces = await workspace.findByParentId(projectId);
-  console.log('workspaces', workspaces);
   return db.find<MockServer>(type, { parentId: { $in: workspaces.map(ws => ws._id) } });
 }
 
