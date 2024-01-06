@@ -63,7 +63,7 @@ export function init(): BaseSettings {
     theme: getAppDefaultTheme(),
     // milliseconds
     timeout: 30_000,
-    updateAutomatically: true,
+    updateAutomatically: false,
     updateChannel: UpdateChannel.stable,
     useBulkHeaderEditor: false,
     useBulkParametersEditor: false,
