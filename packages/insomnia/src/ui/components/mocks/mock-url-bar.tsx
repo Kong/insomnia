@@ -10,6 +10,7 @@ import { invariant } from '../../../utils/invariant';
 import { MockRouteLoaderData } from '../../routes/mock-route';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { useMockRoutePatcher } from '../editors/mock-response-headers-editor';
+import { showAlert } from '../modals';
 const StyledDropdownButton = styled(DropdownButton)({
   '&&': {
     paddingLeft: 'var(--padding-sm)',
@@ -50,6 +51,17 @@ export const MockUrlBar = () => {
       });
       if (bin?.data?.errors) {
         console.error('error response', bin?.data?.errors);
+        showAlert({
+          title: 'Unexpected Request Failure',
+          message: (
+            <div>
+              <p>The request failed due to an unhandled error:</p>
+              <code className="wide selectable">
+                <pre>{bin?.data?.errors}</pre>
+              </code>
+            </div>
+          ),
+        });
       }
       if (bin?.data?.length) {
         console.log('RES', bin.data);
@@ -57,8 +69,18 @@ export const MockUrlBar = () => {
       }
 
     } catch (e) {
-      // todo: handle error better
       console.log(e);
+      showAlert({
+        title: 'Network error',
+        message: (
+          <div>
+            <p>The request failed due to a network error:</p>
+            <code className="wide selectable">
+              <pre>{e.message}</pre>
+            </code>
+          </div>
+        ),
+      });
     }
     console.log('Error: creating bin on remote');
     return '';
