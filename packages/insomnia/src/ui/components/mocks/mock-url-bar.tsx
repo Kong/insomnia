@@ -43,11 +43,11 @@ export const MockUrlBar = () => {
   };
   const upsertBinOnRemoteFromResponse = async (binResponse: HarResponse, binId: string | null): Promise<string> => {
     try {
-        const bin = await window.main.axiosRequest({
-          url: mockbinUrl + `/bin/${binId}`,
-          method: 'put',
-          data: binResponse,
-        });
+      const bin = await window.main.axiosRequest({
+        url: mockbinUrl + `/bin/${binId}`,
+        method: 'put',
+        data: binResponse,
+      });
       if (bin?.data?.errors) {
         console.error('error response', bin?.data?.errors);
       }
@@ -83,6 +83,8 @@ export const MockUrlBar = () => {
       body: mockRoute.body,
     });
     // only pass paths when set to /something
+    // to prefix / or not
+    // validation rules? only allow alphanumeric and slashes? inital must be slash or remove prefix?
     const binId = mockRoute.path.length > 1 ? mockRoute._id + mockRoute.path : mockRoute._id;
     const id = await upsertBinOnRemoteFromResponse(binResponse, binId);
     const url = mockbinUrl + '/bin/' + id;
@@ -113,17 +115,19 @@ export const MockUrlBar = () => {
       </DropdownItem>
     ))}
     </Dropdown>
-    <div className='flex p-1 align-middle'>
-      <div className="opacity-50 cursor-copy" onClick={() => window.clipboard.writeText(mockRoute.url)}>{mockRoute.url}</div>
-      {/* <OneLineEditor
-              id="grpc-url"
-              type="text"
-              defaultValue={mockRoute.path}
-              placeholder="something"
-            // onChange={url => patchRequest(requestId, { url })}
-            // getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, requestId)}
-            /> */}
-      <div><input value={mockRoute.path} onChange={e => patchMockRoute(mockRoute._id, { path: e.currentTarget.value })} /></div>
+    <div className='flex p-1 items-center overflow-x-scroll'>
+      <div
+        className="opacity-50 cursor-copy "
+        onClick={() => window.clipboard.writeText(mockRoute.url)}
+      >
+        {mockRoute.url}
+      </div>
+      <div>
+        <input
+          value={mockRoute.path}
+          onChange={e => patchMockRoute(mockRoute._id, { path: e.currentTarget.value, name: e.currentTarget.value })}
+        />
+      </div>
     </div>
     <span className='flex-1' />
     <div className='flex p-1'>
