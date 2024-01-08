@@ -645,6 +645,10 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('disables ssl verification when configured to do so', async () => {
+    if (process.platform === 'darwin') {
+      // skipped this test, due to SSL_VERIFYHOST being disabled for MacOS on libcurl-promise.ts
+      return;
+    }
     const workspace = await models.workspace.create();
     const settings = await models.settings.getOrCreate();
     const cookies = [

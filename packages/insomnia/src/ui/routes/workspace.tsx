@@ -33,6 +33,7 @@ import { invariant } from '../../utils/invariant';
 type Collection = Child[];
 
 export interface WorkspaceLoaderData {
+  workspaces: Workspace[];
   activeWorkspace: Workspace;
   activeWorkspaceMeta: WorkspaceMeta;
   activeProject: Project;
@@ -235,7 +236,10 @@ export const workspaceLoader: LoaderFunction = async ({
     }
   }
 
+  const workspaces = await models.workspace.findByParentId(projectId);
+
   return {
+    workspaces,
     activeWorkspace,
     activeProject,
     gitRepository,
