@@ -9,6 +9,7 @@ import * as models from '../../../models';
 import { MockRouteLoaderData } from '../../routes/mock-route';
 import { useRootLoaderData } from '../../routes/root';
 import { TabItem, Tabs } from '../base/tabs';
+import { getTimeFromNow } from '../time-from-now';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
@@ -81,16 +82,20 @@ export const MockResponsePane = () => {
             <thead>
               <tr>
                 <th>Method</th>
+                <th>Size</th>
                 <th>Date</th>
                 <th>IP</th>
+                <th>Path</th>
               </tr>
             </thead>
             <tbody>
               {logs?.log.entries?.map(row => (
                 <tr key={row.startedDateTime}>
                   <td>{row.request.method}</td>
-                  <td>{row.startedDateTime}</td>
+                  <td>{row.request.bodySize + row.request.headersSize}</td>
+                  <td>{getTimeFromNow(row.startedDateTime, false)}</td>
                   <td>{row.clientIPAddress}</td>
+                  <td className='truncate max-w-xs'>{row.request.url}</td>
                 </tr>
               ))}
             </tbody>
