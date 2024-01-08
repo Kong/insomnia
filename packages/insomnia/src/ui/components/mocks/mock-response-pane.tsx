@@ -1,5 +1,5 @@
 import { AxiosResponse } from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
@@ -77,29 +77,30 @@ export const MockResponsePane = () => {
   return (
     <Tabs aria-label="Mock response">
       <TabItem key="history" title="History">
-        <div className="flex">
-          <table className="table--fancy table--striped table--compact selectable">
-            <thead>
-              <tr>
-                <th>Method</th>
-                <th>Size</th>
-                <th>Date</th>
-                <th>IP</th>
-                <th>Path</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs?.log.entries?.map(row => (
-                <tr key={row.startedDateTime}>
-                  <td>{row.request.method}</td>
-                  <td>{row.request.bodySize + row.request.headersSize}</td>
-                  <td>{getTimeFromNow(row.startedDateTime, false)}</td>
-                  <td>{row.clientIPAddress}</td>
-                  <td className='truncate max-w-xs'>{row.request.url}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="divide-solid divide-y divide-[--hl-sm] grid [grid-template-columns:repeat(5,auto)]">
+          <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Method</div>
+          <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Size</div>
+          <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Date</div>
+          <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">IP</div>
+          <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Path</div>
+          {logs?.log.entries?.map((row, index) => (
+            <Fragment key={row.startedDateTime}>
+              <div className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
+                <div className='p-2'>{row.request.method}</div>
+              </div>
+              <div className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
+                <div className='p-2'>{row.request.bodySize + row.request.headersSize}</div></div>
+              <div className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
+                <div className='p-2 truncate'>{getTimeFromNow(row.startedDateTime, false)}</div>
+              </div>
+              <div className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
+                <div className='p-2 truncate'>{row.clientIPAddress}</div>
+              </div>
+              <div className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} whitespace-nowrap truncate text-sm font-medium group-last-of-type:border-none focus:outline-none`}>
+                <div className='p-2 truncate'>{row.request.url}</div>
+              </div>
+            </Fragment>
+          ))}
         </div>
       </TabItem>
       <TabItem key="preview" title="Preview">
