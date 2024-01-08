@@ -2,6 +2,7 @@ import { RawObject } from '../renderers/hidden-browser-window/inso-object';
 
 type MessageHandler = (ev: MessageEvent) => Promise<void>;
 
+const logPrefix = '[main][pre-request-script]';
 export interface ScriptError {
     message: string;
     stack: string;
@@ -26,7 +27,7 @@ class WindowMessageHandler {
 
     publishPortHandler = async (ev: MessageEvent) => {
         if (ev.ports.length === 0) {
-            console.error('no port is found in the publishing port event');
+            console.error(logPrefix, 'no port is found in the publishing port event');
             return;
         }
 
@@ -35,23 +36,25 @@ class WindowMessageHandler {
         this.hiddenBrowserWindowPort.onmessage = ev => {
             if (ev.data.action === 'message-channel://caller/respond') {
                 if (!ev.data.id) {
-                    console.error('id is not specified in the executing script response message');
+                    console.error(logPrefix, 'id is not specified in the executing script response message');
                     return;
                 }
 
                 const callbackIndex = this.scriptResultResolvers.
                     findIndex(callback => callback.id === ev.data.id);
                 if (callbackIndex < 0) {
-                    console.error(`id(${ev.data.id}) is not found in the callback list`);
+                    console.error(logPrefix, `id(${ev.data.id}) is not found in the callback list`);
                     return;
                 }
+
+                console.log(logPrefix, `found pre-request script resolver(id=${ev.data.id}) at index: ${callbackIndex}`);
 
                 if (ev.data.result) {
                     this.scriptResultResolvers[callbackIndex].resolve(ev.data.result);
                 } else if (ev.data.error) {
                     this.scriptResultResolvers[callbackIndex].reject(ev.data.error);
                 } else {
-                    console.error('no data found in the message port response');
+                    console.error(logPrefix, 'no data found in the message port response');
                 }
 
                 // skip previous ones for keeping it simple
@@ -62,14 +65,14 @@ class WindowMessageHandler {
                     console.log(ev.data.result);
                 } else {
                     window.localStorage.setItem(`test_error:${ev.data.id}`, JSON.stringify(ev.data.error));
-                    console.error(ev.data.error);
+                    console.error(logPrefix, ev.data.error);
                 }
             } else if (ev.data.action === 'message-channel://consumers/close') {
                 this.hiddenBrowserWindowPort?.close();
                 this.hiddenBrowserWindowPort = undefined;
                 console.log('[hidden win] hidden browser window port is closed');
             } else {
-                console.error(`unknown action ${ev}`);
+                console.error(logPrefix, `unknown action ${ev}`);
             }
         };
 
@@ -90,12 +93,12 @@ class WindowMessageHandler {
             }
         }
 
-        console.error('the hidden window is still not ready');
+        console.error(logPrefix, 'the hidden window is still not ready');
     };
 
     debugEventHandler = async (ev: MessageEvent) => {
         if (!this.hiddenBrowserWindowPort) {
-            console.error('hidden browser window port is not inited, restarting');
+            console.error(logPrefix, 'hidden browser window port is not inited, restarting');
             await this.waitUntilHiddenBrowserWindowReady();
         }
 
@@ -127,14 +130,14 @@ class WindowMessageHandler {
 
             const handler = this.actionHandlers.get(action);
             if (!handler) {
-                console.error(`no handler is found for action ${action}`);
+                console.error(logPrefix, `no handler is found for action ${action}`);
                 return;
             }
 
             try {
                 handler(ev);
             } catch (e) {
-                console.error(`failed to handle event message (${ev.data.action}): ${e.message}`);
+                console.error(logPrefix, `failed to handle event message (${ev.data.action}): ${e.message}`);
             }
         };
     };
@@ -145,11 +148,13 @@ class WindowMessageHandler {
         context: object,
     ): Promise<RawObject | undefined> => {
         if (!this.hiddenBrowserWindowPort) {
-            console.error('hidden browser window port is not inited, restarting');
+            console.error(logPrefix, 'hidden browser window port is not inited, restarting');
             await this.waitUntilHiddenBrowserWindowReady();
         }
 
         const promise = new Promise<RawObject>((resolve, reject) => {
+            console.log(logPrefix, `created pre-request script result resolver(id=${id})`);
+
             this.scriptResultResolvers.push({
                 id,
                 resolve,
