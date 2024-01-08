@@ -91,7 +91,7 @@ export const MockUrlBar = () => {
     invariant(id, 'mockbin failed to return an id, its possible it does not support something within the request body');
     patchMockRoute(mockRoute._id, { url, binId: id, binResponse });
     createandSendRequest({
-      url,
+      url: url + mockRoute.path,
       parentId: mockRoute._id,
       binResponse,
     });
