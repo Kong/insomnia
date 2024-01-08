@@ -125,7 +125,13 @@ export const MockUrlBar = () => {
       <div>
         <input
           value={mockRoute.path}
-          onChange={e => patchMockRoute(mockRoute._id, { path: e.currentTarget.value, name: e.currentTarget.value })}
+          onChange={e => {
+            const value = e.currentTarget.value;
+            if (/^[a-zA-Z0-9\/]+$/i.test(value)) {
+              patchMockRoute(mockRoute._id, { path: value, name: value });
+            }
+          }
+          }
         />
       </div>
     </div>
