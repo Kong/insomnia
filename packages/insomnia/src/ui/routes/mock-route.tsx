@@ -1,7 +1,7 @@
 import React from 'react';
 import { LoaderFunction, useRouteLoaderData } from 'react-router-dom';
 
-import { contentTypesMap, RESPONSE_CODE_REASONS } from '../../common/constants';
+import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TYPE_YAML, contentTypesMap, RESPONSE_CODE_REASONS } from '../../common/constants';
 import { database as db } from '../../common/database';
 import * as models from '../../models';
 import { MockRoute } from '../../models/mock-route';
@@ -41,8 +41,10 @@ export const loader: LoaderFunction = async ({ params }): Promise<MockRouteLoade
 };
 
 const mockContentTypes = [
-  'application/json',
-  'application/xml',
+  CONTENT_TYPE_PLAINTEXT,
+  CONTENT_TYPE_JSON,
+  CONTENT_TYPE_XML,
+  CONTENT_TYPE_YAML,
 ];
 export const MockRouteRoute = () => {
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
