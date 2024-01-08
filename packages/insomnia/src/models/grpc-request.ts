@@ -63,7 +63,7 @@ export function init(): BaseGrpcRequest {
       enabled: false,
       url: 'https://buf.build',
       apiKey: '',
-      module: '',
+      module: 'buf.build/connectrpc/eliza',
     },
   };
 }

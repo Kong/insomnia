@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { Heading } from 'react-aria-components';
 import { useFetcher, useNavigate, useParams } from 'react-router-dom';
 
 import * as models from '../../../models';
@@ -216,11 +215,9 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
               </>)}
             {request && isGrpcRequest(request) && (
               <>
-                <div className="rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2">
-                  <Heading className="text-lg font-bold flex items-center gap-2">Reflection </Heading>
                   <div className="form-control form-control--thin">
                     <label>
-                      Use the Buf Reflection API
+                      Use the Buf Schema Registry API
                       <a href="https://buf.build/docs/bsr/reflection/overview" className="pad-left-sm">
                         <Icon icon="external-link" size="sm"/>
                       </a>
@@ -238,55 +235,59 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                     </label>
                   </div>
                   <div className="form-row pad-top-sm">
-                    <div className="form-control form-control--outlined">
-                      <label>
-                        Reflection server URL
-                        <a href="https://buf.build/docs/bsr/api-access" className="pad-left-sm">
-                          <Icon icon="external-link" size="sm"/>
-                        </a>
-                        <input
-                          type="text"
-                          name="url"
-                          placeholder="https://buf.build"
-                          value={request.bufReflectionApi.url}
-                          onChange={updateReflectonApi}
-                          disabled={!request.bufReflectionApi.enabled}
-                        />
-                      </label>
-                    </div>
-                    <div className="form-control form-control--outlined">
-                      <label>
-                        Reflection server API key
-                        <a href="https://buf.build/docs/bsr/authentication#manage-tokens" className="pad-left-sm">
-                          <Icon icon="external-link" size="sm"/>
-                        </a>
-                        <input
-                          type="password"
-                          name="apiKey"
-                          value={request.bufReflectionApi.apiKey}
-                          onChange={updateReflectonApi}
-                          disabled={!request.bufReflectionApi.enabled}
-                        />
-                      </label>
-                    </div>
-                    <div className="form-control form-control--outlined">
-                      <label>
-                        BSR module
-                        <a href="https://buf.build/docs/bsr/module/manage" className="pad-left-sm">
-                          <Icon icon="external-link" size="sm"/>
-                        </a>
-                        <input
-                          type="text"
-                          name="module"
-                          placeholder="buf.build/connectrpc/eliza"
-                          value={request.bufReflectionApi.module}
-                          onChange={updateReflectonApi}
-                          disabled={!request.bufReflectionApi.enabled}
-                        />
-                      </label>
-                    </div>
+                    { request.bufReflectionApi.enabled && (
+                        <>
+                          <div className="form-control form-control--outlined">
+                            <label>
+                              Reflection server URL
+                              <a href="https://buf.build/docs/bsr/api-access" className="pad-left-sm">
+                                <Icon icon="external-link" size="sm"/>
+                              </a>
+                              <input
+                                type="text"
+                                name="bsrUrl"
+                                placeholder="https://buf.build"
+                                value={request.bufReflectionApi.url}
+                                onChange={updateReflectonApi}
+                                disabled={!request.bufReflectionApi.enabled}
+                              />
+                            </label>
+                          </div>
+                          <div className="form-control form-control--outlined">
+                            <label>
+                              Reflection server API key
+                              <a href="https://buf.build/docs/bsr/authentication#manage-tokens" className="pad-left-sm">
+                                <Icon icon="external-link" size="sm"/>
+                              </a>
+                            <input
+                              type="password"
+                              name="bsrApiKey"
+                              value={request.bufReflectionApi.apiKey}
+                              onChange={updateReflectonApi}
+                              disabled={!request.bufReflectionApi.enabled}
+                            />
+                            </label>
+                          </div>
+                          <div className="form-control form-control--outlined">
+                            <label>
+                              Module
+                              <a href="https://buf.build/docs/bsr/module/manage" className="pad-left-sm">
+                                <Icon icon="external-link" size="sm"/>
+                              </a>
+                              <input
+                                type="text"
+                                name="bsrModule"
+                                placeholder="buf.build/connectrpc/eliza"
+                                value={request.bufReflectionApi.module}
+                                onChange={updateReflectonApi}
+                                disabled={!request.bufReflectionApi.enabled}
+                              />
+                            </label>
+                          </div>
+                        </>
+                      )
+                    }
                   </div>
-                </div>
                 <p className="faint italic pad-top">
                   Are there any gRPC settings you expect to see? Create a{' '}
                   <a href={'https://github.com/Kong/insomnia/issues/new/choose'}>feature request</a>!

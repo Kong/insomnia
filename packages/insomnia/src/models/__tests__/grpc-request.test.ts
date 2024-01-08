@@ -21,7 +21,7 @@ describe('init()', () => {
       bufReflectionApi: {
         enabled: false,
         apiKey: '',
-        module: '',
+        module: 'buf.build/connectrpc/eliza',
         url: 'https://buf.build',
       },
       metaSortKey: -1478795580200,
@@ -56,7 +56,7 @@ describe('create()', () => {
       bufReflectionApi: {
         enabled: false,
         apiKey: '',
-        module: '',
+        module: 'buf.build/connectrpc/eliza',
         url: 'https://buf.build',
       },
       metaSortKey: -1478795580200,
