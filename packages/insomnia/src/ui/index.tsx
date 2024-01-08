@@ -457,6 +457,7 @@ const router = createMemoryRouter(
                                         (
                                           await import('./routes/mock-route')
                                         ).loader(...args),
+                                      element: <Outlet />,
                                     },
                                     {
                                       path: 'new',
