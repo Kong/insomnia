@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
@@ -22,6 +22,30 @@ const mockbinUrl = 'http://localhost:8080';
 export const MockUrlBar = () => {
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
+
+  // create mockbin on remote at route open time, perhaps should be in action?
+  useEffect(() => {
+    const fn = async () => {
+      if (!mockRoute?.url) {
+        const binResponse = await formToHar({
+          statusCode: mockRoute.statusCode,
+          statusText: mockRoute.statusText,
+          headersArray: mockRoute.headers,
+          body: mockRoute.body,
+        });
+        // only pass paths when set to /something
+        // to prefix / or not
+        // validation rules? only allow alphanumeric and slashes? inital must be slash or remove prefix?
+        const binId = mockRoute.path.length > 1 ? mockRoute._id + mockRoute.path : mockRoute._id;
+        const id = await upsertBinOnRemoteFromResponse(binResponse, binId);
+        const url = mockbinUrl + '/bin/' + mockRoute._id;
+        invariant(id, 'mockbin failed to return an id, its possible it does not support something within the request body');
+        patchMockRoute(mockRoute._id, { url, binId: id, binResponse });
+      }
+    };
+    fn();
+  }, [mockRoute?.url]);
+
   const formToHar = async ({ statusCode, statusText, headersArray, body }: { statusCode: number; statusText: string; headersArray: RequestHeader[]; body: string }): Promise<HarResponse> => {
     const contentType = headersArray.find(h => h.name.toLowerCase() === 'content-type')?.value || CONTENT_TYPE_PLAINTEXT;
     const validHeaders = headersArray.filter(({ name }) => !!name);
@@ -109,7 +133,7 @@ export const MockUrlBar = () => {
     // validation rules? only allow alphanumeric and slashes? inital must be slash or remove prefix?
     const binId = mockRoute.path.length > 1 ? mockRoute._id + mockRoute.path : mockRoute._id;
     const id = await upsertBinOnRemoteFromResponse(binResponse, binId);
-    const url = mockbinUrl + '/bin/' + id;
+    const url = mockbinUrl + '/bin/' + mockRoute._id;
     invariant(id, 'mockbin failed to return an id, its possible it does not support something within the request body');
     patchMockRoute(mockRoute._id, { url, binId: id, binResponse });
     createandSendRequest({
