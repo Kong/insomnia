@@ -33,13 +33,13 @@ interface MockbinLogOutput {
 export const MockResponsePane = () => {
   const { mockRoute, activeResponse } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const { settings } = useRootLoaderData();
-  const getLogById = async (binId: string): Promise<MockbinLogOutput | null> => {
-    if (!binId) {
+  const getLogById = async (compoundId: string): Promise<MockbinLogOutput | null> => {
+    if (!compoundId) {
       return null;
     };
     try {
       const res = await window.main.axiosRequest({
-        url: mockbinUrl + `/bin/log/${binId}`,
+        url: mockbinUrl + `/bin/log/${compoundId}`,
         method: 'get',
       }) as unknown as AxiosResponse<MockbinLogOutput>;
       // todo: handle error better
@@ -57,13 +57,11 @@ export const MockResponsePane = () => {
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   useEffect(() => {
     const fn = async () => {
-      if (mockRoute?.binId) {
-        const logs = await getLogById(mockRoute.binId + mockRoute.path);
-        setLogs(logs);
-      }
+      const logs = await getLogById(mockRoute._id + mockRoute.path);
+      setLogs(logs);
     };
     fn();
-  }, [mockRoute.binId, activeResponse?._id, mockRoute.path]);
+  }, [activeResponse?._id, mockRoute._id, mockRoute.path]);
   useEffect(() => {
     const fn = async () => {
       if (activeResponse) {

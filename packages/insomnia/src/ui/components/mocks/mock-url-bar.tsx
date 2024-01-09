@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
@@ -24,31 +24,9 @@ const mockbinUrl = 'http://localhost:8080';
 export const MockUrlBar = () => {
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
+  const [pathInput, setPathInput] = useState<string>(mockRoute.path);
 
-  // TODO: create mockbin on remote at route open time, perhaps should be in action?
-  useEffect(() => {
-    const fn = async () => {
-      if (!mockRoute?.url) {
-        const binResponse = await formToHar({
-          statusCode: mockRoute.statusCode,
-          statusText: mockRoute.statusText,
-          headersArray: mockRoute.headers,
-          body: mockRoute.body,
-        });
-        // only pass paths when set to /something
-        // to prefix / or not
-        // validation rules? only allow alphanumeric and slashes? inital must be slash or remove prefix?
-        const binId = mockRoute.path.length > 1 ? mockRoute._id + mockRoute.path : mockRoute._id;
-        const id = await upsertBinOnRemoteFromResponse(binResponse, binId);
-        const url = mockbinUrl + '/bin/' + mockRoute._id;
-        invariant(id, 'mockbin failed to return an id, its possible it does not support something within the request body');
-        patchMockRoute(mockRoute._id, { url, binId: id, binResponse });
-      }
-    };
-    fn();
-  }, [mockRoute?.url]);
-
-  const formToHar = async ({ statusCode, statusText, headersArray, body }: { statusCode: number; statusText: string; headersArray: RequestHeader[]; body: string }): Promise<HarResponse> => {
+  const formToHar = ({ statusCode, statusText, headersArray, body }: { statusCode: number; statusText: string; headersArray: RequestHeader[]; body: string }): HarResponse => {
     const contentType = headersArray.find(h => h.name.toLowerCase() === 'content-type')?.value || CONTENT_TYPE_PLAINTEXT;
     const validHeaders = headersArray.filter(({ name }) => !!name);
     return {
@@ -68,12 +46,17 @@ export const MockUrlBar = () => {
       redirectURL: '',
     };
   };
-  const upsertBinOnRemoteFromResponse = async (binResponse: HarResponse, binId: string | null): Promise<string> => {
+  const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
     try {
       const bin = await window.main.axiosRequest({
-        url: mockbinUrl + `/bin/${binId}`,
+        url: mockbinUrl + `/bin/${compoundId}`,
         method: 'put',
-        data: binResponse,
+        data: formToHar({
+          statusCode: mockRoute.statusCode,
+          statusText: mockRoute.statusText,
+          headersArray: mockRoute.headers,
+          body: mockRoute.body,
+        }),
       });
       if (bin?.data?.errors) {
         console.error('error response', bin?.data?.errors);
@@ -123,29 +106,41 @@ export const MockUrlBar = () => {
         method: 'post',
       });
 
-  const upsertMockbinHarAndTestIt = async () => {
-    const binResponse = await formToHar({
-      statusCode: mockRoute.statusCode,
-      statusText: mockRoute.statusText,
-      headersArray: mockRoute.headers,
-      body: mockRoute.body,
+  const upsertMockbinHar = async () => {
+    const compoundId = mockRoute._id + pathInput;
+    const id = await upsertBinOnRemoteFromResponse(compoundId);
+    if (!id) {
+      showAlert({
+        title: 'Unexpected Mock Failure',
+        message: (
+          <div>
+            <p>The request failed due to a error from mockbin</p>
+          </div>
+        ),
+      });
+      return;
+    }
+    patchMockRoute(mockRoute._id, {
+      url: mockbinUrl + '/bin/' + mockRoute._id,
+      path: pathInput,
+      binResponse: formToHar({
+        statusCode: mockRoute.statusCode,
+        statusText: mockRoute.statusText,
+        headersArray: mockRoute.headers,
+        body: mockRoute.body,
+      }),
     });
-    // only pass paths when set to /something
-    // to prefix / or not
-    // validation rules? only allow alphanumeric and slashes? inital must be slash or remove prefix?
-    const binId = mockRoute.path.length > 1 ? mockRoute._id + mockRoute.path : mockRoute._id;
-    const id = await upsertBinOnRemoteFromResponse(binResponse, binId);
-    const url = mockbinUrl + '/bin/' + mockRoute._id;
-    invariant(id, 'mockbin failed to return an id, its possible it does not support something within the request body');
-    patchMockRoute(mockRoute._id, { url, binId: id, binResponse });
-    createandSendRequest({
-      url: url + mockRoute.path,
-      parentId: mockRoute._id,
-      binResponse,
+
+  };
+
+  const showFullURL = () => {
+    showModal(AlertModal, {
+      title: 'Full URL',
+      message: mockRoute.url,
     });
   };
   return (<div className='w-full flex justify-between urlbar'>
-    <Dropdown
+    {/* <Dropdown
       className="method-dropdown"
       triggerButton={
         <StyledDropdownButton className={'pad-right pad-left vertically-center'}>
@@ -162,41 +157,57 @@ export const MockUrlBar = () => {
         />
       </DropdownItem>
     ))}
-    </Dropdown>
-    <div className='flex p-1 items-center'>
-      <div
-        className="opacity-50 cursor-copy "
+    </Dropdown> */}
+    <div className='flex p-1'>
+      <Button
+        className="bg-[--hl-sm] px-3 mr-1 rounded-sm"
+        onPress={() => window.clipboard.writeText(mockRoute.url)}
       >
-        <Icon icon="copy" className="text-[--color-font] pl-2" onClick={() => window.clipboard.writeText(mockRoute.url)} />
-        <Icon
-          icon="eye"
-          className="text-[--color-font] px-2"
-          onClick={() =>
-            showModal(AlertModal, {
-              title: 'Full URL',
-              message: mockRoute.url,
-            })}
-        />
-        [mock resource url]
+        <Icon icon="copy" />
+      </Button>
+      <Button
+        className="bg-[--hl-sm] px-3 rounded-sm"
+        onPress={showFullURL}
+      >
+        <Icon icon="eye" />
+      </Button>
+    </div>
+
+    <div className='flex p-1 items-center'>
+      <div className="opacity-50 cursor-pointer">
+        <span onClick={showFullURL}>[mock resource url]</span>
       </div>
       <div>
         <input
-          value={mockRoute.path}
-          onChange={e => {
-            const value = e.currentTarget.value;
-            if (/^[a-zA-Z0-9\/]+$/i.test(value)) {
-              patchMockRoute(mockRoute._id, { path: value, name: value });
-            }
-          }
-          }
+          value={pathInput}
+          onChange={e => setPathInput(e.currentTarget.value)}
         />
       </div>
     </div>
     <span className='flex-1' />
     <div className='flex p-1'>
       <Button
+        className="bg-[--hl-sm] px-3 rounded-sm"
+        onPress={upsertMockbinHar}
+      >
+        <Icon icon="save" />
+      </Button>
+      <Button
         className="urlbar__send-btn rounded-sm"
-        onPress={upsertMockbinHarAndTestIt}
+        onPress={() => {
+          upsertMockbinHar();
+          const compoundId = mockRoute._id + pathInput;
+          createandSendRequest({
+            url: mockbinUrl + '/bin/' + compoundId,
+            parentId: mockRoute._id,
+            binResponse: formToHar({
+              statusCode: mockRoute.statusCode,
+              statusText: mockRoute.statusText,
+              headersArray: mockRoute.headers,
+              body: mockRoute.body,
+            }),
+          });
+        }}
       >
         Test
       </Button>

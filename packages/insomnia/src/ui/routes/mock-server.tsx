@@ -134,7 +134,7 @@ const MockServerRoute = () => {
             onPress={() => {
               fetcher.submit(
                 {
-                  name: 'New Mock Route',
+                  name: '/',
                   parentId: mockServerId,
                 },
                 {

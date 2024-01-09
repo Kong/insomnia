@@ -24,7 +24,6 @@ interface BaseMockRoute {
   statusText: string;
   name: string;
   mimeType: string | null;
-  binId: string | null;
   binResponse: HarResponse | null;
 }
 
@@ -42,7 +41,6 @@ export function init(): BaseMockRoute {
     statusText: 'OK',
     name: '',
     mimeType: null,
-    binId: '',
     binResponse: null,
   };
 }
