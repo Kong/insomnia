@@ -39,7 +39,7 @@ export const MockResponsePane = () => {
     };
     try {
       const res = await window.main.axiosRequest({
-        url: mockbinUrl + `/bin/${binId}/log`,
+        url: mockbinUrl + `/bin/log/${binId}`,
         method: 'get',
       }) as unknown as AxiosResponse<MockbinLogOutput>;
       // todo: handle error better
@@ -58,12 +58,12 @@ export const MockResponsePane = () => {
   useEffect(() => {
     const fn = async () => {
       if (mockRoute?.binId) {
-        const logs = await getLogById(mockRoute.binId);
+        const logs = await getLogById(mockRoute.binId + mockRoute.path);
         setLogs(logs);
       }
     };
     fn();
-  }, [mockRoute.binId, activeResponse?._id]);
+  }, [mockRoute.binId, activeResponse?._id, mockRoute.path]);
   useEffect(() => {
     const fn = async () => {
       if (activeResponse) {
