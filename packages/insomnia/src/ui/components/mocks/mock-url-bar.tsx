@@ -10,7 +10,9 @@ import { invariant } from '../../../utils/invariant';
 import { MockRouteLoaderData } from '../../routes/mock-route';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { useMockRoutePatcher } from '../editors/mock-response-headers-editor';
-import { showAlert } from '../modals';
+import { Icon } from '../icon';
+import { showAlert, showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 const StyledDropdownButton = styled(DropdownButton)({
   '&&': {
     paddingLeft: 'var(--padding-sm)',
@@ -23,7 +25,7 @@ export const MockUrlBar = () => {
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
 
-  // create mockbin on remote at route open time, perhaps should be in action?
+  // TODO: create mockbin on remote at route open time, perhaps should be in action?
   useEffect(() => {
     const fn = async () => {
       if (!mockRoute?.url) {
@@ -161,12 +163,21 @@ export const MockUrlBar = () => {
       </DropdownItem>
     ))}
     </Dropdown>
-    <div className='flex p-1 items-center overflow-x-scroll'>
+    <div className='flex p-1 items-center'>
       <div
         className="opacity-50 cursor-copy "
-        onClick={() => window.clipboard.writeText(mockRoute.url)}
       >
-        {mockRoute.url}
+        <Icon icon="copy" className="text-[--color-font] pl-2" onClick={() => window.clipboard.writeText(mockRoute.url)} />
+        <Icon
+          icon="eye"
+          className="text-[--color-font] px-2"
+          onClick={() =>
+            showModal(AlertModal, {
+              title: 'Full URL',
+              message: mockRoute.url,
+            })}
+        />
+        [mock resource url]
       </div>
       <div>
         <input
