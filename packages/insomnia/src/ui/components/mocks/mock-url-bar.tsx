@@ -99,7 +99,7 @@ export const MockUrlBar = () => {
       });
 
   const upsertMockbinHar = async () => {
-    const compoundId = mockRoute._id + pathInput;
+    const compoundId = mockRoute.parentId + pathInput;
     const id = await upsertBinOnRemoteFromResponse(compoundId);
     if (!id) {
       showAlert({
@@ -113,7 +113,7 @@ export const MockUrlBar = () => {
       return;
     }
     patchMockRoute(mockRoute._id, {
-      url: mockbinUrl + '/bin/' + mockRoute._id,
+      url: mockbinUrl + '/bin/' + mockRoute.parentId,
       path: pathInput,
       binResponse: formToHar({
         statusCode: mockRoute.statusCode,
@@ -188,7 +188,7 @@ export const MockUrlBar = () => {
         className="urlbar__send-btn rounded-sm"
         onPress={() => {
           upsertMockbinHar();
-          const compoundId = mockRoute._id + pathInput;
+          const compoundId = mockRoute.parentId + pathInput;
           createandSendRequest({
             url: mockbinUrl + '/bin/' + compoundId,
             parentId: mockRoute._id,

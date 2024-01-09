@@ -57,11 +57,11 @@ export const MockResponsePane = () => {
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   useEffect(() => {
     const fn = async () => {
-      const logs = await getLogById(mockRoute._id + mockRoute.path);
+      const logs = await getLogById(mockRoute.parentId + mockRoute.path);
       setLogs(logs);
     };
     fn();
-  }, [activeResponse?._id, mockRoute._id, mockRoute.path]);
+  }, [activeResponse?._id, mockRoute.parentId, mockRoute.path]);
   useEffect(() => {
     const fn = async () => {
       if (activeResponse) {
