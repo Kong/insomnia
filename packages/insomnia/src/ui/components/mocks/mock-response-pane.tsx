@@ -100,7 +100,7 @@ export const MockResponsePane = () => {
                 <div className='p-2 truncate'>{row.request.url}</div>
               </div>
             </Fragment>
-          ))}
+          )).reverse()}
         </div>
       </TabItem>
       <TabItem key="preview" title="Preview">
