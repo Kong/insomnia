@@ -21,7 +21,7 @@ export type MockServer = BaseModel & BaseMockServer;
 export function init(): BaseMockServer {
   return {
     parentId: '',
-    name: 'New Mock Server',
+    name: '/',
   };
 }
 

@@ -7,7 +7,7 @@ export const name = 'Mock Route';
 
 export const type = 'MockRoute';
 
-export const prefix = 'mock';
+export const prefix = 'mock_route';
 
 export const canDuplicate = true;
 
