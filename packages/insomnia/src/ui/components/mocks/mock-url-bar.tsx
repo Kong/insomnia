@@ -153,7 +153,10 @@ export const MockUrlBar = () => {
     <div className='flex p-1'>
       <Button
         className="bg-[--hl-sm] px-3 mr-1 rounded-sm"
-        onPress={() => window.clipboard.writeText(mockRoute.url)}
+        onPress={() => {
+          const compoundId = mockRoute.parentId + pathInput;
+          window.clipboard.writeText(mockbinUrl + '/bin/' + compoundId);
+        }}
       >
         <Icon icon="copy" />
       </Button>
