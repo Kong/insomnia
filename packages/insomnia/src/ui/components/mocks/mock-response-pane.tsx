@@ -1,7 +1,6 @@
 import { AxiosResponse } from 'axios';
 import React, { Fragment, useEffect, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
-import styled from 'styled-components';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { HarRequest } from '../../../common/har';
@@ -15,7 +14,9 @@ import { getTimeFromNow } from '../time-from-now';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
+
 const mockbinUrl = 'http://localhost:8080';
+
 interface MockbinLogOutput {
   log: {
     version: string;
@@ -32,25 +33,7 @@ interface MockbinLogOutput {
     ];
   };
 }
-const EventLogTableWrapper = styled.div({
-  width: '100%',
-  flex: 1,
-  overflow: 'hidden',
-  boxSizing: 'border-box',
-  overflowY: 'scroll',
-});
 
-const EventViewWrapper = styled.div({
-  flex: 1,
-  borderTop: '1px solid var(--hl-md)',
-  height: '100%',
-});
-const PaneBodyContent = styled.div({
-  height: '100%',
-  width: '100%',
-  display: 'grid',
-  gridTemplateRows: 'repeat(auto-fit, minmax(0, 1fr))',
-});
 export const MockResponsePane = () => {
   const { mockRoute, activeResponse } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const { settings } = useRootLoaderData();
@@ -97,9 +80,9 @@ export const MockResponsePane = () => {
   return (
     <Tabs aria-label="Mock response">
       <TabItem key="history" title="History">
-        <PaneBodyContent>
-          <EventLogTableWrapper>
-            <div className="divide-solid divide-y divide-[--hl-sm] grid [grid-template-columns:repeat(5,auto)]">
+        <div className="h-full w-full grid grid-rows-[repeat(auto-fit,minmax(0,1fr))]">
+          <div className="w-full flex-1 overflow-hidden box-border overflow-y-scroll">
+            <div className="grid grid-cols-[repeat(5,auto)] divide-solid divide-y divide-[--hl-sm]">
               <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Method</div>
               <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Size</div>
               <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Date</div>
@@ -124,9 +107,9 @@ export const MockResponsePane = () => {
                 </Fragment>
               )).reverse()}
             </div>
-          </EventLogTableWrapper>
+          </div>
           {logEntryId !== null && logs?.log.entries?.[logEntryId] && (
-            <EventViewWrapper>
+            <div className='flex-1 h-full border-solid border border-[--hl-md]'>
               <CodeEditor
                 id="log-body-preview"
                 key={logEntryId + logs?.log.entries?.[logEntryId].startedDateTime}
@@ -135,9 +118,9 @@ export const MockResponsePane = () => {
                 defaultValue={JSON.stringify(logs?.log.entries?.[logEntryId], null, '\t')}
                 readOnly
               />
-            </EventViewWrapper>
+            </div>
           )}
-        </PaneBodyContent>
+        </div>
       </TabItem>
       <TabItem key="preview" title="Preview">
         {activeResponse && <ResponseViewer
