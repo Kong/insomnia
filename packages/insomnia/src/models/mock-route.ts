@@ -38,7 +38,7 @@ export function init(): BaseMockRoute {
     url: '',
     path: '/',
     statusCode: 200,
-    statusText: 'OK',
+    statusText: '',
     name: '',
     mimeType: null,
     binResponse: null,
