@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
-import styled from 'styled-components';
 
 import { CONTENT_TYPE_PLAINTEXT, HTTP_METHODS, RESPONSE_CODE_REASONS } from '../../../common/constants';
 import { getResponseCookiesFromHeaders, HarResponse } from '../../../common/har';
@@ -127,31 +126,14 @@ export const MockUrlBar = () => {
 
   };
 
-  const showFullURL = () => {
-    showModal(AlertModal, {
-      title: 'Full URL',
-      message: mockRoute.url,
-    });
-  };
-
-  const StyledDropdownButton = styled(DropdownButton)({
-    '&:hover:not(:disabled)': {
-      backgroundColor: 'var(--color-surprise)',
-    },
-
-    '&:focus:not(:disabled)': {
-      backgroundColor: 'var(--color-surprise)',
-    },
-  });
-
   return (<div className='w-full flex justify-between urlbar'>
     <Dropdown
       className="method-dropdown"
       triggerButton={
-        <StyledDropdownButton className={'pad-right pad-left vertically-center'}>
+        <DropdownButton className="pad-right pad-left vertically-center hover:bg-[--color-surprise] focus:bg-[--color-surprise]">
           <span className={`http-method-${mockRoute.method}`}>{mockRoute.method}</span>{' '}
           <i className="fa fa-caret-down space-left" />
-        </StyledDropdownButton>
+        </DropdownButton>
       }
     >{HTTP_METHODS.map(method => (
       <DropdownItem key={method}>
@@ -175,7 +157,10 @@ export const MockUrlBar = () => {
       </Button>
       <Button
         className="bg-[--hl-sm] px-3 rounded-sm"
-        onPress={showFullURL}
+        onPress={() => showModal(AlertModal, {
+          title: 'Full URL',
+          message: mockRoute.url,
+        })}
       >
         <Icon icon="eye" />
       </Button>
@@ -183,7 +168,12 @@ export const MockUrlBar = () => {
 
     <div className='flex flex-1 p-1 items-center'>
       <div className="flex-shrink-0 opacity-50 cursor-pointer">
-        <span onClick={showFullURL}>[mock resource url]</span>
+        <span
+          onClick={() => showModal(AlertModal, {
+            title: 'Full URL',
+            message: mockRoute.url,
+          })}
+        >[mock resource url]</span>
       </div>
       <input className='flex-1' onBlur={upsertMockbinHar} value={pathInput} onChange={e => setPathInput(e.currentTarget.value)} />
     </div>
