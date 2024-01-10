@@ -182,7 +182,7 @@ export const MockUrlBar = () => {
         <Icon icon="save" />
       </Button>
       <Button
-        className="urlbar__send-btn rounded-sm"
+        className="px-5 ml-1 text-[--color-font-surprise] bg-[--color-surprise] hover:bg-opacity-90 rounded-sm"
         onPress={() => {
           upsertMockbinHar();
           const compoundId = mockRoute.parentId + pathInput;
