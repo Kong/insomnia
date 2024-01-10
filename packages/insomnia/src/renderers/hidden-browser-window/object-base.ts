@@ -163,7 +163,7 @@ export class Property extends PropertyBase {
     }
 }
 
-export class PropertyList<T extends Property> {
+export class PropertyList<T> {
     kind: string = 'PropertyList';
     protected _parent: PropertyList<T> | undefined = undefined;
     protected list: T[] = [];

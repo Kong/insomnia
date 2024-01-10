@@ -1,5 +1,14 @@
 import { Property, PropertyList } from './object-base';
 
+export interface HeaderOptions {
+    id?: string;
+    name?: string;
+    type?: string;
+    disabled?: boolean;
+    key: string;
+    value: string;
+}
+
 export class Header extends Property {
     kind: string = 'Header';
     type: string = '';
@@ -7,14 +16,7 @@ export class Header extends Property {
     value: string;
 
     constructor(
-        opts: {
-            id?: string;
-            name?: string;
-            type?: string;
-            disabled?: boolean;
-            key: string;
-            value: string;
-        } | string,
+        opts: HeaderOptions | string,
         name?: string, // if it is defined, it overrides 'key' (not 'name')
     ) {
         super();

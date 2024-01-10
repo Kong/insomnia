@@ -1,5 +1,16 @@
 import { Property, PropertyList } from './object-base';
 
+export interface ProxyConfigOptions {
+    match: string;
+    host: string;
+    port: number;
+    tunnel: boolean;
+    disabled?: boolean;
+    authenticate: boolean;
+    username: string;
+    password: string;
+}
+
 export class ProxyConfig extends Property {
     kind: string = 'ProxyConfig';
     type: string;
@@ -36,12 +47,12 @@ export class ProxyConfig extends Property {
         id?: string;
         name?: string;
         type?: string;
-        disabled?: boolean;
 
-        host: string;
         match: string;
+        host: string;
         port: number;
         tunnel: boolean;
+        disabled?: boolean;
         authenticate: boolean;
         username: string;
         password: string;

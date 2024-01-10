@@ -23,7 +23,152 @@ export interface AuthOption {
     value: string;
 }
 
-export interface RawAuthOptions {
+// export interface AuthBasic {
+//     password: string;
+//     username: string;
+//     id: string;
+// }
+
+// export interface AuthBearer {
+//     token: string;
+//     id: string;
+// }
+
+// export interface AuthJWT {
+//     secret: string;
+//     algorithm: string;
+//     isSecretBase64Encoded: boolean;
+//     payload: string; // e.g. "{}"
+//     addTokenTo: string;
+//     headerPrefix: string;
+//     queryParamKey: string;
+//     header: string; // e.g. "{}"
+//     id: string;
+// }
+
+// export interface AuthDigest {
+//     opaque: string;
+//     clientNonce: string;
+//     nonceCount: string;
+//     qop: string;
+//     nonce: string;
+//     realm: string;
+//     password: string;
+//     username: string;
+//     algorithm: string;
+//     id: string;
+// }
+
+// export interface AuthOAuth1 {
+//     addEmptyParamsToSign: boolean;
+//     includeBodyHash: boolean;
+//     realm: string;
+//     nonce: string;
+//     timestamp: string;
+//     verifier: string;
+//     callback: string;
+//     tokenSecret: string;
+//     token: string;
+//     consumerSecret: string;
+//     consumerKey: string;
+//     signatureMethod: string; // "HMAC-SHA1"
+//     version: string;
+//     addParamsToHeader: string;
+//     id: string;
+// }
+
+// export interface OAuth2Param {
+//     key: string;
+//     value: string;
+//     enabled: boolean;
+//     send_as: string; // it follows exising naming
+// }
+
+// export interface AuthOAuth2 {
+//     accessToken: string;
+//     refreshRequestParams: OAuth2Param[];
+//     tokenRequestParams: OAuth2Param[];
+//     authRequestParams: OAuth2Param[];
+//     refreshTokenUrl: string;
+//     state: string;
+//     scope: string;
+//     clientSecret: string;
+//     clientId: string;
+//     tokenName: string;
+//     addTokenTo: string;
+//     id: string;
+// }
+
+// export interface AuthHAWK {
+//     includePayloadHash: boolean;
+//     timestamp: string;
+//     delegation: string;
+//     app: string;
+//     extraData: string;
+//     nonce: string;
+//     user: string;
+//     authKey: string;
+//     authId: string;
+//     algorithm: string;
+//     id: string;
+// }
+
+// export interface AuthAWSV4 {
+//     sessionToken: string;
+//     service: string;
+//     region: string;
+//     secretKey: string;
+//     accessKey: string;
+//     id: string;
+// }
+
+// export interface AuthNTLM {
+//     workstation: string;
+//     domain: string;
+//     password: string;
+//     username: string;
+//     id: string;
+// }
+
+// export interface AuthAPIKey {
+//     key: string;
+//     value: string;
+//     id: string;
+// }
+
+// export interface AuthEdgegrid {
+//     headersToSign: string;
+//     baseURL: string;
+//     timestamp: string;
+//     nonce: string;
+//     clientSecret: string;
+//     clientToken: string;
+//     accessToken: string;
+//     id: string;
+// }
+
+// export interface AuthASAP {
+//     exp: string; // expiry
+//     claims: string; // e.g., { "additional claim": "claim value" }
+//     sub: string; // subject
+//     privateKey: string; // private key
+//     kid: string; // key id
+//     aud: string; // audience
+//     iss: string; // issuer
+//     alg: string; // e.g., RS256
+//     id: string;
+// }
+
+// function AuthMethodToParams(authMethod: AuthNoAuth | AuthBasic | AuthBasic | AuthBearer | AuthJWT | AuthDigest | AuthOAuth1 | AuthOAuth2 | AuthHAWK | AuthAWSV4 | AuthNTLM | AuthAPIKey | AuthEdgegrid | AuthASAP) {
+//     return Object.entries(authMethod).
+//         map(entry => ({
+//             type: 'any',
+//             key: entry[0],
+//             value: entry[1],
+//         }));
+// }
+
+export interface AuthOptions {
     type: string;
     basic?: AuthOption[];
     bearer?: AuthOption[];
@@ -43,7 +188,7 @@ function rawOptionsToVariables(options: VariableList<Variable> | Variable[] | ob
     if (VariableList.isVariableList(options)) {
         return [options as VariableList<Variable>];
     } else if ('type' in options) { // object
-        const optsObj = options as RawAuthOptions;
+        const optsObj = options as AuthOptions;
         const optsVarLists = Object.entries(optsObj)
             .filter(optsObjEntry => optsObjEntry[0] === targetType)
             .map(optsEntry => {
@@ -69,14 +214,14 @@ export class RequestAuth extends Property {
     private type: string;
     private authOptions: Map<string, VariableList<Variable>> = new Map();
 
-    constructor(options: RawAuthOptions, parent?: Property) {
+    constructor(options: AuthOptions, parent?: Property) {
         super();
 
         if (!RequestAuth.isValidType(options.type)) {
             throw Error(`invalid auth type ${options.type}`);
         }
         this.type = options.type;
-        const optsObj = options as RawAuthOptions;
+        const optsObj = options as AuthOptions;
         Object.entries(optsObj)
             .filter(optsObjEntry => optsObjEntry[0] !== 'type')
             .map(optsEntry => {
@@ -114,7 +259,7 @@ export class RequestAuth extends Property {
     }
 
     toJSON() {
-        const obj: RawAuthOptions = { type: this.type };
+        const obj: AuthOptions = { type: this.type };
         const authOption = this.authOptions.get(this.type);
         if (!authOption) {
             return obj;

@@ -1,7 +1,7 @@
 import { Property } from './object-base';
 import { UrlMatchPattern, UrlMatchPatternList } from './object-urls';
 
-export interface RawCertificateOptions {
+export interface CertificateOptions {
     name?: string;
     matches?: string[];
     key?: object;
@@ -18,7 +18,7 @@ export class Certificate extends Property {
     passphrase?: string;
     pfx?: object; // PFX or PKCS12 Certificate
 
-    constructor(options: RawCertificateOptions) {
+    constructor(options: CertificateOptions) {
         super();
         this.kind = 'Certificate';
         this.name = options.name;
@@ -42,7 +42,7 @@ export class Certificate extends Property {
         return this.matches ? this.matches.test(url) : false;
     }
 
-    update(options: RawCertificateOptions) {
+    update(options: CertificateOptions) {
         this.name = options.name;
         this.matches = new UrlMatchPatternList(
             undefined,
