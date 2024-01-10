@@ -430,13 +430,15 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   }
 };
 export const createAndSendToMockbinAction: ActionFunction = async ({ request }) => {
-  const { url, parentId, binResponse } = await request.json() as { url: string; parentId: string; binResponse: Partial<HarResponse> };
+  const { url, method, parentId, binResponse } = await request.json() as { url: string; method: string; parentId: string; binResponse: Partial<HarResponse> };
   invariant(typeof url === 'string', 'URL is required');
+  invariant(typeof method === 'string', 'method is required');
   invariant(typeof parentId === 'string', 'mock route ID is required');
   invariant(binResponse.content, 'bin content is required');
 
   const req = await models.request.create({
     url,
+    method,
     headers: binResponse.headers,
     body: {
       mimeType: binResponse.content.mimeType,

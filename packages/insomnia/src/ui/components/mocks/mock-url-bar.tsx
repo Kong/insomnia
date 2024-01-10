@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import styled from 'styled-components';
 
-import { CONTENT_TYPE_PLAINTEXT, RESPONSE_CODE_REASONS } from '../../../common/constants';
+import { CONTENT_TYPE_PLAINTEXT, HTTP_METHODS, RESPONSE_CODE_REASONS } from '../../../common/constants';
 import { getResponseCookiesFromHeaders, HarResponse } from '../../../common/har';
 import { RequestHeader } from '../../../models/request';
 import { MockRouteLoaderData } from '../../routes/mock-route';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { useMockRoutePatcher } from '../editors/mock-response-headers-editor';
 import { Icon } from '../icon';
 import { showAlert, showModal } from '../modals';
@@ -90,8 +92,8 @@ export const MockUrlBar = () => {
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
-  const createandSendRequest = ({ url, parentId, binResponse }: { url: string; parentId: string; binResponse?: Partial<HarResponse> }) =>
-    requestFetcher.submit(JSON.stringify({ url, parentId, binResponse }),
+  const createandSendRequest = ({ url, method, parentId, binResponse }: { url: string; method: string; parentId: string; binResponse?: Partial<HarResponse> }) =>
+    requestFetcher.submit(JSON.stringify({ url, method, parentId, binResponse }),
       {
         encType: 'application/json',
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new-mock-send`,
@@ -131,8 +133,19 @@ export const MockUrlBar = () => {
       message: mockRoute.url,
     });
   };
+
+  const StyledDropdownButton = styled(DropdownButton)({
+    '&:hover:not(:disabled)': {
+      backgroundColor: 'var(--color-surprise)',
+    },
+
+    '&:focus:not(:disabled)': {
+      backgroundColor: 'var(--color-surprise)',
+    },
+  });
+
   return (<div className='w-full flex justify-between urlbar'>
-    {/* <Dropdown
+    <Dropdown
       className="method-dropdown"
       triggerButton={
         <StyledDropdownButton className={'pad-right pad-left vertically-center'}>
@@ -149,7 +162,7 @@ export const MockUrlBar = () => {
         />
       </DropdownItem>
     ))}
-    </Dropdown> */}
+    </Dropdown>
     <div className='flex p-1'>
       <Button
         className="bg-[--hl-sm] px-3 mr-1 rounded-sm"
@@ -188,6 +201,7 @@ export const MockUrlBar = () => {
           const compoundId = mockRoute.parentId + pathInput;
           createandSendRequest({
             url: mockbinUrl + '/bin/' + compoundId,
+            method: mockRoute.method,
             parentId: mockRoute._id,
             binResponse: formToHar({
               statusCode: mockRoute.statusCode,
