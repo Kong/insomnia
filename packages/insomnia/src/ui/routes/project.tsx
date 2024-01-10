@@ -1240,6 +1240,7 @@ const ProjectRoute: FC = () => {
                   return (
                     <GridListItem
                       key={item._id}
+                      // hack to workaround gridlist not have access to workspace scope
                       id={item.workspace.scope + '|' + item._id}
                       textValue={item.name}
                       className="flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-sm hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
