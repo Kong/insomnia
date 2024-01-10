@@ -41,7 +41,7 @@ export const MockUrlBar = () => {
   const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
     try {
       const bin = await window.main.axiosRequest({
-        url: mockbinUrl + `/bin/${compoundId}`,
+        url: mockbinUrl + `/bin/upsert/${compoundId}`,
         method: 'put',
         data: formToHar({
           statusCode: mockRoute.statusCode,
@@ -168,18 +168,12 @@ export const MockUrlBar = () => {
       </Button>
     </div>
 
-    <div className='flex p-1 items-center'>
-      <div className="opacity-50 cursor-pointer">
+    <div className='flex flex-1 p-1 items-center'>
+      <div className="flex-shrink-0 opacity-50 cursor-pointer">
         <span onClick={showFullURL}>[mock resource url]</span>
       </div>
-      <div>
-        <input
-          value={pathInput}
-          onChange={e => setPathInput(e.currentTarget.value)}
-        />
-      </div>
+      <input className='flex-1' onBlur={upsertMockbinHar} value={pathInput} onChange={e => setPathInput(e.currentTarget.value)} />
     </div>
-    <span className='flex-1' />
     <div className='flex p-1'>
       <Button
         className="bg-[--hl-sm] px-3 rounded-sm"

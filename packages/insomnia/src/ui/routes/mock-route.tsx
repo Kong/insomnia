@@ -52,7 +52,7 @@ export const MockRouteRoute = () => {
   return (
     <Pane type="request">
       <PaneHeader>
-        <MockUrlBar key={mockRoute._id} />
+        <MockUrlBar key={mockRoute._id + mockRoute.name} />
       </PaneHeader>
       <PaneBody>
         <Tabs aria-label="Mock response config">

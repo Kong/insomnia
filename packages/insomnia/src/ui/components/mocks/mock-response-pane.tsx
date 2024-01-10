@@ -77,7 +77,6 @@ export const MockResponsePane = () => {
   const [logs, setLogs] = useState<MockbinLogOutput | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [logEntryId, setLogEntryId] = useState<number | null>(null);
-  console.log('logEntryId', logEntryId);
   useEffect(() => {
     const fn = async () => {
       const logs = await getLogById(mockRoute.parentId + mockRoute.path);
