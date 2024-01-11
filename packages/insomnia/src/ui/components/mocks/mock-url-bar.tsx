@@ -147,42 +147,28 @@ export const MockUrlBar = () => {
     </Dropdown>
     <div className='flex p-1'>
       <Button
-        className="bg-[--hl-sm] px-3 mr-1 rounded-sm"
-        onPress={() => {
-          const compoundId = mockRoute.parentId + pathInput;
-          window.clipboard.writeText(mockbinUrl + '/bin/' + compoundId);
-        }}
-      >
-        <Icon icon="copy" />
-      </Button>
-      <Button
         className="bg-[--hl-sm] px-3 rounded-sm"
         onPress={() => showModal(AlertModal, {
           title: 'Full URL',
           message: mockRoute.url,
         })}
       >
-        <Icon icon="eye" />
+        <Icon icon="eye" /> Show URL
       </Button>
     </div>
 
     <div className='flex flex-1 p-1 items-center'>
-      <div className="flex-shrink-0 opacity-50 cursor-pointer">
-        <span
-          onClick={() => showModal(AlertModal, {
-            title: 'Full URL',
-            message: mockRoute.url,
-          })}
-        >[mock resource url]</span>
-      </div>
       <input className='flex-1' onBlur={upsertMockbinHar} value={pathInput} onChange={e => setPathInput(e.currentTarget.value)} />
     </div>
     <div className='flex p-1'>
       <Button
         className="bg-[--hl-sm] px-3 rounded-sm"
-        onPress={upsertMockbinHar}
+        onPress={() => {
+          const compoundId = mockRoute.parentId + pathInput;
+          window.clipboard.writeText(mockbinUrl + '/bin/' + compoundId);
+        }}
       >
-        <Icon icon="save" />
+        <Icon icon="copy" />
       </Button>
       <Button
         className="px-5 ml-1 text-[--color-font-surprise] bg-[--color-surprise] hover:bg-opacity-90 rounded-sm"
