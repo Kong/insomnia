@@ -1,6 +1,6 @@
 import { Property, PropertyList } from './object-base';
 
-export interface CookieDef {
+export interface CookieOptions {
     key: string;
     value: string;
     expires?: Date | string;
@@ -17,7 +17,7 @@ export interface CookieDef {
 export class Cookie extends Property {
     private def: object;
 
-    constructor(cookieDef: CookieDef | string) {
+    constructor(cookieDef: CookieOptions | string) {
         super();
         this.kind = 'Cookie';
         this.description = 'Cookie';
@@ -36,7 +36,7 @@ export class Cookie extends Property {
     static parse(cookieStr: string) {
         const parts = cookieStr.split(';');
 
-        const def: CookieDef = { key: '', value: '' };
+        const def: CookieOptions = { key: '', value: '' };
         const extensions: { key: string; value: string }[] = [];
 
         parts.forEach((part, i) => {
@@ -107,7 +107,7 @@ export class Cookie extends Property {
 
     toString = () => {
         // Reference: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
-        const cookieDef = this.def as CookieDef;
+        const cookieDef = this.def as CookieOptions;
         const kvPair = `${cookieDef.key}=${cookieDef.value};`;
         const expires = cookieDef.expires ? `Expires=${cookieDef.expires?.toString()};` : '';
         const maxAge = cookieDef.maxAge ? `Max-Age=${cookieDef.maxAge};` : '';
@@ -130,7 +130,7 @@ export class Cookie extends Property {
     };
 
     valueOf = () => {
-        return (this.def as CookieDef).value;
+        return (this.def as CookieOptions).value;
     };
 }
 
@@ -138,7 +138,7 @@ export class CookieList extends PropertyList<Cookie> {
     kind: string = 'CookieList';
     cookies: Cookie[];
 
-    constructor(parent: CookieList, cookies: Cookie[]) {
+    constructor(parent: CookieList | undefined, cookies: Cookie[]) {
         super(
             // Cookie, parent.toString()
             cookies

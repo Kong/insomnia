@@ -1,47 +1,121 @@
+import queryString from 'query-string';
+
 import { Property, PropertyBase, PropertyList } from './object-base';
 import { Variable, VariableList } from './object-variables';
 
-export class QueryParam extends Property {
-    key: string = '';
-    value: string = '';
+// export class QueryParam extends Property {
+//     key: string = '';
+//     value: string = '';
 
-    constructor(options: {
-        id?: string;
-        name?: string;
-        key: string;
-        value: string;
-    }) {
+//     constructor(options: {
+//         id?: string;
+//         name?: string;
+//         key: string;
+//         value: string;
+//     }) {
+//         super();
+
+//         this.id = options.id ? options.id : '';
+//         this.name = options.name ? options.name : '';
+//         this.key = options.key;
+//         this.value = options.value;
+//     }
+
+//     // TODO: improve following fields
+//     static _postman_propertyAllowsMultipleValues: boolean = true;
+//     static _postman_propertyIndexKey: string = 'formData';
+
+//     // parse a form data string into an array of objects, where each object contains a key and a value.
+//     static parse(query: string): { key: string; value: string }[] {
+//         try {
+//             const keyValues = JSON.parse(query);
+//             return keyValues.filter((keyValue: object) => {
+//                 if (!('key' in keyValue) || !('value' in keyValue)) {
+//                     console.error('ignored some formdata as "key" or "value" is not found in it');
+//                     return false;
+//                 }
+//                 return true;
+//             });
+//         } catch (e) {
+//             console.error(`failed to parse QueryParams: ${e.message}`);
+//             return [];
+//         }
+//     }
+
+//     valueOf() {
+//         return this.value;
+//     }
+// }
+
+export class QueryParam extends Property {
+    key: string;
+    value: string;
+
+    constructor(options: { key: string; value: string } | string) {
         super();
 
-        this.id = options.id ? options.id : '';
-        this.name = options.name ? options.name : '';
-        this.key = options.key;
-        this.value = options.value;
-    }
-
-    // TODO: improve following fields
-    static _postman_propertyAllowsMultipleValues: boolean = true;
-    static _postman_propertyIndexKey: string = 'formData';
-
-    // parse a form data string into an array of objects, where each object contains a key and a value.
-    static parse(query: string): { key: string; value: string }[] {
-        try {
-            const keyValues = JSON.parse(query);
-            return keyValues.filter((keyValue: object) => {
-                if (!('key' in keyValue) || !('value' in keyValue)) {
-                    console.error('ignored some formdata as "key" or "value" is not found in it');
-                    return false;
-                }
-                return true;
-            });
-        } catch (e) {
-            console.error(`failed to parse QueryParams: ${e.message}`);
-            return [];
+        if (typeof options === 'string') {
+            try {
+                const optionsObj = JSON.parse(options);
+                // validate key and value fields
+                this.key = optionsObj.key;
+                this.value = optionsObj.value;
+            } catch (e) {
+                throw Error(`invalid QueryParam options ${e}`);
+            }
+        } else if (typeof options === 'object' && ('key' in options) && ('value' in options)) {
+            this.key = options.key;
+            this.value = options.value;
+        } else {
+            throw Error('unknown options for new QueryParam');
         }
     }
 
-    valueOf() {
-        return this.value;
+    // TODO:
+    // (static) _postman_propertyAllowsMultipleValues :Boolean
+    // (static) _postman_propertyIndexKey :String
+
+    static parse(queryStr: string) {
+        // this may not always be executed in the browser
+        return queryString.parse(queryStr);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    static parseSingle(param: string, _idx?: number, _all?: string[]) {
+        // it seems that _idx and _all are not useful
+        return queryString.parse(param);
+
+    }
+
+    static unparse(params: object) {
+        return Object.entries(params)
+            .map(entry => `${entry[0]}=${entry[1] || ''}`)
+            .join('&');
+    }
+
+    static unparseSingle(obj: { key: string; value: string }) {
+        if ('key' in obj && 'value' in obj) {
+            // TODO: validate and unescape
+            return `${obj.key}=${obj.value}`;
+        }
+        return {};
+    }
+
+    toString() {
+        return `${this.key}=${this.value}`; // validate key, value contains '='
+    }
+
+    update(param: string | { key: string; value: string }) {
+        if (typeof param === 'string') {
+            const paramObj = QueryParam.parse(param);
+            this.key = typeof paramObj.key === 'string' ? paramObj.key : '';
+            this.value = typeof paramObj.value === 'string' ? paramObj.value : '';
+        } else if ('key' in param && 'value' in param) {
+            this.key = param.key;
+            this.value = param.value;
+        } else {
+            throw Error('the param for update must be: string | { key: string; value: string }');
+        }
     }
 }
 
