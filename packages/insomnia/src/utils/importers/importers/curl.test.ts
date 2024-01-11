@@ -123,7 +123,7 @@ describe('curl', () => {
       { flag: '--data-urlencode', inputs: ['=value'], expected: [{ name: '', value: 'value' }] },
 
       // --data-urlencode URI encoding
-      { flag: '--data-urlencode', inputs: ['a='], expected: [{ name: '', value: 'a=' }] },
+      { flag: '--data-urlencode', inputs: ['a='], expected: [{ name: 'a', value: '' }] },
       { flag: '--data-urlencode', inputs: [' '], expected: [{ name: '', value: ' ' }] },
       { flag: '--data-urlencode', inputs: ['<'], expected: [{ name: '', value: '<' }] },
       { flag: '--data-urlencode', inputs: ['>'], expected: [{ name: '', value: '>' }] },
@@ -133,7 +133,7 @@ describe('curl', () => {
       { flag: '--data-urlencode', inputs: ['|'], expected: [{ name: '', value: '|' }] },
       { flag: '--data-urlencode', inputs: ['^'], expected: [{ name: '', value: '^' }] },
       { flag: '--data-urlencode', inputs: ['"'], expected: [{ name: '', value: '"' }] },
-      { flag: '--data-urlencode', inputs: ['='], expected: [{ name: '', value: '=' }] },
+      { flag: '--data-urlencode', inputs: ['='], expected: [{ name: '', value: '' }] },
       { flag: '--data-urlencode', inputs: ['%3D'], expected: [{ name: '', value: '%3D' }] },
     ])('handles %p correctly', async ({
       flag,
