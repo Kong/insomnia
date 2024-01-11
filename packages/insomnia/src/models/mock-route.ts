@@ -40,7 +40,7 @@ export function init(): BaseMockRoute {
     statusCode: 200,
     statusText: '',
     name: '',
-    mimeType: null,
+    mimeType: 'application/json',
     binResponse: null,
   };
 }
