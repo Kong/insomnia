@@ -107,7 +107,7 @@ export const MockUrlBar = () => {
         title: 'Unexpected Mock Failure',
         message: (
           <div>
-            <p>The request failed due to a error from mockbin</p>
+            <p>The request failed due to a error from the mock server</p>
           </div>
         ),
       });
