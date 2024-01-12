@@ -1,6 +1,4 @@
-import * as uuid from 'uuid';
-
-import { getIntepolator } from './intepolator';
+import { getIntepolator } from './sdk-objects/intepolator';
 
 export type EventName = 'prerequest' | 'test';
 
@@ -225,21 +223,3 @@ export function initGlobalObject(rawObj: RawObject) {
         requestInfo,
     });
 };
-
-const builtinModules = new Map<string, any>([
-    ['uuid', uuid],
-]);
-
-const nodeModules = new Map<string, any>([]);
-
-export function require(moduleName: string) {
-    if (builtinModules.has(moduleName)) {
-        return builtinModules.get(moduleName);
-    }
-
-    if (nodeModules.has(moduleName)) {
-        // invoke main.js
-    }
-
-    throw Error(`no module is found for "${moduleName}"`);
-}

@@ -1,4 +1,5 @@
-import { initGlobalObject, InsomniaObject, require } from './inso-object';
+import { initGlobalObject, InsomniaObject } from './inso-object';
+import { require } from './sdk-objects/require';
 
 const ErrorTimeout = 'executing script timeout';
 const ErrorInvalidResult = 'result is invalid, null or custom value may be returned';
@@ -22,6 +23,11 @@ async function init() {
                 const executeScript = AsyncFunction(
                     'insomnia',
                     'require',
+                    // isolate DOM objects
+                    // window properties
+                    'closed', 'console', 'credentialless', 'customElements', 'devicePixelRatio', 'document', 'documentPictureInPicture', 'event', 'external', 'frameElement', 'frames', 'fullScreen', 'history', 'innerHeight', 'innerWidth', 'launchQueue', 'length', 'localStorage', 'location', 'locationbar', 'menubar', 'name', 'navigation', 'navigator', 'opener', 'orientation', 'originAgentCluster', 'outerHeight', 'outerWidth', 'parent', 'personalbar', 'screen', 'screenLeft', 'screenTop', 'screenX', 'screenY', 'scrollbars', 'scrollMaxX', 'scrollMaxY', 'scrollX', 'scrollY', 'self', 'sessionStorage', 'sharedStorage', 'sidebar', 'speechSynthesis', 'status', 'statusbar', 'toolbar', 'top', 'visualViewport', 'window',
+                    // window methods
+                    'alert', 'backalert', 'bluralert', 'cancelAnimationFramealert', 'cancelIdleCallbackalert', 'captureEventsalert', 'clearImmediatealert', 'closealert', 'confirmalert', 'dumpalert', 'findalert', 'focusalert', 'forwardalert', 'getComputedStylealert', 'getDefaultComputedStylealert', 'getScreenDetailsalert', 'getSelectionalert', 'matchMediaalert', 'moveByalert', 'moveToalert', 'openalert', 'postMessagealert', 'printalert', 'promptalert', 'queryLocalFontsalert', 'releaseEventsalert', 'requestAnimationFramealert', 'requestFileSystemalert', 'requestIdleCallbackalert', 'resizeByalert', 'resizeToalert', 'scrollalert', 'scrollByalert', 'scrollByLinesalert', 'scrollByPagesalert', 'scrollToalert', 'setImmediatealert', 'setResizablealert', 'showDirectoryPickeralert', 'showModalDialogalert', 'showOpenFilePickeralert', 'showSaveFilePickeralert', 'sizeToContentalert', 'stopalert', 'updateCommandsalert', 'webkitConvertPointFromNodeToPagealert', 'webkitConvertPointFromPageToNodealert',
                     // if possible, avoid adding code to the following part
                     `
                         const $ = insomnia, pm = insomnia;
@@ -39,6 +45,10 @@ async function init() {
                         const insoObject = await executeScript(
                             insomniaObject,
                             require,
+                            // window properties
+                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+                            // window methods
+                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
                         );
                         clearTimeout(timeoutChecker);
                         if (insoObject instanceof InsomniaObject) {
@@ -46,6 +56,7 @@ async function init() {
                         } else {
                             throw { message: ErrorInvalidResult };
                         }
+
                     } catch (e) {
                         reject(e);
                     }
