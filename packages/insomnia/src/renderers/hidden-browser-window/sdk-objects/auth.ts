@@ -1,7 +1,7 @@
 import { Property } from './base';
 import { Variable, VariableList } from './variables';
 
-const AuthTypes = new Set([
+export const AuthTypes = new Set([
     'noauth',
     'basic',
     'bearer',
@@ -23,150 +23,152 @@ export interface AuthOption {
     value: string;
 }
 
-// export interface AuthBasic {
-//     password: string;
-//     username: string;
-//     id: string;
-// }
+export interface BasicOptions {
+    password: string;
+    username: string;
+    id: string;
+}
 
-// export interface AuthBearer {
-//     token: string;
-//     id: string;
-// }
+export interface BearerOptions {
+    token: string;
+    id: string;
+}
 
-// export interface AuthJWT {
-//     secret: string;
-//     algorithm: string;
-//     isSecretBase64Encoded: boolean;
-//     payload: string; // e.g. "{}"
-//     addTokenTo: string;
-//     headerPrefix: string;
-//     queryParamKey: string;
-//     header: string; // e.g. "{}"
-//     id: string;
-// }
+export interface JWTOptions {
+    secret: string;
+    algorithm: string;
+    isSecretBase64Encoded: boolean;
+    payload: string; // e.g. "{}"
+    addTokenTo: string;
+    headerPrefix: string;
+    queryParamKey: string;
+    header: string; // e.g. "{}"
+    id: string;
+}
 
-// export interface AuthDigest {
-//     opaque: string;
-//     clientNonce: string;
-//     nonceCount: string;
-//     qop: string;
-//     nonce: string;
-//     realm: string;
-//     password: string;
-//     username: string;
-//     algorithm: string;
-//     id: string;
-// }
+export interface DigestOptions {
+    opaque: string;
+    clientNonce: string;
+    nonceCount: string;
+    qop: string;
+    nonce: string;
+    realm: string;
+    password: string;
+    username: string;
+    algorithm: string;
+    id: string;
+}
 
-// export interface AuthOAuth1 {
-//     addEmptyParamsToSign: boolean;
-//     includeBodyHash: boolean;
-//     realm: string;
-//     nonce: string;
-//     timestamp: string;
-//     verifier: string;
-//     callback: string;
-//     tokenSecret: string;
-//     token: string;
-//     consumerSecret: string;
-//     consumerKey: string;
-//     signatureMethod: string; // "HMAC-SHA1"
-//     version: string;
-//     addParamsToHeader: string;
-//     id: string;
-// }
+export interface OAuth1Options {
+    addEmptyParamsToSign: boolean;
+    includeBodyHash: boolean;
+    realm: string;
+    nonce: string;
+    timestamp: string;
+    verifier: string;
+    callback: string;
+    tokenSecret: string;
+    token: string;
+    consumerSecret: string;
+    consumerKey: string;
+    signatureMethod: string; // "HMAC-SHA1"
+    version: string;
+    addParamsToHeader: string;
+    id: string;
+}
 
-// export interface OAuth2Param {
-//     key: string;
-//     value: string;
-//     enabled: boolean;
-//     send_as: string; // it follows exising naming
-// }
+export interface OAuth2Param {
+    key: string;
+    value: string;
+    enabled: boolean;
+    send_as: string; // it follows exising naming
+}
 
-// export interface AuthOAuth2 {
-//     accessToken: string;
-//     refreshRequestParams: OAuth2Param[];
-//     tokenRequestParams: OAuth2Param[];
-//     authRequestParams: OAuth2Param[];
-//     refreshTokenUrl: string;
-//     state: string;
-//     scope: string;
-//     clientSecret: string;
-//     clientId: string;
-//     tokenName: string;
-//     addTokenTo: string;
-//     id: string;
-// }
+export interface OAuth2Options {
+    accessToken: string;
+    refreshRequestParams: OAuth2Param[];
+    tokenRequestParams: OAuth2Param[];
+    authRequestParams: OAuth2Param[];
+    refreshTokenUrl: string;
+    state: string;
+    scope: string;
+    clientSecret: string;
+    clientId: string;
+    tokenName: string;
+    addTokenTo: string;
+    id: string;
+}
 
-// export interface AuthHAWK {
-//     includePayloadHash: boolean;
-//     timestamp: string;
-//     delegation: string;
-//     app: string;
-//     extraData: string;
-//     nonce: string;
-//     user: string;
-//     authKey: string;
-//     authId: string;
-//     algorithm: string;
-//     id: string;
-// }
+export interface HAWKOptions {
+    includePayloadHash: boolean;
+    timestamp: string;
+    delegation: string;
+    app: string;
+    extraData: string;
+    nonce: string;
+    user: string;
+    authKey: string;
+    authId: string;
+    algorithm: string;
+    id: string;
+}
 
-// export interface AuthAWSV4 {
-//     sessionToken: string;
-//     service: string;
-//     region: string;
-//     secretKey: string;
-//     accessKey: string;
-//     id: string;
-// }
+export interface AWSV4Options {
+    sessionToken: string;
+    service: string;
+    region: string;
+    secretKey: string;
+    accessKey: string;
+    id: string;
+}
 
-// export interface AuthNTLM {
-//     workstation: string;
-//     domain: string;
-//     password: string;
-//     username: string;
-//     id: string;
-// }
+export interface NTLMOptions {
+    workstation: string;
+    domain: string;
+    password: string;
+    username: string;
+    id: string;
+}
 
-// export interface AuthAPIKey {
-//     key: string;
-//     value: string;
-//     id: string;
-// }
+export interface APIKeyOptions {
+    key: string;
+    value: string;
+    id: string;
+}
 
-// export interface AuthEdgegrid {
-//     headersToSign: string;
-//     baseURL: string;
-//     timestamp: string;
-//     nonce: string;
-//     clientSecret: string;
-//     clientToken: string;
-//     accessToken: string;
-//     id: string;
-// }
+export interface EdgegridOptions {
+    headersToSign: string;
+    baseURL: string;
+    timestamp: string;
+    nonce: string;
+    clientSecret: string;
+    clientToken: string;
+    accessToken: string;
+    id: string;
+}
 
-// export interface AuthASAP {
-//     exp: string; // expiry
-//     claims: string; // e.g., { "additional claim": "claim value" }
-//     sub: string; // subject
-//     privateKey: string; // private key
-//     kid: string; // key id
-//     aud: string; // audience
-//     iss: string; // issuer
-//     alg: string; // e.g., RS256
-//     id: string;
-// }
+export interface ASAPOptions {
+    exp: string; // expiry
+    claims: string; // e.g., { "additional claim": "claim value" }
+    sub: string; // subject
+    privateKey: string; // private key
+    kid: string; // key id
+    aud: string; // audience
+    iss: string; // issuer
+    alg: string; // e.g., RS256
+    id: string;
+}
 
-// function AuthMethodToParams(authMethod: AuthNoAuth | AuthBasic | AuthBasic | AuthBearer | AuthJWT | AuthDigest | AuthOAuth1 | AuthOAuth2 | AuthHAWK | AuthAWSV4 | AuthNTLM | AuthAPIKey | AuthEdgegrid | AuthASAP) {
-//     return Object.entries(authMethod).
-//         map(entry => ({
-//             type: 'any',
-//             key: entry[0],
-//             value: entry[1],
-//         }));
-// }
+export function authOptionsToParams(
+    authMethod: BasicOptions | BearerOptions | JWTOptions | DigestOptions | OAuth1Options | OAuth2Options | HAWKOptions | AWSV4Options | NTLMOptions | APIKeyOptions | EdgegridOptions | ASAPOptions
+) {
+    return Object.entries(authMethod).
+        map(entry => ({
+            type: 'any',
+            key: entry[0],
+            value: entry[1],
+        }));
+}
 
 export interface AuthOptions {
     type: string;
@@ -220,21 +222,25 @@ export class RequestAuth extends Property {
         if (!RequestAuth.isValidType(options.type)) {
             throw Error(`invalid auth type ${options.type}`);
         }
+
         this.type = options.type;
         const optsObj = options as AuthOptions;
-        Object.entries(optsObj)
-            .filter(optsObjEntry => optsObjEntry[0] !== 'type')
-            .map(optsEntry => {
-                return {
-                    type: optsEntry[0],
-                    options: new VariableList(
-                        undefined,
-                        optsEntry.map(opt => new Variable({
-                            key: opt.key,
-                            value: opt.value,
-                            type: opt.type,
-                        })),
-                    ),
+        const optsEntries = Object.entries(optsObj)
+            .filter(optsObjEntry => optsObjEntry[0] !== 'type');
+
+        optsEntries.map((optsEntry: [string, AuthOption[]]) => {
+            const optVars = optsEntry[1]
+                .map(opt => {
+                    return new Variable({
+                        key: opt.key,
+                        value: opt.value,
+                        type: opt.type,
+                    });
+                });
+
+            return {
+                type: optsEntry[0],
+                options: new VariableList(undefined, optVars),
                 };
             })
             .forEach(authOpts => {
@@ -254,7 +260,7 @@ export class RequestAuth extends Property {
         }
     }
 
-    parameters() {
+    parameters(): VariableList<Variable> | undefined {
         return this.authOptions.get(this.type);
     }
 
