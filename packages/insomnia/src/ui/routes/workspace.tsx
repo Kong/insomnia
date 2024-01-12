@@ -238,6 +238,23 @@ export const workspaceLoader: LoaderFunction = async ({
 
   const workspaces = await models.workspace.findByParentId(projectId);
 
+  const collection = flattenTree();
+
+  // If there is a filter then we need to show all the parents of the requests that are not hidden.
+  collection.forEach(node => {
+    const ancestors = node.ancestors || [];
+
+    if (!node.hidden) {
+      ancestors.forEach(ancestorId => {
+        const ancestor = collection.find(n => n.doc._id === ancestorId);
+
+        if (ancestor) {
+          ancestor.hidden = false;
+        }
+      });
+    }
+  });
+
   return {
     workspaces,
     activeWorkspace,
@@ -255,7 +272,7 @@ export const workspaceLoader: LoaderFunction = async ({
     requestTree,
     // TODO: remove this state hack when the grpc responses go somewhere else
     grpcRequests: grpcReqs,
-    collection: flattenTree(),
+    collection,
   };
 };
 
