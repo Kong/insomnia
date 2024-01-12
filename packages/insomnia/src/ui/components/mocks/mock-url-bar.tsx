@@ -1,3 +1,4 @@
+import deepEqual from 'deep-equal';
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
@@ -100,6 +101,22 @@ export const MockUrlBar = () => {
       });
 
   const upsertMockbinHar = async () => {
+    const hasPathChanged = pathInput !== mockRoute.path;
+    if (!hasPathChanged) {
+      console.log('path has not changed');
+      return;
+    }
+    const newResponse = formToHar({
+      statusCode: mockRoute.statusCode,
+      statusText: mockRoute.statusText,
+      headersArray: mockRoute.headers,
+      body: mockRoute.body,
+    });
+    const hasResponseChanged = !deepEqual(newResponse, mockRoute.binResponse);
+    if (!hasResponseChanged) {
+      console.log('response has not changed');
+      return;
+    }
     const compoundId = mockRoute.parentId + pathInput;
     const id = await upsertBinOnRemoteFromResponse(compoundId);
     if (!id) {
@@ -116,12 +133,7 @@ export const MockUrlBar = () => {
     patchMockRoute(mockRoute._id, {
       url: mockbinUrl + '/bin/' + mockRoute.parentId,
       path: pathInput,
-      binResponse: formToHar({
-        statusCode: mockRoute.statusCode,
-        statusText: mockRoute.statusText,
-        headersArray: mockRoute.headers,
-        body: mockRoute.body,
-      }),
+      binResponse: newResponse,
     });
 
   };
