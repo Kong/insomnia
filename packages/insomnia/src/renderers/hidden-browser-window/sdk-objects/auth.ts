@@ -18,9 +18,9 @@ export const AuthTypes = new Set([
 ]);
 
 export interface AuthOption {
-    type: string;
     key: string;
     value: string;
+    type?: string;
 }
 
 export interface BasicOptions {
@@ -186,22 +186,24 @@ export interface AuthOptions {
     asap?: AuthOption[];
 }
 
-function rawOptionsToVariables(options: VariableList<Variable> | Variable[] | object, targetType?: string): VariableList<Variable>[] {
+function rawOptionsToVariables(options: VariableList<Variable> | Variable[] | AuthOptions, targetType?: string): VariableList<Variable>[] {
     if (VariableList.isVariableList(options)) {
         return [options as VariableList<Variable>];
-    } else if ('type' in options) { // object
+    } else if ('type' in options) {
+        // options is AuthOptions
         const optsObj = options as AuthOptions;
         const optsVarLists = Object.entries(optsObj)
-            .filter(optsObjEntry => optsObjEntry[0] === targetType)
+            .filter(optsObjEntry => {
+                return optsObjEntry[0] === targetType;
+            })
             .map(optsEntry => {
-                return new VariableList(
-                    undefined,
-                    optsEntry.map(opt => new Variable({
+                const optVars = optsEntry[1].map((opt: AuthOption) => {
+                    return new Variable({
                         key: opt.key,
                         value: opt.value,
-                        type: opt.type,
-                    })),
-                );
+                    });
+                });
+                return new VariableList(undefined, optVars);
             });
 
         return optsVarLists;
@@ -316,9 +318,10 @@ export class RequestAuth extends Property {
         return obj;
     }
 
-    update(options: VariableList<Variable> | Variable[] | object, type?: string) {
+    update(options: VariableList<Variable> | Variable[] | AuthOptions, type?: string) {
         const currentType = type ? type : this.type;
         const authOpts = rawOptionsToVariables(options, currentType);
+
         if (authOpts.length > 0) {
             this.authOptions.set(currentType, authOpts[0]);
         } else {
@@ -326,7 +329,7 @@ export class RequestAuth extends Property {
         }
     }
 
-    use(type: string, options: VariableList<Variable> | Variable[] | object) {
+    use(type: string, options: VariableList<Variable> | Variable[] | AuthOptions) {
         if (!RequestAuth.isValidType(type)) {
             throw Error(`invalid type (${type}), it must be noauth | basic | bearer | jwt | digest | oauth1 | oauth2 | hawk | awsv4 | ntlm | apikey | edgegrid | asap.`);
         }
