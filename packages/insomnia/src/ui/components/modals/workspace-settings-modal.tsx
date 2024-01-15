@@ -19,6 +19,7 @@ import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { HelpTooltip } from '../help-tooltip';
+import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
 import { PasswordViewer } from '../viewers/password-viewer';
 
@@ -352,6 +353,7 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
                         </div>
                       </div>
                       <p className="text-sm text-[--hl] italic">
+                        <Icon icon='info-circle' className='pr-2' />
                         On MacOS please upload the local Keychain certificates here
                       </p>
                     </div>
