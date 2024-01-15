@@ -42,6 +42,10 @@ export const isCollection = (workspace: Pick<Workspace, 'scope'>) => (
   workspace.scope === WorkspaceScopeKeys.collection
 );
 
+export const isMockServer = (workspace: Pick<Workspace, 'scope'>) => (
+  workspace.scope === WorkspaceScopeKeys.mockServer
+);
+
 export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,
   description: '',
