@@ -19,8 +19,7 @@ export class Cookie extends Property {
 
     constructor(cookieDef: CookieOptions | string) {
         super();
-        this.kind = 'Cookie';
-        this.description = 'Cookie';
+        this._kind = 'Cookie';
 
         if (typeof cookieDef === 'string') {
             this.def = Cookie.parse(cookieDef);
@@ -30,7 +29,7 @@ export class Cookie extends Property {
     }
 
     static isCookie(obj: Property) {
-        return obj.kind === 'Cookie';
+        return obj._kind === 'Cookie';
     }
 
     static parse(cookieStr: string) {
@@ -135,7 +134,7 @@ export class Cookie extends Property {
 }
 
 export class CookieList extends PropertyList<Cookie> {
-    kind: string = 'CookieList';
+    _kind: string = 'CookieList';
     cookies: Cookie[];
 
     constructor(parent: CookieList | undefined, cookies: Cookie[]) {
@@ -148,6 +147,6 @@ export class CookieList extends PropertyList<Cookie> {
     }
 
     static isCookieList(obj: object) {
-        return 'kind' in obj && obj.kind === 'CookieList';
+        return '_kind' in obj && obj._kind === 'CookieList';
     }
 }

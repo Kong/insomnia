@@ -12,7 +12,7 @@ export interface ProxyConfigOptions {
 }
 
 export class ProxyConfig extends Property {
-    kind: string = 'ProxyConfig';
+    _kind: string = 'ProxyConfig';
     type: string;
 
     host: string;
@@ -75,7 +75,7 @@ export class ProxyConfig extends Property {
     }
 
     static isProxyConfig(obj: object) {
-        return 'kind' in obj && obj.kind === 'ProxyConfig';
+        return '_kind' in obj && obj._kind === 'ProxyConfig';
     }
 
     // TODO: should not read from match?
@@ -148,7 +148,7 @@ export class ProxyConfigList<T extends ProxyConfig> extends PropertyList<T> {
     }
 
     static isProxyConfigList(obj: any) {
-        return 'kind' in obj && obj.kind === 'ProxyConfigList';
+        return '_kind' in obj && obj._kind === 'ProxyConfigList';
     }
 
     // TODO: need support URL at first

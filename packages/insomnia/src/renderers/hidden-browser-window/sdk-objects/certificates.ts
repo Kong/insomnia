@@ -1,16 +1,22 @@
 import { Property } from './base';
 import { UrlMatchPattern, UrlMatchPatternList } from './urls';
 
+export interface SrcRef {
+    src: string; // src is the path of the file
+}
+
 export interface CertificateOptions {
     name?: string;
     matches?: string[];
-    key?: object;
-    cert?: object;
+    key?: SrcRef;
+    cert?: SrcRef;
     passphrase?: string;
-    pfx?: object; // PFX or PKCS12 Certificate
+    pfx?: SrcRef; // PFX or PKCS12 Certificate
 }
 
 export class Certificate extends Property {
+    _kind: string = 'Certificate';
+
     name?: string;
     matches?: UrlMatchPatternList<UrlMatchPattern>;
     key?: object;
@@ -20,7 +26,7 @@ export class Certificate extends Property {
 
     constructor(options: CertificateOptions) {
         super();
-        this.kind = 'Certificate';
+
         this.name = options.name;
         this.matches = new UrlMatchPatternList(
             undefined,
@@ -35,7 +41,7 @@ export class Certificate extends Property {
     }
 
     static isCertificate(obj: object) {
-        return 'kind' in obj && obj.kind === 'Certificate';
+        return '_kind' in obj && obj._kind === 'Certificate';
     }
 
     canApplyTo(url: string) {

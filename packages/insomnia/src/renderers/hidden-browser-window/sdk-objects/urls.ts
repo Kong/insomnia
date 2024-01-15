@@ -134,7 +134,7 @@ export interface UrlObject {
 }
 
 export class Url extends PropertyBase {
-    kind: string = 'Url';
+    _kind: string = 'Url';
 
     auth?: { username: string; password: string };
     hash?: string;
@@ -146,17 +146,19 @@ export class Url extends PropertyBase {
     variables: VariableList<Variable>;
 
     // TODO: user could pass anything
-    constructor(def: {
-        auth?: { username: string; password: string }; // TODO: should be related to RequestAuth
-        hash?: string;
-        host: string[];
-        path?: string[];
-        port?: string;
-        protocol: string;
-        query: PropertyList<QueryParam>;
-        variables: VariableList<Variable>;
-    } | string) {
-        super({ description: 'Url' });
+    constructor(
+        def: {
+            auth?: { username: string; password: string }; // TODO: should be related to RequestAuth
+            hash?: string;
+            host: string[];
+            path?: string[];
+            port?: string;
+            protocol: string;
+            query: PropertyList<QueryParam>;
+            variables: VariableList<Variable>;
+        } | string
+    ) {
+        super({});
 
         if (typeof def === 'string') {
             const urlObj = Url.parse(def);
@@ -192,10 +194,11 @@ export class Url extends PropertyBase {
     }
 
     static isUrl(obj: object) {
-        return 'kind' in obj && obj.kind === 'Url';
+        return '_kind' in obj && obj._kind === 'Url';
     }
 
     static parse(urlStr: string): UrlObject | undefined {
+        // TODO: URL requires explicit requiring in Node.js
         if (!URL.canParse(urlStr)) {
             console.error(`invalid URL string ${urlStr}`);
             return undefined;
@@ -401,7 +404,8 @@ export class Url extends PropertyBase {
     }
 }
 
-// UrlMatchPattern implements chrome extension match patterns: https://developer.chrome.com/docs/extensions/develop/concepts/match-patterns
+// UrlMatchPattern implements chrome extension match patterns:
+// https://developer.chrome.com/docs/extensions/develop/concepts/match-patterns
 export class UrlMatchPattern extends Property {
     // scheme
     scheme: 'http:' | 'https:' | '*' | 'file:';
@@ -541,7 +545,7 @@ export class UrlMatchPattern extends Property {
 }
 
 export class UrlMatchPatternList<T extends UrlMatchPattern> extends PropertyList<T> {
-    kind: string = 'UrlMatchPatternList';
+    _kind: string = 'UrlMatchPatternList';
 
     constructor(parent: PropertyList<T> | undefined, populate: T[]) {
         super(populate);
@@ -549,7 +553,7 @@ export class UrlMatchPatternList<T extends UrlMatchPattern> extends PropertyList
     }
 
     static isUrlMatchPatternList(obj: any) {
-        return 'kind' in obj && obj.kind === 'UrlMatchPatternList';
+        return '_kind' in obj && obj._kind === 'UrlMatchPatternList';
     }
 
     // TODO: unsupported yet

@@ -204,7 +204,7 @@ export interface RequestSize {
 }
 
 export class Request extends Property {
-    kind: string = 'Request';
+    _kind: string = 'Request';
 
     url: Url;
     method: string;
@@ -230,7 +230,7 @@ export class Request extends Property {
     }
 
     static isRequest(obj: object) {
-        return 'kind' in obj && obj.kind === 'Request';
+        return '_kind' in obj && obj._kind === 'Request';
     }
 
     addHeader(header: Header | object) {
@@ -442,7 +442,7 @@ export interface ResponseOptions {
 }
 
 export class Response extends Property {
-    kind: string = 'Response';
+    _kind: string = 'Response';
 
     body: string;
     code: number;
@@ -504,7 +504,7 @@ export class Response extends Property {
     }
 
     static isResponse(obj: object) {
-        return 'kind' in obj && obj.kind === 'Response';
+        return '_kind' in obj && obj._kind === 'Response';
     }
 
     contentInfo(): ResponseContentInfo {

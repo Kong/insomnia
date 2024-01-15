@@ -4,7 +4,7 @@ export class Variable extends Property {
     key: string;
     value: any;
     type: string;
-    kind: string = 'Variable';
+    _kind: string = 'Variable';
 
     constructor(def?: {
         id?: string;
@@ -30,7 +30,7 @@ export class Variable extends Property {
 
     // cast typecasts a value to the Variable.types of this Variable.
     cast(value: any) {
-        if ('kind' in value && value.kind === 'Variable') {
+        if ('_kind' in value && value._kind === 'Variable') {
             return value.value;
         }
         return undefined;
@@ -46,7 +46,7 @@ export class Variable extends Property {
 }
 
 export class VariableList<T extends Variable> extends PropertyList<T> {
-    kind: string = 'VariableList';
+    _kind: string = 'VariableList';
 
     constructor(parent: PropertyList<T> | undefined, populate: T[]) {
         super(populate);
@@ -54,6 +54,6 @@ export class VariableList<T extends Variable> extends PropertyList<T> {
     }
 
     static isVariableList(obj: any) {
-        return 'kind' in obj && obj.kind === 'VariableList';
+        return '_kind' in obj && obj._kind === 'VariableList';
     }
 }

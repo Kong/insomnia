@@ -10,7 +10,7 @@ export interface HeaderOptions {
 }
 
 export class Header extends Property {
-    kind: string = 'Header';
+    _kind: string = 'Header';
     type: string = '';
     key: string;
     value: string;
@@ -40,7 +40,7 @@ export class Header extends Property {
     }
 
     static isHeader(obj: object) {
-        return 'kind' in obj && obj.kind === 'Header';
+        return '_kind' in obj && obj._kind === 'Header';
     }
 
     // example: 'Content-Type: application/json\nUser-Agent: MyClientLibrary/2.0\n'
@@ -90,7 +90,7 @@ export class HeaderList<T extends Header> extends PropertyList<T> {
     }
 
     static isHeaderList(obj: any) {
-        return 'kind' in obj && obj.kind === 'HeaderList';
+        return '_kind' in obj && obj._kind === 'HeaderList';
     }
 
     // unsupported

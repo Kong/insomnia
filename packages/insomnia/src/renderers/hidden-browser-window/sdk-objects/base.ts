@@ -6,11 +6,11 @@ export interface JSONer {
 }
 
 export class PropertyBase {
-    public kind = 'PropertyBase';
-    protected description: string;
+    public _kind = 'PropertyBase';
     protected _parent: PropertyBase | undefined = undefined;
+    protected description?: string;
 
-    constructor(def: { description: string }) {
+    constructor(def: { description?: string }) {
         this.description = def.description;
     }
 
@@ -140,7 +140,7 @@ export class Property extends PropertyBase {
         disabled?: boolean;
         info?: object;
     }) {
-        super({ description: 'Property' });
+        super({});
         this.id = def?.id || '';
         this.name = def?.name || '';
         this.disabled = def?.disabled || false;
@@ -158,13 +158,13 @@ export class Property extends PropertyBase {
     // }
 
     describe(content: string, typeName: string) {
-        this.kind = typeName;
+        this._kind = typeName;
         this.description = content;
     }
 }
 
 export class PropertyList<T> {
-    kind: string = 'PropertyList';
+    _kind: string = 'PropertyList';
     protected _parent: PropertyList<T> | undefined = undefined;
     protected list: T[] = [];
 
@@ -177,7 +177,7 @@ export class PropertyList<T> {
     }
 
     static isPropertyList(obj: object) {
-        return 'kind' in obj && obj.kind === 'PropertyList';
+        return '_kind' in obj && obj._kind === 'PropertyList';
     }
 
     add(item: T) {
