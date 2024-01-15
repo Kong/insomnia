@@ -1212,7 +1212,7 @@ const ProjectRoute: FC = () => {
                   items={workspacesWithPresence}
                   onAction={key => {
                     // hack to workaround gridlist not have access to workspace scope
-                    const [scope, id] = key.toString().split('|');
+                    const [id, scope] = key.toString().split('|');
                     const activity = scopeToActivity(scope as WorkspaceScope);
                     navigate(
                       `/organization/${organizationId}/project/${projectId}/workspace/${id}/${activity}`
@@ -1246,7 +1246,7 @@ const ProjectRoute: FC = () => {
                     <GridListItem
                       key={item._id}
                       // hack to workaround gridlist not have access to workspace scope
-                      id={item.workspace.scope + '|' + item._id}
+                      id={item._id + '|' + item.workspace.scope}
                       textValue={item.name}
                       className="flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-sm hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
                     >

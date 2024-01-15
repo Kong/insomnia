@@ -1,3 +1,4 @@
+import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React from 'react';
 import { useState } from 'react';
 import { Collection, ComboBox, Dialog, Header, Input, Label, ListBox, ListBoxItem, Modal, ModalOverlay, Section, Text } from 'react-aria-components';
@@ -7,6 +8,7 @@ import { isGrpcRequest } from '../../models/grpc-request';
 import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import { isWebSocketRequest } from '../../models/websocket-request';
+import { scopeToActivity, WorkspaceScope } from '../../models/workspace';
 import { WorkspaceLoaderData } from '../routes/workspace';
 import { Icon } from './icon';
 import { useDocBodyKeyboardShortcuts } from './keydown-binder';
@@ -32,6 +34,12 @@ export const CommandPalette = () => {
     },
   });
 
+  const scopeToIconMap: Record<string, IconName> = {
+    design: 'file',
+    collection: 'bars',
+    'mock-server': 'server',
+  };
+
   return (
     <ModalOverlay isOpen={isOpen} onOpenChange={setIsOpen} isDismissable className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex pt-20 justify-center bg-black/30">
       <Modal className="max-w-2xl h-max w-full rounded-md flex flex-col overflow-hidden border border-solid border-[--hl-sm] max-h-[80vh] bg-[--color-bg] text-[--color-font]">
@@ -54,8 +62,11 @@ export const CommandPalette = () => {
                 if (!itemId) {
                   return;
                 }
-                if (itemId.toString().startsWith('wrk_')) {
-                  navigate(`/organization/${organizationId}/project/${projectId}/workspace/${itemId}/debug`);
+                const isWorkspace = itemId.toString().startsWith('wrk_');
+                if (isWorkspace) {
+                  const [id, scope] = itemId.toString().split('|');
+                  const activity = scopeToActivity(scope as WorkspaceScope);
+                  navigate(`/organization/${organizationId}/project/${projectId}/workspace/${id}/${activity}`);
                 } else {
                   navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${itemId}`);
                 }
@@ -115,11 +126,11 @@ export const CommandPalette = () => {
                     id: 'collections-and-documents',
                     name: 'Collections and documents',
                     children: workspaces.map(workspace => ({
-                      id: workspace._id,
-                      icon: <Icon icon={workspace.scope === 'collection' ? 'bars' : 'file'} className="text-[--color-font] w-10 flex-shrink-0 flex items-center justify-center" />,
+                      id: workspace._id + '|' + workspace.scope,
+                      icon: <Icon icon={scopeToIconMap[workspace.scope]} className="text-[--color-font] w-10 flex-shrink-0 flex items-center justify-center" />,
                       name: workspace.name,
                       description: '',
-                      textValue: `${workspace.scope === 'collection' ? 'Collection' : 'Document'} ${workspace.name}`,
+                      textValue: `${workspace.scope} ${workspace.name}`,
                     })),
                   },
                 ]}
