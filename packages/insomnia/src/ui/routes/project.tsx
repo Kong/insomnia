@@ -758,9 +758,14 @@ const ProjectRoute: FC = () => {
     'mock-server': 'server',
   };
   const scopeToBgColorMap: Record<string, string> = {
-    design: 'info',
-    collection: 'surprise',
-    'mock-server': 'notice',
+    design: 'bg-[--color-info]',
+    collection: 'bg-[--color-surprise]',
+    'mock-server': 'bg-[--color-warning]',
+  };
+  const scopeToTextColorMap: Record<string, string> = {
+    design: 'text-[--color-info-font]',
+    collection: 'text-[--color-surprise-font]',
+    'mock-server': 'text-[--color-warning-font]',
   };
 
   return (
@@ -1247,7 +1252,7 @@ const ProjectRoute: FC = () => {
                     >
                       <div className="flex gap-2 h-[20px]">
                         <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
-                          <div className={`bg-[--color-${scopeToBgColorMap[item.workspace.scope]}] text-[--color-font-${scopeToBgColorMap[item.workspace.scope]}] px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
+                          <div className={`${scopeToBgColorMap[item.workspace.scope]} ${scopeToTextColorMap[item.workspace.scope]}  px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
                             <Icon icon={scopeToIconMap[item.workspace.scope]} />
                           </div>
                           <span>
