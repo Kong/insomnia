@@ -81,6 +81,7 @@
     "oauth-1.0a": "^2.2.6",
     "papaparse": "^5.4.1",
     "prettier": "2.4.1",
+    "qs": "^6.11.2",
     "query-string": "^8.1.0",
     "shell-quote": "^1.8.1",
     "swagger-ui-dist": "5.0.0-alpha.6",

@@ -1,4 +1,4 @@
-import queryString from 'query-string';
+import qs from 'qs';
 
 import { Property, PropertyBase, PropertyList } from './base';
 import { Variable, VariableList } from './variables';
@@ -47,6 +47,11 @@ import { Variable, VariableList } from './variables';
 //     }
 // }
 
+let urlParser = URL;
+export function setUrlParser(urlAlternative: any) {
+    urlParser = urlAlternative;
+}
+
 export class QueryParam extends Property {
     key: string;
     value: string;
@@ -77,13 +82,13 @@ export class QueryParam extends Property {
 
     static parse(queryStr: string) {
         // this may not always be executed in the browser
-        return queryString.parse(queryStr);
+        return qs.parse(queryStr);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     static parseSingle(param: string, _idx?: number, _all?: string[]) {
         // it seems that _idx and _all are not useful
-        return queryString.parse(param);
+        return qs.parse(param);
 
     }
 
@@ -198,13 +203,12 @@ export class Url extends PropertyBase {
     }
 
     static parse(urlStr: string): UrlObject | undefined {
-        // TODO: URL requires explicit requiring in Node.js
-        if (!URL.canParse(urlStr)) {
+        if (!urlParser.canParse(urlStr)) {
             console.error(`invalid URL string ${urlStr}`);
             return undefined;
         }
 
-        const url = new URL(urlStr);
+        const url = new urlParser(urlStr);
         const query = Array.from(url.searchParams.entries())
             .map((kv: [string, string]) => {
                 return { key: kv[0], value: kv[1] };
