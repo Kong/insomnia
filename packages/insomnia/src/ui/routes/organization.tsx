@@ -136,37 +136,24 @@ export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
     try {
-      let organizationsResult, user, currentPlan;
-      const orgs = window.localStorage.getItem('orgs');
-      const usr = window.localStorage.getItem('user');
-      const plan = window.localStorage.getItem('plan');
-      if (orgs && usr && plan) {
-        console.log('found');
-        organizationsResult = JSON.parse(orgs) as unknown as OrganizationsResponse;
-        user = JSON.parse(usr) as unknown as UserProfileResponse;
-        currentPlan = JSON.parse(plan) as unknown as CurrentPlan;
-      } else {
-        organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
-          method: 'GET',
-          path: '/v1/organizations',
-          sessionId,
-        });
-        window.localStorage.setItem('orgs', JSON.stringify(organizationsResult));
+      const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
+        method: 'GET',
+        path: '/v1/organizations',
+        sessionId,
+      });
 
-        user = await window.main.insomniaFetch<UserProfileResponse | void>({
-          method: 'GET',
-          path: '/v1/user/profile',
-          sessionId,
-        });
-        window.localStorage.setItem('user', JSON.stringify(user));
+      const user = await window.main.insomniaFetch<UserProfileResponse | void>({
+        method: 'GET',
+        path: '/v1/user/profile',
+        sessionId,
+      });
 
-        currentPlan = await window.main.insomniaFetch<CurrentPlan | void>({
-          method: 'GET',
-          path: '/v1/billing/current-plan',
-          sessionId,
-        });
-        window.localStorage.setItem('plan', JSON.stringify(currentPlan));
-      }
+      const currentPlan = await window.main.insomniaFetch<CurrentPlan | void>({
+        method: 'GET',
+        path: '/v1/billing/current-plan',
+        sessionId,
+      });
+
       invariant(organizationsResult && organizationsResult.organizations, 'Failed to load organizations');
       invariant(user && user.id, 'Failed to load user');
       invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
