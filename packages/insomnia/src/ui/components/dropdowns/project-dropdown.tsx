@@ -29,6 +29,8 @@ import { AskModal } from '../modals/ask-modal';
 interface Props {
   project: Project;
   organizationId: string;
+  isCloudSyncEnabled: boolean;
+  isLocalVaultEnabled: boolean;
 }
 
 interface ProjectActionItem {
@@ -38,7 +40,7 @@ interface ProjectActionItem {
   action: (projectId: string, projectName: string) => void;
 }
 
-export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
+export const ProjectDropdown: FC<Props> = ({ project, organizationId, isCloudSyncEnabled, isLocalVaultEnabled }) => {
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] =
     useState(false);
   const deleteProjectFetcher = useFetcher();
@@ -197,6 +199,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
                       </Label>
                       <div className="flex gap-2">
                         <Radio
+                          isDisabled={!isCloudSyncEnabled}
                           value="remote"
                           className="data-[selected]:border-[--color-surprise] flex-1 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
@@ -209,7 +212,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
                           </p>
                         </Radio>
                         <Radio
-                          isDisabled={isDefaultOrganizationProject(project)}
+                          isDisabled={isDefaultOrganizationProject(project) || !isLocalVaultEnabled}
                           value="local"
                           className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
@@ -267,7 +270,10 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
                     <div className="flex items-center gap-2 text-sm">
                       <Icon icon="info-circle" />
                       <span>
-                        For both project types you can optionally enable Git Sync
+                        {isCloudSyncEnabled && isLocalVaultEnabled ?
+                          'For both project types you can optionally enable Git Sync' :
+                          `The owner of the organization allow only ${isCloudSyncEnabled ? 'Secure Cloud' : 'Local Vault'} project creation. You can optionally enable Git Sync`
+                        }
                       </span>
                     </div>
                     <div className='flex items-center gap-2'>

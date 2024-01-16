@@ -725,6 +725,8 @@ const ProjectRoute: FC = () => {
   }, [createNewProjectFetcher.data, createNewProjectFetcher.state]);
 
   const isGitSyncEnabled = features.gitSync.enabled;
+  const isCloudSyncEnabled = features.cloudSync.enabled;
+  const isLocalVaultEnabled = features.localVault.enabled;
 
   const showUpgradePlanModal = () => {
     if (!organization || !userSession.accountId) {
@@ -971,14 +973,15 @@ const ProjectRoute: FC = () => {
                                     className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                                   />
                                 </TextField>
-                                <RadioGroup name="type" defaultValue="remote" className="flex flex-col gap-2">
+                                <RadioGroup name="type" defaultValue={isCloudSyncEnabled ? 'remote' : 'local'} className="flex flex-col gap-2">
                                   <Label className="text-sm text-[--hl]">
                                     Project type
                                   </Label>
                                   <div className="flex gap-2">
                                     <Radio
+                                      isDisabled={!isCloudSyncEnabled}
                                       value="remote"
-                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
                                       <div className='flex items-center gap-2'>
                                         <Icon icon="globe" />
@@ -989,8 +992,9 @@ const ProjectRoute: FC = () => {
                                       </p>
                                     </Radio>
                                     <Radio
+                                      isDisabled={!isLocalVaultEnabled}
                                       value="local"
-                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
                                       <div className="flex items-center gap-2">
                                         <Icon icon="laptop" />
@@ -1006,7 +1010,10 @@ const ProjectRoute: FC = () => {
                                   <div className="flex items-center gap-2 text-sm">
                                     <Icon icon="info-circle" />
                                     <span>
-                                      For both project types you can optionally enable Git Sync
+                                      {isCloudSyncEnabled && isLocalVaultEnabled ?
+                                        'For both project types you can optionally enable Git Sync' :
+                                        `The owner of the organization allow only ${isCloudSyncEnabled ? 'Secure Cloud' : 'Local Vault'} project creation. You can optionally enable Git Sync`
+                                      }
                                     </span>
                                   </div>
                                   <div className='flex items-center gap-2'>
@@ -1072,7 +1079,7 @@ const ProjectRoute: FC = () => {
                             maxAvatars={3}
                             items={item.presence}
                           />
-                          {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} />}
+                          {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} isCloudSyncEnabled={isCloudSyncEnabled} isLocalVaultEnabled={isLocalVaultEnabled} />}
                         </div>
                       </GridListItem>
                     );
