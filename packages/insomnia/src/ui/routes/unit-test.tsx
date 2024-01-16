@@ -40,6 +40,7 @@ import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { showPrompt } from '../components/modals';
 import { CookiesModal } from '../components/modals/cookies-modal';
+import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TestRunStatus } from './test-results';
@@ -92,6 +93,7 @@ const TestRoute: FC = () => {
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
+  const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
   const createUnitTestSuiteFetcher = useFetcher();
   const deleteUnitTestSuiteFetcher = useFetcher();
@@ -325,6 +327,13 @@ const TestRoute: FC = () => {
               <Icon icon="cookie-bite" className='w-5' />
                 <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
             </Button>
+              <Button
+                onPress={() => setCertificatesModalOpen(true)}
+                className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              >
+                <Icon icon="file-contract" className='w-5' />
+                <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Certificates</span>
+              </Button>
           </div>
             <div className="p-[--padding-sm]">
               <Button
@@ -442,6 +451,9 @@ const TestRoute: FC = () => {
           )}
           {isCookieModalOpen && (
             <CookiesModal onHide={() => setIsCookieModalOpen(false)} />
+          )}
+          {isCertificatesModalOpen && (
+            <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />
           )}
         </ErrorBoundary>
       }

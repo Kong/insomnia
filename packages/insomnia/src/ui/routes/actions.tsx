@@ -1123,8 +1123,10 @@ export const deleteCaCertificateAction: ActionFunction = async ({ params }) => {
 
 export const createNewClientCertificateAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
-  await models.clientCertificate.create(patch);
-  return null;
+  const certificate = await models.clientCertificate.create(patch);
+  return {
+    certificate,
+  };
 };
 
 export const updateClientCertificateAction: ActionFunction = async ({ request }) => {
