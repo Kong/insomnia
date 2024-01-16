@@ -279,6 +279,8 @@ export interface FeatureStatus {
 export interface FeatureList {
   gitSync: FeatureStatus;
   orgBasicRbac: FeatureStatus;
+  cloudSync: FeatureStatus;
+  localVault: FeatureStatus;
 }
 
 export interface Billing {
@@ -292,6 +294,8 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   const fallbackFeatures = {
     gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
+    cloudSync: { enabled: false, reason: 'Insomnia API unreachable' },
+    localVault: { enabled: false, reason: 'Insomnia API unreachable' },
   };
 
   // If network unreachable assume user has paid for the current period
