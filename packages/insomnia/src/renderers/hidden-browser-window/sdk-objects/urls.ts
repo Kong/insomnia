@@ -1,5 +1,3 @@
-import qs from 'qs';
-
 import { Property, PropertyBase, PropertyList } from './base';
 import { Variable, VariableList } from './variables';
 
@@ -48,11 +46,22 @@ import { Variable, VariableList } from './variables';
 // }
 
 let urlParser = URL;
-export function setUrlParser(urlAlternative: any) {
-    urlParser = urlAlternative;
+let UrlSearchParams = URLSearchParams;
+export function setUrlParser(provider: any) {
+    urlParser = provider;
+}
+export function setUrlSearchParams(provider: any) {
+    UrlSearchParams = provider;
+}
+
+export interface QueryParamOptions {
+    key: string;
+    value: string;
 }
 
 export class QueryParam extends Property {
+    _kind: string = 'QueryParam';
+
     key: string;
     value: string;
 
@@ -62,7 +71,6 @@ export class QueryParam extends Property {
         if (typeof options === 'string') {
             try {
                 const optionsObj = JSON.parse(options);
-                // validate key and value fields
                 this.key = optionsObj.key;
                 this.value = optionsObj.value;
             } catch (e) {
@@ -81,38 +89,54 @@ export class QueryParam extends Property {
     // (static) _postman_propertyIndexKey :String
 
     static parse(queryStr: string) {
-        // this may not always be executed in the browser
-        return qs.parse(queryStr);
+        const params = new UrlSearchParams(queryStr);
+        return Array.from(params.entries())
+            .map(entry => ({ key: entry[0], value: entry[1] }));
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    static parseSingle(param: string, _idx?: number, _all?: string[]) {
-        // it seems that _idx and _all are not useful
-        return qs.parse(param);
+    static parseSingle(paramStr: string, _idx?: number, _all?: string[]) {
+        const pairs = QueryParam.parse(paramStr);
+        if (pairs.length === 0) {
+            throw Error('invalid search query string');
+        }
 
+        return pairs[0];
     }
 
-    static unparse(params: object) {
-        return Object.entries(params)
-            .map(entry => `${entry[0]}=${entry[1] || ''}`)
-            .join('&');
+    static unparse(params: QueryParamOptions[] | Record<string, string>) {
+        const searchParams = new UrlSearchParams();
+
+        if (Array.isArray(params)) {
+            params.forEach((entry: QueryParamOptions) => searchParams.append(entry.key, entry.value));
+        } else {
+            Object.entries(params)
+                .forEach(entry => searchParams.append(entry[0], entry[1]));
+        }
+
+        return searchParams.toString();
     }
 
     static unparseSingle(obj: { key: string; value: string }) {
         if ('key' in obj && 'value' in obj) {
-            // TODO: validate and unescape
-            return `${obj.key}=${obj.value}`;
+            const params = new UrlSearchParams();
+            params.append(obj.key, obj.value);
+
+            return params.toString();
         }
         return {};
     }
 
     toString() {
-        return `${this.key}=${this.value}`; // validate key, value contains '='
+        const params = new UrlSearchParams();
+        params.append(this.key, this.value);
+
+        return params.toString();
     }
 
     update(param: string | { key: string; value: string }) {
         if (typeof param === 'string') {
-            const paramObj = QueryParam.parse(param);
+            const paramObj = QueryParam.parseSingle(param);
             this.key = typeof paramObj.key === 'string' ? paramObj.key : '';
             this.value = typeof paramObj.value === 'string' ? paramObj.value : '';
         } else if ('key' in param && 'value' in param) {
@@ -124,77 +148,81 @@ export class QueryParam extends Property {
     }
 }
 
-export interface UrlObject {
-    auth: {
+export interface UrlOptions {
+    auth?: {
         username: string;
         password: string;
-    } | undefined;
-    hash: string;
+    };
+    hash?: string;
     host: string[];
-    path: string[];
-    port: string;
+    path?: string[];
+    port?: string;
     protocol: string;
     query: { key: string; value: string }[];
     variables: { key: string; value: string }[];
 }
 
+// export interface UrlOptions {
+//     auth?: { username: string; password: string };
+//     hash?: string;
+//     host: string[];
+//     path?: string[];
+//     port?: string;
+//     protocol: string;
+//     query: PropertyList<QueryParam>;
+//     variables: VariableList<Variable>; // TODO: basically it is not supported now
+// }
+
 export class Url extends PropertyBase {
     _kind: string = 'Url';
 
+    // TODO: should be related to RequestAuth
+    // but the implementation seems only supports username + password
     auth?: { username: string; password: string };
     hash?: string;
-    host: string[];
-    path?: string[];
+    host: string[] = [];
+    path?: string[] = [];
     port?: string;
     protocol?: string;
-    query: PropertyList<QueryParam>;
-    variables: VariableList<Variable>;
+    query: PropertyList<QueryParam> = new PropertyList<QueryParam>([]);
+    variables: VariableList<Variable> = new VariableList<Variable>(undefined, []);
 
-    // TODO: user could pass anything
     constructor(
-        def: {
-            auth?: { username: string; password: string }; // TODO: should be related to RequestAuth
-            hash?: string;
-            host: string[];
-            path?: string[];
-            port?: string;
-            protocol: string;
-            query: PropertyList<QueryParam>;
-            variables: VariableList<Variable>;
-        } | string
+        def: UrlOptions | string
     ) {
         super({});
+        this.setFields(def);
+    }
 
-        if (typeof def === 'string') {
-            const urlObj = Url.parse(def);
+    private setFields(def: UrlOptions | string) {
+        const urlObj = typeof def === 'string' ? Url.parse(def) : def;
 
-            if (urlObj) {
-                this.auth = urlObj.auth;
-                this.hash = urlObj.hash;
-                this.host = urlObj.host;
-                this.path = urlObj.path;
-                this.port = urlObj.port;
-                this.protocol = urlObj.protocol;
+        if (urlObj) {
+            this.auth = urlObj.auth;
+            this.hash = urlObj.hash;
+            this.host = urlObj.host;
+            this.path = urlObj.path;
+            this.port = urlObj.port;
+            this.protocol = urlObj.protocol;
 
-                const queryList = urlObj.query ? urlObj.query.map(kvObj => new QueryParam(kvObj)) : [];
-                this.query = new PropertyList<QueryParam>(queryList);
-                const varList = urlObj.variables ?
-                    urlObj.variables
-                        .map((kvObj: { key: string; value: string }) => new Variable(kvObj)) :
-                    [];
-                this.variables = new VariableList(undefined, varList);
-            } else {
-                throw Error(`url is invalid: ${def}`); // TODO:
-            }
+            const queryList = urlObj.query ?
+                urlObj.query.map(kvObj => new QueryParam(kvObj), {}) :
+                [];
+            this.query = new PropertyList<QueryParam>(queryList);
+
+            // TODO: variable is always empty in this way
+            const varList = urlObj.variables ?
+                urlObj.variables
+                    .map(
+                        (kvObj: { key: string; value: string }) => new Variable(kvObj),
+                        {},
+                    ) :
+                [];
+
+            this.variables = new VariableList(undefined, varList);
+
         } else {
-            this.auth = def.auth ? { username: def.auth.username, password: def.auth.password } : undefined;
-            this.hash = def.hash ? def.hash : '';
-            this.host = def.host;
-            this.path = def.path ? def.path : [];
-            this.port = def.port ? def.port : '';
-            this.protocol = def.protocol ? def.protocol : '';
-            this.query = def.query ? def.query : new PropertyList<QueryParam>([]);
-            this.variables = def.variables ? def.variables : new VariableList(undefined, new Array<Variable>());
+            throw Error(`url is invalid: ${def}`); // TODO:
         }
     }
 
@@ -202,7 +230,7 @@ export class Url extends PropertyBase {
         return '_kind' in obj && obj._kind === 'Url';
     }
 
-    static parse(urlStr: string): UrlObject | undefined {
+    static parse(urlStr: string): UrlOptions | undefined {
         if (!urlParser.canParse(urlStr)) {
             console.error(`invalid URL string ${urlStr}`);
             return undefined;
@@ -244,44 +272,45 @@ export class Url extends PropertyBase {
     }
 
     getHost() {
-        return this.host.join('/');
+        return this.host.join('.').toLowerCase();
     }
 
     getPath(unresolved?: boolean) {
-        const path = this.path ? this.path.join('/') : '';
+        const pathStr = this.path ? this.path.join('/') : '/';
+        const finalPath = pathStr.startsWith('/') ? pathStr : '/' + pathStr;
 
         if (unresolved) {
-            return '/' + path;
+            return finalPath;
         }
-        // TODO: handle variables
-        return path;
+
+        // TODO: should it support rendering variables here?
+        return finalPath;
     }
 
     getPathWithQuery() {
-        const path = this.path ? this.path.join('/') : '';
-        const pathHasPrefix = path.startsWith('/') ? path : '/' + path;
-
-        const query = this.query
-            .map(param => `${param.key}=${param.value}`, {})
-            .join('&');
-
-        return `${pathHasPrefix}?${query}`;
+        return `${this.getPath(true)}?${this.getQueryString()}`;
     }
 
     getQueryString() {
-        return this.query
-            .map(queryParam => (`${queryParam.key}=${queryParam.key}`), {})
-            .join('&');
+        const params = new UrlSearchParams();
+        this.query.each(param => params.append(param.key, param.value), {});
+
+        return params.toString();
     }
 
-    // TODO:
     getRemote(forcePort?: boolean) {
-        const host = this.host.join('/');
+        const host = this.getHost();
+
         if (forcePort) {
-            const port = this.protocol && (this.protocol === 'https:') ? 443 : 80; // TODO: support ws, gql, grpc
+            // TODO: it does not support GQL, gRPC and so on
+            const port = this.port ? this.port :
+                this.protocol && (this.protocol === 'https:') ? 443 : 80;
             return `${host}:${port}`;
         }
-        return this.port ? `${host}:${this.port}` : `${host}`;
+
+        // TODO: it does not support GQL, gRPC and so on
+        const portWithColon = this.port ? `:${this.port}` : '';
+        return `${host}${portWithColon}`;
     }
 
     removeQueryParams(params: QueryParam[] | string[] | string) {
@@ -313,98 +342,24 @@ export class Url extends PropertyBase {
     }
 
     toString(forceProtocol?: boolean) {
-        const queryStr = this.query
-            .map(param => `${param.key}=${param.value}`, {})
-            .join('&');
+        const protocol = forceProtocol ?
+            (this.protocol ? this.protocol : 'https:') :
+            (this.protocol ? this.protocol : '');
 
-        const auth = this.auth ? `${this.auth.username}:${this.auth.password}@` : '';
-        if (forceProtocol) {
-            return `${this.protocol}//${auth}${this.host}:${this.port}${this.path}?${queryStr}#${this.hash}`; // TODO: improve auth
-        }
-        return `${auth}${this.host}:${this.port}${this.path}?${queryStr}#${this.hash}`;
+        const parser = new urlParser(`${protocol}//` + this.getHost());
+        parser.username = this.auth?.username || '';
+        parser.password = this.auth?.password || '';
+        parser.port = this.port || '';
+        parser.pathname = this.getPath();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        parser.search = this.getQueryString();
+        parser.hash = this.hash || '';
+
+        return parser.toString();
     }
 
-    update(url: string | object) {
-        // user could pass anything in script
-
-        if (typeof url === 'string') {
-            const urlObj = Url.parse(url);
-            if (urlObj) {
-                this.auth = urlObj.auth ? {
-                    username: urlObj.auth.username,
-                    password: urlObj.auth.password,
-                } : {
-                    username: '',
-                    password: '',
-                };
-                this.hash = urlObj.hash ? urlObj.hash : '';
-                this.host = urlObj.host ? urlObj.host : [];
-                this.path = urlObj.path ? urlObj.path : [];
-                this.port = urlObj.port ? urlObj.port : '';
-                this.protocol = urlObj.protocol ? urlObj.protocol : '';
-                this.query = urlObj.query ?
-                    new PropertyList(urlObj.query.map(kv => new QueryParam(kv))) :
-                    new PropertyList<QueryParam>([]);
-                // TODO: update variables
-                // this.variables = new VariableList(undefined, new Array<Variable>());
-            } else {
-                throw Error(`failed to parse url: ${url}`);
-            }
-        } else {
-            if ('auth' in url && typeof url.auth === 'object' && url.auth) {
-                if ('username' in url.auth
-                    && typeof url.auth.username === 'string'
-                    && 'password' in url.auth
-                    && typeof url.auth.password === 'string'
-                ) {
-                    this.auth = { username: url.auth.username, password: url.auth.password };
-                } else {
-                    console.error('the auth field must have "username" and "password" fields');
-                }
-            }
-
-            if ('hash' in url && typeof url.hash === 'string') {
-                this.hash = url.hash;
-            } else {
-                this.hash = '';
-            }
-
-            if ('host' in url && Array.isArray(url.host)) {
-                const isStringArray = url.host.length > 0 ? typeof url.host[0] === 'string' : true;
-                if (isStringArray) {
-                    this.host = url.host;
-                } else {
-                    console.error('type of "host" is invalid');
-                }
-            } else {
-                this.host = [];
-            }
-
-            if ('path' in url && Array.isArray(url.path)) {
-                const isStringArray = url.path.length > 0 ? typeof url.path[0] === 'string' : true;
-                if (isStringArray) {
-                    this.path = url.path;
-                } else {
-                    console.error('type of "path" is invalid');
-                }
-            } else {
-                this.path = [];
-            }
-
-            this.port = 'port' in url && url.port && typeof url.port === 'string' ? url.port : '';
-            this.protocol = 'protocol' in url && url.protocol && typeof url.protocol === 'string' ? url.protocol : '';
-
-            if ('query' in url && Array.isArray(url.query)) {
-                const queryParams = url.query
-                    .filter(obj => 'key' in obj && 'value' in obj)
-                    .map(kv => new QueryParam(kv));
-
-                this.query = new PropertyList(queryParams);
-            }
-
-            // TODO: update variables
-            // this.variables = new VariableList(undefined, new Array<Variable>());
-        }
+    update(url: UrlOptions | string) {
+        this.setFields(url);
     }
 }
 
@@ -436,19 +391,19 @@ export class UrlMatchPattern extends Property {
 
         const patternObj = UrlMatchPattern.parseAndValidate(pattern);
         this.scheme = patternObj.scheme;
-        this.host = patternObj.host.join('/');
-        this.path = patternObj.path.join('/');
+        this.host = patternObj.host;
+        this.path = patternObj.path;
         this.port = patternObj.port;
     }
 
     static parseAndValidate(pattern: string): {
         scheme: 'http:' | 'https:' | '*' | 'file:';
-        host: string[];
-        path: string[];
+        host: string;
+        path: string;
         port: string;
     } {
         // TODO: validate the pattern
-        const urlObj = Url.parse(pattern);
+        const urlObj = new Url(pattern);
 
         if (!urlObj || urlObj.host.length === 0) {
             throw Error(`match pattern (${pattern}) is invalid and failed to parse`);
@@ -458,7 +413,12 @@ export class UrlMatchPattern extends Property {
             throw Error(`scheme (${urlObj.protocol}) is invalid and failed to parse`);
         }
 
-        return { scheme: urlObj.protocol, host: urlObj.host, path: urlObj.path, port: `${urlObj.port}` };
+        return {
+            scheme: urlObj.protocol,
+            host: urlObj.getHost(),
+            path: urlObj.getPath() || '/',
+            port: urlObj.port || '',
+        };
     }
 
     static readonly MATCH_ALL_URLS: string = '<all_urls>';
@@ -491,8 +451,8 @@ export class UrlMatchPattern extends Property {
 
         return this.testProtocol(urlObj.protocol)
             && this.testHost(urlObj.host.join('/'))
-            && this.testPort(urlObj.port, urlObj.protocol)
-            && this.testPath(urlObj.path.join('/'));
+            && this.testPort(urlObj.port || '', urlObj.protocol)
+            && urlObj?.path && this.testPath(urlObj.path.join('/'));
     }
 
     testHost(host: string) {
