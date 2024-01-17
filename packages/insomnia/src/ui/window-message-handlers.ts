@@ -166,7 +166,3 @@ export async function runPreRequestScript(
 
     return promise;
 };
-
-// export function getWindowMessageHandler() {
-//     return windowMessageHandler;
-// }
