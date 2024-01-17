@@ -208,6 +208,72 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
+const ClientCertificateGridListItem = ({ certificate }: {
+  certificate: {
+    id: string;
+    key: string;
+    certificateKey: string;
+    _id: string;
+    type: string;
+    parentId: string;
+    modified: number;
+    created: number;
+    isPrivate: boolean;
+    name: string;
+    host: string;
+    passphrase: string | null;
+    cert: string | null;
+    pfx: string | null;
+    disabled: boolean;
+  };
+}) => {
+  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const updateClientCertificateFetcher = useFetcher();
+  const deleteClientCertificateFetcher = useFetcher();
+
+  return (
+    <GridListItem className="outline-none flex gap-2 pl-2 items-center justify-between p-1 ring-inset focus:ring-1 focus:ring-[--hl-md]">
+      <Icon icon={certificate.isPrivate ? 'lock' : 'refresh'} className='w-4' />
+      <div className='flex-1 text-sm text-[--color-font]'>{certificate.host}</div>
+      <div className='flex items-center gap-2 h-6'>
+        <ToggleButton
+          onChange={isSelected => {
+            updateClientCertificateFetcher.submit({ ...certificate, disabled: !isSelected }, {
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/update`,
+              method: 'post',
+              encType: 'application/json',
+            });
+          }}
+          isSelected={!certificate.disabled}
+          className="w-[12ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        >
+          {({ isSelected }) => (
+            <Fragment>
+              <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
+              <span>{
+                isSelected ? 'Enabled' : 'Disabled'
+              }</span>
+            </Fragment>
+          )}
+        </ToggleButton>
+        <Button
+          isDisabled={deleteClientCertificateFetcher.state !== 'idle'}
+          onPress={() => {
+            deleteClientCertificateFetcher.submit(certificate, {
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/delete`,
+              method: 'delete',
+              encType: 'application/json',
+            });
+          }}
+          className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        >
+          <Icon icon="trash" />
+        </Button>
+      </div>
+    </GridListItem>
+  );
+};
+
 export const CertificatesModal = ({ onClose }: {
   onClose: () => void;
 }) => {
@@ -223,15 +289,10 @@ export const CertificatesModal = ({ onClose }: {
   const deleteCertificateFetcher = useFetcher();
   const updateCertificateFetcher = useFetcher();
 
-  const updateClientCertificateFetcher = useFetcher();
-  const deleteClientCertificateFetcher = useFetcher();
-
   const {
     caCertificate,
     clientCertificates,
   } = routeData;
-
-  console.log({ caCertificate, clientCertificates });
 
   if (!workspaceId) {
     return null;
@@ -299,6 +360,7 @@ export const CertificatesModal = ({ onClose }: {
                         )}
                       </ToggleButton>
                       <Button
+                        isDisabled={deleteCertificateFetcher.state !== 'idle'}
                         onPress={() => {
                           deleteCertificateFetcher.submit({}, {
                             action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/delete`,
@@ -366,48 +428,7 @@ export const CertificatesModal = ({ onClose }: {
                     certificateKey: cert._id,
                   }))}
                 >
-                  {item => {
-                    return (
-                      <GridListItem className="outline-none flex gap-2 pl-2 items-center justify-between p-1 ring-inset focus:ring-1 focus:ring-[--hl-md]">
-                        <Icon icon={item.isPrivate ? 'lock' : 'refresh'} className='w-4' />
-                        <div className='flex-1 text-sm text-[--color-font]'>{item.host}</div>
-                        <div className='flex items-center gap-2 h-6'>
-                          <ToggleButton
-                            onChange={isSelected => {
-                              updateClientCertificateFetcher.submit({ ...item, disabled: !isSelected }, {
-                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/update`,
-                                method: 'post',
-                                encType: 'application/json',
-                              });
-                            }}
-                            isSelected={!item.disabled}
-                            className="w-[12ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                          >
-                            {({ isSelected }) => (
-                              <Fragment>
-                                <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
-                                <span>{
-                                  isSelected ? 'Enabled' : 'Disabled'
-                                }</span>
-                              </Fragment>
-                            )}
-                          </ToggleButton>
-                          <Button
-                            onPress={() => {
-                              deleteClientCertificateFetcher.submit(item, {
-                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/delete`,
-                                method: 'delete',
-                                encType: 'application/json',
-                              });
-                            }}
-                            className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                          >
-                            <Icon icon="trash" />
-                          </Button>
-                        </div>
-                      </GridListItem>
-                    );
-                  }}
+                  {item => <ClientCertificateGridListItem certificate={item} />}
                 </GridList>
               </div>
               <div className='flex items-center gap-2 justify-end'>
