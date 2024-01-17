@@ -341,7 +341,7 @@ export const CertificatesModal = ({ onClose }: {
                 {caCertificate ? (
                   <div className='flex gap-2 pl-2 items-center justify-between rounded-sm border border-solid border-[--hl-sm] p-1'>
                     <Icon icon="file-contract" className='w-4' />
-                    <div className='flex-1 text-sm text-[--color-font] truncate' title={caCertificate.path || ''}>{caCertificate.path}</div>
+                    <div className='flex-1 text-sm text-[--color-font] truncate' title={caCertificate.path || ''}>{caCertificate?.path?.split('\\')?.pop()?.split('/')?.pop()}</div>
                     <div className='flex items-center gap-2 h-6'>
                       <ToggleButton
                         onChange={isSelected => {
