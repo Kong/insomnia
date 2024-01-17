@@ -161,6 +161,8 @@ export const Debug: FC = () => {
     activeProject,
     activeEnvironment,
     activeCookieJar,
+    caCertificate,
+    clientCertificates,
     grpcRequests,
     subEnvironments,
     baseEnvironment,
@@ -788,7 +790,7 @@ export const Debug: FC = () => {
               className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             >
               <Icon icon="file-contract" className='w-5' />
-              <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Certificates</span>
+              <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates</span>
             </Button>
           </div>
 
