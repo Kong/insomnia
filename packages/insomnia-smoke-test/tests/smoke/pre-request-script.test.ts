@@ -3,20 +3,6 @@ import { ScriptError } from 'insomnia/src/ui/window-message-handlers';
 
 import { test } from '../../playwright/test';
 
-async function waitForTrue(timeout: number, func: () => Promise<boolean>) {
-  const pollInterval = 500;
-
-  for (let i = 0; i < timeout / pollInterval; i++) {
-    const ready = await func();
-
-    if (ready) {
-      break;
-    } else {
-      await new Promise(resolve => setTimeout(resolve, pollInterval));
-    }
-  }
-}
-
 async function runTests(testCases: {
   id: string;
   code: string;
@@ -58,30 +44,29 @@ async function runTests(testCases: {
       );
 
       // verify
-      let localStorage;
+      await mainWindow.waitForFunction(
+        args => {
+          return window.localStorage[args.resultKey] != null || window.localStorage[args.errorKey] != null;
+        },
+        {
+          resultKey: `test_result:${tc.id}`,
+          errorKey: `test_error:${tc.id}`,
+        }
+      );
 
-      await waitForTrue(60000, async () => {
-        localStorage = await mainWindow?.evaluate(() => window.localStorage);
-        expect(localStorage).toBeDefined();
-
-        return localStorage[`test_result:${tc.id}`] || localStorage[`test_error:${tc.id}`];
-      });
-
+      const localStorage = await mainWindow?.evaluate(() => window.localStorage);
       expect(localStorage).toBeDefined(); // or no output is found
 
-      if (localStorage) { // just for suppressing ts complaint
-        const result = localStorage[`test_result:${tc.id}`];
-        const error = localStorage[`test_error:${tc.id}`];
+      const result = localStorage[`test_result:${tc.id}`];
+      const error = localStorage[`test_error:${tc.id}`];
 
-        if (result) {
-          expect(JSON.parse(result)).toEqual(tc.expectedResult);
-        } else {
-          const scriptError = JSON.parse(error) as ScriptError;
-          expect(scriptError.message).toEqual(tc.expectedResult.message);
-          // TODO: stack field is not checked as its content is complex
-        }
+      if (result) {
+        expect(JSON.parse(result)).toEqual(tc.expectedResult);
+      } else {
+        const scriptError = JSON.parse(error) as ScriptError;
+        expect(scriptError.message).toEqual(tc.expectedResult.message);
+      // TODO: stack field is not checked as its content is complex
       }
-
     });
   }
 }
