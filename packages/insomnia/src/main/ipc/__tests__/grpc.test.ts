@@ -46,7 +46,11 @@ describe('loadMethodsFromReflection', () => {
     });
 
     it('parses methods', async () => {
-      const methods = await loadMethodsFromReflection({ url: 'foo.com', metadata: [], bufReflectionApi: { enabled: false, apiKey: '', url: '', module: '' } });
+      const methods = await loadMethodsFromReflection({
+        url: "foo.com",
+        metadata: [],
+        reflectionApi: { enabled: false, apiKey: "", url: "", module: "" },
+      });
       expect(methods).toStrictEqual([{
         type: 'unary',
         fullPath: '/FooService/Foo',
@@ -84,7 +88,11 @@ describe('loadMethodsFromReflection', () => {
     });
 
     it('parses methods', async () => {
-      const methods = await loadMethodsFromReflection({ url: 'foo.com', metadata: [], bufReflectionApi: { enabled: false, apiKey: '', url: '', module: '' } });
+      const methods = await loadMethodsFromReflection({
+        url: "foo.com",
+        metadata: [],
+        reflectionApi: { enabled: false, apiKey: "", url: "", module: "" },
+      });
       expect(methods).toStrictEqual([{
         type: 'unary',
         fullPath: '/FooService/format',
@@ -134,7 +142,11 @@ describe('loadMethodsFromReflection', () => {
     });
 
     it('parses methods', async () => {
-      const methods = await loadMethodsFromReflection({ url: 'foo-bar.com', metadata: [], bufReflectionApi: { enabled: false, apiKey: '', url: '', module: '' } });
+      const methods = await loadMethodsFromReflection({
+        url: "foo-bar.com",
+        metadata: [],
+        reflectionApi: { enabled: false, apiKey: "", url: "", module: "" },
+      });
       expect(methods).toStrictEqual([{
         type: 'unary',
         fullPath: '/FooService/Foo',
@@ -183,13 +195,13 @@ describe('loadMethodsFromReflection', () => {
         }
       );
       const methods = await loadMethodsFromReflection({
-        url: 'foo.com',
+        url: "foo.com",
         metadata: [],
-        bufReflectionApi: {
+        reflectionApi: {
           enabled: true,
-          apiKey: 'TEST_KEY',
-          url: 'https://buf.build',
-          module: 'buf.build/connectrpc/eliza',
+          apiKey: "TEST_KEY",
+          url: "https://buf.build",
+          module: "buf.build/connectrpc/eliza",
         },
       });
       expect(methods).toStrictEqual(

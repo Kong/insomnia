@@ -76,10 +76,11 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
     if (!isGrpcRequest(request)) {
       throw new Error('Must be a gRPC request');
     }
+    const property = event.currentTarget.name.replace("reflectionApi.", "");
     patchRequest(request._id, {
-      bufReflectionApi: {
-        ...request.bufReflectionApi,
-        [event.currentTarget.name]: event.currentTarget.value,
+      reflectionApi: {
+        ...request.reflectionApi,
+        [property]: event.currentTarget.value,
       },
     });
   };
@@ -215,7 +216,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
               </>)}
             {request && isGrpcRequest(request) && (
               <>
-                  <div className="form-control form-control--thin">
+                  <div className="form-control form-control--thin pad-top-sm">
                     <label>
                       Use the Buf Schema Registry API
                       <a href="https://buf.build/docs/bsr/reflection/overview" className="pad-left-sm">
@@ -223,11 +224,11 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                       </a>
                       <input
                         type="checkbox"
-                        name="bufReflectionApi"
-                        checked={request.bufReflectionApi.enabled}
+                        name="reflectionApi"
+                        checked={request.reflectionApi.enabled}
                         onChange={event => patchRequest(request._id, {
-                          bufReflectionApi: {
-                            ...request.bufReflectionApi,
+                          reflectionApi: {
+                            ...request.reflectionApi,
                             enabled: event.currentTarget.checked,
                           },
                         })}
@@ -235,7 +236,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                     </label>
                   </div>
                   <div className="form-row pad-top-sm">
-                    { request.bufReflectionApi.enabled && (
+                    { request.reflectionApi.enabled && (
                         <>
                           <div className="form-control form-control--outlined">
                             <label>
@@ -245,11 +246,11 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                               </a>
                               <input
                                 type="text"
-                                name="bsrUrl"
+                                name="reflectionApi.url"
                                 placeholder="https://buf.build"
-                                value={request.bufReflectionApi.url}
+                                value={request.reflectionApi.url}
                                 onChange={updateReflectonApi}
-                                disabled={!request.bufReflectionApi.enabled}
+                                disabled={!request.reflectionApi.enabled}
                               />
                             </label>
                           </div>
@@ -261,10 +262,10 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                               </a>
                             <input
                               type="password"
-                              name="bsrApiKey"
-                              value={request.bufReflectionApi.apiKey}
+                              name="reflectionApi.apiKey"
+                              value={request.reflectionApi.apiKey}
                               onChange={updateReflectonApi}
-                              disabled={!request.bufReflectionApi.enabled}
+                              disabled={!request.reflectionApi.enabled}
                             />
                             </label>
                           </div>
@@ -276,11 +277,11 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                               </a>
                               <input
                                 type="text"
-                                name="bsrModule"
+                                name="reflectionApi.module"
                                 placeholder="buf.build/connectrpc/eliza"
-                                value={request.bufReflectionApi.module}
+                                value={request.reflectionApi.module}
                                 onChange={updateReflectonApi}
-                                disabled={!request.bufReflectionApi.enabled}
+                                disabled={!request.reflectionApi.enabled}
                               />
                             </label>
                           </div>
