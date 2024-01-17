@@ -70,6 +70,7 @@ import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { PasteCurlModal } from '../components/modals/paste-curl-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
+import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { GrpcRequestPane } from '../components/panes/grpc-request-pane';
 import { GrpcResponsePane } from '../components/panes/grpc-response-pane';
@@ -160,6 +161,8 @@ export const Debug: FC = () => {
     activeProject,
     activeEnvironment,
     activeCookieJar,
+    caCertificate,
+    clientCertificates,
     grpcRequests,
     subEnvironments,
     baseEnvironment,
@@ -192,6 +195,7 @@ export const Debug: FC = () => {
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
     useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
+  const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
   const patchRequest = useRequestPatcher();
   const patchGroup = useRequestGroupPatcher();
@@ -781,6 +785,13 @@ export const Debug: FC = () => {
               <Icon icon="cookie-bite" className='w-5' />
               <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
             </Button>
+            <Button
+              onPress={() => setCertificatesModalOpen(true)}
+              className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            >
+              <Icon icon="file-contract" className='w-5' />
+              <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates</span>
+            </Button>
           </div>
 
           <div className="flex flex-col flex-1 overflow-hidden">
@@ -1131,6 +1142,9 @@ export const Debug: FC = () => {
           )}
           {isCookieModalOpen && (
             <CookiesModal onHide={() => setIsCookieModalOpen(false)} />
+          )}
+          {isCertificatesModalOpen && (
+            <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />
           )}
           {isPasteCurlModalOpen && (
             <PasteCurlModal

@@ -61,6 +61,7 @@ import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dr
 import { Icon } from '../components/icon';
 import { InsomniaAI } from '../components/insomnia-ai-icon';
 import { CookiesModal } from '../components/modals/cookies-modal';
+import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { formatMethodName } from '../components/tags/method-tag';
@@ -205,6 +206,8 @@ const Design: FC = () => {
     activeProject,
     activeEnvironment,
     activeCookieJar,
+    caCertificate,
+    clientCertificates,
     subEnvironments,
     baseEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
@@ -217,6 +220,7 @@ const Design: FC = () => {
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
+  const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
   const { apiSpec, lintMessages, rulesetPath, parsedSpec } = useLoaderData() as LoaderData;
 
@@ -536,6 +540,13 @@ const Design: FC = () => {
             >
               <Icon icon="cookie-bite" className='w-5' />
               <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
+            </Button>
+            <Button
+              onPress={() => setCertificatesModalOpen(true)}
+              className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            >
+              <Icon icon="file-contract" className='w-5' />
+              <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates</span>
             </Button>
           </div>
           <div className="flex flex-shrink-0 items-center gap-2 p-[--padding-sm]">
@@ -1019,6 +1030,9 @@ const Design: FC = () => {
           )}
           {isCookieModalOpen && (
             <CookiesModal onHide={() => setIsCookieModalOpen(false)} />
+          )}
+          {isCertificatesModalOpen && (
+            <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />
           )}
         </div>
       }
