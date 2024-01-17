@@ -1122,10 +1122,6 @@ option {
 textarea.no-resize {
   resize: none;
 }
-input[type='color'] {
-  height: var(--line-height-xs) !important;
-  padding: var(--padding-xxs) !important;
-}
 label {
   position: relative;
   z-index: 1;

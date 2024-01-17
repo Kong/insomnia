@@ -36,6 +36,21 @@ html {
 input[type="search"]::-webkit-search-cancel-button {
   display: none;
 }
+
+input[type="color"] {
+	-webkit-appearance: none;
+	border: none;
+	width: 12px;
+	height: 12px;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+	border-radius: 9999px;
+  border: none;
+}
+
 .new-sidebar {
   z-index: 0;
 }

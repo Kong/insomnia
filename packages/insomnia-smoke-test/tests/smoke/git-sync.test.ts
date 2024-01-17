@@ -2,7 +2,7 @@ import { test } from '../../playwright/test';
 test('Clone from github', async ({ page }) => {
   await page.getByLabel('Clone git repository').click();
   await page.getByRole('tab', { name: ' Git' }).click();
-  await page.getByPlaceholder('https://github.com/org/repo.git').fill('https://github.com/gatzjames/insomnia-git-example.git');
+  await page.getByPlaceholder('https://github.com/org/repo.git').fill('https://github.com/jackkav/insomnia-git-example.git');
   await page.getByPlaceholder('Name').fill('J');
   await page.getByPlaceholder('Email').fill('J');
   await page.getByPlaceholder('MyUser').fill('J');

@@ -19,9 +19,12 @@ test.describe('Environment Editor', async () => {
     // await page.getByLabel("Select an environment").click();
     await page.getByLabel('Manage Environments').click();
     await page.getByTestId('CreateEnvironmentDropdown').click();
-    await page.getByRole('menuitem', { name: 'Environment', exact: true }).click();
-    await page.getByRole('option', { name: 'New Environment' }).click();
+    await page.getByRole('menuitemradio', { name: 'Shared Environment' }).press('Enter');
+    await page.getByRole('row', { name: 'New Environment' }).click();
     await page.getByRole('button', { name: 'Close' }).click();
+
+    await page.getByRole('button', { name: 'Select an environment' }).press('Enter');
+    await page.getByRole('option', { name: 'New Environment' }).press('Enter');
 
     // Send a request check variables defaulted to base env since new env is empty
     await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
@@ -33,12 +36,16 @@ test.describe('Environment Editor', async () => {
 
   // rename an existing environment
   test('Rename an existing environment', async ({ page }) => {
-    // Rename the environment (which will make it active)
+    // Rename the environment
     await page.getByLabel('Manage Environments').click();
-    await page.getByRole('option', { name: 'ExampleB' }).click();
-    await page.getByTitle('Click to edit', { exact: true }).click();
-    await page.getByRole('dialog').locator('input[type="text"]').fill('Gandalf');
+    await page.getByRole('row', { name: 'ExampleB' }).getByRole('button', { name: 'name' }).dblclick();
+    await page.getByRole('row', { name: 'ExampleB' }).locator('input').fill('Gandalf');
+    await page.getByRole('row', { name: 'ExampleB' }).locator('input').press('Enter');
+
     await page.getByRole('button', { name: 'Close' }).click();
+
+    await page.getByRole('button', { name: 'Select an environment' }).press('Enter');
+    await page.getByRole('option', { name: 'Gandalf' }).press('Enter');
 
     // Send a request check variables defaulted to base env since new env is empty
     await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
@@ -57,7 +64,8 @@ test.describe('Environment Editor', async () => {
     await page.getByTestId('CodeEditor').getByRole('textbox').fill('"testNumber":9000,');
     await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
     await page.getByTestId('CodeEditor').getByRole('textbox').fill('"testString":"Gandalf",');
-    await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
+    // Let debounce finish
+    await page.waitForTimeout(1500);
 
     // Open request
     await page.getByRole('button', { name: 'Close' }).click();

@@ -185,6 +185,9 @@ export const jsonPrettify = (json?: string | Object, indentChars = '\t', replace
 };
 
 const repeatString = (str: string, count: number) => {
+  if (count < 0) {
+    return '';
+  };
   return new Array(count + 1).join(str);
 };
 
