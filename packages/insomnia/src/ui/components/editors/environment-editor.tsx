@@ -58,6 +58,7 @@ export interface EnvironmentInfo {
 interface Props {
   environmentInfo: EnvironmentInfo;
   onBlur?: () => void;
+  onChange?: (value: EnvironmentInfo) => void;
 }
 
 export interface EnvironmentEditorHandle {
@@ -68,6 +69,7 @@ export interface EnvironmentEditorHandle {
 export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(({
   environmentInfo,
   onBlur,
+  onChange,
 }, ref) => {
   const editorRef = useRef<CodeEditorHandle>(null);
   const [error, setError] = useState('');
@@ -115,6 +117,8 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(({
               const err = checkNestedKeys(value.object);
               if (err) {
                 setError(err);
+              } else {
+                onChange?.(value);
               }
             }
           } catch (err) {

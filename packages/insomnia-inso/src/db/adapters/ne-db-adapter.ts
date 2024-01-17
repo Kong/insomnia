@@ -1,6 +1,6 @@
 import { stat } from 'node:fs/promises';
 
-import NeDB from 'nedb';
+import NeDB from '@seald-io/nedb';
 import path from 'path';
 
 import { UNKNOWN, UNKNOWN_OBJ } from '../../types';

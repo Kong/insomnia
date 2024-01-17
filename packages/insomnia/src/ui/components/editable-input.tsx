@@ -24,19 +24,16 @@ export const EditableInput = ({
       return;
     }
 
-    const keysToLock = [
-      'ArrowLeft',
-      'ArrowRight',
-      'ArrowUp',
-      'ArrowDown',
-      'Tab',
-      ' ',
+    const keysToIgnore = [
+      'Enter',
+      'Escape',
     ];
 
     function lockKeyDownToInput(e: KeyboardEvent) {
-      if (keysToLock.includes(e.key)) {
-        e.stopPropagation();
+      if (keysToIgnore.includes(e.key)) {
+        return;
       }
+      e.stopPropagation();
     }
 
     window.addEventListener('keydown', lockKeyDownToInput, { capture: true });

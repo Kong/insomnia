@@ -19,6 +19,7 @@ import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { HelpTooltip } from '../help-tooltip';
+import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
 import { PasswordViewer } from '../viewers/password-viewer';
 
@@ -314,7 +315,7 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
                       <label>
                         CA Certificate
                         <HelpTooltip position="right" className="space-left">
-                          One or more PEM format certificates in a single file to pass to curl. Overrides the root CA certificate and macOS keychain.
+                          One or more PEM format certificates in a single file to pass to curl. Overrides the root CA certificate.
                         </HelpTooltip>
                       </label>
                       <div className="row-spaced">
@@ -351,6 +352,10 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
                           </PromptButton>
                         </div>
                       </div>
+                      <p className="text-sm text-[--hl] italic">
+                        <Icon icon='info-circle' className='pr-2' />
+                        On MacOS please upload the local Keychain certificates here
+                      </p>
                     </div>
                   </PanelContainer>,
                 },

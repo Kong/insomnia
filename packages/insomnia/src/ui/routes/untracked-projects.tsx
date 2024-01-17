@@ -6,7 +6,7 @@ import { Project } from '../../models/project';
 import { Workspace } from '../../models/workspace';
 import { organizationsData } from './organization';
 
-export interface LoaderData {
+export interface UntrackedProjectsLoaderData {
   untrackedProjects: (Project & { workspacesCount: number })[];
   untrackedWorkspaces: Workspace[];
 }
