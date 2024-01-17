@@ -110,7 +110,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                         >
                           <Button className="flex flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
                             {!pfxPath && <Icon icon="plus" />}
-                            <span className="truncate">{pfxPath ? pfxPath : 'Add PFX or PKCS12 file'}</span>
+                            <span className='truncate' title={pfxPath}>{pfxPath ? pfxPath : 'Add PFX or PKCS12 file'}</span>
                           </Button>
                         </FileTrigger>
                         <Input
@@ -139,7 +139,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                         >
                           <Button className="flex flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
                             {!certificatePath && <Icon icon="plus" />}
-                            <span className='truncate'>{certificatePath ? certificatePath : 'Add certificate file'}</span>
+                            <span className='truncate' title={certificatePath}>{certificatePath ? certificatePath : 'Add certificate file'}</span>
                           </Button>
                         </FileTrigger>
                         <Input
@@ -166,7 +166,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                         >
                           <Button className="flex flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
                             {!keyPath && <Icon icon="plus" />}
-                            <span className='truncate'>{keyPath ? keyPath : 'Add key file'}</span>
+                            <span className='truncate' title={keyPath}>{keyPath ? keyPath : 'Add key file'}</span>
                           </Button>
                         </FileTrigger>
                         <Input
@@ -225,7 +225,7 @@ const ClientCertificateGridListItem = ({ certificate }: {
         {certificate.key && (
           <Fragment>
             <Icon icon="key" />
-            <div className='flex-1 text-sm text-[--color-font] truncate'>
+            <div className='flex-1 text-sm text-[--color-font] truncate' title={certificate.key}>
               {certificate.key}
             </div>
           </Fragment>
@@ -341,7 +341,7 @@ export const CertificatesModal = ({ onClose }: {
                 {caCertificate ? (
                   <div className='flex gap-2 pl-2 items-center justify-between rounded-sm border border-solid border-[--hl-sm] p-1'>
                     <Icon icon="file-contract" className='w-4' />
-                    <div className='flex-1 text-sm text-[--color-font] truncate'>{caCertificate.path}</div>
+                    <div className='flex-1 text-sm text-[--color-font] truncate' title={caCertificate.path || ''}>{caCertificate.path}</div>
                     <div className='flex items-center gap-2 h-6'>
                       <ToggleButton
                         onChange={isSelected => {
