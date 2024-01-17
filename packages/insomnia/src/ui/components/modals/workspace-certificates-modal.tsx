@@ -4,6 +4,7 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Icon } from '../icon';
+import { PasswordViewer } from '../viewers/password-viewer';
 
 const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
@@ -58,6 +59,8 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                     const formData = new FormData(e.currentTarget);
 
                     const certificate = Object.fromEntries(formData.entries());
+
+                    console.log({ certificate });
 
                     createClientCertificateFetcher.submit({
                       ...certificate,
@@ -212,7 +215,7 @@ const ClientCertificateGridListItem = ({ certificate }: {
   certificate: {
     id: string;
     key: string;
-    certificateKey: string;
+    certificateKey: string | null;
     _id: string;
     type: string;
     parentId: string;
@@ -232,44 +235,62 @@ const ClientCertificateGridListItem = ({ certificate }: {
   const deleteClientCertificateFetcher = useFetcher();
 
   return (
-    <GridListItem className="outline-none flex gap-2 pl-2 items-center justify-between p-1 ring-inset focus:ring-1 focus:ring-[--hl-md]">
-      <Icon icon={certificate.isPrivate ? 'lock' : 'refresh'} className='w-4' />
-      <div className='flex-1 text-sm text-[--color-font]'>{certificate.host}</div>
-      <div className='flex items-center gap-2 h-6'>
-        <ToggleButton
-          onChange={isSelected => {
-            updateClientCertificateFetcher.submit({ ...certificate, disabled: !isSelected }, {
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/update`,
-              method: 'post',
-              encType: 'application/json',
-            });
-          }}
-          isSelected={!certificate.disabled}
-          className="w-[12ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-        >
-          {({ isSelected }) => (
-            <Fragment>
-              <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
-              <span>{
-                isSelected ? 'Enabled' : 'Disabled'
-              }</span>
-            </Fragment>
-          )}
-        </ToggleButton>
-        <Button
-          isDisabled={deleteClientCertificateFetcher.state !== 'idle'}
-          onPress={() => {
-            deleteClientCertificateFetcher.submit(certificate, {
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/delete`,
-              method: 'delete',
-              encType: 'application/json',
-            });
-          }}
-          className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-        >
-          <Icon icon="trash" />
-        </Button>
+    <GridListItem className="outline-none flex flex-col gap-2 pl-2 items-center justify-between p-1 ring-inset focus:ring-1 focus:ring-[--hl-md]">
+      <div className='flex items-center gap-2 w-full'>
+        <Icon icon="file-contract" className='w-4' />
+        <div className='flex-1 text-sm text-[--color-font] truncate'>{certificate.host}</div>
+        {certificate.certificateKey && (
+          <Fragment>
+            <Icon icon="key" />
+            <div className='flex-1 text-sm text-[--color-font] truncate'>
+              {certificate.certificateKey}
+            </div>
+          </Fragment>
+        )}
+        <div className='flex items-center gap-2 h-6'>
+          <ToggleButton
+            onChange={isSelected => {
+              updateClientCertificateFetcher.submit({ ...certificate, disabled: !isSelected }, {
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/update`,
+                method: 'post',
+                encType: 'application/json',
+              });
+            }}
+            isSelected={!certificate.disabled}
+            className="w-[12ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          >
+            {({ isSelected }) => (
+              <Fragment>
+                <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
+                <span>{
+                  isSelected ? 'Enabled' : 'Disabled'
+                }</span>
+              </Fragment>
+            )}
+          </ToggleButton>
+          <Button
+            isDisabled={deleteClientCertificateFetcher.state !== 'idle'}
+            onPress={() => {
+              deleteClientCertificateFetcher.submit(certificate, {
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/delete`,
+                method: 'delete',
+                encType: 'application/json',
+              });
+            }}
+            className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          >
+            <Icon icon="trash" />
+          </Button>
+        </div>
       </div>
+      {certificate.passphrase && (
+        <div className='flex items-center gap-2 w-full truncate'>
+          <span className='text-sm'>{'Password:'}</span>
+          <div className='truncate text-sm'>
+            <PasswordViewer text={certificate.passphrase} />
+          </div>
+        </div>
+      )}
     </GridListItem>
   );
 };
@@ -337,7 +358,7 @@ export const CertificatesModal = ({ onClose }: {
                 {caCertificate ? (
                   <div className='flex gap-2 pl-2 items-center justify-between rounded-sm border border-solid border-[--hl-sm] p-1'>
                     <Icon icon="file-contract" className='w-4' />
-                    <div className='flex-1 text-sm text-[--color-font]'>{caCertificate.path}</div>
+                    <div className='flex-1 text-sm text-[--color-font] truncate'>{caCertificate.path}</div>
                     <div className='flex items-center gap-2 h-6'>
                       <ToggleButton
                         onChange={isSelected => {
@@ -425,7 +446,7 @@ export const CertificatesModal = ({ onClose }: {
                     ...cert,
                     id: cert._id,
                     key: cert._id,
-                    certificateKey: cert._id,
+                    certificateKey: cert.key,
                   }))}
                 >
                   {item => <ClientCertificateGridListItem certificate={item} />}
