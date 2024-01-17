@@ -2,7 +2,7 @@ import { AxiosResponse } from 'axios';
 import React, { Fragment, useEffect, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
+import { getMockServiceURL, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { HarRequest } from '../../../common/har';
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models';
@@ -14,8 +14,6 @@ import { getTimeFromNow } from '../time-from-now';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
-
-const mockbinUrl = 'http://localhost:8080';
 
 interface MockbinLogOutput {
   log: {
@@ -42,6 +40,7 @@ export const MockResponsePane = () => {
       return null;
     };
     try {
+      const mockbinUrl = getMockServiceURL();
       const res = await window.main.axiosRequest({
         url: mockbinUrl + `/bin/log/${compoundId}`,
         method: 'get',

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { CONTENT_TYPE_PLAINTEXT, HTTP_METHODS, RESPONSE_CODE_REASONS } from '../../../common/constants';
+import { CONTENT_TYPE_PLAINTEXT, getMockServiceURL, HTTP_METHODS, RESPONSE_CODE_REASONS } from '../../../common/constants';
 import { getResponseCookiesFromHeaders, HarResponse } from '../../../common/har';
 import { RequestHeader } from '../../../models/request';
 import { MockRouteLoaderData } from '../../routes/mock-route';
@@ -13,7 +13,7 @@ import { Icon } from '../icon';
 import { showAlert, showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 
-const mockbinUrl = 'http://localhost:8080';
+const mockbinUrl = getMockServiceURL();
 
 export const MockUrlBar = () => {
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
