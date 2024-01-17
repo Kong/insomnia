@@ -91,52 +91,12 @@ test.describe('pre-request script cases', async () => {
     {
       id: 'run js code and return empty object',
       code: `
-            const bool2 = pm.environment.has('bool1');
+            console.log('hello world');
           `,
       context: {
-        insomnia: {
-          environment: {
-            bool1: true,
-            num1: 1,
-            str1: 'str',
-          },
-        },
+        insomnia: {},
       },
       expectedResult: {
-        collectionVariables: {},
-        iterationData: {},
-        globals: {},
-        variables: {
-          bool1: false,
-          num1: 11,
-          str1: 'strr',
-          bool2: true,
-          num2: 1,
-          str2: 'str',
-          'newObject.bool': true,
-          'newObject.num': 1,
-          'newObject.str': 'str',
-          'rendered': 'false-11-strr',
-        },
-        environment: {
-          bool1: false,
-          num1: 11,
-          str1: 'strr',
-          bool2: true,
-          num2: 1,
-          str2: 'str',
-          'newObject.bool': true,
-          'newObject.num': 1,
-          'newObject.str': 'str',
-          'rendered': 'false-11-strr',
-        },
-        info: {
-          'eventName': 'prerequest',
-          'iteration': 1,
-          'iterationCount': 1,
-          'requestId': '',
-          'requestName': '',
-        },
       },
     },
   ];
