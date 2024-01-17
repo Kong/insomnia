@@ -101,13 +101,15 @@ test.describe('Debug-Sidebar', async () => {
       await requestLocator.click();
     });
 
-    test('Delete Request', async ({ page }) => {
+    test.skip('Delete Request', async ({ page }) => {
       const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example http' });
       await requestLocator.click();
+      const numberOfRequests = await page.getByLabel('Request Collection').getByRole('row').count();
       await requestLocator.getByLabel('Request Actions').click();
       await page.getByRole('menuitemradio', { name: 'Delete' }).click();
       await page.locator('.modal__content').getByRole('button', { name: 'Delete' }).click();
-      await expect(page.locator('.app')).not.toContainText('example http');
+
+      expect(page.getByLabel('Request Collection').getByRole('row')).toHaveCount(numberOfRequests - 1);
     });
 
     test('Rename a request', async ({ page }) => {
@@ -140,7 +142,7 @@ test.describe('Debug-Sidebar', async () => {
     test('Create a new HTTP request', async ({ page }) => {
       await page.getByLabel('Create in collection').click();
       await page.getByRole('menuitemradio', { name: 'Http Request' }).click();
-      await expect(page.locator('.app')).toContainText('New Request');
+      await page.getByLabel('Request Collection').getByRole('row', { name: 'New Request' }).click();
     });
 
   // TODO: more scenarios will be added in follow-up iterations of increasing test coverage

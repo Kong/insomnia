@@ -21,7 +21,6 @@ test('can send requests', async ({ app, page }) => {
 
   await page.getByRole('button', { name: 'Workspace actions menu button' }).click();
   await page.getByRole('menuitem', { name: 'Export' }).click();
-  await page.getByRole('dialog').getByRole('checkbox').nth(1).uncheck();
   await page.getByRole('button', { name: 'Export' }).click();
   await page.getByText('Which format would you like to export as?').click();
   await page.locator('.app').press('Escape');
