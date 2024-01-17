@@ -104,7 +104,6 @@ export const MockUrlBar = () => {
     const hasPathChanged = pathInput !== mockRoute.path;
     if (!hasPathChanged) {
       console.log('path has not changed');
-      return;
     }
     const newResponse = formToHar({
       statusCode: mockRoute.statusCode,
@@ -115,6 +114,8 @@ export const MockUrlBar = () => {
     const hasResponseChanged = !deepEqual(newResponse, mockRoute.binResponse);
     if (!hasResponseChanged) {
       console.log('response has not changed');
+    }
+    if (!hasPathChanged && !hasResponseChanged) {
       return;
     }
     const compoundId = mockRoute.parentId + pathInput;
@@ -135,7 +136,6 @@ export const MockUrlBar = () => {
       path: pathInput,
       binResponse: newResponse,
     });
-
   };
 
   return (<div className='w-full flex justify-between urlbar'>
@@ -184,8 +184,8 @@ export const MockUrlBar = () => {
       </Button>
       <Button
         className="px-5 ml-1 text-[--color-font-surprise] bg-[--color-surprise] hover:bg-opacity-90 rounded-sm"
-        onPress={() => {
-          upsertMockbinHar();
+        onPress={async () => {
+          await upsertMockbinHar();
           const compoundId = mockRoute.parentId + pathInput;
           createandSendRequest({
             url: mockbinUrl + '/bin/' + compoundId,

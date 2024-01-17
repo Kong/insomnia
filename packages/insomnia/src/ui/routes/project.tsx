@@ -739,7 +739,7 @@ const ProjectRoute: FC = () => {
     },
       {
         id: 'mock-server',
-        label: `Mock Servers (${mockServersCount})`,
+        label: `Mock (${mockServersCount})`,
         icon: 'server',
         action: {
           icon: 'plus',
