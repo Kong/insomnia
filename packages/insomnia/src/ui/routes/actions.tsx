@@ -412,11 +412,8 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
   } catch (e) {
     console.warn('Failed to initialize local backend project', e);
   }
-
-  return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${newWorkspace._id}/${newWorkspace.scope === 'collection' ? ACTIVITY_DEBUG : ACTIVITY_SPEC
-    }`
-  );
+  const activity = scopeToActivity(newWorkspace.scope);
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${newWorkspace._id}/${activity}`);
 };
 
 export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
