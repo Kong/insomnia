@@ -1,5 +1,3 @@
-
-
 export class InsomniaObject {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     constructor(_input: {}) {

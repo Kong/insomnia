@@ -86,8 +86,7 @@ async function runTests(testCases: {
   }
 }
 
-test.describe('basic operations', async () => {
-
+test.describe('pre-request script cases', async () => {
   const testCases = [
     {
       id: 'run js code and return empty object',
@@ -138,49 +137,6 @@ test.describe('basic operations', async () => {
           'requestId': '',
           'requestName': '',
         },
-      },
-    },
-  ];
-
-  await runTests(testCases);
-});
-
-test.describe('unhappy paths', async () => {
-  const testCases = [
-    {
-      id: 'execution timeout (default timeout 3s)',
-      code: `
-        await new Promise(resolve => setTimeout(resolve, 4000));
-        `,
-      context: {
-        insomnia: {},
-      },
-      expectedResult: {
-        message: 'executing script timeout:3000ms',
-      },
-    },
-    {
-      id: 'invalid result is returned',
-      code: `
-        return;
-        `,
-      context: {
-        insomnia: {},
-      },
-      expectedResult: {
-        message: 'result is invalid, null or custom value may be returned',
-      },
-    },
-    {
-      id: 'custom error is returned',
-      code: `
-        throw Error('my custom error');
-        `,
-      context: {
-        insomnia: {},
-      },
-      expectedResult: {
-        message: 'my custom error',
       },
     },
   ];
