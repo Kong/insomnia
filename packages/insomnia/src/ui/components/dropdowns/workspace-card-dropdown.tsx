@@ -85,7 +85,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 };
 
 export const WorkspaceCardDropdown: FC<Props> = props => {
-  const { workspace, project, projects, workspaceMeta, clientCertificates, caCertificate } = props;
+  const { workspace, project, projects } = props;
   const fetcher = useFetcher();
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -209,10 +209,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
       {isSettingsModalOpen && (
         <WorkspaceSettingsModal
           workspace={workspace}
-          workspaceMeta={workspaceMeta}
-          clientCertificates={clientCertificates}
-          caCertificate={caCertificate}
-          onHide={() => setIsSettingsModalOpen(false)}
+          onClose={() => setIsSettingsModalOpen(false)}
         />
       )}
       {isDeleteRemoteWorkspaceModalOpen && (
