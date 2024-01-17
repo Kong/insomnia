@@ -88,20 +88,23 @@ export const WorkspaceSettingsModal = ({ workspace, onClose }: Props) => {
                   />
                 </Label>
               </div>
-              <Heading>Actions</Heading>
-              <PromptButton
-                onClick={async () => {
-                  const docs = await db.withDescendants(workspace, models.request.type);
-                  const requests = docs.filter(isRequest);
-                  for (const req of requests) {
-                    await models.response.removeForRequest(req._id);
-                  }
-                  close();
-                }}
-                className="width-auto btn btn--clicky inline-block space-left"
-              >
-                <i className="fa fa-trash-o" /> Clear All Responses
-              </PromptButton>
+              {workspace.scope !== 'mock-server' && (
+                <>
+                  <Heading>Actions</Heading>
+                  <PromptButton
+                    onClick={async () => {
+                      const docs = await db.withDescendants(workspace, models.request.type);
+                      const requests = docs.filter(isRequest);
+                      for (const req of requests) {
+                        await models.response.removeForRequest(req._id);
+                      }
+                      close();
+                    }}
+                    className="width-auto btn btn--clicky inline-block space-left"
+                  >
+                    <i className="fa fa-trash-o" /> Clear All Responses
+                  </PromptButton>
+                </>)}
               <div className='flex items-center gap-2 justify-end'>
                 <Button
                   onPress={close}
