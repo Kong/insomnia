@@ -143,7 +143,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                           </Button>
                         </FileTrigger>
                         <Input
-                          name='certificate'
+                          name='cert'
                           type='text'
                           value={certificatePath}
                           readOnly
@@ -220,16 +220,9 @@ const ClientCertificateGridListItem = ({ certificate }: {
   return (
     <GridListItem className="outline-none flex flex-col gap-2 pl-2 items-center justify-between p-1 ring-inset focus:ring-1 focus:ring-[--hl-md]">
       <div className='flex items-center gap-2 w-full'>
-        <Icon icon="file-contract" className='w-4' />
+        {Boolean(certificate.pfx || certificate.cert) && <Icon icon="file-contract" className='w-4' title={certificate.pfx || certificate.cert || ''} />}
+        {certificate.key && <Icon icon="key" title={certificate.key} />}
         <div className='flex-1 text-sm text-[--color-font] truncate'>{certificate.host}</div>
-        {certificate.key && (
-          <Fragment>
-            <Icon icon="key" />
-            <div className='flex-1 text-sm text-[--color-font] truncate' title={certificate.key}>
-              {certificate.key}
-            </div>
-          </Fragment>
-        )}
         <div className='flex items-center gap-2 h-6'>
           <ToggleButton
             onChange={isSelected => {
