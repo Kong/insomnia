@@ -3,7 +3,7 @@ import url from 'node:url';
 import { describe, expect, it } from '@jest/globals';
 
 import { PropertyList } from '../base';
-import { QueryParam, setUrlParser, Url } from '../urls';
+import { QueryParam, setUrlParser, Url, UrlMatchPattern } from '../urls';
 import { Variable } from '../variables';
 
 describe('test Certificate object', () => {
@@ -75,12 +75,17 @@ describe('test Certificate object', () => {
     // static methods
     const urlStr = 'https://myhost.com/path1/path2';
     const urlOptions = Url.parse(urlStr);
-    const urlOpt = new Url(urlOptions || '');
+    const urlObj = new Url(urlOptions || '');
 
-    expect(urlOpt.toString()).toEqual(urlStr);
-
+    expect(urlObj.toString()).toEqual(urlStr);
   });
 
   it('test UrlMatchPattern', () => {
+    const pattern = 'https://*.insomnia.com/*';
+    const matchPattern = new UrlMatchPattern(pattern);
+
+    expect(matchPattern.getProtocols()).toEqual(['https']);
+    expect(matchPattern.test('https://*.insomnia.com')).toBeTruthy();
+    expect(matchPattern.toString()).toEqual(pattern);
   });
 });
