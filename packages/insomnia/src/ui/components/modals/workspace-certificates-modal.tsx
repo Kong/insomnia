@@ -2,6 +2,7 @@ import React, { Fragment, useEffect, useId, useState } from 'react';
 import { Button, Dialog, FileTrigger, GridList, GridListItem, Heading, Input, Label, Modal, ModalOverlay, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
+import { ClientCertificate } from '../../../models/client-certificate';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Icon } from '../icon';
 import { PasswordViewer } from '../viewers/password-viewer';
@@ -60,8 +61,6 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
 
                     const certificate = Object.fromEntries(formData.entries());
 
-                    console.log({ certificate });
-
                     createClientCertificateFetcher.submit({
                       ...certificate,
                       isPrivate: certificate.isPrivate === 'on',
@@ -111,7 +110,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                         >
                           <Button className="flex flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
                             {!pfxPath && <Icon icon="plus" />}
-                            <span>{pfxPath ? pfxPath : 'Add PFX or PKCS12 file'}</span>
+                            <span className="truncate">{pfxPath ? pfxPath : 'Add PFX or PKCS12 file'}</span>
                           </Button>
                         </FileTrigger>
                         <Input
@@ -212,23 +211,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
 };
 
 const ClientCertificateGridListItem = ({ certificate }: {
-  certificate: {
-    id: string;
-    key: string;
-    certificateKey: string | null;
-    _id: string;
-    type: string;
-    parentId: string;
-    modified: number;
-    created: number;
-    isPrivate: boolean;
-    name: string;
-    host: string;
-    passphrase: string | null;
-    cert: string | null;
-    pfx: string | null;
-    disabled: boolean;
-  };
+  certificate: ClientCertificate;
 }) => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   const updateClientCertificateFetcher = useFetcher();
@@ -239,11 +222,11 @@ const ClientCertificateGridListItem = ({ certificate }: {
       <div className='flex items-center gap-2 w-full'>
         <Icon icon="file-contract" className='w-4' />
         <div className='flex-1 text-sm text-[--color-font] truncate'>{certificate.host}</div>
-        {certificate.certificateKey && (
+        {certificate.key && (
           <Fragment>
             <Icon icon="key" />
             <div className='flex-1 text-sm text-[--color-font] truncate'>
-              {certificate.certificateKey}
+              {certificate.key}
             </div>
           </Fragment>
         )}
@@ -271,7 +254,7 @@ const ClientCertificateGridListItem = ({ certificate }: {
           <Button
             isDisabled={deleteClientCertificateFetcher.state !== 'idle'}
             onPress={() => {
-              deleteClientCertificateFetcher.submit(certificate, {
+              deleteClientCertificateFetcher.submit(JSON.stringify(certificate), {
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/delete`,
                 method: 'delete',
                 encType: 'application/json',
@@ -443,13 +426,12 @@ export const CertificatesModal = ({ onClose }: {
                 <GridList
                   className="border border-solid border-[--hl-md] rounded-sm divide-y divide-solid divide-[--hl-md] overflow-y-auto"
                   items={clientCertificates.map(cert => ({
-                    ...cert,
+                    cert,
                     id: cert._id,
                     key: cert._id,
-                    certificateKey: cert.key,
                   }))}
                 >
-                  {item => <ClientCertificateGridListItem certificate={item} />}
+                  {item => <ClientCertificateGridListItem certificate={item.cert} />}
                 </GridList>
               </div>
               <div className='flex items-center gap-2 justify-end'>
