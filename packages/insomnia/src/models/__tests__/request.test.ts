@@ -20,6 +20,7 @@ describe('init()', () => {
       name: 'New Request',
       description: '',
       parameters: [],
+      pathParameters: [],
       url: '',
       settingStoreCookies: true,
       settingSendCookies: true,
@@ -56,6 +57,7 @@ describe('create()', () => {
       method: 'GET',
       name: 'Test Request',
       parameters: [],
+      pathParameters: [],
       url: '',
       settingStoreCookies: true,
       settingSendCookies: true,
@@ -388,6 +390,7 @@ describe('migrate()', () => {
       headers: [],
       authentication: {},
       parameters: [],
+      pathParameters: [],
       parentId: null,
       body: {
         mimeType: '',
