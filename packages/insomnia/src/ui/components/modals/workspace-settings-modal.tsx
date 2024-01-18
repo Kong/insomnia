@@ -28,9 +28,17 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
 
   const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
   const workspaceFetcher = useFetcher();
+  const mockServerFetcher = useFetcher();
   const workspacePatcher = (workspaceId: string, patch: Partial<Workspace>) => {
     workspaceFetcher.submit({ ...patch, workspaceId }, {
       action: `/organization/${organizationId}/project/${projectId}/workspace/update`,
+      method: 'post',
+      encType: 'application/json',
+    });
+  };
+  const mockServerPatcher = (mockServerId: string, patch: Partial<MockServer>) => {
+    mockServerFetcher.submit({ ...patch, mockServerId }, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/mock-server/update`,
       method: 'post',
       encType: 'application/json',
     });
@@ -109,7 +117,7 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                   </>)}
                 {Boolean(workspace.scope === 'mock-server' && mockServer) && (
                   <>
-                    <RadioGroup name="type" defaultValue={mockServer?.useInsomniaCloud ? 'remote' : 'local'} className="flex flex-col gap-2">
+                    <RadioGroup onChange={value => mockServer && mockServerPatcher(mockServer._id, { useInsomniaCloud: value === 'remote' })} name="type" defaultValue={mockServer?.useInsomniaCloud ? 'remote' : 'local'} className="flex flex-col gap-2">
                       <Label className="text-sm text-[--hl]">
                         Mock type
                       </Label>
@@ -148,6 +156,7 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                       </Label>
                       <Input
                         placeholder="http://localhost:8080"
+                        onChange={e => mockServer && mockServerPatcher(mockServer._id, { url: e.target.value })}
                         className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                       />
                       <Label className='text-sm text-[--hl]'>

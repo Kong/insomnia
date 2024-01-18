@@ -5,7 +5,7 @@ import { ActionFunction, redirect } from 'react-router-dom';
 
 import * as session from '../../account/session';
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC, getAIServiceURL } from '../../common/constants';
+import { ACTIVITY_DEBUG, getAIServiceURL } from '../../common/constants';
 import { database } from '../../common/database';
 import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
@@ -429,6 +429,14 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
 
     await models.apiSpec.update(apiSpec, {
       fileName: patch.name || workspace.name,
+    });
+  }
+  if (workspace.scope === 'mock-server') {
+    const mockServer = await models.mockServer.getByParentId(workspaceId);
+    invariant(mockServer, 'No MockServer found for this workspace');
+
+    await models.mockServer.update(mockServer, {
+      name: patch.name || workspace.name,
     });
   }
 
@@ -1228,5 +1236,14 @@ export const deleteMockRouteAction: ActionFunction = async ({ request, params })
   if (isSelected) {
     return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server`);
   }
+  return null;
+};
+export const updateMockServerAction: ActionFunction = async ({ request, params }) => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+  const patch = await request.json();
+  const mockServer = await models.mockServer.getByParentId(workspaceId);
+  invariant(mockServer, 'Mock server not found');
+  await models.mockServer.update(mockServer, patch);
   return null;
 };

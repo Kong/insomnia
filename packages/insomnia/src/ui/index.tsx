@@ -447,6 +447,13 @@ const router = createMemoryRouter(
                               ),
                               children: [
                                 {
+                                  path: 'update',
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).updateMockServerAction(...args),
+                                },
+                                {
                                   path: 'mock-route',
                                   id: 'mock-route',
                                   children: [
