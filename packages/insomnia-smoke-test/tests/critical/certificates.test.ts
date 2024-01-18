@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
@@ -17,18 +19,17 @@ test('can send request with custom ca root certificate', async ({ app, page }) =
   await page.getByRole('button', { name: 'Send' }).click();
   await page.getByText('Error: SSL peer certificate or SSH remote key was not OK').click();
 
-  // add server and client certs
-  await page.getByTestId('workspace-context-dropdown').click();
-  await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-  const workspaceId = await page.getByTestId('workspace-id').textContent();
   const fixturePath = getFixturePath('certificates');
-  await page.evaluate(async ({ workspaceId, fixturePath }) => {
-    window.main.database.caCertificate.create({
-      parentId: workspaceId,
-      path: fixturePath + '/rootCA.pem',
-    });
-  }, { workspaceId, fixturePath });
-  await page.getByRole('button', { name: '' }).click();
+
+  await page.getByRole('button', { name: 'Add Certificates' }).click();
+
+  const fileChooserPromise = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Add CA Certificate' }).click();
+
+  const fileChooser = await fileChooserPromise;
+  await fileChooser.setFiles(path.join(fixturePath, 'rootCA.pem'));
+
+  await page.getByRole('button', { name: 'Done' }).click();
 
   // test request with certs
   await page.getByRole('button', { name: 'Send' }).click();
