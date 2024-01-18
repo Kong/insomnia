@@ -523,8 +523,11 @@ export async function getRenderedRequestAndContext(
     renderedRequest.url = renderedRequest.url.replace(/:[^/?#]+/g, match => {
       const param = renderedRequest.pathParameters?.find(p => p.name === match);
 
+      if (param) {
+        return param.value ? encodeURIComponent(param.value) : param.name;
+      }
       // The parameter should also be URL encoded
-      return param ? encodeURIComponent(param.value) : match;
+      return match;
     });
   }
 

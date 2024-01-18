@@ -59,8 +59,11 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         url = url.replace(/:[^/?#]+/g, match => {
           const param = pathParameters?.find(p => p.name === match);
 
+          if (param) {
+            return param.value ? encodeURIComponent(param.value) : param.name;
+          }
           // The parameter should also be URL encoded
-          return param ? encodeURIComponent(param.value) : match;
+          return match;
         });
       }
 
