@@ -33,14 +33,14 @@ interface MockbinLogOutput {
 }
 
 export const MockResponsePane = () => {
-  const { mockRoute, activeResponse } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
+  const { mockServer, mockRoute, activeResponse } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const { settings } = useRootLoaderData();
   const getLogById = async (compoundId: string): Promise<MockbinLogOutput | null> => {
     if (!compoundId) {
       return null;
     };
     try {
-      const mockbinUrl = getMockServiceURL();
+      const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
       const res = await window.main.axiosRequest({
         url: mockbinUrl + `/bin/log/${compoundId}`,
         method: 'get',

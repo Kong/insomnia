@@ -6,6 +6,7 @@ import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TY
 import { database as db } from '../../common/database';
 import * as models from '../../models';
 import { MockRoute } from '../../models/mock-route';
+import { MockServer } from '../../models/mock-server';
 import { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
@@ -20,6 +21,7 @@ import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { SvgIcon } from '../components/svg-icon';
 
 export interface MockRouteLoaderData {
+  mockServer: MockServer;
   mockRoute: MockRoute;
   activeResponse?: Response;
 }
@@ -30,6 +32,8 @@ export const loader: LoaderFunction = async ({ params }): Promise<MockRouteLoade
   invariant(projectId, 'Project ID is required');
   invariant(workspaceId, 'Workspace ID is required');
   invariant(mockRouteId, 'Mock route ID is required');
+  const mockServer = await models.mockServer.getByParentId(workspaceId);
+  invariant(mockServer, 'Mock server is required');
   const mockRoute = await models.mockRoute.getById(mockRouteId);
   invariant(mockRoute, 'Mock route is required');
   // get current response via request children of
@@ -37,6 +41,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<MockRouteLoade
 
   const responses = await db.findMostRecentlyModified<Response>(models.response.type, { parentId: { $in: reqIds } });
   return {
+    mockServer,
     mockRoute,
     activeResponse: responses?.[0],
   };
@@ -48,11 +53,11 @@ const mockContentTypes = [
   CONTENT_TYPE_XML,
   CONTENT_TYPE_YAML,
 ];
-const mockbinUrl = getMockServiceURL();
 
 export const MockRouteRoute = () => {
-  const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
+  const { mockServer, mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
+  const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
 
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };

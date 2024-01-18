@@ -12,7 +12,6 @@ import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 
-const mockbinUrl = getMockServiceURL();
 export const formToHar = ({ statusCode, statusText, headersArray, body }: { statusCode: number; statusText: string; headersArray: RequestHeader[]; body: string }): HarResponse => {
   const contentType = headersArray.find(h => h.name.toLowerCase() === 'content-type')?.value || CONTENT_TYPE_PLAINTEXT;
   const validHeaders = headersArray.filter(({ name }) => !!name);
@@ -34,10 +33,10 @@ export const formToHar = ({ statusCode, statusText, headersArray, body }: { stat
   };
 };
 export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: string) => void; onSend: (path: string) => void }) => {
-  const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
+  const { mockServer, mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
   const [pathInput, setPathInput] = useState<string>(mockRoute.path);
-
+  const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
   return (<div className='w-full flex justify-between urlbar'>
     <Dropdown
       className="method-dropdown"
