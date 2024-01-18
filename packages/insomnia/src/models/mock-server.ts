@@ -14,6 +14,8 @@ export const canSync = true;
 interface BaseMockServer {
   parentId: string;
   name: string;
+  url: string;
+  useInsomniaCloud: boolean;
 }
 
 export type MockServer = BaseModel & BaseMockServer;
@@ -21,7 +23,9 @@ export type MockServer = BaseModel & BaseMockServer;
 export function init(): BaseMockServer {
   return {
     parentId: '',
-    name: '/',
+    name: 'New Mock',
+    url: 'http://localhost:8080',
+    useInsomniaCloud: true,
   };
 }
 

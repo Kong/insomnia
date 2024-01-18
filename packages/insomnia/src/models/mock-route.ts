@@ -16,15 +16,15 @@ export const canSync = true;
 interface BaseMockRoute {
   body: string;
   headers: RequestHeader[];
-  method: string;
   parentId: string;
   url: string;
   path: string;
   statusCode: number;
   statusText: string;
   name: string;
-  mimeType: string | null;
-  binResponse: HarResponse | null;
+  mimeType: string | null; // response body type
+  method: string; // used only for sending the testing request
+  binResponse: HarResponse | null; // used for checking if an update to the remote is necessary
 }
 
 export type MockRoute = BaseModel & BaseMockRoute;
@@ -33,7 +33,6 @@ export function init(): BaseMockRoute {
   return {
     body: '',
     headers: [],
-    method: 'GET',
     parentId: '',
     url: '',
     path: '/',
@@ -41,6 +40,7 @@ export function init(): BaseMockRoute {
     statusText: '',
     name: '',
     mimeType: 'application/json',
+    method: 'GET',
     binResponse: null,
   };
 }
