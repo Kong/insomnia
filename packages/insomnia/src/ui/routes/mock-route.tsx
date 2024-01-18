@@ -1,7 +1,8 @@
+import deepEqual from 'deep-equal';
 import React from 'react';
-import { LoaderFunction, useRouteLoaderData } from 'react-router-dom';
+import { LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TYPE_YAML, contentTypesMap, RESPONSE_CODE_REASONS } from '../../common/constants';
+import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TYPE_YAML, contentTypesMap, getMockServiceURL, RESPONSE_CODE_REASONS } from '../../common/constants';
 import { database as db } from '../../common/database';
 import * as models from '../../models';
 import { MockRoute } from '../../models/mock-route';
@@ -12,7 +13,8 @@ import { PanelContainer, TabItem, Tabs } from '../components/base/tabs';
 import { CodeEditor } from '../components/codemirror/code-editor';
 import { MockResponseHeadersEditor, useMockRoutePatcher } from '../components/editors/mock-response-headers-editor';
 import { MockResponsePane } from '../components/mocks/mock-response-pane';
-import { MockUrlBar } from '../components/mocks/mock-url-bar';
+import { formToHar, MockUrlBar } from '../components/mocks/mock-url-bar';
+import { showAlert } from '../components/modals';
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { SvgIcon } from '../components/svg-icon';
@@ -46,13 +48,130 @@ const mockContentTypes = [
   CONTENT_TYPE_XML,
   CONTENT_TYPE_YAML,
 ];
+const mockbinUrl = getMockServiceURL();
+
 export const MockRouteRoute = () => {
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
+
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+
+  const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
+    // send upsert and return id, or show alert modal with error
+    try {
+      const bin = await window.main.axiosRequest({
+        url: mockbinUrl + `/bin/upsert/${compoundId}`,
+        method: 'put',
+        data: formToHar({
+          statusCode: mockRoute.statusCode,
+          statusText: mockRoute.statusText,
+          headersArray: mockRoute.headers,
+          body: mockRoute.body,
+        }),
+      });
+      if (bin?.data?.errors) {
+        console.error('error response', bin?.data?.errors);
+        showAlert({
+          title: 'Unexpected Request Failure',
+          message: (
+            <div>
+              <p>The request failed due to an unhandled error:</p>
+              <code className="wide selectable">
+                <pre>{bin?.data?.errors}</pre>
+              </code>
+            </div>
+          ),
+        });
+      }
+      if (bin?.data?.length) {
+        console.log('RES', bin.data);
+        return bin.data;
+      }
+
+    } catch (e) {
+      console.log(e);
+      showAlert({
+        title: 'Network error',
+        message: (
+          <div>
+            <p>The request failed due to a network error:</p>
+            <code className="wide selectable">
+              <pre>{e.message}</pre>
+            </code>
+          </div>
+        ),
+      });
+    }
+    console.log('Error: creating bin on remote');
+    return '';
+
+  };
+
+  const createandSendRequest = ({ url, method, parentId, binResponse }: { url: string; method: string; parentId: string; binResponse?: Partial<HarResponse> }) =>
+    requestFetcher.submit(JSON.stringify({ url, method, parentId, binResponse }),
+      {
+        encType: 'application/json',
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new-mock-send`,
+        method: 'post',
+      });
+
+  const upsertMockbinHar = async (pathInput?: string) => {
+    console.log('upserting mockbin har');
+    // check for change and update remote
+    const newResponse = formToHar({
+      statusCode: mockRoute.statusCode,
+      statusText: mockRoute.statusText,
+      headersArray: mockRoute.headers,
+      body: mockRoute.body,
+    });
+    const hasResponseChanged = !deepEqual(newResponse, mockRoute.binResponse);
+    console.log('upserting mockbin har', newResponse, mockRoute.binResponse);
+
+    if (!hasResponseChanged) {
+      console.log('response has not changed');
+      return;
+    }
+    const compoundId = mockRoute.parentId + pathInput;
+    const id = await upsertBinOnRemoteFromResponse(compoundId);
+    if (!id) {
+      showAlert({
+        title: 'Unexpected Mock Failure',
+        message: (
+          <div>
+            <p>The request failed due to a error from the mock server</p>
+          </div>
+        ),
+      });
+      return;
+    }
+    patchMockRoute(mockRoute._id, {
+      url: mockbinUrl + '/bin/' + mockRoute.parentId,
+      path: pathInput,
+      binResponse: newResponse,
+    });
+  };
+  const onSend = async (pathInput: string) => {
+    // on click send button, sync with remote and send hidden request
+    await upsertMockbinHar(pathInput);
+    const compoundId = mockRoute.parentId + pathInput;
+    createandSendRequest({
+      url: mockbinUrl + '/bin/' + compoundId,
+      method: mockRoute.method,
+      parentId: mockRoute._id,
+      binResponse: formToHar({
+        statusCode: mockRoute.statusCode,
+        statusText: mockRoute.statusText,
+        headersArray: mockRoute.headers,
+        body: mockRoute.body,
+      }),
+    });
+  };
+  const onBlurTriggerUpsert = () => upsertMockbinHar(mockRoute.path);
   return (
     <Pane type="request">
       <PaneHeader>
-        <MockUrlBar key={mockRoute._id + mockRoute.name} />
+        <MockUrlBar key={mockRoute._id + mockRoute.name} onSend={onSend} onPathUpdate={upsertMockbinHar} />
       </PaneHeader>
       <PaneBody>
         <Tabs aria-label="Mock response config">
@@ -86,6 +205,7 @@ export const MockRouteRoute = () => {
                 defaultValue={mockRoute.body}
                 enableNunjucks
                 onChange={body => patchMockRoute(mockRoute._id, { body })}
+                onBlur={onBlurTriggerUpsert}
                 mode={mockRoute.mimeType}
                 placeholder="..."
               />) :
@@ -98,6 +218,7 @@ export const MockRouteRoute = () => {
           </TabItem>
           <TabItem key="headers" title="Response Headers">
             <MockResponseHeadersEditor
+              // TODO: update mock on blur if key is set
               bulk={false}
             />
           </TabItem>
@@ -112,6 +233,7 @@ export const MockRouteRoute = () => {
                       type="number"
                       defaultValue={mockRoute.statusCode}
                       onChange={e => patchMockRoute(mockRoute._id, { statusCode: parseInt(e.currentTarget.value, 10) })}
+                      onBlur={onBlurTriggerUpsert}
                       placeholder="200"
                     />
                   </label>
@@ -126,6 +248,8 @@ export const MockRouteRoute = () => {
                       type="string"
                       defaultValue={mockRoute.statusText}
                       onChange={e => patchMockRoute(mockRoute._id, { statusText: e.currentTarget.value })}
+                      onBlur={onBlurTriggerUpsert}
+
                       placeholder={RESPONSE_CODE_REASONS[mockRoute.statusCode || 200] || 'Unknown'}
                     />
                   </label>
