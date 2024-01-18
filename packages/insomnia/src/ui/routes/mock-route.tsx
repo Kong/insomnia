@@ -57,10 +57,10 @@ export const MockRouteRoute = () => {
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
-  const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
+  const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<{ id: string; error?: string }> => {
     // send upsert and return id, or show alert modal with error
     try {
-      const bin = await window.main.axiosRequest({
+      const res = await window.main.axiosRequest({
         url: mockbinUrl + `/bin/upsert/${compoundId}`,
         method: 'put',
         data: formToHar({
@@ -70,41 +70,20 @@ export const MockRouteRoute = () => {
           body: mockRoute.body,
         }),
       });
-      if (bin?.data?.errors) {
-        console.error('error response', bin?.data?.errors);
-        showAlert({
-          title: 'Unexpected Request Failure',
-          message: (
-            <div>
-              <p>The request failed due to an unhandled error:</p>
-              <code className="wide selectable">
-                <pre>{bin?.data?.errors}</pre>
-              </code>
-            </div>
-          ),
-        });
+      if (res?.data?.errors) {
+        console.error('error response', res?.data?.errors);
+        return { id: '', error: res?.data?.errors };
       }
-      if (bin?.data?.length) {
-        console.log('RES', bin.data);
-        return bin.data;
+      if (res?.data?.length) {
+        console.log('RES', res.data);
+        return { id: res.data };
       }
-
+      console.log('Error: invalid response from remote', { res, mockbinUrl });
+      return { id: '', error: 'Invalid response from ' + mockbinUrl };
     } catch (e) {
       console.log(e);
-      showAlert({
-        title: 'Network error',
-        message: (
-          <div>
-            <p>The request failed due to a network error:</p>
-            <code className="wide selectable">
-              <pre>{e.message}</pre>
-            </code>
-          </div>
-        ),
-      });
+      return { id: '', error: 'Unhandled error ' + e.message };
     }
-    console.log('Error: creating bin on remote');
-    return '';
 
   };
 
@@ -117,7 +96,6 @@ export const MockRouteRoute = () => {
       });
 
   const upsertMockbinHar = async (pathInput?: string) => {
-    console.log('upserting mockbin har');
     // check for change and update remote
     const newResponse = formToHar({
       statusCode: mockRoute.statusCode,
@@ -126,20 +104,22 @@ export const MockRouteRoute = () => {
       body: mockRoute.body,
     });
     const hasResponseChanged = !deepEqual(newResponse, mockRoute.binResponse);
-    console.log('upserting mockbin har', newResponse, mockRoute.binResponse);
-
     if (!hasResponseChanged) {
       console.log('response has not changed');
       return;
     }
+    console.log('upserting mockbin har');
     const compoundId = mockRoute.parentId + pathInput;
-    const id = await upsertBinOnRemoteFromResponse(compoundId);
-    if (!id) {
+    const { error } = await upsertBinOnRemoteFromResponse(compoundId);
+    if (error) {
       showAlert({
-        title: 'Unexpected Mock Failure',
+        title: 'Network error',
         message: (
           <div>
-            <p>The request failed due to a error from the mock server</p>
+            <p>The request failed due to a network error:</p>
+            <code className="wide selectable">
+              <pre className='text-pretty'>{error}</pre>
+            </code>
           </div>
         ),
       });
