@@ -54,6 +54,7 @@ import { ApiSpec } from '../../models/api-spec';
 import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
+import { MockServer } from '../../models/mock-server';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
 import { Organization } from '../../models/organization';
 import {
@@ -121,6 +122,7 @@ export interface WorkspaceWithMetadata {
   specFormat: 'openapi' | 'swagger' | null;
   name: string;
   apiSpec: ApiSpec | null;
+  mockServer: MockServer | null;
   specFormatVersion: string | null;
   workspace: Workspace;
   workspaceMeta: WorkspaceMeta;
@@ -304,7 +306,7 @@ export const loader: LoaderFunction = async ({
     workspace: Workspace
   ): Promise<WorkspaceWithMetadata> => {
     const apiSpec = await models.apiSpec.getByParentId(workspace._id);
-
+    const mockServer = await models.mockServer.getByParentId(workspace._id);
     let spec: ParsedApiSpec['contents'] = null;
     let specFormat: ParsedApiSpec['format'] = null;
     let specFormatVersion: ParsedApiSpec['formatVersion'] = null;
@@ -369,6 +371,7 @@ export const loader: LoaderFunction = async ({
       specFormat,
       name: workspace.name,
       apiSpec,
+      mockServer,
       specFormatVersion,
       workspaceMeta,
       clientCertificates,

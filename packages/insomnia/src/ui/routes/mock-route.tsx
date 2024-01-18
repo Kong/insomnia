@@ -118,7 +118,7 @@ export const MockRouteRoute = () => {
           <div>
             <p>The request failed due to a network error:</p>
             <code className="wide selectable">
-              <pre className='text-pretty'>{error}</pre>
+              <pre>{error}</pre>
             </code>
           </div>
         ),

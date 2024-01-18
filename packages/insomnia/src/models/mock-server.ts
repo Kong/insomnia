@@ -69,7 +69,7 @@ export function getById(id: string) {
   return db.get<MockServer>(type, id);
 }
 
-export function findByParentId(parentId: string) {
+export function getByParentId(parentId: string) {
   return db.getWhere<MockServer>(type, { parentId });
 }
 
