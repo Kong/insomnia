@@ -6,7 +6,7 @@ import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
 import { isProject, Project } from '../models/project';
-import type { Request } from '../models/request';
+import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
 import { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, Workspace } from '../models/workspace';
@@ -520,13 +520,15 @@ export async function getRenderedRequestAndContext(
   if (renderedRequest.pathParameters) {
     // Replace path parameters in URL with their rendered values
     // Path parameters are path segments that start with a colon, e.g. :id
-    renderedRequest.url = renderedRequest.url.replace(/:[^/?#]+/g, match => {
-      const param = renderedRequest.pathParameters?.find(p => p.name === match);
+    renderedRequest.url = renderedRequest.url.replace(PATH_PARAMETER_REGEX, match => {
+      const paramName = match.replace('\/:', '');
+      const param = renderedRequest.pathParameters?.find(p => p.name === paramName);
 
-      if (param) {
-        return param.value ? encodeURIComponent(param.value) : param.name;
+      if (param && param.value) {
+        // The parameter value needs to be URL encoded
+        return `/${encodeURIComponent(param.value)}`;
       }
-      // The parameter should also be URL encoded
+
       return match;
     });
   }

@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
 import * as models from '../../../models';
 import { Environment } from '../../../models/environment';
-import { RequestPathParameter } from '../../../models/request';
+import { getCombinedPathParametersFromUrl, RequestPathParameter } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
@@ -237,9 +237,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   };
 
   // Path parameters are path segments that start with a colon (:)
-  const urlPathParameters = activeRequest.url.match(/:[^/?#]+/g)?.map(String) || [];
-  const savedPathParameters = activeRequest.pathParameters?.filter(p => urlPathParameters.includes(p.name)) || [];
-  const finalPathParameters = [...savedPathParameters, ...urlPathParameters?.filter(p => !savedPathParameters.map(p => p.name).includes(p)).map(p => ({ name: p, value: '' }))];
+  const pathParameters = getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters);
 
   const onPathParameterChange = (pathParameters: RequestPathParameter[]) => {
     patchRequest(requestId, { pathParameters });
@@ -282,18 +280,23 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
         <TabItem key="query" title="Parameters">
           <div className="grid h-full auto-rows-auto [grid-template-columns:100%] divide-y divide-solid divide-[--hl-md]">
             {disabled && <PaneReadOnlyBanner />}
-            <div className="max-h-[14rem] grid grid-rows-auto auto-rows-min p-4">
-              <label className="label--small no-pad-top">Url Preview</label>
-              <code className="txt-sm block faint overflow-auto min-h-[2em]">
+            <div className='h-full flex flex-col'>
+              <div className="p-4">
+                <div className="text-xs max-h-32 flex flex-col overflow-y-auto min-h-[2em] bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm]">
+                  <label className="label--small no-pad-top">Url Preview</label>
                 <ErrorBoundary
                   key={uniqueKey}
                   errorClassName="tall wide vertically-align font-error pad text-center"
                 >
                   <RenderedQueryString request={activeRequest} />
-                </ErrorBoundary>
-              </code>
-            </div>
-            <div className="min-h-[2rem] max-h-full flex flex-col overflow-y-auto [&_.key-value-editor]:p-0">
+                  </ErrorBoundary>
+                </div>
+              </div>
+              <div className="grid flex-1 [grid-template-rows:minmax(auto,min-content)] [grid-template-columns:100%] overflow-hidden">
+                <div className="min-h-[2rem] max-h-full flex flex-col overflow-y-auto [&_.key-value-editor]:p-0 flex-1">
+                  <div className='flex items-center w-full p-4 h-4 justify-between'>
+                    <Heading className='text-xs font-bold uppercase text-[--hl]'>Query parameters</Heading>
+                  </div>
               <ErrorBoundary
                 key={uniqueKey}
                 errorClassName="tall wide vertically-align font-error pad text-center"
@@ -304,33 +307,40 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                 />
               </ErrorBoundary>
             </div>
-            <div className='flex-1 flex flex-col gap-2 p-4 border-t border-solid border-[--hl-md] overflow-y-auto'>
+                <div className='flex-1 flex flex-col gap-4 p-4 overflow-y-auto'>
               <Heading className='text-xs font-bold uppercase text-[--hl]'>Path parameters</Heading>
-              {finalPathParameters.length > 0 && <div className='grid grid-cols-2 flex-shrink-0 w-full divide-x divide-y divide-solid divide-[--hl-sm] rounded-sm border border-solid border-[--hl-sm] overflow-hidden'>
-                {finalPathParameters.map(pathParameter => (
-                  <Fragment key={pathParameter.name}>
-                    <span className='p-2 bg-[--hl-xs] truncate flex text-sm items-center justify-end'>
-                      {pathParameter.name.slice(1)}
-                    </span>
-                    <div className='px-2 flex items-center h-full'>
-                      <OneLineEditor
-                        id={'key-value-editor__name' + pathParameter.name}
-                        placeholder={'Parameter value'}
-                        defaultValue={pathParameter.value || ''}
-                        onChange={name => {
-                          onPathParameterChange(finalPathParameters.map(p => p.name === pathParameter.name ? { ...p, value: name } : p));
-                        }}
-                      />
+                  {pathParameters.length > 0 && (
+                    <div className="pr-[72.73px] w-full">
+                      <div className='grid gap-x-[20.8px] grid-cols-2 flex-shrink-0 w-full rounded-sm overflow-hidden'>
+                        {pathParameters.map(pathParameter => (
+                          <Fragment key={pathParameter.name}>
+                            <span className='p-2 select-none border-b border-solid border-[--hl-md] truncate flex items-center justify-end rounded-sm'>
+                              {pathParameter.name}
+                            </span>
+                            <div className='px-2 flex items-center h-full border-b border-solid border-[--hl-md]'>
+                              <OneLineEditor
+                                readOnly={disabled}
+                                id={'key-value-editor__name' + pathParameter.name}
+                                placeholder={'Parameter value'}
+                                defaultValue={pathParameter.value || ''}
+                                onChange={name => {
+                                  onPathParameterChange(pathParameters.map(p => p.name === pathParameter.name ? { ...p, value: name } : p));
+                                }}
+                              />
+                            </div>
+                          </Fragment>
+                        ))}
+                      </div>
                     </div>
-                  </Fragment>
-                ))}
-              </div>}
-              {finalPathParameters.length === 0 && (
-                <div className='text-sm text-[--hl] border border-solid border-[--hl-md] rounded p-2 flex items-center gap-2'>
-                  <Icon icon='info-circle' />
-                  <span>Path parameters are url path segments that start with a collon :</span>
+                  )}
+                  {pathParameters.length === 0 && (
+                    <div className='text-sm text-[--hl] rounded-sm border border-solid border-[--hl-md] p-2 flex items-center gap-2'>
+                      <Icon icon='info-circle' />
+                      <span>Path parameters are url path segments that start with a colon ':' e.g. ':id' </span>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </TabItem>

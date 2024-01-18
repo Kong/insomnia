@@ -2,7 +2,7 @@ import React, { FC, useState } from 'react';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';
 
-import { Request } from '../../models/request';
+import { PATH_PARAMETER_REGEX, Request } from '../../models/request';
 import { WebSocketRequest } from '../../models/websocket-request';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../utils/url/querystring';
 import { useNunjucks } from '../context/nunjucks/use-nunjucks';
@@ -56,11 +56,12 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
       if (pathParameters) {
         // Replace path parameters in URL with their rendered values
         // Path parameters are path segments that start with a colon, e.g. :id
-        url = url.replace(/:[^/?#]+/g, match => {
-          const param = pathParameters?.find(p => p.name === match);
+        url = url.replace(PATH_PARAMETER_REGEX, match => {
+          const pathParam = match.replace('\/:', '');
+          const param = pathParameters?.find(p => p.name === pathParam);
 
-          if (param) {
-            return param.value ? encodeURIComponent(param.value) : param.name;
+          if (param && param.value) {
+            return `/${encodeURIComponent(param.value)}`;
           }
           // The parameter should also be URL encoded
           return match;

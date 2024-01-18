@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { getContentTypeFromHeaders } from '../../../common/constants';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import { RequestParameter } from '../../../models/request';
+import { getCombinedPathParametersFromUrl, RequestParameter } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
@@ -112,10 +112,7 @@ export const RequestPane: FC<Props> = ({
     return <PlaceholderRequestPane />;
   }
 
-  // Path parameters are path segments that start with a colon (:)
-  const urlPathParameters = activeRequest.url.match(/:[^/?#]+/g)?.map(String) || [];
-  const savedPathParameters = activeRequest.pathParameters?.filter(p => urlPathParameters.includes(p.name)) || [];
-  const finalPathParameters = [...savedPathParameters, ...urlPathParameters?.filter(p => !savedPathParameters.map(p => p.name).includes(p)).map(p => ({ name: p, value: '' }))];
+  const pathParameters = getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters);
 
   const onPathParameterChange = (pathParameters: RequestParameter[]) => {
     patchRequest(requestId, { pathParameters });
@@ -145,8 +142,8 @@ export const RequestPane: FC<Props> = ({
           title={'Parameters'}
         >
           <div className='h-full flex flex-col'>
-            <div className="max-h-[14rem] grid grid-rows-auto auto-rows-min p-4 grow-0">
-              <code className="text-xs flex flex-col overflow-y-auto min-h-[2em]">
+            <div className="p-4">
+              <div className="text-xs max-h-32 flex flex-col overflow-y-auto min-h-[2em] bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm]">
                 <label className="label--small no-pad-top">Url Preview</label>
                 <ErrorBoundary
                   key={uniqueKey}
@@ -154,9 +151,9 @@ export const RequestPane: FC<Props> = ({
                 >
                   <RenderedQueryString request={activeRequest} />
                 </ErrorBoundary>
-              </code>
+              </div>
             </div>
-            <div className="grid flex-1 auto-rows-auto [grid-template-columns:100%] overflow-hidden">
+            <div className="grid flex-1 [grid-template-rows:minmax(auto,min-content)] [grid-template-columns:100%] overflow-hidden">
               <div className="min-h-[2rem] max-h-full flex flex-col overflow-y-auto [&_.key-value-editor]:p-0 flex-1">
                 <div className='flex items-center w-full p-4 h-4 justify-between'>
                 <Heading className='text-xs font-bold uppercase text-[--hl]'>Query parameters</Heading>
@@ -200,13 +197,13 @@ export const RequestPane: FC<Props> = ({
             </div>
               <div className='flex-1 flex flex-col gap-4 p-4 overflow-y-auto'>
               <Heading className='text-xs font-bold uppercase text-[--hl]'>Path parameters</Heading>
-                {finalPathParameters.length > 0 && (
+                {pathParameters.length > 0 && (
                   <div className="pr-[72.73px] w-full">
                     <div className='grid gap-x-[20.8px] grid-cols-2 flex-shrink-0 w-full rounded-sm overflow-hidden'>
-                      {finalPathParameters.map(pathParameter => (
+                      {pathParameters.map(pathParameter => (
                         <Fragment key={pathParameter.name}>
                           <span className='p-2 select-none border-b border-solid border-[--hl-md] truncate flex items-center justify-end rounded-sm'>
-                            {pathParameter.name.slice(1)}
+                            {pathParameter.name}
                           </span>
                           <div className='px-2 flex items-center h-full border-b border-solid border-[--hl-md]'>
                             <OneLineEditor
@@ -214,7 +211,7 @@ export const RequestPane: FC<Props> = ({
                               placeholder={'Parameter value'}
                               defaultValue={pathParameter.value || ''}
                               onChange={name => {
-                                onPathParameterChange(finalPathParameters.map(p => p.name === pathParameter.name ? { ...p, value: name } : p));
+                                onPathParameterChange(pathParameters.map(p => p.name === pathParameter.name ? { ...p, value: name } : p));
                               }}
                             />
                           </div>
@@ -223,7 +220,7 @@ export const RequestPane: FC<Props> = ({
                     </div>
                   </div>
                 )}
-                {finalPathParameters.length === 0 && (
+                {pathParameters.length === 0 && (
                   <div className='text-sm text-[--hl] rounded-sm border border-solid border-[--hl-md] p-2 flex items-center gap-2'>
                     <Icon icon='info-circle' />
                     <span>Path parameters are url path segments that start with a colon ':' e.g. ':id' </span>

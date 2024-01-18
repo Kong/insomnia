@@ -85,8 +85,46 @@ export interface RequestBodyParameter {
 export interface RequestPathParameter {
   name: string;
   value: string;
-  id?: string;
 }
+
+export const PATH_PARAMETER_REGEX = /\/:[^/?#]+/g;
+
+export const getPathParametersFromUrl = (url: string): string[] => {
+  // Find all path parameters in the URL. Path parameters are defined as segments of the URL that start with a colon.
+  const urlPathParameters = url.match(PATH_PARAMETER_REGEX)?.map(String).map(match => match.replace('\/:', '')) || [];
+  const uniqueUrlPathParameters = [...new Set(urlPathParameters)];
+
+  return uniqueUrlPathParameters;
+};
+
+export const getCombinedPathParametersFromUrl = (url: string, pathParameters: RequestPathParameter[]): RequestPathParameter[] => {
+  // Extract path parameters from the URL
+  const urlPathParameters = getPathParametersFromUrl(url);
+
+  // Initialize an empty array for saved path parameters
+  let savedPathParameters: RequestPathParameter[] = [];
+
+  // Check if there are any path parameters in the active request
+  if (pathParameters) {
+    // Filter out the saved path parameters
+    savedPathParameters = pathParameters.filter(p => urlPathParameters.includes(p.name));
+  }
+
+  // Initialize an empty set for unsaved URL path parameters
+  let unsavedUrlPathParameters = new Set<RequestPathParameter>();
+
+  // Check if there are any path parameters in the URL
+  if (urlPathParameters) {
+    // Filter out the unsaved URL path parameters
+    unsavedUrlPathParameters = new Set(
+      urlPathParameters.filter(p => !savedPathParameters.map(p => p.name).includes(p))
+        .map(p => ({ name: p, value: '' }))
+    );
+  }
+
+  // Combine the saved and unsaved path parameters
+  return [...savedPathParameters, ...unsavedUrlPathParameters];
+};
 
 export interface RequestBody {
   mimeType?: string | null;
