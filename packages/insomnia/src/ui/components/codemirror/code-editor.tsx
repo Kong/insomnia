@@ -90,7 +90,7 @@ export interface CodeEditorProps {
   noMatchBrackets?: boolean;
   noStyleActiveLine?: boolean;
   // used only for saving env editor state
-  onBlur?: () => void;
+  onBlur?: (e: FocusEvent) => void;
   onChange?: (value: string) => void;
   onClickLink?: CodeMirrorLinkClickCallback;
   pinToBottom?: boolean;
@@ -397,10 +397,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         };
       }
     };
-    codeMirror.current.on('blur', () => {
-      persistState();
-      onBlur?.();
-    });
+
     codeMirror.current.on('scroll', persistState);
     codeMirror.current.on('fold', persistState);
     codeMirror.current.on('unfold', persistState);
@@ -439,7 +436,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     }
   });
   useUnmount(() => {
-    onBlur?.();
     codeMirror.current?.toTextArea();
     codeMirror.current?.closeHintDropdown();
     codeMirror.current = null;
@@ -471,9 +467,9 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   }, [lintOptions, noLint, onChange]);
 
   useEffect(() => {
-    const handleOnBlur = () => onBlur?.();
+    const handleOnBlur = (_: CodeMirror.Editor, e: FocusEvent) => onBlur?.(e);
     codeMirror.current?.on('blur', handleOnBlur);
-    return () => codeMirror.current?.on('blur', handleOnBlur);
+    return () => codeMirror.current?.off('blur', handleOnBlur);
   }, [onBlur]);
 
   const tryToSetOption = (key: keyof EditorConfiguration, value: any) => {
