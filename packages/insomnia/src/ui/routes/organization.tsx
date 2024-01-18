@@ -715,7 +715,7 @@ const OrganizationRoute = () => {
                   className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
                   onPress={() => showModal(SettingsModal, { tab: 'data' })}
                 >
-                  <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer. Press here to view them.
+                  <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click here to view them.
                 </Button>
               </div> : null}
             </div>

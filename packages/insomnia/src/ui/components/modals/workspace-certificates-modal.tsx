@@ -218,11 +218,19 @@ const ClientCertificateGridListItem = ({ certificate }: {
   const deleteClientCertificateFetcher = useFetcher();
 
   return (
-    <GridListItem className="outline-none flex flex-col gap-2 pl-2 items-center justify-between p-1 ring-inset focus:ring-1 focus:ring-[--hl-md]">
+    <GridListItem className="outline-none flex flex-col gap-2 items-center justify-between p-4 ring-inset focus:ring-1 focus:ring-[--hl-md]">
       <div className='flex items-center gap-2 w-full'>
         {Boolean(certificate.pfx || certificate.cert) && <Icon icon="file-contract" className='w-4' title={certificate.pfx || certificate.cert || ''} />}
         {certificate.key && <Icon icon="key" title={certificate.key} />}
         <div className='flex-1 text-sm text-[--color-font] truncate'>{certificate.host}</div>
+        {certificate.passphrase && (
+          <div className='flex items-center gap-2 truncate'>
+            <span className='text-sm'>{'Password:'}</span>
+            <div className='truncate text-sm'>
+              <PasswordViewer text={certificate.passphrase} />
+            </div>
+          </div>
+        )}
         <div className='flex items-center gap-2 h-6'>
           <ToggleButton
             onChange={isSelected => {
@@ -233,7 +241,7 @@ const ClientCertificateGridListItem = ({ certificate }: {
               });
             }}
             isSelected={!certificate.disabled}
-            className="w-[12ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            className="w-[12ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 h-full rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           >
             {({ isSelected }) => (
               <Fragment>
@@ -259,14 +267,6 @@ const ClientCertificateGridListItem = ({ certificate }: {
           </Button>
         </div>
       </div>
-      {certificate.passphrase && (
-        <div className='flex items-center gap-2 w-full truncate'>
-          <span className='text-sm'>{'Password:'}</span>
-          <div className='truncate text-sm'>
-            <PasswordViewer text={certificate.passphrase} />
-          </div>
-        </div>
-      )}
     </GridListItem>
   );
 };
@@ -324,79 +324,80 @@ export const CertificatesModal = ({ onClose }: {
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className='rounded flex-1 w-full overflow-hidden basis-96 flex flex-col gap-2 select-none overflow-y-auto'>
+              <div className='rounded flex-1 w-full overflow-hidden basis-96 flex flex-col gap-6 select-none overflow-y-auto'>
                 <Heading className='text-xl'>CA Certificate</Heading>
-                <p className="text-sm text-[--hl] italic max-w-[80ch]">
-                  <Icon icon='info-circle' className='pr-2' />
-                  One or more PEM format certificates in a single file to pass to curl. Overrides the root CA certificate.
-                  On MacOS please upload your local Keychain certificates here
-                </p>
-                {caCertificate ? (
-                  <div className='flex gap-2 pl-2 items-center justify-between rounded-sm border border-solid border-[--hl-sm] p-1'>
-                    <Icon icon="file-contract" className='w-4' />
-                    <div className='flex-1 text-sm text-[--color-font] truncate' title={caCertificate.path || ''}>{caCertificate?.path?.split('\\')?.pop()?.split('/')?.pop()}</div>
-                    <div className='flex items-center gap-2 h-6'>
-                      <ToggleButton
-                        onChange={isSelected => {
-                          updateCertificateFetcher.submit({ _id: caCertificate._id, disabled: !isSelected }, {
-                            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/update`,
+                <div className='flex flex-col gap-2'>
+                  {caCertificate ? (
+                    <div className='flex gap-2 items-center justify-between rounded-sm border border-solid border-[--hl-sm] p-4'>
+                      <Icon icon="file-contract" className='w-4' />
+                      <div className='flex-1 text-sm text-[--color-font] truncate' title={caCertificate.path || ''}>{caCertificate?.path?.split('\\')?.pop()?.split('/')?.pop()}</div>
+                      <div className='flex items-center gap-2 h-6'>
+                        <ToggleButton
+                          onChange={isSelected => {
+                            updateCertificateFetcher.submit({ _id: caCertificate._id, disabled: !isSelected }, {
+                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/update`,
+                              method: 'post',
+                              encType: 'application/json',
+                            });
+                          }}
+                          isSelected={!caCertificate.disabled}
+                          className="w-[12ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 h-full rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                        >
+                          {({ isSelected }) => (
+                            <Fragment>
+                              <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
+                              <span>{
+                                isSelected ? 'Enabled' : 'Disabled'
+                              }</span>
+                            </Fragment>
+                          )}
+                        </ToggleButton>
+                        <Button
+                          isDisabled={deleteCertificateFetcher.state !== 'idle'}
+                          onPress={() => {
+                            deleteCertificateFetcher.submit({}, {
+                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/delete`,
+                              method: 'delete',
+                            });
+                          }}
+                          className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                        >
+                          <Icon icon="trash" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className='flex gap-2 items-center justify-between'>
+                      <FileTrigger
+                        acceptedFileTypes={['.pem']}
+                        allowsMultiple={false}
+                        onSelect={fileList => {
+                          if (!fileList) {
+                            return;
+                          }
+                          const files = Array.from(fileList);
+                          const file = files[0];
+
+                          createCertificateFetcher.submit({ parentId: workspaceId, path: file.path }, {
+                            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/new`,
                             method: 'post',
                             encType: 'application/json',
                           });
                         }}
-                        isSelected={!caCertificate.disabled}
-                        className="w-[12ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                       >
-                        {({ isSelected }) => (
-                          <Fragment>
-                            <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
-                            <span>{
-                              isSelected ? 'Enabled' : 'Disabled'
-                            }</span>
-                          </Fragment>
-                        )}
-                      </ToggleButton>
-                      <Button
-                        isDisabled={deleteCertificateFetcher.state !== 'idle'}
-                        onPress={() => {
-                          deleteCertificateFetcher.submit({}, {
-                            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/delete`,
-                            method: 'delete',
-                          });
-                        }}
-                        className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                      >
-                        <Icon icon="trash" />
-                      </Button>
+                        <Button className="flex flex-1 flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
+                          <Icon icon="plus" />
+                          <span>Add CA Certificate</span>
+                        </Button>
+                      </FileTrigger>
                     </div>
-                  </div>
-                ) : (
-                  <div className='flex gap-2 items-center justify-between'>
-                    <FileTrigger
-                      acceptedFileTypes={['.pem']}
-                      allowsMultiple={false}
-                      onSelect={fileList => {
-                        if (!fileList) {
-                          return;
-                        }
-                        const files = Array.from(fileList);
-                        const file = files[0];
-
-                        createCertificateFetcher.submit({ parentId: workspaceId, path: file.path }, {
-                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/new`,
-                          method: 'post',
-                          encType: 'application/json',
-                        });
-                      }}
-                    >
-                      <Button className="flex flex-1 flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
-                        <Icon icon="plus" />
-                        <span>Add CA Certificate</span>
-                      </Button>
-                    </FileTrigger>
-                  </div>
-                )}
-                <span className='p-2' />
+                  )}
+                  <p className="text-sm text-[--hl] italic max-w-[80ch]">
+                    <Icon icon='info-circle' className='pr-2' />
+                    One or more PEM format certificates in a single file to pass to curl. Overrides the root CA certificate.
+                    On MacOS please upload your local Keychain certificates here.
+                  </p>
+                </div>
                 <div className='flex items-center gap-2 justify-between'>
                   <Heading className='text-xl'>Client Certificates</Heading>
                   <Button

@@ -6,7 +6,7 @@ import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
 import { isProject, Project } from '../models/project';
-import type { Request } from '../models/request';
+import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
 import { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, Workspace } from '../models/workspace';
@@ -493,6 +493,7 @@ export async function getRenderedRequestAndContext(
     renderContext,
     request.settingDisableRenderRequestBody ? /^body.*/ : null,
   );
+
   const renderedRequest = renderResult._request;
   const renderedCookieJar = renderResult._cookieJar;
   renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
@@ -514,6 +515,24 @@ export async function getRenderedRequestAndContext(
 
   // Default the proto if it doesn't exist
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
+
+  // Render path parameters
+  if (renderedRequest.pathParameters) {
+    // Replace path parameters in URL with their rendered values
+    // Path parameters are path segments that start with a colon, e.g. :id
+    renderedRequest.url = renderedRequest.url.replace(PATH_PARAMETER_REGEX, match => {
+      const paramName = match.replace('\/:', '');
+      const param = renderedRequest.pathParameters?.find(p => p.name === paramName);
+
+      if (param && param.value) {
+        // The parameter value needs to be URL encoded
+        return `/${encodeURIComponent(param.value)}`;
+      }
+
+      return match;
+    });
+  }
+
   return {
     context: renderContext,
     request: {
@@ -523,6 +542,7 @@ export async function getRenderedRequestAndContext(
       isPrivate: false,
       _id: renderedRequest._id,
       authentication: renderedRequest.authentication,
+      pathParameters: renderedRequest.pathParameters,
       body: renderedRequest.body,
       created: renderedRequest.created,
       modified: renderedRequest.modified,

@@ -1,10 +1,12 @@
-import React, { FC, useState } from 'react';
+import React, { FC, Fragment, useState } from 'react';
+import { Button, Heading, ToggleButton } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
+import { getCombinedPathParametersFromUrl, RequestParameter } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
@@ -12,18 +14,15 @@ import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/us
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
+import { OneLineEditor } from '../codemirror/one-line-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
-import {
-  QueryEditor,
-  QueryEditorContainer,
-  QueryEditorPreview,
-} from '../editors/query-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
+import { Icon } from '../icon';
 import { MarkdownPreview } from '../markdown-preview';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { RenderedQueryString } from '../rendered-query-string';
@@ -113,9 +112,11 @@ export const RequestPane: FC<Props> = ({
     return <PlaceholderRequestPane />;
   }
 
-  const numParameters = activeRequest.parameters.filter(
-    p => !p.disabled,
-  ).length;
+  const pathParameters = getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters);
+
+  const onPathParameterChange = (pathParameters: RequestParameter[]) => {
+    patchRequest(requestId, { pathParameters });
+  };
   const numHeaders = activeRequest.headers.filter(h => !h.disabled).length;
   const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
   const contentType =
@@ -136,6 +137,99 @@ export const RequestPane: FC<Props> = ({
         </ErrorBoundary>
       </PaneHeader>
       <Tabs aria-label="Request pane tabs">
+        <TabItem
+          key="query"
+          title={'Parameters'}
+        >
+          <div className='h-full flex flex-col'>
+            <div className="p-4">
+              <div className="text-xs max-h-32 flex flex-col overflow-y-auto min-h-[2em] bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm]">
+                <label className="label--small no-pad-top">Url Preview</label>
+                <ErrorBoundary
+                  key={uniqueKey}
+                  errorClassName="tall wide vertically-align font-error pad text-center"
+                >
+                  <RenderedQueryString request={activeRequest} />
+                </ErrorBoundary>
+              </div>
+            </div>
+            <div className="grid flex-1 [grid-template-rows:minmax(auto,min-content)] [grid-template-columns:100%] overflow-hidden">
+              <div className="min-h-[2rem] max-h-full flex flex-col overflow-y-auto [&_.key-value-editor]:p-0 flex-1">
+                <div className='flex items-center w-full p-4 h-4 justify-between'>
+                <Heading className='text-xs font-bold uppercase text-[--hl]'>Query parameters</Heading>
+                <div className='flex items-center gap-2'>
+                  <Button
+                    isDisabled={!urlHasQueryParameters}
+                    onPress={handleImportQueryFromUrl}
+                    className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  >
+                    Import from URL
+                  </Button>
+                  <ToggleButton
+                    onChange={isSelected => {
+                      patchSettings({
+                        useBulkParametersEditor: isSelected,
+                      });
+                    }}
+                    isSelected={settings.useBulkParametersEditor}
+                    className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 h-full rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  >
+                    {({ isSelected }) => (
+                      <Fragment>
+                        <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
+                        <span>{
+                          isSelected ? 'Regular Edit' : 'Bulk Edit'
+                        }</span>
+                      </Fragment>
+                    )}
+                  </ToggleButton>
+                </div>
+              </div>
+              <ErrorBoundary
+                key={uniqueKey}
+                errorClassName="tall wide vertically-align font-error pad text-center"
+              >
+                <RequestParametersEditor
+                  key={contentType}
+                  bulk={settings.useBulkParametersEditor}
+                />
+              </ErrorBoundary>
+            </div>
+              <div className='flex-1 flex flex-col gap-4 p-4 overflow-y-auto'>
+              <Heading className='text-xs font-bold uppercase text-[--hl]'>Path parameters</Heading>
+                {pathParameters.length > 0 && (
+                  <div className="pr-[72.73px] w-full">
+                    <div className='grid gap-x-[20.8px] grid-cols-2 flex-shrink-0 w-full rounded-sm overflow-hidden'>
+                      {pathParameters.map(pathParameter => (
+                        <Fragment key={pathParameter.name}>
+                          <span className='p-2 select-none border-b border-solid border-[--hl-md] truncate flex items-center justify-end rounded-sm'>
+                            {pathParameter.name}
+                          </span>
+                          <div className='px-2 flex items-center h-full border-b border-solid border-[--hl-md]'>
+                            <OneLineEditor
+                              id={'key-value-editor__name' + pathParameter.name}
+                              placeholder={'Parameter value'}
+                              defaultValue={pathParameter.value || ''}
+                              onChange={name => {
+                                onPathParameterChange(pathParameters.map(p => p.name === pathParameter.name ? { ...p, value: name } : p));
+                              }}
+                            />
+                          </div>
+                        </Fragment>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {pathParameters.length === 0 && (
+                  <div className='text-sm text-[--hl] rounded-sm border border-solid border-[--hl-md] p-2 flex items-center gap-2'>
+                    <Icon icon='info-circle' />
+                    <span>Path parameters are url path segments that start with a colon ':' e.g. ':id' </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </TabItem>
         <TabItem key="content-type" title={<ContentTypeDropdown />}>
           <BodyEditor
             key={uniqueKey}
@@ -150,67 +244,6 @@ export const RequestPane: FC<Props> = ({
           >
             <AuthWrapper />
           </ErrorBoundary>
-        </TabItem>
-        <TabItem
-          key="query"
-          title={
-            <>
-              Query{' '}
-              {numParameters > 0 && (
-                <span className="bubble space-left">{numParameters}</span>
-              )}
-            </>
-          }
-        >
-          <QueryEditorContainer>
-            <QueryEditorPreview className="pad pad-bottom-sm">
-              <label className="label--small no-pad-top">Url Preview</label>
-              <code className="txt-sm block faint">
-                <ErrorBoundary
-                  key={uniqueKey}
-                  errorClassName="tall wide vertically-align font-error pad text-center"
-                >
-                  <RenderedQueryString request={activeRequest} />
-                </ErrorBoundary>
-              </code>
-            </QueryEditorPreview>
-            <QueryEditor>
-              <ErrorBoundary
-                key={uniqueKey}
-                errorClassName="tall wide vertically-align font-error pad text-center"
-              >
-                <RequestParametersEditor
-                  key={contentType}
-                  bulk={settings.useBulkParametersEditor}
-                />
-              </ErrorBoundary>
-            </QueryEditor>
-            <TabPanelFooter>
-              <button
-                className="btn btn--compact"
-                title={
-                  urlHasQueryParameters
-                    ? 'Import querystring'
-                    : 'No query params to import'
-                }
-                onClick={handleImportQueryFromUrl}
-              >
-                Import from URL
-              </button>
-              <button
-                className="btn btn--compact"
-                onClick={() =>
-                  patchSettings({
-                    useBulkParametersEditor: !settings.useBulkParametersEditor,
-                  })
-                }
-              >
-                {settings.useBulkParametersEditor
-                  ? 'Regular Edit'
-                  : 'Bulk Edit'}
-              </button>
-            </TabPanelFooter>
-          </QueryEditorContainer>
         </TabItem>
         <TabItem
           key="headers"
