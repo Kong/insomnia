@@ -24,6 +24,7 @@ import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
+import { Icon } from '../icon';
 import { MarkdownPreview } from '../markdown-preview';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
@@ -305,7 +306,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             </div>
             <div className='flex-1 flex flex-col gap-2 p-4 border-t border-solid border-[--hl-md] overflow-y-auto'>
               <Heading className='text-xs font-bold uppercase text-[--hl]'>Path parameters</Heading>
-              <div className='grid grid-cols-2 flex-shrink-0 w-full divide-x divide-y divide-solid divide-[--hl-sm] rounded-sm border border-solid border-[--hl-sm] overflow-hidden'>
+              {finalPathParameters.length > 0 && <div className='grid grid-cols-2 flex-shrink-0 w-full divide-x divide-y divide-solid divide-[--hl-sm] rounded-sm border border-solid border-[--hl-sm] overflow-hidden'>
                 {finalPathParameters.map(pathParameter => (
                   <Fragment key={pathParameter.name}>
                     <span className='p-2 bg-[--hl-xs] truncate flex text-sm items-center justify-end'>
@@ -323,7 +324,13 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                     </div>
                   </Fragment>
                 ))}
-              </div>
+              </div>}
+              {finalPathParameters.length === 0 && (
+                <div className='text-sm text-[--hl] border border-solid border-[--hl-md] rounded p-2 flex items-center gap-2'>
+                  <Icon icon='info-circle' />
+                  <span>Path parameters are url path segments that start with a collon :</span>
+                </div>
+              )}
             </div>
           </div>
         </TabItem>
