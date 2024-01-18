@@ -43,13 +43,27 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
       const result = await handleRender({
         url: request.url,
         parameters: enabledParameters,
+        pathParameters: request.pathParameters,
       });
 
       if (!result) {
         return;
       }
 
-      const { url, parameters } = result;
+      const { parameters, pathParameters } = result;
+      let { url } = result;
+
+      if (pathParameters) {
+        // Replace path parameters in URL with their rendered values
+        // Path parameters are path segments that start with a colon, e.g. :id
+        url = url.replace(/:[^/?#]+/g, match => {
+          const param = pathParameters?.find(p => p.name === match);
+
+          // The parameter should also be URL encoded
+          return param ? encodeURIComponent(param.value) : match;
+        });
+      }
+
       const qs = buildQueryStringFromParams(parameters);
       const fullUrl = joinUrlAndQueryString(url, qs);
       const encoded = smartEncodeUrl(fullUrl, request.settingEncodeUrl);
@@ -58,7 +72,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
       console.error(error);
       setPreviewString(defaultPreview);
     }
-  }, [request.url, request.parameters, request.settingEncodeUrl, handleRender]);
+  }, [request.parameters, request.url, request.pathParameters, request.settingEncodeUrl, handleRender]);
 
   const className = previewString === defaultPreview ? 'super-duper-faint' : 'selectable force-wrap';
 

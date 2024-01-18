@@ -493,6 +493,7 @@ export async function getRenderedRequestAndContext(
     renderContext,
     request.settingDisableRenderRequestBody ? /^body.*/ : null,
   );
+
   const renderedRequest = renderResult._request;
   const renderedCookieJar = renderResult._cookieJar;
   renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
@@ -514,6 +515,19 @@ export async function getRenderedRequestAndContext(
 
   // Default the proto if it doesn't exist
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
+
+  // Render path parameters
+  if (renderedRequest.pathParameters) {
+    // Replace path parameters in URL with their rendered values
+    // Path parameters are path segments that start with a colon, e.g. :id
+    renderedRequest.url = renderedRequest.url.replace(/:[^/?#]+/g, match => {
+      const param = renderedRequest.pathParameters?.find(p => p.name === match);
+
+      // The parameter should also be URL encoded
+      return param ? encodeURIComponent(param.value) : match;
+    });
+  }
+
   return {
     context: renderContext,
     request: {
@@ -523,6 +537,7 @@ export async function getRenderedRequestAndContext(
       isPrivate: false,
       _id: renderedRequest._id,
       authentication: renderedRequest.authentication,
+      pathParameters: renderedRequest.pathParameters,
       body: renderedRequest.body,
       created: renderedRequest.created,
       modified: renderedRequest.modified,
