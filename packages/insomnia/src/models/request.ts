@@ -244,7 +244,6 @@ export function migrate(doc: Request): Request {
     doc = migrateBody(doc);
     doc = migrateWeirdUrls(doc);
     doc = migrateAuthType(doc);
-    doc = migratePathParameters(doc);
     return doc;
   } catch (e) {
     console.log('[db] Error during request migration', e);
@@ -310,30 +309,6 @@ export function remove(request: Request) {
 
 export async function all() {
   return db.all<Request>(type);
-}
-
-function migratePathParameters(request: Request) {
-  if (!request.pathParameters) {
-    request.pathParameters = [];
-  }
-
-  const urlPathParameters = request.url.match(/:[^/?#]+/g)?.map(String) || [];
-  const savedPathParameters = request.pathParameters?.filter(p => urlPathParameters.includes(p.name)) || [];
-
-  // Add any missing path parameters
-  for (const urlPathParameter of urlPathParameters) {
-    const name = urlPathParameter.slice(1);
-    const existing = savedPathParameters.find(p => p.name === name);
-
-    if (!existing) {
-      request.pathParameters.push({
-        name,
-        value: '',
-      });
-    }
-  }
-
-  return request;
 }
 
 // ~~~~~~~~~~ //
