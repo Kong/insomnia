@@ -118,13 +118,8 @@ export const RequestPane: FC<Props> = ({
   const finalPathParameters = [...savedPathParameters, ...urlPathParameters?.filter(p => !savedPathParameters.map(p => p.name).includes(p)).map(p => ({ name: p, value: '' }))];
 
   const onPathParameterChange = (pathParameters: RequestParameter[]) => {
-    console.log('pathParameters', pathParameters);
     patchRequest(requestId, { pathParameters });
   };
-
-  const numParameters = activeRequest.parameters.filter(
-    p => !p.disabled,
-  ).length;
   const numHeaders = activeRequest.headers.filter(h => !h.disabled).length;
   const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
   const contentType =
@@ -147,14 +142,7 @@ export const RequestPane: FC<Props> = ({
       <Tabs aria-label="Request pane tabs">
         <TabItem
           key="query"
-          title={
-            <>
-              Parameters{' '}
-              {numParameters > 0 && (
-                <span className="bubble space-left">{numParameters}</span>
-              )}
-            </>
-          }
+          title={'Parameters'}
         >
           <div className="grid h-full auto-rows-auto [grid-template-columns:100%] divide-y divide-solid divide-[--hl-md]">
             <div className="max-h-[14rem] grid grid-rows-auto auto-rows-min p-4">

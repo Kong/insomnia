@@ -1,10 +1,12 @@
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
+import { Heading } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
 import * as models from '../../../models';
 import { Environment } from '../../../models/environment';
+import { RequestPathParameter } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
@@ -15,10 +17,10 @@ import { WebSocketRequestLoaderData } from '../../routes/request';
 import { useRootLoaderData } from '../../routes/root';
 import { TabItem, Tabs } from '../base/tabs';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
+import { OneLineEditor } from '../codemirror/one-line-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { WebSocketPreviewMode } from '../dropdowns/websocket-preview-mode';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
-import { QueryEditorContainer, QueryEditorPreview } from '../editors/query-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
@@ -77,11 +79,6 @@ const PaneReadOnlyBanner = () => {
     </PaneReadOnlyBannerContainer>
   );
 };
-
-const QueryEditorWrapper = styled.div({
-  flex: '1 0 auto',
-  overflowY: 'auto',
-});
 
 interface FormProps {
   request: WebSocketRequest;
@@ -238,6 +235,15 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
     upsertPayloadWithMode(mode);
   };
 
+  // Path parameters are path segments that start with a colon (:)
+  const urlPathParameters = activeRequest.url.match(/:[^/?#]+/g)?.map(String) || [];
+  const savedPathParameters = activeRequest.pathParameters?.filter(p => urlPathParameters.includes(p.name)) || [];
+  const finalPathParameters = [...savedPathParameters, ...urlPathParameters?.filter(p => !savedPathParameters.map(p => p.name).includes(p)).map(p => ({ name: p, value: '' }))];
+
+  const onPathParameterChange = (pathParameters: RequestPathParameter[]) => {
+    patchRequest(requestId, { pathParameters });
+  };
+
   const upsertPayloadWithMode = async (mode: string) => {
     // @TODO: multiple payloads
     const payload = await models.webSocketPayload.getByParentId(requestId);
@@ -272,6 +278,55 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
         />
       </PaneHeader>
       <Tabs aria-label="Websocket request pane tabs">
+        <TabItem key="query" title="Parameters">
+          <div className="grid h-full auto-rows-auto [grid-template-columns:100%] divide-y divide-solid divide-[--hl-md]">
+            {disabled && <PaneReadOnlyBanner />}
+            <div className="max-h-[14rem] grid grid-rows-auto auto-rows-min p-4">
+              <label className="label--small no-pad-top">Url Preview</label>
+              <code className="txt-sm block faint overflow-auto min-h-[2em]">
+                <ErrorBoundary
+                  key={uniqueKey}
+                  errorClassName="tall wide vertically-align font-error pad text-center"
+                >
+                  <RenderedQueryString request={activeRequest} />
+                </ErrorBoundary>
+              </code>
+            </div>
+            <div className="min-h-[2rem] max-h-full flex flex-col overflow-y-auto [&_.key-value-editor]:p-0">
+              <ErrorBoundary
+                key={uniqueKey}
+                errorClassName="tall wide vertically-align font-error pad text-center"
+              >
+                <RequestParametersEditor
+                  bulk={useBulkParametersEditor}
+                  disabled={disabled}
+                />
+              </ErrorBoundary>
+            </div>
+            <div className='flex-1 flex flex-col gap-2 p-4 border-t border-solid border-[--hl-md] overflow-y-auto'>
+              <Heading className='text-xs font-bold uppercase text-[--hl]'>Path parameters</Heading>
+              <div className='grid grid-cols-2 flex-shrink-0 w-full divide-x divide-y divide-solid divide-[--hl-sm] rounded-sm border border-solid border-[--hl-sm] overflow-hidden'>
+                {finalPathParameters.map(pathParameter => (
+                  <Fragment key={pathParameter.name}>
+                    <span className='p-2 bg-[--hl-xs] truncate flex text-sm items-center justify-end'>
+                      {pathParameter.name.slice(1)}
+                    </span>
+                    <div className='px-2 flex items-center h-full'>
+                      <OneLineEditor
+                        id={'key-value-editor__name' + pathParameter.name}
+                        placeholder={'Parameter value'}
+                        defaultValue={pathParameter.value || ''}
+                        onChange={name => {
+                          onPathParameterChange(finalPathParameters.map(p => p.name === pathParameter.name ? { ...p, value: name } : p));
+                        }}
+                      />
+                    </div>
+                  </Fragment>
+                ))}
+              </div>
+            </div>
+          </div>
+        </TabItem>
         <TabItem key="websocket-preview-mode" title={<WebSocketPreviewMode previewMode={previewMode} onClick={changeMode} />}>
           <div
             style={{
@@ -304,33 +359,6 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             key={uniqueKey}
             disabled={disabled}
           />
-        </TabItem>
-        <TabItem key="query" title="Query">
-          <QueryEditorContainer>
-            {disabled && <PaneReadOnlyBanner />}
-            <QueryEditorPreview className="pad pad-bottom-sm">
-              <label className="label--small no-pad-top">Url Preview</label>
-              <code className="txt-sm block faint">
-                <ErrorBoundary
-                  key={uniqueKey}
-                  errorClassName="tall wide vertically-align font-error pad text-center"
-                >
-                  <RenderedQueryString request={activeRequest} />
-                </ErrorBoundary>
-              </code>
-            </QueryEditorPreview>
-            <QueryEditorWrapper>
-              <ErrorBoundary
-                key={uniqueKey}
-                errorClassName="tall wide vertically-align font-error pad text-center"
-              >
-                <RequestParametersEditor
-                  bulk={useBulkParametersEditor}
-                  disabled={disabled}
-                />
-              </ErrorBoundary>
-            </QueryEditorWrapper>
-          </QueryEditorContainer>
         </TabItem>
         <TabItem key="headers" title="Headers">
           {disabled && <PaneReadOnlyBanner />}
