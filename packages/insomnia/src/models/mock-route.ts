@@ -17,7 +17,6 @@ interface BaseMockRoute {
   headers: RequestHeader[];
   parentId: string;
   url: string;
-  path: string;
   statusCode: number;
   statusText: string;
   name: string;
@@ -33,10 +32,9 @@ export function init(): BaseMockRoute {
     headers: [],
     parentId: '',
     url: '',
-    path: '/',
     statusCode: 200,
     statusText: '',
-    name: '',
+    name: '/',
     mimeType: 'application/json',
     method: 'GET',
   };

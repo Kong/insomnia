@@ -13,7 +13,7 @@ import { AlertModal } from '../modals/alert-modal';
 export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: string) => void; onSend: (path: string) => void }) => {
   const { mockServer, mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
-  const [pathInput, setPathInput] = useState<string>(mockRoute.path);
+  const [pathInput, setPathInput] = useState<string>(mockRoute.name);
   const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
   return (<div className='w-full flex justify-between urlbar'>
     <Dropdown

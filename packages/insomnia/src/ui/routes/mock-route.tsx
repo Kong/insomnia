@@ -141,7 +141,7 @@ export const MockRouteRoute = () => {
     }
     patchMockRoute(mockRoute._id, {
       url: mockbinUrl + '/bin/' + mockRoute.parentId,
-      path: pathInput,
+      name: pathInput,
     });
   };
   const onSend = async (pathInput: string) => {
@@ -155,7 +155,7 @@ export const MockRouteRoute = () => {
       isPrivate: true,
     });
   };
-  const onBlurTriggerUpsert = () => upsertMockbinHar(mockRoute.path);
+  const onBlurTriggerUpsert = () => upsertMockbinHar(mockRoute.name);
   return (
     <Pane type="request">
       <PaneHeader>

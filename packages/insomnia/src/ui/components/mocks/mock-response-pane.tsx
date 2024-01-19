@@ -44,7 +44,7 @@ export const MockResponsePane = () => {
     const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
 
     const fn = async () => {
-      const compoundId = mockRoute.parentId + mockRoute.path;
+      const compoundId = mockRoute.parentId + mockRoute.name;
       try {
         const res = await window.main.axiosRequest({
           url: mockbinUrl + `/bin/log/${compoundId}`,
@@ -61,7 +61,7 @@ export const MockResponsePane = () => {
       }
     };
     fn();
-  }, [activeResponse?._id, mockRoute.parentId, mockRoute.path, mockServer.url, mockServer.useInsomniaCloud]);
+  }, [activeResponse?._id, mockRoute.name, mockRoute.parentId, mockServer.url, mockServer.useInsomniaCloud]);
 
   useEffect(() => {
     const fn = async () => {

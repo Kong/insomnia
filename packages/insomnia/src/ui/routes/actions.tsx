@@ -1213,14 +1213,6 @@ export const updateMockRouteAction: ActionFunction = async ({ request, params })
 
   const mockRoute = await models.mockRoute.getById(mockRouteId);
   invariant(mockRoute, 'Mock route is required');
-  // sync name to path
-  if (patch.path) {
-    patch.name = patch.path;
-  }
-  if (patch.name) {
-    patch.path = patch.name;
-  }
-  console.log({ mockRoute, patch });
 
   await models.mockRoute.update(mockRoute, patch);
   return null;
