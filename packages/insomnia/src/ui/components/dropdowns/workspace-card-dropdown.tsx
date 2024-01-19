@@ -9,6 +9,7 @@ import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
 import { CaCertificate } from '../../../models/ca-certificate';
 import { ClientCertificate } from '../../../models/client-certificate';
+import { MockServer } from '../../../models/mock-server';
 import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
@@ -30,6 +31,7 @@ interface Props {
   workspace: Workspace;
   workspaceMeta: WorkspaceMeta;
   apiSpec: ApiSpec | null;
+  mockServer: MockServer | null;
   project: Project;
   projects: Project[];
   clientCertificates: ClientCertificate[];

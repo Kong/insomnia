@@ -19,7 +19,6 @@ import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
-import { MockRequestSender } from '../editors/mock-request-sender';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';

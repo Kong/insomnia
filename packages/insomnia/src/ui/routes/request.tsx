@@ -8,7 +8,6 @@ import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 import { version } from '../../../package.json';
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import { ChangeBufferEvent, database } from '../../common/database';
-import { HarResponse } from '../../common/har';
 import { getContentDispositionHeader } from '../../common/misc';
 import { RENDER_PURPOSE_SEND } from '../../common/render';
 import { ResponsePatch } from '../../main/network/libcurl-promise';
