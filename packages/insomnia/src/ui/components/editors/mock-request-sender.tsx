@@ -1,14 +1,22 @@
+import fs from 'fs/promises';
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useRouteLoaderData } from 'react-router-dom';
 
+import { useMockRoutePatcher } from '../../routes/mock-route';
 import { RequestLoaderData } from '../../routes/request';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 
 export const MockRequestSender = () => {
-  const { mockServerAndRoutes } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-
+  const { mockServerAndRoutes, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const patchMockRoute = useMockRoutePatcher();
+  const navigate = useNavigate();
+  const {
+    organizationId,
+    projectId,
+  } = useParams();
   const [selectedMockServer, setSelectedMockServer] = useState('');
   const [selectedMockRoute, setSelectedMockRoute] = useState('');
   return (
@@ -20,10 +28,23 @@ export const MockRequestSender = () => {
         Export this response to a mock route.
       </div>
       <form
-        onSubmit={e => {
+        onSubmit={async e => {
           e.preventDefault();
           if (!selectedMockServer || !selectedMockRoute) {
             return;
+          }
+
+          if (activeResponse) {
+            // TODO: move this out of the renderer
+            const body = await fs.readFile(activeResponse.bodyPath);
+            console.log('Exporting response to mock route', activeResponse, body.toString());
+
+            patchMockRoute(selectedMockRoute, {
+              body: body.toString(),
+              mimeType: activeResponse.contentType,
+              statusCode: activeResponse.statusCode,
+              headers: activeResponse.headers,
+            });
           }
         }}
       >
@@ -80,6 +101,16 @@ export const MockRequestSender = () => {
           </div>
         </div>
         <div className="flex justify-end">
+          <Button
+            isDisabled={!selectedMockServer || !selectedMockRoute}
+            onPress={() => {
+              const mockWorkspaceId = mockServerAndRoutes.find(s => s._id === selectedMockServer)?.parentId;
+              navigate(`/organization/${organizationId}/project/${projectId}/workspace/${mockWorkspaceId}/mock-server/mock-route/${selectedMockRoute}`);
+            }}
+            className="mr-2 hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+          >
+            Go to mock
+          </Button>
           <Button
             type="submit"
             isDisabled={!selectedMockServer || !selectedMockRoute}

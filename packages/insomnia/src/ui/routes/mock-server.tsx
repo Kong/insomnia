@@ -16,7 +16,7 @@ import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { SvgIcon } from '../components/svg-icon';
 import { formatMethodName } from '../components/tags/method-tag';
-import { MockRouteResponse, MockRouteRoute } from './mock-route';
+import { MockRouteResponse, MockRouteRoute, useMockRoutePatcher } from './mock-route';
 interface LoaderData {
   mockServerId: string;
   mockRoutes: MockRoute[];
@@ -49,7 +49,7 @@ const MockServerRoute = () => {
   const { mockServerId, mockRoutes } = useLoaderData() as LoaderData;
   const fetcher = useFetcher();
   const navigate = useNavigate();
-
+  const patchMockRoute = useMockRoutePatcher();
   const mockRouteActionList: {
     id: string;
     name: string;
@@ -66,14 +66,7 @@ const MockServerRoute = () => {
             defaultValue: mockRoutes.find(s => s._id === id)?.name,
             submitName: 'Rename',
             onComplete: name => {
-              name && fetcher.submit(
-                { name },
-                {
-                  encType: 'application/json',
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${id}/update`,
-                  method: 'POST',
-                }
-              );
+              name && patchMockRoute(id, { name });
             },
           });
         },

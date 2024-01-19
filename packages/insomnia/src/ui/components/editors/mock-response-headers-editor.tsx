@@ -1,10 +1,9 @@
 import React, { FC, useCallback } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
-import { MockRoute } from '../../../models/mock-route';
 import type { RequestHeader } from '../../../models/request';
-import { MockRouteLoaderData } from '../../routes/mock-route';
+import { MockRouteLoaderData, useMockRoutePatcher } from '../../routes/mock-route';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
@@ -13,17 +12,7 @@ interface Props {
   isDisabled?: boolean;
   onBlur?: (e: FocusEvent) => void;
 }
-export const useMockRoutePatcher = () => {
-  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
-  const fetcher = useFetcher();
-  return (id: string, patch: Partial<MockRoute>) => {
-    fetcher.submit(JSON.stringify(patch), {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${id}/update`,
-      method: 'post',
-      encType: 'application/json',
-    });
-  };
-};
+
 export const MockResponseHeadersEditor: FC<Props> = ({
   bulk,
   isDisabled,

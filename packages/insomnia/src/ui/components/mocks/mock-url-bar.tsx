@@ -3,9 +3,8 @@ import { Button } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { getMockServiceURL, HTTP_METHODS } from '../../../common/constants';
-import { MockRouteLoaderData } from '../../routes/mock-route';
+import { MockRouteLoaderData, useMockRoutePatcher } from '../../routes/mock-route';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
-import { useMockRoutePatcher } from '../editors/mock-response-headers-editor';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';

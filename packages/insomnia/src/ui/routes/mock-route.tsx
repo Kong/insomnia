@@ -13,7 +13,7 @@ import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
 import { PanelContainer, TabItem, Tabs } from '../components/base/tabs';
 import { CodeEditor } from '../components/codemirror/code-editor';
-import { MockResponseHeadersEditor, useMockRoutePatcher } from '../components/editors/mock-response-headers-editor';
+import { MockResponseHeadersEditor } from '../components/editors/mock-response-headers-editor';
 import { MockResponsePane } from '../components/mocks/mock-response-pane';
 import { MockUrlBar } from '../components/mocks/mock-url-bar';
 import { showAlert } from '../components/modals';
@@ -71,6 +71,17 @@ export const formToHar = ({ statusCode, statusText, mimeType, headersArray, body
     headersSize: -1,
     bodySize: -1,
     redirectURL: '',
+  };
+};
+export const useMockRoutePatcher = () => {
+  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const fetcher = useFetcher();
+  return (id: string, patch: Partial<MockRoute>) => {
+    fetcher.submit(JSON.stringify(patch), {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${id}/update`,
+      method: 'post',
+      encType: 'application/json',
+    });
   };
 };
 export const MockRouteRoute = () => {
