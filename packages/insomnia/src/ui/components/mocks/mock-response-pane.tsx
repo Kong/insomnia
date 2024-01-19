@@ -35,37 +35,34 @@ interface MockbinLogOutput {
 export const MockResponsePane = () => {
   const { mockServer, mockRoute, activeResponse } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const { settings } = useRootLoaderData();
-  const getLogById = async (compoundId: string): Promise<MockbinLogOutput | null> => {
-    if (!compoundId) {
-      return null;
-    };
-    try {
-      const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
-      const res = await window.main.axiosRequest({
-        url: mockbinUrl + `/bin/log/${compoundId}`,
-        method: 'get',
-      }) as unknown as AxiosResponse<MockbinLogOutput>;
-      // todo: handle error better
-      if (res?.data?.log) {
-        return res.data;
-      }
-    } catch (e) {
-      console.log(e);
-    }
-    console.log('Error: creating fetching log on remote');
-    return null;
-
-  };
   const [logs, setLogs] = useState<MockbinLogOutput | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [logEntryId, setLogEntryId] = useState<number | null>(null);
+
+  // refetches logs whenever the path changes, or a response is recieved
   useEffect(() => {
+    const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
+
     const fn = async () => {
-      const logs = await getLogById(mockRoute.parentId + mockRoute.path);
-      setLogs(logs);
+      const compoundId = mockRoute.parentId + mockRoute.path;
+      try {
+        const res = await window.main.axiosRequest({
+          url: mockbinUrl + `/bin/log/${compoundId}`,
+          method: 'get',
+        }) as unknown as AxiosResponse<MockbinLogOutput>;
+        if (res?.data?.log) {
+          setLogs(res.data);
+          return;
+        }
+        console.log('Error: fetching logs from remote', { mockbinUrl, res });
+      } catch (e) {
+        // network erros will be managed by the upsert trigger, so we can ignore them here
+        console.log({ mockbinUrl, e });
+      }
     };
     fn();
-  }, [activeResponse?._id, mockRoute.parentId, mockRoute.path]);
+  }, [activeResponse?._id, mockRoute.parentId, mockRoute.path, mockServer.url, mockServer.useInsomniaCloud]);
+
   useEffect(() => {
     const fn = async () => {
       if (activeResponse) {
