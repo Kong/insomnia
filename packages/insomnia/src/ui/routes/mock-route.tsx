@@ -107,7 +107,7 @@ export const MockRouteRoute = () => {
       return { id: '', error: 'Invalid response from ' + mockbinUrl };
     } catch (e) {
       console.log(e);
-      return { id: '', error: 'Unhandled error ' + e.message };
+      return { id: '', error: 'Unhandled error: ' + e.message };
     }
 
   };
@@ -130,7 +130,7 @@ export const MockRouteRoute = () => {
         title: 'Network error',
         message: (
           <div>
-            <p>The request failed due to a network error:</p>
+            <p>The request failed due to a network error: {mockbinUrl}</p>
             <pre className="pad-top-sm force-wrap selectable">
               <code className="wide">{error}</code>
             </pre>
