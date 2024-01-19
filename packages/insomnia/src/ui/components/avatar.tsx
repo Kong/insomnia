@@ -1,7 +1,5 @@
-import React, { Suspense } from 'react';
-import styled, { keyframes } from 'styled-components';
-
-import { Tooltip } from './tooltip';
+import React, { ReactNode, Suspense } from 'react';
+import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 
 const getNameInitials = (name?: string) => {
   // Split on whitespace and take first letter of each word
@@ -22,68 +20,6 @@ const getNameInitials = (name?: string) => {
 
   return `${firstWord.charAt(0)}${lastWord ? lastWord.charAt(0) : ''}`;
 };
-
-const appearIn = keyframes`
-  0% {
-    opacity: 0;
-    scale: 0.8;
-  }
-
-  50% {
-    opacity: 1;
-    scale: 1.1;
-  }
-
-  100% {
-    opacity: 1;
-    scale: 1;
-  }
-`;
-
-const ImageElement = styled.img<{
-  size: 'small' | 'medium';
-  animate: boolean;
-}>`
-  border: 2px solid var(--color-bg);
-  box-sizing: border-box;
-  outline: none;
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: center;
-  background-size: cover;
-  background-position: center;
-  animation: ${({ animate }) => (animate ? appearIn : 'none')} 0.2s ease-in-out;
-  width: ${({ size }) => (size === 'small' ? '20px' : '24px')};
-  height: ${({ size }) => (size === 'small' ? '20px' : '24px')};
-`;
-
-const AvatarImage = ({ src, alt, size, animate }: { src: string; alt: string; size: 'small' | 'medium'; animate: boolean }) => {
-  imgCache.read(src);
-  return <ImageElement animate={animate} alt={alt} src={src} size={size} />;
-};
-
-const AvatarPlaceholder = styled.div<{size: 'small' | 'medium'; animate: boolean}>`
-  border: 2px solid var(--color-bg);
-  box-sizing: border-box;
-  outline: none;
-  border-radius: 50%;
-  width: ${({ size }) => size === 'small' ? '20px' : '24px'};
-  height: ${({ size }) => size === 'small' ? '20px' : '24px'};
-  object-fit: cover;
-  object-position: center;
-  background-size: cover;
-  background-position: center;
-  margin: 0!important;
-  animation: ${({ animate }) => animate ? appearIn : 'none'} 0.2s ease-in-out;
-  background-color: var(--color-surprise);
-  color: var(--color-font-surprise);
-  display: flex;
-  margin-left: ${({ size }) => size === 'small' ? '-5px' : '-6px'};
-  align-items: center;
-  justify-content: center;
-  font-size: ${({ size }) => size === 'small' ? 'var(--font-size-xxs)' : 'var(--font-size-xs)'};
-  font-weight: bold;
-`;
 
 // https://css-tricks.com/pre-caching-image-with-react-suspense/
 // can be improved when api sends image expiry headers
@@ -123,32 +59,59 @@ class ImageCache {
 // Cache images for 10 minutes
 const imgCache = new ImageCache({ ttl: 1000 * 60 * 10 });
 
-export const Avatar = ({ src, alt, size = 'medium', animate }: { src: string; alt: string; size?: 'small' | 'medium'; animate?: boolean }) => {
-  if (!src) {
-    return <AvatarPlaceholder animate={Boolean(animate)} size={size}>{getNameInitials(alt)}</AvatarPlaceholder>;
-  }
-
+// The Image component will Suspend while the image is loading if it's not available in the cache
+const AvatarImage = ({ src, alt, size }: { src: string; alt: string; size: 'small' | 'medium' }) => {
+  imgCache.read(src);
   return (
-    <Tooltip
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-      }}
-      message={alt}
-    >
-      <Suspense fallback={<AvatarPlaceholder animate={Boolean(animate)} size={size}>{getNameInitials(alt)}</AvatarPlaceholder>}>
-        <AvatarImage
-          animate={Boolean(animate)}
-          src={src}
-          alt={alt}
-          size={size}
-        />
-      </Suspense>
-    </Tooltip>
+    <img
+      alt={alt}
+      src={src}
+      width={size === 'small' ? 20 : 24}
+      height={size === 'small' ? 20 : 24}
+      className={'border-2 border-solid border-[--color-bg] box-border outline-none rounded-full object-cover object-center bg-cover bg-center'}
+    />
   );
 };
 
-export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium', animate = false }: { items: { key: string; src: string; alt: string }[]; maxAvatars?: number; size: 'small' | 'medium'; animate?: boolean }) => {
+const AvatarPlaceholder = ({ size, children }: { size: 'small' | 'medium'; children: ReactNode }) => {
+  return (
+    <div
+      className={`border-2 border-solid border-[--color-bg] box-border outline-none rounded-full object-cover object-center bg-cover bg-center m-0 bg-[--color-surprise] text-[--color-font-surprise] ${size === 'small' ? 'w-5 h-5' : 'w-6 h-6'} flex items-center justify-center font-bold text-[var(--font-size-xxs)]`}
+    >
+      {children}
+    </div>
+  );
+};
+
+export const Avatar = ({ src, alt, size = 'medium' }: { src: string; alt: string; size?: 'small' | 'medium' }) => {
+  return (
+    <TooltipTrigger>
+      <Button className="cursor-default">
+        {src ? (
+          <Suspense fallback={<AvatarPlaceholder size={size}>{getNameInitials(alt)}</AvatarPlaceholder>}>
+            <AvatarImage
+              src={src}
+              alt={alt}
+              size={size}
+            />
+          </Suspense>
+        ) : (
+          <AvatarPlaceholder size={size}>
+            {getNameInitials(alt)}
+          </AvatarPlaceholder>
+        )}
+      </Button>
+      <Tooltip
+        offset={8}
+        className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+      >
+        {alt}
+      </Tooltip>
+    </TooltipTrigger>
+  );
+};
+
+export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium' }: { items: { key: string; src: string; alt: string }[]; maxAvatars?: number; size: 'small' | 'medium' }) => {
   const avatars = items.slice(0, maxAvatars);
   const overflow = items.length - maxAvatars;
 
@@ -164,21 +127,24 @@ export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium', animate = 
           <Avatar
             size={size}
             key={avatar.key}
-            animate={animate}
             src={avatar.src}
             alt={avatar.alt}
           />
         ))}
         {overflow > 0 && (
-          <Tooltip
-            message={
-              items.slice(maxAvatars).map(avatar => (
+          <TooltipTrigger>
+            <Button className="cursor-default">
+              <AvatarPlaceholder size={size}>{`+${overflow}`}</AvatarPlaceholder>
+            </Button>
+            <Tooltip
+              offset={8}
+              className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+            >
+              {items.slice(maxAvatars).map(avatar => (
                 <div key={avatar.key}>{avatar.alt}</div>
-              ))
-            }
-          >
-            <AvatarPlaceholder animate={animate} size={size}>{`+${overflow}`}</AvatarPlaceholder>
-          </Tooltip>
+              ))}
+            </Tooltip>
+          </TooltipTrigger>
         )}
       </div>
     </Suspense>
