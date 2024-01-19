@@ -210,7 +210,7 @@ export const RequestPane: FC<Props> = ({
                               key={activeRequest._id}
                               id={'key-value-editor__name' + pathParameter.name}
                               key={activeRequest._id}
-                              placeholder={'Parameter value'}
+                              placeholder="Parameter value"
                               defaultValue={pathParameter.value || ''}
                               onChange={name => {
                                 onPathParameterChange(pathParameters.map(p => p.name === pathParameter.name ? { ...p, value: name } : p));
