@@ -24,7 +24,6 @@ interface BaseMockRoute {
   name: string;
   mimeType: string | null; // response body type
   method: string; // used only for sending the testing request
-  binResponse: HarResponse | null; // used for checking if an update to the remote is necessary
 }
 
 export type MockRoute = BaseModel & BaseMockRoute;
@@ -41,7 +40,6 @@ export function init(): BaseMockRoute {
     name: '',
     mimeType: 'application/json',
     method: 'GET',
-    binResponse: null,
   };
 }
 

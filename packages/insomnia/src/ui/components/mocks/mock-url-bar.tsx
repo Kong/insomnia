@@ -69,7 +69,7 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
     </div>
 
     <div className='flex flex-1 p-1 items-center'>
-      <input className='flex-1' onBlur={() => pathInput !== mockRoute.path && onPathUpdate(pathInput)} value={pathInput} onChange={e => setPathInput(e.currentTarget.value)} />
+      <input className='flex-1' onBlur={() => onPathUpdate(pathInput)} value={pathInput} onChange={e => setPathInput(e.currentTarget.value)} />
     </div>
     <div className='flex p-1'>
       <Button

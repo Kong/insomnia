@@ -1,4 +1,3 @@
-import deepEqual from 'deep-equal';
 import React from 'react';
 import { LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
@@ -7,6 +6,7 @@ import { database as db } from '../../common/database';
 import * as models from '../../models';
 import { MockRoute } from '../../models/mock-route';
 import { MockServer } from '../../models/mock-server';
+import { Request } from '../../models/request';
 import { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
@@ -92,8 +92,8 @@ export const MockRouteRoute = () => {
 
   };
 
-  const createandSendRequest = ({ url, method, parentId, binResponse }: { url: string; method: string; parentId: string; binResponse?: Partial<HarResponse> }) =>
-    requestFetcher.submit(JSON.stringify({ url, method, parentId, binResponse }),
+  const createandSendPrivateRequest = (patch: Partial<Request>) =>
+    requestFetcher.submit(JSON.stringify(patch),
       {
         encType: 'application/json',
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new-mock-send`,
@@ -102,17 +102,6 @@ export const MockRouteRoute = () => {
 
   const upsertMockbinHar = async (pathInput?: string) => {
     // check for change and update remote
-    const newResponse = formToHar({
-      statusCode: mockRoute.statusCode,
-      statusText: mockRoute.statusText,
-      headersArray: mockRoute.headers,
-      body: mockRoute.body,
-    });
-    const hasResponseChanged = !deepEqual(newResponse, mockRoute.binResponse);
-    if (!hasResponseChanged) {
-      console.log('response has not changed');
-      return;
-    }
     console.log('upserting mockbin har');
     const compoundId = mockRoute.parentId + pathInput;
     const { error } = await upsertBinOnRemoteFromResponse(compoundId);
@@ -133,23 +122,17 @@ export const MockRouteRoute = () => {
     patchMockRoute(mockRoute._id, {
       url: mockbinUrl + '/bin/' + mockRoute.parentId,
       path: pathInput,
-      binResponse: newResponse,
     });
   };
   const onSend = async (pathInput: string) => {
     // on click send button, sync with remote and send hidden request
     await upsertMockbinHar(pathInput);
     const compoundId = mockRoute.parentId + pathInput;
-    createandSendRequest({
+    createandSendPrivateRequest({
       url: mockbinUrl + '/bin/' + compoundId,
       method: mockRoute.method,
       parentId: mockRoute._id,
-      binResponse: formToHar({
-        statusCode: mockRoute.statusCode,
-        statusText: mockRoute.statusText,
-        headersArray: mockRoute.headers,
-        body: mockRoute.body,
-      }),
+      isPrivate: true,
     });
   };
   const onBlurTriggerUpsert = () => upsertMockbinHar(mockRoute.path);
