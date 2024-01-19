@@ -206,7 +206,7 @@ export const MockRouteRoute = () => {
           </TabItem>
           <TabItem key="headers" title="Response Headers">
             <MockResponseHeadersEditor
-              // TODO: update mock on blur if key is set
+              onBlur={onBlurTriggerUpsert}
               bulk={false}
             />
           </TabItem>

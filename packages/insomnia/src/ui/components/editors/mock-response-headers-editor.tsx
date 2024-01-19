@@ -11,6 +11,7 @@ import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 interface Props {
   bulk: boolean;
   isDisabled?: boolean;
+  onBlur?: (e: FocusEvent) => void;
 }
 export const useMockRoutePatcher = () => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
@@ -26,6 +27,7 @@ export const useMockRoutePatcher = () => {
 export const MockResponseHeadersEditor: FC<Props> = ({
   bulk,
   isDisabled,
+  onBlur,
 }) => {
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
@@ -82,6 +84,7 @@ export const MockResponseHeadersEditor: FC<Props> = ({
           onChange={handleBulkUpdate}
           defaultValue={headersString}
           enableNunjucks
+          onBlur={onBlur}
         />
       </div>
     );
@@ -97,6 +100,7 @@ export const MockResponseHeadersEditor: FC<Props> = ({
       handleGetAutocompleteValueConstants={getCommonHeaderValues}
       onChange={onChangeHeaders}
       isDisabled={isDisabled}
+      onBlur={onBlur}
     />
   );
 };
