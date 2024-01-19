@@ -209,7 +209,6 @@ export const RequestPane: FC<Props> = ({
                             <OneLineEditor
                               key={activeRequest._id}
                               id={'key-value-editor__name' + pathParameter.name}
-                              key={activeRequest._id}
                               placeholder="Parameter value"
                               defaultValue={pathParameter.value || ''}
                               onChange={name => {
