@@ -56,6 +56,13 @@ async function getSyncItems({
   const testSuites = await models.unitTestSuite.findByParentId(workspaceId);
   const tests = await database.find(models.unitTest.type, { parentId: { $in: testSuites.map(t => t._id) } });
 
+  const mockServer = await models.mockServer.getByParentId(workspaceId);
+  if (mockServer) {
+    syncItemsList.push(mockServer);
+    const mockRoutes = await database.find(models.mockRoute.type, { parentId: mockServer._id });
+    mockRoutes.map(m => syncItemsList.push(m));
+  }
+
   const baseEnvironment = await models.environment.getByParentId(workspaceId);
   invariant(baseEnvironment, 'Base environment not found');
 

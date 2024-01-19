@@ -1,5 +1,4 @@
 import { database as db } from '../common/database';
-import { HarResponse } from '../common/har';
 import type { BaseModel } from './index';
 import { RequestHeader } from './request';
 

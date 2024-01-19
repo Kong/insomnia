@@ -147,6 +147,8 @@ export class NeDBClient {
         models.protoDirectory.type,
         models.webSocketRequest.type,
         models.webSocketPayload.type,
+        models.mockRoute.type,
+        models.mockServer.type,
       ];
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
