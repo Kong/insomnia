@@ -207,6 +207,7 @@ export const RequestPane: FC<Props> = ({
                           </span>
                           <div className='px-2 flex items-center h-full border-b border-solid border-[--hl-md]'>
                             <OneLineEditor
+                              key={activeRequest._id}
                               id={'key-value-editor__name' + pathParameter.name}
                               placeholder={'Parameter value'}
                               defaultValue={pathParameter.value || ''}
