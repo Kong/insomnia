@@ -282,9 +282,6 @@ export const RequestPane: FC<Props> = ({
             </TabPanelFooter>
           </HeaderContainer>
         </TabItem>
-        <TabItem key="mock-response" title="Mock Response">
-          <MockRequestSender />
-        </TabItem>
         <TabItem
           key="docs"
           title={

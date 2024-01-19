@@ -3,10 +3,11 @@ import { LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TYPE_YAML, contentTypesMap, getMockServiceURL, RESPONSE_CODE_REASONS } from '../../common/constants';
 import { database as db } from '../../common/database';
+import { getResponseCookiesFromHeaders, HarResponse } from '../../common/har';
 import * as models from '../../models';
 import { MockRoute } from '../../models/mock-route';
 import { MockServer } from '../../models/mock-server';
-import { Request } from '../../models/request';
+import { Request, RequestHeader } from '../../models/request';
 import { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
@@ -14,7 +15,7 @@ import { PanelContainer, TabItem, Tabs } from '../components/base/tabs';
 import { CodeEditor } from '../components/codemirror/code-editor';
 import { MockResponseHeadersEditor, useMockRoutePatcher } from '../components/editors/mock-response-headers-editor';
 import { MockResponsePane } from '../components/mocks/mock-response-pane';
-import { formToHar, MockUrlBar } from '../components/mocks/mock-url-bar';
+import { MockUrlBar } from '../components/mocks/mock-url-bar';
 import { showAlert } from '../components/modals';
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
@@ -53,7 +54,25 @@ const mockContentTypes = [
   CONTENT_TYPE_XML,
   CONTENT_TYPE_YAML,
 ];
-
+export const formToHar = ({ statusCode, statusText, mimeType, headersArray, body }: { statusCode: number; statusText: string; mimeType: string; headersArray: RequestHeader[]; body: string }): HarResponse => {
+  const validHeaders = headersArray.filter(({ name }) => !!name);
+  return {
+    status: +statusCode,
+    statusText: statusText || RESPONSE_CODE_REASONS[+statusCode] || '',
+    httpVersion: 'HTTP/1.1',
+    headers: validHeaders,
+    cookies: getResponseCookiesFromHeaders(validHeaders),
+    content: {
+      size: Buffer.byteLength(body),
+      mimeType,
+      text: body,
+      compression: 0,
+    },
+    headersSize: -1,
+    bodySize: -1,
+    redirectURL: '',
+  };
+};
 export const MockRouteRoute = () => {
   const { mockServer, mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
@@ -72,6 +91,7 @@ export const MockRouteRoute = () => {
           statusCode: mockRoute.statusCode,
           statusText: mockRoute.statusText,
           headersArray: mockRoute.headers,
+          mimeType: mockRoute.mimeType,
           body: mockRoute.body,
         }),
       });

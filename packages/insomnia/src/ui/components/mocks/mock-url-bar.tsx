@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { CONTENT_TYPE_PLAINTEXT, getMockServiceURL, HTTP_METHODS, RESPONSE_CODE_REASONS } from '../../../common/constants';
-import { getResponseCookiesFromHeaders, HarResponse } from '../../../common/har';
-import { RequestHeader } from '../../../models/request';
+import { getMockServiceURL, HTTP_METHODS } from '../../../common/constants';
 import { MockRouteLoaderData } from '../../routes/mock-route';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { useMockRoutePatcher } from '../editors/mock-response-headers-editor';
@@ -12,26 +10,6 @@ import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 
-export const formToHar = ({ statusCode, statusText, headersArray, body }: { statusCode: number; statusText: string; headersArray: RequestHeader[]; body: string }): HarResponse => {
-  const contentType = headersArray.find(h => h.name.toLowerCase() === 'content-type')?.value || CONTENT_TYPE_PLAINTEXT;
-  const validHeaders = headersArray.filter(({ name }) => !!name);
-  return {
-    status: +statusCode,
-    statusText: statusText || RESPONSE_CODE_REASONS[+statusCode] || '',
-    httpVersion: 'HTTP/1.1',
-    headers: validHeaders,
-    cookies: getResponseCookiesFromHeaders(validHeaders),
-    content: {
-      size: Buffer.byteLength(body),
-      mimeType: contentType,
-      text: body,
-      compression: 0,
-    },
-    headersSize: -1,
-    bodySize: -1,
-    redirectURL: '',
-  };
-};
 export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: string) => void; onSend: (path: string) => void }) => {
   const { mockServer, mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();

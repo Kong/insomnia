@@ -17,7 +17,7 @@ export const MockRequestSender = () => {
         <Icon icon="cube" />
       </div>
       <div className="flex place-content-center pb-2">
-        Choose an existing Mock file and route, or create a new one.
+        Export this response to a mock route.
       </div>
       <form
         onSubmit={e => {
@@ -32,7 +32,7 @@ export const MockRequestSender = () => {
             <label>
               Choose Mock Server
               <HelpTooltip position="top" className="space-left">
-                Select from created mock servers to send this request to
+                Select from created mock servers to add the route to
               </HelpTooltip>
               <select
                 value={selectedMockServer}
@@ -85,7 +85,7 @@ export const MockRequestSender = () => {
             isDisabled={!selectedMockServer || !selectedMockRoute}
             className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
           >
-            Send
+            Export
           </Button>
         </div>
       </form>

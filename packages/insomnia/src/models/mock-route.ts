@@ -21,7 +21,7 @@ interface BaseMockRoute {
   statusCode: number;
   statusText: string;
   name: string;
-  mimeType: string | null; // response body type
+  mimeType: string;// response body type
   method: string; // used only for sending the testing request
 }
 

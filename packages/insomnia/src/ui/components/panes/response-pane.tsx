@@ -14,6 +14,7 @@ import { useRootLoaderData } from '../../routes/root';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
+import { MockRequestSender } from '../editors/mock-request-sender';
 import { ErrorBoundary } from '../error-boundary';
 import { showError } from '../modals';
 import { ResponseTimer } from '../response-timer';
@@ -176,6 +177,9 @@ export const ResponsePane: FC<Props> = ({
             updateFilter={activeResponse.error ? undefined : handleSetFilter}
             url={activeResponse.url}
           />
+        </TabItem>
+        <TabItem key="mock-response" title="Mock Response">
+          <MockRequestSender />
         </TabItem>
         <TabItem
           key="headers"
