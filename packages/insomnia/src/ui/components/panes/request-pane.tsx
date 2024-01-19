@@ -19,10 +19,10 @@ import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
+import { MockRequestSender } from '../editors/mock-request-sender';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
-import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { MarkdownPreview } from '../markdown-preview';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
@@ -70,16 +70,13 @@ export const RequestPane: FC<Props> = ({
   setLoading,
   onPaste,
 }) => {
-  const { activeRequest, activeRequestMeta, mockServerAndRoutes } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const patchSettings = useSettingsPatcher();
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
     useState(false);
   const patchRequest = useRequestPatcher();
-  const [selectedMockServer, setSelectedMockServer] = useState('');
-  const [selectedMockRoute, setSelectedMockRoute] = useState('');
 
-  useState(false);
   const handleImportQueryFromUrl = () => {
     let query;
 
@@ -125,6 +122,7 @@ export const RequestPane: FC<Props> = ({
   const contentType =
     getContentTypeFromHeaders(activeRequest.headers) ||
     activeRequest.body.mimeType;
+
   return (
     <Pane type="request">
       <PaneHeader>
@@ -285,76 +283,7 @@ export const RequestPane: FC<Props> = ({
           </HeaderContainer>
         </TabItem>
         <TabItem key="mock-response" title="Mock Response">
-          <div className="px-32 h-full flex flex-col justify-center">
-            <div className="flex place-content-center text-9xl pb-2">
-              <Icon icon="cube" />
-            </div>
-            <div className="flex place-content-center pb-2">
-              Choose an existing Mock file and route, or create a new one.
-            </div>
-            <form>
-              <div className="form-row">
-                <div className="form-control form-control--outlined">
-                  <label>
-                    Choose Mock Server
-                    <HelpTooltip position="top" className="space-left">
-                      Select from created mock servers to send this request to
-                    </HelpTooltip>
-                    <select
-                      value={selectedMockServer}
-                      onChange={event => {
-                        const selected = event.currentTarget.value;
-                        setSelectedMockServer(selected);
-                      }}
-                    >
-                      <option value="">-- Select... --</option>
-                      {mockServerAndRoutes
-                        .map(w => (
-                          <option key={w._id} value={w._id}>
-                            {w.name}
-                          </option>
-                        ))
-                      }
-                    </select>
-                  </label>
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-control form-control--outlined">
-                  <label>
-                    Choose Mock Route
-                    <HelpTooltip position="top" className="space-left">
-                      Select from created mock routes to send this request to
-                    </HelpTooltip>
-                    <select
-                      value={selectedMockRoute}
-                      onChange={event => {
-                        const selected = event.currentTarget.value;
-                        setSelectedMockRoute(selected);
-                      }}
-                    >
-                      <option value="">-- Select... --</option>
-                      {mockServerAndRoutes.find(s => s._id === selectedMockServer)?.routes
-                        .map(w => (
-                          <option key={w._id} value={w._id}>
-                            {w.name}
-                          </option>
-                        ))
-                      }
-                    </select>
-                  </label>
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button
-                  type="submit"
-                  className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-                >
-                  Send
-                </Button>
-              </div>
-            </form>
-          </div>
+          <MockRequestSender />
         </TabItem>
         <TabItem
           key="docs"
