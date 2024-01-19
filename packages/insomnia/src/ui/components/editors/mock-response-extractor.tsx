@@ -9,7 +9,7 @@ import { RequestLoaderData } from '../../routes/request';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 
-export const MockRequestSender = () => {
+export const MockResponseExtractor = () => {
   const { mockServerAndRoutes, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const patchMockRoute = useMockRoutePatcher();
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ export const MockRequestSender = () => {
           }
 
           if (activeResponse) {
-            // TODO: move this out of the renderer
+            // TODO: move this out of the renderer, and upsert mock
             const body = await fs.readFile(activeResponse.bodyPath);
             console.log('Exporting response to mock route', activeResponse, body.toString());
 
