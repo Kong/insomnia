@@ -144,10 +144,9 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                         </Radio>
                       </div>
                     </RadioGroup>
-                    <TextField
+                    {!mockServer?.useInsomniaCloud && <TextField
                       autoFocus
                       name="name"
-                      isDisabled={mockServer?.useInsomniaCloud}
                       defaultValue={mockServer?.url || ''}
                       className={`group relative flex-1 flex flex-col gap-2 ${mockServer?.useInsomniaCloud ? 'disabled' : ''}`}
                     >
@@ -160,9 +159,9 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                         className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                       />
                       <Label className='text-sm text-[--hl]'>
-                        You can run a mock server locally by using Mockbin. <Link href="https://github.com/Kong/mockbin" className='underline'>Learn more</Link>
+                        You can run a mock server locally. <Link href="https://github.com/Kong/mockbin" className='underline'>Learn more</Link>
                       </Label>
-                    </TextField>
+                    </TextField>}
                   </>
                 )}
               </div>
