@@ -38,7 +38,6 @@ export const PresentUsers = () => {
 
   return (
     <AvatarGroup
-      animate
       size="medium"
       items={activeUsers}
     />

@@ -17,11 +17,11 @@ import { CookieJar } from '../../models/cookie-jar';
 import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
+import { getPathParametersFromUrl, isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { isRequestMeta, RequestMeta } from '../../models/request-meta';
 import { RequestVersion } from '../../models/request-version';
 import { Response } from '../../models/response';
-import { isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
+import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import { invariant } from '../../utils/invariant';
@@ -179,6 +179,23 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
   const req = await requestOperations.getById(requestId);
   invariant(req, 'Request not found');
   const patch = await request.json();
+
+  const isRequestURLChanged = (isRequest(req) || isWebSocketRequest(req)) && patch.url && patch.url !== req.url;
+
+  if (isRequestURLChanged) {
+    const { url } = patch as Request | WebSocketRequest;
+
+    // Check the URL for path parameters and store them in the request
+    const urlPathParameters = getPathParametersFromUrl(url);
+
+    const pathParameters = urlPathParameters.map(name => ({
+      name,
+      value: req.pathParameters?.find(p => p.name === name)?.value || '',
+    }));
+
+    patch.pathParameters = pathParameters;
+  }
+
   // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
   const isMimeTypeChanged = isRequest(req) && patch.body && patch.body.mimeType !== req.body.mimeType;
   if (isMimeTypeChanged) {

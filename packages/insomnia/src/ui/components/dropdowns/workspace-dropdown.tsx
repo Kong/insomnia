@@ -39,11 +39,8 @@ export const WorkspaceDropdown: FC = () => {
   invariant(organizationId, 'Expected organizationId');
   const {
     activeWorkspace,
-    activeWorkspaceMeta,
     activeProject,
     activeApiSpec,
-    clientCertificates,
-    caCertificate,
     projects,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const activeWorkspaceName = activeWorkspace.name;
@@ -257,10 +254,7 @@ export const WorkspaceDropdown: FC = () => {
       {isSettingsModalOpen && (
         <WorkspaceSettingsModal
           workspace={activeWorkspace}
-          workspaceMeta={activeWorkspaceMeta}
-          clientCertificates={clientCertificates}
-          caCertificate={caCertificate}
-          onHide={() => setIsSettingsModalOpen(false)}
+          onClose={() => setIsSettingsModalOpen(false)}
         />
       )}
       {isDeleteRemoteWorkspaceModalOpen && (

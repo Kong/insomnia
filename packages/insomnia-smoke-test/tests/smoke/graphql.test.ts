@@ -21,6 +21,7 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
 
   // Open the graphql request
   await page.getByLabel('Request Collection').getByTestId('GraphQL request').press('Enter');
+  await page.getByRole('tab', { name: 'GraphQL' }).click();
   // Assert the schema is fetched after switching to GraphQL request
   await expect(page.locator('.graphql-editor__meta')).toContainText('schema fetched just now');
 
@@ -62,6 +63,7 @@ test('can render schema and send GraphQL requests with object variables', async 
 
   // Open the graphql request
   await page.getByLabel('Request Collection').getByTestId('GraphQL request with variables').press('Enter');
+  await page.getByRole('tab', { name: 'GraphQL' }).click();
   // Assert the schema is fetched after switching to GraphQL request
   await expect(page.locator('.graphql-editor__meta')).toContainText('schema fetched just now');
 
@@ -103,6 +105,7 @@ test('can render numeric environment', async ({ app, page }) => {
 
   // Open the graphql request
   await page.getByLabel('Request Collection').getByTestId('GraphQL request with number').press('Enter');
+  await page.getByRole('tab', { name: 'GraphQL' }).click();
   // Assert the schema is fetched after switching to GraphQL request
   await expect(page.locator('.graphql-editor__meta')).toContainText('schema fetched just now');
 
@@ -141,6 +144,7 @@ test('can send GraphQL requests after editing and prettifying query', async ({ a
   await page.getByLabel('Request Collection').getByTestId('GraphQL request').press('Enter');
 
   // Edit and prettify query
+  await page.getByRole('tab', { name: 'GraphQL' }).click();
   await page.locator('pre[role="presentation"]:has-text("bearer")').click();
   await page.locator('.app').press('Enter');
   await page.locator('text=Prettify GraphQL').click();
