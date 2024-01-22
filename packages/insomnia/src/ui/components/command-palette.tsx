@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Collection, ComboBox, Dialog, Header, Input, Label, ListBox, ListBoxItem, Modal, ModalOverlay, Section, Text } from 'react-aria-components';
 import { useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
+import { fuzzyMatch } from '../../common/misc';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
@@ -54,10 +55,11 @@ export const CommandPalette = () => {
               menuTrigger='focus'
               shouldFocusWrap
               defaultFilter={(text, filter) => {
-                // Fuzzy search using Regex
-                const fuzzy = filter.split('').join('.*?');
-                const regex = new RegExp(fuzzy, 'i');
-                return regex.test(text);
+                return Boolean(fuzzyMatch(
+                    filter,
+                    text,
+                    { splitSpace: false, loose: true }
+                )?.indexes);
               }}
               onSelectionChange={itemId => {
                 if (!itemId) {
