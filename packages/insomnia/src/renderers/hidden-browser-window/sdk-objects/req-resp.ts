@@ -571,4 +571,7 @@ export class Response extends Property {
     text() {
         return this.body;
     }
+
+    // ResponseContentInfo
+    // timings
 }

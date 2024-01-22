@@ -19,7 +19,12 @@ import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { WebSocketBridgeAPI } from '../network/websocket';
 import { gRPCBridgeAPI } from './grpc';
 
-export interface MainBridgeAPI {
+export interface CurlAPI {
+  cancelCurlRequest: typeof cancelCurlRequest;
+  curlRequest: typeof curlRequest;
+}
+
+export interface MainBridgeAPI extends CurlAPI {
   loginStateChange: () => void;
   openInBrowser: (url: string) => void;
   restart: () => void;
@@ -32,8 +37,6 @@ export interface MainBridgeAPI {
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
-  cancelCurlRequest: typeof cancelCurlRequest;
-  curlRequest: typeof curlRequest;
   on: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
   webSocket: WebSocketBridgeAPI;
   grpc: gRPCBridgeAPI;
@@ -49,6 +52,7 @@ export interface MainBridgeAPI {
     };
   };
 }
+
 export function registerMainHandlers() {
   ipcMain.handle('insomniaFetch', async (_, options: Parameters<typeof insomniaFetch>[0]) => {
     return insomniaFetch(options);

@@ -1,5 +1,11 @@
 import type { CurlRequestOptions, CurlRequestOutput } from '../main/network/libcurl-promise';
 const cancelRequestFunctionMap = new Map<string, () => void>();
+export function setCancelRequestFunctionMap(id: string, cb: () => void) {
+  return cancelRequestFunctionMap.set(id, cb);
+}
+export function deleteCancelRequestFunctionMap(id: string) {
+  return cancelRequestFunctionMap.delete(id);
+}
 export async function cancelRequestById(requestId: string) {
   const cancel = cancelRequestFunctionMap.get(requestId);
   if (cancel) {
@@ -27,7 +33,7 @@ export const cancellableCurlRequest = async (requestOptions: CurlRequestOptions)
     return { statusMessage: 'Error', error: err.message || 'Something went wrong' };
   }
 };
-const cancellablePromise = ({ signal, fn }: { signal: AbortSignal; fn: Promise<any> }) => {
+export const cancellablePromise = ({ signal, fn }: { signal: AbortSignal; fn: Promise<any> }) => {
   if (signal?.aborted) {
     return Promise.reject(new DOMException('Aborted', 'AbortError'));
   }

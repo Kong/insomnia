@@ -1,4 +1,15 @@
-import { ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
+
+const main: Window['curl'] = {
+  curlRequest: options => ipcRenderer.invoke('curlRequest', options),
+  cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
+};
+
+if (process.contextIsolated) {
+  contextBridge.exposeInMainWorld('main', main);
+} else {
+  window.curl = main;
+}
 
 window.onmessage = (ev: MessageEvent) => {
   if (ev.data === 'message-event://preload/publish-port') {

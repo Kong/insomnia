@@ -19,10 +19,10 @@ export class Certificate extends Property {
 
     name?: string;
     matches?: UrlMatchPatternList<UrlMatchPattern>;
-    key?: object;
-    cert?: object;
+    key?: SrcRef;
+    cert?: SrcRef;
     passphrase?: string;
-    pfx?: object; // PFX or PKCS12 Certificate
+    pfx?: SrcRef; // PFX or PKCS12 Certificate
 
     constructor(options: CertificateOptions) {
         super();

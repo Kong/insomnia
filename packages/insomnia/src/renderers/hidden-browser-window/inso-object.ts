@@ -1,3 +1,4 @@
+import { Settings } from './sdk-objects/common';
 import { getIntepolator } from './sdk-objects/intepolator';
 
 export type EventName = 'prerequest' | 'test';
@@ -162,20 +163,27 @@ export class InsomniaObject {
     public variables: Variables;
     public info: RequestInfo;
 
-    constructor(input: {
-        globals: Environment;
-        collectionVariables: Environment;
-        environment: Environment;
-        iterationData: Environment;
-        variables: Variables;
-        requestInfo: RequestInfo;
-    }) {
-        this.globals = input.globals;
-        this.collectionVariables = input.collectionVariables;
-        this.environment = input.environment;
-        this.iterationData = input.iterationData;
-        this.variables = input.variables;
-        this.info = input.requestInfo;
+    private settings: Settings;
+
+    constructor(
+        rawObj: {
+            globals: Environment;
+            collectionVariables: Environment;
+            environment: Environment;
+            iterationData: Environment;
+            variables: Variables;
+            requestInfo: RequestInfo;
+        },
+        settings: Settings,
+    ) {
+        this.globals = rawObj.globals;
+        this.collectionVariables = rawObj.collectionVariables;
+        this.environment = rawObj.environment;
+        this.iterationData = rawObj.iterationData;
+        this.variables = rawObj.variables;
+        this.info = rawObj.requestInfo;
+
+        this.settings = settings;
     }
 
     toObject = () => {

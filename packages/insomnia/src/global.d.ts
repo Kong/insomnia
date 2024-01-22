@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import type { HiddenBrowserWindowAPI } from './main/ipc/hidden-browser-window';
-import type { MainBridgeAPI } from './main/ipc/main';
+import type { CurlAPI, MainBridgeAPI } from './main/ipc/main';
 
 declare global {
   interface Window {
@@ -10,6 +10,7 @@ declare global {
     shell: Pick<Electron.Shell, 'showItemInFolder'>;
     clipboard: Pick<Electron.Clipboard, 'readText' | 'writeText' | 'clear'>;
     hiddenBrowserWindow: HiddenBrowserWindowAPI;
+    curl?: CurlAPI;
   }
 }
 
