@@ -53,6 +53,8 @@ describe('NeDBClient', () => {
         models.apiSpec.type,
         models.environment.type,
         models.grpcRequest.type,
+        models.mockRoute.type,
+        models.mockServer.type,
         models.protoDirectory.type,
         models.protoFile.type,
         models.request.type,
@@ -61,8 +63,6 @@ describe('NeDBClient', () => {
         models.unitTestSuite.type,
         models.webSocketPayload.type,
         models.webSocketRequest.type,
-        models.mockRoute.type,
-        models.mockServer.type,
         models.workspace.type,
       ]);
       expect(await neDbClient.readdir(reqDir)).toEqual(['req_1.yml', 'req_2.yml']);
