@@ -41,7 +41,7 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
           showModal(AlertModal, {
           title: 'Full URL',
             message: mockbinUrl + '/bin/' + compoundId,
-          })
+          });
         }}
       >
         <Icon icon="eye" /> Show URL
