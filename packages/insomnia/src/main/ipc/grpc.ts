@@ -35,6 +35,7 @@ import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
 import { writeProtoFile } from '../../network/grpc/write-proto-file';
 import { invariant } from '../../utils/invariant';
 import { mockRequestMethods } from './automock';
+import { version } from '../../../package.json';
 
 const grpcCalls = new Map<string, Call>();
 
@@ -152,8 +153,10 @@ const getMethodsFromReflectionServer = async (
     httpVersion: "1.1",
   });
   const client = createPromiseClient(FileDescriptorSetService, transport);
-  const headers: HeadersInit =
-    apiKey === "" ? {} : { Authorization: `Bearer ${apiKey}` };
+  const headers: HeadersInit = {
+    'User-Agent': `insomnia/${version}`,
+    ...(apiKey === "" ? {} : { Authorization: `Bearer ${apiKey}` }),
+  };
   try {
     const res = await client.getFileDescriptorSet(
       {
