@@ -36,10 +36,13 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
     <div className='flex p-1'>
       <Button
         className="bg-[--hl-sm] px-3 rounded-sm"
-        onPress={() => showModal(AlertModal, {
+        onPress={() => {
+          const compoundId = mockRoute.parentId + pathInput;
+          showModal(AlertModal, {
           title: 'Full URL',
-          message: mockRoute.url,
-        })}
+            message: mockbinUrl + '/bin/' + compoundId,
+          })
+        }}
       >
         <Icon icon="eye" /> Show URL
       </Button>

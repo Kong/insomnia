@@ -46,10 +46,10 @@ export const MockResponsePane = () => {
     const fn = async () => {
       const compoundId = mockRoute.parentId + mockRoute.name;
       try {
-        const res = await window.main.axiosRequest({
+        const res: AxiosResponse<MockbinLogOutput> = await window.main.axiosRequest({
           url: mockbinUrl + `/bin/log/${compoundId}`,
           method: 'get',
-        }) as unknown as AxiosResponse<MockbinLogOutput>;
+        });
         if (res?.data?.log) {
           setLogs(res.data);
           return;

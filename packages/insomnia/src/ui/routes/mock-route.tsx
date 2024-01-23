@@ -1,3 +1,4 @@
+import { AxiosResponse } from 'axios';
 import React from 'react';
 import { LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
@@ -84,6 +85,12 @@ export const useMockRoutePatcher = () => {
     });
   };
 };
+interface MockbinResult {
+  data: string; // returns only the mock server id not the path
+}
+interface MockbinError {
+  data: { errors: string };
+}
 export const MockRouteRoute = () => {
   const { mockServer, mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
@@ -92,10 +99,10 @@ export const MockRouteRoute = () => {
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
-  const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<{ id: string; error?: string }> => {
-    // send upsert and return id, or show alert modal with error
+  const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
     try {
-      const res = await window.main.axiosRequest({
+
+      const res: AxiosResponse<MockbinResult | MockbinError> = await window.main.axiosRequest({
         url: mockbinUrl + `/bin/upsert/${compoundId}`,
         method: 'put',
         data: formToHar({
@@ -106,21 +113,20 @@ export const MockRouteRoute = () => {
           body: mockRoute.body,
         }),
       });
-      if (res?.data?.errors) {
+      if ('errors' in res?.data && typeof res?.data?.errors === 'string') {
         console.error('error response', res?.data?.errors);
-        return { id: '', error: res?.data?.errors };
+        return res?.data?.errors;
       }
-      if (res?.data?.length) {
-        console.log('RES', res.data);
-        return { id: res.data };
+      if (typeof res?.data === 'string') {
+        console.log('successful upsert', res.data);
+        return '';
       }
       console.log('Error: invalid response from remote', { res, mockbinUrl });
-      return { id: '', error: 'Invalid response from ' + mockbinUrl };
+      return 'Invalid response from ' + mockbinUrl;
     } catch (e) {
       console.log(e);
-      return { id: '', error: 'Unhandled error: ' + e.message };
+      return 'Unhandled error: ' + e.message;
     }
-
   };
 
   const createandSendPrivateRequest = (patch: Partial<Request>) =>
@@ -132,10 +138,9 @@ export const MockRouteRoute = () => {
       });
 
   const upsertMockbinHar = async (pathInput?: string) => {
-    // check for change and update remote
     console.log('upserting mockbin har');
     const compoundId = mockRoute.parentId + pathInput;
-    const { error } = await upsertBinOnRemoteFromResponse(compoundId);
+    const error = await upsertBinOnRemoteFromResponse(compoundId);
     if (error) {
       showAlert({
         title: 'Network error',
@@ -151,12 +156,10 @@ export const MockRouteRoute = () => {
       return;
     }
     patchMockRoute(mockRoute._id, {
-      url: mockbinUrl + '/bin/' + mockRoute.parentId,
       name: pathInput,
     });
   };
   const onSend = async (pathInput: string) => {
-    // on click send button, sync with remote and send hidden request
     await upsertMockbinHar(pathInput);
     const compoundId = mockRoute.parentId + pathInput;
     createandSendPrivateRequest({
