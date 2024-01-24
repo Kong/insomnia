@@ -604,24 +604,14 @@ export const deleteTestAction: ActionFunction = async ({ params }) => {
 
 export const updateTestAction: ActionFunction = async ({ request, params }) => {
   const { testId } = params;
-  const formData = await request.formData();
-  invariant(typeof testId === 'string', 'Test ID is required');
-  const code = formData.get('code');
-  invariant(typeof code === 'string', 'Code is required');
-  const name = formData.get('name');
-  invariant(typeof name === 'string', 'Name is required');
-  const requestId = formData.get('requestId');
-
-  if (requestId) {
-    invariant(typeof requestId === 'string', 'Request ID is required');
-  }
+  const data = await request.json() as Partial<UnitTest>;
 
   const unitTest = await database.getWhere<UnitTest>(models.unitTest.type, {
     _id: testId,
   });
   invariant(unitTest, 'Test not found');
 
-  await models.unitTest.update(unitTest, { name, code, requestId: requestId || null });
+  await models.unitTest.update(unitTest, data);
 
   return null;
 };

@@ -6,6 +6,7 @@ import {
   Button,
   DropIndicator,
   GridList,
+  GridListItem,
   Heading,
   ListBox,
   ListBoxItem,
@@ -219,23 +220,12 @@ const TestRoute: FC = () => {
       });
     },
     renderDropIndicator(target) {
-      if (target.type === 'item') {
-        if (target.dropPosition === 'before' && target.key === baseEnvironment._id) {
-          return <DropIndicator
-            target={target}
-            className="hidden"
-          />;
-        }
-        return <DropIndicator
+      return (
+        <DropIndicator
           target={target}
           className="outline-[--color-surprise] outline-1 outline"
-        />;
-      }
-
-      return <DropIndicator
-        target={target}
-        className="outline-[--color-surprise] outline-1 outline"
-      />;
+        />
+      );
     },
   });
 
@@ -439,7 +429,7 @@ const TestRoute: FC = () => {
             >
               {item => {
                 return (
-                  <ListBoxItem
+                  <GridListItem
                     key={item._id}
                     id={item._id}
                     textValue={item.name}
@@ -502,7 +492,7 @@ const TestRoute: FC = () => {
                         </Popover>
                       </MenuTrigger>
                     </div>
-                  </ListBoxItem>
+                  </GridListItem>
                 );
               }}
             </GridList>
