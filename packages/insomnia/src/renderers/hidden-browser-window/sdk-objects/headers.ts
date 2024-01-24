@@ -47,6 +47,7 @@ export class Header extends Property {
     static parse(headerString: string): { key: string; value: string }[] {
         return headerString
             .split('\n')
+            .filter(kvPart => kvPart.trim() !== '')
             .map(kvPart => Header.parseSingle(kvPart));
     }
 
@@ -54,18 +55,25 @@ export class Header extends Property {
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers
         // the first colon is the separator
         const separatorPos = headerStr.indexOf(':');
+
+        if (separatorPos <= 0) {
+            throw Error('Header.parseSingle: the header string seems invalid');
+        }
+
         const key = headerStr.slice(0, separatorPos);
         const value = headerStr.slice(separatorPos + 1);
 
-        return { key, value };
+        return { key: key.trim(), value: value.trim() };
     }
 
     static unparse(headers: { key: string; value: string }[] | PropertyList<Header>, separator?: string): string {
-        const headerStrs = headers.map(
-            header => this.unparseSingle(header), {}
-        );
+        const headerArray: { key: string; value: string }[] = [
+            ...headers.map(
+                header => this.unparseSingle(header), {}
+            ),
+        ];
 
-        return headerStrs.join(separator || '\n');
+        return headerArray.join(separator || '\n');
     }
 
     static unparseSingle(header: { key: string; value: string } | Header): string {

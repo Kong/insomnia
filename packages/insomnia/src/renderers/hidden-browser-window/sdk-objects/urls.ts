@@ -356,26 +356,11 @@ export class UrlMatchPattern extends Property {
     }
 
     test(urlStr: string) {
-        const protoEndPos = urlStr.indexOf('/');
+        const protoEndPos = urlStr.indexOf(':');
         const protoStr = urlStr.slice(0, protoEndPos);
-
-        // const protocolEndPos = urlStr.indexOf(':');
-        // const pathBegPos = urlStr.indexOf('/', 3);
         const hostStr = this.getHost(urlStr);
-
-        // const queryBegPos = this.pattern.indexOf('?');
-        // const hashBegPos = this.pattern.indexOf('#');
-        // let pathEndPos = this.pattern.length;
-        // if (queryBegPos >= 0) {
-        //     pathEndPos = queryBegPos;
-        // } else if (hashBegPos >= 0) {
-        //     pathEndPos = hashBegPos;
-        // }
         const pathStr = this.getPath(this.pattern);
-
-        const portBeg = urlStr.indexOf(':', 2);
-        const portEnd = urlStr.indexOf('/', 3);
-        const portStr = urlStr.slice(portBeg, portEnd);
+        const portStr = this.getPort(urlStr);
 
         return this.testProtocol(protoStr) &&
             this.testHost(hostStr) &&
@@ -489,8 +474,8 @@ export class UrlMatchPattern extends Property {
 
     testProtocol(protocol: string) {
         // TODO: check if the protocol is not set in the pattern
-        const protoEndPos = this.pattern.indexOf(':');
-        const protoPatterns = this.pattern.slice(0, protoEndPos).split(UrlMatchPattern.PROTOCOL_DELIMITER);
+        // const protoEndPos = this.pattern.indexOf(':');
+        const protoPatterns = this.getProtocols();
 
         for (let i = 0; i < protoPatterns.length; i++) {
             if (protoPatterns[i] === '*') {

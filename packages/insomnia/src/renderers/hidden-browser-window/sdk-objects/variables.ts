@@ -1,19 +1,21 @@
 import { Property, PropertyList } from './base';
 
+export interface VariableOptions {
+    id?: string;
+    key: string;
+    name?: string;
+    value: string;
+    type?: string;
+    disabled?: boolean;
+}
+
 export class Variable extends Property {
     key: string;
     value: any;
     type: string;
     _kind: string = 'Variable';
 
-    constructor(def?: {
-        id?: string;
-        key: string;
-        name?: string;
-        value: string;
-        type?: string;
-        disabled?: boolean;
-    }) {
+    constructor(def?: VariableOptions) {
         super();
 
         this.id = def ? def.id : '';

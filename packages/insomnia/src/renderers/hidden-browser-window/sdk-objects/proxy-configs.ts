@@ -1,4 +1,5 @@
 import { Property, PropertyList } from './base';
+import { UrlMatchPattern, UrlMatchPatternList } from './urls';
 
 export interface ProxyConfigOptions {
     match: string;
@@ -24,7 +25,7 @@ export class ProxyConfig extends Property {
     password: string;
 
     static authenticate: boolean;
-    // static bypass: UrlMatchPatternList;
+    static bypass: UrlMatchPatternList<UrlMatchPattern>;
     static host: string;
     static match: string;
     static password: string;
@@ -34,7 +35,7 @@ export class ProxyConfig extends Property {
 
     static {
         ProxyConfig.authenticate = false;
-        // ProxyConfig.bypass: UrlMatchPatternList;
+        ProxyConfig.bypass = new UrlMatchPatternList<UrlMatchPattern>(undefined, []);
         ProxyConfig.host = '';
         ProxyConfig.match = '';
         ProxyConfig.password = '';
@@ -78,17 +79,10 @@ export class ProxyConfig extends Property {
         return '_kind' in obj && obj._kind === 'ProxyConfig';
     }
 
-    // TODO: should not read from match?
     getProtocols(): string[] {
         // match field example: 'http+https://example.com/*'
-        const protoSeparator = this.match.indexOf('://');
-        if (protoSeparator <= 0 || protoSeparator >= this.match.length) {
-            return []; // invalid match value
-        }
-
-        return this.match
-            .slice(0, protoSeparator)
-            .split('+');
+        const urlMatch = new UrlMatchPattern(this.match);
+        return urlMatch.getProtocols();
     }
 
     getProxyUrl(): string {
@@ -99,14 +93,22 @@ export class ProxyConfig extends Property {
         }
 
         // http://proxy_username:proxy_password@proxy.com:8080
+        // TODO: check if port is not given
         if (this.authenticate) {
-            return `protos[0]://${this.username}:${this.password}@${this.host}:${this.port}`;
+            return `${protos[0]}://${this.username}:${this.password}@${this.host}:${this.port}`;
         }
-        return `protos[0]://${this.host}:${this.port}`;
+        return `${protos[0]}://${this.host}:${this.port}`;
     }
 
-    // TODO: unsupported yet
-    // test(urlStropt)
+    test(url?: string) {
+        if (!url) {
+            // TODO: it is confusing in which case url arg is optional
+            return false;
+        }
+
+        const urlMatch = new UrlMatchPattern(this.match);
+        return urlMatch.test(url);
+    }
 
     update(options: {
         host: string;
@@ -129,7 +131,7 @@ export class ProxyConfig extends Property {
     updateProtocols(protocols: string[]) {
         const protoSeparator = this.match.indexOf('://');
         if (protoSeparator <= 0 || protoSeparator >= this.match.length) {
-            return; // invalid match value
+            throw Error('updateProtocols: invalid protocols, no protocol is detected');
         }
 
         this.match = protocols.join('+') + this.match.slice(protoSeparator);
@@ -140,7 +142,6 @@ export class ProxyConfig extends Property {
 //     {match: 'https://example.com/*', host: 'proxy.com', port: 8080, tunnel: true},
 //     {match: 'http+https://example2.com/*', host: 'proxy2.com'},
 // ]);
-
 export class ProxyConfigList<T extends ProxyConfig> extends PropertyList<T> {
     constructor(parent: PropertyList<T> | undefined, populate: T[]) {
         super(populate);
