@@ -4,6 +4,7 @@ import {
   Breadcrumb,
   Breadcrumbs,
   Button,
+  DropIndicator,
   GridList,
   Heading,
   ListBox,
@@ -13,6 +14,7 @@ import {
   Popover,
   Select,
   SelectValue,
+  useDragAndDrop,
 } from 'react-aria-components';
 import {
   LoaderFunction,
@@ -58,7 +60,7 @@ export const loader: LoaderFunction = async ({
 
   invariant(workspaceId, 'Workspace ID is required');
 
-  const unitTestSuites = await models.unitTestSuite.findByParentId(workspaceId);
+  const unitTestSuites = (await models.unitTestSuite.findByParentId(workspaceId)).sort((a, b) => a.metaSortKey - b.metaSortKey);
   invariant(unitTestSuites, 'Unit test suites not found');
 
   return {
@@ -100,6 +102,7 @@ const TestRoute: FC = () => {
   const createUnitTestSuiteFetcher = useFetcher();
   const deleteUnitTestSuiteFetcher = useFetcher();
   const renameTestSuiteFetcher = useFetcher();
+  const updateTestSuiteFetcher = useFetcher();
   const runAllTestsFetcher = useFetcher();
   const runningTests = useFetchers()
     .filter(
@@ -144,8 +147,9 @@ const TestRoute: FC = () => {
               name && renameTestSuiteFetcher.submit(
                 { name },
                 {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/rename`,
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/update`,
                   method: 'POST',
+                  encType: 'application/json',
                 }
               );
             },
@@ -178,6 +182,62 @@ const TestRoute: FC = () => {
       },
     },
   ];
+
+  const testSuitesDragAndDrop = useDragAndDrop({
+    getItems: keys => [...keys].map(key => ({ 'text/plain': key.toString() })),
+    onReorder(e) {
+      const source = [...e.keys][0];
+      const sourceTestSuite = unitTestSuites.find(testSuite => testSuite._id === source);
+      const targetTestSuite = unitTestSuites.find(testSuite => testSuite._id === e.target.key);
+      if (!sourceTestSuite || !targetTestSuite) {
+        return;
+      }
+      const dropPosition = e.target.dropPosition;
+      if (dropPosition === 'before') {
+        const currentTestSuiteIndex = unitTestSuites.findIndex(testSuite => testSuite._id === targetTestSuite._id);
+        const previousTestSuite = unitTestSuites[currentTestSuiteIndex - 1];
+        if (!previousTestSuite) {
+          sourceTestSuite.metaSortKey = targetTestSuite.metaSortKey - 1;
+        } else {
+          sourceTestSuite.metaSortKey = (previousTestSuite.metaSortKey + targetTestSuite.metaSortKey) / 2;
+        }
+      }
+      if (dropPosition === 'after') {
+        const currentTestSuiteIndex = unitTestSuites.findIndex(testSuite => testSuite._id === targetTestSuite._id);
+        const nextEnv = unitTestSuites[currentTestSuiteIndex + 1];
+        if (!nextEnv) {
+          sourceTestSuite.metaSortKey = targetTestSuite.metaSortKey + 1;
+        } else {
+          sourceTestSuite.metaSortKey = (nextEnv.metaSortKey + targetTestSuite.metaSortKey) / 2;
+        }
+      }
+
+      updateTestSuiteFetcher.submit({ metaSortKey: sourceTestSuite.metaSortKey }, {
+        method: 'post',
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${sourceTestSuite._id}/update`,
+        encType: 'application/json',
+      });
+    },
+    renderDropIndicator(target) {
+      if (target.type === 'item') {
+        if (target.dropPosition === 'before' && target.key === baseEnvironment._id) {
+          return <DropIndicator
+            target={target}
+            className="hidden"
+          />;
+        }
+        return <DropIndicator
+          target={target}
+          className="outline-[--color-surprise] outline-1 outline"
+        />;
+      }
+
+      return <DropIndicator
+        target={target}
+        className="outline-[--color-surprise] outline-1 outline"
+      />;
+    },
+  });
 
   return (
     <SidebarLayout
@@ -363,6 +423,7 @@ const TestRoute: FC = () => {
                 key: suite._id,
                 ...suite,
               }))}
+              dragAndDropHooks={testSuitesDragAndDrop.dragAndDropHooks}
               className="overflow-y-auto flex-1 data-[empty]:py-0 py-[--padding-sm]"
               disallowEmptySelection
               selectedKeys={[testSuiteId]}
@@ -386,6 +447,7 @@ const TestRoute: FC = () => {
                   >
                     <div className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]">
                       <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+                      <Button slot="drag" className="hidden" />
                       <EditableInput
                         value={item.name}
                         name="name"

@@ -16,6 +16,7 @@ import { isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
+import { UnitTestSuite } from '../../models/unit-test-suite';
 import { isCollection, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
@@ -545,23 +546,21 @@ export const runAllTestsAction: ActionFunction = async ({
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
 };
 
-export const renameTestSuiteAction: ActionFunction = async ({ request, params }) => {
+export const updateTestSuiteAction: ActionFunction = async ({ request, params }) => {
   const { workspaceId, projectId, testSuiteId } = params;
   invariant(typeof testSuiteId === 'string', 'Test Suite ID is required');
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   invariant(typeof projectId === 'string', 'Project ID is required');
 
-  const formData = await request.formData();
-  const name = formData.get('name');
-  invariant(typeof name === 'string', 'Name is required');
+  const data = await request.json() as Partial<UnitTestSuite>;
 
-  const unitTestSuite = await database.getWhere(models.unitTestSuite.type, {
+  const unitTestSuite = await database.getWhere<UnitTestSuite>(models.unitTestSuite.type, {
     _id: testSuiteId,
   });
 
   invariant(unitTestSuite, 'Test Suite not found');
 
-  await models.unitTestSuite.update(unitTestSuite, { name });
+  await models.unitTestSuite.update(unitTestSuite, data);
 
   return null;
 };
