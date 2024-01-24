@@ -436,7 +436,7 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
   const mockRoute = await models.mockRoute.getById(patch.parentId);
   invariant(mockRoute, 'mock route not found');
   const childRequests = await models.request.findByParentId(mockRoute._id);
-  const testRequest = childRequests[0];
+  const testRequest = childRequests[0] || (await models.request.create({ parentId: mockRoute._id, isPrivate: true }));
   invariant(testRequest, 'mock route is missing a testing request');
   const req = await models.request.update(testRequest, patch);
 
