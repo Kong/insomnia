@@ -1,135 +1,132 @@
+import { Cookie as ToughCookie } from 'tough-cookie';
+
 import { Property, PropertyList } from './base';
 
 export interface CookieOptions {
     key: string;
     value: string;
     expires?: Date | string;
-    maxAge?: Number;
+    maxAge?: string | 'Infinity' | '-Infinity';
     domain?: string;
     path?: string;
-    secure?: Boolean;
-    httpOnly?: Boolean;
-    hostOnly?: Boolean;
-    session?: Boolean;
+    secure?: boolean;
+    httpOnly?: boolean;
+    hostOnly?: boolean;
+    session?: boolean;
     extensions?: { key: string; value: string }[];
 }
 
 export class Cookie extends Property {
-    private def: object;
+    readonly _kind: string = 'Cookie';
+    private cookie: ToughCookie;
+    private extensions?: { key: string; value: string }[];
 
     constructor(cookieDef: CookieOptions | string) {
         super();
-        this._kind = 'Cookie';
 
         if (typeof cookieDef === 'string') {
-            this.def = Cookie.parse(cookieDef);
-        } else {
-            this.def = cookieDef;
+            const cookieDefParsed = Cookie.parse(cookieDef);
+            if (!cookieDefParsed) {
+                throw Error('failed to parse cookie, the cookie string seems invalid');
+            }
+            cookieDef = cookieDefParsed;
         }
+
+        const def = { ...cookieDef };
+        this.extensions = def.extensions ? [...def.extensions] : [];
+        def.extensions = [];
+
+        const cookie = ToughCookie.fromJSON(def);
+        if (!cookie) {
+            throw Error('failed to parse cookie, the cookie string seems invalid');
+        }
+        this.cookie = cookie;
     }
 
     static isCookie(obj: Property) {
-        return obj._kind === 'Cookie';
+        return '_kind' in obj && obj._kind === 'Cookie';
     }
 
     static parse(cookieStr: string) {
-        const parts = cookieStr.split(';');
+        const cookieObj = ToughCookie.parse(cookieStr);
+        if (!cookieObj) {
+            throw Error('failed to parse cookie, the cookie string seems invalid');
+        }
 
-        const def: CookieOptions = { key: '', value: '' };
-        const extensions: { key: string; value: string }[] = [];
+        const hostOnly = cookieObj.extensions?.includes('HostOnly') || false;
+        const session = cookieObj.extensions?.includes('Session') || false;
+        if (hostOnly) {
+            cookieObj.extensions = cookieObj.extensions?.filter(item => item !== 'HostOnly') || [];
+        }
+        if (session) {
+            cookieObj.extensions = cookieObj.extensions?.filter(item => item !== 'Session') || [];
+        }
 
-        parts.forEach((part, i) => {
-            const kvParts = part.split('=');
-            const key = kvParts[0];
-
-            if (i === 0) {
-                const value = kvParts.length > 1 ? kvParts[1] : '';
-                def.key, def.value = key, value;
-            } else {
-                switch (key) {
-                    case 'Expires':
-                        // TODO: it should be timestamp
-                        const expireVal = kvParts.length > 1 ? kvParts[1] : '0';
-                        def.expires = expireVal;
-                        break;
-                    case 'Max-Age':
-                        let maxAgeVal = 0;
-                        if (kvParts.length > 1) {
-                            maxAgeVal = parseInt(kvParts[1], 10);
-                        }
-                        def.maxAge = maxAgeVal;
-                        break;
-                    case 'Domain':
-                        const domainVal = kvParts.length > 1 ? kvParts[1] : '';
-                        def.domain = domainVal;
-                        break;
-                    case 'Path':
-                        const pathVal = kvParts.length > 1 ? kvParts[1] : '';
-                        def.path = pathVal;
-                        break;
-                    case 'Secure':
-                        def.secure = true;
-                        break;
-                    case 'HttpOnly':
-                        def.httpOnly = true;
-                        break;
-                    case 'HostOnly':
-                        def.hostOnly = true;
-                        break;
-                    case 'Session':
-                        def.session = true;
-                        break;
-                    default:
-                        const value = kvParts.length > 1 ? kvParts[1] : '';
-                        extensions.push({ key, value });
-                        def.extensions = extensions;
+        // Tough Cookies extensions works well with string[], but not {key: string; value: string}[]
+        const extensions = cookieObj.extensions?.map((entry: string | { key: string; value: string }) => {
+            if (typeof entry === 'string') {
+                const equalPos = entry.indexOf('=');
+                if (equalPos > 0) {
+                    return { key: entry.slice(0, equalPos), value: entry.slice(equalPos + 1) };
                 }
+                return { key: entry, value: 'true' };
+            } else if (
+                'key' in entry &&
+                'value' in entry &&
+                typeof entry.key === 'string' &&
+                typeof entry.value === 'string'
+            ) {
+                return { key: entry.key, value: entry.value };
+            } else {
+                throw Error('failed to create cookie, extension must be: { key: string; value: string }[]');
             }
+
         });
 
-        return def;
+        return {
+            key: cookieObj.key,
+            value: cookieObj.value,
+            expires: cookieObj.expires || undefined,
+            maxAge: `${cookieObj.maxAge}` || undefined,
+            domain: cookieObj.domain || undefined,
+            path: cookieObj.path || undefined,
+            secure: cookieObj.secure || false,
+            httpOnly: cookieObj.httpOnly || false,
+            hostOnly,
+            session,
+            extensions: extensions,
+        };
     }
 
     static stringify(cookie: Cookie) {
         return cookie.toString();
     }
 
-    static unparseSingle(cookie: Cookie) {
+    static unparseSingle(cookieOpt: CookieOptions) {
+        const cookie = new Cookie(cookieOpt);
+        if (!cookie) {
+            throw Error('failed to unparse cookie, the cookie options seems invalid');
+        }
         return cookie.toString();
     }
 
-    // TODO: support PropertyList
     static unparse(cookies: Cookie[]) {
         const cookieStrs = cookies.map(cookie => cookie.toString());
-        return cookieStrs.join(';');
+        return cookieStrs.join('; ');
     }
 
     toString = () => {
-        // Reference: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
-        const cookieDef = this.def as CookieOptions;
-        const kvPair = `${cookieDef.key}=${cookieDef.value};`;
-        const expires = cookieDef.expires ? `Expires=${cookieDef.expires?.toString()};` : '';
-        const maxAge = cookieDef.maxAge ? `Max-Age=${cookieDef.maxAge};` : '';
-        const domain = cookieDef.domain ? `Domain=${cookieDef.domain};` : '';
-        const path = cookieDef.path ? `Path=${cookieDef.path};` : '';
-        const secure = cookieDef.secure ? 'Secure;' : '';
-        const httpOnly = cookieDef.httpOnly ? 'HttpOnly;' : '';
-        // TODO: SameSite, Partitioned is not suported
+        const hostOnlyPart = this.cookie.hostOnly ? '; HostOnly' : '';
+        const sessionPart = this.cookie.extensions?.includes('session') ? '; Session' : '';
+        const extensionPart = this.extensions && this.extensions.length > 0 ?
+            '; ' + this.extensions.map(ext => `${ext.key}=${ext.value}`).join(';') :
+            '';
 
-        const hostOnly = cookieDef.hostOnly ? 'HostOnly;' : '';
-        const session = cookieDef.session ? 'Session;' : '';
-
-        // TODO: extension key may be conflict with pre-defined keys
-        const extensions = cookieDef.extensions ?
-            cookieDef.extensions
-                .map((kv: { key: string; value: string }) => `${kv.key}=${kv.value}`)
-                .join(';') : ''; // the last field doesn't have ';'
-
-        return `${kvPair} ${expires} ${maxAge} ${domain} ${path} ${secure} ${httpOnly} ${hostOnly} ${session} ${extensions}`;
+        return this.cookie.toString() + hostOnlyPart + sessionPart + extensionPart;
     };
 
     valueOf = () => {
-        return (this.def as CookieOptions).value;
+        return this.cookie.toJSON().value;
     };
 }
 
@@ -139,7 +136,6 @@ export class CookieList extends PropertyList<Cookie> {
 
     constructor(parent: CookieList | undefined, cookies: Cookie[]) {
         super(
-            // Cookie, parent.toString()
             cookies
         );
         this._parent = parent;

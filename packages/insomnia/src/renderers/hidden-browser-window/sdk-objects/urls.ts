@@ -1,51 +1,5 @@
-import { MatcherOrInvalid, matchPattern } from 'browser-extension-url-match';
-
 import { Property, PropertyBase, PropertyList } from './base';
 import { Variable, VariableList } from './variables';
-
-// export class QueryParam extends Property {
-//     key: string = '';
-//     value: string = '';
-
-//     constructor(options: {
-//         id?: string;
-//         name?: string;
-//         key: string;
-//         value: string;
-//     }) {
-//         super();
-
-//         this.id = options.id ? options.id : '';
-//         this.name = options.name ? options.name : '';
-//         this.key = options.key;
-//         this.value = options.value;
-//     }
-
-//     // TODO: improve following fields
-//     static _postman_propertyAllowsMultipleValues: boolean = true;
-//     static _postman_propertyIndexKey: string = 'formData';
-
-//     // parse a form data string into an array of objects, where each object contains a key and a value.
-//     static parse(query: string): { key: string; value: string }[] {
-//         try {
-//             const keyValues = JSON.parse(query);
-//             return keyValues.filter((keyValue: object) => {
-//                 if (!('key' in keyValue) || !('value' in keyValue)) {
-//                     console.error('ignored some formdata as "key" or "value" is not found in it');
-//                     return false;
-//                 }
-//                 return true;
-//             });
-//         } catch (e) {
-//             console.error(`failed to parse QueryParams: ${e.message}`);
-//             return [];
-//         }
-//     }
-
-//     valueOf() {
-//         return this.value;
-//     }
-// }
 
 let urlParser = URL;
 let UrlSearchParams = URLSearchParams;
@@ -163,17 +117,6 @@ export interface UrlOptions {
     query: { key: string; value: string }[];
     variables: { key: string; value: string }[];
 }
-
-// export interface UrlOptions {
-//     auth?: { username: string; password: string };
-//     hash?: string;
-//     host: string[];
-//     path?: string[];
-//     port?: string;
-//     protocol: string;
-//     query: PropertyList<QueryParam>;
-//     variables: VariableList<Variable>; // TODO: basically it is not supported now
-// }
 
 export class Url extends PropertyBase {
     _kind: string = 'Url';
@@ -374,17 +317,15 @@ export class Url extends PropertyBase {
 export class UrlMatchPattern extends Property {
     // scheme
     // scheme: 'http:' | 'https:' | '*' | 'file:';
+
     // host
     // About wildcard:
     // If you use a wildcard in the host pattern
     // it must be the first or only character, and it must be followed by a period (.) or forward slash (/).
-    // host: string;
-    // path:
+
+    // path
     // Must contain at least a forward slash
     // The slash by itself matches any path.
-    // path: string;
-
-    // private port: string;
 
     // Special cases: https://developer.chrome.com/docs/extensions/develop/concepts/match-patterns#special
     // "<all_urls>"
@@ -392,51 +333,19 @@ export class UrlMatchPattern extends Property {
     // "http://localhost/*"
     // It doesn't support match patterns for top Level domains (TLD).
 
-    private matcher: MatcherOrInvalid;
     private pattern: string;
 
     constructor(pattern: string) {
         super();
 
-        // const patternObj = UrlMatchPattern.parse(pattern);
         this.pattern = pattern;
-        this.matcher = matchPattern(pattern).assertValid();
-        // this.scheme = patternObj.scheme;
-        // this.host = patternObj.host;
-        // this.path = patternObj.path;
-        // this.port = patternObj.port;
     }
-
-    // private static parse(pattern: string): {
-    //     scheme: 'http:' | 'https:' | '*' | 'file:';
-    //     host: string;
-    //     path: string;
-    //     port: string;
-    // } {
-    //     const urlObj = new Url(pattern);
-
-    //     if (!urlObj || urlObj.host.length === 0) {
-    //         throw Error(`match pattern (${pattern}) is invalid and failed to parse`);
-    //     }
-
-    //     if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:' && urlObj.protocol !== '*' && urlObj.protocol !== 'file:') {
-    //         throw Error(`scheme (${urlObj.protocol}) is invalid and failed to parse`);
-    //     }
-
-    //     return {
-    //         scheme: urlObj.protocol,
-    //         host: urlObj.getHost(),
-    //         path: urlObj.getPath() || '/',
-    //         port: urlObj.port || '',
-    //     };
-    // }
 
     static readonly MATCH_ALL_URLS: string = '<all_urls>';
     static pattern: string | undefined = undefined; // TODO: its usage is unknown
     static readonly PROTOCOL_DELIMITER: string = '+';
 
     // TODO: the url can not start with -
-    // private readonly starRegPattern = '[a-zA-Z0-9\-]*';
 
     getProtocols(): string[] {
         const protocolEndPos = this.pattern.indexOf(':');
@@ -447,74 +356,151 @@ export class UrlMatchPattern extends Property {
     }
 
     test(urlStr: string) {
-        return this.matcher.match(urlStr);
+        const protoEndPos = urlStr.indexOf('/');
+        const protoStr = urlStr.slice(0, protoEndPos);
+
+        // const protocolEndPos = urlStr.indexOf(':');
+        // const pathBegPos = urlStr.indexOf('/', 3);
+        const hostStr = this.getHost(urlStr);
+
+        // const queryBegPos = this.pattern.indexOf('?');
+        // const hashBegPos = this.pattern.indexOf('#');
+        // let pathEndPos = this.pattern.length;
+        // if (queryBegPos >= 0) {
+        //     pathEndPos = queryBegPos;
+        // } else if (hashBegPos >= 0) {
+        //     pathEndPos = hashBegPos;
+        // }
+        const pathStr = this.getPath(this.pattern);
+
+        const portBeg = urlStr.indexOf(':', 2);
+        const portEnd = urlStr.indexOf('/', 3);
+        const portStr = urlStr.slice(portBeg, portEnd);
+
+        return this.testProtocol(protoStr) &&
+            this.testHost(hostStr) &&
+            this.testPath(pathStr) &&
+            this.testPort(portStr, protoStr);
     }
 
-    // testHost(hostStr: string) {
-    //     const protocolEndPos = this.pattern.indexOf(':');
-    //     const pathBegPos = this.pattern.indexOf('/', 3);
-    //     const hostOnlyPattern = '*' + this.pattern.slice(protocolEndPos + 3, pathBegPos) + '*';
-    //     const hostOnlyMatcher = matchPattern(hostOnlyPattern);
+    private getHost(urlStr: string) {
+        const protocolEndPos = urlStr.indexOf('/') + 2;
+        const hostBegPos = protocolEndPos;
 
-    //     return hostOnlyMatcher.match(hostStr);
-    // }
+        const portBegPos = urlStr.indexOf(':', protocolEndPos);
+        const queryBegPos = urlStr.indexOf('?', protocolEndPos);
+        const hashBegPos = urlStr.indexOf('?', protocolEndPos);
+        let pathEndPos = urlStr.length;
+        if (portBegPos >= 0) {
+            pathEndPos = portBegPos;
+        } else if (queryBegPos >= 0) {
+            pathEndPos = queryBegPos;
+        } else if (hashBegPos >= 0) {
+            pathEndPos = hashBegPos;
+        }
 
-    // testPath(pathStr: string) {
-    //     const pathBegPos = this.pattern.indexOf('/', 3);
-    //     const pathOnlyPattern = '*' + '*://*' + this.pattern.slice(pathBegPos);
-    //     const pathOnlyMatcher = matchPattern(pathOnlyPattern);
+        return urlStr.slice(hostBegPos, pathEndPos);
+    }
 
-    //     return pathOnlyMatcher.match(pathStr);
-    // }
+    testHost(hostStr: string) {
+        const patternSegments = this.getHost(this.pattern).split('.');
+        const inputHostSegments = hostStr.split('.');
 
-    // // TODO: it is confusing to verify both port and protocol
-    // testPort(port: string, protocol: string) {
-    //     const protocolEndPos = this.pattern.indexOf(':');
-    //     const protocolPattern = this.pattern.slice(0, protocolEndPos);
-    //     if (protocolPattern === '*') {
-    //         return true;
-    //     }
-    //     const protocolMatcher = matchPattern(protocolPattern + '://*/*');
-    //     if (protocolMatcher.match(p))
+        if (patternSegments.length !== inputHostSegments.length) {
+            return false;
+        }
 
-    //     const portBeg = this.pattern.indexOf(':', 2);
-    //     const portEnd = this.pattern.indexOf('/', 3);
-    //     const portPattern = this.pattern.slice(portBeg, portEnd);
-    //     if (portPattern === '') {
+        for (let i = 0; i < patternSegments.length; i++) {
+            if (patternSegments[i] === '*') {
+                continue;
+            } else if (patternSegments[i] !== inputHostSegments[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-    //     }
+    private getPath(urlStr: string) {
+        const protocolEndPos = urlStr.indexOf('/') + 2;
+        const hostBegPos = protocolEndPos;
+        const pathBegPos = urlStr.indexOf('/', hostBegPos);
+        const queryBegPos = urlStr.indexOf('?');
+        const hashBegPos = urlStr.indexOf('#');
 
-    //     const pathOnlyPattern = '*' + '*://*' + this.pattern.slice(pathBegPos);
-    //     const pathOnlyMatcher = matchPattern(pathOnlyPattern);
+        let pathEndPos = urlStr.length;
+        if (queryBegPos >= 0) {
+            pathEndPos = queryBegPos;
+        } else if (hashBegPos >= 0) {
+            pathEndPos = hashBegPos;
+        }
+        return urlStr.slice(pathBegPos, pathEndPos);
+    }
 
-    //     // return pathOnlyMatcher.match(pathStr);
+    testPath(pathStr: string) {
+        const patternSegments = this.getPath(this.pattern).split('/');
+        const inputSegments = pathStr.split('/');
 
-    //     // if (!this.testProtocol(protocol)) {
-    //     //     return false;
-    //     // }
+        if (patternSegments.length !== inputSegments.length) {
+            return false;
+        }
 
-    //     // const portRegPattern = new RegExp(this.port.replace('*', this.starRegPattern), 'ig');
-    //     // if (!portRegPattern.test(port)) {
-    //     //     return false;
-    //     // }
+        for (let i = 0; i < patternSegments.length; i++) {
+            if (patternSegments[i] === '*') {
+                continue;
+            } else if (patternSegments[i] !== inputSegments[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-    //     // return true;
-    // }
+    private getPort(urlStr: string) {
+        const protocolEndPos = urlStr.indexOf('/') + 2;
+        const hostBegPos = protocolEndPos;
 
-    // testProtocol(protocol: string) {
-    //     switch (protocol) {
-    //         case 'http:':
-    //             return this.scheme === 'http:' || this.scheme === '*';
-    //         case 'https:':
-    //             return this.scheme === 'https:' || this.scheme === '*';
-    //         case '*':
-    //             return this.scheme === 'http:' || this.scheme === 'https:' || this.scheme === '*';
-    //         case 'file:':
-    //             return this.scheme === 'file:';
-    //         default:
-    //             throw `invalid scheme ${protocol}`;
-    //     }
-    // }
+        const portBegPos = this.pattern.indexOf(':', protocolEndPos) + 1;
+        let portEndPos = this.pattern.length;
+        const pathBegPos = urlStr.indexOf('/', hostBegPos);
+        const queryBegPos = urlStr.indexOf('?');
+        const hashBegPos = urlStr.indexOf('#');
+
+        if (pathBegPos >= 0) {
+            portEndPos = pathBegPos;
+        } else if (queryBegPos >= 0) {
+            portEndPos = queryBegPos;
+        } else if (hashBegPos >= 0) {
+            portEndPos = hashBegPos;
+        }
+
+        return urlStr.slice(portBegPos, portEndPos);
+    }
+
+    testPort(port: string, protocol: string) {
+        if (!this.testProtocol(protocol)) {
+            return false;
+        }
+
+        const portPattern = this.getPort(this.pattern);
+        if (portPattern === '*') {
+            return true;
+        }
+        return portPattern === port;
+    }
+
+    testProtocol(protocol: string) {
+        // TODO: check if the protocol is not set in the pattern
+        const protoEndPos = this.pattern.indexOf(':');
+        const protoPatterns = this.pattern.slice(0, protoEndPos).split(UrlMatchPattern.PROTOCOL_DELIMITER);
+
+        for (let i = 0; i < protoPatterns.length; i++) {
+            if (protoPatterns[i] === '*') {
+                return true;
+            } else if (protoPatterns[i] === protocol) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     toString() {
         return this.pattern;
@@ -522,7 +508,6 @@ export class UrlMatchPattern extends Property {
 
     update(pattern: string) {
         this.pattern = pattern;
-        this.matcher = matchPattern(pattern);
     }
 }
 

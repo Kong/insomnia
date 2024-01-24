@@ -2,11 +2,10 @@ import url from 'node:url';
 
 import { describe, expect, it } from '@jest/globals';
 
-import { PropertyList } from '../base';
 import { QueryParam, setUrlParser, Url, UrlMatchPattern } from '../urls';
 import { Variable } from '../variables';
 
-describe('test Certificate object', () => {
+describe('test Url object', () => {
   setUrlParser(url.URL);
 
   it('test QueryParam', () => {
@@ -79,13 +78,33 @@ describe('test Certificate object', () => {
 
     expect(urlObj.toString()).toEqual(urlStr);
   });
+});
 
+describe('test Url Match Pattern', () => {
   it('test UrlMatchPattern', () => {
-    const pattern = 'https://*.insomnia.com/*';
+    const pattern = 'http+https+custom://*.insomnia.com:80/p1/*';
     const matchPattern = new UrlMatchPattern(pattern);
 
-    expect(matchPattern.getProtocols()).toEqual(['https']);
-    expect(matchPattern.test('https://*.insomnia.com')).toBeTruthy();
-    expect(matchPattern.toString()).toEqual(pattern);
+    expect(matchPattern.getProtocols()).toEqual(['http', 'https', 'custom']);
+    expect(matchPattern.testProtocol('http')).toBeTruthy();
+    expect(matchPattern.testProtocol('https')).toBeTruthy();
+    expect(matchPattern.testProtocol('custom')).toBeTruthy();
+    expect(matchPattern.testProtocol('unmatched')).toBeFalsy();
+
+    expect(matchPattern.testHost('download.insomnia.com')).toBeTruthy();
+    expect(matchPattern.testHost('bin.download.insomnia.com')).toBeFalsy();
+    expect(matchPattern.testHost('insomnia.com')).toBeFalsy();
+    expect(matchPattern.testHost('com')).toBeFalsy();
+
+    expect(matchPattern.testPath('/p1/abc')).toBeTruthy();
+    expect(matchPattern.testPath('/p1/')).toBeTruthy();
+    expect(matchPattern.testPath('/p1')).toBeFalsy();
+    expect(matchPattern.testPath('/')).toBeFalsy();
+    expect(matchPattern.testPath('')).toBeFalsy();
+
+    expect(matchPattern.testPort('80', 'https')).toBeTruthy();
+    expect(matchPattern.testPort('443', 'https')).toBeFalsy();
+    expect(matchPattern.testPort('80', 'http')).toBeTruthy();
+    expect(matchPattern.testPort('80', 'unmatched')).toBeFalsy();
   });
 });
