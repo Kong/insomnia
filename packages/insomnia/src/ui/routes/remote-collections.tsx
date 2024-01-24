@@ -54,7 +54,7 @@ async function getSyncItems({
   const wsReqs = await database.find(models.webSocketRequest.type, { parentId: { $in: listOfParentIds } });
   const allRequests = [...reqs, ...reqGroups, ...grpcReqs, ...wsReqs] as (Request | RequestGroup | GrpcRequest | WebSocketRequest)[];
   const testSuites = await models.unitTestSuite.findByParentId(workspaceId);
-  const tests = await database.find(models.unitTest.type, { parentId: { $in: testSuites.map(t => t._id) } });
+  const tests = await database.find<UnitTest>(models.unitTest.type, { parentId: { $in: testSuites.map(t => t._id) } });
 
   const baseEnvironment = await models.environment.getByParentId(workspaceId);
   invariant(baseEnvironment, 'Base environment not found');
