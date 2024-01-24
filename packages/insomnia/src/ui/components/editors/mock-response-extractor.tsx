@@ -37,7 +37,6 @@ export const MockResponseExtractor = () => {
           if (activeResponse) {
             // TODO: move this out of the renderer, and upsert mock
             const body = await fs.readFile(activeResponse.bodyPath);
-            console.log('Exporting response to mock route', activeResponse, body.toString());
 
             patchMockRoute(selectedMockRoute, {
               body: body.toString(),

@@ -39,6 +39,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<MockRouteLoade
   const mockRoute = await models.mockRoute.getById(mockRouteId);
   invariant(mockRoute, 'Mock route is required');
   // get current response via request children of
+  // TODO: use the same request for try mock rather than creating lots of child requests
   const reqIds = (await models.request.findByParentId(mockRouteId)).map(r => r._id);
 
   const responses = await db.findMostRecentlyModified<Response>(models.response.type, { parentId: { $in: reqIds } });
@@ -118,7 +119,6 @@ export const MockRouteRoute = () => {
         return res?.data?.errors;
       }
       if (typeof res?.data === 'string') {
-        console.log('successful upsert', res.data);
         return '';
       }
       console.log('Error: invalid response from remote', { res, mockbinUrl });
@@ -138,7 +138,6 @@ export const MockRouteRoute = () => {
       });
 
   const upsertMockbinHar = async (pathInput?: string) => {
-    console.log('upserting mockbin har');
     const compoundId = mockRoute.parentId + pathInput;
     const error = await upsertBinOnRemoteFromResponse(compoundId);
     if (error) {
