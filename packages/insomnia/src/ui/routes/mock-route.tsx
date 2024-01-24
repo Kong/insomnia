@@ -166,7 +166,6 @@ export const MockRouteRoute = () => {
       url: mockbinUrl + '/bin/' + compoundId,
       method: mockRoute.method,
       parentId: mockRoute._id,
-      isPrivate: true,
     });
   };
   const onBlurTriggerUpsert = () => upsertMockbinHar(mockRoute.name);

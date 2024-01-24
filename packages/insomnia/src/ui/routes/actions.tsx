@@ -1203,7 +1203,9 @@ export const createMockRouteAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
   invariant(typeof patch.name === 'string', 'Name is required');
   invariant(typeof patch.parentId === 'string', 'parentId is required');
-  await models.mockRoute.create(patch);
+  const mockRoute = await models.mockRoute.create(patch);
+  // create a single hidden request under the mock route for testing the mock endpoint
+  await models.request.create({ parentId: mockRoute._id, isPrivate: true });
   return null;
 };
 export const updateMockRouteAction: ActionFunction = async ({ request, params }) => {
