@@ -54,6 +54,7 @@ import { ApiSpec } from '../../models/api-spec';
 import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
+import { MockServer } from '../../models/mock-server';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
 import { Organization } from '../../models/organization';
 import {
@@ -61,7 +62,7 @@ import {
   Project,
   SCRATCHPAD_PROJECT_ID,
 } from '../../models/project';
-import { isDesign, Workspace } from '../../models/workspace';
+import { isDesign, scopeToActivity, Workspace, WorkspaceScope } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { showModal } from '../../ui/components/modals';
 import { AskModal } from '../../ui/components/modals/ask-modal';
@@ -121,6 +122,7 @@ export interface WorkspaceWithMetadata {
   specFormat: 'openapi' | 'swagger' | null;
   name: string;
   apiSpec: ApiSpec | null;
+  mockServer: MockServer | null;
   specFormatVersion: string | null;
   workspace: Workspace;
   workspaceMeta: WorkspaceMeta;
@@ -263,6 +265,7 @@ export interface ProjectLoaderData {
   allFilesCount: number;
   documentsCount: number;
   collectionsCount: number;
+  mockServersCount: number;
   projectsCount: number;
   activeProject: Project;
   projects: Project[];
@@ -303,7 +306,7 @@ export const loader: LoaderFunction = async ({
     workspace: Workspace
   ): Promise<WorkspaceWithMetadata> => {
     const apiSpec = await models.apiSpec.getByParentId(workspace._id);
-
+    const mockServer = await models.mockServer.getByParentId(workspace._id);
     let spec: ParsedApiSpec['contents'] = null;
     let specFormat: ParsedApiSpec['format'] = null;
     let specFormatVersion: ParsedApiSpec['formatVersion'] = null;
@@ -368,6 +371,7 @@ export const loader: LoaderFunction = async ({
       specFormat,
       name: workspace.name,
       apiSpec,
+      mockServer,
       specFormatVersion,
       workspaceMeta,
       clientCertificates,
@@ -453,6 +457,9 @@ export const loader: LoaderFunction = async ({
     collectionsCount: workspacesWithMetaData.filter(
       w => w.workspace.scope === 'collection'
     ).length,
+    mockServersCount: workspacesWithMetaData.filter(
+      w => w.workspace.scope === 'mock-server'
+    ).length,
   };
 };
 
@@ -463,6 +470,7 @@ const ProjectRoute: FC = () => {
     projects,
     allFilesCount,
     collectionsCount,
+    mockServersCount,
     documentsCount,
     projectsCount,
     learningFeature,
@@ -570,6 +578,28 @@ const ProjectRoute: FC = () => {
     });
   };
 
+  const createNewMockServer = () => {
+    showPrompt({
+      title: 'Create New Mock Server',
+      submitName: 'Create',
+      placeholder: 'My Mock Server',
+      defaultValue: 'My Mock Server',
+      selectText: true,
+      onComplete: async (name: string) => {
+        fetcher.submit(
+          {
+            name,
+            scope: 'mock-server',
+          },
+          {
+            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
+            method: 'post',
+          }
+        );
+      },
+    });
+  };
+
   const createNewProjectFetcher = useFetcher();
 
   useEffect(() => {
@@ -654,6 +684,12 @@ const ProjectRoute: FC = () => {
       action: createNewDocument,
     },
     {
+        id: 'new-mock-server',
+        name: 'Mock Server',
+        icon: 'server',
+      action: createNewMockServer,
+      },
+      {
       id: 'import',
       name: 'Import',
       icon: 'file-import',
@@ -704,11 +740,36 @@ const ProjectRoute: FC = () => {
         run: createNewCollection,
       },
     },
+      {
+        id: 'mock-server',
+        label: `Mock (${mockServersCount})`,
+        icon: 'server',
+        action: {
+          icon: 'plus',
+          label: 'New Mock Server',
+          run: createNewMockServer,
+        },
+      },
   ];
 
   const organization = organizations.find(o => o.id === organizationId);
   const isUserOwner = organization && accountId && isOwnerOfOrganization({ organization, accountId });
   const isPersonalOrg = organization && isPersonalOrganization(organization);
+  const scopeToIconMap: Record<string, IconName> = {
+    design: 'file',
+    collection: 'bars',
+    'mock-server': 'server',
+  };
+  const scopeToBgColorMap: Record<string, string> = {
+    design: 'bg-[--color-info]',
+    collection: 'bg-[--color-surprise]',
+    'mock-server': 'bg-[--color-warning]',
+  };
+  const scopeToTextColorMap: Record<string, string> = {
+    design: 'text-[--color-info-font]',
+    collection: 'text-[--color-surprise-font]',
+    'mock-server': 'text-[--color-warning-font]',
+  };
 
   return (
     <ErrorBoundary>
@@ -1153,8 +1214,11 @@ const ProjectRoute: FC = () => {
                   aria-label="Workspaces"
                   items={workspacesWithPresence}
                   onAction={key => {
+                    // hack to workaround gridlist not have access to workspace scope
+                    const [id, scope] = key.toString().split('|');
+                    const activity = scopeToActivity(scope as WorkspaceScope);
                     navigate(
-                      `/organization/${organizationId}/project/${projectId}/workspace/${key}/debug`
+                      `/organization/${organizationId}/project/${projectId}/workspace/${id}/${activity}`
                     );
                   }}
                   className="data-[empty]:flex data-[empty]:justify-center grid [grid-template-columns:repeat(auto-fit,200px)] [grid-template-rows:repeat(auto-fit,200px)] gap-4 p-[--padding-md]"
@@ -1169,40 +1233,34 @@ const ProjectRoute: FC = () => {
                       );
                     }
 
-                    return (
-                      <EmptyStatePane
-                        createRequestCollection={createNewCollection}
-                        createDesignDocument={createNewDocument}
-                        importFrom={() => setImportModalType('file')}
-                        cloneFromGit={importFromGit}
-                      />
-                    );
-                  }}
+                  return (
+                    <EmptyStatePane
+                      createRequestCollection={createNewCollection}
+                      createDesignDocument={createNewDocument}
+                      createMockServer={createNewMockServer}
+                      importFrom={() => setImportModalType('file')}
+                      cloneFromGit={importFromGit}
+                    />
+                  );
+                }}
                 >
-                  {item => {
-                    return (
-                      <GridListItem
-                        key={item._id}
-                        id={item._id}
-                        textValue={item.name}
-                        className="flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-sm hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
-                      >
-                        <div className="flex gap-2 h-[20px]">
-                          <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
-                            {isDesign(item.workspace) ? (
-                              <div className="px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm bg-[--color-info] text-[--color-font-info]">
-                                <Icon icon="file" />
-                              </div>
-                            ) : (
-                              <div className="px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm bg-[--color-surprise] text-[--color-font-surprise]">
-                                <Icon icon="bars" />
-                              </div>
-                            )}
-                            <span>
-                              {isDesign(item.workspace)
-                                ? 'Document'
-                                : 'Collection'}
-                            </span>
+                {item => {
+                  return (
+                    <GridListItem
+                      key={item._id}
+                      // hack to workaround gridlist not have access to workspace scope
+                      id={item._id + '|' + item.workspace.scope}
+                      textValue={item.name}
+                      className="flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-sm hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
+                    >
+                      <div className="flex gap-2 h-[20px]">
+                        <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
+                          <div className={`${scopeToBgColorMap[item.workspace.scope]} ${scopeToTextColorMap[item.workspace.scope]}  px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
+                            <Icon icon={scopeToIconMap[item.workspace.scope]} />
+                          </div>
+                          <span>
+                            {item.workspace.scope}
+                          </span>
                           </div>
                           <span className="flex-1" />
                           {item.presence.length > 0 && (

@@ -755,16 +755,16 @@ const OrganizationRoute = () => {
                 </Tooltip>
               </TooltipTrigger>
               <span className='w-[1px] h-full bg-[--hl-sm]' />
-            <Link>
-              <a
-                className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
-                href="https://konghq.com/"
-              >
-                Made with
+              <Link>
+                <a
+                  className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
+                  href="https://konghq.com/"
+                >
+                  Made with
                   <Icon className="text-[--color-surprise-font]" icon="heart" /> by
-                Kong
-              </a>
-            </Link>
+                  Kong
+                </a>
+              </Link>
             </div>
           </div>
         </div>

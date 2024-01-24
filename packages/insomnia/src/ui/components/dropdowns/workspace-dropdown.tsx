@@ -41,6 +41,7 @@ export const WorkspaceDropdown: FC = () => {
     activeWorkspace,
     activeProject,
     activeApiSpec,
+    activeMockServer,
     projects,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const activeWorkspaceName = activeWorkspace.name;
@@ -254,6 +255,7 @@ export const WorkspaceDropdown: FC = () => {
       {isSettingsModalOpen && (
         <WorkspaceSettingsModal
           workspace={activeWorkspace}
+          mockServer={activeMockServer}
           onClose={() => setIsSettingsModalOpen(false)}
         />
       )}

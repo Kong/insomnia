@@ -5,6 +5,7 @@ export interface StringInfo {
 
 type StringId =
   | 'collection'
+  | 'mock'
   | 'document'
   | 'project'
   | 'workspace'
@@ -17,6 +18,10 @@ export const strings: Record<StringId, StringInfo> = {
   collection: {
     singular: 'Collection',
     plural: 'Collections',
+  },
+  mock: {
+    singular: 'Mock',
+    plural: 'Mocks',
   },
   document: {
     singular: 'Document',

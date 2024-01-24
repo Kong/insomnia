@@ -76,7 +76,6 @@ export const RequestPane: FC<Props> = ({
     useState(false);
   const patchRequest = useRequestPatcher();
 
-  useState(false);
   const handleImportQueryFromUrl = () => {
     let query;
 
@@ -122,6 +121,7 @@ export const RequestPane: FC<Props> = ({
   const contentType =
     getContentTypeFromHeaders(activeRequest.headers) ||
     activeRequest.body.mimeType;
+
   return (
     <Pane type="request">
       <PaneHeader>

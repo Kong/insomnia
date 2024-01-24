@@ -16,6 +16,7 @@ import { GitRepository } from '../../models/git-repository';
 import { GrpcRequest } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { sortProjects } from '../../models/helpers/project';
+import { MockServer } from '../../models/mock-server';
 import { Project } from '../../models/project';
 import { Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
@@ -43,6 +44,7 @@ export interface WorkspaceLoaderData {
   baseEnvironment: Environment;
   subEnvironments: Environment[];
   activeApiSpec: ApiSpec | null;
+  activeMockServer: MockServer | null;
   clientCertificates: ClientCertificate[];
   caCertificate: CaCertificate | null;
   projects: Project[];
@@ -106,6 +108,7 @@ export const workspaceLoader: LoaderFunction = async ({
   invariant(activeCookieJar, 'Cookie jar not found');
 
   const activeApiSpec = await models.apiSpec.getByParentId(workspaceId);
+  const activeMockServer = await models.mockServer.getByParentId(workspaceId);
   const clientCertificates = await models.clientCertificate.findByParentId(
     workspaceId,
   );
@@ -266,6 +269,7 @@ export const workspaceLoader: LoaderFunction = async ({
     subEnvironments,
     baseEnvironment,
     activeApiSpec,
+    activeMockServer,
     clientCertificates,
     caCertificate: await models.caCertificate.findByParentId(workspaceId),
     projects,

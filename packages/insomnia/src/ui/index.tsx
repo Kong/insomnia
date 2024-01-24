@@ -42,6 +42,7 @@ const Workspace = lazy(() => import('./routes/workspace'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
 const Debug = lazy(() => import('./routes/debug'));
 const Design = lazy(() => import('./routes/design'));
+const MockServer = lazy(() => import('./routes/mock-server'));
 
 initializeSentry();
 initializeLogging();
@@ -358,6 +359,13 @@ const router = createMemoryRouter(
                                     ).createRequestAction(...args),
                                 },
                                 {
+                                  path: 'request/new-mock-send',
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/request')
+                                    ).createAndSendToMockbinAction(...args),
+                                },
+                                {
                                   path: 'request/delete',
                                   action: async (...args) =>
                                     (
@@ -422,6 +430,64 @@ const router = createMemoryRouter(
                                     ).generateCollectionFromApiSpecAction(
                                       ...args,
                                     ),
+                                },
+                              ],
+                            },
+                            {
+                              path: 'mock-server',
+                              id: 'mock-server',
+                              loader: async (...args) =>
+                                (await import('./routes/mock-server')).loader(
+                                  ...args,
+                                ),
+                              element: (
+                                <Suspense fallback={<AppLoadingIndicator />}>
+                                  <MockServer />
+                                </Suspense>
+                              ),
+                              children: [
+                                {
+                                  path: 'update',
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).updateMockServerAction(...args),
+                                },
+                                {
+                                  path: 'mock-route',
+                                  id: 'mock-route',
+                                  children: [
+                                    {
+                                      path: ':mockRouteId',
+                                      id: ':mockRouteId',
+                                      loader: async (...args) =>
+                                        (
+                                          await import('./routes/mock-route')
+                                        ).loader(...args),
+                                      element: <Outlet />,
+                                    },
+                                    {
+                                      path: 'new',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/actions')
+                                        ).createMockRouteAction(...args),
+                                    },
+                                    {
+                                      path: ':mockRouteId/update',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/actions')
+                                        ).updateMockRouteAction(...args),
+                                    },
+                                    {
+                                      path: ':mockRouteId/delete',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/actions')
+                                        ).deleteMockRouteAction(...args),
+                                    },
+                                  ],
                                 },
                               ],
                             },
