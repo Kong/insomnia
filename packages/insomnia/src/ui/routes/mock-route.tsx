@@ -56,7 +56,8 @@ const mockContentTypes = [
   CONTENT_TYPE_XML,
   CONTENT_TYPE_YAML,
 ];
-export const formToHar = ({ statusCode, statusText, mimeType, headersArray, body }: { statusCode: number; statusText: string; mimeType: string; headersArray: RequestHeader[]; body: string }): HarResponse => {
+// mockbin expect a HAR response structure
+export const mockRouteToHar = ({ statusCode, statusText, mimeType, headersArray, body }: { statusCode: number; statusText: string; mimeType: string; headersArray: RequestHeader[]; body: string }): HarResponse => {
   const validHeaders = headersArray.filter(({ name }) => !!name);
   return {
     status: +statusCode,
@@ -106,7 +107,7 @@ export const MockRouteRoute = () => {
       const res: AxiosResponse<MockbinResult | MockbinError> = await window.main.axiosRequest({
         url: mockbinUrl + `/bin/upsert/${compoundId}`,
         method: 'put',
-        data: formToHar({
+        data: mockRouteToHar({
           statusCode: mockRoute.statusCode,
           statusText: mockRoute.statusText,
           headersArray: mockRoute.headers,
@@ -114,7 +115,7 @@ export const MockRouteRoute = () => {
           body: mockRoute.body,
         }),
       });
-      if ('errors' in res?.data && typeof res?.data?.errors === 'string') {
+      if (typeof res?.data === 'object' && 'errors' in res?.data && typeof res?.data?.errors === 'string') {
         console.error('error response', res?.data?.errors);
         return res?.data?.errors;
       }
