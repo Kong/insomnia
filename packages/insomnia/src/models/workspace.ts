@@ -141,13 +141,14 @@ type MigrationWorkspace = Merge<Workspace, { scope: OldScopeTypes | Workspace['s
  * Ensure workspace scope is set to a valid entry
  */
 function _migrateScope(workspace: MigrationWorkspace) {
-  if (workspace.scope === WorkspaceScopeKeys.design || workspace.scope === WorkspaceScopeKeys.collection) {
+  if (workspace.scope === WorkspaceScopeKeys.design
+    || workspace.scope === WorkspaceScopeKeys.collection
+    || workspace.scope === WorkspaceScopeKeys.mockServer) {
     return workspace as Workspace;
   }
+  // designer and spec => design, unset => collection
   if (workspace.scope === 'designer' || workspace.scope === 'spec') {
     workspace.scope = WorkspaceScopeKeys.design;
-  } else if (workspace.scope === 'mock-server') {
-    workspace.scope = WorkspaceScopeKeys.mockServer;
   } else {
     workspace.scope = WorkspaceScopeKeys.collection;
   }
