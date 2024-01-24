@@ -112,7 +112,6 @@ const TestRoute: FC = () => {
 
   const createUnitTestSuiteFetcher = useFetcher();
   const deleteUnitTestSuiteFetcher = useFetcher();
-  const renameTestSuiteFetcher = useFetcher();
   const updateTestSuiteFetcher = useFetcher();
   const runAllTestsFetcher = useFetcher();
   const runningTests = useFetchers()
@@ -155,7 +154,7 @@ const TestRoute: FC = () => {
             defaultValue: unitTestSuites.find(s => s._id === suiteId)?.name,
             submitName: 'Rename',
             onComplete: name => {
-              name && renameTestSuiteFetcher.submit(
+              name && updateTestSuiteFetcher.submit(
                 { name },
                 {
                   action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/update`,
@@ -459,11 +458,12 @@ const TestRoute: FC = () => {
                           });
                         }}
                         onSubmit={name => {
-                          name && renameTestSuiteFetcher.submit(
+                          name && updateTestSuiteFetcher.submit(
                             { name },
                             {
-                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${item._id}/rename`,
+                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${item._id}/update`,
                               method: 'POST',
+                              encType: 'application/json',
                             }
                           );
                         }}

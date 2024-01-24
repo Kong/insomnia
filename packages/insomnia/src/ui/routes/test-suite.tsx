@@ -412,13 +412,16 @@ const TestSuiteRoute = () => {
 
   const createUnitTestFetcher = useFetcher();
   const runAllTestsFetcher = useFetcher();
-  const renameTestSuiteFetcher = useFetcher();
+  const updateTestSuiteFetcher = useFetcher();
   const updateUnitTestFetcher = useFetcher();
 
   const testsRunning = runAllTestsFetcher.state === 'submitting';
 
+  const optimisticUpdateTestSuiteName = updateTestSuiteFetcher.json && typeof updateTestSuiteFetcher.json === 'object' &&
+    'name' in updateTestSuiteFetcher.json && updateTestSuiteFetcher.json?.name?.toString();
+
   const testSuiteName =
-    renameTestSuiteFetcher.formData?.get('name')?.toString() ??
+    optimisticUpdateTestSuiteName ||
     unitTestSuite.name;
 
   const unitTestsDragAndDrop = useDragAndDrop({
@@ -464,7 +467,7 @@ const TestSuiteRoute = () => {
       return (
         <DropIndicator
           target={target}
-          className="outline-[--color-surprise] outline-1 outline"
+          className="outline-[--color-surprise] outline-1 outline !border-none"
         />
       );
     },
@@ -478,11 +481,12 @@ const TestSuiteRoute = () => {
             className='w-full px-1'
             onSubmit={name =>
               name &&
-              renameTestSuiteFetcher.submit(
+              updateTestSuiteFetcher.submit(
                 { name },
                 {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/rename`,
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/update`,
                   method: 'POST',
+                  encType: 'application/json',
                 }
               )
             }
@@ -571,7 +575,7 @@ const TestSuiteRoute = () => {
           className="flex-1 flex flex-col divide-y divide-solid divide-[--hl-md] overflow-y-auto"
         >
           {unitTest => (
-            <ListBoxItem>
+            <ListBoxItem className="outline-none">
               <Button slot="drag" className="hidden" />
               <UnitTestItemView
                 unitTest={unitTest}
