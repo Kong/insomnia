@@ -23,7 +23,7 @@ import { documentationLinks } from '../../common/documentation';
 import * as models from '../../models';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRequest, Request } from '../../models/request';
-import { isUnitTest, UnitTest } from '../../models/unit-test';
+import { UnitTest } from '../../models/unit-test';
 import { UnitTestSuite } from '../../models/unit-test-suite';
 import { isWebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
@@ -382,9 +382,15 @@ export const loader: LoaderFunction = async ({
 
   invariant(unitTestSuite, 'Test Suite not found');
 
-  const unitTests = (await database.withDescendants(unitTestSuite)).filter(
-    isUnitTest
-  ).sort((a, b) => a.metaSortKey - b.metaSortKey);
+  const unitTests = await database.find<UnitTest>(
+    models.unitTest.type,
+    {
+      parentId: testSuiteId,
+    },
+    {
+      metaSortKey: 1,
+    }
+  );
 
   return {
     unitTests,

@@ -517,9 +517,11 @@ export const runAllTestsAction: ActionFunction = async ({
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   invariant(typeof testSuiteId === 'string', 'Test Suite ID is required');
 
-  const unitTests = await database.find<UnitTest>(models.unitTest.type, {
-    parentId: testSuiteId,
-  });
+  const unitTests = await database.find<UnitTest>(
+    models.unitTest.type,
+    { parentId: testSuiteId },
+    { metaSortKey: 1 }
+  );
   invariant(unitTests, 'No unit tests found');
 
   const tests: Test[] = unitTests

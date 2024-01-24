@@ -30,6 +30,7 @@ import {
   useRouteLoaderData,
 } from 'react-router-dom';
 
+import { database } from '../../common/database';
 import * as models from '../../models';
 import { Environment } from '../../models/environment';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
@@ -61,7 +62,16 @@ export const loader: LoaderFunction = async ({
 
   invariant(workspaceId, 'Workspace ID is required');
 
-  const unitTestSuites = (await models.unitTestSuite.findByParentId(workspaceId)).sort((a, b) => a.metaSortKey - b.metaSortKey);
+  const unitTestSuites = await database.find<UnitTestSuite>(
+    models.unitTestSuite.type,
+    {
+      parentId: workspaceId,
+    },
+    {
+      metaSortKey: 1,
+    }
+  );
+
   invariant(unitTestSuites, 'Unit test suites not found');
 
   return {
