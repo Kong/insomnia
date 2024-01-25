@@ -1,3 +1,5 @@
+import * as Har from 'har-format';
+
 import { Body, Converter, ImportRequest, PostData, UNKNOWN } from '../entities';
 
 export const id = 'har';
@@ -6,18 +8,13 @@ export const description = 'Importer for HTTP Archive 1.2';
 
 let requestCount = 1;
 
-interface Entry {
-  comment: UNKNOWN;
-  request: ImportRequest;
-}
-
 interface HarRoot {
   log: {
-    entries: Entry[];
+    entries: Har.Entry[];
   };
-  httpVersion: UNKNOWN;
-  method: UNKNOWN;
-  url: UNKNOWN;
+  httpVersion: string;
+  method: string;
+  url: string;
 }
 
 const extractRequests = (harRoot: HarRoot): ImportRequest[] => {

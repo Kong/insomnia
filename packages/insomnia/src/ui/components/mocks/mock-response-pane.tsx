@@ -1,9 +1,9 @@
 import { AxiosResponse } from 'axios';
+import * as Har from 'har-format';
 import React, { Fragment, useEffect, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { getMockServiceURL, PREVIEW_MODE_SOURCE } from '../../../common/constants';
-import { HarRequest } from '../../../common/har';
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models';
 import { MockRouteLoaderData } from '../../routes/mock-route';
@@ -26,7 +26,7 @@ interface MockbinLogOutput {
       {
         startedDateTime: string;
         clientIPAddress: string;
-        request: HarRequest;
+        request: Har.Request;
       }
     ];
   };

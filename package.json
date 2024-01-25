@@ -48,6 +48,7 @@
     "@jest/types": "^28.1.0",
     "@types/chai": "^4.3.5",
     "@types/eslint": "^8.4.3",
+    "@types/har-format": "^1.2.15",
     "@types/mocha": "^10.0.1",
     "@types/node": "^20.3.3",
     "@types/svgo": "^2.6.3",
