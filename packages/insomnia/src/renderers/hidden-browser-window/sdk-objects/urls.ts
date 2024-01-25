@@ -348,7 +348,11 @@ export class UrlMatchPattern extends Property {
     // TODO: the url can not start with -
 
     getProtocols(): string[] {
-        const protocolEndPos = this.pattern.indexOf(':');
+        const protocolEndPos = this.pattern.indexOf('://');
+        if (protocolEndPos < 0) {
+            throw Error('UrlMatchPattern: protocol is not specified');
+        }
+
         const protocolPattern = this.pattern.slice(0, protocolEndPos);
         const protocols = protocolPattern.split(UrlMatchPattern.PROTOCOL_DELIMITER);
 
@@ -369,26 +373,32 @@ export class UrlMatchPattern extends Property {
     }
 
     private getHost(urlStr: string) {
-        const protocolEndPos = urlStr.indexOf('/') + 2;
+        const protocolEndPos = urlStr.indexOf('://') + 3;
         const hostBegPos = protocolEndPos;
 
         const portBegPos = urlStr.indexOf(':', protocolEndPos);
+        const pathBegPos = urlStr.indexOf('/', protocolEndPos);
         const queryBegPos = urlStr.indexOf('?', protocolEndPos);
         const hashBegPos = urlStr.indexOf('?', protocolEndPos);
-        let pathEndPos = urlStr.length;
+
+        let hostEndPos = urlStr.length;
         if (portBegPos >= 0) {
-            pathEndPos = portBegPos;
+            hostEndPos = portBegPos;
+        } else if (pathBegPos >= 0) {
+            hostEndPos = pathBegPos;
         } else if (queryBegPos >= 0) {
-            pathEndPos = queryBegPos;
+            hostEndPos = queryBegPos;
         } else if (hashBegPos >= 0) {
-            pathEndPos = hashBegPos;
+            hostEndPos = hashBegPos;
         }
 
-        return urlStr.slice(hostBegPos, pathEndPos);
+        return urlStr.slice(hostBegPos, hostEndPos);
     }
 
     testHost(hostStr: string) {
         const patternSegments = this.getHost(this.pattern).split('.');
+        console.log(patternSegments);
+
         const inputHostSegments = hostStr.split('.');
 
         if (patternSegments.length !== inputHostSegments.length) {
@@ -406,18 +416,22 @@ export class UrlMatchPattern extends Property {
     }
 
     private getPath(urlStr: string) {
-        const protocolEndPos = urlStr.indexOf('/') + 2;
+        const protocolEndPos = urlStr.indexOf('://') + 3;
         const hostBegPos = protocolEndPos;
         const pathBegPos = urlStr.indexOf('/', hostBegPos);
+        if (pathBegPos < 0) {
+            return '';
+        }
+
         const queryBegPos = urlStr.indexOf('?');
         const hashBegPos = urlStr.indexOf('#');
-
         let pathEndPos = urlStr.length;
         if (queryBegPos >= 0) {
             pathEndPos = queryBegPos;
         } else if (hashBegPos >= 0) {
             pathEndPos = hashBegPos;
         }
+
         return urlStr.slice(pathBegPos, pathEndPos);
     }
 
@@ -444,6 +458,10 @@ export class UrlMatchPattern extends Property {
         const hostBegPos = protocolEndPos;
 
         const portBegPos = this.pattern.indexOf(':', protocolEndPos) + 1;
+        if (portBegPos <= 0) {
+            return '';
+        }
+
         let portEndPos = this.pattern.length;
         const pathBegPos = urlStr.indexOf('/', hostBegPos);
         const queryBegPos = urlStr.indexOf('?');
@@ -468,13 +486,20 @@ export class UrlMatchPattern extends Property {
         const portPattern = this.getPort(this.pattern);
         if (portPattern === '*') {
             return true;
+        } else if (portPattern === '') {
+            const protos = this.getProtocols();
+
+            if (protos.includes('https') && port === '443' && protocol === 'https') {
+                return true;
+            } else if (protos.includes('http') && port === '80' && protocol === 'http') {
+                return true;
+            }
         }
+
         return portPattern === port;
     }
 
     testProtocol(protocol: string) {
-        // TODO: check if the protocol is not set in the pattern
-        // const protoEndPos = this.pattern.indexOf(':');
         const protoPatterns = this.getProtocols();
 
         for (let i = 0; i < protoPatterns.length; i++) {

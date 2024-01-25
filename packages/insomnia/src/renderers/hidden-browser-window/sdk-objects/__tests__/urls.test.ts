@@ -107,4 +107,65 @@ describe('test Url Match Pattern', () => {
     expect(matchPattern.testPort('80', 'http')).toBeTruthy();
     expect(matchPattern.testPort('80', 'unmatched')).toBeFalsy();
   });
+
+  it('test UrlMatchPattern with no protocol', () => {
+    const pattern = '*.insomnia.com/p1/*';
+    try {
+      const matchPattern = new UrlMatchPattern(pattern);
+      matchPattern.testProtocol('http');
+    } catch (e) {
+      expect(e.message).toContain('UrlMatchPattern: protocol is not specified');
+    }
+  });
+
+  it('test UrlMatchPattern with no port', () => {
+    const pattern = 'http+https+custom://*.insomnia.com/p1/*';
+    const matchPattern = new UrlMatchPattern(pattern);
+
+    expect(matchPattern.getProtocols()).toEqual(['http', 'https', 'custom']);
+    expect(matchPattern.testProtocol('http')).toBeTruthy();
+    expect(matchPattern.testProtocol('https')).toBeTruthy();
+    expect(matchPattern.testProtocol('custom')).toBeTruthy();
+    expect(matchPattern.testProtocol('unmatched')).toBeFalsy();
+
+    expect(matchPattern.testHost('download.insomnia.com')).toBeTruthy();
+    expect(matchPattern.testHost('bin.download.insomnia.com')).toBeFalsy();
+    expect(matchPattern.testHost('insomnia.com')).toBeFalsy();
+    expect(matchPattern.testHost('com')).toBeFalsy();
+
+    expect(matchPattern.testPath('/p1/abc')).toBeTruthy();
+    expect(matchPattern.testPath('/p1/')).toBeTruthy();
+    expect(matchPattern.testPath('/p1')).toBeFalsy();
+    expect(matchPattern.testPath('/')).toBeFalsy();
+    expect(matchPattern.testPath('')).toBeFalsy();
+
+    expect(matchPattern.testPort('443', 'https')).toBeTruthy();
+    expect(matchPattern.testPort('80', 'http')).toBeTruthy();
+    expect(matchPattern.testPort('443', 'http')).toBeFalsy();
+    expect(matchPattern.testPort('80', 'https')).toBeFalsy();
+  });
+
+  it('test UrlMatchPattern with no path', () => {
+    const pattern = 'http+https+custom://*.insomnia.com';
+    const matchPattern = new UrlMatchPattern(pattern);
+
+    expect(matchPattern.getProtocols()).toEqual(['http', 'https', 'custom']);
+    expect(matchPattern.testProtocol('http')).toBeTruthy();
+    expect(matchPattern.testProtocol('https')).toBeTruthy();
+    expect(matchPattern.testProtocol('custom')).toBeTruthy();
+    expect(matchPattern.testProtocol('unmatched')).toBeFalsy();
+
+    expect(matchPattern.testHost('download.insomnia.com')).toBeTruthy();
+    expect(matchPattern.testHost('bin.download.insomnia.com')).toBeFalsy();
+    expect(matchPattern.testHost('insomnia.com')).toBeFalsy();
+    expect(matchPattern.testHost('com')).toBeFalsy();
+
+    expect(matchPattern.testPath('')).toBeTruthy();
+    expect(matchPattern.testPath('/')).toBeFalsy(); // it is not handled temporarily
+
+    expect(matchPattern.testPort('443', 'https')).toBeTruthy();
+    expect(matchPattern.testPort('80', 'http')).toBeTruthy();
+    expect(matchPattern.testPort('443', 'http')).toBeFalsy();
+    expect(matchPattern.testPort('80', 'https')).toBeFalsy();
+  });
 });

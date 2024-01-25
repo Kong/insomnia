@@ -36,7 +36,5 @@ describe('test ProxyConfig object', () => {
     expect(
       proxyConfig.test('http://a.example.com:80/a')
     ).toBeTruthy();
-
-    // test no port and add tests in url tests
   });
 });

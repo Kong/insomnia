@@ -142,6 +142,7 @@ export class ProxyConfig extends Property {
 //     {match: 'https://example.com/*', host: 'proxy.com', port: 8080, tunnel: true},
 //     {match: 'http+https://example2.com/*', host: 'proxy2.com'},
 // ]);
+
 export class ProxyConfigList<T extends ProxyConfig> extends PropertyList<T> {
     constructor(parent: PropertyList<T> | undefined, populate: T[]) {
         super(populate);
