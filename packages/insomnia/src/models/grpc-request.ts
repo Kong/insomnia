@@ -48,22 +48,22 @@ export const isGrpcRequestId = (id: string | null) => (
 
 export function init(): BaseGrpcRequest {
   return {
-    url: "",
-    name: "New gRPC Request",
-    description: "",
-    protoFileId: "",
-    protoMethodName: "",
+    url: '',
+    name: 'New gRPC Request',
+    description: '',
+    protoFileId: '',
+    protoMethodName: '',
     metadata: [],
     body: {
-      text: "{}",
+      text: '{}',
     },
     metaSortKey: -1 * Date.now(),
     isPrivate: false,
     reflectionApi: {
       enabled: false,
-      url: "https://buf.build",
-      apiKey: "",
-      module: "buf.build/connectrpc/eliza",
+      url: 'https://buf.build',
+      apiKey: '',
+      module: 'buf.build/connectrpc/eliza',
     },
   };
 }
