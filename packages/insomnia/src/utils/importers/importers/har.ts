@@ -1,6 +1,6 @@
 import * as Har from 'har-format';
 
-import { Body, Converter, ImportRequest, PostData, UNKNOWN } from '../entities';
+import { Body, Converter, ImportRequest } from '../entities';
 
 export const id = 'har';
 export const name = 'HAR 1.2';
@@ -34,12 +34,12 @@ const extractRequests = (harRoot: HarRoot): ImportRequest[] => {
   });
 };
 
-const removeComment = <T extends { comment?: UNKNOWN }>(obj: T) => {
+const removeComment = <T extends { comment?: string }>(obj: T) => {
   const { comment, ...newObject } = obj;
   return newObject;
 };
 
-const importPostData = (postData?: PostData): Body => {
+const importPostData = (postData?: Har.PostData): Body => {
   if (!postData) {
     return {};
   }
