@@ -2,6 +2,7 @@ import { AxiosResponse } from 'axios';
 import React from 'react';
 import { LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
+import { getCurrentSessionId } from '../../account/session';
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TYPE_YAML, contentTypesMap, getMockServiceURL, RESPONSE_CODE_REASONS } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { getResponseCookiesFromHeaders, HarResponse } from '../../common/har';
@@ -103,7 +104,7 @@ export const MockRouteRoute = () => {
 
   const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
     try {
-
+      console.log(getCurrentSessionId());
       const res: AxiosResponse<MockbinResult | MockbinError> = await window.main.axiosRequest({
         url: mockbinUrl + `/bin/upsert/${compoundId}`,
         method: 'put',
@@ -114,6 +115,9 @@ export const MockRouteRoute = () => {
           mimeType: mockRoute.mimeType,
           body: mockRoute.body,
         }),
+        headers: {
+          'X-Session-ID': getCurrentSessionId(),
+        },
       });
       if (typeof res?.data === 'object' && 'errors' in res?.data && typeof res?.data?.errors === 'string') {
         console.error('error response', res?.data?.errors);
