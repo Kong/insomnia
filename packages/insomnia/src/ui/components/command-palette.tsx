@@ -7,7 +7,9 @@ import { isGrpcRequest } from '../../models/grpc-request';
 import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import { isWebSocketRequest } from '../../models/websocket-request';
-import { WorkspaceLoaderData } from '../routes/workspace';
+import { Workspace } from '../../models/workspace';
+import { ProjectLoaderData } from '../routes/project';
+import { Collection as WorkspaceCollection, WorkspaceLoaderData } from '../routes/workspace';
 import { Icon } from './icon';
 import { useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { getMethodShortHand } from './tags/method-tag';
@@ -20,10 +22,17 @@ export const CommandPalette = () => {
     workspaceId,
     requestId,
   } = useParams();
-  const {
-    collection,
-    workspaces,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
+  const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | undefined;
+
+  let collection: WorkspaceCollection = [];
+  let workspaces: Workspace[] = [];
+  if (workspaceData) {
+    collection = workspaceData.collection;
+    workspaces = workspaceData.workspaces;
+  } else if (projectData) {
+    workspaces = projectData.workspaces.map(workspace => workspace.workspace);
+  }
 
   const navigate = useNavigate();
   useDocBodyKeyboardShortcuts({

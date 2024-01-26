@@ -770,7 +770,7 @@ const OrganizationRoute = () => {
         </div>
         <Toast />
       </div>
-      {workspaceId && <CommandPalette />}
+      {<CommandPalette />}
     </InsomniaEventStreamProvider>
   );
 };
