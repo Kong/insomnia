@@ -605,11 +605,11 @@ const router = createMemoryRouter(
                                             ).deleteTestSuiteAction(...args),
                                         },
                                         {
-                                          path: 'rename',
+                                          path: 'update',
                                           action: async (...args) =>
                                             (
                                               await import('./routes/actions')
-                                            ).renameTestSuiteAction(...args),
+                                            ).updateTestSuiteAction(...args),
                                         },
                                         {
                                           path: 'run-all-tests',
