@@ -1,7 +1,5 @@
 import { gsap } from 'gsap';
-import { MotionPathPlugin } from 'gsap/dist/MotionPathPlugin';
 import type { RefObject } from 'react';
-
 export const internals = {
   LINE_WIDTH: 1.5,
   DURATION: 2,
@@ -10,7 +8,7 @@ export const internals = {
   COMPACT_VERTICAL_SPACE: 20,
 };
 
-gsap.registerPlugin(MotionPathPlugin);
+gsap.registerPlugin(gsap.plugins.motionPath);
 
 gsap.registerEffect({
   name: 'trail',

@@ -1,5 +1,5 @@
 import { type Environment } from 'nunjucks';
-import nunjucks from 'nunjucks/browser/nunjucks';
+import nunjucks from 'nunjucks';
 
 import * as plugins from '../plugins/index';
 import { localTemplateTags } from '../ui/components/templating/local-template-tags';
