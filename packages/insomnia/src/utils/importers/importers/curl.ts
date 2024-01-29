@@ -200,7 +200,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   });
 
   /// /////// Body //////////
-  let body;
+  let body = {};
   const bodyAsGET = getPairValue(pairsByName, false, ['G', 'get']);
 
   if (dataParameters.length !== 0 && bodyAsGET) {
@@ -234,7 +234,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   ]).toUpperCase();
 
   if (method === '__UNSET__' && body) {
-    method = body.text || body.params ? 'POST' : 'GET';
+    method = ('text' in body || 'params' in body) ? 'POST' : 'GET';
   }
 
   const count = requestCount++;
