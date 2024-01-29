@@ -23,11 +23,25 @@ const HelpExamples: FC<{ helpExamples: HelpExample[] }> = ({ helpExamples }) => 
   </table>
 );
 
-const JSONPathHelp: FC = () => (
+const JqHelper: FC = () => (
   <ModalBody className="pad">
+    <p>
+      Use <Link href="https://github.com/jqlang/jq/wiki/For-JSONPath-users">Jq</Link> to filter the response body. Here are some examples that you might use on a book store API:
+    </p>
+    <br />
+    <HelpExamples
+      helpExamples={[
+        { code: '.store.book[].title', description: 'Get titles of all books in the store' },
+        { code: '.store.book[] | select(.price < 10)', description: 'Get books costing less than $10' },
+        { code: '..|objects.book[-1]', description: 'Get the last book in the store' },
+        { code: '.store.book[] | select(.isbn)', description: 'Get all books in the store with an isbn number' },
+      ]}
+    />
+    <br />
     <p>
       Use <Link href="http://goessner.net/articles/JsonPath/">JSONPath</Link> to filter the response body. Here are some examples that you might use on a book store API:
     </p>
+    <br />
     <HelpExamples
       helpExamples={[
         { code: '$.store.books[*].title', description: 'Get titles of all books in the store' },
@@ -38,7 +52,8 @@ const JSONPathHelp: FC = () => (
       ]}
     />
     <p className="notice info">
-      Note that there's <Link href="https://cburgmer.github.io/json-path-comparison/">no standard</Link> for JSONPath. Insomnia uses <Link href="https://www.npmjs.com/package/jsonpath-plus">jsonpath-plus</Link>.
+      Insomnia supports both <Link href="https://www.npmjs.com/package/node-jq">jq</Link> and <Link href="https://www.npmjs.com/package/jsonpath-plus">JSONPath</Link>.
+      Note that there's <Link href="https://cburgmer.github.io/json-path-comparison/">no standard</Link> for JSONPath.
     </p>
   </ModalBody>
 );
@@ -88,7 +103,7 @@ export const FilterHelpModal = forwardRef<FilterHelpModalHandle, ModalProps>((_,
   return (
     <Modal ref={modalRef}>
       <ModalHeader>Response Filtering Help</ModalHeader>
-      {isJSON ? <JSONPathHelp /> : null}
+      {isJSON ? <JqHelper /> : null}
       {isXPath ? <XPathHelp /> : null}
     </Modal>
   );

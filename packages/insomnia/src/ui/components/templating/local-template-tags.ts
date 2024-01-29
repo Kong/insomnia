@@ -13,6 +13,7 @@ import { Response } from '../../../models/response';
 import { TemplateTag } from '../../../plugins';
 import { PluginTemplateTag } from '../../../templating/extensions';
 import { invariant } from '../../../utils/invariant';
+import run from '../../../utils/node-jq/src/jq';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
 
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
@@ -160,18 +161,25 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           ],
         },
         {
-          displayName: 'JSONPath Filter',
-          help: 'Some OS functions return objects. Use JSONPath queries to extract desired values.',
+          displayName: 'jq / JSONPath Filter',
+          help: 'Some OS functions return objects. Use jq or JSONPath queries to extract desired values.',
           hide: args => !['userInfo', 'cpus'].includes(args[0].value + ''),
           type: 'string',
         },
       ],
-      run(_context, fnName: 'arch' | 'cpus', filter) {
-        let value = os[fnName]();
+      async run(_context, fnName: 'arch' | 'cpus', filter) {
+        let value: any = os[fnName]();
 
-        if (JSONPath && ['userInfo', 'cpus'].includes(fnName)) {
+        if (jq  && ['userInfo', 'cpus'].includes(fnName)) {
           try {
-            value = JSONPath({ json: value, path: filter })[0];
+            if (filter.indexOf('$') === 0) {
+              value = JSONPath({ json: value, path: filter })[0];
+            }
+
+            if (filter.indexOf('.') === 0) {
+              value = await run(`${filter.trim()}`, value, { input: 'json' });
+              value = JSON.parse(value);
+            }
           } catch (err) { }
         }
 
@@ -252,6 +260,46 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
   },
   {
     templateTag: {
+      displayName: 'jq',
+      name: 'jq',
+      description: 'pull data from JSON strings with jq',
+      args: [
+        {
+          displayName: 'JSON string',
+          type: 'string',
+        },
+        {
+          displayName: 'jq Filter',
+          encoding: 'base64', // So it doesn't cause syntax errors
+          type: 'string',
+        },
+      ],
+      async run(_context, jsonString, filter) {
+        let body;
+        try {
+          body = JSON.parse(jsonString);
+        } catch (err) {
+          throw new Error(`Invalid JSON: ${err.message}`);
+        }
+
+        let results: any;
+        try {
+          results = await run(`${filter.trim()}`, body, { input: 'json' });
+          results = JSON.parse(results);
+        } catch (err) {
+          throw new Error(`Invalid jq query: ${filter}`);
+        }
+
+        if (results.length === 0) {
+          throw new Error(`jq query returned no results: ${filter}`);
+        }
+
+        return results[0];
+      },
+    },
+  },
+  {
+    templateTag: {
       displayName: 'JSONPath',
       name: 'jsonpath',
       description: 'pull data from JSON strings with JSONPath',
@@ -274,7 +322,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           throw new Error(`Invalid JSON: ${err.message}`);
         }
 
-        let results;
+        let results: any;
         try {
           results = JSONPath({ json: body, path: filter });
         } catch (err) {
@@ -423,7 +471,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         // If we don't have a key, default to request ID.
         // We do this because we may render the prompt multiple times per request.
-        // We cache it under the requestId so it only prompts once. We then clear
+        // We cache it under the requestId, so it only prompts once. We then clear
         // the cache in a response hook when the request is sent.
         const titleHash = crypto
           .createHash('md5')
@@ -512,7 +560,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           displayName: args => {
             switch (args[0].value) {
               case 'body':
-                return 'Filter (JSONPath or XPath)';
+                return 'Filter (jq or JSONPath or XPath)';
               case 'header':
                 return 'Header Name';
               default:
@@ -606,7 +654,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         }
 
-        // Make sure we only send the request once per render so we don't have infinite recursion
+        // Make sure we only send the request once per render, so we don't have infinite recursion
         const requestChain = context.context.getExtraInfo?.('requestChain') || [];
         if (requestChain.some((id: any) => id === request._id)) {
           console.log('[response tag] Preventing recursive render');
@@ -677,9 +725,9 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             body = bodyBuffer.toString();
           }
 
-          if (sanitizedFilter.indexOf('$') === 0) {
+          if (sanitizedFilter.indexOf('.') === 0 || sanitizedFilter.indexOf('$') === 0) {
             let bodyJSON;
-            let results;
+            let results: any;
 
             try {
               bodyJSON = JSON.parse(body);
@@ -687,10 +735,25 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
               throw new Error(`Invalid JSON: ${err.message}`);
             }
 
-            try {
-              results = JSONPath({ json: bodyJSON, path: sanitizedFilter });
-            } catch (err) {
-              throw new Error(`Invalid JSONPath query: ${sanitizedFilter}`);
+            if (sanitizedFilter.indexOf('.') === 0) {
+               try {
+                 results = await run (`${sanitizedFilter.trim ()}`, bodyJSON, { input: 'json' });
+                 results = JSON.parse (results);
+               } catch (err) {
+                 throw new Error (`Invalid jq query: ${sanitizedFilter}`);
+               }
+            }
+
+            if (sanitizedFilter.indexOf('$') === 0) {
+              try {
+                results = JSONPath({ json: bodyJSON, path: sanitizedFilter });
+              } catch (err) {
+                throw new Error(`Invalid JSONPath query: ${sanitizedFilter}`);
+              }
+            }
+
+            if (typeof results === 'object') {
+              return JSON.stringify(results);
             }
 
             if (results.length === 0) {
