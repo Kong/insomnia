@@ -388,7 +388,12 @@ function getRequestPostData(renderedRequest: RenderedRequest): Har.PostData | un
   if (body.params) {
     return {
       mimeType: body.mimeType || '',
-      params: body.params.map(param => ({ name: param.name, value: param.type === 'file' ? param.fileName : param.value })),
+      params: body.params.map(({ name, value, fileName, type }) => ({
+        name,
+        ...(type === 'file'
+          ? { fileName }
+          : { value }),
+      })),
     };
   }
 
