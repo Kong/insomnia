@@ -15,73 +15,62 @@ import { PluginTemplateTag } from '../../../templating/extensions';
 import { invariant } from '../../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
 
-const encode = 'encode';
-const decode = 'decode';
-
-const normal = 'normal';
-const url = 'url';
-const hex = 'hex';
-
-/**
- * @internal exported only for testing
- */
-export const base64EncoderTag: PluginTemplateTag = {
-  name: 'base64',
-  displayName: 'Base64',
-  description: 'encode or decode values',
-  args: [
-    {
-      displayName: 'Action',
-      type: 'enum',
-      options: [
-        { displayName: 'Encode', value: encode },
-        { displayName: 'Decode', value: decode },
-      ],
-    },
-    {
-      displayName: 'Kind',
-      type: 'enum',
-      options: [
-        { displayName: 'Normal', value: normal },
-        { displayName: 'URL', value: url },
-        { displayName: 'Hex', value: hex },
-      ],
-    },
-    {
-      displayName: 'Value',
-      type: 'string',
-      placeholder: 'My text',
-    },
-  ],
-  run(_context, action, kind, text) {
-    text = text || '';
-    invariant(action === encode || action === decode, 'invalid action');
-    invariant(kind === normal || kind === url || kind === hex, 'invalid kind');
-    if (action === encode) {
-      if (kind === normal) {
-        return Buffer.from(text, 'utf8').toString('base64');
-      } else if (kind === hex) {
-        return Buffer.from(text, 'hex').toString('base64');
-      } else if (kind === url) {
-        return Buffer.from(text, 'utf8')
-          .toString('base64')
-          .replace(/\+/g, '-')
-          .replace(/\//g, '_')
-          .replace(/=/g, '');
-      }
-    } else if (action === decode) {
-      if (kind === hex) {
-        return Buffer.from(text, 'base64').toString('hex');
-      } else {
-        return Buffer.from(text, 'base64').toString('utf8');
-      }
-    }
-    throw new Error('unknown options');
-  },
-};
-
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
-  { templateTag: base64EncoderTag },
+  {
+    templateTag: {
+      name: 'base64',
+      displayName: 'Base64',
+      description: 'encode or decode values',
+      args: [
+        {
+          displayName: 'Action',
+          type: 'enum',
+          options: [
+            { displayName: 'Encode', value: 'encode' },
+            { displayName: 'Decode', value: 'decode' },
+          ],
+        },
+        {
+          displayName: 'Kind',
+          type: 'enum',
+          options: [
+            { displayName: 'Normal', value: 'normal' },
+            { displayName: 'URL', value: 'url' },
+            { displayName: 'Hex', value: 'hex' },
+          ],
+        },
+        {
+          displayName: 'Value',
+          type: 'string',
+          placeholder: 'My text',
+        },
+      ],
+      run(_context, action: 'encode' | 'decode', kind: 'normal' | 'url' | 'hex', text) {
+        text = text || '';
+        invariant(action === 'encode' || action === 'decode', 'invalid action');
+        invariant(kind === 'normal' || kind === 'url' || kind === 'hex', 'invalid kind');
+        if (action === 'encode') {
+          if (kind === 'normal') {
+            return Buffer.from(text, 'utf8').toString('base64');
+          }
+          if (kind === 'hex') {
+            return Buffer.from(text, 'hex').toString('base64');
+          }
+          if (kind === 'url') {
+            return Buffer.from(text, 'utf8')
+              .toString('base64')
+              .replace(/\+/g, '-')
+              .replace(/\//g, '_')
+              .replace(/=/g, '');
+          }
+        }
+        if (kind === 'hex') {
+          return Buffer.from(text, 'base64').toString('hex');
+        }
+        return Buffer.from(text, 'base64').toString('utf8');
+      },
+    },
+  },
   {
     templateTag: {
       name: 'now',
