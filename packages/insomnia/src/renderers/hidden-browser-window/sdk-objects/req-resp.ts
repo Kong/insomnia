@@ -37,7 +37,7 @@ export interface ResponseContentInfo {
     contentType: string;
 }
 
-class FormParam {
+export class FormParam {
     key: string;
     value: string;
 

@@ -59,6 +59,12 @@ class WindowMessageHandler {
                 }
 
                 // skip previous ones for keeping it simple
+                for (let i = 0; i < callbackIndex; i++) {
+                    this.scriptResultResolvers[i].reject({
+                        message: 'The request has been canceled',
+                        stack: '',
+                    });
+                }
                 this.scriptResultResolvers = this.scriptResultResolvers.slice(callbackIndex + 1);
             } else if (ev.data.action === 'message-channel://caller/debug/respond') {
                 if (ev.data.result) {

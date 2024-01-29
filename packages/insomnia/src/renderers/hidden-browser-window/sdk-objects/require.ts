@@ -9,6 +9,16 @@ import * as stringdecoder from 'string_decoder';
 import * as util from 'util';
 import * as uuid from 'uuid';
 
+import { RequestAuth } from './auth';
+import { Property, PropertyBase, PropertyList } from './base';
+import { Certificate } from './certificates';
+import { Cookie, CookieList } from './cookies';
+import { Header, HeaderList } from './headers';
+import { ProxyConfig, ProxyConfigList } from './proxy-configs';
+import { FormParam, Request, RequestBody, Response } from './req-resp';
+import { QueryParam, Url, UrlMatchPattern, UrlMatchPatternList } from './urls';
+import { Variable, VariableList } from './variables';
+
 let urlModule = URL;
 let timersModule = {
     // TODO: not all of latest APIs are supported
@@ -57,6 +67,40 @@ let utilModule = {
 let eventsModule = {
     EventEmitter,
 };
+const collectionModule = {
+    PropertyBase,
+    Certificate,
+    // CertificateList: "[Function: a]"
+    // Collection: "[Function: PostmanCollection]"
+    Cookie,
+    CookieList,
+    // Description: "[Function: PostmanPropertyDescription]"
+    // Event: "[Function: PostmanEvent]"
+    // EventList: "[Function: PostmanEventList]"
+    FormParam,
+    Header,
+    HeaderList,
+    // Item: "[Function: PostmanItem]"
+    // ItemGroup: "[Function: PostmanItemGroup]"
+    // MutationTracker: "[Function: e]"
+    PropertyList,
+    Property,
+    QueryParam,
+    Request,
+    RequestAuth,
+    RequestBody,
+    Response,
+    // Script: "[Function: PostmanScript]"
+    Url,
+    UrlMatchPattern,
+    UrlMatchPatternList,
+    Variable,
+    VariableList,
+    // VariableScope: "[Function: PostmanVariableScope]"
+    ProxyConfig,
+    ProxyConfigList,
+    // Version: '[Function: PostmanPropertyVersion]',
+};
 
 export function setUrlModule(module: any) {
     urlModule = module;
@@ -99,6 +143,10 @@ export function require(moduleName: string) {
 
     if (nodeModules.has(moduleName)) {
         return nodeModules.get(moduleName);
+    }
+
+    if (moduleName === 'insomnia-collection' || moduleName === 'postman-collection') {
+        return collectionModule;
     }
 
     throw Error(`no module is found for "${moduleName}"`);

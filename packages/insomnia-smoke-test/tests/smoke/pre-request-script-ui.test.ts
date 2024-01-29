@@ -191,6 +191,39 @@ test.describe('pre-request UI tests', async () => {
                 cookies: {},
             },
         },
+        {
+            name: 'require collection url object ',
+            preReqScript: `
+                const insoCollection = require('insomnia-collection');
+                const Url = require('postman-collection').Url;
+                const { QueryParam, Variable } = require('postman-collection');
+                const url = new Url({
+                    auth: {
+                        username: 'usernameValue',
+                        password: 'passwordValue',
+                    },
+                    hash: 'hashValue',
+                    host: ['hostValue', 'com'],
+                    path: ['pathLevel1', 'pathLevel2'],
+                    port: '777',
+                    protocol: 'https:',
+                    query: [
+                        new QueryParam({ key: 'key1', value: 'value1' }),
+                        new QueryParam({ key: 'key2', value: 'value2' }),
+                    ],
+                    variables: [
+                        new Variable({ key: 'varKey', value: 'varValue' }),
+                    ],
+                });
+                insomnia.environment.set('url', url.toString());
+            `,
+            body: `{
+                "url": "{{ _.url }}"
+            }`,
+            expectedBody: {
+                url: 'https://usernameValue:passwordValue@hostvalue.com:777/pathLevel1/pathLevel2?key1=value1&key2=value2#hashValue',
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
