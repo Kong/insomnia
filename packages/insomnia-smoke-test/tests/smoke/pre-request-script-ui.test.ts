@@ -110,7 +110,7 @@ test.describe('pre-request UI tests', async () => {
             },
         },
         {
-            name: 'require URL module',
+            name: 'require url module',
             preReqScript: `
                 const URL = require('url');
                 const url = new URL('https://user:pwd@insomnia.com:6666/p1?q1=a&q2=b#hashcontent');
@@ -163,6 +163,30 @@ test.describe('pre-request UI tests', async () => {
                     search: '?q1=a&q2=b',
                     username: 'user',
                     seachParam: 'q1=a&q2=b',
+                },
+                cookies: {},
+            },
+        },
+        {
+            name: 'require uuid module',
+            preReqScript: `
+                const uuid = require('uuid');
+                insomnia.environment.set('uuid', uuid.NIL);
+            `,
+            body: `{
+                    "uuid": "{{ _.uuid}}"
+            }`,
+            expectedResponse: {
+                method: 'GET',
+                headers: {
+                    host: '127.0.0.1:4010',
+                    'user-agent': 'insomnia/8.5.1',
+                    'content-type': 'application/json',
+                    'accept': '*/*',
+                    'content-length': '70',
+                },
+                data: {
+                    uuid: '00000000-0000-0000-0000-000000000000',
                 },
                 cookies: {},
             },
