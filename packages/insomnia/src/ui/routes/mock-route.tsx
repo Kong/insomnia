@@ -105,7 +105,6 @@ export const MockRouteRoute = () => {
 
   const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
     try {
-      console.log(getCurrentSessionId());
       const res: AxiosResponse<MockbinResult | MockbinError> = await window.main.axiosRequest({
         url: mockbinUrl + `/bin/upsert/${compoundId}`,
         method: 'put',
