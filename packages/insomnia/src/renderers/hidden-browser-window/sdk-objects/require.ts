@@ -98,7 +98,7 @@ export function require(moduleName: string) {
     }
 
     if (nodeModules.has(moduleName)) {
-        // invoke main.js
+        return nodeModules.get(moduleName);
     }
 
     throw Error(`no module is found for "${moduleName}"`);

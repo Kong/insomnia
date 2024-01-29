@@ -94,6 +94,11 @@ export async function createHiddenBrowserWindow() {
     }
   });
 
+  hiddenBrowserWindow?.on('ready-to-show', () => {
+    hiddenBrowserWindow?.show();
+    hiddenBrowserWindow?.webContents.openDevTools();
+  });
+
   processes.set(hiddenBrowserWindow.id, hiddenBrowserWindow);
 
   return hiddenBrowserWindow;

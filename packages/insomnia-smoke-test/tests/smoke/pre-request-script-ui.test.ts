@@ -109,6 +109,64 @@ test.describe('pre-request UI tests', async () => {
                 cookies: {},
             },
         },
+        {
+            name: 'require URL module',
+            preReqScript: `
+                const URL = require('url');
+                const url = new URL('https://user:pwd@insomnia.com:6666/p1?q1=a&q2=b#hashcontent');
+                insomnia.environment.set('hash', "#hashcontent");
+                insomnia.environment.set('host', "insomnia.com:6666");
+                insomnia.environment.set('hostname', "insomnia.com");
+                insomnia.environment.set('href', "https://user:pwd@insomnia.com:6666/p1?q1=a&q2=b#hashcontent");
+                insomnia.environment.set('origin', "https://insomnia.com:6666");
+                insomnia.environment.set('password', "pwd");
+                insomnia.environment.set('pathname', "/p1");
+                insomnia.environment.set('port', "6666");
+                insomnia.environment.set('protocol', "https:");
+                insomnia.environment.set('search', "?q1=a&q2=b");
+                insomnia.environment.set('username', "user");
+                insomnia.environment.set('seachParam', url.searchParams.toString());
+            `,
+            body: `{
+                "hash": "{{ _.hash }}",
+                "host": "{{ _.host }}",
+                "hostname": "{{ _.hostname }}",
+                "href": "{{ _.href }}",
+                "origin": "{{ _.origin }}",
+                "password": "{{ _.password }}",
+                "pathname": "{{ _.pathname }}",
+                "port": "{{ _.port }}",
+                "protocol": "{{ _.protocol }}",
+                "search": "{{ _.search }}",
+                "username": "{{ _.username }}",
+                "seachParam": "{{ _.seachParam }}"
+            }`,
+            expectedResponse: {
+                method: 'GET',
+                headers: {
+                    host: '127.0.0.1:4010',
+                    'user-agent': 'insomnia/8.5.1',
+                    'content-type': 'application/json',
+                    'accept': '*/*',
+                    'content-length': '532',
+                },
+                data: {
+                    hash: '#hashcontent',
+                    host: 'insomnia.com:6666',
+                    hostname: 'insomnia.com',
+                    href: 'https://user:pwd@insomnia.com:6666/p1?q1=a&q2=b#hashcontent',
+                    origin: 'https://insomnia.com:6666',
+                    password: 'pwd',
+                    pathname: '/p1',
+                    port: '6666',
+                    protocol: 'https:',
+                    search: '?q1=a&q2=b',
+                    username: 'user',
+                    seachParam: 'q1=a&q2=b',
+                },
+                cookies: {},
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
