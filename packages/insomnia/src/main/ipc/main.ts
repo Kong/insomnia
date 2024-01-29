@@ -8,6 +8,7 @@ import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
 import * as models from '../../models';
+import { Compression } from '../../models/response';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
@@ -22,6 +23,7 @@ import { gRPCBridgeAPI } from './grpc';
 export interface CurlAPI {
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
+  readCurlResponse: (options: { bodyPath: string; bodyCompression: Compression }) => Promise<{ body: string; error: string }>;
 }
 
 export interface MainBridgeAPI extends CurlAPI {

@@ -11,6 +11,7 @@ import * as models from '../../models';
 import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { RequestAuthentication, RequestHeader } from '../../models/request';
+import { Compression, getBodyBuffer } from '../../models/response';
 import { Response } from '../../models/response';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
@@ -360,6 +361,21 @@ export const registerCurlHandlers = () => {
   ipcMain.on('curl.closeAll', closeAllCurlConnections);
   ipcMain.handle('curl.readyState', (_, options: Parameters<typeof getCurlReadyState>[0]) => getCurlReadyState(options));
   ipcMain.handle('curl.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
+  ipcMain.handle('readCurlResponse', async (_, options: { bodyPath?: string; bodyCompression?: Compression }) => {
+    const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
+    const bodyBufferOrErrMsg = getBodyBuffer(options, readFailureMsg);
+
+    if (!bodyBufferOrErrMsg) {
+      return { body: '', error: readFailureMsg };
+    } else if (typeof bodyBufferOrErrMsg === 'string') {
+      if (bodyBufferOrErrMsg === readFailureMsg) {
+        return { body: '', error: readFailureMsg };
+      }
+      return { body: '', error: `unknown error in loading response body: ${bodyBufferOrErrMsg}` };
+    }
+
+    return { body: bodyBufferOrErrMsg.toString('utf8'), error: '' };
+  });
 };
 
 electron.app.on('window-all-closed', closeAllCurlConnections);

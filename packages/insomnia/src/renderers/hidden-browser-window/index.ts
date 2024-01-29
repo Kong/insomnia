@@ -17,7 +17,8 @@ async function init() {
             if (action === executeAction || action === 'message-channel://hidden.browser-window/debug') {
                 const getRawGlobalObject = new Function('insomnia', 'return insomnia;');
                 const rawObject = getRawGlobalObject(ev.data.options.context.insomnia);
-                const insomniaObject = initGlobalObject(rawObject);
+                const settings = ev.data.options.settings;
+                const insomniaObject = initGlobalObject(rawObject, settings);
 
                 const AsyncFunction = (async () => { }).constructor;
                 const executeScript = AsyncFunction(
@@ -25,7 +26,7 @@ async function init() {
                     'require',
                     // isolate DOM objects
                     // window properties
-                    'closed', 'console', 'credentialless', 'customElements', 'devicePixelRatio', 'document', 'documentPictureInPicture', 'event', 'external', 'frameElement', 'frames', 'fullScreen', 'history', 'innerHeight', 'innerWidth', 'launchQueue', 'length', 'localStorage', 'location', 'locationbar', 'menubar', 'name', 'navigation', 'navigator', 'opener', 'orientation', 'originAgentCluster', 'outerHeight', 'outerWidth', 'parent', 'personalbar', 'screen', 'screenLeft', 'screenTop', 'screenX', 'screenY', 'scrollbars', 'scrollMaxX', 'scrollMaxY', 'scrollX', 'scrollY', 'self', 'sessionStorage', 'sharedStorage', 'sidebar', 'speechSynthesis', 'status', 'statusbar', 'toolbar', 'top', 'visualViewport', 'window',
+                    'closed', /* 'console', */ 'credentialless', 'customElements', 'devicePixelRatio', 'document', 'documentPictureInPicture', 'event', 'external', 'frameElement', 'frames', 'fullScreen', 'history', 'innerHeight', 'innerWidth', 'launchQueue', 'length', 'localStorage', 'location', 'locationbar', 'menubar', 'name', 'navigation', 'navigator', 'opener', 'orientation', 'originAgentCluster', 'outerHeight', 'outerWidth', 'parent', 'personalbar', 'screen', 'screenLeft', 'screenTop', 'screenX', 'screenY', 'scrollbars', 'scrollMaxX', 'scrollMaxY', 'scrollX', 'scrollY', 'self', 'sessionStorage', 'sharedStorage', 'sidebar', 'speechSynthesis', 'status', 'statusbar', 'toolbar', 'top', 'visualViewport', 'window',
                     // window methods
                     'alert', 'backalert', 'bluralert', 'cancelAnimationFramealert', 'cancelIdleCallbackalert', 'captureEventsalert', 'clearImmediatealert', 'closealert', 'confirmalert', 'dumpalert', 'findalert', 'focusalert', 'forwardalert', 'getComputedStylealert', 'getDefaultComputedStylealert', 'getScreenDetailsalert', 'getSelectionalert', 'matchMediaalert', 'moveByalert', 'moveToalert', 'openalert', 'postMessagealert', 'printalert', 'promptalert', 'queryLocalFontsalert', 'releaseEventsalert', 'requestAnimationFramealert', 'requestFileSystemalert', 'requestIdleCallbackalert', 'resizeByalert', 'resizeToalert', 'scrollalert', 'scrollByalert', 'scrollByLinesalert', 'scrollByPagesalert', 'scrollToalert', 'setImmediatealert', 'setResizablealert', 'showDirectoryPickeralert', 'showModalDialogalert', 'showOpenFilePickeralert', 'showSaveFilePickeralert', 'sizeToContentalert', 'stopalert', 'updateCommandsalert', 'webkitConvertPointFromNodeToPagealert', 'webkitConvertPointFromPageToNodealert',
                     // if possible, avoid adding code to the following part

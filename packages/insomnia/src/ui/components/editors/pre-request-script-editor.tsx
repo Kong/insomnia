@@ -16,18 +16,19 @@ export const PreRequestScriptEditor: FC<Props> = ({
     contentType,
     onChange,
     uniquenessKey,
-}) => (
-    <Fragment>
-        <CodeEditor
-          id="pre-request-script-editor"
-          showPrettifyButton
-          uniquenessKey={uniquenessKey}
-          defaultValue={content}
-          className={className}
-        //   enableNunjucks
-          onChange={onChange}
-          mode={contentType}
-          placeholder="..."
-        />
-    </Fragment>
-);
+}) => {
+
+  return <Fragment>
+    <CodeEditor
+      id="pre-request-script-editor"
+      showPrettifyButton
+      uniquenessKey={uniquenessKey}
+      defaultValue={content}
+      className={className}
+      //   enableNunjucks
+      onChange={onChange}
+      mode={contentType}
+      placeholder="..."
+    />
+  </Fragment>;
+};

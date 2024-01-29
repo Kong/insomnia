@@ -23,7 +23,7 @@ export interface ResponseHeader {
   value: string;
 }
 
-type Compression = 'zip' | null | '__NEEDS_MIGRATION__' | undefined;
+export type Compression = 'zip' | null | '__NEEDS_MIGRATION__' | undefined;
 
 export interface BaseResponse {
   environmentId: string | null;

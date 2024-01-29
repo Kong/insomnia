@@ -1,30 +1,188 @@
 import { Cookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
-import { getSetCookieHeaders } from '../../../../src/common/misc';
-import {
-    // AUTH_API_KEY,
-    AUTH_ASAP,
-    AUTH_AWS_IAM,
-    AUTH_BASIC,
-    // AUTH_BEARER,
-    AUTH_DIGEST,
-    AUTH_HAWK,
-    AUTH_NETRC,
-    AUTH_NONE,
-    AUTH_NTLM,
-    AUTH_OAUTH_1,
-    AUTH_OAUTH_2,
-    // HAWK_ALGORITHM_SHA1,
-    // HAWK_ALGORITHM_SHA256,
-} from '../../../common/constants';
-import type { CurlRequestOptions, CurlRequestOutput } from '../../../main/network/libcurl-promise';
-import { newAuth } from '../../../models/request';
+// import { getSetCookieHeaders } from '../../../../src/common/misc';
+// import {
+//     // AUTH_API_KEY,
+//     AUTH_ASAP,
+//     AUTH_AWS_IAM,
+//     AUTH_BASIC,
+//     // AUTH_BEARER,
+//     AUTH_DIGEST,
+//     AUTH_HAWK,
+//     AUTH_NETRC,
+//     AUTH_NONE,
+//     AUTH_NTLM,
+//     AUTH_OAUTH_1,
+//     AUTH_OAUTH_2,
+//     // HAWK_ALGORITHM_SHA1,
+//     // HAWK_ALGORITHM_SHA256,
+// } from '../../../common/constants';
+// import type { CurlRequestOptions, CurlRequestOutput } from '../../../main/network/libcurl-promise';
+// import { newAuth } from '../../../models/request';
+// import { ResponseHeader } from '../../../models/response';
 import { cancellablePromise, deleteCancelRequestFunctionMap, setCancelRequestFunctionMap } from '../../../network/cancellation';
 import { RequestAuth } from './auth';
 import { Settings } from './common';
 import { CookieOptions } from './cookies';
 import { Request, Response } from './req-resp';
+
+export const AUTH_NONE = 'none';
+export const AUTH_API_KEY = 'apikey';
+export const AUTH_OAUTH_2 = 'oauth2';
+export const AUTH_OAUTH_1 = 'oauth1';
+export const AUTH_BASIC = 'basic';
+export const AUTH_DIGEST = 'digest';
+export const AUTH_BEARER = 'bearer';
+export const AUTH_NTLM = 'ntlm';
+export const AUTH_HAWK = 'hawk';
+export const AUTH_AWS_IAM = 'iam';
+export const AUTH_NETRC = 'netrc';
+export const AUTH_ASAP = 'asap';
+export const HAWK_ALGORITHM_SHA256 = 'sha256';
+export const HAWK_ALGORITHM_SHA1 = 'sha1';
+
+export enum CurlInfoDebug {
+    Text,
+    HeaderIn,
+    HeaderOut,
+    DataIn,
+    DataOut,
+    SslDataIn,
+    SslDataOut,
+}
+
+interface ResponseHeader {
+    name: string;
+    value: string;
+}
+
+export interface ResponsePatch {
+    bodyCompression?: 'zip' | null;
+    bodyPath?: string;
+    bytesContent?: number;
+    bytesRead?: number;
+    contentType?: string;
+    elapsedTime: number;
+    environmentId?: string | null;
+    error?: string;
+    headers?: ResponseHeader[];
+    httpVersion?: string;
+    message?: string;
+    parentId?: string;
+    settingSendCookies?: boolean;
+    settingStoreCookies?: boolean;
+    statusCode?: number;
+    statusMessage?: string;
+    timelinePath?: string;
+    url?: string;
+}
+
+export interface HeaderResult {
+    headers: ResponseHeader[];
+    version: string;
+    code: number;
+    reason: string;
+}
+
+export interface ResponseTimelineEntry {
+    name: keyof typeof CurlInfoDebug;
+    timestamp: number;
+    value: string;
+}
+
+interface CurlRequestOutput {
+    patch: ResponsePatch;
+    debugTimeline: ResponseTimelineEntry[];
+    headerResults: HeaderResult[];
+    responseBodyPath?: string;
+}
+
+export function transformAuth(type: string, oldAuth: Record<string, any> = {}): Record<string, any> {
+    switch (type) {
+        // No Auth
+        case AUTH_NONE:
+            return {};
+
+        // HTTP Basic Authentication
+        case AUTH_BASIC:
+            return {
+                type,
+                useISO88591: oldAuth.useISO88591 || false,
+                disabled: oldAuth.disabled || false,
+                username: oldAuth.username || '',
+                password: oldAuth.password || '',
+            };
+
+        case AUTH_DIGEST:
+        case AUTH_NTLM:
+            return {
+                type,
+                disabled: oldAuth.disabled || false,
+                username: oldAuth.username || '',
+                password: oldAuth.password || '',
+            };
+
+        case AUTH_OAUTH_1:
+            return {
+                type,
+                disabled: false,
+                signatureMethod: 'HMAC-SHA1',
+                consumerKey: '',
+                consumerSecret: '',
+                tokenKey: '',
+                tokenSecret: '',
+                privateKey: '',
+                version: '1.0',
+                nonce: '',
+                timestamp: '',
+                callback: '',
+            };
+
+        // OAuth 2.0
+        case AUTH_OAUTH_2:
+            return {
+                type,
+                grantType: 'authorization_code',
+            };
+
+        // Aws IAM
+        case AUTH_AWS_IAM:
+            return {
+                type,
+                disabled: oldAuth.disabled || false,
+                accessKeyId: oldAuth.accessKeyId || '',
+                secretAccessKey: oldAuth.secretAccessKey || '',
+                sessionToken: oldAuth.sessionToken || '',
+            };
+
+        // Hawk
+        case AUTH_HAWK:
+            return {
+                type,
+                algorithm: HAWK_ALGORITHM_SHA256,
+            };
+
+        // Atlassian ASAP
+        case AUTH_ASAP:
+            return {
+                type,
+                issuer: '',
+                subject: '',
+                audience: '',
+                additionalClaims: '',
+                keyId: '',
+                privateKey: '',
+            };
+
+        // Types needing no defaults
+        case AUTH_NETRC:
+        default:
+            return {
+                type,
+            };
+    }
+}
 
 function transformAuthentication(auth: RequestAuth) {
     const authObj = auth.toJSON();
@@ -44,7 +202,7 @@ function transformAuthentication(auth: RequestAuth) {
 
     switch (authObj.type) {
         case 'noauth':
-            return newAuth(AUTH_NONE, {});
+            return transformAuth(AUTH_NONE, {});
         // TODO: these 2 methods are not supported yet
         // case 'apikey':
         // case 'bearer':
@@ -55,7 +213,7 @@ function transformAuthentication(auth: RequestAuth) {
         //         token: findValueInObj('token', authObj.bearer),
         //     };
         case 'basic':
-            return newAuth(
+            return transformAuth(
                 AUTH_BASIC,
                 {
                     useISO88591: false,
@@ -65,7 +223,7 @@ function transformAuthentication(auth: RequestAuth) {
                 }
             );
         case 'digest':
-            return newAuth(
+            return transformAuth(
                 AUTH_DIGEST,
                 {
                     disabled: false,
@@ -74,7 +232,7 @@ function transformAuthentication(auth: RequestAuth) {
                 }
             );
         case 'ntlm':
-            return newAuth(
+            return transformAuth(
                 AUTH_NTLM,
                 {
                     disabled: false,
@@ -83,7 +241,7 @@ function transformAuthentication(auth: RequestAuth) {
                 }
             );
         case 'oauth1':
-            return newAuth(
+            return transformAuth(
                 AUTH_OAUTH_1,
                 {
                     disabled: false,
@@ -99,9 +257,9 @@ function transformAuthentication(auth: RequestAuth) {
                 }
             );
         case 'oauth2':
-            return newAuth(AUTH_OAUTH_2, {});
+            return transformAuth(AUTH_OAUTH_2, {});
         case 'awsv4':
-            return newAuth(
+            return transformAuth(
                 AUTH_AWS_IAM,
                 {
                     disabled: false,
@@ -111,9 +269,9 @@ function transformAuthentication(auth: RequestAuth) {
                 }
             );
         case 'hawk':
-            return newAuth(AUTH_HAWK, {});
+            return transformAuth(AUTH_HAWK, {});
         case 'asap':
-            return newAuth(
+            return transformAuth(
                 AUTH_ASAP,
                 {
                     // exp: string; // expiry
@@ -134,13 +292,13 @@ function transformAuthentication(auth: RequestAuth) {
                 }
             );
         case 'netrc':
-            return newAuth(AUTH_NETRC, {});
+            return transformAuth(AUTH_NETRC, {});
         default:
             throw Error(`unknown auth type: ${authObj.type}`);
     }
 }
 
-export class HttpRequestSender {
+export class HttpSendRequest {
     constructor(private settings: Settings) { }
 
     sendRequest(
@@ -162,7 +320,9 @@ export class HttpRequestSender {
                 fn: window.main.curlRequest(requestOptions),
             }).then(result => {
                 const output = result as CurlRequestOutput;
-                cb(undefined, fromCurlOutputToResponse(output));
+                return fromCurlOutputToResponse(output);
+            }).then(transformedOutput => {
+                cb(undefined, transformedOutput);
             }).catch(e => {
                 cb(e, undefined);
             });
@@ -178,10 +338,13 @@ export class HttpRequestSender {
     }
 }
 
-function fromRequestToCurlOptions(req: string | Request, settings: Settings): CurlRequestOptions {
+// function fromRequestToCurlOptions(req: string | Request, settings: Settings): CurlRequestOptions {
+function fromRequestToCurlOptions(req: string | Request, settings: Settings) {
+    const id = uuidv4();
+
     if (typeof req === 'string') {
         return {
-            requestId: `pre-request-script-adhoc-str-req:${uuidv4()}`,
+            requestId: `pre-request-script-adhoc-str-req:${id}`,
             req: {
                 headers: [],
                 method: 'GET',
@@ -193,7 +356,9 @@ function fromRequestToCurlOptions(req: string | Request, settings: Settings): Cu
                 settingRebuildPath: true,
                 settingSendCookies: true,
                 url: req,
-                cookieJar: undefined,
+                cookieJar: {
+                    cookies: [],
+                },
                 cookies: [],
                 suppressUserAgent: false,
             },
@@ -206,7 +371,7 @@ function fromRequestToCurlOptions(req: string | Request, settings: Settings): Cu
         };
     } else if (req instanceof Request) {
         return {
-            requestId: req.id || `pre-request-script-adhoc-req:${uuidv4()}`,
+            requestId: req.id || `pre-request-script-adhoc-req:${id}`,
             req: {
                 headers: req.headers.map(header => ({ name: header.key, value: header.value }), {}),
                 method: 'GET',
@@ -216,7 +381,9 @@ function fromRequestToCurlOptions(req: string | Request, settings: Settings): Cu
                 settingRebuildPath: true,
                 settingSendCookies: true,
                 url: req.url.toString(),
-                cookieJar: undefined,
+                cookieJar: {
+                    cookies: [],
+                },
                 cookies: [], // no cookie can be set in the arg Request
                 suppressUserAgent: req.headers.map(
                     h => h.key.toLowerCase() === 'user-agent' && h.disabled === true,
@@ -252,7 +419,7 @@ function fromRequestToCurlOptions(req: string | Request, settings: Settings): Cu
     throw Error('the request type must be: string | Request.');
 }
 
-function fromCurlOutputToResponse(result: CurlRequestOutput): Response {
+async function fromCurlOutputToResponse(result: CurlRequestOutput): Response {
     // input
     // patch: ResponsePatch;
     // export interface ResponsePatch {
@@ -309,7 +476,11 @@ function fromCurlOutputToResponse(result: CurlRequestOutput): Response {
     const headers = lastRedirect.headers.map(
         (header: { name: string; value: string }) => ({ key: header.name, value: header.value })
     );
-    const cookieHeaders = getSetCookieHeaders(lastRedirect.headers);
+
+    const cookieHeaders = lastRedirect.headers.filter(header => {
+        return header.name.toLowerCase() === 'set-cookie';
+    });
+
     const cookies = cookieHeaders
         .map(cookieHeader => {
             const cookieObj = Cookie.parse(cookieHeader.value || '');
@@ -333,23 +504,38 @@ function fromCurlOutputToResponse(result: CurlRequestOutput): Response {
         })
         .filter(cookieOpt => cookieOpt !== undefined);
 
-    // TODO: tackle response
-    // responseBodyPath;
-    // const body = '';
-    // const stream: ArrayBuffer =
+    // TODO: tackle stream field but currently it is just a duplication of body
     const status = lastRedirect.reason;
     const responseTime = result.patch.elapsedTime;
 
-    const resp = new Response({
+    if (!result.responseBodyPath) {
+        return new Response({
+            code,
+            reason,
+            header: headers,
+            cookie: cookies as CookieOptions[],
+            body: '',
+            // stream,
+            responseTime,
+            status,
+        });
+    }
+
+    const bodyResult = await window.main.readCurlResponse({
+        bodyPath: result.responseBodyPath,
+        bodyCompression: result.patch.bodyCompression,
+    });
+    if (bodyResult.error) {
+        throw Error(bodyResult.error);
+    }
+    return new Response({
         code,
         reason,
         header: headers,
         cookie: cookies as CookieOptions[],
-        // body,
+        body: bodyResult.body,
         // stream,
         responseTime,
         status,
     });
-
-    return resp;
 }

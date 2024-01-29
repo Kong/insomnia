@@ -1,5 +1,7 @@
 import { Settings } from './sdk-objects/common';
 import { getIntepolator } from './sdk-objects/intepolator';
+import { Request, Response } from './sdk-objects/req-resp';
+import { HttpSendRequest } from './sdk-objects/send-req';
 
 export type EventName = 'prerequest' | 'test';
 
@@ -164,6 +166,7 @@ export class InsomniaObject {
     public info: RequestInfo;
 
     private settings: Settings;
+    private httpRequestSender: HttpSendRequest;
 
     constructor(
         rawObj: {
@@ -184,6 +187,14 @@ export class InsomniaObject {
         this.info = rawObj.requestInfo;
 
         this.settings = settings;
+        this.httpRequestSender = new HttpSendRequest(settings);
+    }
+
+    sendRequest(
+        request: string | Request,
+        cb: (error?: string, response?: Response) => void
+    ) {
+        return this.httpRequestSender.sendRequest(request, cb);
     }
 
     toObject = () => {
@@ -206,7 +217,7 @@ export interface RawObject {
     requestInfo?: object;
 }
 
-export function initGlobalObject(rawObj: RawObject) {
+export function initGlobalObject(rawObj: RawObject, settings: Settings) {
     const globals = new Environment(rawObj.globals);
     const environment = new Environment(rawObj.environment);
     const collectionVariables = new Environment(rawObj.collectionVariables);
@@ -222,12 +233,15 @@ export function initGlobalObject(rawObj: RawObject) {
         local,
     });
 
-    return new InsomniaObject({
-        globals,
-        environment,
-        collectionVariables,
-        iterationData,
-        variables,
-        requestInfo,
-    });
+    return new InsomniaObject(
+        {
+            globals,
+            environment,
+            collectionVariables,
+            iterationData,
+            variables,
+            requestInfo,
+        },
+        settings,
+    );
 };

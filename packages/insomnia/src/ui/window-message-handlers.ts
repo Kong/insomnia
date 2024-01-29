@@ -1,3 +1,4 @@
+import { Settings } from '../../src/models/settings';
 import { RawObject } from '../renderers/hidden-browser-window/inso-object';
 
 type MessageHandler = (ev: MessageEvent) => Promise<void>;
@@ -148,6 +149,7 @@ class WindowMessageHandler {
         id: string,
         code: string,
         context: object,
+        settings: Settings,
     ): Promise<RawObject | undefined> => {
         if (!this.hiddenBrowserWindowPort) {
             console.error(logPrefix, 'hidden browser window port is not inited, restarting');
@@ -170,6 +172,7 @@ class WindowMessageHandler {
                 id,
                 code,
                 context,
+                settings,
             },
         });
 

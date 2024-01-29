@@ -17,8 +17,8 @@ let timersModule = {
     setInterval: setInterval,
     clearInterval: clearInterval,
     clearTimeout: clearTimeout,
-    setImmediate: setImmediate,
-    clearImmediate: clearImmediate,
+    // setImmediate: setImmediate, // TODO: deprecated
+    // clearImmediate: clearImmediate, // TODO: deprecated
 };
 let queryStringModule = {
     decode: queryString.parse,

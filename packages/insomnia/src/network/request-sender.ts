@@ -59,6 +59,7 @@ export class RequestSender {
         this.clientCertificates = clientCertificates;
         this.caCert = caCert;
         this.preRequestScript = preRequestScript;
+        this.request.preRequestScript = ''; // avoid rendering error and the script is already saved
 
         this.timeline = [];
     }
@@ -76,7 +77,10 @@ export class RequestSender {
 
         try {
             if (this.preRequestScript !== '') {
-                const populatedObj = await this.runPreRequestScript(insomniaObject, this.preRequestScript);
+                const populatedObj = await this.runPreRequestScript(
+                    insomniaObject,
+                    this.preRequestScript,
+                );
                 if (!populatedObj) {
                     console.error('no response returned');
                     return;
@@ -148,6 +152,7 @@ export class RequestSender {
             scriptRunId,
             code,
             context,
+            this.settings,
         );
     };
 

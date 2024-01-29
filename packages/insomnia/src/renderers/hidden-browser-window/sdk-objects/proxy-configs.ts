@@ -24,25 +24,14 @@ export class ProxyConfig extends Property {
     username: string;
     password: string;
 
-    static authenticate: boolean;
-    static bypass: UrlMatchPatternList<UrlMatchPattern>;
-    static host: string;
-    static match: string;
-    static password: string;
-    static port: number;
-    static tunnel: boolean; // unsupported
-    static username: string;
-
-    static {
-        ProxyConfig.authenticate = false;
-        ProxyConfig.bypass = new UrlMatchPatternList<UrlMatchPattern>(undefined, []);
-        ProxyConfig.host = '';
-        ProxyConfig.match = '';
-        ProxyConfig.password = '';
-        ProxyConfig.port = 0;
-        ProxyConfig.tunnel = false;
-        ProxyConfig.username = '';
-    }
+    static authenticate: boolean = false;
+    static bypass: UrlMatchPatternList<UrlMatchPattern> = new UrlMatchPatternList<UrlMatchPattern>(undefined, []);
+    static host: string = '';
+    static match: string = '';
+    static password: string = '';
+    static port: number = 0;
+    static tunnel: boolean = false; // unsupported
+    static username: string = '';
 
     constructor(def: {
         id?: string;

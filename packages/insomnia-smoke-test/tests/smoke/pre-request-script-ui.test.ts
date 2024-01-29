@@ -67,6 +67,48 @@ test.describe('pre-request UI tests', async () => {
                 predefined: 'updatedByScript',
             },
         },
+        {
+            name: 'sendRequest API',
+            preReqScript: `
+                const resp = await new Promise((resolve, reject) => {
+                    insomnia.sendRequest(
+                        'http://127.0.0.1:4010/echo',
+                        (err, resp) => {
+                            if (err != null) {
+                                reject(err);
+                            } else {
+                                resolve(resp);
+                            }
+                        }
+                    );
+                });
+                insomnia.environment.set('method', resp.method);
+                insomnia.environment.set('body', resp.body);
+                // insomnia.environment.set('stream', resp.stream);
+                insomnia.environment.set('cookies', resp.cookies.filter(_ => true, {}));
+                insomnia.environment.set('headers', resp.headers.filter(_ => true, {}));
+                insomnia.environment.set('responseTime', resp.responseTime);
+                insomnia.environment.set('disabled', resp.disabled);
+                insomnia.environment.set('status', resp.status);
+            `,
+            body: `{
+                "content": "sent bt Insomnia.sendRequest"
+            }`,
+            expectedResponse: {
+                method: 'GET',
+                headers: {
+                    host: '127.0.0.1:4010',
+                    'user-agent': 'insomnia/8.5.1',
+                    'content-type': 'application/json',
+                    'accept': '*/*',
+                    'content-length': '61',
+                },
+                data: {
+                    content: 'sent bt Insomnia.sendRequest',
+                },
+                cookies: {},
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
@@ -95,7 +137,6 @@ test.describe('pre-request UI tests', async () => {
             await preRequestScriptEditor.fill(tc.preReqScript);
 
             // TODO: wait for body and pre-request script are persisted to the disk
-            // should improve this part
             await page.waitForTimeout(500);
 
             // send
@@ -110,7 +151,13 @@ test.describe('pre-request UI tests', async () => {
             expect(rows.length).toBeGreaterThan(0);
 
             const bodyJson = JSON.parse(rows.join('\n'));
-            expect(bodyJson.data).toEqual(tc.expectedBody);
+
+            if (tc.expectedBody) {
+                expect(bodyJson.data).toEqual(tc.expectedBody);
+            }
+            if (tc.expectedResponse) {
+                expect(bodyJson).toEqual(tc.expectedResponse);
+            }
         });
     }
 });
