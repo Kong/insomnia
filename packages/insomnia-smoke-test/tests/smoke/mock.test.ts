@@ -1,7 +1,6 @@
 import { test } from '../../playwright/test';
 
-// TODO: unskip this test when cloud mock is online
-test.skip('can make a mock route', async ({ page }) => {
+test('can make a mock route', async ({ page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   await page.getByLabel('New Mock Server').click();
   await page.getByRole('button', { name: 'Create', exact: true }).click();
