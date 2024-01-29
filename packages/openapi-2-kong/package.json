@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "@types/url-join": "^4.0.1",
+    "@types/url-join": "^4.0.3",
     "jest": "^29.7.0",
     "type-fest": "^2.12.0"
   },
