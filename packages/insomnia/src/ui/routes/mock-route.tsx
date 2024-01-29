@@ -1,10 +1,12 @@
 import { AxiosResponse } from 'axios';
+import * as Har from 'har-format';
 import React from 'react';
 import { LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
+import { getCurrentSessionId } from '../../account/session';
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TYPE_YAML, contentTypesMap, getMockServiceURL, RESPONSE_CODE_REASONS } from '../../common/constants';
 import { database as db } from '../../common/database';
-import { getResponseCookiesFromHeaders, HarResponse } from '../../common/har';
+import { getResponseCookiesFromHeaders } from '../../common/har';
 import * as models from '../../models';
 import { MockRoute } from '../../models/mock-route';
 import { MockServer } from '../../models/mock-server';
@@ -57,7 +59,7 @@ const mockContentTypes = [
   CONTENT_TYPE_YAML,
 ];
 // mockbin expect a HAR response structure
-export const mockRouteToHar = ({ statusCode, statusText, mimeType, headersArray, body }: { statusCode: number; statusText: string; mimeType: string; headersArray: RequestHeader[]; body: string }): HarResponse => {
+export const mockRouteToHar = ({ statusCode, statusText, mimeType, headersArray, body }: { statusCode: number; statusText: string; mimeType: string; headersArray: RequestHeader[]; body: string }): Har.Response => {
   const validHeaders = headersArray.filter(({ name }) => !!name);
   return {
     status: +statusCode,
@@ -103,7 +105,6 @@ export const MockRouteRoute = () => {
 
   const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
     try {
-
       const res: AxiosResponse<MockbinResult | MockbinError> = await window.main.axiosRequest({
         url: mockbinUrl + `/bin/upsert/${compoundId}`,
         method: 'put',
@@ -114,6 +115,9 @@ export const MockRouteRoute = () => {
           mimeType: mockRoute.mimeType,
           body: mockRoute.body,
         }),
+        headers: {
+          'X-Session-ID': getCurrentSessionId(),
+        },
       });
       if (typeof res?.data === 'object' && 'errors' in res?.data && typeof res?.data?.errors === 'string') {
         console.error('error response', res?.data?.errors);

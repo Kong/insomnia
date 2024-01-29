@@ -1,5 +1,6 @@
 import clone from 'clone';
 import fs from 'fs';
+import * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
 import * as models from '../models';
@@ -18,164 +19,13 @@ import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from './misc';
 import type { RenderedRequest } from './render';
 import { getRenderedRequestAndContext } from './render';
 
-export interface HarCookie {
-  name: string;
-  value: string;
-  path?: string;
-  domain?: string;
-  expires?: string;
-  httpOnly?: boolean;
-  secure?: boolean;
-  comment?: string;
-}
-
-export interface HarHeader {
-  name: string;
-  value: string;
-  comment?: string;
-}
-
-export interface HarQueryString {
-  name: string;
-  value: string;
-  comment?: string;
-}
-
-export interface HarPostParam {
-  name: string;
-  value?: string;
-  fileName?: string;
-  contentType?: string;
-  comment?: string;
-}
-
-export interface HarPostData {
-  mimeType: string;
-  params: HarPostParam[];
-  text: string;
-  comment?: string;
-}
-
-export interface HarRequest {
-  method: string;
-  url: string;
-  httpVersion: string;
-  cookies: HarCookie[];
-  headers: HarHeader[];
-  queryString: HarQueryString[];
-  postData?: HarPostData;
-  headersSize: number;
-  bodySize: number;
-  comment?: string;
-  settingEncodeUrl: boolean;
-}
-
-export interface HarContent {
-  size: number;
-  compression?: number;
-  mimeType: string;
-  text?: string;
-  encoding?: string;
-  comment?: string;
-}
-
-export interface HarResponse {
-  status: number;
-  statusText: string;
-  httpVersion: string;
-  cookies: HarCookie[];
-  headers: HarHeader[];
-  content: HarContent;
-  redirectURL: string;
-  headersSize: number;
-  bodySize: number;
-  comment?: string;
-}
-
-export interface HarRequestCache {
-  expires?: string;
-  lastAccess: string;
-  eTag: string;
-  hitCount: number;
-  comment?: string;
-}
-
-export interface HarCache {
-  beforeRequest?: HarRequestCache;
-  afterRequest?: HarRequestCache;
-  comment?: string;
-}
-
-export interface HarEntryTimings {
-  blocked?: number;
-  dns?: number;
-  connect?: number;
-  send: number;
-  wait: number;
-  receive: number;
-  ssl?: number;
-  comment?: string;
-}
-
-export interface HarEntry {
-  pageref?: string;
-  startedDateTime: string;
-  time: number;
-  request: HarRequest;
-  response: HarResponse;
-  cache: HarCache;
-  timings: HarEntryTimings;
-  serverIPAddress?: string;
-  connection?: string;
-  comment?: string;
-}
-
-export interface HarPageTimings {
-  onContentLoad?: number;
-  onLoad?: number;
-  comment?: string;
-}
-
-export interface HarPage {
-  startedDateTime: string;
-  id: string;
-  title: string;
-  pageTimings: HarPageTimings;
-  comment?: string;
-}
-
-export interface HarCreator {
-  name: string;
-  version: string;
-  comment?: string;
-}
-
-export interface HarBrowser {
-  name: string;
-  version: string;
-  comment?: string;
-}
-
-export interface HarLog {
-  version: string;
-  creator: HarCreator;
-  browser?: HarBrowser;
-  pages?: HarPage[];
-  entries: HarEntry[];
-  comment?: string;
-}
-
-export interface Har {
-  log: HarLog;
-}
-
 export interface ExportRequest {
   requestId: string;
   environmentId: string | null;
   responseId?: string;
 }
 
-export async function exportHarCurrentRequest(request: Request, response: Response): Promise<Har> {
+export async function exportHarCurrentRequest(request: Request, response: Response): Promise<Har.Har> {
   const ancestors = await database.withAncestors(request, [
     models.workspace.type,
     models.requestGroup.type,
@@ -204,7 +54,7 @@ export async function exportHarCurrentRequest(request: Request, response: Respon
 export async function exportHar(exportRequests: ExportRequest[]) {
   // Export HAR entries with the same start time in order to keep their workspace sort order.
   const startedDateTime = new Date().toISOString();
-  const entries: HarEntry[] = [];
+  const entries: Har.Entry[] = [];
 
   for (const exportRequest of exportRequests) {
     const request: Request | null = await models.request.getById(exportRequest.requestId);
@@ -255,7 +105,7 @@ export async function exportHar(exportRequests: ExportRequest[]) {
     entries.push(entry);
   }
 
-  const har: Har = {
+  const har: Har.Har = {
     log: {
       version: '1.2',
       creator: {
@@ -286,7 +136,7 @@ export async function exportHarResponse(response: Response | null) {
     };
   }
 
-  const harResponse: HarResponse = {
+  const harResponse: Har.Response = {
     status: response.statusCode,
     statusText: response.statusMessage,
     httpVersion: 'HTTP/1.1',
@@ -392,7 +242,7 @@ export async function exportHarWithRenderedRequest(
     }
   }
 
-  const harRequest: HarRequest = {
+  const harRequest: Har.Request = {
     method: renderedRequest.method,
     url,
     httpVersion: 'HTTP/1.1',
@@ -402,7 +252,6 @@ export async function exportHarWithRenderedRequest(
     postData: getRequestPostData(renderedRequest),
     headersSize: -1,
     bodySize: -1,
-    settingEncodeUrl: renderedRequest.settingEncodeUrl,
   };
   return harRequest;
 }
@@ -410,11 +259,11 @@ export async function exportHarWithRenderedRequest(
 function getRequestCookies(renderedRequest: RenderedRequest) {
   const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
   const domainCookies = renderedRequest.url ? jar.getCookiesSync(renderedRequest.url) : [];
-  const harCookies: HarCookie[] = domainCookies.map(mapCookie);
+  const harCookies: Har.Cookie[] = domainCookies.map(mapCookie);
   return harCookies;
 }
 
-export function getResponseCookiesFromHeaders(headers: HarCookie[]) {
+export function getResponseCookiesFromHeaders(headers: Har.Cookie[]) {
   return getSetCookieHeaders(headers)
     .reduce((accumulator, harCookie) => {
       let cookie: null | undefined | ToughCookie = null;
@@ -431,7 +280,7 @@ export function getResponseCookiesFromHeaders(headers: HarCookie[]) {
         ...accumulator,
         mapCookie(cookie),
       ];
-    }, [] as HarCookie[]);
+    }, [] as Har.Cookie[]);
 }
 
 function getResponseCookies(response: Response) {
@@ -440,7 +289,7 @@ function getResponseCookies(response: Response) {
 }
 
 function mapCookie(cookie: ToughCookie) {
-  const harCookie: HarCookie = {
+  const harCookie: Har.Cookie = {
     name: cookie.key,
     value: cookie.value,
   };
@@ -487,7 +336,7 @@ function getResponseContent(response: Response) {
   if (body === null) {
     body = Buffer.alloc(0);
   }
-  const harContent: HarContent = {
+  const harContent: Har.Content = {
     size: Buffer.byteLength(body),
     mimeType: response.contentType,
     text: body.toString('utf8'),
@@ -498,7 +347,7 @@ function getResponseContent(response: Response) {
 function getResponseHeaders(response: Response) {
   return response.headers
     .filter(header => header.name)
-    .map<HarHeader>(header => ({
+    .map<Har.Header>(header => ({
       name: header.name,
       value: header.value,
     }));
@@ -507,20 +356,20 @@ function getResponseHeaders(response: Response) {
 function getRequestHeaders(renderedRequest: RenderedRequest) {
   return renderedRequest.headers
     .filter(header => header.name)
-    .map<HarHeader>(header => ({
+    .map<Har.Header>(header => ({
       name: header.name,
       value: header.value,
     }));
 }
 
-function getRequestQueryString(renderedRequest: RenderedRequest): HarQueryString[] {
-  return renderedRequest.parameters.map<HarQueryString>(parameter => ({
+function getRequestQueryString(renderedRequest: RenderedRequest): Har.QueryString[] {
+  return renderedRequest.parameters.map<Har.QueryString>(parameter => ({
     name: parameter.name,
     value: parameter.value,
   }));
 }
 
-function getRequestPostData(renderedRequest: RenderedRequest): HarPostData | undefined {
+function getRequestPostData(renderedRequest: RenderedRequest): Har.PostData | undefined {
   let body;
   if (renderedRequest.body.fileName) {
     try {
@@ -536,27 +385,20 @@ function getRequestPostData(renderedRequest: RenderedRequest): HarPostData | und
     body = renderedRequest.body;
   }
 
-  let params: any[] = [];
-
   if (body.params) {
-    params = body.params.map(param => {
-      if (param.type === 'file') {
-        return {
-          name: param.name,
-          fileName: param.fileName,
-        };
-      }
-
-      return {
-        name: param.name,
-        value: param.value,
-      };
-    });
+    return {
+      mimeType: body.mimeType || '',
+      params: body.params.map(({ name, value, fileName, type }) => ({
+        name,
+        ...(type === 'file'
+          ? { fileName }
+          : { value }),
+      })),
+    };
   }
 
   return {
     mimeType: body.mimeType || '',
     text: body.text || '',
-    params: params,
   };
 }

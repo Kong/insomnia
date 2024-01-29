@@ -3,7 +3,6 @@ import path from 'path';
 import YAML from 'yaml';
 
 import { InsoError } from '../../errors';
-import { UNKNOWN } from '../../types';
 import { DbAdapter } from '../index';
 import { emptyDb } from '../index';
 import { BaseModel } from '../models/types';
@@ -110,7 +109,7 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
       const obj = parseRaw(model);
 
       // Store it, only if the key value exists
-      (db[obj.type] as UNKNOWN[])?.push(obj);
+      (db[obj.type] as {}[])?.push(obj);
     }
   });
 

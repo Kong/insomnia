@@ -19,7 +19,6 @@ import type { RunTestsOptions } from './commands/run-tests';
 import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
 import { getOptions } from './get-options';
 import { configureLogger, logger } from './logger';
-import { UNKNOWN_OBJ } from './types';
 import { exit, getVersion, logErrorExit1 } from './util';
 
 const prepareCommand = (options: Partial<GenerateConfigOptions>) => {
@@ -137,7 +136,7 @@ const addScriptCommand = (originalCommand: commander.Command) => {
     .description('Run scripts defined in .insorc')
     .allowUnknownOption()
     // @ts-expect-error this appears to actually be valid, and I don't want to risk changing any behavior
-    .action((scriptName, cmd) => {
+    .action((scriptName: 'lint', cmd) => {
       // Load scripts
       let options = getOptions(cmd);
       options = prepareCommand(options);
@@ -213,9 +212,6 @@ export const go = (args?: string[], exitOverride?: boolean) => {
   runWithArgs(cmd, args || process.argv);
 };
 
-const runWithArgs = (
-  cmd: UNKNOWN_OBJ,
-  args: string[],
-) => {
+const runWithArgs = (cmd: commander.Command, args: string[]) => {
   cmd.parseAsync(args).catch(logErrorExit1);
 };

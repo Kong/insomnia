@@ -233,12 +233,10 @@ describe('app.export.*', () => {
               method: 'GET',
               postData: {
                 mimeType: '',
-                params: [],
                 text: '',
               },
               queryString: [],
               url: 'https://insomnia.rest/',
-              settingEncodeUrl: true,
             },
             response: {
               bodySize: -1,
