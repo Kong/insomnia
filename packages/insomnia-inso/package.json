@@ -48,11 +48,11 @@
     "jest-mock": "^29.7.0"
   },
   "dependencies": {
-    "@stoplight/spectral-core": "^1.18.2",
-    "@stoplight/spectral-formats": "^1.5.0",
+    "@stoplight/spectral-core": "^1.18.3",
+    "@stoplight/spectral-formats": "^1.6.0",
     "@stoplight/spectral-ruleset-bundler": "^1.5.2",
-    "@stoplight/spectral-rulesets": "^1.16.0",
-    "@stoplight/types": "^13.15.0",
+    "@stoplight/spectral-rulesets": "^1.18.1",
+    "@stoplight/types": "^14.1.1",
     "axios": "^1.6.3",
     "commander": "^5.1.0",
     "consola": "^2.15.0",
