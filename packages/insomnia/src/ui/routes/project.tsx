@@ -579,6 +579,7 @@ const ProjectRoute: FC = () => {
   };
 
   const createNewMockServer = () => {
+    activeProject.remoteId ?
     showPrompt({
       title: 'Create New Mock Server',
       submitName: 'Create',
@@ -597,6 +598,10 @@ const ProjectRoute: FC = () => {
           }
         );
       },
+    }) :
+      showModal(AlertModal, {
+        title: 'Change Project',
+        message: 'Mock feature is only supported for Cloud projects.',
     });
   };
 

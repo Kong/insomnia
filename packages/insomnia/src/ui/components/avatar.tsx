@@ -84,30 +84,18 @@ const AvatarPlaceholder = ({ size, children }: { size: 'small' | 'medium'; child
 };
 
 export const Avatar = ({ src, alt, size = 'medium' }: { src: string; alt: string; size?: 'small' | 'medium' }) => {
-  return (
-    <TooltipTrigger>
-      <Button className="cursor-default">
-        {src ? (
-          <Suspense fallback={<AvatarPlaceholder size={size}>{getNameInitials(alt)}</AvatarPlaceholder>}>
-            <AvatarImage
-              src={src}
-              alt={alt}
-              size={size}
-            />
-          </Suspense>
-        ) : (
-          <AvatarPlaceholder size={size}>
-            {getNameInitials(alt)}
-          </AvatarPlaceholder>
-        )}
-      </Button>
-      <Tooltip
-        offset={8}
-        className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-      >
-        {alt}
-      </Tooltip>
-    </TooltipTrigger>
+  return src ? (
+    <Suspense fallback={<AvatarPlaceholder size={size}>{getNameInitials(alt)}</AvatarPlaceholder>}>
+      <AvatarImage
+        src={src}
+        alt={alt}
+        size={size}
+      />
+    </Suspense>
+  ) : (
+    <AvatarPlaceholder size={size}>
+      {getNameInitials(alt)}
+    </AvatarPlaceholder>
   );
 };
 
@@ -124,12 +112,21 @@ export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium' }: { items:
         }}
       >
         {avatars.map(avatar => (
-          <Avatar
-            size={size}
-            key={avatar.key}
-            src={avatar.src}
-            alt={avatar.alt}
-          />
+          <TooltipTrigger key={avatar.key}>
+            <Button className="cursor-default">
+              <Avatar
+                size={size}
+                src={avatar.src}
+                alt={avatar.alt}
+              />
+            </Button>
+            <Tooltip
+              offset={8}
+              className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+            >
+              {avatar.alt}
+            </Tooltip>
+          </TooltipTrigger>
         ))}
         {overflow > 0 && (
           <TooltipTrigger>

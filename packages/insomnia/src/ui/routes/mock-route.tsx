@@ -1,4 +1,3 @@
-import { AxiosResponse } from 'axios';
 import * as Har from 'har-format';
 import React from 'react';
 import { LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
@@ -89,12 +88,7 @@ export const useMockRoutePatcher = () => {
     });
   };
 };
-interface MockbinResult {
-  data: string; // returns only the mock server id not the path
-}
-interface MockbinError {
-  data: { errors: string };
-}
+
 export const MockRouteRoute = () => {
   const { mockServer, mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
@@ -105,9 +99,15 @@ export const MockRouteRoute = () => {
 
   const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
     try {
-      const res: AxiosResponse<MockbinResult | MockbinError> = await window.main.axiosRequest({
-        url: mockbinUrl + `/bin/upsert/${compoundId}`,
-        method: 'put',
+      const res = await window.main.insomniaFetch<string | {
+        error: string;
+        message: string;
+      }>({
+        origin: mockbinUrl,
+        path: `/bin/upsert/${compoundId}`,
+        method: 'PUT',
+        organizationId,
+        sessionId: getCurrentSessionId(),
         data: mockRouteToHar({
           statusCode: mockRoute.statusCode,
           statusText: mockRoute.statusText,
@@ -115,19 +115,17 @@ export const MockRouteRoute = () => {
           mimeType: mockRoute.mimeType,
           body: mockRoute.body,
         }),
-        headers: {
-          'X-Session-ID': getCurrentSessionId(),
-        },
       });
-      if (typeof res?.data === 'object' && 'errors' in res?.data && typeof res?.data?.errors === 'string') {
-        console.error('error response', res?.data?.errors);
-        return res?.data?.errors;
+      if (typeof res === 'object' && 'message' in res && 'error' in res) {
+        console.error('error response', res);
+        return `${res.error}: ${res.message}`;
       }
-      if (typeof res?.data === 'string') {
+
+      if (typeof res === 'string') {
         return '';
       }
       console.log('Error: invalid response from remote', { res, mockbinUrl });
-      return 'Invalid response from ' + mockbinUrl;
+      return 'Unexpected response, see console for details';
     } catch (e) {
       console.log(e);
       return 'Unhandled error: ' + e.message;
@@ -150,7 +148,7 @@ export const MockRouteRoute = () => {
         title: 'Network error',
         message: (
           <div>
-            <p>The request failed due to a network error: {mockbinUrl}</p>
+            <p>The request failed due to a network error made to {mockbinUrl}</p>
             <pre className="pad-top-sm force-wrap selectable">
               <code className="wide">{error}</code>
             </pre>

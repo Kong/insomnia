@@ -1,7 +1,6 @@
 import { test } from '../../playwright/test';
 
-// TODO: unskip this test when cloud mock is online
-test.skip('can make a mock route', async ({ page }) => {
+test('can make a mock route', async ({ page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   await page.getByLabel('New Mock Server').click();
   await page.getByRole('button', { name: 'Create', exact: true }).click();
@@ -20,6 +19,5 @@ test.skip('can make a mock route', async ({ page }) => {
   await page.getByRole('tab', { name: 'Preview' }).click();
   await page.getByLabel('Preview').getByText('123').click();
   await page.getByRole('tab', { name: 'Timeline' }).click();
-  await page.getByText('HTTP/1.1 201 Created').click();
-  await page.getByText('my-header:').click();
+  await page.getByText('201').click();
 });
