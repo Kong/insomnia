@@ -23,6 +23,7 @@ import { showAlert } from '../components/modals';
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { SvgIcon } from '../components/svg-icon';
+import { WorkspaceLoaderData } from './workspace';
 
 export interface MockRouteLoaderData {
   mockServer: MockServer;
@@ -96,6 +97,11 @@ interface MockbinError {
   data: { errors: string };
 }
 export const MockRouteRoute = () => {
+  const {
+    activeProject,
+  } = useRouteLoaderData(
+    ':workspaceId'
+  ) as WorkspaceLoaderData;
   const { mockServer, mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
   const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
@@ -116,7 +122,9 @@ export const MockRouteRoute = () => {
           body: mockRoute.body,
         }),
         headers: {
-          'X-Session-ID': getCurrentSessionId(),
+          'X-Session-Id': getCurrentSessionId(),
+          'X-Insomnia-Project-Id': activeProject?.remoteId,
+          ...(process.env.PLAYWRIGHT ? { 'X-Mockbin-Test': true } : {}),
         },
       });
       if (typeof res?.data === 'object' && 'errors' in res?.data && typeof res?.data?.errors === 'string') {
