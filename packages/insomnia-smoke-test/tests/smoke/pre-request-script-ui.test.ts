@@ -39,80 +39,117 @@ test.describe('pre-request UI tests', async () => {
                 base: 'baseFromScriptValue',
             },
         },
-        // {
-        //     name: 'send environment-populated request',
-        //     preReqScript: `
-        //         insomnia.collectionVariables.set('fromBase', 'base');
-        //         insomnia.environment.set('fromEnv1', 'env1');
-        //     `,
-        //     body: `{
-        //         "fromBase": "{{ _.fromBase }}",
-        //         "fromEnv1": "{{ _.fromEnv1 }}"
-        //     }`,
-        //     expectedBody: {
-        //         fromBase: 'base',
-        //         fromEnv1: 'env1',
-        //     },
-        // },
-        // {
-        //     name: 'send environment-overridden request',
-        //     preReqScript: `
-        //         // 'predefined' is already defined in the base environment, its original value is 'base'
-        //         insomnia.environment.set('predefined', 'updatedByScript');
-        //     `,
-        //     body: `{
-        //         "predefined": "{{ _.predefined }}"
-        //     }`,
-        //     expectedBody: {
-        //         predefined: 'updatedByScript',
-        //     },
-        // },
-        // {
-        //     name: 'sendRequest API',
-        //     preReqScript: `
-        //         const resp = await new Promise((resolve, reject) => {
-        //             insomnia.sendRequest(
-        //                 'http://127.0.0.1:4010/echo',
-        //                 (err, resp) => {
-        //                     if (err != null) {
-        //                         reject(err);
-        //                     } else {
-        //                         resolve(resp);
-        //                     }
-        //                 }
-        //             );
-        //         });
-        //         insomnia.environment.set('body', resp.body);
-        //         // insomnia.environment.set('stream', resp.stream);
-        //         insomnia.environment.set('cookies', resp.cookies.filter(_ => true, {}));
-        //         insomnia.environment.set('headers', resp.headers.filter(_ => true, {}));
-        //         insomnia.environment.set('responseTime', resp.responseTime);
-        //         insomnia.environment.set('disabled', resp.disabled);
-        //         insomnia.environment.set('status', resp.status);
-        //     `,
-        //     body: `{
-        //         body: "{{ _.body }}",
-        //         cookies: "{{ _.cookies }}",
-        //         headers: "{{ _.headers }}",
-        //         responseTime: "{{ _.responseTime }}",
-        //         disabled: "{{ _.disabled }}",
-        //         status: "{{ _.status }}",
-        //     }`,
-        //     expectedResponse: {
-        //         method: 'GET',
-        //         headers: {
-        //             host: '127.0.0.1:4010',
-        //             'user-agent': 'insomnia/8.5.1',
-        //             'content-type': 'application/json',
-        //             'accept': '*/*',
-        //             'content-length': '61',
-        //         },
-        //         data: {
-        //             content: 'sent bt Insomnia.sendRequest',
-        //         },
-        //         cookies: {},
-        //     },
-        // },
+        {
+            name: 'send environment-populated request',
+            preReqScript: `
+                insomnia.collectionVariables.set('fromBase', 'base');
+                insomnia.environment.set('fromEnv1', 'env1');
+            `,
+            body: `{
+                "fromBase": "{{ _.fromBase }}",
+                "fromEnv1": "{{ _.fromEnv1 }}"
+            }`,
+            expectedBody: {
+                fromBase: 'base',
+                fromEnv1: 'env1',
+            },
+        },
+        {
+            name: 'send environment-overridden request',
+            preReqScript: `
+                // 'predefined' is already defined in the base environment, its original value is 'base'
+                insomnia.environment.set('predefined', 'updatedByScript');
+            `,
+            body: `{
+                "predefined": "{{ _.predefined }}"
+            }`,
+            expectedBody: {
+                predefined: 'updatedByScript',
+            },
+        },
+        {
+            name: 'sendRequest API string URL mode',
+            preReqScript: `
+                const resp = await new Promise((resolve, reject) => {
+                    insomnia.sendRequest(
+                        'http://127.0.0.1:4010/echo',
+                        (err, resp) => {
+                            if (err != null) {
+                                reject(err);
+                            } else {
+                                resolve(resp);
+                            }
+                        }
+                    );
+                });
+                insomnia.environment.set('body', resp.body);
+                // insomnia.environment.set('stream', resp.stream);
+                insomnia.environment.set('cookies', JSON.stringify(resp.cookies.filter(_ => true, {})));
+                // insomnia.environment.set('headers', JSON.stringify(resp.headers.filter(_ => true, {})));
+                insomnia.environment.set('responseTime', resp.responseTime);
+                insomnia.environment.set('disabled', resp.disabled);
+                insomnia.environment.set('status', resp.status);
+            `,
+            body: `{
+                "body": {{ _.body }},
+                "cookies": {{ _.cookies }},
+
+                "responseTime": "{{ _.responseTime }}",
+                "disabled": "{{ _.disabled }}",
+                "status": "{{ _.status }}"
+            }`,
+            customVerify: (bodyJson: any) => {
+                expect(bodyJson.method).toEqual('GET');
+                expect(bodyJson.data.cookies).toEqual([]);
+                // expect(bodyJson.data.headers.length).toBeGreaterThan(0);
+                expect(bodyJson.data.responseTime).not.toEqual('');
+                expect(bodyJson.data.disabled).toEqual('false');
+                expect(bodyJson.data.status).toEqual('OK');
+            },
+        },
+        {
+            name: 'sendRequest API Request URL mode',
+            preReqScript: `
+                const postRequest = {
+                    url: 'https://postman-echo.com/post',
+                    method: 'POST',
+                    header: {
+                    'Content-Type': 'application/json',
+                    'X-Foo': 'bar'
+                    },
+                    body: {
+                    mode: 'raw',
+                    raw: JSON.stringify({ key: 'this is json' })
+                    }
+                };
+                pm.sendRequest(postRequest, (error, response) => {
+                    console.log(error ? error : response.json());
+                });
+                insomnia.environment.set('body', resp.body);
+                // insomnia.environment.set('stream', resp.stream);
+                insomnia.environment.set('cookies', JSON.stringify(resp.cookies.filter(_ => true, {})));
+                // insomnia.environment.set('headers', JSON.stringify(resp.headers.filter(_ => true, {})));
+                insomnia.environment.set('responseTime', resp.responseTime);
+                insomnia.environment.set('disabled', resp.disabled);
+                insomnia.environment.set('status', resp.status);
+            `,
+            body: `{
+                "body": {{ _.body }},
+                "cookies": {{ _.cookies }},
+
+                "responseTime": "{{ _.responseTime }}",
+                "disabled": "{{ _.disabled }}",
+                "status": "{{ _.status }}"
+            }`,
+            customVerify: (bodyJson: any) => {
+                expect(bodyJson.method).toEqual('GET');
+                expect(bodyJson.data.cookies).toEqual([]);
+                // expect(bodyJson.data.headers.length).toBeGreaterThan(0);
+                expect(bodyJson.data.responseTime).not.toEqual('');
+                expect(bodyJson.data.disabled).toEqual('false');
+                expect(bodyJson.data.status).toEqual('OK');
+            },
+        },
         // {
         //     name: 'require url module',
         //     preReqScript: `
@@ -269,14 +306,15 @@ test.describe('pre-request UI tests', async () => {
             const rows = await responseBody.allInnerTexts();
             expect(rows.length).toBeGreaterThan(0);
 
+            // await page.waitForTimeout(600000);
             const bodyJson = JSON.parse(rows.join('\n'));
 
-            // if (tc.expectedBody) {
-            //     expect(bodyJson.data).toEqual(tc.expectedBody);
-            // }
-            // if (tc.expectedResponse) {
-            //     expect(bodyJson).toEqual(tc.expectedResponse);
-            // }
+            if (tc.expectedBody) {
+                expect(bodyJson.data).toEqual(tc.expectedBody);
+            }
+            if (tc.customVerify) {
+                tc.customVerify(bodyJson);
+            }
         });
     }
 });

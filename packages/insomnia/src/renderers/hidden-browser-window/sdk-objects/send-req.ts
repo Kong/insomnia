@@ -25,6 +25,7 @@ import { cancellablePromise, deleteCancelRequestFunctionMap, setCancelRequestFun
 import { RequestAuth } from './auth';
 import { Settings } from './common';
 import { CookieOptions } from './cookies';
+import { RequestOptions } from './req-resp';
 import { Request, Response } from './req-resp';
 
 export const AUTH_NONE = 'none';
@@ -302,7 +303,7 @@ export class HttpSendRequest {
     constructor(private settings: Settings) { }
 
     sendRequest(
-        request: string | Request,
+        request: string | Request | RequestOptions,
         cb: (error?: string, response?: Response) => void
     ) {
         const requestOptions = fromRequestToCurlOptions(request, this.settings);
@@ -339,7 +340,7 @@ export class HttpSendRequest {
 }
 
 // function fromRequestToCurlOptions(req: string | Request, settings: Settings): CurlRequestOptions {
-function fromRequestToCurlOptions(req: string | Request, settings: Settings) {
+function fromRequestToCurlOptions(req: string | Request | RequestOptions, settings: Settings) {
     const id = uuidv4();
 
     if (typeof req === 'string') {
@@ -369,36 +370,42 @@ function fromRequestToCurlOptions(req: string | Request, settings: Settings) {
             socketPath: undefined,
             authHeader: undefined, // it seems not used
         };
-    } else if (req instanceof Request) {
+    } else if (req instanceof Request || 'url' in req) {
+        const finalReq = req instanceof Request ? req : new Request(req);
+
         return {
-            requestId: req.id || `pre-request-script-adhoc-req:${id}`,
+            requestId: finalReq.id || `pre-request-script-adhoc-req:${id}`,
             req: {
-                headers: req.headers.map(header => ({ name: header.key, value: header.value }), {}),
-                method: 'GET',
-                body: { mimeType: undefined }, // TODO: use value from headers
-                authentication: transformAuthentication(req.auth),
+                headers: finalReq.headers.map(header => ({ name: header.key, value: header.value }), {}),
+                method: finalReq.method,
+                body: {
+                    mimeType: undefined,
+                    method: finalReq.method,
+                    text: finalReq.body,
+                }, // TODO: use value from headers
+                authentication: transformAuthentication(finalReq.auth),
                 settingFollowRedirects: settings.followRedirects ? 'on' : 'off',
                 settingRebuildPath: true,
                 settingSendCookies: true,
-                url: req.url.toString(),
+                url: finalReq.url.toString(),
                 cookieJar: {
                     cookies: [],
                 },
                 cookies: [], // no cookie can be set in the arg Request
-                suppressUserAgent: req.headers.map(
+                suppressUserAgent: finalReq.headers.map(
                     h => h.key.toLowerCase() === 'user-agent' && h.disabled === true,
                     {},
                 ).length > 0,
             },
-            finalUrl: req.url.toString(),
+            finalUrl: finalReq.url.toString(),
             settings,
-            certificates: req.certificate ?
+            certificates: finalReq.certificate ?
                 [{
-                    host: req.certificate?.name || '',
-                    passphrase: req.certificate?.passphrase || '',
-                    cert: req.certificate?.cert?.src || '',
-                    key: req.certificate?.key?.src || '',
-                    pfx: req.certificate?.pfx?.src || '',
+                    host: finalReq.certificate?.name || '',
+                    passphrase: finalReq.certificate?.passphrase || '',
+                    cert: finalReq.certificate?.cert?.src || '',
+                    key: finalReq.certificate?.key?.src || '',
+                    pfx: finalReq.certificate?.pfx?.src || '',
                     // unused fields because they are not persisted
                     disabled: false,
                     isPrivate: false,
@@ -416,10 +423,10 @@ function fromRequestToCurlOptions(req: string | Request, settings: Settings) {
         };
     }
 
-    throw Error('the request type must be: string | Request.');
+    throw Error('the request type must be: string | Request | RequestOptions.');
 }
 
-async function fromCurlOutputToResponse(result: CurlRequestOutput): Response {
+async function fromCurlOutputToResponse(result: CurlRequestOutput): Promise<Response> {
     // input
     // patch: ResponsePatch;
     // export interface ResponsePatch {

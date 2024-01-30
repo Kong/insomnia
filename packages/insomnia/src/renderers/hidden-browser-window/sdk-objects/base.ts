@@ -25,7 +25,15 @@ export class PropertyBase {
     // }
 
     static toJSON(obj: JSONer) {
-        return obj.toJSON();
+        if ('toJSON' in obj && typeof obj.toJSON === 'function') {
+            return obj.toJSON();
+        } else {
+            try {
+                return JSON.parse(JSON.stringify(obj));
+            } catch (e) {
+                throw Error(`failed to call "toJSON" for ${obj}`);
+            }
+        }
     }
 
     meta() {

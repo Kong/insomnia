@@ -188,12 +188,12 @@ export class RequestBody extends PropertyBase {
 
 export interface RequestOptions {
     url: string | Url;
-    method: string;
-    header: HeaderOptions[];
-    body: RequestBodyOptions;
-    auth: AuthOptions;
-    proxy: ProxyConfigOptions;
-    certificate: CertificateOptions;
+    method?: string;
+    header?: HeaderOptions[] | object;
+    body?: RequestBodyOptions;
+    auth?: AuthOptions;
+    proxy?: ProxyConfigOptions;
+    certificate?: CertificateOptions;
 }
 
 export interface RequestSize {
@@ -211,22 +211,35 @@ export class Request extends Property {
     headers: HeaderList<Header>;
     body?: RequestBody;
     auth: RequestAuth;
-    proxy: ProxyConfig;
+    proxy?: ProxyConfig;
     certificate?: Certificate;
 
     constructor(options: RequestOptions) {
         super();
 
         this.url = typeof options.url === 'string' ? new Url(options.url) : options.url;
-        this.method = options.method;
-        this.headers = new HeaderList(
-            undefined,
-            options.header.map(header => new Header(header)),
-        );
-        this.body = new RequestBody(options.body);
-        this.auth = new RequestAuth(options.auth);
-        this.proxy = new ProxyConfig(options.proxy);
-        this.certificate = new Certificate(options.certificate);
+        this.method = options.method || 'GET';
+        if (options.header) {
+            if (Array.isArray(options.header)) {
+                this.headers = new HeaderList(
+                    undefined,
+                    options.header ? options.header.map(header => new Header(header)) : [],
+                );
+            } else {
+                this.headers = new HeaderList(
+                    undefined,
+                    Object.entries(options.header)
+                        .map(entry => new Header({ key: entry[0], value: entry[1] })),
+                );
+            }
+        } else {
+            this.headers = new HeaderList(undefined, new Array<Header>());
+        }
+
+        this.body = options.body ? new RequestBody(options.body) : undefined;
+        this.auth = new RequestAuth(options.auth || { type: 'noauth' });
+        this.proxy = options.proxy ? new ProxyConfig(options.proxy) : undefined;
+        this.certificate = options.certificate ? new Certificate(options.certificate) : undefined;
     }
 
     static isRequest(obj: object) {
@@ -251,7 +264,7 @@ export class Request extends Property {
 
     authorizeUsing(authType: string | AuthOptions, options?: VariableList<Variable>) {
         const selectedAuth = typeof authType === 'string' ? authType : authType.type;
-        this.auth.use(selectedAuth, options || {});
+        this.auth.use(selectedAuth, options || { type: 'noauth' });
     }
 
     clone() {
@@ -268,7 +281,7 @@ export class Request extends Property {
                 urlencoded: this.body?.urlencoded?.map(queryParam => queryParam.toJSON(), {}),
             },
             auth: this.auth.toJSON(),
-            proxy: {
+            proxy: this.proxy ? {
                 match: this.proxy.match,
                 host: this.proxy.host,
                 port: this.proxy.port,
@@ -277,7 +290,7 @@ export class Request extends Property {
                 authenticate: this.proxy.authenticate,
                 username: this.proxy.username,
                 password: this.proxy.password,
-            },
+            } : undefined,
             certificate: {
                 name: this.certificate?.name,
                 matches: this.certificate?.matches?.map(match => match.toString(), {}),
@@ -379,7 +392,7 @@ export class Request extends Property {
                 urlencoded: this.body?.urlencoded?.map(queryParam => queryParam.toJSON(), {}),
             },
             auth: this.auth.toJSON(),
-            proxy: {
+            proxy: this.proxy ? {
                 match: this.proxy.match,
                 host: this.proxy.host,
                 port: this.proxy.port,
@@ -388,7 +401,7 @@ export class Request extends Property {
                 authenticate: this.proxy.authenticate,
                 username: this.proxy.username,
                 password: this.proxy.password,
-            },
+            } : undefined,
             certificate: {
                 name: this.certificate?.name,
                 matches: this.certificate?.matches?.map(match => match.toString(), {}),
@@ -402,15 +415,27 @@ export class Request extends Property {
 
     update(options: RequestOptions) {
         this.url = typeof options.url === 'string' ? new Url(options.url) : options.url;
-        this.method = options.method;
-        this.headers = new HeaderList(
-            undefined,
-            options.header.map(header => new Header(header)),
-        );
-        this.body = new RequestBody(options.body);
-        this.auth = new RequestAuth(options.auth);
-        this.proxy = new ProxyConfig(options.proxy);
-        this.certificate = new Certificate(options.certificate);
+        this.method = options.method || 'GET';
+        if (options.header) {
+            if (Array.isArray(options.header)) {
+                this.headers = new HeaderList(
+                    undefined,
+                    options.header ? options.header.map(header => new Header(header)) : [],
+                );
+            } else {
+                this.headers = new HeaderList(
+                    undefined,
+                    Object.entries(options.header)
+                        .map(entry => new Header({ key: entry[0], value: entry[1] })),
+                );
+            }
+        } else {
+            this.headers = new HeaderList(undefined, new Array<Header>());
+        }
+        this.body = options.body ? new RequestBody(options.body) : undefined;
+        this.auth = new RequestAuth(options.auth || { type: 'noauth' });
+        this.proxy = options.proxy ? new ProxyConfig(options.proxy) : undefined;
+        this.certificate = options.certificate ? new Certificate(options.certificate) : undefined;
     }
 
     upsertHeader(header: HeaderOptions) {
