@@ -90,13 +90,7 @@ export const useMockRoutePatcher = () => {
     });
   };
 };
-interface MockbinError {
-  errors: string;
-}
-interface AuthError {
-  code: string;
-  message: string;
-}
+
 export const MockRouteRoute = () => {
   const {
     activeProject,
@@ -112,7 +106,10 @@ export const MockRouteRoute = () => {
 
   const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
     try {
-      const res: AxiosResponse<string | MockbinError | AuthError> = await window.main.insomniaFetch({
+      const res: AxiosResponse<string | {
+        error: string;
+        message: string;
+      }> = await window.main.insomniaFetch({
         origin: mockbinUrl,
         path: `/bin/upsert/${compoundId}`,
         method: 'PUT',
@@ -126,14 +123,11 @@ export const MockRouteRoute = () => {
           body: mockRoute.body,
         }),
       });
-      if (typeof res === 'object' && 'message' in res && typeof res.message === 'string') {
-        return res.message;
+      if ('message' in res && 'error' in res) {
+        console.error('error response', res);
+        return `${res.error}: ${res.message}`;
       }
-      // todo update mockbin error type
-      if (typeof res === 'object' && 'errors' in res && typeof res.errors === 'string') {
-        console.error('error response', res.errors);
-        return res.errors;
-      }
+
       if (typeof res === 'string') {
         return '';
       }
