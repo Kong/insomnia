@@ -1,4 +1,5 @@
 import { initGlobalObject, InsomniaObject } from './inso-object';
+import { Console } from './sdk-objects/console';
 import { require } from './sdk-objects/require';
 
 const ErrorTimeout = 'executing script timeout';
@@ -11,7 +12,7 @@ async function init() {
 
     channel.port1.onmessage = async (ev: MessageEvent) => {
         const action = ev.data.action;
-        const timeout = ev.data.timeout ? ev.data.timeout : 3000;
+        const timeout = ev.data.timeout ? ev.data.timeout : 20000;
 
         try {
             if (action === executeAction || action === 'message-channel://hidden.browser-window/debug') {
@@ -19,11 +20,13 @@ async function init() {
                 const rawObject = getRawGlobalObject(ev.data.options.context.insomnia);
                 const settings = ev.data.options.settings;
                 const insomniaObject = initGlobalObject(rawObject, settings);
+                const myConsole = new Console();
 
                 const AsyncFunction = (async () => { }).constructor;
                 const executeScript = AsyncFunction(
                     'insomnia',
                     'require',
+                    'console',
                     // isolate DOM objects
                     // window properties
                     'closed', /* 'console', */ 'credentialless', 'customElements', 'devicePixelRatio', 'document', 'documentPictureInPicture', 'event', 'external', 'frameElement', 'frames', 'fullScreen', 'history', 'innerHeight', 'innerWidth', 'launchQueue', 'length', 'localStorage', 'location', 'locationbar', 'menubar', 'name', 'navigation', 'navigator', 'opener', 'orientation', 'originAgentCluster', 'outerHeight', 'outerWidth', 'parent', 'personalbar', 'screen', 'screenLeft', 'screenTop', 'screenX', 'screenY', 'scrollbars', 'scrollMaxX', 'scrollMaxY', 'scrollX', 'scrollY', 'self', 'sessionStorage', 'sharedStorage', 'sidebar', 'speechSynthesis', 'status', 'statusbar', 'toolbar', 'top', 'visualViewport', 'window',
@@ -38,14 +41,15 @@ async function init() {
                     `
                 );
 
-                const result = await new Promise(async (resolve, reject) => {
-                    const alertTimeout = () => reject({ message: `${ErrorTimeout}:${timeout}ms` });
+                const updatedContext = await new Promise(async (resolve, reject) => {
+                    const alertTimeout = () => reject({ message: `${ErrorTimeout}: ${timeout}ms` });
                     const timeoutChecker = setTimeout(alertTimeout, timeout);
 
                     try {
                         const insoObject = await executeScript(
                             insomniaObject,
                             require,
+                            myConsole,
                             // window properties
                             undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
                             // window methods
@@ -66,7 +70,10 @@ async function init() {
                 channel.port1.postMessage({
                     action: action === executeAction ? 'message-channel://caller/respond' : 'message-channel://caller/debug/respond',
                     id: ev.data.options.id,
-                    result,
+                    result: {
+                        context: updatedContext,
+                        outputs: myConsole.valueOf(),
+                    },
                 });
             } else {
                 console.error(`unknown action ${ev.data}`);

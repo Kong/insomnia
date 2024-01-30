@@ -1,4 +1,5 @@
 import { Settings } from '../../src/models/settings';
+import { Row } from '../../src/renderers/hidden-browser-window/sdk-objects/console';
 import { RawObject } from '../renderers/hidden-browser-window/inso-object';
 
 type MessageHandler = (ev: MessageEvent) => Promise<void>;
@@ -9,9 +10,14 @@ export interface ScriptError {
     stack: string;
 }
 
+export interface ScriptExecutionResult {
+    context: RawObject;
+    outputs: Row[];
+}
+
 interface ScriptResultResolver {
     id: string;
-    resolve: (value: RawObject) => void;
+    resolve: (value: ScriptExecutionResult) => void;
     reject: (error: ScriptError) => void;
 }
 
@@ -156,13 +162,13 @@ class WindowMessageHandler {
         code: string,
         context: object,
         settings: Settings,
-    ): Promise<RawObject | undefined> => {
+    ): Promise<ScriptExecutionResult | undefined> => {
         if (!this.hiddenBrowserWindowPort) {
             console.error(logPrefix, 'hidden browser window port is not inited, restarting');
             await this.waitUntilHiddenBrowserWindowReady();
         }
 
-        const promise = new Promise<RawObject>((resolve, reject) => {
+        const promise = new Promise<ScriptExecutionResult>((resolve, reject) => {
             console.log(logPrefix, `created pre-request script result resolver(id=${id})`);
 
             this.scriptResultResolvers.push({

@@ -473,14 +473,15 @@ async function fromCurlOutputToResponse(result: CurlRequestOutput): Response {
 
     const code = lastRedirect.code;
     const reason = lastRedirect.reason;
+    const status = lastRedirect.reason;
+    const responseTime = result.patch.elapsedTime;
     const headers = lastRedirect.headers.map(
         (header: { name: string; value: string }) => ({ key: header.name, value: header.value })
     );
-
     const cookieHeaders = lastRedirect.headers.filter(header => {
         return header.name.toLowerCase() === 'set-cookie';
     });
-
+    // TODO: tackle stream field but currently it is just a duplication of body
     const cookies = cookieHeaders
         .map(cookieHeader => {
             const cookieObj = Cookie.parse(cookieHeader.value || '');
@@ -503,10 +504,6 @@ async function fromCurlOutputToResponse(result: CurlRequestOutput): Response {
             return cookieObj;
         })
         .filter(cookieOpt => cookieOpt !== undefined);
-
-    // TODO: tackle stream field but currently it is just a duplication of body
-    const status = lastRedirect.reason;
-    const responseTime = result.patch.elapsedTime;
 
     if (!result.responseBodyPath) {
         return new Response({

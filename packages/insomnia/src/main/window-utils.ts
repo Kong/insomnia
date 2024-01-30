@@ -66,6 +66,10 @@ export async function createHiddenBrowserWindow() {
   hiddenBrowserWindow = new BrowserWindow({
     show: false,
     title: 'HiddenBrowserWindow',
+    width: DEFAULT_WIDTH,
+    height: DEFAULT_HEIGHT,
+    minHeight: MINIMUM_HEIGHT,
+    minWidth: MINIMUM_WIDTH,
     webPreferences: {
       sandbox: true,
       contextIsolation: true,
@@ -92,6 +96,11 @@ export async function createHiddenBrowserWindow() {
       processes.delete(hiddenBrowserWindow.id);
       hiddenBrowserWindow = null;
     }
+  });
+
+  hiddenBrowserWindow?.on('ready-to-show', () => {
+    hiddenBrowserWindow?.show();
+    hiddenBrowserWindow?.webContents.openDevTools();
   });
 
   processes.set(hiddenBrowserWindow.id, hiddenBrowserWindow);

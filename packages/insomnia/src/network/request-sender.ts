@@ -77,16 +77,25 @@ export class RequestSender {
 
         try {
             if (this.preRequestScript !== '') {
-                const populatedObj = await this.runPreRequestScript(
+                const result = await this.runPreRequestScript(
                     insomniaObject,
                     this.preRequestScript,
                 );
-                if (!populatedObj) {
+                if (!result?.context) {
                     console.error('no response returned');
                     return;
                 }
+                if (result.outputs) {
+                    result.outputs.forEach(row => {
+                        this.timeline.push({
+                            value: `Pre-request-script(${row.level}): ${row.messages.join(' ')}`,
+                            name: 'Text',
+                            timestamp: Date.now(),
+                        });
+                    });
+                }
 
-                const rawObj = populatedObj as Record<string, any>;
+                const rawObj = result.context as Record<string, any>;
                 const envJsonMap = orderedJSON.parse(
                     JSON.stringify(rawObj.environment),
                     JSON_ORDER_PREFIX,
@@ -121,7 +130,7 @@ export class RequestSender {
             }
 
             this.timeline.push({
-                value: `Pre-request script execution failed: ${e.message}`,
+                value: `Failed to send request: ${e.message}`,
                 name: 'Text',
                 timestamp: Date.now(),
             });
