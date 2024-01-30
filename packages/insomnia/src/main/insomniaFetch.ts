@@ -7,7 +7,7 @@ interface FetchConfig {
   method: 'POST' | 'PUT' | 'GET' | 'DELETE' | 'PATCH';
   path: string;
   sessionId: string | null;
-  remoteId: string | null;
+  remoteId?: string | null;
   data?: unknown;
   retries?: number;
   origin?: string;
