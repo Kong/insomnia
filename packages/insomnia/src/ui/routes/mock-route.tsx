@@ -1,4 +1,3 @@
-import { AxiosResponse } from 'axios';
 import * as Har from 'har-format';
 import React from 'react';
 import { LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
@@ -23,7 +22,6 @@ import { showAlert } from '../components/modals';
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { SvgIcon } from '../components/svg-icon';
-import { WorkspaceLoaderData } from './workspace';
 
 export interface MockRouteLoaderData {
   mockServer: MockServer;
@@ -92,11 +90,6 @@ export const useMockRoutePatcher = () => {
 };
 
 export const MockRouteRoute = () => {
-  const {
-    activeProject,
-  } = useRouteLoaderData(
-    ':workspaceId'
-  ) as WorkspaceLoaderData;
   const { mockServer, mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
   const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
@@ -106,14 +99,14 @@ export const MockRouteRoute = () => {
 
   const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
     try {
-      const res: AxiosResponse<string | {
+      const res = await window.main.insomniaFetch<string | {
         error: string;
         message: string;
-      }> = await window.main.insomniaFetch({
+      }>({
         origin: mockbinUrl,
         path: `/bin/upsert/${compoundId}`,
         method: 'PUT',
-        remoteId: activeProject?.remoteId,
+        organizationId,
         sessionId: getCurrentSessionId(),
         data: mockRouteToHar({
           statusCode: mockRoute.statusCode,
