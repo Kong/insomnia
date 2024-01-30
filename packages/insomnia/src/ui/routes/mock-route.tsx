@@ -90,11 +90,12 @@ export const useMockRoutePatcher = () => {
     });
   };
 };
-interface MockbinResult {
-  data: string; // returns only the mock server id not the path
-}
 interface MockbinError {
-  data: { errors: string };
+  errors: string;
+}
+interface AuthError {
+  code: string;
+  message: string;
 }
 export const MockRouteRoute = () => {
   const {
@@ -111,9 +112,12 @@ export const MockRouteRoute = () => {
 
   const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
     try {
-      const res: AxiosResponse<MockbinResult | MockbinError> = await window.main.axiosRequest({
-        url: mockbinUrl + `/bin/upsert/${compoundId}`,
-        method: 'put',
+      const res: AxiosResponse<string | MockbinError | AuthError> = await window.main.insomniaFetch({
+        origin: mockbinUrl,
+        path: `/bin/upsert/${compoundId}`,
+        method: 'PUT',
+        remoteId: activeProject?.remoteId,
+        sessionId: getCurrentSessionId(),
         data: mockRouteToHar({
           statusCode: mockRoute.statusCode,
           statusText: mockRoute.statusText,
@@ -121,17 +125,16 @@ export const MockRouteRoute = () => {
           mimeType: mockRoute.mimeType,
           body: mockRoute.body,
         }),
-        headers: {
-          'X-Session-Id': getCurrentSessionId(),
-          'X-Insomnia-Project-Id': activeProject?.remoteId,
-          ...(process.env.PLAYWRIGHT ? { 'X-Mockbin-Test': true } : {}),
-        },
       });
-      if (typeof res?.data === 'object' && 'errors' in res?.data && typeof res?.data?.errors === 'string') {
-        console.error('error response', res?.data?.errors);
-        return res?.data?.errors;
+      if (typeof res === 'object' && 'message' in res && typeof res.message === 'string') {
+        return res.message;
       }
-      if (typeof res?.data === 'string') {
+      // todo update mockbin error type
+      if (typeof res === 'object' && 'errors' in res && typeof res.errors === 'string') {
+        console.error('error response', res.errors);
+        return res.errors;
+      }
+      if (typeof res === 'string') {
         return '';
       }
       console.log('Error: invalid response from remote', { res, mockbinUrl });

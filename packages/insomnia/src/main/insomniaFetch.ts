@@ -7,6 +7,7 @@ interface FetchConfig {
   method: 'POST' | 'PUT' | 'GET' | 'DELETE' | 'PATCH';
   path: string;
   sessionId: string | null;
+  remoteId: string | null;
   data?: unknown;
   retries?: number;
   origin?: string;
@@ -41,13 +42,15 @@ const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): 
   }
 };
 
-export async function insomniaFetch<T = void>({ method, path, data, sessionId, origin }: FetchConfig): Promise<T> {
+export async function insomniaFetch<T = void>({ method, path, data, sessionId, remoteId, origin }: FetchConfig): Promise<T> {
   const config: RequestInit = {
     method,
     headers: {
       'X-Insomnia-Client': getClientString(),
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
       ...(data ? { 'Content-Type': 'application/json' } : {}),
+      ...(remoteId ? { 'X-Insomnia-Project-Id': remoteId } : {}),
+      ...(process.env.PLAYWRIGHT ? { 'X-Mockbin-Test': 'true' } : {}),
     },
     ...(data ? { body: JSON.stringify(data) } : {}),
   };
