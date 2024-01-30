@@ -123,7 +123,7 @@ export const MockRouteRoute = () => {
           body: mockRoute.body,
         }),
       });
-      if ('message' in res && 'error' in res) {
+      if (typeof res === 'object' && 'message' in res && 'error' in res) {
         console.error('error response', res);
         return `${res.error}: ${res.message}`;
       }
@@ -132,7 +132,7 @@ export const MockRouteRoute = () => {
         return '';
       }
       console.log('Error: invalid response from remote', { res, mockbinUrl });
-      return 'Invalid response from ' + mockbinUrl;
+      return 'Unexpected response, see console for details';
     } catch (e) {
       console.log(e);
       return 'Unhandled error: ' + e.message;
@@ -155,7 +155,7 @@ export const MockRouteRoute = () => {
         title: 'Network error',
         message: (
           <div>
-            <p>The request failed due to a network error: {mockbinUrl}</p>
+            <p>The request failed due to a network error made to {mockbinUrl}</p>
             <pre className="pad-top-sm force-wrap selectable">
               <code className="wide">{error}</code>
             </pre>

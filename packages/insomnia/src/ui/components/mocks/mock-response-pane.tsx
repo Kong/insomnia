@@ -1,8 +1,8 @@
-import { AxiosResponse } from 'axios';
 import * as Har from 'har-format';
 import React, { Fragment, useEffect, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
+import { getCurrentSessionId } from '../../../account/session';
 import { getMockServiceURL, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models';
@@ -46,12 +46,14 @@ export const MockResponsePane = () => {
     const fn = async () => {
       const compoundId = mockRoute.parentId + mockRoute.name;
       try {
-        const res: AxiosResponse<MockbinLogOutput> = await window.main.axiosRequest({
-          url: mockbinUrl + `/bin/log/${compoundId}`,
-          method: 'get',
+        const res = await window.main.insomniaFetch<MockbinLogOutput>({
+          origin: mockbinUrl,
+          path: `/bin/log/${compoundId}`,
+          method: 'GET',
+          sessionId: getCurrentSessionId(),
         });
-        if (res?.data?.log) {
-          setLogs(res.data);
+        if (res?.log) {
+          setLogs(res);
           return;
         }
         console.log('Error: fetching logs from remote', { mockbinUrl, res });
