@@ -10,7 +10,7 @@
     "esModuleInterop": true,
     "lib": ["DOM", "ES2019"],
     "module": "CommonJS",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
