@@ -3,6 +3,7 @@ import { v4 as uuid } from 'uuid';
 
 import { getApiBaseURL } from '../../common/constants';
 
+// Vite is filtering out process.env variables that are not prefixed with VITE_.
 const ENV = 'env';
 
 const env = process[ENV];
