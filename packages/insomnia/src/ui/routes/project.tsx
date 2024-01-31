@@ -81,7 +81,7 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
-import { Billing, type FeatureList, useOrganizationLoaderData } from './organization';
+import { Billing, type FeatureList, type StorageType, useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
 interface TeamProject {
@@ -547,7 +547,7 @@ const ProjectRoute: FC = () => {
 
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
-  const { features, billing } = useRouteLoaderData(':organizationId') as { features: FeatureList; billing: Billing };
+  const { features, billing, storage } = useRouteLoaderData(':organizationId') as { features: FeatureList; billing: Billing; storage: StorageType };
 
   const [scope, setScope] = useLocalStorage(`${projectId}:project-dashboard-scope`, 'all');
   const [sortOrder, setSortOrder] = useLocalStorage(`${projectId}:project-dashboard-sort-order`, 'modified-desc');
@@ -725,8 +725,9 @@ const ProjectRoute: FC = () => {
   }, [createNewProjectFetcher.data, createNewProjectFetcher.state]);
 
   const isGitSyncEnabled = features.gitSync.enabled;
-  const isCloudSyncEnabled = features.cloudSync.enabled;
-  const isLocalVaultEnabled = features.localVault.enabled;
+
+  const isCloudSyncEnabled = storage === 'cloud_only' || storage === 'cloud_plus_local';
+  const isLocalVaultEnabled = storage === 'local_only' || storage === 'cloud_plus_local';
 
   const showUpgradePlanModal = () => {
     if (!organization || !userSession.accountId) {
@@ -1012,7 +1013,7 @@ const ProjectRoute: FC = () => {
                                     <span>
                                       {isCloudSyncEnabled && isLocalVaultEnabled ?
                                         'For both project types you can optionally enable Git Sync' :
-                                        `The owner of the organization allow only ${isCloudSyncEnabled ? 'Secure Cloud' : 'Local Vault'} project creation. You can optionally enable Git Sync`
+                                        `The owner of the organization allows only ${isCloudSyncEnabled ? 'Secure Cloud' : 'Local Vault'} project creation. You can optionally enable Git Sync`
                                       }
                                     </span>
                                   </div>
@@ -1079,7 +1080,7 @@ const ProjectRoute: FC = () => {
                             maxAvatars={3}
                             items={item.presence}
                           />
-                          {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} isCloudSyncEnabled={isCloudSyncEnabled} isLocalVaultEnabled={isLocalVaultEnabled} />}
+                          {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} storage={storage} />}
                         </div>
                       </GridListItem>
                     );
