@@ -2,7 +2,9 @@ import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
 import { KeyCombination } from './settings';
 
-const env = process['env'];
+const ENV = 'env';
+
+const env = process[ENV];
 
 // App Stuff
 export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
