@@ -328,7 +328,7 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
 
     const ruleResponse = await window.main.insomniaFetch<{ storage: StorageRule } | undefined>({
       method: 'GET',
-      path: `/v1/organizations/${organizationId}/storage-rules`,
+      path: `/v1/organizations/${organizationId}/storage-rule`,
       sessionId: session.getCurrentSessionId(),
     });
 
