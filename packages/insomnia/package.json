@@ -147,7 +147,7 @@
     "electron-builder": "24.4.0",
     "electron-builder-squirrel-windows": "24.4.0",
     "electron-devtools-installer": "^3.2.0",
-    "esbuild": "^0.16.0",
+    "esbuild": "^0.19.0",
     "esbuild-plugin-alias": "0.2.1",
     "esbuild-runner": "^2.2.2",
     "fuzzysort": "^1.2.1",
