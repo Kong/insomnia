@@ -22,6 +22,7 @@ import {
   isDefaultOrganizationProject,
   Project,
 } from '../../../models/project';
+import { type StorageType } from '../../routes/organization';
 import { Icon } from '../icon';
 import { showAlert, showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
@@ -29,8 +30,7 @@ import { AskModal } from '../modals/ask-modal';
 interface Props {
   project: Project;
   organizationId: string;
-  isCloudSyncEnabled: boolean;
-  isLocalVaultEnabled: boolean;
+  storage: StorageType;
 }
 
 interface ProjectActionItem {
@@ -40,12 +40,15 @@ interface ProjectActionItem {
   action: (projectId: string, projectName: string) => void;
 }
 
-export const ProjectDropdown: FC<Props> = ({ project, organizationId, isCloudSyncEnabled, isLocalVaultEnabled }) => {
+export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage }) => {
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] =
     useState(false);
   const deleteProjectFetcher = useFetcher();
   const updateProjectFetcher = useFetcher();
   const [projectType, setProjectType] = useState<'local' | 'remote' | ''>('');
+
+  const isCloudSyncEnabled = storage === 'cloud_plus_local' || storage === 'cloud_only';
+  const isLocalVaultEnabled = storage === 'cloud_plus_local' || storage === 'local_only';
 
   const projectActionList: ProjectActionItem[] = [
     {
@@ -272,7 +275,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, isCloudSyn
                       <span>
                         {isCloudSyncEnabled && isLocalVaultEnabled ?
                           'For both project types you can optionally enable Git Sync' :
-                          `The owner of the organization allow only ${isCloudSyncEnabled ? 'Secure Cloud' : 'Local Vault'} project creation. You can optionally enable Git Sync`
+                          `The owner of the organization allows only ${isCloudSyncEnabled ? 'Secure Cloud' : 'Local Vault'} project creation. You can optionally enable Git Sync`
                         }
                       </span>
                     </div>
