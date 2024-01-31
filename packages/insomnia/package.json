@@ -89,7 +89,6 @@
     "yaml-source-map": "^2.1.1"
   },
   "devDependencies": {
-    "@babel/plugin-transform-class-properties": "^7.23.3",
     "@develohpanda/fluent-builder": "^2.1.2",
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
     "@fortawesome/free-brands-svg-icons": "^6.4.2",
