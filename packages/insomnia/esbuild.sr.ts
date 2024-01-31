@@ -8,7 +8,7 @@ async function main() {
     outfile: '../insomnia-send-request/dist/index.js',
     bundle: true,
     platform: 'node',
-    target: 'node16',
+    target: 'node18',
     sourcemap: true,
     format: 'cjs',
     tsconfig: 'tsconfig.build.sr.json',
@@ -17,7 +17,7 @@ async function main() {
         'electron': path.resolve(__dirname, './send-request/electron/index.js'),
       }),
     ],
-    external: ['@getinsomnia/node-libcurl'],
+    external: ['@getinsomnia/node-libcurl', 'fsevents'],
   });
 
   process.exit(0);
