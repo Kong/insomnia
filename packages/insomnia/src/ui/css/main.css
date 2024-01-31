@@ -2464,7 +2464,7 @@ input.editable {
   height: 100%;
 }
 .modal.modal--wide .modal__content__wrapper {
-  width: var(--modal-width) wide;
+  width: var(--modal-width);
 }
 .modal.modal--skinny .modal__content__wrapper {
   width: var(--modal-width-skinny);
