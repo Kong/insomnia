@@ -279,13 +279,17 @@ export interface FeatureStatus {
 export interface FeatureList {
   gitSync: FeatureStatus;
   orgBasicRbac: FeatureStatus;
-  cloudSync: FeatureStatus;
-  localVault: FeatureStatus;
 }
 
 export interface Billing {
   // If true, the user has paid for the current period
   isActive: boolean;
+}
+
+export type StorageType = 'cloud_plus_local' | 'cloud_only' | 'local_only';
+
+export interface StorageRule {
+  storage: StorageType;
 }
 
 export const singleOrgLoader: LoaderFunction = async ({ params }) => {
@@ -294,8 +298,6 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   const fallbackFeatures = {
     gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
-    cloudSync: { enabled: false, reason: 'Insomnia API unreachable' },
-    localVault: { enabled: false, reason: 'Insomnia API unreachable' },
   };
 
   // If network unreachable assume user has paid for the current period
@@ -307,6 +309,7 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
     return {
       features: fallbackFeatures,
       billing: fallbackBilling,
+      storage: 'cloud_plus_local',
     };
   }
 
@@ -323,14 +326,22 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
       sessionId,
     });
 
+    const ruleResponse = await window.main.insomniaFetch<{ storage: StorageRule } | undefined>({
+      method: 'GET',
+      path: `/v1/organizations/${organizationId}/storage-rules`,
+      sessionId: session.getCurrentSessionId(),
+    });
+
     return {
       features: response?.features || fallbackFeatures,
       billing: response?.billing || fallbackBilling,
+      storage: ruleResponse?.storage || 'cloud_plus_local',
     };
   } catch (err) {
     return {
       features: fallbackFeatures,
       billing: fallbackBilling,
+      storage: 'cloud_plus_local',
     };
   }
 };
