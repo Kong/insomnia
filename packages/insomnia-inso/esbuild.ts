@@ -1,11 +1,10 @@
-import { build } from 'esbuild';
+import { build, type BuildOptions, context } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
 
 const isProd = Boolean(process.env.NODE_ENV === 'production');
 const watch = Boolean(process.env.ESBUILD_WATCH);
 const version = process.env.VERSION || 'dev';
-
-build({
+const config: BuildOptions = {
   outfile: './dist/index.js',
   bundle: true,
   platform: 'node',
@@ -14,7 +13,6 @@ build({
   sourcemap: true,
   format: 'cjs',
   tsconfig: 'tsconfig.json',
-  watch,
   plugins: [
     // Exclude node_modules from the bundle since they will be packaged with the cli
     nodeExternalsPlugin(),
@@ -26,4 +24,14 @@ build({
   },
   external: ['@getinsomnia/node-libcurl', 'mocha'],
   entryPoints: ['./src/index.ts'],
-});
+};
+
+if (watch) {
+  async function watch() {
+    const ctx = await context(config);
+    await ctx.watch();
+  }
+  watch();
+} else {
+  build(config);
+}
