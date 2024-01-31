@@ -69,6 +69,10 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
         error = newCloudProject.error;
       }
 
+      if (newCloudProject.error === 'PROJECT_STORAGE_RESTRICTION') {
+        error = 'The owner of the organization allows only Local Vault project creation, please try again.';
+      }
+
       return {
         error,
       };
