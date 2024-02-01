@@ -6,7 +6,7 @@ import * as buffer from 'buffer/';
 import * as chai from 'chai';
 import * as cheerio from 'cheerio';
 import crypto from 'crypto-js';
-import * as csvParse from 'csv-parse';
+import * as csvParse from 'csv-parse/browser/esm';
 import { EventEmitter } from 'eventemitter3';
 import lodash from 'lodash';
 import moment from 'moment';
@@ -18,8 +18,8 @@ import * as stringdecoder from 'string_decoder';
 import tv4 from 'tv4';
 import * as util from 'util';
 import * as uuid from 'uuid';
-import * as xml2js from 'xml2js';
 
+// import * as xml2js from 'xml2js';
 import { RequestAuth } from './auth';
 import { Property, PropertyBase, PropertyList } from './base';
 import { Certificate } from './certificates';
@@ -133,7 +133,7 @@ export function setEventsModule(module: any) {
     eventsModule = module;
 }
 
-const browserModules = new Map<string, any>([
+const npmModules = new Map<string, any>([
     ['ajv', ajv],
     ['btoa', btoa],
     ['atob', atob],
@@ -145,7 +145,7 @@ const browserModules = new Map<string, any>([
     ['moment', moment],
     ['tv4', tv4],
     ['uuid', uuid],
-    ['xml2js', xml2js],
+    // ['xml2js', xml2js],
 ]);
 
 const nodeModules = new Map<string, any>([
@@ -163,8 +163,8 @@ const nodeModules = new Map<string, any>([
 ]);
 
 export function require(moduleName: string) {
-    if (browserModules.has(moduleName)) {
-        return browserModules.get(moduleName);
+    if (npmModules.has(moduleName)) {
+        return npmModules.get(moduleName);
     }
 
     if (nodeModules.has(moduleName)) {
