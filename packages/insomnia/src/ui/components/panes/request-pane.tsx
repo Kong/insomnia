@@ -160,7 +160,12 @@ export const RequestPane: FC<Props> = ({
         </TabItem>
         <TabItem
           key="pre-request-script"
-          title={'Pre-request Script'}
+          title={
+            <>
+              Pre-request Script{' '}
+              <span className="bubble space-left">Beta</span>
+            </>
+          }
           aria-label={settings.experimentalFlagPreRequestScript ? '' : 'experimental'}
         >
           <PreRequestScriptEditor

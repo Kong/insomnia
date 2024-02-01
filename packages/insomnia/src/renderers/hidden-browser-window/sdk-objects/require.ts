@@ -19,7 +19,11 @@ import { FormParam, Request, RequestBody, Response } from './req-resp';
 import { QueryParam, Url, UrlMatchPattern, UrlMatchPatternList } from './urls';
 import { Variable, VariableList } from './variables';
 
-let urlModule = URL;
+let urlModule = {
+    URL,
+    URLSearchParams,
+};
+
 let timersModule = {
     // TODO: not all of latest APIs are supported
     // but they are good enough for compatibility

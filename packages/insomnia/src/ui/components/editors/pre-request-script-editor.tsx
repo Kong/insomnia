@@ -18,6 +18,22 @@ export const PreRequestScriptEditor: FC<Props> = ({
     uniquenessKey,
 }) => {
 
+  const lintOptions = {
+    globals: {
+      // https://jshint.com/docs/options/
+      insomnia: true,
+      pm: true,
+      require: true,
+      console: true,
+    },
+    asi: true,
+    // Don't require semicolons
+    undef: true,
+    // Prevent undefined usages
+    node: true,
+    esversion: 8, // ES8 syntax (async/await, etc)
+  };
+
   return <Fragment>
     <CodeEditor
       id="pre-request-script-editor"
@@ -29,6 +45,7 @@ export const PreRequestScriptEditor: FC<Props> = ({
       onChange={onChange}
       mode={contentType}
       placeholder="..."
+      lintOptions={lintOptions}
     />
   </Fragment>;
 };
