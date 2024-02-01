@@ -17,6 +17,7 @@ import { axiosRequest } from '../network/axios-request';
 import { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { WebSocketBridgeAPI } from '../network/websocket';
+import { runCalculation } from '../run-calc';
 import { gRPCBridgeAPI } from './grpc';
 
 export interface MainBridgeAPI {
@@ -42,6 +43,7 @@ export interface MainBridgeAPI {
   trackPageView: (options: { name: string }) => void;
   axiosRequest: typeof axiosRequest;
   insomniaFetch: typeof insomniaFetch;
+  runCalculation: typeof runCalculation;
   showContextMenu: (options: { key: string }) => void;
   database: {
     caCertificate: {
@@ -50,6 +52,9 @@ export interface MainBridgeAPI {
   };
 }
 export function registerMainHandlers() {
+  ipcMain.handle('runCalculation', async (_, options: Parameters<typeof runCalculation>[0]) => {
+    return await runCalculation(options);
+  });
   ipcMain.handle('insomniaFetch', async (_, options: Parameters<typeof insomniaFetch>[0]) => {
     return insomniaFetch(options);
   });

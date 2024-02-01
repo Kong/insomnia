@@ -9,14 +9,19 @@ interface ChildMessage {
   result?: string;
   error?: string;
 }
-
+// await main.runCalculation`
+//   const hash = crypto.createHash('sha256');
+//   hash.update('Hello, world!');
+//   const hashedValue = hash.digest('hex');
+//   console.log('Hashed value:', hashedValue);
+// `
 export const runCalculation = async (code: string): Promise<string> => {
   // First, we need to wrap the code in the sandbox environment
   const wrappedCode = wrapCode(code);
   const tempFile = await createTempFile(wrappedCode);
   const child = utilityProcess.fork(tempFile, [], {
     env: {},
-    stdio: 'ignore',
+    // stdio: 'ignore',
     serviceName: 'tomato-calculator',
   });
 
@@ -51,6 +56,7 @@ const wrapCode = (code: string): string => {
   // return dedent`
   return `
     const vm = require("vm");
+    const crypto = require('crypto');
     const code = ${encodedCode};
 
     const sendMessageData = (obj) => {
@@ -58,7 +64,13 @@ const wrapCode = (code: string): string => {
     }
 
     try {
-      result = vm.runInNewContext(code);
+      const context = {
+        crypto: {
+          createHash: crypto.createHash,
+        },
+        console,  // You may include other necessary objects from the global context
+      };
+      result = vm.runInNewContext(code,context);
       sendMessageData({ result });
     } catch (e) {
       sendMessageData({ error: e.message });

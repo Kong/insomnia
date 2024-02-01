@@ -63,6 +63,7 @@ const main: Window['main'] = {
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   axiosRequest: options => ipcRenderer.invoke('axiosRequest', options),
   insomniaFetch: options => ipcRenderer.invoke('insomniaFetch', options),
+  runCalculation: options => ipcRenderer.invoke('runCalculation', options),
   showContextMenu: options => ipcRenderer.send('show-context-menu', options),
   database: {
     caCertificate: {
