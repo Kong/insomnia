@@ -1,13 +1,24 @@
+import * as ajv from 'ajv';
 import * as assert from 'assert';
+import atob from 'atob';
+import btoa from 'btoa';
 import * as buffer from 'buffer/';
+import * as chai from 'chai';
+import * as cheerio from 'cheerio';
+import crypto from 'crypto-js';
+import * as csvParse from 'csv-parse';
 import { EventEmitter } from 'eventemitter3';
-import * as path from 'path-browserify';
+import lodash from 'lodash';
+import moment from 'moment';
+import path from 'path-browserify';
 import * as punnycode from 'punycode/';
 import queryString from 'query-string';
 import * as stream from 'readable-stream';
 import * as stringdecoder from 'string_decoder';
+import tv4 from 'tv4';
 import * as util from 'util';
 import * as uuid from 'uuid';
+import * as xml2js from 'xml2js';
 
 import { RequestAuth } from './auth';
 import { Property, PropertyBase, PropertyList } from './base';
@@ -122,8 +133,19 @@ export function setEventsModule(module: any) {
     eventsModule = module;
 }
 
-const builtinModules = new Map<string, any>([
+const browserModules = new Map<string, any>([
+    ['ajv', ajv],
+    ['btoa', btoa],
+    ['atob', atob],
+    ['cha', chai],
+    ['cheerio', cheerio],
+    ['crypto', crypto],
+    ['csv', csvParse],
+    ['lodash', lodash],
+    ['moment', moment],
+    ['tv4', tv4],
     ['uuid', uuid],
+    ['xml2js', xml2js],
 ]);
 
 const nodeModules = new Map<string, any>([
@@ -141,8 +163,8 @@ const nodeModules = new Map<string, any>([
 ]);
 
 export function require(moduleName: string) {
-    if (builtinModules.has(moduleName)) {
-        return builtinModules.get(moduleName);
+    if (browserModules.has(moduleName)) {
+        return browserModules.get(moduleName);
     }
 
     if (nodeModules.has(moduleName)) {
