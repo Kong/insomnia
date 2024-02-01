@@ -175,6 +175,8 @@ const _launchApp = async () => {
       app.on('second-instance', (_1, args) => {
         console.log('Second instance listener received:', args.join('||'));
         window = windowUtils.getOrCreateWindow();
+        window.webContents.setZoomFactor(1);
+
         if (window) {
           if (window.isMinimized()) {
             window.restore();
@@ -186,10 +188,13 @@ const _launchApp = async () => {
         window.webContents.send('shell:open', lastArg);
       });
       window = windowUtils.getOrCreateWindow();
+      window.webContents.setZoomFactor(1);
 
       app.on('open-url', (_event, url) => {
         console.log('[main] Open Deep Link URL', url);
         window = windowUtils.getOrCreateWindow();
+        window.webContents.setZoomFactor(1);
+
         if (window) {
           if (window.isMinimized()) {
             window.restore();
@@ -203,6 +208,7 @@ const _launchApp = async () => {
     }
   } else {
     window = windowUtils.getOrCreateWindow();
+    window.webContents.setZoomFactor(1);
   }
 
   // Don't send origin header from Insomnia because we're not technically using CORS
