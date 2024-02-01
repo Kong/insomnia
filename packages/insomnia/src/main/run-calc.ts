@@ -21,81 +21,9 @@ interface ChildMessage {
 // insomnia.environment.set('test', 'test');
 // `
 
-// class BaseKV {
-//   private kvs = new Map<string, boolean | number | string>();
-
-//   constructor(jsonObject: object | undefined) {
-//     // TODO: currently it doesn't support getting nested field directly
-//     this.kvs = new Map(Object.entries(jsonObject || {}));
-//   }
-
-//   has = (variableName: string) => {
-//     return this.kvs.has(variableName);
-//   };
-
-//   get = (variableName: string) => {
-//     return this.kvs.get(variableName);
-//   };
-
-//   set = (variableName: string, variableValue: boolean | number | string) => {
-//     this.kvs.set(variableName, variableValue);
-//   };
-
-//   unset = (variableName: string) => {
-//     this.kvs.delete(variableName);
-//   };
-
-//   clear = () => {
-//     this.kvs.clear();
-//   };
-
-//   // replaceIn = (template: string) => {
-//   // return getIntepolator().render(template, this.toObject());
-//   // };
-
-//   toObject = () => {
-//     return Object.fromEntries(this.kvs.entries());
-//   };
-// }
-
-// class Environment extends BaseKV {
-//   constructor(jsonObject: object | undefined) {
-//     super(jsonObject);
-//   }
-// }
-
-// export class InsomniaObject {
-//   public environment: Environment;
-
-//   constructor(input: {
-//     environment: Environment;
-//   }) {
-//     this.environment = input.environment;
-//   }
-
-//   toObject = () => {
-//     return {
-//       environment: this.environment.toObject(),
-//     };
-//   };
-// }
-
-// export interface RawObject {
-//   globals?: object;
-//   environment?: object;
-//   collectionVariables?: object;
-//   iterationData?: object;
-//   requestInfo?: object;
-// }
-
-// export function initGlobalObject(rawObj: RawObject) {
-//   const environment = new Environment(rawObj.environment);
-
-//   return new InsomniaObject({
-//     environment,
-//   });
-// };
-
+// await main.runCalculation`
+// insomnia.sendRequest('https://api.insomnia.rest').then(res=>console.log({a:1,res}));
+// `
 export const runCalculation = async (code: string): Promise<string> => {
   // First, we need to wrap the code in the sandbox environment
   const wrappedCode = wrapCode(code);
@@ -117,7 +45,7 @@ export const runCalculation = async (code: string): Promise<string> => {
         const parsedMessage: ChildMessage = JSON.parse(message);
         if (parsedMessage.result) {
           clearTimeout(timer);
-          resolve(parsedMessage.result.toString());
+          resolve(parsedMessage.result);
         } else {
           clearTimeout(timer);
           reject(new Error(parsedMessage.error));
@@ -155,6 +83,12 @@ const wrapCode = (code: string): string => {
           environment:{
             set:(...args)=>kvs.set(...args),
             get:(...args)=>kvs.get(...args)
+          },
+          sendRequest: async (url) => {
+            const response = await fetch(url);
+            const movies = await response.json();
+            console.log(movies);
+            return movies
           }
         },
       };
