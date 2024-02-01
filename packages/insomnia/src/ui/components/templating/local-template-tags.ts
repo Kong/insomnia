@@ -232,7 +232,11 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           throw new Error(`Cannot hash value of type "${valueType}"`);
         }
 
-        return await window.main.runCalculation(`crypto.createHash('${algorithm}').update('${value}','utf8').digest('${encoding}');`);
+        return await window.main.runCalculation(`
+        crypto.createHash('${algorithm}')
+        .update('${value}','utf8')
+        .digest('${encoding}');
+        `);
       },
     },
   },
