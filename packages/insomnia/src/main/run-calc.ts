@@ -14,6 +14,7 @@ interface ChildMessage {
 //   hash.update('Hello, world!');
 //   const hashedValue = hash.digest('hex');
 //   console.log('Hashed value:', hashedValue);
+//   hashedValue
 // `
 export const runCalculation = async (code: string): Promise<string> => {
   // First, we need to wrap the code in the sandbox environment

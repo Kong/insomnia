@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { format } from 'date-fns';
 import fs from 'fs';
 import iconv from 'iconv-lite';
@@ -223,7 +222,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           placeholder: 'Value to hash',
         },
       ],
-      run(_context, algorithm, encoding, value = '') {
+      async run(_context, algorithm, encoding, value = '') {
         if (encoding !== 'hex' && encoding !== 'latin1' && encoding !== 'base64') {
           throw new Error(`Invalid encoding ${encoding}. Choices are hex, latin1, base64`);
         }
@@ -233,9 +232,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           throw new Error(`Cannot hash value of type "${valueType}"`);
         }
 
-        const hash = crypto.createHash(algorithm);
-        hash.update(value || '', 'utf8');
-        return hash.digest(encoding);
+        return await window.main.runCalculation(`crypto.createHash('${algorithm}').update('${value}','utf8').digest('${encoding}');`);
       },
     },
   },
@@ -434,10 +431,8 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         // We do this because we may render the prompt multiple times per request.
         // We cache it under the requestId so it only prompts once. We then clear
         // the cache in a response hook when the request is sent.
-        const titleHash = crypto
-          .createHash('md5')
-          .update(title)
-          .digest('hex');
+        const titleHash = await window.main.runCalculation(`crypto.createHash('md5').update('${title}').digest('hex');`);
+
         const storageKey = explicitStorageKey || `${context.meta.requestId}.${titleHash}`;
         const cachedValue = await context.store.getItem(storageKey);
 
