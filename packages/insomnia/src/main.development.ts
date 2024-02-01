@@ -160,6 +160,7 @@ const _launchApp = async () => {
       window = windowUtils.getOrCreateWindow();
       windowUtils.createHiddenBrowserWindow();
       window.webContents.send('shell:open', args.join());
+      window.webContents.setZoomFactor(1);
     }
   });
   // Disable deep linking in playwright e2e tests in order to run multiple tests in parallel
