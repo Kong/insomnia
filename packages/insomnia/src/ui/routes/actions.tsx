@@ -285,7 +285,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   const flushId = await database.bufferChanges();
 
   const workspace = await models.workspace.create({
-    name,
+    name: name || `My ${scope === 'collection' ? 'Collection' : 'my-spec.yaml'}`,
     scope,
     parentId: projectId,
   });
