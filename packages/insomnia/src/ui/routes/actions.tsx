@@ -285,7 +285,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   const flushId = await database.bufferChanges();
 
   const workspace = await models.workspace.create({
-    name,
+    name: name || scope === 'collection' ? 'My Collection' : 'my-spec.yaml',
     scope,
     parentId: projectId,
   });
@@ -432,6 +432,8 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
       fileName: patch.name || workspace.name,
     });
   }
+
+  patch.name = patch.name || workspace.scope === 'collection' ? 'My Collection' : 'my-spec.yaml';
 
   await models.workspace.update(workspace, patch);
 
