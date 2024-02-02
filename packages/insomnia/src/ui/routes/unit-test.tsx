@@ -293,7 +293,7 @@ const TestRoute: FC = () => {
                                 borderColor: 'var(--color-font)',
                               }}
                             >
-                              <Icon className='text-xs w-5' icon="refresh" />
+                              <Icon className='text-xs w-5' icon="globe-americas" />
                             </span>
                             <span className='truncate'>
                               {baseEnvironment.name}
@@ -310,7 +310,7 @@ const TestRoute: FC = () => {
                             }}
                           >
                           <Icon
-                            icon={selectedItem.isPrivate ? 'lock' : 'refresh'}
+                            icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
                             style={{
                               color: selectedItem.color ?? 'var(--color-font)',
                             }}
@@ -350,8 +350,8 @@ const TestRoute: FC = () => {
                               }}
                             >
                               <Icon
-                                icon={item.isPrivate ? 'lock' : 'refresh'}
-                                className='text-xs'
+                                icon={item.isPrivate ? 'laptop-code' : 'globe-americas'}
+                                className='text-xs w-5'
                                 style={{
                                   color: item.color ?? 'var(--color-font)',
                                 }}
