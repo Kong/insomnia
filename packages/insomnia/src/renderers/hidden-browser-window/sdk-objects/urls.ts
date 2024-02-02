@@ -1,9 +1,8 @@
 import { Property, PropertyBase, PropertyList } from './base';
-import { require } from './require';
 import { Variable, VariableList } from './variables';
 
-// TODO: ideally it should use URL from browser or node, instead of built in module
-let UrlParser = require('url').URL;
+// TODO: make it also work with node.js
+let UrlParser = URL;
 let UrlSearchParams = URLSearchParams;
 export function setUrlParser(provider: any) {
     UrlParser = provider;
@@ -178,10 +177,11 @@ export class Url extends PropertyBase {
     }
 
     static parse(urlStr: string): UrlOptions | undefined {
-        if (!UrlParser.canParse(urlStr)) {
-            console.error(`invalid URL string ${urlStr}`);
-            return undefined;
-        }
+        // TODO: enable validation
+        // if (!UrlParser.canParse(urlStr)) {
+        //     console.error(`invalid URL string ${urlStr}`);
+        //     return undefined;
+        // }
 
         const url = new UrlParser(urlStr);
         const query = Array.from(url.searchParams.entries())

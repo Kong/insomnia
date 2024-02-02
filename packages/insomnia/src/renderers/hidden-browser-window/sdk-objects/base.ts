@@ -1,10 +1,6 @@
 import clone from 'clone';
 import equal from 'deep-equal';
 
-export interface JSONer {
-    toJSON: () => object;
-}
-
 export class PropertyBase {
     public _kind = 'PropertyBase';
     protected _parent: PropertyBase | undefined = undefined;
@@ -24,7 +20,7 @@ export class PropertyBase {
     //     // so no op here
     // }
 
-    static toJSON(obj: JSONer) {
+    static toJSON(obj: object) {
         if ('toJSON' in obj && typeof obj.toJSON === 'function') {
             return obj.toJSON();
         } else {

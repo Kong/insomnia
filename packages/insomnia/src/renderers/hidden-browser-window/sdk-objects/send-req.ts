@@ -1,26 +1,6 @@
 import { Cookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
-// import { getSetCookieHeaders } from '../../../../src/common/misc';
-// import {
-//     // AUTH_API_KEY,
-//     AUTH_ASAP,
-//     AUTH_AWS_IAM,
-//     AUTH_BASIC,
-//     // AUTH_BEARER,
-//     AUTH_DIGEST,
-//     AUTH_HAWK,
-//     AUTH_NETRC,
-//     AUTH_NONE,
-//     AUTH_NTLM,
-//     AUTH_OAUTH_1,
-//     AUTH_OAUTH_2,
-//     // HAWK_ALGORITHM_SHA1,
-//     // HAWK_ALGORITHM_SHA256,
-// } from '../../../common/constants';
-// import type { CurlRequestOptions, CurlRequestOutput } from '../../../main/network/libcurl-promise';
-// import { newAuth } from '../../../models/request';
-// import { ResponseHeader } from '../../../models/response';
 import { cancellablePromise, deleteCancelRequestFunctionMap, setCancelRequestFunctionMap } from '../../../network/cancellation';
 import { RequestAuth } from './auth';
 import { Settings } from './common';
