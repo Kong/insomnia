@@ -1,10 +1,12 @@
 import { Property, PropertyBase, PropertyList } from './base';
+import { require } from './require';
 import { Variable, VariableList } from './variables';
 
-let urlParser = URL;
+// TODO: ideally it should use URL from browser or node, instead of built in module
+let UrlParser = require('url').URL;
 let UrlSearchParams = URLSearchParams;
 export function setUrlParser(provider: any) {
-    urlParser = provider;
+    UrlParser = provider;
 }
 export function setUrlSearchParams(provider: any) {
     UrlSearchParams = provider;
@@ -176,15 +178,16 @@ export class Url extends PropertyBase {
     }
 
     static parse(urlStr: string): UrlOptions | undefined {
-        if (!urlParser.canParse(urlStr)) {
+        if (!UrlParser.canParse(urlStr)) {
             console.error(`invalid URL string ${urlStr}`);
             return undefined;
         }
 
-        const url = new urlParser(urlStr);
+        const url = new UrlParser(urlStr);
         const query = Array.from(url.searchParams.entries())
-            .map((kv: [string, string]) => {
-                return { key: kv[0], value: kv[1] };
+            .map(kv => {
+                const kvArray = kv as [string, string];
+                return { key: kvArray[0], value: kvArray[1] };
             });
 
         return {
@@ -291,7 +294,7 @@ export class Url extends PropertyBase {
             (this.protocol ? this.protocol : 'https:') :
             (this.protocol ? this.protocol : '');
 
-        const parser = new urlParser(`${protocol}//` + this.getHost());
+        const parser = new UrlParser(`${protocol}//` + this.getHost());
         parser.username = this.auth?.username || '';
         parser.password = this.auth?.password || '';
         parser.port = this.port || '';

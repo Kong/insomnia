@@ -34,8 +34,9 @@ export const PreRequestScriptEditor: FC<Props> = ({
     esversion: 8, // ES8 syntax (async/await, etc)
   };
 
-  return <Fragment>
+  const editor = <Fragment>
     <CodeEditor
+      key={uniquenessKey}
       id="pre-request-script-editor"
       showPrettifyButton
       uniquenessKey={uniquenessKey}
@@ -48,4 +49,6 @@ export const PreRequestScriptEditor: FC<Props> = ({
       lintOptions={lintOptions}
     />
   </Fragment>;
+
+  return editor;
 };

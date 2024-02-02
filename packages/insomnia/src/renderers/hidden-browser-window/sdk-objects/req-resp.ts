@@ -37,11 +37,12 @@ export interface ResponseContentInfo {
     contentType: string;
 }
 
-export class FormParam {
+export class FormParam extends Property {
     key: string;
     value: string;
 
     constructor(options: { key: string; value: string }) {
+        super();
         this.key = options.key;
         this.value = options.value;
     }

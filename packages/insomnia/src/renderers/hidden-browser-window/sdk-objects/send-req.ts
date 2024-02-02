@@ -192,11 +192,10 @@ function transformAuthentication(auth: RequestAuth) {
             return '';
         }
 
-        return kvs.reduce(
-            (
-                finalValue: string | undefined,
-                kv: { key: string; value: string }
-            ) => finalValue = kv.key === targetKey ? kv.value : '',
+        return kvs.find(
+            (kv: { key: string; value: string }) => {
+                return kv.key === targetKey ? kv.value : '';
+            },
             '',
         );
     };
@@ -310,7 +309,7 @@ export class HttpSendRequest {
 
         const controller = new AbortController();
         const cancelRequest = () => {
-            window.main.cancelCurlRequest(requestOptions.requestId);
+            window.curl.cancelCurlRequest(requestOptions.requestId);
             controller.abort();
         };
         setCancelRequestFunctionMap(requestOptions.requestId, cancelRequest);
@@ -318,7 +317,7 @@ export class HttpSendRequest {
         try {
             cancellablePromise({
                 signal: controller.signal,
-                fn: window.main.curlRequest(requestOptions),
+                fn: window.curl.curlRequest(requestOptions),
             }).then(result => {
                 const output = result as CurlRequestOutput;
                 return fromCurlOutputToResponse(output);
@@ -342,6 +341,7 @@ export class HttpSendRequest {
 // function fromRequestToCurlOptions(req: string | Request, settings: Settings): CurlRequestOptions {
 function fromRequestToCurlOptions(req: string | Request | RequestOptions, settings: Settings) {
     const id = uuidv4();
+    const settingFollowRedirects: 'global' | 'on' | 'off' = settings.followRedirects ? 'on' : 'off';
 
     if (typeof req === 'string') {
         return {
@@ -353,7 +353,7 @@ function fromRequestToCurlOptions(req: string | Request | RequestOptions, settin
                 authentication: transformAuthentication(
                     new RequestAuth({ type: 'noauth' }),
                 ),
-                settingFollowRedirects: settings.followRedirects ? 'on' : 'off',
+                settingFollowRedirects: settingFollowRedirects,
                 settingRebuildPath: true,
                 settingSendCookies: true,
                 url: req,
@@ -384,7 +384,7 @@ function fromRequestToCurlOptions(req: string | Request | RequestOptions, settin
                     text: finalReq.body?.toString(),
                 }, // TODO: use value from headers
                 authentication: transformAuthentication(finalReq.auth),
-                settingFollowRedirects: settings.followRedirects ? 'on' : 'off',
+                settingFollowRedirects: settingFollowRedirects,
                 settingRebuildPath: true,
                 settingSendCookies: true,
                 url: finalReq.url.toString(),
@@ -525,7 +525,7 @@ async function fromCurlOutputToResponse(result: CurlRequestOutput): Promise<Resp
         });
     }
 
-    const bodyResult = await window.main.readCurlResponse({
+    const bodyResult = await window.curl.readCurlResponse({
         bodyPath: result.responseBodyPath,
         bodyCompression: result.patch.bodyCompression,
     });

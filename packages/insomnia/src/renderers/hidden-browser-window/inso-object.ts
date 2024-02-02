@@ -165,7 +165,6 @@ export class InsomniaObject {
     public variables: Variables;
     public info: RequestInfo;
 
-    private settings: Settings;
     private httpRequestSender: HttpSendRequest;
 
     constructor(
@@ -186,7 +185,6 @@ export class InsomniaObject {
         this.variables = rawObj.variables;
         this.info = rawObj.requestInfo;
 
-        this.settings = settings;
         this.httpRequestSender = new HttpSendRequest(settings);
     }
 

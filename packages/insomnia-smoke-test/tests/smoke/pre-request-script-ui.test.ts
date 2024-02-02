@@ -68,7 +68,7 @@ test.describe('pre-request UI tests', async () => {
             },
         },
         {
-            name: 'sendRequest API string URL mode',
+            name: 'sendRequest simple mode',
             preReqScript: `
                 const resp = await new Promise((resolve, reject) => {
                     insomnia.sendRequest(
@@ -108,7 +108,7 @@ test.describe('pre-request UI tests', async () => {
             },
         },
         {
-            name: 'sendRequest API Request URL mode',
+            name: 'sendRequest custom mode',
             preReqScript: `
                 const postRequest = {
                     url: 'https://httpbin.org/anything',

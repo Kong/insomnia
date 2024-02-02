@@ -18,7 +18,7 @@ export class Variable extends Property {
     constructor(def?: VariableOptions) {
         super();
 
-        this.id = def ? def.id : '';
+        this.id = def ? def.id || '' : '';
         this.key = def ? def.key : '';
         this.name = def ? def.name : '';
         this.value = def ? def.value : '';

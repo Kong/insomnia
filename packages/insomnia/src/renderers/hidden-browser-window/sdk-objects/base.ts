@@ -137,22 +137,21 @@ export class PropertyBase {
 }
 
 export class Property extends PropertyBase {
-    id?: string;
+    id: string;
     name?: string;
     disabled?: boolean;
-    info?: object;
 
     constructor(def?: {
         id?: string;
         name?: string;
         disabled?: boolean;
-        info?: object;
+        info?: { id?: string; name?: string };
     }) {
         super({});
-        this.id = def?.id || '';
-        this.name = def?.name || '';
+        this.id = def?.info?.id || def?.id || '';
+        this.name = def?.info?.id || def?.name || '';
         this.disabled = def?.disabled || false;
-        this.info = def?.info || {};
+
     }
 
     // static replaceSubstitutions(_str: string, _variables: object): string {
@@ -171,7 +170,7 @@ export class Property extends PropertyBase {
     }
 }
 
-export class PropertyList<T> {
+export class PropertyList<T extends Property> {
     _kind: string = 'PropertyList';
     protected _parent: PropertyList<T> | undefined = undefined;
     protected list: T[] = [];
@@ -193,11 +192,7 @@ export class PropertyList<T> {
     }
 
     all() {
-        return new Map(
-            this.list.map(
-                pp => [pp.id, pp.toJSON()]
-            ),
-        );
+        return this.list.map(pp => pp.toJSON());
     }
 
     append(item: T) {
@@ -282,14 +277,8 @@ export class PropertyList<T> {
 
     indexOf(item: string | T) {
         for (let i = 0; i < this.list.length; i++) {
-            if (typeof item === 'string') {
-                if (item === this.list[i].id) {
-                    return i;
-                }
-            } else {
-                if (equal(item, this.list[i])) {
-                    return i;
-                }
+            if (equal(item, this.list[i])) {
+                return i;
             }
         }
         return -1;

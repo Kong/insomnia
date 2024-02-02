@@ -10,7 +10,7 @@ declare global {
     shell: Pick<Electron.Shell, 'showItemInFolder'>;
     clipboard: Pick<Electron.Clipboard, 'readText' | 'writeText' | 'clear'>;
     hiddenBrowserWindow: HiddenBrowserWindowAPI;
-    curl?: CurlAPI;
+    curl: CurlAPI;
   }
 }
 

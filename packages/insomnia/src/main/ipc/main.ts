@@ -20,13 +20,7 @@ import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { WebSocketBridgeAPI } from '../network/websocket';
 import { gRPCBridgeAPI } from './grpc';
 
-export interface CurlAPI {
-  cancelCurlRequest: typeof cancelCurlRequest;
-  curlRequest: typeof curlRequest;
-  readCurlResponse: (options: { bodyPath: string; bodyCompression: Compression }) => Promise<{ body: string; error: string }>;
-}
-
-export interface MainBridgeAPI extends CurlAPI {
+export interface MainBridgeAPI {
   loginStateChange: () => void;
   openInBrowser: (url: string) => void;
   restart: () => void;
@@ -53,6 +47,14 @@ export interface MainBridgeAPI extends CurlAPI {
       create: (options: { parentId: string; path: string }) => Promise<string>;
     };
   };
+  cancelCurlRequest: typeof cancelCurlRequest;
+  curlRequest: typeof curlRequest;
+}
+
+export interface CurlAPI {
+  cancelCurlRequest: typeof cancelCurlRequest;
+  curlRequest: typeof curlRequest;
+  readCurlResponse: (options: { bodyPath: string; bodyCompression: Compression }) => Promise<{ body: string; error: string }>;
 }
 
 export function registerMainHandlers() {

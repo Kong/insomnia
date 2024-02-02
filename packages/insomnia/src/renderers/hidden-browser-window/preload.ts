@@ -1,15 +1,15 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-const main: Window['curl'] = {
+const curl: Window['curl'] = {
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   readCurlResponse: options => ipcRenderer.invoke('readCurlResponse', options),
 };
 
 if (process.contextIsolated) {
-  contextBridge.exposeInMainWorld('main', main);
+  contextBridge.exposeInMainWorld('curl', curl);
 } else {
-  window.curl = main;
+  window.curl = curl;
 }
 
 window.onmessage = (ev: MessageEvent) => {
