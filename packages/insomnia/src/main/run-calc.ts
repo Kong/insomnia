@@ -87,13 +87,14 @@ const wrapCode = (code: string): string => {
           sendRequest: async (url) => {
             const response = await fetch(url);
             const movies = await response.json();
-            console.log(movies);
             return movies
           }
         },
       };
-      result = vm.runInNewContext(code,context);
-      sendMessageData({ result });
+      vm.runInNewContext(code,context).then((result)=>{
+        sendMessageData({ result });
+      })
+
     } catch (e) {
       sendMessageData({ error: e.message });
     }
