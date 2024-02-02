@@ -284,8 +284,10 @@ export const createNewWorkspaceAction: ActionFunction = async ({
 
   const flushId = await database.bufferChanges();
 
+  const workspaceName = name || (scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
+
   const workspace = await models.workspace.create({
-    name: name || scope === 'collection' ? 'My Collection' : 'my-spec.yaml',
+    name: workspaceName,
     scope,
     parentId: projectId,
   });
@@ -433,7 +435,7 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
     });
   }
 
-  patch.name = patch.name || workspace.scope === 'collection' ? 'My Collection' : 'my-spec.yaml';
+  patch.name = patch.name || workspace.name || (workspace.scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
 
   await models.workspace.update(workspace, patch);
 
