@@ -26,7 +26,7 @@ describe('test Cookie object', () => {
     const cookie1Opt = {
       key: 'myCookie',
       value: 'myCookie',
-      expires: '0',
+      expires: '01 Jan 1970 00:00:01 GMT',
       maxAge: '7',
       domain: 'domain.com',
       path: '/',
@@ -37,7 +37,8 @@ describe('test Cookie object', () => {
       extensions: [{ key: 'Ext', value: 'ExtValue' }],
     };
     const cookie1 = new Cookie(cookie1Opt);
-    const expectedCookieString = 'myCookie=myCookie; Expires=Fri, 31 Dec 1999 16:00:00 GMT; Max-Age=7; Path=/; Secure; HttpOnly; HostOnly; Ext=ExtValue';
+
+    const expectedCookieString = 'myCookie=myCookie; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=7; Path=/; Secure; HttpOnly; HostOnly; Ext=ExtValue';
 
     expect(cookie1.toString()).toEqual(expectedCookieString);
     expect(Cookie.stringify(cookie1)).toEqual(expectedCookieString);
