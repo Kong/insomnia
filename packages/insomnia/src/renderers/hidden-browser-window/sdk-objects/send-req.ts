@@ -381,7 +381,7 @@ function fromRequestToCurlOptions(req: string | Request | RequestOptions, settin
                 body: {
                     mimeType: undefined,
                     method: finalReq.method,
-                    text: finalReq.body,
+                    text: finalReq.body?.toString(),
                 }, // TODO: use value from headers
                 authentication: transformAuthentication(finalReq.auth),
                 settingFollowRedirects: settings.followRedirects ? 'on' : 'off',

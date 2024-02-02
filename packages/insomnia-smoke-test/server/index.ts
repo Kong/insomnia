@@ -28,14 +28,17 @@ app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
 });
 
-app.get('/echo', jsonParser, async (req, res) => {
+async function echoHandler(req: any, res: any) {
   res.status(200).send({
     method: req.method,
     headers: req.headers,
     data: req.body,
     cookies: req.cookies,
   });
-});
+};
+
+app.get('/echo', jsonParser, echoHandler);
+app.post('/echo', jsonParser, echoHandler);
 
 app.get('/builds/check/*', (_req, res) => {
   res.status(200).send({
