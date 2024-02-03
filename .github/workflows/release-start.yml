@@ -17,6 +17,7 @@ on:
 
 jobs:
   setup-release-branch:
+    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
