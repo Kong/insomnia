@@ -17,6 +17,7 @@ concurrency:
 
 jobs:
   parse-version:
+    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     if: ${{ startsWith(github.head_ref, 'release/') || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     outputs:
@@ -44,6 +45,7 @@ jobs:
 
 
   generate-changelog:
+    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     needs: parse-version
     runs-on: ubuntu-latest
     steps:
@@ -141,6 +143,7 @@ jobs:
           edit-mode: replace
 
   generate-changelog-image:
+    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     needs: parse-version
     runs-on: ubuntu-latest
     steps:
