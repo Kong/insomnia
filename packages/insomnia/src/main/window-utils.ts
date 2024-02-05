@@ -1,4 +1,14 @@
-import electron, { type BrowserWindow as ElectronBrowserWindow, type MenuItemConstructorOptions } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  type BrowserWindow as ElectronBrowserWindow,
+  clipboard,
+  dialog,
+  Menu,
+  type MenuItemConstructorOptions,
+  screen,
+  shell,
+} from 'electron';
 import fs from 'fs';
 import * as os from 'os';
 import path from 'path';
@@ -16,17 +26,15 @@ import {
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
 import * as log from '../common/log';
+import { invariant } from '../utils/invariant';
 import LocalStorage from './local-storage';
-
-const { app, Menu, shell, dialog, clipboard, BrowserWindow } = electron;
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 
-let newWindow: ElectronBrowserWindow | null = null;
-const windows = new Set<ElectronBrowserWindow>();
+const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
 let localStorage: LocalStorage | null = null;
 
 interface Bounds {
@@ -40,14 +48,67 @@ export function init() {
   initLocalStorage();
 }
 
-export function createWindow() {
+export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow> {
+  // if open, close it
+  if (browserWindows.get('HiddenBrowserWindow')) {
+    await new Promise<void>(resolve => {
+      const hiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
+      invariant(hiddenBrowserWindow, 'hiddenBrowserWindow is not defined');
+
+      // overwrite the closed handler
+      hiddenBrowserWindow.on('closed', () => {
+        if (hiddenBrowserWindow) {
+          console.log('[main] restarting hidden browser window');
+          browserWindows.delete('HiddenBrowserWindow');
+        }
+        resolve();
+      });
+
+      stopHiddenBrowserWindow();
+    });
+  }
+  const hiddenBrowserWindow = new BrowserWindow({
+    show: false,
+    title: 'HiddenBrowserWindow',
+    webPreferences: {
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false,
+      webSecurity: true,
+      preload: path.join(__dirname, 'renderers/hidden-browser-window/preload.js'),
+      spellcheck: false,
+    },
+  });
+  browserWindows.set('HiddenBrowserWindow', hiddenBrowserWindow);
+
+  const hiddenBrowserWindowPath = path.resolve(__dirname, './renderers/hidden-browser-window/index.html');
+  const hiddenBrowserWindowUrl = process.env.HIDDEN_BROWSER_WINDOW_URL || pathToFileURL(hiddenBrowserWindowPath).href;
+  hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
+
+  console.log('[main][init hidden win step 1/6]: starting hidden browser window');
+
+  hiddenBrowserWindow.on('closed', () => {
+    if (browserWindows.get('HiddenBrowserWindow')) {
+      console.log('[main] closing hidden browser window');
+      browserWindows.delete('HiddenBrowserWindow');
+    }
+  });
+
+  return hiddenBrowserWindow;
+}
+
+export function stopHiddenBrowserWindow() {
+  browserWindows.get('HiddenBrowserWindow')?.close();
+}
+
+export function createWindow(): ElectronBrowserWindow {
   const { bounds, fullscreen, maximize } = getBounds();
   const { x, y, width, height } = bounds;
 
   const appLogo = 'static/insomnia-core-logo_16x.png';
   let isVisibleOnAnyDisplay = true;
 
-  for (const d of electron.screen.getAllDisplays()) {
+  for (const d of screen.getAllDisplays()) {
     const isVisibleOnDisplay =
       // @ts-expect-error -- TSCONVERSION genuine error
       x >= d.bounds.x &&
@@ -63,7 +124,7 @@ export function createWindow() {
     }
   }
 
-  newWindow = new BrowserWindow({
+  const mainBrowserWindow = new BrowserWindow({
     // Make sure we don't initialize the window outside the bounds
     x: isVisibleOnAnyDisplay ? x : undefined,
     y: isVisibleOnAnyDisplay ? y : undefined,
@@ -88,22 +149,23 @@ export function createWindow() {
       disableBlinkFeatures: 'Auxclick',
     },
   });
+  browserWindows.set('Insomnia', mainBrowserWindow);
 
   // BrowserWindow doesn't have an option for this, so we have to do it manually :(
   if (maximize) {
-    newWindow?.maximize();
+    mainBrowserWindow.maximize();
   }
 
-  newWindow?.on('resize', () => saveBounds());
-  newWindow?.on('maximize', () => saveBounds());
-  newWindow?.on('unmaximize', () => saveBounds());
-  newWindow?.on('move', () => saveBounds());
-  newWindow?.on('unresponsive', () => {
+  mainBrowserWindow.on('resize', () => saveBounds());
+  mainBrowserWindow.on('maximize', () => saveBounds());
+  mainBrowserWindow.on('unmaximize', () => saveBounds());
+  mainBrowserWindow.on('move', () => saveBounds());
+  mainBrowserWindow.on('unresponsive', () => {
     showUnresponsiveModal();
   });
 
   // Open generic links (<a .../>) in default browser
-  newWindow?.webContents.on('will-navigate', (event, url) => {
+  mainBrowserWindow.webContents.on('will-navigate', (event, url) => {
     // Prevents local dev full-reload events from opening browser window, see https://github.com/Kong/insomnia/pull/4925
     if (url.startsWith(appUrl)) {
       return;
@@ -118,7 +180,7 @@ export function createWindow() {
     }
   });
 
-  newWindow?.webContents.setWindowOpenHandler(() => {
+  mainBrowserWindow.webContents.setWindowOpenHandler(() => {
     return { action: 'deny' };
   });
 
@@ -127,12 +189,11 @@ export function createWindow() {
   const appUrl = process.env.APP_RENDER_URL || pathToFileURL(appPath).href;
 
   console.log(`[main] Loading ${appUrl}`);
-  newWindow?.loadURL(appUrl);
+  mainBrowserWindow.loadURL(appUrl);
   // Emitted when the window is closed.
-  newWindow?.on('closed', () => {
-    if (newWindow) {
-      windows.delete(newWindow);
-      newWindow = windows.values().next().value || null;
+  mainBrowserWindow.on('closed', () => {
+    if (browserWindows.get('Insomnia')) {
+      browserWindows.delete('Insomnia');
     }
   });
 
@@ -259,7 +320,7 @@ export function createWindow() {
       {
         label: `Resize to ${MNEMONIC_SYM}Small (qHD 540)`,
         click: () =>
-          newWindow?.setBounds({
+          mainBrowserWindow.setBounds({
             width: 960,
             height: 540,
           }),
@@ -267,7 +328,7 @@ export function createWindow() {
       {
         label: `Resize to Defaul${MNEMONIC_SYM}t (HD 720)`,
         click: () =>
-          newWindow?.setBounds({
+          mainBrowserWindow.setBounds({
             width: DEFAULT_WIDTH,
             height: DEFAULT_HEIGHT,
           }),
@@ -275,7 +336,7 @@ export function createWindow() {
       {
         label: `Resize to ${MNEMONIC_SYM}Large (FHD 1080)`,
         click: () =>
-          newWindow?.setBounds({
+          mainBrowserWindow.setBounds({
             width: 1920,
             height: 1080,
           }),
@@ -367,7 +428,7 @@ export function createWindow() {
       {
         label: `Show App ${MNEMONIC_SYM}Data Folder`,
         click: () => {
-          const directory = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
+          const directory = process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
           shell.showItemInFolder(directory);
         },
       },
@@ -445,10 +506,10 @@ export function createWindow() {
     helpMenu.submenu?.push({
       type: 'separator',
     },
-    {
-      label: `${MNEMONIC_SYM}About`,
-      click: aboutMenuClickHandler,
-    });
+      {
+        label: `${MNEMONIC_SYM}About`,
+        click: aboutMenuClickHandler,
+      });
   }
 
   const developerMenu: MenuItemConstructorOptions = {
@@ -470,7 +531,7 @@ export function createWindow() {
         label: `Take ${MNEMONIC_SYM}Screenshot`,
         click: function() {
           // @ts-expect-error -- TSCONVERSION not accounted for in the electron types to provide a function
-          newWindow?.capturePage(image => {
+          mainBrowserWindow.capturePage(image => {
             const buffer = image.toPNG();
             const dir = app.getPath('desktop');
             fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
@@ -496,7 +557,7 @@ export function createWindow() {
       {
         label: `Set window for ${MNEMONIC_SYM}FHD Screenshot`,
         click: () => {
-          newWindow?.setBounds({
+          mainBrowserWindow.setBounds({
             width: 1920,
             height: 1080,
           });
@@ -546,8 +607,7 @@ export function createWindow() {
   }
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-  windows.add(newWindow);
-  return newWindow;
+  return mainBrowserWindow;
 }
 
 async function showUnresponsiveModal() {
@@ -646,10 +706,10 @@ export const setZoom = (transformer: (current: number) => number) => () => {
 };
 
 function initLocalStorage() {
-  const localStoragePath = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'localStorage');
+  const localStoragePath = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'localStorage');
   localStorage = new LocalStorage(localStoragePath);
 }
 
 export function getOrCreateWindow() {
-  return newWindow ?? createWindow();
+  return browserWindows.get('Insomnia') ?? createWindow();
 }

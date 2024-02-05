@@ -9,10 +9,10 @@ test('Sign in with Gitlab', async ({ app, page }) => {
 
   const fakeGitLabOAuthWebFlow = app.evaluate(electron => {
     return new Promise<{ redirectUrl: string }>(resolve => {
-      const webContents = electron.BrowserWindow.getAllWindows()[0].webContents;
+      const webContents = electron.BrowserWindow.getAllWindows()?.find(w => w.title === 'Insomnia')?.webContents;
       // Remove all navigation listeners so that only the one we inject will run
-      webContents.removeAllListeners('will-navigate');
-      webContents.on('will-navigate', (event: Event, url: string) => {
+      webContents?.removeAllListeners('will-navigate');
+      webContents?.on('will-navigate', (event: Event, url: string) => {
         event.preventDefault();
         const parsedUrl = new URL(url);
         // We use the same state parameter that the app created to assert that we prevent CSRF
