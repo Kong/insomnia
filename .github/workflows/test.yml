@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   Test:
-    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
+    timeout-minutes: 25
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
