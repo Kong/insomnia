@@ -16,6 +16,7 @@ import {
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
 import * as log from '../common/log';
+import { invariant } from '../utils/invariant';
 import LocalStorage from './local-storage';
 
 const { app, Menu, shell, dialog, clipboard, BrowserWindow } = electron;
@@ -26,7 +27,9 @@ const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 
 let newWindow: ElectronBrowserWindow | null = null;
+let hiddenBrowserWindow: ElectronBrowserWindow | null = null;
 const windows = new Set<ElectronBrowserWindow>();
+const processes = new Map<number, ElectronBrowserWindow>();
 let localStorage: LocalStorage | null = null;
 
 interface Bounds {
@@ -38,6 +41,61 @@ interface Bounds {
 
 export function init() {
   initLocalStorage();
+}
+
+export async function createHiddenBrowserWindow() {
+  if (hiddenBrowserWindow) {
+    await new Promise<void>(resolve => {
+      invariant(hiddenBrowserWindow, 'hiddenBrowserWindow is running');
+
+      // overwrite the closed handler
+      hiddenBrowserWindow.on('closed', () => {
+        if (hiddenBrowserWindow) {
+          console.log('[hidden window] restarting hidden browser window:', hiddenBrowserWindow.id);
+          processes.delete(hiddenBrowserWindow.id);
+          hiddenBrowserWindow = null;
+        }
+        resolve();
+      });
+
+      stopHiddenBrowserWindow();
+    });
+  }
+
+  hiddenBrowserWindow = new BrowserWindow({
+    show: false,
+    title: 'HiddenBrowserWindow',
+    webPreferences: {
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false,
+      webSecurity: true,
+      preload: path.join(__dirname, 'renderers/hidden-browser-window/preload-hidden-browser-window.js'),
+      spellcheck: false,
+    },
+  });
+
+  const hiddenBrowserWindowPath = path.resolve(__dirname, './renderers/hidden-browser-window/index.html');
+  const hiddenBrowserWindowUrl = process.env.HIDDEN_BROWSER_WINDOW_URL || pathToFileURL(hiddenBrowserWindowPath).href;
+  hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
+
+  console.log(`[main][init hidden win step 1/6]: starting hidden browser window(id=${hiddenBrowserWindow.id}): `);
+
+  hiddenBrowserWindow?.on('closed', () => {
+    if (hiddenBrowserWindow) {
+      console.log(`[main] closing hidden browser window(id=${hiddenBrowserWindow.id})`);
+      processes.delete(hiddenBrowserWindow.id);
+      hiddenBrowserWindow = null;
+    }
+  });
+
+  processes.set(hiddenBrowserWindow.id, hiddenBrowserWindow);
+
+  return hiddenBrowserWindow;
+}
+
+export function stopHiddenBrowserWindow() {
+  hiddenBrowserWindow?.close();
 }
 
 export function createWindow() {
@@ -445,10 +503,10 @@ export function createWindow() {
     helpMenu.submenu?.push({
       type: 'separator',
     },
-    {
-      label: `${MNEMONIC_SYM}About`,
-      click: aboutMenuClickHandler,
-    });
+      {
+        label: `${MNEMONIC_SYM}About`,
+        click: aboutMenuClickHandler,
+      });
   }
 
   const developerMenu: MenuItemConstructorOptions = {
