@@ -26,10 +26,7 @@ const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 
-let newWindow: ElectronBrowserWindow | null = null;
-let hiddenBrowserWindow: ElectronBrowserWindow | null = null;
-const windows = new Set<ElectronBrowserWindow>();
-const processes = new Map<number, ElectronBrowserWindow>();
+const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
 let localStorage: LocalStorage | null = null;
 
 interface Bounds {
@@ -44,16 +41,17 @@ export function init() {
 }
 
 export async function createHiddenBrowserWindow() {
-  if (hiddenBrowserWindow) {
+  // if open, close it
+  if (browserWindows.get('HiddenBrowserWindow')) {
     await new Promise<void>(resolve => {
-      invariant(hiddenBrowserWindow, 'hiddenBrowserWindow is running');
+      const hiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
+      invariant(hiddenBrowserWindow, 'hiddenBrowserWindow is not defined');
 
       // overwrite the closed handler
       hiddenBrowserWindow.on('closed', () => {
         if (hiddenBrowserWindow) {
-          console.log('[hidden window] restarting hidden browser window:', hiddenBrowserWindow.id);
-          processes.delete(hiddenBrowserWindow.id);
-          hiddenBrowserWindow = null;
+          console.log('[main] restarting hidden browser window');
+          browserWindows.delete('HiddenBrowserWindow');
         }
         resolve();
       });
@@ -62,7 +60,7 @@ export async function createHiddenBrowserWindow() {
     });
   }
 
-  hiddenBrowserWindow = new BrowserWindow({
+  browserWindows.set('HiddenBrowserWindow', new BrowserWindow({
     show: false,
     title: 'HiddenBrowserWindow',
     webPreferences: {
@@ -73,29 +71,26 @@ export async function createHiddenBrowserWindow() {
       preload: path.join(__dirname, 'renderers/hidden-browser-window/preload.js'),
       spellcheck: false,
     },
-  });
+  }));
 
   const hiddenBrowserWindowPath = path.resolve(__dirname, './renderers/hidden-browser-window/index.html');
   const hiddenBrowserWindowUrl = process.env.HIDDEN_BROWSER_WINDOW_URL || pathToFileURL(hiddenBrowserWindowPath).href;
-  hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
+  browserWindows.get('HiddenBrowserWindow')?.loadURL(hiddenBrowserWindowUrl);
 
-  console.log(`[main][init hidden win step 1/6]: starting hidden browser window(id=${hiddenBrowserWindow.id}): `);
+  console.log('[main][init hidden win step 1/6]: starting hidden browser window');
 
-  hiddenBrowserWindow?.on('closed', () => {
-    if (hiddenBrowserWindow) {
-      console.log(`[main] closing hidden browser window(id=${hiddenBrowserWindow.id})`);
-      processes.delete(hiddenBrowserWindow.id);
-      hiddenBrowserWindow = null;
+  browserWindows.get('HiddenBrowserWindow')?.on('closed', () => {
+    if (browserWindows.get('HiddenBrowserWindow')) {
+      console.log('[main] closing hidden browser window');
+      browserWindows.delete('HiddenBrowserWindow');
     }
   });
 
-  processes.set(hiddenBrowserWindow.id, hiddenBrowserWindow);
-
-  return hiddenBrowserWindow;
+  return browserWindows.get('HiddenBrowserWindow');
 }
 
 export function stopHiddenBrowserWindow() {
-  hiddenBrowserWindow?.close();
+  browserWindows.get('HiddenBrowserWindow')?.close();
 }
 
 export function createWindow() {
@@ -121,7 +116,7 @@ export function createWindow() {
     }
   }
 
-  newWindow = new BrowserWindow({
+  browserWindows.set('Insomnia', new BrowserWindow({
     // Make sure we don't initialize the window outside the bounds
     x: isVisibleOnAnyDisplay ? x : undefined,
     y: isVisibleOnAnyDisplay ? y : undefined,
@@ -145,23 +140,23 @@ export function createWindow() {
       contextIsolation: false,
       disableBlinkFeatures: 'Auxclick',
     },
-  });
+  }));
 
   // BrowserWindow doesn't have an option for this, so we have to do it manually :(
   if (maximize) {
-    newWindow?.maximize();
+    browserWindows.get('Insomnia')?.maximize();
   }
 
-  newWindow?.on('resize', () => saveBounds());
-  newWindow?.on('maximize', () => saveBounds());
-  newWindow?.on('unmaximize', () => saveBounds());
-  newWindow?.on('move', () => saveBounds());
-  newWindow?.on('unresponsive', () => {
+  browserWindows.get('Insomnia')?.on('resize', () => saveBounds());
+  browserWindows.get('Insomnia')?.on('maximize', () => saveBounds());
+  browserWindows.get('Insomnia')?.on('unmaximize', () => saveBounds());
+  browserWindows.get('Insomnia')?.on('move', () => saveBounds());
+  browserWindows.get('Insomnia')?.on('unresponsive', () => {
     showUnresponsiveModal();
   });
 
   // Open generic links (<a .../>) in default browser
-  newWindow?.webContents.on('will-navigate', (event, url) => {
+  browserWindows.get('Insomnia')?.webContents.on('will-navigate', (event, url) => {
     // Prevents local dev full-reload events from opening browser window, see https://github.com/Kong/insomnia/pull/4925
     if (url.startsWith(appUrl)) {
       return;
@@ -176,7 +171,7 @@ export function createWindow() {
     }
   });
 
-  newWindow?.webContents.setWindowOpenHandler(() => {
+  browserWindows.get('Insomnia')?.webContents.setWindowOpenHandler(() => {
     return { action: 'deny' };
   });
 
@@ -185,12 +180,11 @@ export function createWindow() {
   const appUrl = process.env.APP_RENDER_URL || pathToFileURL(appPath).href;
 
   console.log(`[main] Loading ${appUrl}`);
-  newWindow?.loadURL(appUrl);
+  browserWindows.get('Insomnia')?.loadURL(appUrl);
   // Emitted when the window is closed.
-  newWindow?.on('closed', () => {
-    if (newWindow) {
-      windows.delete(newWindow);
-      newWindow = windows.values().next().value || null;
+  browserWindows.get('Insomnia')?.on('closed', () => {
+    if (browserWindows.get('Insomnia')) {
+      browserWindows.delete('Insomnia');
     }
   });
 
@@ -317,7 +311,7 @@ export function createWindow() {
       {
         label: `Resize to ${MNEMONIC_SYM}Small (qHD 540)`,
         click: () =>
-          newWindow?.setBounds({
+          browserWindows.get('Insomnia')?.setBounds({
             width: 960,
             height: 540,
           }),
@@ -325,7 +319,7 @@ export function createWindow() {
       {
         label: `Resize to Defaul${MNEMONIC_SYM}t (HD 720)`,
         click: () =>
-          newWindow?.setBounds({
+          browserWindows.get('Insomnia')?.setBounds({
             width: DEFAULT_WIDTH,
             height: DEFAULT_HEIGHT,
           }),
@@ -333,7 +327,7 @@ export function createWindow() {
       {
         label: `Resize to ${MNEMONIC_SYM}Large (FHD 1080)`,
         click: () =>
-          newWindow?.setBounds({
+          browserWindows.get('Insomnia')?.setBounds({
             width: 1920,
             height: 1080,
           }),
@@ -528,7 +522,7 @@ export function createWindow() {
         label: `Take ${MNEMONIC_SYM}Screenshot`,
         click: function() {
           // @ts-expect-error -- TSCONVERSION not accounted for in the electron types to provide a function
-          newWindow?.capturePage(image => {
+          browserWindows.get('Insomnia')?.capturePage(image => {
             const buffer = image.toPNG();
             const dir = app.getPath('desktop');
             fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
@@ -554,7 +548,7 @@ export function createWindow() {
       {
         label: `Set window for ${MNEMONIC_SYM}FHD Screenshot`,
         click: () => {
-          newWindow?.setBounds({
+          browserWindows.get('Insomnia')?.setBounds({
             width: 1920,
             height: 1080,
           });
@@ -604,8 +598,7 @@ export function createWindow() {
   }
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-  windows.add(newWindow);
-  return newWindow;
+  return browserWindows.get('Insomnia');
 }
 
 async function showUnresponsiveModal() {
@@ -709,5 +702,5 @@ function initLocalStorage() {
 }
 
 export function getOrCreateWindow() {
-  return newWindow ?? createWindow();
+  return browserWindows.get('Insomnia') ?? createWindow();
 }
