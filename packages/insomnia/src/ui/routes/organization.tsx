@@ -434,12 +434,12 @@ const OrganizationRoute = () => {
       <div className="w-full h-full">
         <div className={`w-full h-full divide-x divide-solid divide-y divide-[--hl-md] ${isScratchPadBannerVisible ? 'grid-template-app-layout-with-banner' : 'grid-template-app-layout'} grid relative bg-[--color-bg]`}>
           <header className="[grid-area:Header] grid grid-cols-3 items-center">
-            <div className="flex items-center">
-              <div className="flex w-[50px] py-2">
+            <div className="flex items-center gap-2">
+              <div className="flex shrink-0 w-[50px] py-2">
                 <InsomniaAILogo />
               </div>
-              {!user ? <GitHubStarsButton /> : null}
               <CommandPalette />
+              {!user ? <GitHubStarsButton /> : null}
             </div>
             <div className="flex place-content-stretch gap-2 flex-nowrap items-center justify-center">
               {workspaceData && isDesign(workspaceData?.activeWorkspace) && (
