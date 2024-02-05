@@ -70,7 +70,7 @@ export async function createHiddenBrowserWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       webSecurity: true,
-      preload: path.join(__dirname, 'renderers/hidden-browser-window/preload-hidden-browser-window.js'),
+      preload: path.join(__dirname, 'renderers/hidden-browser-window/preload.js'),
       spellcheck: false,
     },
   });
