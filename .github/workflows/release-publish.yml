@@ -15,7 +15,7 @@ env:
 
 jobs:
   publish:
-    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch # Check out the release branch
