@@ -196,7 +196,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
                         className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                       />
                     </TextField>
-                    <RadioGroup name="type" defaultValue={project.remoteId ? 'remote' : 'local'} className="flex flex-col gap-2">
+                    <RadioGroup name="type" defaultValue={project.remoteId && isCloudSyncEnabled ? 'remote' : 'local'} className="flex flex-col gap-2">
                       <Label className="text-sm text-[--hl]">
                         Project type
                       </Label>
@@ -204,7 +204,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
                         <Radio
                           isDisabled={!isCloudSyncEnabled}
                           value="remote"
-                          className="data-[selected]:border-[--color-surprise] flex-1 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                          className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
                           <div className='flex items-center gap-2'>
                             <Icon icon="globe" />
