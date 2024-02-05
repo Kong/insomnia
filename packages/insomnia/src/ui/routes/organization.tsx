@@ -439,6 +439,7 @@ const OrganizationRoute = () => {
                 <InsomniaAILogo />
               </div>
               {!user ? <GitHubStarsButton /> : null}
+              <CommandPalette />
             </div>
             <div className="flex place-content-stretch gap-2 flex-nowrap items-center justify-center">
               {workspaceData && isDesign(workspaceData?.activeWorkspace) && (
@@ -471,18 +472,18 @@ const OrganizationRoute = () => {
                   <PresentUsers />
                   <Button
                     aria-label="Invite collaborators"
-                    className="px-4 text-[--color-font-surprise] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    className="px-4 text-[--color-font-surprise] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-2 h-full font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-md hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                     onPress={() => {
                       window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/organizations/${organizationId}/collaborators`);
                     }}
                   >
                     <Icon icon="user-plus" />
                     <span className="truncate">
-                      Share
+                      Invite
                     </span>
                   </Button>
                   <MenuTrigger>
-                    <Button data-testid='user-dropdown' className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                    <Button data-testid='user-dropdown' className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                       <Avatar
                         src={user.picture}
                         alt={user.name}
@@ -770,7 +771,6 @@ const OrganizationRoute = () => {
         </div>
         <Toast />
       </div>
-      {<CommandPalette />}
     </InsomniaEventStreamProvider>
   );
 };
