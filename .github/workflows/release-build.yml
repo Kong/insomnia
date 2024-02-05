@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   build-and-upload-release-artifacts:
-    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
