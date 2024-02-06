@@ -8,9 +8,13 @@ const createHash = ({ value, algorithm, encoding }) => {
 const writeFile = ({ path, contents }) => {
   return window.bridge.fs.writeFile(path, contents);
 };
+const runPreRequestScript = ({ script, context }) => {
+  return window.bridge.runPreRequestScript(script, context);
+};
 const work = {
   createHash,
   writeFile,
+  runPreRequestScript,
 };
 window.bridge.on('new-client', event => {
   const [port] = event.ports;

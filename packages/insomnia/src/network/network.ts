@@ -70,6 +70,9 @@ export const fetchRequestData = async (requestId: string) => {
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
+export const tryToExecutePreRequestScript = async (request: Request) => {
+  return await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request } });
+};
 export const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
   try {
     return await getRenderedRequestAndContext({

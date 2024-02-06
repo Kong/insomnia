@@ -14,6 +14,7 @@ import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/us
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
+import { CodeEditor } from '../codemirror/code-editor';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
@@ -139,6 +140,22 @@ export const RequestPane: FC<Props> = ({
         </ErrorBoundary>
       </PaneHeader>
       <Tabs aria-label="Request pane tabs">
+        <TabItem
+          key="pre-request-script"
+          title={'Pre-request Script'}
+          aria-label={'experimental'}
+        >
+          <CodeEditor
+            id="pre-request-script-editor"
+            showPrettifyButton
+            uniquenessKey={uniqueKey}
+            defaultValue={activeRequest.preRequestScript || ''}
+            onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
+            mode='text/javascript'
+            placeholder="..."
+          />
+
+        </TabItem>
         <TabItem
           key="query"
           title={

@@ -17,6 +17,9 @@ const bridge = {
       };
     },
   },
+  runPreRequestScript: (script, context) => {
+    return context.request;
+  },
 };
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('bridge', bridge);

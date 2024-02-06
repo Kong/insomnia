@@ -25,7 +25,7 @@ import { RequestVersion } from '../../models/request-version';
 import { Response } from '../../models/response';
 import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
-import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
@@ -346,6 +346,7 @@ const writeToDownloadPath = (downloadPathAndName: string, responsePatch: Respons
   });
 
 };
+
 export interface SendActionParams {
   requestId: string;
   shouldPromptForPathAfterResponse?: boolean;
@@ -369,7 +370,8 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   } = await fetchRequestData(requestId);
   try {
     const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
-    const renderedResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
+    const mutatedRequest = await tryToExecutePreRequestScript(req);
+    const renderedResult = await tryToInterpolateRequest(mutatedRequest, environment._id, RENDER_PURPOSE_SEND);
     const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
 
     // TODO: remove this temporary hack to support GraphQL variables in the request body properly

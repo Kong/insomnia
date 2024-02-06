@@ -102,6 +102,22 @@ const main: Window['main'] = {
         });
       });
     },
+    runPreRequestScript: async options => {
+      return new Promise((resolve, reject) => {
+        ipcRenderer.send('request-worker-channel');
+        ipcRenderer.once('provide-worker-channel', event => {
+          const [port] = event.ports;
+          port.onmessage = event => {
+            console.log('received result:', event.data);
+            if (event.data.error) {
+              reject(new Error(event.data.error));
+            }
+            resolve(event.data);
+          };
+          port.postMessage({ ...options, type: 'runPreRequestScript' });
+        });
+      });
+    },
   },
 };
 const dialog: Window['dialog'] = {

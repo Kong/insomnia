@@ -8,6 +8,7 @@ import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
 import * as models from '../../models';
+import { Request } from '../../models/request';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
@@ -51,6 +52,7 @@ export interface MainBridgeAPI {
   hiddenBrowserWindow: {
     writeFile: (options: { path: string; contents: string }) => void;
     createHash: (options: { value: string; algorithm: string; encoding: string }) => Promise<string>;
+    runPreRequestScript: (options: { script: string; context: Record<string, any> }) => Promise<Request>;
   };
 }
 export function registerMainHandlers() {
