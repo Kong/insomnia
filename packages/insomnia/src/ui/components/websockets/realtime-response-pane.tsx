@@ -244,12 +244,12 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
         <TabItem
           key="headers"
           title={
-            <>
-              Headers{' '}
-              {response?.headers.length > 0 && (
-                <span className="bubble">{response.headers.length}</span>
+            <div className='flex items-center gap-2'>
+              Headers
+              {response.headers.length > 0 && (
+                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{response.headers.length}</span>
               )}
-            </>
+            </div>
           }
         >
           <PanelContainer className="pad">
@@ -261,12 +261,12 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
         <TabItem
           key="cookies"
           title={
-            <>
-              Cookies{' '}
-              {cookieHeaders.length ? (
-                <span className="bubble">{cookieHeaders.length}</span>
-              ) : null}
-            </>
+            <div className='flex items-center gap-2'>
+              Cookies
+              {cookieHeaders.length > 0 && (
+                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{cookieHeaders.length}</span>
+              )}
+            </div>
           }
         >
           <PanelContainer className="pad">

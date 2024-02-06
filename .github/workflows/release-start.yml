@@ -102,6 +102,16 @@ jobs:
       - name: Git Commit
         run: git commit -am "Bump app version to ${{ env.RELEASE_VERSION }}"
 
+      - name: Update CHANGELOG
+        id: changelog
+        uses: requarks/changelog-action@v1
+        with:
+          token: ${{ secrets.RELEASE_GH_TOKEN }}
+          tag: ${{ github.ref_name }}
+
+      - name: Git Commit Changelog
+        run: git commit -am "update CHANGELOG.md for ${{ env.RELEASE_VERSION }} [skip ci]"
+
       - name: Git Push changes
         run: |
           remote_repo="https://${GITHUB_ACTOR}:${RELEASE_GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"

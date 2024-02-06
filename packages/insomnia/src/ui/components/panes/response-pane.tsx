@@ -181,12 +181,12 @@ export const ResponsePane: FC<Props> = ({
         <TabItem
           key="headers"
           title={
-            <>
+            <div className='flex items-center gap-2'>
               Headers
               {activeResponse.headers.length > 0 && (
-                <span className="bubble">{activeResponse.headers.length}</span>
+                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{activeResponse.headers.length}</span>
               )}
-            </>
+            </div>
           }
         >
           <PanelContainer className="pad">
@@ -198,12 +198,12 @@ export const ResponsePane: FC<Props> = ({
         <TabItem
           key="cookies"
           title={
-            <>
+            <div className='flex items-center gap-2'>
               Cookies
-              {cookieHeaders.length ? (
-                <span className="bubble">{cookieHeaders.length}</span>
-              ) : null}
-            </>
+              {cookieHeaders.length > 0 && (
+                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{cookieHeaders.length}</span>
+              )}
+            </div>
           }
         >
           <PanelContainer className="pad">

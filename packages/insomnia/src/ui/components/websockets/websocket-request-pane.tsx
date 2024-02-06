@@ -243,6 +243,9 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
     patchRequest(requestId, { pathParameters });
   };
 
+  const parametersCount = pathParameters.length + activeRequest.parameters.filter(p => !p.disabled).length;
+  const headersCount = activeRequest.headers.filter(h => !h.disabled).length;
+
   const upsertPayloadWithMode = async (mode: string) => {
     // @TODO: multiple payloads
     const payload = await models.webSocketPayload.getByParentId(requestId);
@@ -277,7 +280,17 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
         />
       </PaneHeader>
       <Tabs aria-label="Websocket request pane tabs">
-        <TabItem key="query" title="Parameters">
+        <TabItem
+          key="query"
+          title={
+            <div className='flex items-center gap-2'>
+              Parameters
+              {parametersCount > 0 && (
+                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{parametersCount}</span>
+              )}
+            </div>
+          }
+        >
           <div className="grid h-full auto-rows-auto [grid-template-columns:100%] divide-y divide-solid divide-[--hl-md]">
             {disabled && <PaneReadOnlyBanner />}
             <div className='h-full flex flex-col'>
@@ -378,7 +391,17 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             disabled={disabled}
           />
         </TabItem>
-        <TabItem key="headers" title="Headers">
+        <TabItem
+          key="headers"
+          title={
+            <div className='flex items-center gap-2'>
+              Headers{' '}
+              {headersCount > 0 && (
+                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{headersCount}</span>
+              )}
+            </div>
+          }
+        >
           {disabled && <PaneReadOnlyBanner />}
           <RequestHeadersEditor
             key={uniqueKey}

@@ -8,6 +8,7 @@ import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
@@ -20,7 +21,7 @@ import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
 import { useRootLoaderData } from '../../routes/root';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
+import { Icon } from '../icon';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
@@ -568,8 +569,8 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                   }
                 }}
               />) : null}
-            {showFilter && filterHistory?.length ?
-              ((
+            {/* {showFilter && filterHistory?.length ?
+              (
                 <Dropdown
                   aria-label='Filter History'
                   key="history"
@@ -582,7 +583,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                 >
                   {filterHistory.reverse().map(filter => (
                     <DropdownItem
-                      key={filter}
+                      key={JSON.stringify(filter)}
                       aria-label={filter}
                     >
                       <ItemContent
@@ -601,7 +602,50 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                     </DropdownItem>
                   ))}
                 </Dropdown>
-              )) : null}
+              ) : null} */}
+
+            {showFilter && filterHistory?.length && (
+              <MenuTrigger>
+                <Button
+                  aria-label="Filter History"
+                  className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                >
+                  <Icon icon="clock" />
+                </Button>
+                <Popover className="min-w-max">
+                  <Menu
+                    aria-label="Filter history menu"
+                    selectionMode="single"
+                    onAction={key => {
+                      const index = Number(key);
+                      const filter = filterHistory[index];
+                      if (inputRef.current) {
+                        inputRef.current.value = filter;
+                      }
+                      if (updateFilter) {
+                        updateFilter(filter);
+                      }
+                      maybePrettifyAndSetValue(originalCode, false, filter);
+                    }}
+                    items={filterHistory.map((filter, index) => ({
+                      id: filter,
+                      name: filter,
+                      key: index,
+                    }))}
+                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                  >
+                    {item => (
+                      <MenuItem
+                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                        aria-label={item.name}
+                      >
+                        <span>{item.name}</span>
+                      </MenuItem>
+                    )}
+                  </Menu>
+                </Popover>
+              </MenuTrigger>
+            )}
             {showFilter ?
               (<button key="help" className="btn btn--compact" onClick={() => showModal(FilterHelpModal, { isJSON: Boolean(mode?.includes('json')) })}>
                 <i className="fa fa-question-circle" />

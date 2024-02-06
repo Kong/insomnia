@@ -116,7 +116,9 @@ export const RequestPane: FC<Props> = ({
   const onPathParameterChange = (pathParameters: RequestParameter[]) => {
     patchRequest(requestId, { pathParameters });
   };
-  const numHeaders = activeRequest.headers.filter(h => !h.disabled).length;
+
+  const parametersCount = pathParameters.length + activeRequest.parameters.filter(p => !p.disabled).length;
+  const headersCount = activeRequest.headers.filter(h => !h.disabled).length;
   const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
   const contentType =
     getContentTypeFromHeaders(activeRequest.headers) ||
@@ -139,7 +141,14 @@ export const RequestPane: FC<Props> = ({
       <Tabs aria-label="Request pane tabs">
         <TabItem
           key="query"
-          title={'Parameters'}
+          title={
+            <div className='flex items-center gap-2'>
+              Parameters
+              {parametersCount > 0 && (
+                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{parametersCount}</span>
+              )}
+            </div>
+          }
         >
           <div className='h-full flex flex-col'>
             <div className="p-4">
@@ -249,12 +258,12 @@ export const RequestPane: FC<Props> = ({
         <TabItem
           key="headers"
           title={
-            <>
+            <div className='flex items-center gap-2'>
               Headers{' '}
-              {numHeaders > 0 && (
-                <span className="bubble space-left">{numHeaders}</span>
+              {headersCount > 0 && (
+                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{headersCount}</span>
               )}
-            </>
+            </div>
           }
         >
           <HeaderContainer>

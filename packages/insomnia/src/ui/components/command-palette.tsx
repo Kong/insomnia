@@ -1,15 +1,20 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React from 'react';
 import { useState } from 'react';
-import { Collection, ComboBox, Dialog, Header, Input, Label, ListBox, ListBoxItem, Modal, ModalOverlay, Section, Text } from 'react-aria-components';
+import { Button, Collection, ComboBox, Dialog, DialogTrigger, Header, Input, Keyboard, Label, ListBox, ListBoxItem, Modal, ModalOverlay, Section, Text } from 'react-aria-components';
 import { useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
+import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';
+import { fuzzyMatch } from '../../common/misc';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import { isWebSocketRequest } from '../../models/websocket-request';
+import { Workspace } from '../../models/workspace';
 import { scopeToActivity, WorkspaceScope } from '../../models/workspace';
-import { WorkspaceLoaderData } from '../routes/workspace';
+import { ProjectLoaderData } from '../routes/project';
+import { RootLoaderData } from '../routes/root';
+import { Collection as WorkspaceCollection, WorkspaceLoaderData } from '../routes/workspace';
 import { Icon } from './icon';
 import { useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { getMethodShortHand } from './tags/method-tag';
@@ -22,10 +27,17 @@ export const CommandPalette = () => {
     workspaceId,
     requestId,
   } = useParams();
-  const {
-    collection,
-    workspaces,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
+  const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | undefined;
+  const { settings } = useRouteLoaderData('root') as RootLoaderData;
+  let collection: WorkspaceCollection = [];
+  let workspaces: Workspace[] = [];
+  if (workspaceData) {
+    collection = workspaceData.collection;
+    workspaces = workspaceData.workspaces;
+  } else if (projectData) {
+    workspaces = projectData.workspaces.map(workspace => workspace.workspace);
+  }
 
   const navigate = useNavigate();
   useDocBodyKeyboardShortcuts({
@@ -34,6 +46,7 @@ export const CommandPalette = () => {
     },
   });
 
+  const requestSwitchKeyCombination = getPlatformKeyCombinations(settings.hotKeyRegistry.request_quickSwitch)[0];
   const scopeToIconMap: Record<string, IconName> = {
     design: 'file',
     collection: 'bars',
@@ -41,7 +54,15 @@ export const CommandPalette = () => {
   };
 
   return (
-    <ModalOverlay isOpen={isOpen} onOpenChange={setIsOpen} isDismissable className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex pt-20 justify-center bg-black/30">
+    <DialogTrigger onOpenChange={setIsOpen} isOpen={isOpen}>
+      <Button data-testid='quick-search' className="px-4 py-1 h-[30.5px] flex-shrink-0 flex items-center justify-center gap-2 bg-[--hl-xs] aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] ring-inset ring-transparent ring-1 focus:ring-[--hl-md] transition-all text-sm">
+        <Icon icon="search" />
+        Search..
+        {requestSwitchKeyCombination && <Keyboard className='space-x-0.5 items-center font-sans font-normal text-center text-sm shadow-sm bg-[--hl-xs] text-[--hl] rounded-md py-0.5 px-2 inline-block'>
+          {constructKeyCombinationDisplay(requestSwitchKeyCombination, false)}
+        </Keyboard>}
+      </Button>
+      <ModalOverlay isDismissable className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex pt-20 justify-center bg-black/30">
       <Modal className="max-w-2xl h-max w-full rounded-md flex flex-col overflow-hidden border border-solid border-[--hl-sm] max-h-[80vh] bg-[--color-bg] text-[--color-font]">
         <Dialog className="outline-none h-max overflow-hidden flex flex-col">
           {({ close }) => (
@@ -53,10 +74,11 @@ export const CommandPalette = () => {
               menuTrigger='focus'
               shouldFocusWrap
               defaultFilter={(text, filter) => {
-                // Fuzzy search using Regex
-                const fuzzy = filter.split('').join('.*?');
-                const regex = new RegExp(fuzzy, 'i');
-                return regex.test(text);
+                return Boolean(fuzzyMatch(
+                    filter,
+                    text,
+                    { splitSpace: false, loose: true }
+                )?.indexes);
               }}
               onSelectionChange={itemId => {
                 if (!itemId) {
@@ -159,5 +181,6 @@ export const CommandPalette = () => {
         </Dialog>
       </Modal>
     </ModalOverlay>
+    </DialogTrigger>
   );
 };

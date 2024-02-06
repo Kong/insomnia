@@ -1095,7 +1095,7 @@ const ProjectRoute: FC = () => {
                   )}
                 </div>
               </div>}
-              <div className="flex justify-between w-full gap-1 p-[--padding-md]">
+              <div className="flex justify-between w-full gap-2 p-[--padding-md]">
                 <SearchField
                   aria-label="Workspaces filter"
                   className="group relative flex-1"
@@ -1130,7 +1130,7 @@ const ProjectRoute: FC = () => {
                 >
                   <Button
                     aria-label="Select sort order"
-                    className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    className="flex flex-shrink-0 items-center justify-center aspect-square h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   >
                     <Icon icon="sort" />
                   </Button>
@@ -1173,9 +1173,9 @@ const ProjectRoute: FC = () => {
                 <MenuTrigger>
                   <Button
                     aria-label="Create in project"
-                    className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    className="flex items-center justify-center px-4 gap-2 h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   >
-                    <Icon icon="plus-circle" />
+                    <Icon icon="plus-circle" /> Create
                   </Button>
                   <Popover className="min-w-max">
                     <Menu
@@ -1256,7 +1256,7 @@ const ProjectRoute: FC = () => {
                       // hack to workaround gridlist not have access to workspace scope
                       id={item._id + '|' + item.workspace.scope}
                       textValue={item.name}
-                      className="flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-sm hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
+                      className="flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-md hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
                     >
                       <div className="flex gap-2 h-[20px]">
                         <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
@@ -1264,7 +1264,7 @@ const ProjectRoute: FC = () => {
                             <Icon icon={scopeToIconMap[item.workspace.scope]} />
                           </div>
                           <span>
-                            {item.workspace.scope}
+                            {item.workspace.scope === 'design' ? 'Document' : item.workspace.scope === 'collection' ? 'Collection' : item.workspace.scope === 'mock-server' ? 'Mock Server' : 'Unknown'}
                           </span>
                           </div>
                           <span className="flex-1" />

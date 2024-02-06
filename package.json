@@ -27,7 +27,7 @@
     "lint": "npm run lint --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "lint:markdown": "npx markdownlint-cli2 \"**/*.md\" \"#**/node_modules\"",
+    "lint:markdown": "npx markdownlint-cli2 \"**/*.md\" \"#**/node_modules\" \"#**/CHANGELOG.md\"",
     "clean": "git clean -dfX",
     "inso-start": "npm start --workspace=packages/insomnia-inso",
     "inso-package": "npm run build:sr --workspace=packages/insomnia && npm run package --workspace=packages/insomnia-inso",

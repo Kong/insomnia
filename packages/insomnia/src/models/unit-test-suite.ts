@@ -12,6 +12,7 @@ export const canDuplicate = true;
 export const canSync = true;
 export interface BaseUnitTestSuite {
   name: string;
+  metaSortKey: number;
 }
 
 export type UnitTestSuite = BaseModel & BaseUnitTestSuite;
@@ -23,6 +24,7 @@ export const isUnitTestSuite = (model: Pick<BaseModel, 'type'>): model is UnitTe
 export function init() {
   return {
     name: 'My Test',
+    metaSortKey: -1 * Date.now(),
   };
 }
 

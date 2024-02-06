@@ -16,6 +16,7 @@ import { isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
+import { UnitTestSuite } from '../../models/unit-test-suite';
 import { isCollection, scopeToActivity, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
@@ -283,8 +284,10 @@ export const createNewWorkspaceAction: ActionFunction = async ({
 
   const flushId = await database.bufferChanges();
 
+  const workspaceName = name || (scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
+
   const workspace = await models.workspace.create({
-    name,
+    name: workspaceName,
     scope,
     parentId: projectId,
   });
@@ -440,6 +443,8 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
     });
   }
 
+  patch.name = patch.name || workspace.name || (workspace.scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
+
   await models.workspace.update(workspace, patch);
 
   return null;
@@ -524,9 +529,11 @@ export const runAllTestsAction: ActionFunction = async ({
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   invariant(typeof testSuiteId === 'string', 'Test Suite ID is required');
 
-  const unitTests = await database.find<UnitTest>(models.unitTest.type, {
-    parentId: testSuiteId,
-  });
+  const unitTests = await database.find<UnitTest>(
+    models.unitTest.type,
+    { parentId: testSuiteId },
+    { metaSortKey: 1 }
+  );
   invariant(unitTests, 'No unit tests found');
 
   const tests: Test[] = unitTests
@@ -553,23 +560,21 @@ export const runAllTestsAction: ActionFunction = async ({
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
 };
 
-export const renameTestSuiteAction: ActionFunction = async ({ request, params }) => {
+export const updateTestSuiteAction: ActionFunction = async ({ request, params }) => {
   const { workspaceId, projectId, testSuiteId } = params;
   invariant(typeof testSuiteId === 'string', 'Test Suite ID is required');
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   invariant(typeof projectId === 'string', 'Project ID is required');
 
-  const formData = await request.formData();
-  const name = formData.get('name');
-  invariant(typeof name === 'string', 'Name is required');
+  const data = await request.json() as Partial<UnitTestSuite>;
 
-  const unitTestSuite = await database.getWhere(models.unitTestSuite.type, {
+  const unitTestSuite = await database.getWhere<UnitTestSuite>(models.unitTestSuite.type, {
     _id: testSuiteId,
   });
 
   invariant(unitTestSuite, 'Test Suite not found');
 
-  await models.unitTestSuite.update(unitTestSuite, { name });
+  await models.unitTestSuite.update(unitTestSuite, data);
 
   return null;
 };
@@ -613,24 +618,14 @@ export const deleteTestAction: ActionFunction = async ({ params }) => {
 
 export const updateTestAction: ActionFunction = async ({ request, params }) => {
   const { testId } = params;
-  const formData = await request.formData();
-  invariant(typeof testId === 'string', 'Test ID is required');
-  const code = formData.get('code');
-  invariant(typeof code === 'string', 'Code is required');
-  const name = formData.get('name');
-  invariant(typeof name === 'string', 'Name is required');
-  const requestId = formData.get('requestId');
-
-  if (requestId) {
-    invariant(typeof requestId === 'string', 'Request ID is required');
-  }
+  const data = await request.json() as Partial<UnitTest>;
 
   const unitTest = await database.getWhere<UnitTest>(models.unitTest.type, {
     _id: testId,
   });
   invariant(unitTest, 'Test not found');
 
-  await models.unitTest.update(unitTest, { name, code, requestId: requestId || null });
+  await models.unitTest.update(unitTest, data);
 
   return null;
 };

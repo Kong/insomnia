@@ -7,6 +7,8 @@ import { canSync } from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { Environment } from '../../models/environment';
 import { GrpcRequest } from '../../models/grpc-request';
+import { MockRoute } from '../../models/mock-route';
+import { MockServer } from '../../models/mock-server';
 import { Request } from '../../models/request';
 import { RequestGroup } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
@@ -33,6 +35,8 @@ async function getSyncItems({
     | RequestGroup
     | UnitTestSuite
     | UnitTest
+    | MockServer
+    | MockRoute
   )[] = [];
   const activeWorkspace = await models.workspace.getById(workspaceId);
   invariant(activeWorkspace, 'Workspace could not be found');
@@ -54,12 +58,12 @@ async function getSyncItems({
   const wsReqs = await database.find(models.webSocketRequest.type, { parentId: { $in: listOfParentIds } });
   const allRequests = [...reqs, ...reqGroups, ...grpcReqs, ...wsReqs] as (Request | RequestGroup | GrpcRequest | WebSocketRequest)[];
   const testSuites = await models.unitTestSuite.findByParentId(workspaceId);
-  const tests = await database.find(models.unitTest.type, { parentId: { $in: testSuites.map(t => t._id) } });
+  const tests = await database.find<UnitTest>(models.unitTest.type, { parentId: { $in: testSuites.map(t => t._id) } });
 
   const mockServer = await models.mockServer.getByParentId(workspaceId);
   if (mockServer) {
     syncItemsList.push(mockServer);
-    const mockRoutes = await database.find(models.mockRoute.type, { parentId: mockServer._id });
+    const mockRoutes = await database.find<MockRoute>(models.mockRoute.type, { parentId: mockServer._id });
     mockRoutes.map(m => syncItemsList.push(m));
   }
 
@@ -346,7 +350,7 @@ export const createBranchAction: ActionFunction = async ({ request, params }) =>
 };
 
 export const deleteBranchAction: ActionFunction = async ({ params, request }) => {
-  const { workspaceId } = params;
+  const { organizationId, projectId, workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
   const formData = await request.formData();
   const branch = formData.get('branch');
@@ -369,11 +373,11 @@ export const deleteBranchAction: ActionFunction = async ({ params, request }) =>
     };
   }
 
-  return null;
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
 };
 
 export const pullFromRemoteAction: ActionFunction = async ({ params }) => {
-  const { projectId, workspaceId } = params;
+  const { organizationId, projectId, workspaceId } = params;
   invariant(typeof projectId === 'string', 'Project Id is required');
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
   const project = await models.project.getById(projectId);
@@ -393,7 +397,7 @@ export const pullFromRemoteAction: ActionFunction = async ({ params }) => {
     };
   }
 
-  return null;
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
 };
 
 export const fetchRemoteBranchAction: ActionFunction = async ({ request, params }) => {
@@ -456,7 +460,7 @@ export const pushToRemoteAction: ActionFunction = async ({ params }) => {
 };
 
 export const rollbackChangesAction: ActionFunction = async ({ params }) => {
-  const { workspaceId } = params;
+  const { organizationId, projectId, workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
   try {
     const vcs = VCSInstance();
@@ -464,17 +468,18 @@ export const rollbackChangesAction: ActionFunction = async ({ params }) => {
     const delta = await vcs.rollbackToLatest(syncItems);
     await database.batchModifyDocs(delta as unknown as Operation);
     delete remoteCompareCache[workspaceId];
-    return {};
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while rolling back changes.';
     return {
       error: errorMessage,
     };
   }
+
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
 };
 
 export const restoreChangesAction: ActionFunction = async ({ request, params }) => {
-  const { workspaceId } = params;
+  const { organizationId, projectId, workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
   const formData = await request.formData();
   const id = formData.get('id');
@@ -492,7 +497,7 @@ export const restoreChangesAction: ActionFunction = async ({ request, params }) 
     };
   }
 
-  return null;
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
 };
 
 export const createSnapshotAction: ActionFunction = async ({ request, params }) => {

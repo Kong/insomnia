@@ -31,7 +31,7 @@ import { pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-proj
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { invariant } from '../../utils/invariant';
 
-type Collection = Child[];
+export type Collection = Child[];
 
 export interface WorkspaceLoaderData {
   workspaces: Workspace[];

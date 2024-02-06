@@ -85,7 +85,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
   }[] = [{
     id: 'shared',
     name: 'Shared environment',
-    icon: 'refresh',
+    icon: 'globe-americas',
     action: async () => {
       createEnvironmentFetcher.submit({
         isPrivate: false,
@@ -99,7 +99,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
     }, {
         id: 'private',
         name: 'Private environment',
-        icon: 'lock',
+    icon: 'laptop-code',
         action: async () => {
           createEnvironmentFetcher.submit({
             isPrivate: true,
@@ -246,8 +246,9 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                           <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                           <Icon
                             icon={
-                              item.parentId === workspaceId ? 'refresh' : item.isPrivate ? 'lock' : 'refresh'
+                              item.parentId === workspaceId ? 'globe-americas' : item.isPrivate ? 'laptop-code' : 'globe-americas'
                             }
+                            className='w-5'
                             style={{
                               color: item.color || undefined,
                             }}
@@ -301,7 +302,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                                     className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                                     aria-label={item.name}
                                   >
-                                    <Icon icon={item.icon} />
+                                    <Icon className='w-5' icon={item.icon} />
                                     <span>{item.name}</span>
                                   </ListBoxItem>
                                 )}
@@ -336,7 +337,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                                       className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                                       aria-label={item.name}
                                     >
-                                      <Icon icon={item.icon} />
+                                      <Icon className='w-5' icon={item.icon} />
                                       <span>{item.name}</span>
                                     </ListBoxItem>
                                   )}
@@ -352,7 +353,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                 <div className='flex-1 flex flex-col divide-solid divide-y divide-[--hl-md] overflow-hidden'>
                   <div className='flex items-center justify-between gap-2 w-full overflow-hidden'>
                     <Heading className='flex items-center gap-2 text-lg py-2 px-4 overflow-hidden'>
-                      <Icon className='w-4' icon={selectedEnvironment?.isPrivate ? 'lock' : 'refresh'} />
+                      <Icon className='w-4' icon={selectedEnvironment?.isPrivate ? 'laptop-code' : 'globe-americas'} />
                       <EditableInput
                         value={selectedEnvironment?.name || ''}
                         name="name"

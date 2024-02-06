@@ -178,7 +178,7 @@ const Onboarding = () => {
             <InsomniaLogo className="transform translate-x-[-50%] translate-y-[-50%] absolute top-0 left-1/2 w-16 h-16" />
             <div className="text-[--color-font] flex flex-col gap-6">
               <h1 className="text-xl text-center">
-                🚀 Welcome to Insomnia 8.0!
+                🚀 Welcome to Insomnia 8!
               </h1>
               <div>
                 <p>
