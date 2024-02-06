@@ -22,7 +22,7 @@ window.bridge.on('new-client', async event => {
   port.onmessage = async event => {
     try {
       invariant(event.data.type, 'Missing work type');
-      const workType: 'createHash' | 'writeFile' = event.data.type;
+      const workType: 'createHash' | 'writeFile' | 'runPreRequestScript' = event.data.type;
       invariant(work[workType], `Unknown work type ${workType}`);
       const result = await work[workType](event.data);
       console.log('got', { input: event.data, result });

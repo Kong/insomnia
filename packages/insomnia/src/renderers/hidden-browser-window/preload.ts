@@ -18,20 +18,25 @@ const bridge = {
       };
     },
   },
-  runPreRequestScript: async (script, context) => {
-    // TODO: return error here and show in timeline
+  runPreRequestScript: async (script, data) => {
+  // TODO: return error here and/or write to timeline file
     console.log(script);
+    const insomnia = {
+      request: {
+        addHeader: (v: string) => data.request.headers.push({ name: v.split(':')[0], value: v.split(':')[1] }),
+      },
+    };
     const AsyncFunction = (async () => { }).constructor;
     const executeScript = AsyncFunction(
       'insomnia',
-      // if possible, avoid adding code to the following part
       `
                         const $ = insomnia, pm = insomnia;
                         ${script};
                         return insomnia;
                     `
     );
-    return await executeScript(context);
+    await executeScript(insomnia);
+    return data;
   },
 };
 if (process.contextIsolated) {
