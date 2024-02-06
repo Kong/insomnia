@@ -16,13 +16,16 @@ window.bridge.on('new-client', event => {
   const [port] = event.ports;
   console.log('opened port to insomnia renderer');
   port.onmessage = event => {
-    // The event data can be any serializable object (and the event could even
-    // carry other MessagePorts with it!)
-    invariant(event.data.type, 'Missing work type');
-    const workType = event.data.type;
-    invariant(work[workType], `Unknown work type ${workType}`);
-    const result = work[workType](event.data.options);
-    console.log('got', event.data, result);
-    port.postMessage(result);
+    try {
+      invariant(event.data.type, 'Missing work type');
+      const workType: 'createHash' | 'writeFile' = event.data.type;
+      invariant(work[workType], `Unknown work type ${workType}`);
+      const result = work[workType](event.data);
+      console.log('got', event.data, result);
+      port.postMessage(result);
+    } catch (err) {
+      console.error('error', err);
+      port.postMessage({ error: err.message });
+    }
   };
 });
