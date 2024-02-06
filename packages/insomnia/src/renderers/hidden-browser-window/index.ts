@@ -1,11 +1,16 @@
-// import crypto from 'crypto';
+import { invariant } from '../../utils/invariant';
 
-const doWork = options => {
-  return options * 2;
-// const { value, algorithm, encoding } = options;
-// const hash = crypto.createHash(algorithm || 'md5');
-// hash.update(value || '', 'utf8');
-// return hash.digest(encoding || 'hex');
+const createHash = ({ value, algorithm, encoding }) => {
+  return window.bridge.crypto.createHash(algorithm || 'md5')
+    .update(value || '', 'utf8')
+    .digest(encoding || 'hex');
+};
+const writeFile = ({ path, contents }) => {
+  return window.bridge.fs.writeFile(path, contents);
+};
+const work = {
+  createHash,
+  writeFile,
 };
 window.bridge.on('new-client', event => {
   const [port] = event.ports;
@@ -13,7 +18,10 @@ window.bridge.on('new-client', event => {
   port.onmessage = event => {
     // The event data can be any serializable object (and the event could even
     // carry other MessagePorts with it!)
-    const result = doWork(event.data);
+    invariant(event.data.type, 'Missing work type');
+    const workType = event.data.type;
+    invariant(work[workType], `Unknown work type ${workType}`);
+    const result = work[workType](event.data.options);
     console.log('got', event.data, result);
     port.postMessage(result);
   };

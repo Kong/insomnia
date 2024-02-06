@@ -1,9 +1,21 @@
 const { ipcRenderer, contextBridge } = require('electron');
-
 const bridge = {
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
+  },
+  crypto: {
+    createHash: algorithm => {
+      return {
+        update: (data, inputEncoding) => {
+          return {
+            digest: outputEncoding => {
+              return require('crypto').createHash(algorithm).update(data, inputEncoding).digest(outputEncoding);
+            },
+          };
+        },
+      };
+    },
   },
 };
 if (process.contextIsolated) {

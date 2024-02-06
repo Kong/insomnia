@@ -72,7 +72,11 @@ export default async function build(options: Options) {
     ],
   });
 
-  return Promise.all([main, preload, hiddenBrowserWindow]);
+  return Promise.all([
+    main,
+    preload,
+    hiddenBrowserWindow,
+  ]);
 }
 
 // Build if ran as a cli script

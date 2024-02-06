@@ -49,8 +49,8 @@ export interface MainBridgeAPI {
     };
   };
   hiddenBrowserWindow: {
-    doSomething: (value: string) => void;
-    getHash: (options: { title: string }) => Promise<string>;
+    writeFile: (options: { path: string; contents: string }) => void;
+    createHash: (options: { value: string; algorithm: string; encoding: string }) => Promise<string>;
   };
 }
 export function registerMainHandlers() {

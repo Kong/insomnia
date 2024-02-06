@@ -70,7 +70,7 @@ const main: Window['main'] = {
     },
   },
   hiddenBrowserWindow: {
-    getHash: async options => {
+    createHash: async options => {
       return new Promise(resolve => {
         ipcRenderer.send('request-worker-channel');
         ipcRenderer.once('provide-worker-channel', event => {
@@ -79,11 +79,11 @@ const main: Window['main'] = {
             console.log('received result:', event.data);
             resolve(event.data);
           };
-          port.postMessage(options);
+          port.postMessage({ ...options, type: 'createHash' });
         });
       });
     },
-    doSomething: async value => {
+    writeFile: async options => {
       return new Promise(resolve => {
         ipcRenderer.send('request-worker-channel');
         ipcRenderer.once('provide-worker-channel', event => {
@@ -92,7 +92,7 @@ const main: Window['main'] = {
             console.log('received result:', event.data);
             resolve(event.data);
           };
-          port.postMessage(value);
+          port.postMessage({ ...options, type: 'writeFile' });
         });
       });
     },

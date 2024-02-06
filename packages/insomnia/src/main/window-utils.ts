@@ -72,7 +72,6 @@ export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow
     show: true,
     title: 'HiddenBrowserWindow',
     webPreferences: {
-      sandbox: true,
       contextIsolation: false,
       nodeIntegration: true,
       webSecurity: true,
