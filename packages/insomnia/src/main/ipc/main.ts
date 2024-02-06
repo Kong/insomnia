@@ -52,7 +52,7 @@ export interface MainBridgeAPI {
   hiddenBrowserWindow: {
     writeFile: (options: { path: string; contents: string }) => void;
     createHash: (options: { value: string; algorithm: string; encoding: string }) => Promise<string>;
-    runPreRequestScript: (options: { script: string; context: Record<string, any> }) => Promise<Request>;
+    runPreRequestScript: (options: { script: string; context: Record<string, any> }) => Promise<{ request: Request }>;
   };
 }
 export function registerMainHandlers() {

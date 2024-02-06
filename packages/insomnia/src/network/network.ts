@@ -71,7 +71,8 @@ export const fetchRequestData = async (requestId: string) => {
 };
 
 export const tryToExecutePreRequestScript = async (request: Request) => {
-  return await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request } });
+  const context = await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request } });
+  return context.request;
 };
 export const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
   try {

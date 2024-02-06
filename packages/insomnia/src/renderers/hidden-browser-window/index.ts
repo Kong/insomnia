@@ -16,16 +16,16 @@ const work = {
   writeFile,
   runPreRequestScript,
 };
-window.bridge.on('new-client', event => {
+window.bridge.on('new-client', async event => {
   const [port] = event.ports;
   console.log('opened port to insomnia renderer');
-  port.onmessage = event => {
+  port.onmessage = async event => {
     try {
       invariant(event.data.type, 'Missing work type');
       const workType: 'createHash' | 'writeFile' = event.data.type;
       invariant(work[workType], `Unknown work type ${workType}`);
-      const result = work[workType](event.data);
-      console.log('got', event.data, result);
+      const result = await work[workType](event.data);
+      console.log('got', { input: event.data, result });
       port.postMessage(result);
     } catch (err) {
       console.error('error', err);
