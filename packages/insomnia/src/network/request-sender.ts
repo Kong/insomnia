@@ -6,6 +6,7 @@ import { extension as mimeExtension } from 'mime-types';
 import { v4 as uuidv4 } from 'uuid';
 
 import { init as initClientCertificate } from '../../src/models/client-certificate';
+import { CookieJar } from '../../src/models/cookie-jar';
 import { transformToPreRequestAuth } from '../../src/renderers/hidden-browser-window/sdk-objects/send-req';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { getContentDispositionHeader } from '../common/misc';
@@ -39,6 +40,7 @@ export class RequestSender {
     private settings: Settings;
     private clientCertificates: ClientCertificate[];
     private caCert: CaCertificate | null;
+    private cookieJar: CookieJar | null;
     private preRequestScript: string;
 
     private timeline: ResponseTimelineEntry[];
@@ -51,6 +53,7 @@ export class RequestSender {
         settings: Settings,
         clientCertificates: ClientCertificate[],
         caCert: CaCertificate | null,
+        cookieJar: CookieJar | null,
         preRequestScript: string,
     ) {
         this.request = req;
@@ -61,6 +64,7 @@ export class RequestSender {
         this.clientCertificates = clientCertificates;
         this.caCert = caCert;
         this.preRequestScript = preRequestScript;
+        this.cookieJar = cookieJar;
         this.request.preRequestScript = ''; // avoid rendering error and the script is already saved
 
         this.timeline = [];
@@ -215,6 +219,7 @@ export class RequestSender {
             this.request,
             this.settings,
             this.clientCertificates,
+            this.cookieJar,
         );
     };
 

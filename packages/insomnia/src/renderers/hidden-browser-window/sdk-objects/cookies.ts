@@ -1,5 +1,6 @@
-import { Cookie as ToughCookie } from 'tough-cookie';
+import { Cookie as ToughCookie, CookieJar as ToughCookieJar } from 'tough-cookie';
 
+import { Cookie as InsomniaCookie, CookieJar as InsomniaCookieJar } from '../../../../src/models/cookie-jar';
 import { Property, PropertyList } from './base';
 
 export interface CookieOptions {
@@ -144,5 +145,151 @@ export class CookieList extends PropertyList<Cookie> {
 
     static isCookieList(obj: object) {
         return '_kind' in obj && obj._kind === 'CookieList';
+    }
+}
+
+export class CookieObject extends CookieList {
+    private cookieJar: CookieJar;
+
+    constructor(parent: CookieList | undefined, cookieJar: InsomniaCookieJar | null) {
+        const cookies = cookieJar
+            ? cookieJar.cookies.map((cookie: InsomniaCookie): Cookie => {
+                let expires: string | Date = '';
+                if (cookie.expires) {
+                    if (typeof cookie.expires === 'number') {
+                        expires = new Date(cookie.expires);
+                    } else {
+                        expires = cookie.expires;
+                    }
+                }
+
+                return new Cookie({
+                    key: cookie.key,
+                    value: cookie.value,
+                    expires: expires,
+                    maxAge: undefined, // not supported in Insomnia
+                    domain: cookie.domain,
+                    path: cookie.path,
+                    secure: cookie.secure,
+                    httpOnly: cookie.httpOnly,
+                    hostOnly: cookie.hostOnly,
+                    session: undefined, // not supported in Insomnia
+                    extensions: undefined, // TODO: its format from Insomnia is unknown
+                });
+            })
+            : [];
+        const scriptCookieJar = cookieJar ? new CookieJar(cookieJar.name, cookies) : new CookieJar('', []);
+
+        super(parent, cookies);
+        this.cookieJar = scriptCookieJar;
+    }
+
+    jar() {
+        return this.cookieJar;
+    }
+}
+
+// TODO: current it only works for only 1 domain (url)
+// until Insomnia supports a whitelist for accessing cookies from script
+export class CookieJar {
+    private jar: ToughCookieJar;
+    private url: string;
+
+    constructor(url: string, cookies?: Cookie[]) {
+        this.jar = new ToughCookieJar();
+        this.url = url;
+
+        if (cookies) {
+            cookies.forEach(cookie => {
+                this.jar.setCookieSync(
+                    new ToughCookie({ key: cookie.name, value: cookie.valueOf() }),
+                    url,
+                );
+            });
+        }
+    }
+
+    set(url: string, name: string, value: string, cb: (error?: Error, cookie?: Cookie) => void) {
+        try {
+            const cookie = new ToughCookie({ key: name, value });
+            this.jar.setCookieSync(cookie, url);
+            cb(undefined, new Cookie({ key: name, value }));
+        } catch (e) {
+            cb(e, undefined);
+        }
+    }
+
+    // TODO: create a better method for setting cookie, or overload the above method
+    // set(
+    //     url: string,
+    //     info: { name: string; value: string; httpOnly: boolean },
+    //     cb: (error?: Error, cookie?: Cookie) => void,
+    // ) {
+    //     try {
+    //         const cookie = new ToughCookie({ key: info.name, value: info.value, httpOnly: info.httpOnly });
+    //         this.jar.setCookieSync(cookie, url, { http: info.httpOnly });
+    //         cb(undefined, new Cookie({ key: info.name, value: info.value, httpOnly: info.httpOnly }));
+    //     } catch (e) {
+    //         cb(e, undefined);
+    //     }
+    // }
+
+    get(url: string, name: string, cb: (error?: Error, cookie?: Cookie) => void) {
+        const cookie = this.jar.getCookiesSync(url)
+            .find((cookie: ToughCookie) => {
+                return cookie.key === name;
+            });
+
+        cb(
+            undefined,
+            cookie ? new Cookie({ key: cookie?.key, value: cookie.value }) : undefined
+        );
+    }
+
+    getAll(url: string, cb: (error?: Error, cookies?: Cookie[]) => void) {
+        const cookies = this.jar.getCookiesSync(url)
+            .map((cookie: ToughCookie) => {
+                return new Cookie({ key: cookie?.key, value: cookie.value });
+            });
+
+        cb(undefined, cookies);
+    }
+
+    unset(url: string, name: string, cb: (error?: Error | null) => void) {
+        url = url.indexOf('://') < 0 ? 'http://' + url : url;
+        const urlObj = new URL(url);
+
+        this.jar.store.removeCookie(
+            urlObj.host,
+            urlObj.pathname,
+            name,
+            cb,
+        );
+    }
+
+    clear(url: string, cb: (error?: Error | null) => void) {
+        url = url.indexOf('://') < 0 ? 'http://' + url : url;
+        const urlObj = new URL(url);
+
+        this.jar.store.removeCookies(
+            urlObj.host,
+            urlObj.pathname,
+            cb,
+        );
+    }
+
+    toInsomniaCookieJar() {
+        return new Promise((resolve, reject) => {
+            this.jar.getCookies(this.url, (err, cookies) => {
+                if (err) {
+                    reject(err);
+                }
+
+                resolve({
+                    name: this.url,
+                    cookies,
+                });
+            });
+        });
     }
 }

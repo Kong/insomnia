@@ -416,10 +416,9 @@ export const sendAction2: ActionFunction = async ({ request, params }) => {
     workspace,
   } = await fetchRequestData(requestId);
   const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
-
-  const baseEnvironment = await models.environment.getOrCreateForParentId(
-    workspace ? workspace._id : 'n/a',
-  );
+  const parentId = workspace ? workspace._id : 'n/a';
+  const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
+  const baseEnvironment = await models.environment.getOrCreateForParentId(parentId);
 
   const sender = new RequestSender(
     req,
@@ -429,6 +428,7 @@ export const sendAction2: ActionFunction = async ({ request, params }) => {
     settings,
     clientCertificates,
     caCert,
+    cookieJar,
     req.preRequestScript || '',
   );
 

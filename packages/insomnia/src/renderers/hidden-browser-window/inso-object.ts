@@ -1,6 +1,8 @@
+import { CookieJar as InsomniaCookieJar } from '../../../src/models/cookie-jar';
 import { AuthOptions } from './sdk-objects/auth';
 import { CertificateOptions } from './sdk-objects/certificates';
 import { Settings } from './sdk-objects/common';
+import { CookieObject, CookieJar } from './sdk-objects/cookies';
 import { getIntepolator } from './sdk-objects/intepolator';
 import { ProxyConfigOptions } from './sdk-objects/proxy-configs';
 import { Request, RequestBodyOptions, RequestOptions, Response } from './sdk-objects/req-resp';
@@ -168,6 +170,7 @@ export class InsomniaObject {
     public variables: Variables;
     public info: RequestInfo;
     public request: Request;
+    public cookies: CookieObject;
 
     private httpRequestSender: HttpSendRequest;
 
@@ -182,6 +185,7 @@ export class InsomniaObject {
         },
         request: Request,
         settings: Settings,
+        cookieObject: CookieObject,
     ) {
         this.globals = rawObj.globals;
         this.collectionVariables = rawObj.collectionVariables;
@@ -189,6 +193,7 @@ export class InsomniaObject {
         this.iterationData = rawObj.iterationData;
         this.variables = rawObj.variables;
         this.info = rawObj.requestInfo;
+        this.cookies = cookieObject;
 
         this.request = request;
         this.httpRequestSender = new HttpSendRequest(settings);
@@ -201,7 +206,7 @@ export class InsomniaObject {
         return this.httpRequestSender.sendRequest(request, cb);
     }
 
-    toObject = () => {
+    toObject = async () => {
         return {
             globals: this.globals.toObject(),
             variables: this.variables.toObject(),
@@ -210,6 +215,7 @@ export class InsomniaObject {
             iterationData: this.iterationData.toObject(),
             info: this.info.toObject(),
             request: this.request.toObject(),
+            cookieJar: await this.cookies.jar().toInsomniaCookieJar(),
         };
     };
 }
@@ -229,9 +235,15 @@ export interface RawObject {
         proxy?: ProxyConfigOptions;
         certificate: CertificateOptions;
     };
+    cookies: CookieObject;
 }
 
-export function initGlobalObject(rawObj: RawObject, requestObj: RequestOptions, settings: Settings) {
+export function initGlobalObject(
+    rawObj: RawObject,
+    requestObj: RequestOptions,
+    settings: Settings,
+    cookieJar: InsomniaCookieJar | null,
+) {
     const globals = new Environment(rawObj.globals);
     const environment = new Environment(rawObj.environment);
     const collectionVariables = new Environment(rawObj.collectionVariables);
@@ -239,6 +251,7 @@ export function initGlobalObject(rawObj: RawObject, requestObj: RequestOptions, 
     const local = new Environment({});
     const requestInfo = new RequestInfo(rawObj.requestInfo || {});
     const request = new Request(requestObj);
+    const cookieObject = new CookieObject(undefined, cookieJar);
 
     const variables = new Variables({
         globals,
@@ -259,5 +272,6 @@ export function initGlobalObject(rawObj: RawObject, requestObj: RequestOptions, 
         },
         request,
         settings,
+        cookieObject,
     );
 };

@@ -1,3 +1,4 @@
+import { CookieJar } from '../../src/models/cookie-jar';
 import { Settings } from '../../src/models/settings';
 import { Row } from '../../src/renderers/hidden-browser-window/sdk-objects/console';
 import { RequestBodyMode } from '../../src/renderers/hidden-browser-window/sdk-objects/req-resp';
@@ -168,6 +169,7 @@ class WindowMessageHandler {
         request: Request,
         settings: Settings,
         clientCertificates: ClientCertificate[],
+        cookieJar: CookieJar | null,
     ): Promise<ScriptExecutionResult | undefined> => {
         if (!this.hiddenBrowserWindowPort) {
             console.error(logPrefix, 'hidden browser window port is not inited, restarting');
@@ -251,6 +253,7 @@ class WindowMessageHandler {
                 context,
                 requestObj,
                 settings,
+                cookieJar,
             },
         });
 

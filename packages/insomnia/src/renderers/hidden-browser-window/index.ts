@@ -21,7 +21,8 @@ async function init() {
                 const insomniaObject = initGlobalObject(
                     rawObject,
                     ev.data.options.requestObj,
-                    ev.data.options.settings
+                    ev.data.options.settings,
+                    ev.data.options.cookieJar,
                 );
                 const myConsole = new Console();
 
@@ -60,7 +61,7 @@ async function init() {
                         );
                         clearTimeout(timeoutChecker);
                         if (insoObject instanceof InsomniaObject) {
-                            resolve(insoObject.toObject());
+                            resolve(await insoObject.toObject());
                         } else {
                             throw { message: ErrorInvalidResult };
                         }
