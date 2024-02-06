@@ -7,6 +7,8 @@ import { canSync } from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { Environment } from '../../models/environment';
 import { GrpcRequest } from '../../models/grpc-request';
+import { MockRoute } from '../../models/mock-route';
+import { MockServer } from '../../models/mock-server';
 import { Request } from '../../models/request';
 import { RequestGroup } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
@@ -33,6 +35,8 @@ async function getSyncItems({
     | RequestGroup
     | UnitTestSuite
     | UnitTest
+    | MockServer
+    | MockRoute
   )[] = [];
   const activeWorkspace = await models.workspace.getById(workspaceId);
   invariant(activeWorkspace, 'Workspace could not be found');
@@ -59,7 +63,7 @@ async function getSyncItems({
   const mockServer = await models.mockServer.getByParentId(workspaceId);
   if (mockServer) {
     syncItemsList.push(mockServer);
-    const mockRoutes = await database.find(models.mockRoute.type, { parentId: mockServer._id });
+    const mockRoutes = await database.find<MockRoute>(models.mockRoute.type, { parentId: mockServer._id });
     mockRoutes.map(m => syncItemsList.push(m));
   }
 
