@@ -70,22 +70,6 @@ const main: Window['main'] = {
     },
   },
   hiddenBrowserWindow: {
-    createHash: options => {
-      return new Promise((resolve, reject) => {
-        ipcRenderer.send('request-worker-channel');
-        ipcRenderer.once('provide-worker-channel', event => {
-          const [port] = event.ports;
-          port.onmessage = event => {
-            console.log('received result:', event.data);
-            if (event.data.error) {
-              reject(new Error(event.data.error));
-            }
-            resolve(event.data);
-          };
-          port.postMessage({ ...options, type: 'createHash' });
-        });
-      });
-    },
     runPreRequestScript: options => {
       return new Promise((resolve, reject) => {
         ipcRenderer.send('request-worker-channel');

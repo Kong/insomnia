@@ -69,7 +69,7 @@ export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow
     });
   }
   const hiddenBrowserWindow = new BrowserWindow({
-    show: true,
+    show: process.env.NODE_ENV === 'development',
     title: 'HiddenBrowserWindow',
     webPreferences: {
       contextIsolation: false,
