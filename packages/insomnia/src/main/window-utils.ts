@@ -98,14 +98,9 @@ export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow
 
   invariant(mainWindow, 'mainWindow is not defined');
   mainWindow.webContents.mainFrame.ipc.on('request-worker-channel', event => {
-    // Create a new channel ...
     const { port1, port2 } = new MessageChannelMain();
-    // ... send one end to the worker ...
-    hiddenBrowserWindow.webContents.postMessage('new-client', { message: 'hello' }, [port1]);
-    // ... and the other end to the main window.
-    event.senderFrame.postMessage('provide-worker-channel', { message: 'hello' }, [port2]);
-    // Now the main window and the worker can communicate with each other
-    // without going through the main process!
+    hiddenBrowserWindow.webContents.postMessage('new-client', null, [port1]);
+    event.senderFrame.postMessage('provide-worker-channel', null, [port2]);
   });
   return hiddenBrowserWindow;
 }

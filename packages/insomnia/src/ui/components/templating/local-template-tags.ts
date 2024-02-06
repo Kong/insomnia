@@ -232,9 +232,6 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           throw new Error(`Cannot hash value of type "${valueType}"`);
         }
         return await window.main.hiddenBrowserWindow.getHash({ value, algorithm, encoding });
-        // const hash = crypto.createHash(algorithm);
-        // hash.update(value || '', 'utf8');
-        // return hash.digest(encoding);
       },
     },
   },
@@ -433,11 +430,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         // We do this because we may render the prompt multiple times per request.
         // We cache it under the requestId so it only prompts once. We then clear
         // the cache in a response hook when the request is sent.
-        const titleHash = await window.main.hiddenBrowserWindow.getHash({ title });
-        // const titleHash = crypto
-        //   .createHash('md5')
-        //   .update(title)
-        //   .digest('hex');
+        const titleHash = await window.main.hiddenBrowserWindow.getHash({ value: title, algorithm: 'md5', encoding: 'hex' });
         const storageKey = explicitStorageKey || `${context.meta.requestId}.${titleHash}`;
         const cachedValue = await context.store.getItem(storageKey);
 
