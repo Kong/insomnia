@@ -1,7 +1,7 @@
 import { ControlOperator, parse, ParseEntry } from 'shell-quote';
 import { URL } from 'url';
 
-import { Converter, ImportRequest, Parameter, PostData } from '../entities';
+import { Converter, ImportRequest, Parameter } from '../entities';
 
 export const id = 'curl';
 export const name = 'cURL';
@@ -200,25 +200,31 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   });
 
   /// /////// Body //////////
-  const body: PostData = mimeType ? { mimeType } : {};
+  let body = {};
   const bodyAsGET = getPairValue(pairsByName, false, ['G', 'get']);
 
   if (dataParameters.length !== 0 && bodyAsGET) {
     parameters.push(...dataParameters);
   } else if (dataParameters && mimeType === 'application/x-www-form-urlencoded') {
-    body.params = dataParameters.map(parameter => {
-      return {
+    body = {
+      mimeType,
+      params: dataParameters.map(parameter => ({
         ...parameter,
         name: decodeURIComponent(parameter.name || ''),
         value: decodeURIComponent(parameter.value || ''),
-      };
-    });
+      })),
+    };
+
   } else if (dataParameters.length !== 0) {
-    body.text = dataParameters.map(parameter => `${parameter.name}${parameter.value}`).join('&');
-    body.mimeType = mimeType || '';
+    body = {
+      text: dataParameters.map(parameter => `${parameter.name}${parameter.value}`).join('&'),
+      mimeType: mimeType || '',
+    };
   } else if (formDataParams.length) {
-    body.params = formDataParams;
-    body.mimeType = mimeType || 'multipart/form-data';
+    body = {
+      params: formDataParams,
+      mimeType: mimeType || 'multipart/form-data',
+    };
   }
 
   /// /////// Method //////////
@@ -227,8 +233,8 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     'request',
   ]).toUpperCase();
 
-  if (method === '__UNSET__') {
-    method = body.text || body.params ? 'POST' : 'GET';
+  if (method === '__UNSET__' && body) {
+    method = ('text' in body || 'params' in body) ? 'POST' : 'GET';
   }
 
   const count = requestCount++;

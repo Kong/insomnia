@@ -1,12 +1,7 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- this is a temporary hold-me-over while we get the types into better condition
-export type UNKNOWN = any;
-
-export interface UNKNOWN_OBJ {
-  [key: string]: UNKNOWN;
-}
+import * as Har from 'har-format';
 
 export interface Comment {
-  comment?: UNKNOWN;
+  comment?: string;
 }
 
 export type Variable = `{{ ${string} }}`;
@@ -52,12 +47,6 @@ export interface Header extends Comment {
   value: UNKNOWN;
 }
 
-export interface PostData {
-  params?: Parameter[];
-  mimeType?: string;
-  text?: string;
-}
-
 export interface QueryString extends Comment {
   name: string;
 }
@@ -75,7 +64,7 @@ export interface ImportRequest<T extends {} = {}> extends Comment {
   authentication?: Authentication;
   body?: Body;
   cookies?: Cookie[];
-  environment?: UNKNOWN_OBJ;
+  environment?: {};
   headers?: Header[];
   httpVersion?: string;
   method?: string;
@@ -84,7 +73,7 @@ export interface ImportRequest<T extends {} = {}> extends Comment {
   description?: string;
   parameters?: Parameter[];
   parentId?: string | null;
-  postData?: PostData;
+  postData?: Har.PostData;
   variable?: UNKNOWN;
   queryString?: QueryString[];
   url?: string;

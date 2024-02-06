@@ -44,13 +44,6 @@ const EventViewWrapper = styled.div({
   height: '100%',
 });
 
-const PaneBodyContent = styled.div({
-  height: '100%',
-  width: '100%',
-  display: 'grid',
-  gridTemplateRows: 'repeat(auto-fit, minmax(0, 1fr))',
-});
-
 const EventSearchFormControl = styled.div({
   outline: 'none',
   width: '100%',
@@ -180,7 +173,7 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
       </PaneHeader>
       <Tabs aria-label="Curl response pane tabs">
         <TabItem key="events" title="Events">
-          <PaneBodyContent>
+          <div className='h-full w-full grid grid-rows-[repeat(auto-fit,minmax(0,1fr))]'>
             {response.error ? <ResponseErrorViewer url={response.url} error={response.error} />
               : <>
                 <EventLogTableWrapper>
@@ -246,7 +239,7 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
                   </EventViewWrapper>
                 )}
               </>}
-          </PaneBodyContent>
+          </div>
         </TabItem>
         <TabItem
           key="headers"

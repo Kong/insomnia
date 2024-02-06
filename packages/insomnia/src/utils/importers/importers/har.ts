@@ -1,4 +1,6 @@
-import { Body, Converter, ImportRequest, PostData, UNKNOWN } from '../entities';
+import * as Har from 'har-format';
+
+import { Body, Converter, ImportRequest } from '../entities';
 
 export const id = 'har';
 export const name = 'HAR 1.2';
@@ -6,18 +8,13 @@ export const description = 'Importer for HTTP Archive 1.2';
 
 let requestCount = 1;
 
-interface Entry {
-  comment: UNKNOWN;
-  request: ImportRequest;
-}
-
 interface HarRoot {
   log: {
-    entries: Entry[];
+    entries: Har.Entry[];
   };
-  httpVersion: UNKNOWN;
-  method: UNKNOWN;
-  url: UNKNOWN;
+  httpVersion: string;
+  method: string;
+  url: string;
 }
 
 const extractRequests = (harRoot: HarRoot): ImportRequest[] => {
@@ -37,12 +34,12 @@ const extractRequests = (harRoot: HarRoot): ImportRequest[] => {
   });
 };
 
-const removeComment = <T extends { comment?: UNKNOWN }>(obj: T) => {
+const removeComment = <T extends { comment?: string }>(obj: T) => {
   const { comment, ...newObject } = obj;
   return newObject;
 };
 
-const importPostData = (postData?: PostData): Body => {
+const importPostData = (postData?: Har.PostData): Body => {
   if (!postData) {
     return {};
   }

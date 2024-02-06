@@ -43,9 +43,14 @@ export const fetchRequestData = async (requestId: string) => {
     models.request.type,
     models.requestGroup.type,
     models.workspace.type,
+    models.mockRoute.type,
+    models.mockServer.type,
   ]);
   const workspaceDoc = ancestors.find(isWorkspace);
-  const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
+  invariant(workspaceDoc?._id, 'failed to find workspace');
+
+  const workspaceId = workspaceDoc._id;
+
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);

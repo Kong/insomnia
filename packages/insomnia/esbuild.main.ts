@@ -22,6 +22,9 @@ export default async function build(options: Options) {
       'process.env.APP_RENDER_URL': JSON.stringify(
         `http://localhost:${PORT}/index.html`
       ),
+      'process.env.HIDDEN_BROWSER_WINDOW_URL': JSON.stringify(
+        `http://localhost:${PORT}/renderers/hidden-browser-window/index.html`
+      ),
       'process.env.NODE_ENV': JSON.stringify('development'),
       'process.env.INSOMNIA_ENV': JSON.stringify('development'),
       'process.env.BUILD_DATE': JSON.stringify(new Date()),
@@ -41,6 +44,18 @@ export default async function build(options: Options) {
     format: 'cjs',
     external: ['electron'],
   });
+
+  const hiddenBrowserWindow = esbuild.build({
+    entryPoints: ['./src/renderers/hidden-browser-window/index.ts'],
+    // the hidden browser window script is always outputed to 'src' as index.html requires a built bundle
+    outfile: path.join(__dirname, 'src', 'renderers/hidden-browser-window/index.js'),
+    target: 'esnext',
+    bundle: true,
+    platform: 'browser',
+    sourcemap: true,
+    format: 'cjs',
+    external: [],
+  });
   const main = esbuild.build({
     entryPoints: ['./src/main.development.ts'],
     outfile: path.join(outdir, 'main.min.js'),
@@ -56,7 +71,8 @@ export default async function build(options: Options) {
       ...Object.keys(builtinModules),
     ],
   });
-  return Promise.all([main, preload]);
+
+  return Promise.all([main, preload, hiddenBrowserWindow]);
 }
 
 // Build if ran as a cli script

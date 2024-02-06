@@ -1,3 +1,4 @@
+import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React from 'react';
 import { useState } from 'react';
 import { Button, Collection, ComboBox, Dialog, DialogTrigger, Header, Input, Keyboard, Label, ListBox, ListBoxItem, Modal, ModalOverlay, Section, Text } from 'react-aria-components';
@@ -10,6 +11,7 @@ import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import { isWebSocketRequest } from '../../models/websocket-request';
 import { Workspace } from '../../models/workspace';
+import { scopeToActivity, WorkspaceScope } from '../../models/workspace';
 import { ProjectLoaderData } from '../routes/project';
 import { RootLoaderData } from '../routes/root';
 import { Collection as WorkspaceCollection, WorkspaceLoaderData } from '../routes/workspace';
@@ -45,6 +47,11 @@ export const CommandPalette = () => {
   });
 
   const requestSwitchKeyCombination = getPlatformKeyCombinations(settings.hotKeyRegistry.request_quickSwitch)[0];
+  const scopeToIconMap: Record<string, IconName> = {
+    design: 'file',
+    collection: 'bars',
+    'mock-server': 'server',
+  };
 
   return (
     <DialogTrigger onOpenChange={setIsOpen} isOpen={isOpen}>
@@ -77,8 +84,11 @@ export const CommandPalette = () => {
                 if (!itemId) {
                   return;
                 }
-                if (itemId.toString().startsWith('wrk_')) {
-                  navigate(`/organization/${organizationId}/project/${projectId}/workspace/${itemId}/debug`);
+                const isWorkspace = itemId.toString().startsWith('wrk_');
+                if (isWorkspace) {
+                  const [id, scope] = itemId.toString().split('|');
+                  const activity = scopeToActivity(scope as WorkspaceScope);
+                  navigate(`/organization/${organizationId}/project/${projectId}/workspace/${id}/${activity}`);
                 } else {
                   navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${itemId}`);
                 }
@@ -138,11 +148,11 @@ export const CommandPalette = () => {
                     id: 'collections-and-documents',
                     name: 'Collections and documents',
                     children: workspaces.map(workspace => ({
-                      id: workspace._id,
-                      icon: <Icon icon={workspace.scope === 'collection' ? 'bars' : 'file'} className="text-[--color-font] w-10 flex-shrink-0 flex items-center justify-center" />,
+                      id: workspace._id + '|' + workspace.scope,
+                      icon: <Icon icon={scopeToIconMap[workspace.scope]} className="text-[--color-font] w-10 flex-shrink-0 flex items-center justify-center" />,
                       name: workspace.name,
                       description: '',
-                      textValue: `${workspace.scope === 'collection' ? 'Collection' : 'Document'} ${workspace.name}`,
+                      textValue: `${workspace.scope} ${workspace.name}`,
                     })),
                   },
                 ]}

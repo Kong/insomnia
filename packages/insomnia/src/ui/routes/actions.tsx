@@ -5,7 +5,7 @@ import { ActionFunction, redirect } from 'react-router-dom';
 
 import * as session from '../../account/session';
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC, getAIServiceURL } from '../../common/constants';
+import { ACTIVITY_DEBUG, getAIServiceURL } from '../../common/constants';
 import { database } from '../../common/database';
 import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
@@ -17,7 +17,7 @@ import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
 import { UnitTestSuite } from '../../models/unit-test-suite';
-import { isCollection, Workspace } from '../../models/workspace';
+import { isCollection, scopeToActivity, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
@@ -280,7 +280,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   invariant(typeof name === 'string', 'Name is required');
 
   const scope = formData.get('scope');
-  invariant(scope === 'design' || scope === 'collection', 'Scope is required');
+  invariant(scope === 'design' || scope === 'collection' || scope === 'mock-server', 'Scope is required');
 
   const flushId = await database.bufferChanges();
 
@@ -291,6 +291,12 @@ export const createNewWorkspaceAction: ActionFunction = async ({
     scope,
     parentId: projectId,
   });
+
+  if (scope === 'mock-server') {
+    // create a mock server under the workspace with the same name
+    await models.mockServer.getOrCreateForParentId(workspace._id, { name });
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
+  }
 
   if (scope === 'design') {
     await models.apiSpec.getOrCreateForParentId(workspace._id);
@@ -316,10 +322,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
       : SegmentEvent.documentCreate,
   });
 
-  return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${workspace.scope === 'collection' ? ACTIVITY_DEBUG : ACTIVITY_SPEC
-    }`
-  );
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
 };
 
 export const deleteWorkspaceAction: ActionFunction = async ({
@@ -412,11 +415,8 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
   } catch (e) {
     console.warn('Failed to initialize local backend project', e);
   }
-
-  return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${newWorkspace._id}/${newWorkspace.scope === 'collection' ? ACTIVITY_DEBUG : ACTIVITY_SPEC
-    }`
-  );
+  const activity = scopeToActivity(newWorkspace.scope);
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${newWorkspace._id}/${activity}`);
 };
 
 export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
@@ -432,6 +432,14 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
 
     await models.apiSpec.update(apiSpec, {
       fileName: patch.name || workspace.name,
+    });
+  }
+  if (workspace.scope === 'mock-server') {
+    const mockServer = await models.mockServer.getByParentId(workspaceId);
+    invariant(mockServer, 'No MockServer found for this workspace');
+
+    await models.mockServer.update(mockServer, {
+      name: patch.name || workspace.name,
     });
   }
 
@@ -1183,5 +1191,48 @@ export const reorderCollectionAction: ActionFunction = async ({ request, params 
     await update(item, { parentId, metaSortKey });
   }
 
+  return null;
+};
+
+export const createMockRouteAction: ActionFunction = async ({ request, params }) => {
+  const { organizationId, projectId, workspaceId } = params;
+
+  const patch = await request.json();
+  invariant(typeof patch.name === 'string', 'Name is required');
+  invariant(typeof patch.parentId === 'string', 'parentId is required');
+  const mockRoute = await models.mockRoute.create(patch);
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${mockRoute._id}`);
+};
+export const updateMockRouteAction: ActionFunction = async ({ request, params }) => {
+  const { mockRouteId } = params;
+  invariant(typeof mockRouteId === 'string', 'Mock route id is required');
+  const patch = await request.json();
+
+  const mockRoute = await models.mockRoute.getById(mockRouteId);
+  invariant(mockRoute, 'Mock route is required');
+
+  await models.mockRoute.update(mockRoute, patch);
+  return null;
+};
+export const deleteMockRouteAction: ActionFunction = async ({ request, params }) => {
+  const { organizationId, projectId, workspaceId, mockRouteId } = params;
+  invariant(typeof mockRouteId === 'string', 'Mock route id is required');
+  const mockRoute = await models.mockRoute.getById(mockRouteId);
+  invariant(mockRoute, 'mockRoute not found');
+  const { isSelected } = await request.json();
+
+  await models.mockRoute.remove(mockRoute);
+  if (isSelected) {
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server`);
+  }
+  return null;
+};
+export const updateMockServerAction: ActionFunction = async ({ request, params }) => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+  const patch = await request.json();
+  const mockServer = await models.mockServer.getByParentId(workspaceId);
+  invariant(mockServer, 'Mock server not found');
+  await models.mockServer.update(mockServer, patch);
   return null;
 };

@@ -1,3 +1,7 @@
+import { TextDecoder, TextEncoder } from 'util';
+
+Object.assign(globalThis, { TextDecoder, TextEncoder });
+
 globalThis.__DEV__ = false;
 
 globalThis.requestAnimationFrame = (callback: FrameRequestCallback) => {
