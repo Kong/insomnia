@@ -165,7 +165,7 @@ export function transformAuth(type: string, oldAuth: Record<string, any> = {}): 
     }
 }
 
-function transformAuthentication(auth: RequestAuth) {
+export function transformAuthentication(auth: RequestAuth) {
     const authObj = auth.toJSON();
     const findValueInObj = (targetKey: string, kvs?: { key: string; value: string }[]) => {
         if (!kvs) {
@@ -275,6 +275,129 @@ function transformAuthentication(auth: RequestAuth) {
             return transformAuth(AUTH_NETRC, {});
         default:
             throw Error(`unknown auth type: ${authObj.type}`);
+    }
+}
+
+export function transformToPreRequestAuth(auth: Record<string, any>) {
+    if (!auth || !auth.type) {
+        return { type: 'noauth' };
+    }
+
+    switch (auth.type) {
+        // TODO: these 2 methods are not supported yet
+        // case 'apikey':
+        // case 'bearer':
+        //     // TODO: need double check
+        //     return {
+        //         type: AUTH_BEARER,
+        //         disabled: false,
+        //         token: findValueInObj('token', authObj.bearer),
+        //     };
+        case 'noauth':
+            return { type: 'noauth' };
+        case 'basic':
+            return {
+                type: 'basic',
+                basic: [
+                    { key: 'useISO88591', value: auth.useISO88591 },
+                    { key: 'disabled', value: auth.disabled },
+                    { key: 'username', value: auth.username },
+                    { key: 'password', value: auth.password },
+                ],
+            };
+        case 'digest':
+            return {
+                type: 'digest',
+                digest: [
+                    { key: 'disabled', value: auth.disabled },
+                    { key: 'username', value: auth.username },
+                    { key: 'password', value: auth.password },
+                ],
+            };
+        case 'ntlm':
+            return {
+                type: 'ntlm',
+                ntlm: [
+                    { key: 'disabled', value: auth.disabled },
+                    { key: 'username', value: auth.username },
+                    { key: 'password', value: auth.password },
+                ],
+            };
+        case 'oauth1':
+            return {
+                type: 'oauth1',
+                oauth1: [
+                    { key: 'disabled', value: auth.disabled },
+                    { key: 'consumerKey', value: auth.consumerKey },
+                    { key: 'consumerSecret', value: auth.consumerSecret },
+                    { key: 'tokenKey', value: auth.tokenKey },
+                    { key: 'tokenSecret', value: auth.tokenSecret },
+                    { key: 'privateKey', value: auth.privateKey },
+                    { key: 'version', value: auth.version },
+                    { key: 'nonce', value: auth.nonce },
+                    { key: 'timestamp', value: auth.timestamp },
+                    { key: 'callback', value: auth.callback },
+                ],
+            };
+        case 'oauth2':
+            // TODO
+            return {
+                type: 'oauth2',
+                oauth2: [
+                    { key: 'key', value: auth.key },
+                    { key: 'value', value: auth.value },
+                    { key: 'enabled', value: auth.enabled },
+                    { key: 'send_as', value: auth.send_as },
+                ],
+            };
+        case 'awsv4':
+            return {
+                type: 'awsv4',
+                awsv4: [
+                    { key: 'disabled', value: auth.disabled },
+                    { key: 'accessKeyId', value: auth.accessKeyId },
+                    { key: 'secretAccessKey', value: auth.secretAccessKey },
+                    { key: 'sessionToken', value: auth.sessionToken },
+                ],
+            };
+        case 'hawk':
+            // TODO: actually not supported
+            return {
+                type: 'hawk',
+                hawk: [
+                    { key: 'includePayloadHash', value: auth.includePayloadHash },
+                    { key: 'timestamp', value: auth.timestamp },
+                    { key: 'delegation', value: auth.delegation },
+                    { key: 'app', value: auth.app },
+                    { key: 'extraData', value: auth.extraData },
+                    { key: 'nonce', value: auth.nonce },
+                    { key: 'user', value: auth.user },
+                    { key: 'authKey', value: auth.authKey },
+                    { key: 'authId', value: auth.authId },
+                    { key: 'algorithm', value: auth.algorithm },
+                    { key: 'id', value: auth.id },
+                ],
+            };
+        case 'asap':
+            return {
+                type: 'asap',
+                asap: [
+                    { key: 'exp', value: auth.exp },
+                    { key: 'claims', value: auth.claims },
+                    { key: 'sub', value: auth.sub },
+                    { key: 'privateKey', value: auth.privateKey },
+                    { key: 'kid', value: auth.kid },
+                    { key: 'aud', value: auth.aud },
+                    { key: 'iss', value: auth.iss },
+                    { key: 'alg', value: auth.alg },
+                    { key: 'id', value: auth.id },
+                ],
+            };
+        case 'netrc':
+            // TODO: not supported yet
+            throw Error('net rc is not supported yet');
+        default:
+            throw Error(`unknown auth type or unsupported auth type: ${auth.type}`);
     }
 }
 

@@ -1,5 +1,9 @@
 import { Settings } from '../../src/models/settings';
 import { Row } from '../../src/renderers/hidden-browser-window/sdk-objects/console';
+import { RequestBodyMode } from '../../src/renderers/hidden-browser-window/sdk-objects/req-resp';
+import { transformToPreRequestAuth } from '../../src/renderers/hidden-browser-window/sdk-objects/send-req';
+import { ClientCertificate } from '../models/client-certificate';
+import type { Request } from '../models/request';
 import { RawObject } from '../renderers/hidden-browser-window/inso-object';
 
 type MessageHandler = (ev: MessageEvent) => Promise<void>;
@@ -161,7 +165,9 @@ class WindowMessageHandler {
         id: string,
         code: string,
         context: object,
+        request: Request,
         settings: Settings,
+        clientCertificates: ClientCertificate[],
     ): Promise<ScriptExecutionResult | undefined> => {
         if (!this.hiddenBrowserWindowPort) {
             console.error(logPrefix, 'hidden browser window port is not inited, restarting');
@@ -178,12 +184,72 @@ class WindowMessageHandler {
             });
         });
 
+        // TODO: transform Insomnia request to pre-request script request object
+        let requestBodyMode: RequestBodyMode = undefined;
+        if (request.body.fileName) {
+            requestBodyMode = 'file';
+        } else if (request.body.text) {
+            requestBodyMode = 'raw';
+        } else if (request.body.params) {
+            requestBodyMode = 'urlencoded';
+        }
+
+        const requestBodyObj = {
+            mode: requestBodyMode,
+            file: request.body.fileName,
+            formdata: undefined, // TODO: also hook this to params
+            graphql: undefined, // TODO: also hook gql requests
+            raw: request.body.text,
+            urlencoded: request.body.params?.map(param => ({ key: param.name, value: param.value })),
+        };
+
+        let proxyUrl = { host: '', port: '' };
+        if (settings.proxyEnabled &&
+            (URL.canParse(settings.httpsProxy) || URL.canParse(settings.httpProxy))
+        ) {
+            proxyUrl = new URL(settings.httpsProxy || settings.httpProxy);
+        }
+        const firstClientCert = clientCertificates != null && clientCertificates.length > 0 ? clientCertificates[0] : undefined;
+
+        const requestObj = {
+            url: request.url,
+            method: request.method,
+            header: request.headers.map(header => ({
+                key: header.name,
+                value: header.value,
+                disabled: header.disabled,
+            })),
+            body: requestBodyObj,
+            auth: transformToPreRequestAuth(request.authentication.type),
+            proxy: {
+                // TODO: currently most of configs are not supported in Insomnia
+                match: '<all_urls>',
+                host: proxyUrl.host,
+                port: proxyUrl.port,
+                tunnel: false,
+                disabled: !settings.proxyEnabled,
+                authenticate: false,
+                username: '',
+                password: '',
+            },
+            certificate: firstClientCert ? {
+                // TODO: some fields are not supported in Insomnia
+                // name?: string;
+                // matches?: string[];
+                key: { src: firstClientCert.key },
+                cert: { src: firstClientCert.cert },
+                passphrase: firstClientCert.passphrase,
+                pfx: { src: firstClientCert.pfx },
+            } : undefined,
+        };
+
         this.hiddenBrowserWindowPort?.postMessage({
             action: 'message-channel://hidden.browser-window/execute',
             options: {
                 id,
                 code,
                 context,
+                requestObj,
                 settings,
             },
         });

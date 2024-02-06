@@ -218,7 +218,16 @@ export class Request extends Property {
     constructor(options: RequestOptions) {
         super();
 
-        this.url = typeof options.url === 'string' ? new Url(options.url) : options.url;
+        if (typeof options.url === 'string') {
+            if (options.url.indexOf('://') >= 0) {
+                this.url = new Url(options.url);
+            } else {
+                this.url = new Url('https://' + options.url);
+            }
+        } else {
+            this.url = options.url;
+        }
+
         this.method = options.method || 'GET';
         if (options.header) {
             if (Array.isArray(options.header)) {
@@ -381,7 +390,7 @@ export class Request extends Property {
 
     toJSON() {
         return {
-            url: this.url,
+            url: this.url.toString(),
             method: this.method,
             header: this.headers.map(header => header.toJSON(), {}),
             body: {

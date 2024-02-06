@@ -1,6 +1,9 @@
+import { AuthOptions } from './sdk-objects/auth';
+import { CertificateOptions } from './sdk-objects/certificates';
 import { Settings } from './sdk-objects/common';
 import { getIntepolator } from './sdk-objects/intepolator';
-import { Request, Response } from './sdk-objects/req-resp';
+import { ProxyConfigOptions } from './sdk-objects/proxy-configs';
+import { Request, RequestBodyOptions, RequestOptions, Response } from './sdk-objects/req-resp';
 import { HttpSendRequest } from './sdk-objects/send-req';
 
 export type EventName = 'prerequest' | 'test';
@@ -164,6 +167,7 @@ export class InsomniaObject {
     public iterationData: Environment;
     public variables: Variables;
     public info: RequestInfo;
+    public request: Request;
 
     private httpRequestSender: HttpSendRequest;
 
@@ -176,6 +180,7 @@ export class InsomniaObject {
             variables: Variables;
             requestInfo: RequestInfo;
         },
+        request: Request,
         settings: Settings,
     ) {
         this.globals = rawObj.globals;
@@ -185,6 +190,7 @@ export class InsomniaObject {
         this.variables = rawObj.variables;
         this.info = rawObj.requestInfo;
 
+        this.request = request;
         this.httpRequestSender = new HttpSendRequest(settings);
     }
 
@@ -203,6 +209,7 @@ export class InsomniaObject {
             collectionVariables: this.collectionVariables.toObject(),
             iterationData: this.iterationData.toObject(),
             info: this.info.toObject(),
+            request: this.request.toObject(),
         };
     };
 }
@@ -213,15 +220,25 @@ export interface RawObject {
     collectionVariables?: object;
     iterationData?: object;
     requestInfo?: object;
+    request?: {
+        url: string;
+        method: string;
+        header: { key: string; value: string; disabled: boolean }[];
+        body: RequestBodyOptions;
+        auth: AuthOptions;
+        proxy?: ProxyConfigOptions;
+        certificate: CertificateOptions;
+    };
 }
 
-export function initGlobalObject(rawObj: RawObject, settings: Settings) {
+export function initGlobalObject(rawObj: RawObject, requestObj: RequestOptions, settings: Settings) {
     const globals = new Environment(rawObj.globals);
     const environment = new Environment(rawObj.environment);
     const collectionVariables = new Environment(rawObj.collectionVariables);
     const iterationData = new Environment(rawObj.iterationData);
     const local = new Environment({});
     const requestInfo = new RequestInfo(rawObj.requestInfo || {});
+    const request = new Request(requestObj);
 
     const variables = new Variables({
         globals,
@@ -240,6 +257,7 @@ export function initGlobalObject(rawObj: RawObject, settings: Settings) {
             variables,
             requestInfo,
         },
+        request,
         settings,
     );
 };

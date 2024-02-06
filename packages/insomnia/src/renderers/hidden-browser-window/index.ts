@@ -18,8 +18,11 @@ async function init() {
             if (action === executeAction || action === 'message-channel://hidden.browser-window/debug') {
                 const getRawGlobalObject = new Function('insomnia', 'return insomnia;');
                 const rawObject = getRawGlobalObject(ev.data.options.context.insomnia);
-                const settings = ev.data.options.settings;
-                const insomniaObject = initGlobalObject(rawObject, settings);
+                const insomniaObject = initGlobalObject(
+                    rawObject,
+                    ev.data.options.requestObj,
+                    ev.data.options.settings
+                );
                 const myConsole = new Console();
 
                 const AsyncFunction = (async () => { }).constructor;

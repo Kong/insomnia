@@ -5,6 +5,8 @@ import orderedJSON from 'json-order';
 import { extension as mimeExtension } from 'mime-types';
 import { v4 as uuidv4 } from 'uuid';
 
+import { init as initClientCertificate } from '../../src/models/client-certificate';
+import { transformToPreRequestAuth } from '../../src/renderers/hidden-browser-window/sdk-objects/send-req';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { getContentDispositionHeader } from '../common/misc';
 import { RENDER_PURPOSE_SEND } from '../common/render';
@@ -113,6 +115,55 @@ export class RequestSender {
                 this.baseEnvironment.data = rawObj.collectionVariables;
                 this.baseEnvironment.dataPropertyOrder = baseEnvJsonMap.map;
 
+                // apply updates to the request
+                const updatedReq = rawObj.request;
+                this.request.url = updatedReq.url;
+                this.request.method = updatedReq.method;
+                this.request.headers = updatedReq.header.map((header: { key: string; value: string; disabled: boolean }) => ({
+                    name: header.key,
+                    value: header.value,
+                    disabled: header.disabled,
+                }));
+                this.request.body.text = updatedReq.body.raw;
+                this.request.body.fileName = updatedReq.body.file;
+                this.request.body.params = updatedReq.body.urlencoded?.map((param: { key: string; value: string }) => ({ name: param.key, value: param.value }));
+                // TODO: other fields are not supported yet
+                this.request.authentication = transformToPreRequestAuth(updatedReq.auth);
+                this.settings.proxyEnabled = updatedReq.proxy != null && !updatedReq.disabled;
+                const proxyUrl = updatedReq.proxy.host + updatedReq.proxy.port ? `:${updatedReq.proxy.port}` : '';
+                this.settings.httpProxy = proxyUrl.startsWith('http') ? proxyUrl : '';
+                this.settings.httpsProxy = proxyUrl.startsWith('https') ? proxyUrl : '';
+
+                if (updatedReq.certificate) {
+                    if (this.clientCertificates && this.clientCertificates.length > 0) {
+                        this.clientCertificates[0] = {
+                            ...this.clientCertificates[0],
+                            key: updatedReq.certificate.key ? updatedReq.certificate.key.src : undefined,
+                            cert: updatedReq.certificate.cert ? updatedReq.certificate.cert.src : undefined,
+                            passphrase: updatedReq.certificate.passphrase,
+                            pfx: updatedReq.certificate.pfx ? updatedReq.certificate.pfx.src : undefined,
+                        };
+                    } else {
+                        const baseCertificate = {
+                            ...initClientCertificate(),
+                            // TODO: remove baseModelPart when it is not necessary for certs
+                            _id: '',
+                            type: '',
+                            parentId: '',
+                            modified: 0,
+                            created: 0,
+                            isPrivate: false,
+                            name: '',
+
+                            key: updatedReq.certificate.key ? updatedReq.certificate.key.src : undefined,
+                            cert: updatedReq.certificate.cert ? updatedReq.certificate.cert.src : undefined,
+                            passphrase: updatedReq.certificate.passphrase,
+                            pfx: updatedReq.certificate.pfx ? updatedReq.certificate.pfx.src : undefined,
+                        };
+                        this.clientCertificates = [baseCertificate];
+                    }
+                }
+
                 this.timeline.push({
                     value: 'Pre-request script execution done',
                     name: 'Text',
@@ -161,7 +212,9 @@ export class RequestSender {
             scriptRunId,
             code,
             context,
+            this.request,
             this.settings,
+            this.clientCertificates,
         );
     };
 
