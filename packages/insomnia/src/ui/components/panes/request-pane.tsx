@@ -111,7 +111,7 @@ export const RequestPane: FC<Props> = ({
   if (!activeRequest) {
     return <PlaceholderRequestPane />;
   }
-
+  console.log({ activeRequest });
   const pathParameters = getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters);
 
   const onPathParameterChange = (pathParameters: RequestParameter[]) => {
@@ -145,6 +145,10 @@ export const RequestPane: FC<Props> = ({
           title={'Pre-request Script'}
           aria-label={'experimental'}
         >
+          <ErrorBoundary
+            key={uniqueKey}
+            errorClassName="tall wide vertically-align font-error pad text-center"
+          >
           <CodeEditor
             id="pre-request-script-editor"
             showPrettifyButton
@@ -154,7 +158,7 @@ export const RequestPane: FC<Props> = ({
             mode='text/javascript'
             placeholder="..."
           />
-
+          </ErrorBoundary>
         </TabItem>
         <TabItem
           key="query"

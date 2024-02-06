@@ -36,6 +36,12 @@ test('can send requests', async ({ app, page }) => {
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect(statusTag).toContainText('200 OK');
 
+  await page.getByLabel('Request Collection').getByTestId('sends request with pre-request script').press('Enter');
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+  await expect(statusTag).toContainText('200 OK');
+  await page.getByRole('tab', { name: 'Timeline' }).click();
+  await expect(responseBody).toContainText('my-pre-request-header:');
+
   await page.getByLabel('Request Collection').getByTestId('send JSON request').press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect(statusTag).toContainText('200 OK');
