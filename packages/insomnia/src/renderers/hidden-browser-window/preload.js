@@ -1,8 +1,13 @@
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, contextBridge } = require('electron');
 
-window.onmessage = ev => {
-  if (ev.data === 'message-event://preload/publish-port') {
-    ipcRenderer.postMessage('ipc://main/publish-port', null, [ev.ports[0]]);
-  }
-  console.log('[preload-hidden-browser-win][init hidden win step 3/6]: ipc "publishing port to the main renderer" is ready');
+const bridge = {
+  on: (channel, listener) => {
+    ipcRenderer.on(channel, listener);
+    return () => ipcRenderer.removeListener(channel, listener);
+  },
 };
+if (process.contextIsolated) {
+  contextBridge.exposeInMainWorld('bridge', bridge);
+} else {
+  window.bridge = bridge;
+}

@@ -6,6 +6,7 @@ import {
   dialog,
   Menu,
   type MenuItemConstructorOptions,
+  MessageChannelMain,
   screen,
   shell,
 } from 'electron';
@@ -68,12 +69,12 @@ export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow
     });
   }
   const hiddenBrowserWindow = new BrowserWindow({
-    show: false,
+    show: true,
     title: 'HiddenBrowserWindow',
     webPreferences: {
       sandbox: true,
-      contextIsolation: true,
-      nodeIntegration: false,
+      contextIsolation: false,
+      nodeIntegration: true,
       webSecurity: true,
       preload: path.join(__dirname, 'renderers/hidden-browser-window/preload.js'),
       spellcheck: false,
@@ -93,7 +94,19 @@ export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow
       browserWindows.delete('HiddenBrowserWindow');
     }
   });
+  const mainWindow = browserWindows.get('Insomnia');
 
+  invariant(mainWindow, 'mainWindow is not defined');
+  mainWindow.webContents.mainFrame.ipc.on('request-worker-channel', event => {
+    // Create a new channel ...
+    const { port1, port2 } = new MessageChannelMain();
+    // ... send one end to the worker ...
+    hiddenBrowserWindow.webContents.postMessage('new-client', { message: 'hello' }, [port1]);
+    // ... and the other end to the main window.
+    event.senderFrame.postMessage('provide-worker-channel', { message: 'hello' }, [port2]);
+    // Now the main window and the worker can communicate with each other
+    // without going through the main process!
+  });
   return hiddenBrowserWindow;
 }
 
