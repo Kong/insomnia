@@ -69,6 +69,18 @@ const main: Window['main'] = {
       create: options => ipcRenderer.invoke('database.caCertificate.create', options),
     },
   },
+  hiddenBrowserWindow: {
+    doSomething: value => {
+      ipcRenderer.send('request-worker-channel');
+      ipcRenderer.once('provide-worker-channel', event => {
+        const [port] = event.ports;
+        port.onmessage = event => {
+          console.log('received result:', event.data);
+        };
+        port.postMessage(value);
+      });
+    },
+  },
 };
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),

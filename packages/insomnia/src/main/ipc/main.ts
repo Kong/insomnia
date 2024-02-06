@@ -48,6 +48,9 @@ export interface MainBridgeAPI {
       create: (options: { parentId: string; path: string }) => Promise<string>;
     };
   };
+  hiddenBrowserWindow: {
+    doSomething: (value: string) => void;
+  };
 }
 export function registerMainHandlers() {
   ipcMain.handle('insomniaFetch', async (_, options: Parameters<typeof insomniaFetch>[0]) => {
