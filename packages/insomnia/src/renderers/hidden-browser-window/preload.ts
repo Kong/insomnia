@@ -1,6 +1,6 @@
-import crypto from 'crypto';
+import crypto, { type BinaryToTextEncoding, type Encoding } from 'crypto';
 import { contextBridge, ipcRenderer } from 'electron';
-const bridge = {
+const bridge: Window['bridge'] = {
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
@@ -11,7 +11,7 @@ const bridge = {
         update: (data, inputEncoding) => {
           return {
             digest: outputEncoding => {
-              return crypto.createHash(algorithm).update(data, inputEncoding).digest(outputEncoding);
+              return crypto.createHash(algorithm).update(data, inputEncoding as Encoding).digest(outputEncoding as BinaryToTextEncoding);
             },
           };
         },
@@ -21,7 +21,7 @@ const bridge = {
   runPreRequestScript: async (script, data) => {
   // TODO: return error here and/or write to timeline file
     console.log(script);
-    const insomnia = {
+    const executionContext = {
       request: {
         addHeader: (v: string) => data.request.headers.push({ name: v.split(':')[0], value: v.split(':')[1] }),
       },
@@ -35,7 +35,8 @@ const bridge = {
                         return insomnia;
                     `
     );
-    await executeScript(insomnia);
+    const mutatedContext = await executeScript(executionContext);
+    console.log({ mutatedContext });
     return data;
   },
 };

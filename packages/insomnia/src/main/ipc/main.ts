@@ -8,7 +8,7 @@ import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
 import * as models from '../../models';
-import { Request } from '../../models/request';
+import type { HiddenBrowserWindowBridgeAPI } from '../../renderers/hidden-browser-window';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
@@ -49,11 +49,7 @@ export interface MainBridgeAPI {
       create: (options: { parentId: string; path: string }) => Promise<string>;
     };
   };
-  hiddenBrowserWindow: {
-    writeFile: (options: { path: string; contents: string }) => void;
-    createHash: (options: { value: string; algorithm: string; encoding: string }) => Promise<string>;
-    runPreRequestScript: (options: { script: string; context: Record<string, any> }) => Promise<{ request: Request }>;
-  };
+  hiddenBrowserWindow: HiddenBrowserWindowBridgeAPI;
 }
 export function registerMainHandlers() {
   ipcMain.handle('insomniaFetch', async (_, options: Parameters<typeof insomniaFetch>[0]) => {
