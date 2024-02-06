@@ -8,3 +8,5 @@ src/preload.js
 src/preload.js.map
 src/renderers/hidden-browser-window/index.js
 src/renderers/hidden-browser-window/index.js.map
+src/renderers/hidden-browser-window/preload.js
+src/renderers/hidden-browser-window/preload.js.map

@@ -56,6 +56,16 @@ export default async function build(options: Options) {
     format: 'cjs',
     external: [],
   });
+  const hiddenBrowserWindowPreload = esbuild.build({
+    entryPoints: ['./src/renderers/hidden-browser-window/preload.ts'],
+    outfile: path.join(__dirname, 'src', 'renderers/hidden-browser-window/preload.js'),
+    target: 'esnext',
+    bundle: true,
+    platform: 'node',
+    sourcemap: true,
+    format: 'cjs',
+    external: ['electron'],
+  });
   const main = esbuild.build({
     entryPoints: ['./src/main.development.ts'],
     outfile: path.join(outdir, 'main.min.js'),
@@ -76,6 +86,7 @@ export default async function build(options: Options) {
     main,
     preload,
     hiddenBrowserWindow,
+    hiddenBrowserWindowPreload,
   ]);
 }
 
