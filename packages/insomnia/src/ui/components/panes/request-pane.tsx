@@ -140,26 +140,6 @@ export const RequestPane: FC<Props> = ({
       </PaneHeader>
       <Tabs aria-label="Request pane tabs">
         <TabItem
-          key="pre-request-script"
-          title={'Pre-request Script'}
-          aria-label={'experimental'}
-        >
-          <ErrorBoundary
-            key={uniqueKey}
-            errorClassName="tall wide vertically-align font-error pad text-center"
-          >
-          <CodeEditor
-            id="pre-request-script-editor"
-            showPrettifyButton
-            uniquenessKey={uniqueKey}
-            defaultValue={activeRequest.preRequestScript || ''}
-            onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
-            mode='text/javascript'
-            placeholder="..."
-          />
-          </ErrorBoundary>
-        </TabItem>
-        <TabItem
           key="query"
           title={
             <div className='flex items-center gap-2'>
@@ -309,6 +289,26 @@ export const RequestPane: FC<Props> = ({
               </button>
             </TabPanelFooter>
           </HeaderContainer>
+        </TabItem>
+        <TabItem
+          key="pre-request-script"
+          title={'Pre-request Script'}
+          aria-label={'experimental'}
+        >
+          <ErrorBoundary
+            key={uniqueKey}
+            errorClassName="tall wide vertically-align font-error pad text-center"
+          >
+            <CodeEditor
+              id="pre-request-script-editor"
+              showPrettifyButton
+              uniquenessKey={uniqueKey}
+              defaultValue={activeRequest.preRequestScript || ''}
+              onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
+              mode='text/javascript'
+              placeholder="..."
+            />
+          </ErrorBoundary>
         </TabItem>
         <TabItem
           key="docs"
