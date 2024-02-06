@@ -1,25 +1,10 @@
-import crypto, { type BinaryToTextEncoding, type Encoding } from 'crypto';
 import { contextBridge, ipcRenderer } from 'electron';
 const bridge: Window['bridge'] = {
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
   },
-  crypto: {
-    createHash: algorithm => {
-      return {
-        update: (data, inputEncoding) => {
-          return {
-            digest: outputEncoding => {
-              return crypto.createHash(algorithm).update(data, inputEncoding as Encoding).digest(outputEncoding as BinaryToTextEncoding);
-            },
-          };
-        },
-      };
-    },
-  },
   runPreRequestScript: async (script, data) => {
-  // TODO: return error here and/or write to timeline file
     console.log(script);
     const executionContext = {
       request: {
