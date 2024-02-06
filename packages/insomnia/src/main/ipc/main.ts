@@ -50,6 +50,7 @@ export interface MainBridgeAPI {
   };
   hiddenBrowserWindow: {
     doSomething: (value: string) => void;
+    getHash: (options: { title: string }) => Promise<string>;
   };
 }
 export function registerMainHandlers() {

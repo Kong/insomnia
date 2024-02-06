@@ -70,14 +70,30 @@ const main: Window['main'] = {
     },
   },
   hiddenBrowserWindow: {
-    doSomething: value => {
-      ipcRenderer.send('request-worker-channel');
-      ipcRenderer.once('provide-worker-channel', event => {
-        const [port] = event.ports;
-        port.onmessage = event => {
-          console.log('received result:', event.data);
-        };
-        port.postMessage(value);
+    getHash: async options => {
+      return new Promise(resolve => {
+        ipcRenderer.send('request-worker-channel');
+        ipcRenderer.once('provide-worker-channel', event => {
+          const [port] = event.ports;
+          port.onmessage = event => {
+            console.log('received result:', event.data);
+            resolve(event.data);
+          };
+          port.postMessage(options);
+        });
+      });
+    },
+    doSomething: async value => {
+      return new Promise(resolve => {
+        ipcRenderer.send('request-worker-channel');
+        ipcRenderer.once('provide-worker-channel', event => {
+          const [port] = event.ports;
+          port.onmessage = event => {
+            console.log('received result:', event.data);
+            resolve(event.data);
+          };
+          port.postMessage(value);
+        });
       });
     },
   },

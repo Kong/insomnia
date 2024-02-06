@@ -1,6 +1,11 @@
-const doWork = input => {
-  // Something cpu-intensive.
-  return input * 2;
+// import crypto from 'crypto';
+
+const doWork = options => {
+  return options * 2;
+// const { value, algorithm, encoding } = options;
+// const hash = crypto.createHash(algorithm || 'md5');
+// hash.update(value || '', 'utf8');
+// return hash.digest(encoding || 'hex');
 };
 window.bridge.on('new-client', event => {
   const [port] = event.ports;
