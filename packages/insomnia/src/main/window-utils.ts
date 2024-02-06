@@ -96,10 +96,10 @@ export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow
   const mainWindow = browserWindows.get('Insomnia');
 
   invariant(mainWindow, 'mainWindow is not defined');
-  mainWindow.webContents.mainFrame.ipc.on('request-worker-channel', event => {
+  mainWindow.webContents.mainFrame.ipc.on('open-channel-to-hidden-browser-window', event => {
     const { port1, port2 } = new MessageChannelMain();
-    hiddenBrowserWindow.webContents.postMessage('new-client', null, [port1]);
-    event.senderFrame.postMessage('provide-worker-channel', null, [port2]);
+    hiddenBrowserWindow.webContents.postMessage('renderer-listener', null, [port1]);
+    event.senderFrame.postMessage('hidden-browser-window-response-listener', null, [port2]);
   });
   return hiddenBrowserWindow;
 }

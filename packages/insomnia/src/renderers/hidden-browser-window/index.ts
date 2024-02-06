@@ -19,7 +19,7 @@ const work: HiddenBrowserWindowBridgeAPI = {
     return window.bridge.runPreRequestScript(script, context);
   },
 };
-window.bridge.on('new-client', async (event: MessageEvent) => {
+window.bridge.on('renderer-listener', async (event: MessageEvent) => {
   const [port] = event.ports;
   console.log('opened port to insomnia renderer');
   port.onmessage = async event => {

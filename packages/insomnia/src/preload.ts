@@ -70,22 +70,20 @@ const main: Window['main'] = {
     },
   },
   hiddenBrowserWindow: {
-    runPreRequestScript: options => {
-      return new Promise((resolve, reject) => {
-        ipcRenderer.send('request-worker-channel');
-        ipcRenderer.once('provide-worker-channel', event => {
-          const [port] = event.ports;
-          port.onmessage = event => {
-            console.log('received result:', event.data);
-            if (event.data.error) {
-              reject(new Error(event.data.error));
-            }
-            resolve(event.data);
-          };
-          port.postMessage({ ...options, type: 'runPreRequestScript' });
-        });
+    runPreRequestScript: options => new Promise((resolve, reject) => {
+      ipcRenderer.send('open-channel-to-hidden-browser-window');
+      ipcRenderer.once('hidden-browser-window-response-listener', event => {
+        const [port] = event.ports;
+        port.onmessage = event => {
+          console.log('received result:', event.data);
+          if (event.data.error) {
+            reject(new Error(event.data.error));
+          }
+          resolve(event.data);
+        };
+        port.postMessage({ ...options, type: 'runPreRequestScript' });
       });
-    },
+    }),
   },
 };
 const dialog: Window['dialog'] = {
