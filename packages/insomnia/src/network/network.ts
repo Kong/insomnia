@@ -67,8 +67,7 @@ export const fetchRequestData = async (requestId: string) => {
   const responseId = generateId('res');
   const responsesDir = pathJoin(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'responses');
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
-  const timelineFileStream = fs.createWriteStream(timelinePath);
-  return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelineFileStream, timelinePath, responseId };
+  return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
 export const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
@@ -99,19 +98,19 @@ export async function sendCurlAndWriteTimeline(
   clientCertificates: ClientCertificate[],
   caCert: CaCertificate | null,
   settings: Settings,
-  timelineFileStream: fs.WriteStream,
   timelinePath: string,
   responseId: string,
 ) {
   const requestId = renderedRequest._id;
+  const timelineStrings: string[] = [];
 
   const { finalUrl, socketPath } = transformUrl(renderedRequest.url, renderedRequest.parameters, renderedRequest.authentication, renderedRequest.settingEncodeUrl);
-  timelineFileStream.write(JSON.stringify({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() }) + '\n');
-  timelineFileStream.write(JSON.stringify({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() }) + '\n');
-  timelineFileStream.write(JSON.stringify({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineStrings.push(JSON.stringify({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineStrings.push(JSON.stringify({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineStrings.push(JSON.stringify({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() }) + '\n');
 
   if (!renderedRequest.settingSendCookies) {
-    timelineFileStream.write(JSON.stringify({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() }) + '\n');
+    timelineStrings.push(JSON.stringify({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() }) + '\n');
   }
 
   const authHeader = await getAuthHeader(renderedRequest, finalUrl);
@@ -133,7 +132,9 @@ export async function sendCurlAndWriteTimeline(
   const output = await nodejsCurlRequest(requestOptions);
 
   if ('error' in output) {
-    timelineFileStream.end();
+    await fs.promises.writeFile(timelinePath, timelineStrings.join(''));
+    console.log('wrote to timeline file', timelinePath);
+
     return {
       _id: responseId,
       parentId: requestId,
@@ -147,16 +148,19 @@ export async function sendCurlAndWriteTimeline(
   }
   const { patch, debugTimeline, headerResults, responseBodyPath } = output;
   // todo: move to main process
-  debugTimeline.forEach(entry => timelineFileStream.write(JSON.stringify(entry) + '\n'));
+  debugTimeline.forEach(entry => timelineStrings.push(JSON.stringify(entry) + '\n'));
   // transform output
   const { cookies, rejectedCookies, totalSetCookies } = await extractCookies(headerResults, renderedRequest.cookieJar, finalUrl, renderedRequest.settingStoreCookies);
-  rejectedCookies.forEach(errorMessage => timelineFileStream.write(JSON.stringify({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }) + '\n'));
+  rejectedCookies.forEach(errorMessage => timelineStrings.push(JSON.stringify({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }) + '\n'));
   if (totalSetCookies) {
     await models.cookieJar.update(renderedRequest.cookieJar, { cookies });
-    timelineFileStream.write(JSON.stringify({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() }) + '\n');
+    timelineStrings.push(JSON.stringify({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() }) + '\n');
   }
   const lastRedirect = headerResults[headerResults.length - 1];
-  timelineFileStream.end();
+
+  await fs.promises.writeFile(timelinePath, timelineStrings.join(''));
+
+  console.log('wrote to timeline file', timelinePath);
 
   return {
     _id: responseId,

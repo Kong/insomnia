@@ -106,7 +106,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
-      { write: () => { }, end: () => { } },
       '',
       ''
     );
@@ -186,7 +185,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
-      { write: () => { }, end: () => { } },
       '',
       ''
     );
@@ -291,7 +289,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
-      { write: () => { }, end: () => { } },
       '',
       ''
     );
@@ -356,7 +353,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
-      { write: () => { }, end: () => { } },
       '',
       ''
     );
@@ -441,7 +437,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
-      { write: () => { }, end: () => { } },
       '',
       ''
     );
@@ -507,7 +502,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
-      { write: () => { }, end: () => { } },
       '',
       ''
     );
@@ -552,7 +546,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
-      { write: () => { }, end: () => { } },
       '',
       ''
     );
@@ -596,7 +589,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
-      { write: () => { }, end: () => { } },
       '',
       ''
     );
@@ -641,7 +633,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
-      { write: () => { }, end: () => { } },
       '',
       ''
     );
@@ -747,7 +738,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       { ...settings, validateSSL: false },
-      { write: () => { }, end: () => { } },
       '',
       ''
     );
@@ -803,7 +793,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       ...settings,
       preferredHttpVersion: HttpVersions.V1_0,
     },
-      { write: () => { }, end: () => { } },
       '',
       '');
     expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');

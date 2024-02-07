@@ -313,7 +313,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                             <MenuTrigger>
                               <Button
                                 aria-label="Create Environment"
-                                data-testId="CreateEnvironmentDropdown"
+                                data-testid="CreateEnvironmentDropdown"
                                 className="items-center flex justify-center h-6 aspect-square data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                               >
                                 <Icon icon="plus-circle" />

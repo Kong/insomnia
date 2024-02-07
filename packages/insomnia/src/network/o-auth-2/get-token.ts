@@ -298,7 +298,6 @@ const sendAccessTokenRequest = async (requestId: string, authentication: AuthTyp
     clientCertificates,
     caCert,
     activeEnvironmentId,
-    timelineFileStream,
     timelinePath,
     responseId,
   } = await fetchRequestData(requestId);
@@ -328,7 +327,6 @@ const sendAccessTokenRequest = async (requestId: string, authentication: AuthTyp
     clientCertificates,
     caCert,
     { ...settings, validateSSL: settings.validateAuthSSL },
-    timelineFileStream,
     timelinePath,
     responseId,
   );

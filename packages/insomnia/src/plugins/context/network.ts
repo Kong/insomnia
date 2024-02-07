@@ -13,7 +13,6 @@ export function init() {
           clientCertificates,
           caCert,
           activeEnvironmentId,
-          timelineFileStream,
           timelinePath,
           responseId,
         } = await fetchRequestData(req._id);
@@ -25,7 +24,6 @@ export function init() {
           clientCertificates,
           caCert,
           settings,
-          timelineFileStream,
           timelinePath,
           responseId
         );

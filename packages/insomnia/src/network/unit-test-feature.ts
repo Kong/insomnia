@@ -13,7 +13,6 @@ export function getSendRequestCallback() {
       clientCertificates,
       caCert,
       activeEnvironmentId,
-      timelineFileStream,
       timelinePath,
       responseId,
     } = await fetchRequestData(requestId);
@@ -38,7 +37,6 @@ export function getSendRequestCallback() {
       clientCertificates,
       caCert,
       settings,
-      timelineFileStream,
       timelinePath,
       responseId
     );

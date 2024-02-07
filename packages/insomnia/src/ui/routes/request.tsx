@@ -364,7 +364,6 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     clientCertificates,
     caCert,
     activeEnvironmentId,
-    timelineFileStream,
     timelinePath,
     responseId,
   } = await fetchRequestData(requestId);
@@ -391,7 +390,6 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       clientCertificates,
       caCert,
       settings,
-      timelineFileStream,
       timelinePath,
       responseId
     );
@@ -453,7 +451,6 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
     clientCertificates,
     caCert,
     activeEnvironmentId,
-    timelineFileStream,
     timelinePath,
     responseId,
   } = await fetchRequestData(req._id);
@@ -465,7 +462,6 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
     clientCertificates,
     caCert,
     settings,
-    timelineFileStream,
     timelinePath,
     responseId,
   );

@@ -103,7 +103,6 @@ const fetchGraphQLSchemaForRequest = async ({
       clientCertificates,
       caCert,
       activeEnvironmentId,
-      timelineFileStream,
       timelinePath,
       responseId,
     } = await fetchRequestData(introspectionRequest._id);
@@ -115,7 +114,6 @@ const fetchGraphQLSchemaForRequest = async ({
       clientCertificates,
       caCert,
       settings,
-      timelineFileStream,
       timelinePath,
       responseId,
     );

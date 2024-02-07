@@ -1,4 +1,3 @@
-import fs from 'fs';
 import path from 'path';
 
 import { BaseModel, types as modelTypes } from '../models';
@@ -67,9 +66,8 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     const responseId = generateId('res');
     const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'responses');
     const timelinePath = path.join(responsesDir, responseId + '.timeline');
-    const timelineFileStream = fs.createWriteStream(timelinePath);
 
-    return { request, settings, clientCertificates, caCert, timelineFileStream, timelinePath, responseId };
+    return { request, settings, clientCertificates, caCert, timelinePath, responseId };
   };
   // Return callback helper to send requests
   return async function sendRequest(requestId: string) {
@@ -78,7 +76,6 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       settings,
       clientCertificates,
       caCert,
-      timelineFileStream,
       timelinePath,
       responseId,
     } = await fetchInsoRequestData(requestId);
@@ -90,7 +87,6 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       clientCertificates,
       caCert,
       settings,
-      timelineFileStream,
       timelinePath,
       responseId,
     );
