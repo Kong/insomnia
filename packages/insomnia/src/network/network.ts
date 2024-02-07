@@ -70,9 +70,31 @@ export const fetchRequestData = async (requestId: string) => {
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
-export const tryToExecutePreRequestScript = async (request: Request) => {
-  const context = await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request } });
-  return context.request;
+export const tryToExecutePreRequestScript = async (request: Request, environmentId: string, timelinePath:string) => {
+  try {
+    const output = await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request } });
+    return output;
+  } catch (err) {
+    const responseId = generateId('res');
+    const responsesDir = pathJoin(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'responses');
+    fs.mkdirSync(responsesDir, { recursive: true });
+    await fs.promises.writeFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
+
+    console.log(`[network] Pre-request script failed req=${request._id} err=${err.message}`, environmentId);
+    const requestId = request._id;
+    const settings = await models.settings.get();
+    const responsePatch = {
+      _id: responseId,
+      parentId: requestId,
+      environmentId,
+      timelinePath,
+      statusMessage: 'Error',
+      error: err.message,
+    };
+    const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
+    models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+    return { response: res };
+  }
 };
 export const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
   try {

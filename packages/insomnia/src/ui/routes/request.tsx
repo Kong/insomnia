@@ -370,7 +370,10 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   } = await fetchRequestData(requestId);
   try {
     const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
-    const mutatedRequest = await tryToExecutePreRequestScript(req);
+    const { request: mutatedRequest, response: scriptError } = await tryToExecutePreRequestScript(req, environment._id);
+    if (scriptError) {
+      return null;
+    }
     const renderedResult = await tryToInterpolateRequest(mutatedRequest, environment._id, RENDER_PURPOSE_SEND);
     const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
 
@@ -429,6 +432,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       return writeToDownloadPath(filePath, responsePatch, requestMeta, settings.maxHistoryResponses);
     }
   } catch (e) {
+    console.log('Failed to send request', e);
     const url = new URL(request.url);
     url.searchParams.set('error', e);
     return redirect(`${url.pathname}?${url.searchParams}`);
