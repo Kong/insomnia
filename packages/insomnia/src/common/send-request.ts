@@ -64,7 +64,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     const caCert = await models.caCertificate.findByParentId(workspaceId);
 
     const responseId = generateId('res');
-    const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'responses');
+    const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
     const timelinePath = path.join(responsesDir, responseId + '.timeline');
 
     return { request, settings, clientCertificates, caCert, timelinePath, responseId };
