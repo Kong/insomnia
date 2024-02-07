@@ -1,11 +1,10 @@
 import clone from 'clone';
-import electron from 'electron';
 import fs from 'fs';
 import { join as pathJoin } from 'path';
-import { v4 as uuidv4 } from 'uuid';
 
 import { database as db } from '../common/database';
 import {
+  generateId,
   getContentTypeHeader,
   getLocationHeader,
   getSetCookieHeaders,
@@ -15,7 +14,7 @@ import {
   getRenderedRequestAndContext,
   RENDER_PURPOSE_NO_RENDER,
 } from '../common/render';
-import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
+import type { HeaderResult, ResponsePatch } from '../main/network/libcurl-promise';
 import * as models from '../models';
 import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
@@ -65,8 +64,10 @@ export const fetchRequestData = async (requestId: string) => {
   invariant(settings, 'failed to create settings');
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const caCert = await models.caCertificate.findByParentId(workspaceId);
-
-  return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId };
+  const responseId = generateId('res');
+  const responsesDir = pathJoin(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
+  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+  return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
 export const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
@@ -97,18 +98,19 @@ export async function sendCurlAndWriteTimeline(
   clientCertificates: ClientCertificate[],
   caCert: CaCertificate | null,
   settings: Settings,
+  timelinePath: string,
+  responseId: string,
 ) {
   const requestId = renderedRequest._id;
-  const timeline: ResponseTimelineEntry[] = [];
+  const timelineStrings: string[] = [];
 
   const { finalUrl, socketPath } = transformUrl(renderedRequest.url, renderedRequest.parameters, renderedRequest.authentication, renderedRequest.settingEncodeUrl);
-
-  timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() });
-  timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
-  timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() });
+  timelineStrings.push(JSON.stringify({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineStrings.push(JSON.stringify({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineStrings.push(JSON.stringify({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() }) + '\n');
 
   if (!renderedRequest.settingSendCookies) {
-    timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
+    timelineStrings.push(JSON.stringify({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() }) + '\n');
   }
 
   const authHeader = await getAuthHeader(renderedRequest, finalUrl);
@@ -130,9 +132,10 @@ export async function sendCurlAndWriteTimeline(
   const output = await nodejsCurlRequest(requestOptions);
 
   if ('error' in output) {
-    const timelinePath = await storeTimeline(timeline);
+    await fs.promises.writeFile(timelinePath, timelineStrings.join(''));
 
     return {
+      _id: responseId,
       parentId: requestId,
       url: requestOptions.finalUrl,
       error: output.error,
@@ -143,17 +146,21 @@ export async function sendCurlAndWriteTimeline(
     };
   }
   const { patch, debugTimeline, headerResults, responseBodyPath } = output;
-  const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
+  // todo: move to main process
+  debugTimeline.forEach(entry => timelineStrings.push(JSON.stringify(entry) + '\n'));
   // transform output
   const { cookies, rejectedCookies, totalSetCookies } = await extractCookies(headerResults, renderedRequest.cookieJar, finalUrl, renderedRequest.settingStoreCookies);
-  rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
+  rejectedCookies.forEach(errorMessage => timelineStrings.push(JSON.stringify({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }) + '\n'));
   if (totalSetCookies) {
     await models.cookieJar.update(renderedRequest.cookieJar, { cookies });
-    timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
+    timelineStrings.push(JSON.stringify({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() }) + '\n');
   }
   const lastRedirect = headerResults[headerResults.length - 1];
 
+  await fs.promises.writeFile(timelinePath, timelineStrings.join(''));
+
   return {
+    _id: responseId,
     parentId: renderedRequest._id,
     timelinePath,
     bodyPath: responseBodyPath,
@@ -305,23 +312,23 @@ async function _applyResponsePluginHooks(
 
 }
 
-export function storeTimeline(timeline: ResponseTimelineEntry[]): Promise<string> {
-  const timelineStr = JSON.stringify(timeline, null, '\t');
-  const timelineHash = uuidv4();
-  const responsesDir = pathJoin(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'), 'responses');
+// export function storeTimeline(timeline: ResponseTimelineEntry[]): Promise<string> {
+//   const timelineStr = JSON.stringify(timeline, null, '\t');
+//   const timelineHash = uuidv4();
+//   const responsesDir = pathJoin(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'), 'responses');
 
-  fs.mkdirSync(responsesDir, { recursive: true });
+//   fs.mkdirSync(responsesDir, { recursive: true });
 
-  const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
-  if (process.type === 'renderer') {
-    return window.main.writeFile({ path: timelinePath, content: timelineStr });
-  }
-  return new Promise<string>((resolve, reject) => {
-    fs.writeFile(timelinePath, timelineStr, err => {
-      if (err != null) {
-        return reject(err);
-      }
-      resolve(timelinePath);
-    });
-  });
-}
+//   const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
+//   if (process.type === 'renderer') {
+//     return window.main.writeFile({ path: timelinePath, content: timelineStr });
+//   }
+//   return new Promise<string>((resolve, reject) => {
+//     fs.writeFile(timelinePath, timelineStr, err => {
+//       if (err != null) {
+//         return reject(err);
+//       }
+//       resolve(timelinePath);
+//     });
+//   });
+// }
