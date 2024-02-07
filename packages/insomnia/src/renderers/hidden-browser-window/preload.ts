@@ -16,6 +16,7 @@ const bridge: Window['bridge'] = {
     console.log(script);
     const executionContext = {
       request: {
+        // log: [],
         addHeader: (v: string) => requestContext.request.headers.push({ name: v.split(':')[0], value: v.split(':')[1] }),
       },
     };
@@ -25,8 +26,8 @@ const bridge: Window['bridge'] = {
       'require',
       `
                         const $ = insomnia, pm = insomnia;
-                        const patchlog = (...args)=>insomnia.log.push(args.map(a=>JSON.stringify(a)).join(' '))
-                        console={log:patchlog,error:patchlog,warn:patchlog,info:patchlog,debug:patchlog};
+                        // const patchlog = (...args)=>insomnia.log.push({ value: args.map(a=>JSON.stringify(a)).join(' '), name: 'Text', timestamp: Date.now() })
+                        // console={log:patchlog,error:patchlog,warn:patchlog,info:patchlog,debug:patchlog};
                         ${script};
                         return insomnia;
                     `
