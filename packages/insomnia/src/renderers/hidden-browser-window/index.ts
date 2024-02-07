@@ -5,13 +5,13 @@ declare global {
   interface Window {
     bridge: {
       on: (channel: string, listener: (event: any) => void) => () => void;
-      runPreRequestScript: (script: string, data: { request: Request }) => Promise<{ request: Request }>;
+      runPreRequestScript: (script: string, data: { request: Request; log: string[] }) => Promise<{ request: Request }>;
     };
   }
 }
 
 export interface HiddenBrowserWindowBridgeAPI {
-  runPreRequestScript: (options: { script: string; context: { request: Request } }) => Promise<{ request: Request }>;
+  runPreRequestScript: (options: { script: string; context: { request: Request; log: string[] } }) => Promise<{ request: Request }>;
 };
 
 const work: HiddenBrowserWindowBridgeAPI = {

@@ -1,12 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-export function requirePolyfill(moduleName: string) {
+const requirePolyfill = (moduleName: string) => {
   if (['uuid'].includes(moduleName)) {
     return require(moduleName);
   }
-
   throw Error(`no module is found for "${moduleName}"`);
-}
+};
+
 const bridge: Window['bridge'] = {
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
@@ -18,6 +18,7 @@ const bridge: Window['bridge'] = {
       request: {
         addHeader: (v: string) => data.request.headers.push({ name: v.split(':')[0], value: v.split(':')[1] }),
       },
+      log: data.log,
     };
     const AsyncFunction = (async () => { }).constructor;
     const executeScript = AsyncFunction(
@@ -25,12 +26,16 @@ const bridge: Window['bridge'] = {
       'require',
       `
                         const $ = insomnia, pm = insomnia;
+                        const patchlog = (...args)=>insomnia.log.push(args.map(a=>JSON.stringify(s)).join(' '))
+                        console={log:patchlog,error:patchlog,warn:patchlog,info:patchlog,debug:patchlog};
                         ${script};
                         return insomnia;
                     `
     );
     const mutatedContext = await executeScript(executionContext, requirePolyfill);
+    data.log = mutatedContext.log;
     console.log({ mutatedContext });
+
     return data;
   },
 };
