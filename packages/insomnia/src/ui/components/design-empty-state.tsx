@@ -61,7 +61,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
   }[];
 
   return (
-    <div className='flex items-center select-none'>
+    <div className='flex items-center select-none absolute top-0 left-0 w-full h-full pointer-events-none'>
       <div className="h-full w-full flex-1 overflow-y-auto divide-solid divide-y divide-[--hl-md] p-[--padding-md] flex flex-col items-center gap-2 overflow-hidden text-[--hl-lg]">
         <Heading className="text-lg p-[--padding-sm] font-bold flex-1 flex items-center flex-col gap-2">
           <Icon icon="drafting-compass" className="flex-1 w-28" />
@@ -70,20 +70,24 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
         <div className="flex-1 w-full flex flex-col justify-evenly items-center gap-2 p-[--padding-sm]">
           <p className="flex items-center gap-2">
             <Icon icon="lightbulb" />
-            <span className="truncate">
-              Or import an existing OpenAPI spec or <Button
+            <span className="truncate flex items-center gap-2">
+              Or import an existing OpenAPI spec or
+              <Button
+                className="pointer-events-auto font-bold text-[--hl-lg] hover:text-[--hl] focus:text-[--hl] transition-colors"
                 onPress={async () => {
                   const spec = await import('./example-openapi-spec');
 
                   onImport(spec.exampleOpenApiSpec);
                 }}
-              >start from an example</Button>
+              >
+                start from an example
+              </Button>
             </span>
           </p>
           <MenuTrigger>
             <Button
               aria-label="Project Actions"
-              className="items-center bg-[--hl-xs] gap-2 p-4 hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              className="pointer-events-auto items-center bg-[--hl-xs] gap-2 p-4 hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             >
               <span>Import OpenAPI</span>
               <Icon icon="caret-down" />
@@ -115,7 +119,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
           <ul className="flex flex-col gap-2">
             <li>
               <a
-                className="font-bold flex items-center gap-2 text-sm hover:text-[--hl] focus:text-[--hl] transition-colors"
+                className="pointer-events-auto font-bold flex items-center gap-2 text-sm hover:text-[--hl] focus:text-[--hl] transition-colors"
                 href={documentationLinks.workingWithDesignDocs.url}
               >
                 <span className="truncate">{documentationLinks.workingWithDesignDocs.title}</span>
