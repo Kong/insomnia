@@ -133,7 +133,6 @@ export async function sendCurlAndWriteTimeline(
 
   if ('error' in output) {
     await fs.promises.writeFile(timelinePath, timelineStrings.join(''));
-    console.log('wrote to timeline file', timelinePath);
 
     return {
       _id: responseId,
@@ -159,8 +158,6 @@ export async function sendCurlAndWriteTimeline(
   const lastRedirect = headerResults[headerResults.length - 1];
 
   await fs.promises.writeFile(timelinePath, timelineStrings.join(''));
-
-  console.log('wrote to timeline file', timelinePath);
 
   return {
     _id: responseId,
