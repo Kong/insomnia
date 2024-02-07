@@ -5,13 +5,15 @@ declare global {
   interface Window {
     bridge: {
       on: (channel: string, listener: (event: any) => void) => () => void;
-      runPreRequestScript: (script: string, data: { request: Request; log: string[] }) => Promise<{ request: Request }>;
+      runPreRequestScript: (script: string, data: RequestContext) => Promise<{ request: Request }>;
     };
   }
 }
-
+interface RequestContext {
+  request: Request; log: string[];
+}
 export interface HiddenBrowserWindowBridgeAPI {
-  runPreRequestScript: (options: { script: string; context: { request: Request; log: string[] } }) => Promise<{ request: Request }>;
+  runPreRequestScript: (options: { script: string; context: RequestContext }) => Promise<{ request: Request }>;
 };
 
 const work: HiddenBrowserWindowBridgeAPI = {
@@ -24,6 +26,7 @@ window.bridge.on('renderer-listener', async (event: MessageEvent) => {
   console.log('opened port to insomnia renderer');
   port.onmessage = async event => {
     try {
+      // TODO: consider removing this early abstraction
       invariant(event.data.type, 'Missing work type');
       const workType: 'runPreRequestScript' = event.data.type;
       invariant(work[workType], `Unknown work type ${workType}`);
