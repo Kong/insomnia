@@ -71,7 +71,13 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
           <p className="flex items-center gap-2">
             <Icon icon="lightbulb" />
             <span className="truncate">
-              Or import an existing OpenAPI spec or start from an example
+              Or import an existing OpenAPI spec or <Button
+                onPress={async () => {
+                  const spec = await import('./example-openapi-spec');
+
+                  onImport(spec.exampleOpenApiSpec);
+                }}
+              >start from an example</Button>
             </span>
           </p>
           <MenuTrigger>
