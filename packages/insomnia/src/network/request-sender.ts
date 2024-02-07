@@ -168,6 +168,11 @@ export class RequestSender {
                     }
                 }
 
+                const updatedCookieJar = rawObj.cookieJar;
+                if (this.cookieJar) {
+                    await models.cookieJar.update(this.cookieJar, { cookies: updatedCookieJar.cookies });
+                }
+
                 this.timeline.push({
                     value: 'Pre-request script execution done',
                     name: 'Text',

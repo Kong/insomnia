@@ -4,6 +4,7 @@ import { Cookie as InsomniaCookie, CookieJar as InsomniaCookieJar } from '../../
 import { Property, PropertyList } from './base';
 
 export interface CookieOptions {
+    id?: string;
     key: string;
     value: string;
     expires?: Date | string;
@@ -19,7 +20,7 @@ export interface CookieOptions {
 
 export class Cookie extends Property {
     readonly _kind: string = 'Cookie';
-    private cookie: ToughCookie;
+    protected cookie: ToughCookie;
     private extensions?: { key: string; value: string }[];
 
     constructor(cookieDef: CookieOptions | string) {
@@ -129,18 +130,46 @@ export class Cookie extends Property {
     valueOf = () => {
         return this.cookie.toJSON().value;
     };
+
+    key = () => {
+        return this.cookie.toJSON().key;
+    };
+
+    toJSON = () => {
+        return {
+            key: this.cookie.key,
+            value: this.cookie.value,
+            expires: this.cookie.expires === 'Infinity' ? undefined : this.cookie.expires,
+            maxAge: this.cookie.maxAge,
+            domain: this.cookie.domain,
+            path: this.cookie.path,
+            secure: this.cookie.secure,
+            httpOnly: this.cookie.httpOnly,
+            hostOnly: this.cookie.hostOnly,
+            session: this.cookie.extensions?.includes('session'),
+            extensions: this.extensions,
+        };
+    };
+}
+
+class CookieWrapper extends Cookie {
+    constructor(options: CookieOptions) {
+        super(options);
+    }
+
+    originalCookie = () => {
+        return this.cookie;
+    };
 }
 
 export class CookieList extends PropertyList<Cookie> {
     _kind: string = 'CookieList';
-    cookies: Cookie[];
 
     constructor(parent: CookieList | undefined, cookies: Cookie[]) {
         super(
             cookies
         );
         this._parent = parent;
-        this.cookies = cookies;
     }
 
     static isCookieList(obj: object) {
@@ -164,6 +193,7 @@ export class CookieObject extends CookieList {
                 }
 
                 return new Cookie({
+                    id: cookie.id,
                     key: cookie.key,
                     value: cookie.value,
                     expires: expires,
@@ -189,33 +219,93 @@ export class CookieObject extends CookieList {
     }
 }
 
-// TODO: current it only works for only 1 domain (url)
-// until Insomnia supports a whitelist for accessing cookies from script
-export class CookieJar {
-    private jar: ToughCookieJar;
-    private url: string;
+function fromToughCookie(toughCookie: ToughCookie): Cookie {
+    let expires: string | Date = '';
+    if (toughCookie.expires) {
+        if (typeof toughCookie.expires === 'number') {
+            expires = new Date(toughCookie.expires);
+        } else {
+            expires = toughCookie.expires;
+        }
+    }
+    let maxAge: string | undefined = undefined;
+    if (typeof toughCookie.maxAge === 'number') {
+        maxAge = `${toughCookie.maxAge}`;
+    }
 
-    constructor(url: string, cookies?: Cookie[]) {
-        this.jar = new ToughCookieJar();
-        this.url = url;
+    return new Cookie({
+        key: toughCookie.key,
+        value: toughCookie.value,
+        expires: expires,
+        maxAge: maxAge,
+        domain: toughCookie.domain || undefined,
+        path: toughCookie.path || undefined,
+        secure: toughCookie.secure,
+        httpOnly: toughCookie.httpOnly,
+        hostOnly: toughCookie.hostOnly || undefined,
+        session: undefined, // not supported in Insomnia
+        extensions: undefined, // TODO
+    });
+}
+
+export class CookieJar {
+    // CookieJar from tough-cookie can not be used, as it will failed in comparing context location and cookies' domain
+    // as it reads location from the browser window, it is "localhost"
+    private jar: Map<string, Map<string, ToughCookie>>; // domain -> <key -> cookie>
+    private jarName: string;
+
+    constructor(jarName: string, cookies?: Cookie[]) {
+        this.jarName = jarName;
+        this.jar = new Map();
 
         if (cookies) {
             cookies.forEach(cookie => {
-                this.jar.setCookieSync(
-                    new ToughCookie({ key: cookie.name, value: cookie.valueOf() }),
-                    url,
-                );
+                const properties = cookie.toJSON();
+                if (!properties.domain) {
+                    throw Error(`domain is not specified for the cookie ${cookie.key}`);
+                }
+
+                const domainCookies = this.jar.get(properties.domain) || new Map();
+                const domainCookie = new ToughCookie({
+                    key: properties.key,
+                    value: properties.value,
+                    expires: properties.expires,
+                    maxAge: properties.maxAge,
+                    domain: properties.domain,
+                    path: properties.path || undefined,
+                    secure: properties.secure,
+                    httpOnly: properties.httpOnly,
+                    extensions: properties.extensions ?
+                        properties.extensions.map(ext => `${encodeURIComponent(ext.key)}=${encodeURIComponent(ext.key)}`) :
+                        [],
+                    creation: undefined, // it is not supported in Cookie
+                });
+
+                this.jar.set(properties.domain, domainCookies.set(properties.key, domainCookie));
             });
         }
     }
 
-    set(url: string, name: string, value: string, cb: (error?: Error, cookie?: Cookie) => void) {
-        try {
-            const cookie = new ToughCookie({ key: name, value });
-            this.jar.setCookieSync(cookie, url);
-            cb(undefined, new Cookie({ key: name, value }));
-        } catch (e) {
-            cb(e, undefined);
+    set(url: string, key: string, value: string | CookieOptions, cb: (error?: Error, cookie?: Cookie) => void) {
+        const domainCookies = this.jar.get(url) || new Map();
+        if (typeof value === 'string') {
+            const domainCookie = new ToughCookie({
+                key: key,
+                value: value,
+                domain: url,
+                creation: new Date(),
+                expires: new Date(Date.now() + 1000 * 3600 * 24 * 30),
+            });
+            this.jar.set(url, domainCookies.set(key, domainCookie));
+            cb(undefined, new Cookie({
+                key: key,
+                value: value,
+                domain: url,
+            }));
+        } else {
+            const domainCookie = new CookieWrapper(value);
+            this.jar.set(url, domainCookies.set(key, domainCookie.originalCookie()));
+            cb(undefined, domainCookie); // TODO:
         }
     }
 
@@ -235,61 +325,61 @@ export class CookieJar {
     // }
 
     get(url: string, name: string, cb: (error?: Error, cookie?: Cookie) => void) {
-        const cookie = this.jar.getCookiesSync(url)
-            .find((cookie: ToughCookie) => {
-                return cookie.key === name;
-            });
-
-        cb(
-            undefined,
-            cookie ? new Cookie({ key: cookie?.key, value: cookie.value }) : undefined
-        );
+        const domainCookies = this.jar.get(url) || new Map();
+        const toughCookie = domainCookies.get(name);
+        cb(undefined, toughCookie ? fromToughCookie(toughCookie) : undefined);
     }
 
     getAll(url: string, cb: (error?: Error, cookies?: Cookie[]) => void) {
-        const cookies = this.jar.getCookiesSync(url)
-            .map((cookie: ToughCookie) => {
-                return new Cookie({ key: cookie?.key, value: cookie.value });
-            });
-
-        cb(undefined, cookies);
+        const domainCookies = this.jar.get(url) || new Map();
+        cb(
+            undefined,
+            Array.from(domainCookies.values())
+                .map((cookie: ToughCookie) => fromToughCookie(cookie)),
+        );
     }
 
     unset(url: string, name: string, cb: (error?: Error | null) => void) {
-        url = url.indexOf('://') < 0 ? 'http://' + url : url;
-        const urlObj = new URL(url);
-
-        this.jar.store.removeCookie(
-            urlObj.host,
-            urlObj.pathname,
-            name,
-            cb,
-        );
+        const domainCookies = this.jar.get(url);
+        if (!domainCookies) {
+            cb(undefined);
+        } else {
+            domainCookies.delete(name);
+            cb(undefined);
+        }
     }
 
     clear(url: string, cb: (error?: Error | null) => void) {
-        url = url.indexOf('://') < 0 ? 'http://' + url : url;
-        const urlObj = new URL(url);
-
-        this.jar.store.removeCookies(
-            urlObj.host,
-            urlObj.pathname,
-            cb,
-        );
+        this.jar.delete(url);
+        cb(undefined);
     }
 
     toInsomniaCookieJar() {
-        return new Promise((resolve, reject) => {
-            this.jar.getCookies(this.url, (err, cookies) => {
-                if (err) {
-                    reject(err);
-                }
-
-                resolve({
-                    name: this.url,
-                    cookies,
+        const cookies = new Array<Partial<InsomniaCookie>>();
+        Array.from(this.jar.values())
+            .forEach((domainCookies: Map<string, ToughCookie>) => {
+                Array.from(domainCookies.values()).forEach(cookie => {
+                    cookies.push({
+                        key: cookie.key,
+                        value: cookie.value,
+                        expires: cookie.expires,
+                        domain: cookie.domain || undefined,
+                        path: cookie.path || undefined,
+                        secure: cookie.secure,
+                        httpOnly: cookie.httpOnly,
+                        extensions: cookie.extensions || undefined,
+                        creation: cookie.creation || undefined,
+                        creationIndex: cookie.creationIndex,
+                        hostOnly: cookie.hostOnly || undefined,
+                        pathIsDefault: cookie.pathIsDefault || undefined,
+                        lastAccessed: cookie.lastAccessed || undefined,
+                    });
                 });
             });
-        });
+
+        return {
+            name: this.jarName,
+            cookies,
+        };
     }
 }

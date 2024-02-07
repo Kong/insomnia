@@ -235,7 +235,7 @@ export interface RawObject {
         proxy?: ProxyConfigOptions;
         certificate: CertificateOptions;
     };
-    cookies: CookieObject;
+    cookies?: InsomniaCookieJar;
 }
 
 export function initGlobalObject(
