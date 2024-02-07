@@ -33,7 +33,7 @@
     "inso-package": "npm run build:sr --workspace=packages/insomnia && npm run package --workspace=packages/insomnia-inso",
     "inso-package:artifacts": "npm run artifacts --workspace=packages/insomnia-inso",
     "test:bundled-inso": "npm run build --workspace=packages/insomnia-inso && npm run test:bundled-inso --workspace=packages/insomnia-inso",
-    "watch:app": "npm run build:main.min.js --workspace=packages/insomnia && npm run start:dev-server --workspace=packages/insomnia",
+    "watch:app": "PLAYWRIGHT=1 npm run build:main.min.js --workspace=packages/insomnia && npm run start:dev-server --workspace=packages/insomnia",
     "app-build": "npm run build --workspace=packages/insomnia",
     "app-package": "npm run package --workspace=packages/insomnia",
     "test:smoke:dev": "npm run test:dev --workspace=packages/insomnia-smoke-test -- --project=Smoke",
