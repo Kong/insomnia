@@ -26,7 +26,7 @@ const bridge: Window['bridge'] = {
       'require',
       `
                         const $ = insomnia, pm = insomnia;
-                        const patchlog = (...args)=>insomnia.log.push(args.map(a=>JSON.stringify(s)).join(' '))
+                        const patchlog = (...args)=>insomnia.log.push(args.map(a=>JSON.stringify(a)).join(' '))
                         console={log:patchlog,error:patchlog,warn:patchlog,info:patchlog,debug:patchlog};
                         ${script};
                         return insomnia;

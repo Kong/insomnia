@@ -71,6 +71,9 @@ export const fetchRequestData = async (requestId: string) => {
 };
 
 export const tryToExecutePreRequestScript = async (request: Request, environmentId: string, timelinePath:string, responseId:string) => {
+  if (!request.preRequestScript) {
+    return request;
+  }
   try {
     const output = await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request, log: [] } });
     console.log(`[network] Pre-request script succeeded req=${request._id}`, output);
