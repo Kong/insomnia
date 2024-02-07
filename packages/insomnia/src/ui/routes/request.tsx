@@ -444,7 +444,9 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
   const testRequest = childRequests[0] || (await models.request.create({ parentId: mockRoute._id, isPrivate: true }));
   invariant(testRequest, 'mock route is missing a testing request');
   const req = await models.request.update(testRequest, patch);
-
+  if (process.env.PLAYWRIGHT) {
+    req.headers = [...req.headers, { name: 'X-Mockbin-Test', value: 'true' }];
+  }
   const {
     environment,
     settings,
