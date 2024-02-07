@@ -73,7 +73,7 @@ export const fetchRequestData = async (requestId: string) => {
 export const tryToExecutePreRequestScript = async (request: Request, environmentId: string, timelinePath:string) => {
   try {
     const output = await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request } });
-    return output;
+    return output.request;
   } catch (err) {
     const responseId = generateId('res');
     const responsesDir = pathJoin(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'responses');
@@ -93,7 +93,7 @@ export const tryToExecutePreRequestScript = async (request: Request, environment
     };
     const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
     models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
-    return { response: res };
+    return null;
   }
 };
 export const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {

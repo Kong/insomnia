@@ -370,8 +370,8 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   } = await fetchRequestData(requestId);
   try {
     const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
-    const { request: mutatedRequest, response: scriptError } = await tryToExecutePreRequestScript(req, environment._id);
-    if (scriptError) {
+    const mutatedRequest = await tryToExecutePreRequestScript(req, environment._id, timelinePath);
+    if (!mutatedRequest) {
       return null;
     }
     const renderedResult = await tryToInterpolateRequest(mutatedRequest, environment._id, RENDER_PURPOSE_SEND);
