@@ -70,17 +70,13 @@ export const fetchRequestData = async (requestId: string) => {
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
-export const tryToExecutePreRequestScript = async (request: Request, environmentId: string, timelinePath:string) => {
+export const tryToExecutePreRequestScript = async (request: Request, environmentId: string, timelinePath:string, responseId:string) => {
   try {
     const output = await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request } });
     return output.request;
   } catch (err) {
-    const responseId = generateId('res');
-    const responsesDir = pathJoin(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'responses');
-    fs.mkdirSync(responsesDir, { recursive: true });
     await fs.promises.writeFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
 
-    console.log(`[network] Pre-request script failed req=${request._id} err=${err.message}`, environmentId);
     const requestId = request._id;
     const settings = await models.settings.get();
     const responsePatch = {
