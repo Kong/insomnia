@@ -75,7 +75,7 @@ export const tryToExecutePreRequestScript = async (request: Request, environment
     return request;
   }
   try {
-    const output = await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request, log: [] } });
+    const output = await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request } });
     console.log('[network] Pre-request script succeeded', output);
     return output.request;
   } catch (err) {
