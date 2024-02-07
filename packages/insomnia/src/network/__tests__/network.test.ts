@@ -106,6 +106,9 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      { write: () => { }, end: () => { } },
+      '',
+      ''
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -183,6 +186,9 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      { write: () => { }, end: () => { } },
+      '',
+      ''
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -285,6 +291,9 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      { write: () => { }, end: () => { } },
+      '',
+      ''
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -347,6 +356,9 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      { write: () => { }, end: () => { } },
+      '',
+      ''
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -429,6 +441,9 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      { write: () => { }, end: () => { } },
+      '',
+      ''
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -492,6 +507,9 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      { write: () => { }, end: () => { } },
+      '',
+      ''
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -534,6 +552,9 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      { write: () => { }, end: () => { } },
+      '',
+      ''
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -575,6 +596,9 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      { write: () => { }, end: () => { } },
+      '',
+      ''
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -617,6 +641,9 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      { write: () => { }, end: () => { } },
+      '',
+      ''
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -720,6 +747,9 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       { ...settings, validateSSL: false },
+      { write: () => { }, end: () => { } },
+      '',
+      ''
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -772,7 +802,10 @@ describe('sendCurlAndWriteTimeline()', () => {
     const responseV1 = await networkUtils.sendCurlAndWriteTimeline(renderedRequest, [], null, {
       ...settings,
       preferredHttpVersion: HttpVersions.V1_0,
-    });
+    },
+      { write: () => { }, end: () => { } },
+      '',
+      '');
     expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
     expect(getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
     expect(getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);
