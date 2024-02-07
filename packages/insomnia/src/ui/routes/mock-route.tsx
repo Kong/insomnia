@@ -167,6 +167,7 @@ export const MockRouteRoute = () => {
     createandSendPrivateRequest({
       url: mockbinUrl + '/bin/' + compoundId,
       method: mockRoute.method,
+      headers: mockRoute.headers,
       parentId: mockRoute._id,
     });
   };

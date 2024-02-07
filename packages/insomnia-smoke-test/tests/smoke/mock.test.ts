@@ -9,8 +9,8 @@ test('can make a mock route', async ({ page }) => {
   await page.getByTestId('CodeEditor').getByRole('textbox').fill('123');
   await page.getByRole('tab', { name: 'Response Headers' }).click();
   await page.locator('.CodeMirror').first().click();
-  await page.getByRole('textbox').nth(1).fill('my-header');
-  await page.getByRole('textbox').nth(2).fill('my-value');
+  await page.getByRole('textbox').nth(1).fill('X-Mockbin-Test');
+  await page.getByRole('textbox').nth(2).fill('true');
   await page.getByRole('tab', { name: 'Response Status' }).click();
   await page.getByPlaceholder('200').click();
   await page.getByPlaceholder('200').fill('201');
