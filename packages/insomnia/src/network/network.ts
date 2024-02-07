@@ -76,7 +76,7 @@ export const tryToExecutePreRequestScript = async (request: Request, environment
   }
   try {
     const output = await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request, log: [] } });
-    console.log(`[network] Pre-request script succeeded req=${request._id}`, output);
+    console.log('[network] Pre-request script succeeded', output);
     return output.request;
   } catch (err) {
     await fs.promises.writeFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
