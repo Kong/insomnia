@@ -102,7 +102,11 @@ const fetchGraphQLSchemaForRequest = async ({
       settings,
       clientCertificates,
       caCert,
-      activeEnvironmentId } = await fetchRequestData(introspectionRequest._id);
+      activeEnvironmentId,
+      timelineFileStream,
+      timelinePath,
+      responseId,
+    } = await fetchRequestData(introspectionRequest._id);
 
     const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
     const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
@@ -111,6 +115,9 @@ const fetchGraphQLSchemaForRequest = async ({
       clientCertificates,
       caCert,
       settings,
+      timelineFileStream,
+      timelinePath,
+      responseId,
     );
     const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
     const statusCode = response.statusCode || 0;

@@ -12,8 +12,11 @@ export function getSendRequestCallback() {
       settings,
       clientCertificates,
       caCert,
-      activeEnvironmentId } = await fetchRequestData(requestId);
-
+      activeEnvironmentId,
+      timelineFileStream,
+      timelinePath,
+      responseId,
+    } = await fetchRequestData(requestId);
     const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
     const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
@@ -35,6 +38,9 @@ export function getSendRequestCallback() {
       clientCertificates,
       caCert,
       settings,
+      timelineFileStream,
+      timelinePath,
+      responseId
     );
     const res = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;

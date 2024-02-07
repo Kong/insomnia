@@ -297,7 +297,11 @@ const sendAccessTokenRequest = async (requestId: string, authentication: AuthTyp
     settings,
     clientCertificates,
     caCert,
-    activeEnvironmentId } = await fetchRequestData(requestId);
+    activeEnvironmentId,
+    timelineFileStream,
+    timelinePath,
+    responseId,
+  } = await fetchRequestData(requestId);
 
   const newRequest: Request = await models.initModel(models.request.type, {
     headers: [
@@ -324,6 +328,9 @@ const sendAccessTokenRequest = async (requestId: string, authentication: AuthTyp
     clientCertificates,
     caCert,
     { ...settings, validateSSL: settings.validateAuthSSL },
+    timelineFileStream,
+    timelinePath,
+    responseId,
   );
   const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
 

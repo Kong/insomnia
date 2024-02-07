@@ -364,6 +364,9 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     clientCertificates,
     caCert,
     activeEnvironmentId,
+    timelineFileStream,
+    timelinePath,
+    responseId,
   } = await fetchRequestData(requestId);
   try {
     const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
@@ -388,6 +391,9 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       clientCertificates,
       caCert,
       settings,
+      timelineFileStream,
+      timelinePath,
+      responseId
     );
 
     const requestMeta = await models.requestMeta.getByParentId(requestId);
@@ -446,7 +452,11 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
     settings,
     clientCertificates,
     caCert,
-    activeEnvironmentId } = await fetchRequestData(req._id);
+    activeEnvironmentId,
+    timelineFileStream,
+    timelinePath,
+    responseId,
+  } = await fetchRequestData(req._id);
 
   const renderResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
@@ -455,6 +465,9 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
     clientCertificates,
     caCert,
     settings,
+    timelineFileStream,
+    timelinePath,
+    responseId,
   );
   const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
   await models.response.create(response);
