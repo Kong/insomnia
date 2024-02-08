@@ -4,6 +4,7 @@ import { useFetcher, useNavigate, useParams } from 'react-router-dom';
 
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
+import { isScratchpadOrganizationId } from '../../../models/organization';
 import { isRequest, Request } from '../../../models/request';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { invariant } from '../../../utils/invariant';
@@ -32,7 +33,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   const workspacesFetcher = useFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized) {
+    if (isIdleAndUninitialized && !isScratchpadOrganizationId(organizationId)) {
       workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}`);
     }
   }, [organizationId, projectId, workspacesFetcher]);
