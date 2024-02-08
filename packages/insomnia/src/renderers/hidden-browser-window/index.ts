@@ -25,23 +25,34 @@ const work: HiddenBrowserWindowBridgeAPI = {
         addHeader: (v: string) => context.request.headers.push({ name: v.split(':')[0], value: v.split(':')[1] }),
       },
     };
+
+    const log = [];
+    const consolePolyfill = {
+      log: (...args: any[]) => log.push(JSON.stringify({ value: args.map(a => JSON.stringify(a)).join('\n'), name: 'Text', timestamp: Date.now() }) + '\n'),
+    };
+
     const AsyncFunction = (async () => { }).constructor;
     const executeScript = AsyncFunction(
       'insomnia',
       'require',
+      'console',
       `
                         const $ = insomnia, pm = insomnia;
+                        // const originalConsole = console;
+                        // const console = {
+                        //     log: (...args) => {
+                        //         originalConsole.log(...args);
+                        //         insomnia.log.push(args.join(' '));
+                        //     },
+                        //   };
+                        //   console = originalConsole;
                          ${script};
                         return insomnia;
                     `
     );
 
-    const mutated = await executeScript(executionContext, window.bridge.requirePolyfill);
-    // mutated.log.push(JSON.stringify({ value: 'Ran pre request script', name: 'Text', timestamp: Date.now() }) + '\n');
-    console.log({ mutated, context });
-    // console.log('wrote to', context.timelinePath, mutated.log.join('\n'));
-    // await fs.promises.writeFile(context.timelinePath, mutated.log.join('\n'));
-    await window.bridge.requirePolyfill('fs').promises.appendFile(context.timelinePath, JSON.stringify({ value: 'proof that it works', name: 'Text', timestamp: Date.now() }) + '\n');
+    const mutated = await executeScript(executionContext, window.bridge.requirePolyfill, consolePolyfill);
+    await window.bridge.requirePolyfill('fs').promises.writeFile(context.timelinePath, log.join('\n'));
     return context;
   },
 };
