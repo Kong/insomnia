@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
-
+import fs from 'fs';
 const requirePolyfill = (moduleName: string) => {
-  if (['uuid', 'crypto'].includes(moduleName)) {
+  if (['uuid', 'crypto', 'fs'].includes(moduleName)) {
     return require(moduleName);
   }
   throw Error(`no module is found for "${moduleName}"`);
@@ -16,7 +16,6 @@ const bridge: Window['bridge'] = {
     console.log(script);
     const executionContext = {
       request: {
-        // log: [],
         addHeader: (v: string) => requestContext.request.headers.push({ name: v.split(':')[0], value: v.split(':')[1] }),
       },
     };
@@ -26,15 +25,17 @@ const bridge: Window['bridge'] = {
       'require',
       `
                         const $ = insomnia, pm = insomnia;
-                        // const patchlog = (...args)=>insomnia.log.push({ value: args.map(a=>JSON.stringify(a)).join(' '), name: 'Text', timestamp: Date.now() })
-                        // console={log:patchlog,error:patchlog,warn:patchlog,info:patchlog,debug:patchlog};
-                        ${script};
+                         ${script};
                         return insomnia;
                     `
     );
-    const mutated = await executeScript(executionContext, requirePolyfill);
-    console.log({ mutated });
 
+    const mutated = await executeScript(executionContext, requirePolyfill);
+    // mutated.log.push(JSON.stringify({ value: 'Ran pre request script', name: 'Text', timestamp: Date.now() }) + '\n');
+    console.log({ mutated, requestContext });
+    // console.log('wrote to', requestContext.timelinePath, mutated.log.join('\n'));
+    // await fs.promises.writeFile(requestContext.timelinePath, mutated.log.join('\n'));
+    await fs.promises.appendFile(requestContext.timelinePath, JSON.stringify({ value: 'proof that it works', name: 'Text', timestamp: Date.now() }) + '\n');
     return requestContext;
   },
 };

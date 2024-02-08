@@ -75,11 +75,11 @@ export const tryToExecutePreRequestScript = async (request: Request, environment
     return request;
   }
   try {
-    const output = await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request } });
+    const output = await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request, timelinePath } });
     console.log('[network] Pre-request script succeeded', output);
     return output.request;
   } catch (err) {
-    await fs.promises.writeFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
+    await fs.promises.appendFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
 
     const requestId = request._id;
     const settings = await models.settings.get();
@@ -158,7 +158,7 @@ export async function sendCurlAndWriteTimeline(
   const output = await nodejsCurlRequest(requestOptions);
 
   if ('error' in output) {
-    await fs.promises.writeFile(timelinePath, timelineStrings.join(''));
+    await fs.promises.appendFile(timelinePath, timelineStrings.join(''));
 
     return {
       _id: responseId,
@@ -183,7 +183,7 @@ export async function sendCurlAndWriteTimeline(
   }
   const lastRedirect = headerResults[headerResults.length - 1];
 
-  await fs.promises.writeFile(timelinePath, timelineStrings.join(''));
+  await fs.promises.appendFile(timelinePath, timelineStrings.join(''));
 
   return {
     _id: responseId,

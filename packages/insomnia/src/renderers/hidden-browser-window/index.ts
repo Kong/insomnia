@@ -11,6 +11,7 @@ declare global {
 }
 interface RequestContext {
   request: Request;
+  timelinePath: string;
 }
 export interface HiddenBrowserWindowBridgeAPI {
   runPreRequestScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
