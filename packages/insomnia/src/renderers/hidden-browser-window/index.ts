@@ -5,7 +5,7 @@ declare global {
   interface Window {
     bridge: {
       on: (channel: string, listener: (event: any) => void) => () => void;
-      runPreRequestScript: (script: string, data: RequestContext) => Promise<RequestContext>;
+      requirePolyfill: (module: string) => any;
     };
   }
 }
@@ -18,8 +18,31 @@ export interface HiddenBrowserWindowBridgeAPI {
 };
 
 const work: HiddenBrowserWindowBridgeAPI = {
-  runPreRequestScript: ({ script, context }) => {
-    return window.bridge.runPreRequestScript(script, context);
+  runPreRequestScript: async ({ script, context }) => {
+    console.log(script);
+    const executionContext = {
+      request: {
+        addHeader: (v: string) => context.request.headers.push({ name: v.split(':')[0], value: v.split(':')[1] }),
+      },
+    };
+    const AsyncFunction = (async () => { }).constructor;
+    const executeScript = AsyncFunction(
+      'insomnia',
+      'require',
+      `
+                        const $ = insomnia, pm = insomnia;
+                         ${script};
+                        return insomnia;
+                    `
+    );
+
+    const mutated = await executeScript(executionContext, window.bridge.requirePolyfill);
+    // mutated.log.push(JSON.stringify({ value: 'Ran pre request script', name: 'Text', timestamp: Date.now() }) + '\n');
+    console.log({ mutated, context });
+    // console.log('wrote to', context.timelinePath, mutated.log.join('\n'));
+    // await fs.promises.writeFile(context.timelinePath, mutated.log.join('\n'));
+    await window.bridge.requirePolyfill('fs').promises.appendFile(context.timelinePath, JSON.stringify({ value: 'proof that it works', name: 'Text', timestamp: Date.now() }) + '\n');
+    return context;
   },
 };
 window.bridge.on('renderer-listener', async (event: MessageEvent) => {
