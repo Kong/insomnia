@@ -17,6 +17,7 @@
   "author": "Kong <office@konghq.com>",
   "main": "src/main.min.js",
   "scripts": {
+    "watch:hidden-window": "esbuild --watch --bundle --platform=browser --sourcemap --format=cjs --target=esnext --outfile=./src/renderers/hidden-browser-window/build/index.js ./src/renderers/hidden-browser-window/index.ts",
     "build": "npm run build:sr && npm run build:app",
     "build:app": "esr --cache ./scripts/build.ts --noErrorTruncation",
     "build:main.min.js": "cross-env NODE_ENV=development esr esbuild.main.ts",

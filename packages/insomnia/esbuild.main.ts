@@ -47,7 +47,6 @@ export default async function build(options: Options) {
 
   const hiddenBrowserWindow = esbuild.build({
     entryPoints: ['./src/renderers/hidden-browser-window/index.ts'],
-    // the hidden browser window script is always outputed to 'src' as index.html requires a built bundle
     outfile: path.join(__dirname, 'src', 'renderers/hidden-browser-window/build/index.js'),
     target: 'esnext',
     bundle: true,
