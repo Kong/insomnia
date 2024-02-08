@@ -16,6 +16,17 @@ export interface HiddenBrowserWindowBridgeAPI {
   runPreRequestScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
 };
 
+window.bridge.onmessage(async (data, callback) => {
+  console.log('opened port to insomnia renderer', data);
+  try {
+    const result = await runPreRequestScript(data);
+    console.log('got', { input: data, result });
+    callback(result);
+  } catch (err) {
+    console.error('error', err);
+    callback({ error: err.message });
+  }
+});
 const runPreRequestScript = async ({ script, context }: { script: string; context: RequestContext }): Promise<RequestContext> => {
   console.log(script);
   const executionContext = {
@@ -43,23 +54,9 @@ const runPreRequestScript = async ({ script, context }: { script: string; contex
   const mutatedInsomniaObject = await executeScript(executionContext,
     window.bridge.requirePolyfill,
     consolePolyfill);
+
   await window.bridge.requirePolyfill('fs').promises.writeFile(context.timelinePath, log.join('\n'));
   console.log('mutatedInsomniaObject', mutatedInsomniaObject);
   console.log('context', context);
   return context;
 };
-
-window.bridge.on('renderer-listener', async (event: MessageEvent) => {
-  const [port] = event.ports;
-  console.log('opened port to insomnia renderer');
-  port.onmessage = async event => {
-    try {
-      const result = await runPreRequestScript(event.data);
-      console.log('got', { input: event.data, result });
-      port.postMessage(result);
-    } catch (err) {
-      console.error('error', err);
-      port.postMessage({ error: err.message });
-    }
-  };
-});

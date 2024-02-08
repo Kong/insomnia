@@ -12,7 +12,16 @@ const bridge: Window['bridge'] = {
     return () => ipcRenderer.removeListener(channel, listener);
   },
   requirePolyfill,
+  onmessage: listener => {
+    ipcRenderer.on('renderer-listener', (event: MessageEvent) => {
+      const [port] = event.ports;
+      console.log('[preload] opened port to insomnia renderer');
+      const callback = result => port.postMessage(result);
+      port.onmessage = event => listener(event.data, callback);
+    });
+  },
 };
+
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('bridge', bridge);
 } else {

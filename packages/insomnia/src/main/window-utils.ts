@@ -72,7 +72,7 @@ export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow
     show: process.env.NODE_ENV === 'development',
     title: 'HiddenBrowserWindow',
     webPreferences: {
-      contextIsolation: false,
+      contextIsolation: true,
       nodeIntegration: true,
       webSecurity: true,
       preload: path.join(__dirname, 'renderers/hidden-browser-window/build/preload.js'),
