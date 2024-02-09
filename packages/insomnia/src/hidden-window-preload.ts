@@ -4,7 +4,7 @@ import type { Request } from './models/request';
 declare global {
   interface Window {
     bridge: {
-      requireIntercepter: (module: string) => any;
+      requireInterceptor: (module: string) => any;
       onmessage: (listener: (data: any, callback: (result: any) => void) => void) => void;
     };
   }
@@ -25,7 +25,7 @@ const bridge: Window['bridge'] = {
     ipcRenderer.on('renderer-listener', rendererListener);
     return () => ipcRenderer.removeListener('renderer-listener', rendererListener);
   },
-  requireIntercepter: (moduleName: string) => {
+  requireInterceptor: (moduleName: string) => {
     if (['uuid', 'crypto', 'fs'].includes(moduleName)) {
       return require(moduleName);
     }

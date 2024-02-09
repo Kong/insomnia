@@ -40,11 +40,11 @@ const runPreRequestScript = async ({ script, context }: { script: string; contex
 
   const mutatedInsomniaObject = await executeScript(
     executionContext,
-    window.bridge.requireIntercepter,
+    window.bridge.requireInterceptor,
     consoleInterceptor
   );
 
-  await window.bridge.requireIntercepter('fs').promises.writeFile(context.timelinePath, log.join('\n'));
+  await window.bridge.requireInterceptor('fs').promises.writeFile(context.timelinePath, log.join('\n'));
   console.log('mutatedInsomniaObject', mutatedInsomniaObject);
   console.log('context', context);
   return context;
