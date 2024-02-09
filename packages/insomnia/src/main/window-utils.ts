@@ -74,7 +74,6 @@ export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: true,
-      webSecurity: true,
       preload: path.join(__dirname, 'hidden-window-preload.js'),
       spellcheck: false,
       devTools: process.env.NODE_ENV === 'development',
@@ -100,6 +99,8 @@ export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow
     const { port1, port2 } = new MessageChannelMain();
     hiddenBrowserWindow.webContents.postMessage('renderer-listener', null, [port1]);
     event.senderFrame.postMessage('hidden-browser-window-response-listener', null, [port2]);
+    port1.close();
+    port2.close();
   });
   return hiddenBrowserWindow;
 }
