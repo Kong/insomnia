@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-import type { Request } from '../../models/request';
+import type { Request } from './models/request';
 declare global {
   interface Window {
     bridge: {
