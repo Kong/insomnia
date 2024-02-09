@@ -7,6 +7,7 @@ import { oas } from '@stoplight/spectral-rulesets';
 import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
+import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
 import * as models from '../../models';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
@@ -48,6 +49,7 @@ export interface MainBridgeAPI {
       create: (options: { parentId: string; path: string }) => Promise<string>;
     };
   };
+  hiddenBrowserWindow: HiddenBrowserWindowBridgeAPI;
 }
 export function registerMainHandlers() {
   ipcMain.handle('insomniaFetch', async (_, options: Parameters<typeof insomniaFetch>[0]) => {

@@ -33,6 +33,6 @@
     "src/coverage",
     "src/main.min.js",
     "src/preload.js",
-    "src/hidden-browser-window/build"
+    "src/hidden-window-preload.js",
   ],
 }

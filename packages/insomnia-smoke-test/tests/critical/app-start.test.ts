@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test('can send requests', async ({ app, page }) => {
+test('can use node-libcurl, httpsnippet, hidden browser window', async ({ app, page }) => {
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.locator('[data-testid="CodeEditor"]:visible', {
     has: page.locator('.CodeMirror-activeline'),
@@ -30,4 +30,10 @@ test('can send requests', async ({ app, page }) => {
   await page.getByRole('menuitemradio', { name: 'Generate Code' }).click();
   await page.getByText('curl --request GET \\').click();
   await page.getByRole('button', { name: 'Done' }).click();
+
+  await page.getByLabel('Request Collection').getByTestId('sends request with pre-request script').press('Enter');
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+  await expect(statusTag).toContainText('200 OK');
+  await page.getByRole('tab', { name: 'Timeline' }).click();
+  await expect(responseBody).toContainText('my-pre-request-header:');
 });

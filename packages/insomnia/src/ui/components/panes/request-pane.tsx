@@ -14,6 +14,7 @@ import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/us
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
+import { CodeEditor } from '../codemirror/code-editor';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
@@ -110,7 +111,6 @@ export const RequestPane: FC<Props> = ({
   if (!activeRequest) {
     return <PlaceholderRequestPane />;
   }
-
   const pathParameters = getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters);
 
   const onPathParameterChange = (pathParameters: RequestParameter[]) => {
@@ -289,6 +289,26 @@ export const RequestPane: FC<Props> = ({
               </button>
             </TabPanelFooter>
           </HeaderContainer>
+        </TabItem>
+        <TabItem
+          key="pre-request-script"
+          title={'Pre-request Script'}
+          aria-label={'experimental'}
+        >
+          <ErrorBoundary
+            key={uniqueKey}
+            errorClassName="tall wide vertically-align font-error pad text-center"
+          >
+            <CodeEditor
+              id="pre-request-script-editor"
+              showPrettifyButton
+              uniquenessKey={uniqueKey}
+              defaultValue={activeRequest.preRequestScript || ''}
+              onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
+              mode='text/javascript'
+              placeholder="..."
+            />
+          </ErrorBoundary>
         </TabItem>
         <TabItem
           key="docs"

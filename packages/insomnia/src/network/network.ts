@@ -70,6 +70,32 @@ export const fetchRequestData = async (requestId: string) => {
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
+export const tryToExecutePreRequestScript = async (request: Request, environmentId: string, timelinePath:string, responseId:string) => {
+  if (!request.preRequestScript) {
+    return request;
+  }
+  try {
+    const output = await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request, timelinePath } });
+    console.log('[network] Pre-request script succeeded', output);
+    return output.request;
+  } catch (err) {
+    await fs.promises.appendFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
+
+    const requestId = request._id;
+    const settings = await models.settings.get();
+    const responsePatch = {
+      _id: responseId,
+      parentId: requestId,
+      environmentId,
+      timelinePath,
+      statusMessage: 'Error',
+      error: err.message,
+    };
+    const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
+    models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+    return null;
+  }
+};
 export const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
   try {
     return await getRenderedRequestAndContext({
@@ -132,7 +158,7 @@ export async function sendCurlAndWriteTimeline(
   const output = await nodejsCurlRequest(requestOptions);
 
   if ('error' in output) {
-    await fs.promises.writeFile(timelinePath, timelineStrings.join(''));
+    await fs.promises.appendFile(timelinePath, timelineStrings.join(''));
 
     return {
       _id: responseId,
@@ -157,7 +183,7 @@ export async function sendCurlAndWriteTimeline(
   }
   const lastRedirect = headerResults[headerResults.length - 1];
 
-  await fs.promises.writeFile(timelinePath, timelineStrings.join(''));
+  await fs.promises.appendFile(timelinePath, timelineStrings.join(''));
 
   return {
     _id: responseId,
