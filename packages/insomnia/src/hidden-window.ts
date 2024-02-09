@@ -7,7 +7,12 @@ export interface HiddenBrowserWindowBridgeAPI {
 window.bridge.onmessage(async (data, callback) => {
   console.log('[hidden-browser-window] recieved message', data);
   try {
-    const result = await runPreRequestScript(data);
+    const timeoutPromise = new Promise(resolve => {
+      setTimeout(() => {
+        resolve({ error: 'Timeout: Operation took too long' });
+      }, 5000);
+    });
+    const result = await Promise.race([timeoutPromise, runPreRequestScript(data)]);
     callback(result);
   } catch (err) {
     console.error('error', err);
