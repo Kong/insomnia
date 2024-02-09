@@ -37,7 +37,7 @@ export function authorizeUserInWindow({
       proxyEnabled,
       httpProxy,
       httpsProxy,
-      noProxy
+      noProxy,
     } = await models.settings.get();
 
     // Create a child window
@@ -147,9 +147,9 @@ export function authorizeUserInWindow({
         proxyRules:
           (httpProxy ? `http=${httpProxy};` : '') +
           (httpsProxy ? `https=${httpsProxy}` : ''),
-        proxyBypassRules: noProxy
+        proxyBypassRules: noProxy,
       });
-      console.log(`[oauth2] Proxy loaded`);
+      console.log('[oauth2] Proxy loaded');
     }
 
     try {
