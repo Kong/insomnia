@@ -23,7 +23,7 @@ export default async function build(options: Options) {
         `http://localhost:${PORT}/index.html`
       ),
       'process.env.HIDDEN_BROWSER_WINDOW_URL': JSON.stringify(
-        `http://localhost:${PORT}/renderers/hidden-browser-window/index.html`
+        `http://localhost:${PORT}/hidden-window.html`
       ),
       'process.env.NODE_ENV': JSON.stringify('development'),
       'process.env.INSOMNIA_ENV': JSON.stringify('development'),
@@ -45,19 +45,9 @@ export default async function build(options: Options) {
     external: ['electron'],
   });
 
-  const hiddenBrowserWindow = esbuild.build({
-    entryPoints: ['./src/renderers/hidden-browser-window/index.ts'],
-    outfile: path.join(__dirname, 'src', 'renderers/hidden-browser-window/build/index.js'),
-    target: 'esnext',
-    bundle: true,
-    platform: 'browser',
-    sourcemap: true,
-    format: 'cjs',
-    external: [],
-  });
   const hiddenBrowserWindowPreload = esbuild.build({
-    entryPoints: ['./src/renderers/hidden-browser-window/preload.ts'],
-    outfile: path.join(__dirname, 'src', 'renderers/hidden-browser-window/build/preload.js'),
+    entryPoints: ['./src/hidden-window-preload.ts'],
+    outfile: path.join(outdir, 'hidden-window-preload.js'),
     target: 'esnext',
     bundle: true,
     platform: 'node',
@@ -84,7 +74,6 @@ export default async function build(options: Options) {
   return Promise.all([
     main,
     preload,
-    hiddenBrowserWindow,
     hiddenBrowserWindowPreload,
   ]);
 }

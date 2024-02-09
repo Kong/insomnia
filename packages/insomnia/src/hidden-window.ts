@@ -1,4 +1,4 @@
-import type { RequestContext } from './preload';
+import { RequestContext } from './hidden-window-preload';
 
 export interface HiddenBrowserWindowBridgeAPI {
   runPreRequestScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
