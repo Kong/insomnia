@@ -4,8 +4,7 @@ import type { Request } from './models/request';
 declare global {
   interface Window {
     bridge: {
-      on: (channel: string, listener: (event: any) => void) => () => void;
-      requirePolyfill: (module: string) => any;
+      requireIntercepter: (module: string) => any;
       onmessage: (listener: (data: any, callback: (result: any) => void) => void) => void;
     };
   }
@@ -16,16 +15,6 @@ export interface RequestContext {
 }
 
 const bridge: Window['bridge'] = {
-  on: (channel, listener) => {
-    ipcRenderer.on(channel, listener);
-    return () => ipcRenderer.removeListener(channel, listener);
-  },
-  requirePolyfill: (moduleName: string) => {
-    if (['uuid', 'crypto', 'fs'].includes(moduleName)) {
-      return require(moduleName);
-    }
-    throw Error(`no module is found for "${moduleName}"`);
-  },
   onmessage: listener => {
     const rendererListener = (event: IpcRendererEvent) => {
       const [port] = event.ports;
@@ -35,6 +24,12 @@ const bridge: Window['bridge'] = {
     };
     ipcRenderer.on('renderer-listener', rendererListener);
     return () => ipcRenderer.removeListener('renderer-listener', rendererListener);
+  },
+  requireIntercepter: (moduleName: string) => {
+    if (['uuid', 'crypto', 'fs'].includes(moduleName)) {
+      return require(moduleName);
+    }
+    throw Error(`no module is found for "${moduleName}"`);
   },
 };
 

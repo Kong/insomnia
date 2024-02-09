@@ -23,7 +23,7 @@ const runPreRequestScript = async ({ script, context }: { script: string; contex
   };
 
   const log: string[] = [];
-  const consolePolyfill = {
+  const consoleInterceptor = {
     log: (...args: any[]) => log.push(JSON.stringify({ value: args.map(a => JSON.stringify(a)).join('\n'), name: 'Text', timestamp: Date.now() }) + '\n'),
   };
 
@@ -38,11 +38,13 @@ const runPreRequestScript = async ({ script, context }: { script: string; contex
       return insomnia;`
   );
 
-  const mutatedInsomniaObject = await executeScript(executionContext,
-    window.bridge.requirePolyfill,
-    consolePolyfill);
+  const mutatedInsomniaObject = await executeScript(
+    executionContext,
+    window.bridge.requireIntercepter,
+    consoleInterceptor
+  );
 
-  await window.bridge.requirePolyfill('fs').promises.writeFile(context.timelinePath, log.join('\n'));
+  await window.bridge.requireIntercepter('fs').promises.writeFile(context.timelinePath, log.join('\n'));
   console.log('mutatedInsomniaObject', mutatedInsomniaObject);
   console.log('context', context);
   return context;
