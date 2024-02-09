@@ -6,6 +6,7 @@ import {
   dialog,
   Menu,
   type MenuItemConstructorOptions,
+  MessageChannelMain,
   screen,
   shell,
 } from 'electron';
@@ -68,24 +69,22 @@ export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow
     });
   }
   const hiddenBrowserWindow = new BrowserWindow({
-    show: false,
+    show: process.env.NODE_ENV === 'development',
     title: 'HiddenBrowserWindow',
     webPreferences: {
-      sandbox: true,
       contextIsolation: true,
-      nodeIntegration: false,
-      webSecurity: true,
-      preload: path.join(__dirname, 'renderers/hidden-browser-window/preload.js'),
+      nodeIntegration: true,
+      preload: path.join(__dirname, 'hidden-window-preload.js'),
       spellcheck: false,
+      devTools: process.env.NODE_ENV === 'development',
     },
   });
   browserWindows.set('HiddenBrowserWindow', hiddenBrowserWindow);
 
-  const hiddenBrowserWindowPath = path.resolve(__dirname, './renderers/hidden-browser-window/index.html');
+  const hiddenBrowserWindowPath = path.resolve(__dirname, 'hidden-window.html');
   const hiddenBrowserWindowUrl = process.env.HIDDEN_BROWSER_WINDOW_URL || pathToFileURL(hiddenBrowserWindowPath).href;
   hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
-
-  console.log('[main][init hidden win step 1/6]: starting hidden browser window');
+  console.log(`[main] Loading ${hiddenBrowserWindowUrl}`);
 
   hiddenBrowserWindow.on('closed', () => {
     if (browserWindows.get('HiddenBrowserWindow')) {
@@ -93,7 +92,16 @@ export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow
       browserWindows.delete('HiddenBrowserWindow');
     }
   });
+  const mainWindow = browserWindows.get('Insomnia');
 
+  invariant(mainWindow, 'mainWindow is not defined');
+  mainWindow.webContents.mainFrame.ipc.on('open-channel-to-hidden-browser-window', event => {
+    const { port1, port2 } = new MessageChannelMain();
+    hiddenBrowserWindow.webContents.postMessage('renderer-listener', null, [port1]);
+    event.senderFrame.postMessage('hidden-browser-window-response-listener', null, [port2]);
+    port1.close();
+    port2.close();
+  });
   return hiddenBrowserWindow;
 }
 

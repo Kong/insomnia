@@ -6,9 +6,7 @@ import { test } from '../../playwright/test';
 test('can send requests', async ({ app, page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-  const responseBody = page.locator('[data-testid="CodeEditor"]:visible', {
-    has: page.locator('.CodeMirror-activeline'),
-  });
+  const responseBody = page.getByTestId('response-pane');
 
   const text = await loadFixture('smoke-test-collection.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);

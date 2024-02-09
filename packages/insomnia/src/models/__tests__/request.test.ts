@@ -21,6 +21,7 @@ describe('init()', () => {
       description: '',
       parameters: [],
       pathParameters: [],
+      preRequestScript: '',
       url: '',
       settingStoreCookies: true,
       settingSendCookies: true,
@@ -58,6 +59,7 @@ describe('create()', () => {
       name: 'Test Request',
       parameters: [],
       pathParameters: [],
+      preRequestScript: '',
       url: '',
       settingStoreCookies: true,
       settingSendCookies: true,
@@ -391,6 +393,7 @@ describe('migrate()', () => {
       authentication: {},
       parameters: [],
       pathParameters: [],
+      preRequestScript: '',
       parentId: null,
       body: {
         mimeType: '',

@@ -561,6 +561,7 @@ export async function getRenderedRequestAndContext(
       settingFollowRedirects: renderedRequest.settingFollowRedirects,
       type: renderedRequest.type,
       url: renderedRequest.url,
+      preRequestScript: renderedRequest.preRequestScript,
     },
   };
 }
