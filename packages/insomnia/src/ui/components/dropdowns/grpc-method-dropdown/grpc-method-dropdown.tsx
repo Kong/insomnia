@@ -65,6 +65,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
       display_name: getShortGrpcPath(fullPath),
       type,
       example,
+      isDisabled: disabled,
     })),
   }));
   const selectedPath = selectedMethod?.fullPath;
@@ -78,7 +79,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
       }}
       className="h-full"
       selectedKey={selectedPath}
-      isDisabled={disabled}
+      isDisabled={methods.length === 0}
     >
       <Button className="px-4 py-1 disabled:bg-[--hl-xs] h-full disabled:cursor-not-allowed font-semibold flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] data-[pressed]:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
         <SelectValue<{
