@@ -1,26 +1,13 @@
-import type { Request } from '../../models/request';
+import type { RequestContext } from './preload';
 
-declare global {
-  interface Window {
-    bridge: {
-      on: (channel: string, listener: (event: any) => void) => () => void;
-      requirePolyfill: (module: string) => any;
-    };
-  }
-}
-interface RequestContext {
-  request: Request;
-  timelinePath: string;
-}
 export interface HiddenBrowserWindowBridgeAPI {
   runPreRequestScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
 };
 
 window.bridge.onmessage(async (data, callback) => {
-  console.log('opened port to insomnia renderer', data);
+  console.log('[hidden-browser-window] recieved message', data);
   try {
     const result = await runPreRequestScript(data);
-    console.log('got', { input: data, result });
     callback(result);
   } catch (err) {
     console.error('error', err);
