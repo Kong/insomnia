@@ -193,48 +193,67 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
 
   for (const environment of subEnvironments) {
     const model = getModel(environment.type);
-    model && ResourceIdMap.set(environment._id, generateId(model.prefix));
-
-    await db.docCreate(environment.type, {
-      ...environment,
-      _id: ResourceIdMap.get(environment._id),
-      parentId: baseEnvironment._id,
-    });
+    model && ResourceIdMap.set(environment._id, environment._id || generateId(model.prefix));
+    if (model) {
+      const existingEnvironment = await db.get(model?.type, environment._id);
+      if (existingEnvironment) {
+        await db.docUpdate(existingEnvironment, {
+          ...environment,
+          _id: ResourceIdMap.get(environment._id),
+          parentId: baseEnvironment._id,
+        });
+      } else {
+        await db.docCreate(environment.type, {
+          ...environment,
+          _id: ResourceIdMap.get(environment._id),
+          parentId: baseEnvironment._id,
+        });
+      }
+    }
   }
 
-  // Create new ids for each resource below optionalResources
+  // Create new ids if needed for each resource below optionalResources
   for (const resource of optionalResources) {
     const model = getModel(resource.type);
-    model && ResourceIdMap.set(resource._id, generateId(model.prefix));
+    model && ResourceIdMap.set(resource._id, resource._id || generateId(model.prefix));
   }
 
   // Preserve optionalResource relationships
   for (const resource of optionalResources) {
     const model = getModel(resource.type);
     if (model) {
-      // Make sure we point to the new proto file
-      if (isGrpcRequest(resource)) {
-        await db.docCreate(model.type, {
+      const existingDoc = await db.get(model?.type, resource._id);
+      if (existingDoc) {
+        await db.docUpdate(existingDoc, {
           ...resource,
           _id: ResourceIdMap.get(resource._id),
-          protoFileId: ResourceIdMap.get(resource.protoFileId),
-          parentId: ResourceIdMap.get(resource.parentId),
-        });
-
-        // Make sure we point unit test to the new request
-      } else if (isUnitTest(resource)) {
-        await db.docCreate(model.type, {
-          ...resource,
-          _id: ResourceIdMap.get(resource._id),
-          requestId: ResourceIdMap.get(resource.requestId),
           parentId: ResourceIdMap.get(resource.parentId),
         });
       } else {
-        await db.docCreate(model.type, {
-          ...resource,
-          _id: ResourceIdMap.get(resource._id),
-          parentId: ResourceIdMap.get(resource.parentId),
-        });
+        // Make sure we point to the new proto file
+        if (isGrpcRequest(resource)) {
+          await db.docCreate(model.type, {
+            ...resource,
+            _id: ResourceIdMap.get(resource._id),
+            protoFileId: ResourceIdMap.get(resource.protoFileId),
+            parentId: ResourceIdMap.get(resource.parentId),
+          });
+
+          // Make sure we point unit test to the new request
+        } else if (isUnitTest(resource)) {
+          await db.docCreate(model.type, {
+            ...resource,
+            _id: ResourceIdMap.get(resource._id),
+            requestId: ResourceIdMap.get(resource.requestId),
+            parentId: ResourceIdMap.get(resource.parentId),
+          });
+        } else {
+          await db.docCreate(model.type, {
+            ...resource,
+            _id: ResourceIdMap.get(resource._id),
+            parentId: ResourceIdMap.get(resource.parentId),
+          });
+        }
       }
     }
   }
@@ -288,7 +307,6 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
       contentType: apiSpec.contentType,
       fileName: workspaceToImport?.name,
     });
-
   }
 
   // If we're importing into a new workspace
@@ -302,33 +320,42 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
 
   for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
     const model = getModel(resource.type);
-    model && ResourceIdMap.set(resource._id, generateId(model.prefix));
+    model && ResourceIdMap.set(resource._id, resource._id || generateId(model.prefix));
   }
 
   for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
     const model = getModel(resource.type);
 
     if (model) {
-      if (isGrpcRequest(resource)) {
-        await db.docCreate(model.type, {
+      const existingResource = await db.get(model.type, resource._id);
+      if (existingResource) {
+        await db.docUpdate(existingResource, {
           ...resource,
           _id: ResourceIdMap.get(resource._id),
-          protoFileId: ResourceIdMap.get(resource.protoFileId),
-          parentId: ResourceIdMap.get(resource.parentId),
-        });
-      } else if (isUnitTest(resource)) {
-        await db.docCreate(model.type, {
-          ...resource,
-          _id: ResourceIdMap.get(resource._id),
-          requestId: ResourceIdMap.get(resource.requestId),
           parentId: ResourceIdMap.get(resource.parentId),
         });
       } else {
-        await db.docCreate(model.type, {
-          ...resource,
-          _id: ResourceIdMap.get(resource._id),
-          parentId: ResourceIdMap.get(resource.parentId),
-        });
+        if (isGrpcRequest(resource)) {
+          await db.docCreate(model.type, {
+            ...resource,
+            _id: ResourceIdMap.get(resource._id),
+            protoFileId: ResourceIdMap.get(resource.protoFileId),
+            parentId: ResourceIdMap.get(resource.parentId),
+          });
+        } else if (isUnitTest(resource)) {
+          await db.docCreate(model.type, {
+            ...resource,
+            _id: ResourceIdMap.get(resource._id),
+            requestId: ResourceIdMap.get(resource.requestId),
+            parentId: ResourceIdMap.get(resource.parentId),
+          });
+        } else {
+          await db.docCreate(model.type, {
+            ...resource,
+            _id: ResourceIdMap.get(resource._id),
+            parentId: ResourceIdMap.get(resource.parentId),
+          });
+        }
       }
     }
   }
