@@ -26,7 +26,7 @@ test('can send gRPC requests with reflection', async ({ app, page }) => {
   await page.getByTestId('button-server-reflection').click();
 
   await page.getByRole('button', { name: 'Select Method' }).click();
-  await page.getByRole('menuitem', { name: 'RouteGuide/GetFeature' }).click();
+  await page.getByRole('option', { name: 'RouteGuide/GetFeature' }).click();
 
   await page.getByRole('tab', { name: 'Unary' }).click();
   await page.getByRole('button', { name: 'Send' }).click();

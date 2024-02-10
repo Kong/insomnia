@@ -205,9 +205,9 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
       },
       {
         id: 'revert',
-        name: 'Revert to latest commit',
+        name: 'Discard all changes',
         icon: 'undo',
-        isDisabled: historyCount === 0 || rollbackFetcher.state !== 'idle',
+        isDisabled: historyCount === 0 || rollbackFetcher.state !== 'idle' || !canCreateSnapshot,
         action: () => {
           rollbackFetcher.submit({}, {
             method: 'POST',

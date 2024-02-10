@@ -31,6 +31,10 @@ export default defineConfig(({ mode }) => {
       brotliSize: false,
       emptyOutDir: false,
       rollupOptions: {
+        input: {
+          mainWindow: path.join(__dirname, 'src/index.html'),
+          hiddenBrowserWindow: path.join(__dirname, 'src/hidden-window.html'),
+        },
         external: ['@getinsomnia/node-libcurl'],
       },
     },
@@ -49,15 +53,7 @@ export default defineConfig(({ mode }) => {
           ...builtinModules.map(m => `node:${m}`),
         ],
       }),
-      react({
-        jsxRuntime: 'automatic',
-        babel: {
-          plugins: [
-            // We need to have these plugins installed in our dependencies
-            ['@babel/plugin-transform-class-properties', { loose: true }],
-          ],
-        },
-      }),
+      react(),
     ],
   };
 });

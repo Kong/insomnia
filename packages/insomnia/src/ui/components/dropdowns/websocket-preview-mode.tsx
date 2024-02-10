@@ -12,7 +12,7 @@ export const WebSocketPreviewMode: FC<Props> = ({ previewMode, onClick }) => {
     <Dropdown
       aria-label="Websocket Preview Mode Dropdown"
       triggerButton={
-        <DropdownButton className="tall">
+        <DropdownButton className="tall !text-[--hl]">
           {{
             [CONTENT_TYPE_JSON]: 'JSON',
             [CONTENT_TYPE_PLAINTEXT]: 'Raw',

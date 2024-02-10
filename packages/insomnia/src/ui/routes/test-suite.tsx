@@ -1,12 +1,14 @@
 import React, { Fragment, useRef, useState } from 'react';
 import {
   Button,
+  DropIndicator,
   Heading,
   ListBox,
   ListBoxItem,
   Popover,
   Select,
   SelectValue,
+  useDragAndDrop,
 } from 'react-aria-components';
 import {
   LoaderFunction,
@@ -21,7 +23,7 @@ import { documentationLinks } from '../../common/documentation';
 import * as models from '../../models';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRequest, Request } from '../../models/request';
-import { isUnitTest, UnitTest } from '../../models/unit-test';
+import { UnitTest } from '../../models/unit-test';
 import { UnitTestSuite } from '../../models/unit-test-suite';
 import { isWebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
@@ -90,13 +92,12 @@ const UnitTestItemView = ({
               if (name) {
                 updateUnitTestFetcher.submit(
                   {
-                    code: unitTest.code,
                     name,
-                    requestId: unitTest.requestId || '',
                   },
                   {
                     action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
                     method: 'POST',
+                    encType: 'application/json',
                   }
                 );
               }
@@ -110,13 +111,12 @@ const UnitTestItemView = ({
           onSelectionChange={requestId => {
             updateUnitTestFetcher.submit(
               {
-                code: unitTest.code,
-                name: unitTest.name,
                 requestId,
               },
               {
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
                 method: 'post',
+                encType: 'application/json',
               }
             );
           }}
@@ -306,12 +306,11 @@ const UnitTestItemView = ({
             updateUnitTestFetcher.submit(
               {
                 code,
-                name: unitTest.name,
-                requestId: unitTest.requestId || '',
               },
               {
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
                 method: 'post',
+                encType: 'application/json',
               }
             )
           }
@@ -369,7 +368,7 @@ export const loader: LoaderFunction = async ({
   const workspaceEntities = await database.withDescendants(workspace);
   const requests: Request[] = workspaceEntities.filter(isRequest);
 
-  const unitTestSuite = await database.getWhere(models.unitTestSuite.type, {
+  const unitTestSuite = await database.getWhere<UnitTestSuite>(models.unitTestSuite.type, {
     _id: testSuiteId,
   });
 
@@ -383,8 +382,14 @@ export const loader: LoaderFunction = async ({
 
   invariant(unitTestSuite, 'Test Suite not found');
 
-  const unitTests = (await database.withDescendants(unitTestSuite)).filter(
-    isUnitTest
+  const unitTests = await database.find<UnitTest>(
+    models.unitTest.type,
+    {
+      parentId: testSuiteId,
+    },
+    {
+      metaSortKey: 1,
+    }
   );
 
   return {
@@ -407,13 +412,67 @@ const TestSuiteRoute = () => {
 
   const createUnitTestFetcher = useFetcher();
   const runAllTestsFetcher = useFetcher();
-  const renameTestSuiteFetcher = useFetcher();
+  const updateTestSuiteFetcher = useFetcher();
+  const updateUnitTestFetcher = useFetcher();
 
   const testsRunning = runAllTestsFetcher.state === 'submitting';
 
+  const optimisticUpdateTestSuiteName = updateTestSuiteFetcher.json && typeof updateTestSuiteFetcher.json === 'object' &&
+    'name' in updateTestSuiteFetcher.json && updateTestSuiteFetcher.json?.name?.toString();
+
   const testSuiteName =
-    renameTestSuiteFetcher.formData?.get('name')?.toString() ??
+    optimisticUpdateTestSuiteName ||
     unitTestSuite.name;
+
+  const unitTestsDragAndDrop = useDragAndDrop({
+    getItems: keys => [...keys].map(key => ({ 'text/plain': key.toString() })),
+    onReorder(e) {
+      const source = [...e.keys][0];
+      const sourceTest = unitTests.find(test => test._id === source);
+      const targetTest = unitTests.find(test => test._id === e.target.key);
+
+      if (!sourceTest || !targetTest) {
+        return;
+      }
+      const dropPosition = e.target.dropPosition;
+      if (dropPosition === 'before') {
+        const currentTestIndex = unitTests.findIndex(test => test._id === targetTest._id);
+        const previousTest = unitTests[currentTestIndex - 1];
+        if (!previousTest) {
+          sourceTest.metaSortKey = targetTest.metaSortKey - 1;
+        } else {
+          sourceTest.metaSortKey = (previousTest.metaSortKey + targetTest.metaSortKey) / 2;
+        }
+      }
+      if (dropPosition === 'after') {
+        const currentTestIndex = unitTests.findIndex(test => test._id === targetTest._id);
+        const nextEnv = unitTests[currentTestIndex + 1];
+        if (!nextEnv) {
+          sourceTest.metaSortKey = targetTest.metaSortKey + 1;
+        } else {
+          sourceTest.metaSortKey = (nextEnv.metaSortKey + targetTest.metaSortKey) / 2;
+        }
+      }
+
+      updateUnitTestFetcher.submit(
+        { metaSortKey: sourceTest.metaSortKey },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${sourceTest._id}/update`,
+          method: 'POST',
+          encType: 'application/json',
+        }
+      );
+    },
+    renderDropIndicator(target) {
+      return (
+        <DropIndicator
+          target={target}
+          className="outline-[--color-surprise] outline-1 outline !border-none"
+        />
+      );
+    },
+  });
+
   return (
     <div className="flex flex-col h-full w-full overflow-hidden divide-solid divide-y divide-[--hl-md]">
       <div className="flex flex-shrink-0 gap-2 p-[--padding-md]">
@@ -422,11 +481,12 @@ const TestSuiteRoute = () => {
             className='w-full px-1'
             onSubmit={name =>
               name &&
-              renameTestSuiteFetcher.submit(
+              updateTestSuiteFetcher.submit(
                 { name },
                 {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/rename`,
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/update`,
                   method: 'POST',
+                  encType: 'application/json',
                 }
               )
             }
@@ -505,15 +565,25 @@ const TestSuiteRoute = () => {
         </div>
       )}
       {unitTests.length > 0 && (
-        <ul className="flex-1 flex flex-col divide-y divide-solid divide-[--hl-md] overflow-y-auto">
-          {unitTests.map(unitTest => (
-            <UnitTestItemView
-              key={unitTest._id}
-              unitTest={unitTest}
-              testsRunning={testsRunning}
-            />
-          ))}
-        </ul>
+        <ListBox
+          dragAndDropHooks={unitTestsDragAndDrop.dragAndDropHooks}
+          items={unitTests.map(unitTest => ({
+            ...unitTest,
+            id: unitTest._id,
+            key: unitTest._id,
+          }))}
+          className="flex-1 flex flex-col divide-y divide-solid divide-[--hl-md] overflow-y-auto"
+        >
+          {unitTest => (
+            <ListBoxItem className="outline-none">
+              <Button slot="drag" className="hidden" />
+              <UnitTestItemView
+                unitTest={unitTest}
+                testsRunning={testsRunning}
+              />
+            </ListBoxItem>
+          )}
+        </ListBox>
       )}
     </div>
   );

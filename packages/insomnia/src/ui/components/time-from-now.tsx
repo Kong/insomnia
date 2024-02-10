@@ -16,7 +16,7 @@ const toTitleCase = (value: string) => (
     .join(' ')
 );
 
-function getTimeFromNow(timestamp: string | number | Date, titleCase: boolean): string {
+export function getTimeFromNow(timestamp: string | number | Date, titleCase: boolean): string {
   const date = new Date(timestamp);
   let text = formatDistanceToNowStrict(date, { addSuffix: true });
   const now = new Date();
