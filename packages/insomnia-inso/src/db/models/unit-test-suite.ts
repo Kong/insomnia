@@ -36,7 +36,7 @@ export const loadTestSuites = (
   const workspace = loadWorkspace(db, apiSpec?.parentId || identifier); // if identifier is for an apiSpec or a workspace, return all suites for that workspace
 
   if (workspace) {
-    return db.UnitTestSuite.filter(s => s.parentId === workspace._id);
+    return db.UnitTestSuite.filter(s => s.parentId === workspace._id).sort((a, b) => a.metaSortKey - b.metaSortKey);
   } // load particular suite
 
   const result = loadUnitTestSuite(db, identifier);

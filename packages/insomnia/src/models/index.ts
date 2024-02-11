@@ -3,6 +3,8 @@ import {
   EXPORT_TYPE_COOKIE_JAR,
   EXPORT_TYPE_ENVIRONMENT,
   EXPORT_TYPE_GRPC_REQUEST,
+  EXPORT_TYPE_MOCK_ROUTE,
+  EXPORT_TYPE_MOCK_SERVER,
   EXPORT_TYPE_PROTO_DIRECTORY,
   EXPORT_TYPE_PROTO_FILE,
   EXPORT_TYPE_REQUEST,
@@ -22,6 +24,8 @@ import * as _environment from './environment';
 import * as _gitRepository from './git-repository';
 import * as _grpcRequest from './grpc-request';
 import * as _grpcRequestMeta from './grpc-request-meta';
+import * as _mockRoute from './mock-route';
+import * as _mockServer from './mock-server';
 import * as _oAuth2Token from './o-auth-2-token';
 import * as _pluginData from './plugin-data';
 import * as _project from './project';
@@ -64,6 +68,8 @@ export const caCertificate = _caCertificate;
 export const cookieJar = _cookieJar;
 export const environment = _environment;
 export const gitRepository = _gitRepository;
+export const mockServer = _mockServer;
+export const mockRoute = _mockRoute;
 export const oAuth2Token = _oAuth2Token;
 export const pluginData = _pluginData;
 export const request = _request;
@@ -109,6 +115,8 @@ export function all() {
     requestVersion,
     requestMeta,
     response,
+    mockServer,
+    mockRoute,
     oAuth2Token,
     caCertificate,
     clientCertificate,
@@ -211,6 +219,8 @@ export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {
   [EXPORT_TYPE_REQUEST]: request,
   [EXPORT_TYPE_WEBSOCKET_PAYLOAD]: webSocketPayload,
   [EXPORT_TYPE_WEBSOCKET_REQUEST]: webSocketRequest,
+  [EXPORT_TYPE_MOCK_SERVER]: mockServer,
+  [EXPORT_TYPE_MOCK_ROUTE]: mockRoute,
   [EXPORT_TYPE_GRPC_REQUEST]: grpcRequest,
   [EXPORT_TYPE_REQUEST_GROUP]: requestGroup,
   [EXPORT_TYPE_UNIT_TEST_SUITE]: unitTestSuite,

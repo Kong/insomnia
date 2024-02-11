@@ -1,12 +1,13 @@
 import { cosmiconfigSync } from 'cosmiconfig';
 
 import { GenerateConfigOptions } from './commands/generate-config';
-import { UNKNOWN_OBJ } from './types';
 
 interface ConfigFileOptions {
   __configFile?: {
-    options?: UNKNOWN_OBJ;
-    scripts?: UNKNOWN_OBJ;
+    options?: GlobalOptions;
+    scripts?: {
+      lint: string;
+    };
     filePath: string;
   };
 }
@@ -21,7 +22,7 @@ export type GlobalOptions = {
   src?: string;
 } & ConfigFileOptions;
 
-const OptionsSupportedInConfigFile: (keyof GlobalOptions)[] = [
+export const OptionsSupportedInConfigFile: (keyof GlobalOptions)[] = [
   'appDataDir',
   'workingDir',
   'ci',
@@ -36,7 +37,7 @@ export const loadCosmiConfig = (configFile?: string): Partial<ConfigFileOptions>
     const results = configFile ? explorer.load(configFile) : explorer.search();
 
     if (results && !results?.isEmpty) {
-      const options: UNKNOWN_OBJ = {};
+      const options: GlobalOptions = {};
       OptionsSupportedInConfigFile.forEach(key => {
         const value = results.config?.options?.[key];
 

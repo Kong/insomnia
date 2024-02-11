@@ -53,6 +53,8 @@ describe('NeDBClient', () => {
         models.apiSpec.type,
         models.environment.type,
         models.grpcRequest.type,
+        models.mockRoute.type,
+        models.mockServer.type,
         models.protoDirectory.type,
         models.protoFile.type,
         models.request.type,

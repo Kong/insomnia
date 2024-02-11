@@ -12,7 +12,10 @@ export function init() {
           settings,
           clientCertificates,
           caCert,
-          activeEnvironmentId } = await fetchRequestData(req._id);
+          activeEnvironmentId,
+          timelinePath,
+          responseId,
+        } = await fetchRequestData(req._id);
 
         const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND, extraInfo);
         const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
@@ -21,6 +24,8 @@ export function init() {
           clientCertificates,
           caCert,
           settings,
+          timelinePath,
+          responseId
         );
         const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
         return models.response.create(responsePatch, settings.maxHistoryResponses);

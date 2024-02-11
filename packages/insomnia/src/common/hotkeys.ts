@@ -12,7 +12,7 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   'request_showSettings': 'Show Request Settings',
   'preferences_showKeyboardShortcuts': 'Show Keyboard Shortcuts',
   'preferences_showGeneral': 'Show App Preferences',
-  'request_quickSwitch': 'Switch Requests',
+  'request_quickSwitch': 'Quick search',
   'request_showRecent': 'Show Recent Requests',
   'request_showRecentPrevious': 'Show Recent Requests (Previous)',
   'plugin_reload': 'Reload Plugins',

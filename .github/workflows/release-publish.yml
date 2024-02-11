@@ -15,6 +15,7 @@ env:
 
 jobs:
   publish:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch # Check out the release branch

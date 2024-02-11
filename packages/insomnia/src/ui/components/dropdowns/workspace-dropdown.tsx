@@ -6,6 +6,7 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { isLoggedIn } from '../../../account/session';
 import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
+import { exportMockServerToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import { isRemoteProject } from '../../../models/project';
@@ -39,11 +40,9 @@ export const WorkspaceDropdown: FC = () => {
   invariant(organizationId, 'Expected organizationId');
   const {
     activeWorkspace,
-    activeWorkspaceMeta,
     activeProject,
     activeApiSpec,
-    clientCertificates,
-    caCertificate,
+    activeMockServer,
     projects,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const activeWorkspaceName = activeWorkspace.name;
@@ -160,7 +159,9 @@ export const WorkspaceDropdown: FC = () => {
         id: 'export',
         name: 'Export',
         icon: <Icon icon='file-export' />,
-        action: () => setIsExportModalOpen(true),
+        action: () => activeWorkspace.scope !== 'mock-server'
+          ? setIsExportModalOpen(true)
+          : exportMockServerToFile(activeWorkspace),
       },
       {
         id: 'settings',
@@ -257,10 +258,8 @@ export const WorkspaceDropdown: FC = () => {
       {isSettingsModalOpen && (
         <WorkspaceSettingsModal
           workspace={activeWorkspace}
-          workspaceMeta={activeWorkspaceMeta}
-          clientCertificates={clientCertificates}
-          caCertificate={caCertificate}
-          onHide={() => setIsSettingsModalOpen(false)}
+          mockServer={activeMockServer}
+          onClose={() => setIsSettingsModalOpen(false)}
         />
       )}
       {isDeleteRemoteWorkspaceModalOpen && (

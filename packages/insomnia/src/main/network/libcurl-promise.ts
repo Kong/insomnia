@@ -145,6 +145,11 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       curl.setOpt(Curl.option.POSTFIELDS, requestBody);
     }
 
+    // NOTE: temporary workaround for testing mockbin api
+    if (process.env.PLAYWRIGHT) {
+      req.headers = [...req.headers, { name: 'X-Mockbin-Test', value: 'true' }];
+    }
+
     const headerStrings = parseHeaderStrings({ req, requestBody, requestBodyPath, finalUrl, authHeader });
     curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
 

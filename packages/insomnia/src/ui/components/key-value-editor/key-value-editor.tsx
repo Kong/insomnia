@@ -41,6 +41,7 @@ interface Props {
   }[]) => void;
   pairs: Pair[];
   valuePlaceholder?: string;
+  onBlur?: (e: FocusEvent) => void;
 }
 
 export const KeyValueEditor: FC<Props> = ({
@@ -56,6 +57,7 @@ export const KeyValueEditor: FC<Props> = ({
   onChange,
   pairs,
   valuePlaceholder,
+  onBlur,
 }) => {
   // We should make the pair.id property required and pass them in from the parent
   // smelly
@@ -109,6 +111,7 @@ export const KeyValueEditor: FC<Props> = ({
             descriptionPlaceholder={descriptionPlaceholder}
             hideButtons
             readOnly
+            onBlur={onBlur}
             onClick={() => onChange([...pairs, {
               // smelly
               id: generateId('pair'),
@@ -150,6 +153,7 @@ export const KeyValueEditor: FC<Props> = ({
             namePlaceholder={namePlaceholder}
             valuePlaceholder={valuePlaceholder}
             descriptionPlaceholder={descriptionPlaceholder}
+            onBlur={onBlur}
             onChange={pair => onChange(pairsWithIds.map(p => (p.id === pair.id ? pair : p)))}
             onDelete={pair => onChange(pairsWithIds.filter(p => p.id !== pair.id))}
             handleGetAutocompleteNameConstants={handleGetAutocompleteNameConstants}

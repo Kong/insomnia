@@ -9,6 +9,7 @@ on:
 
 jobs:
   update_homebrew:
+    timeout-minutes: 5
     name: Update Insomnia Formula
     # must be macos, linux-brew doesn't have casks
     runs-on: macos-latest

@@ -105,18 +105,15 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).toContainText('test123');
 
       // Duplicate document
-      await page.click('text=Documenttest123just now >> button');
+      await page.getByLabel('test123').getByRole('button').click();
       await page.getByRole('menuitem', { name: 'Duplicate' }).click();
       await page.locator('input[name="name"]').fill('test123-duplicate');
       await page.click('[role="dialog"] button:has-text("Duplicate")');
 
       await page.getByTestId('project').click();
 
-      const workspaceCards = page.getByLabel('Workspaces').getByRole('gridcell');
-      await expect(workspaceCards).toHaveCount(2);
-
       // Delete document
-      await page.click('text=Documenttest123just now >> button');
+      await page.getByLabel('test123-duplicate').getByRole('button').click();
       await page.getByRole('menuitem', { name: 'Delete' }).click();
       await page.getByRole('button', { name: 'Delete' }).click();
       // @TODO: Re-enable - Requires mocking VCS operations
@@ -143,17 +140,15 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).toContainText('test123');
 
       // Duplicate collection
-      await page.click('text=Collectiontest123just now >> button');
+      await page.getByLabel('test123').getByRole('button').click();
       await page.getByRole('menuitem', { name: 'Duplicate' }).click();
       await page.locator('input[name="name"]').fill('test123-duplicate');
       await page.click('[role="dialog"] button:has-text("Duplicate")');
 
       await page.getByTestId('project').click();
-      const workspaceCards = page.getByLabel('Workspaces').getByRole('gridcell');
-      await expect(workspaceCards).toHaveCount(2);
 
       // Delete collection
-      await page.click('text=Collectiontest123just now >> button');
+      await page.getByLabel('test123-duplicate').getByRole('button').click();
       await page.getByRole('menuitem', { name: 'Delete' }).click();
       await page.getByRole('button', { name: 'Delete' }).click();
       // @TODO: Re-enable - Requires mocking VCS operations

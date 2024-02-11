@@ -1,10 +1,12 @@
-import { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { FC, Fragment, Suspense, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
   Button,
+  DropIndicator,
   GridList,
+  GridListItem,
   Heading,
   ListBox,
   ListBoxItem,
@@ -13,6 +15,7 @@ import {
   Popover,
   Select,
   SelectValue,
+  useDragAndDrop,
 } from 'react-aria-components';
 import {
   LoaderFunction,
@@ -27,6 +30,7 @@ import {
   useRouteLoaderData,
 } from 'react-router-dom';
 
+import { database } from '../../common/database';
 import * as models from '../../models';
 import { Environment } from '../../models/environment';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
@@ -40,6 +44,7 @@ import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { showPrompt } from '../components/modals';
 import { CookiesModal } from '../components/modals/cookies-modal';
+import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TestRunStatus } from './test-results';
@@ -57,7 +62,16 @@ export const loader: LoaderFunction = async ({
 
   invariant(workspaceId, 'Workspace ID is required');
 
-  const unitTestSuites = await models.unitTestSuite.findByParentId(workspaceId);
+  const unitTestSuites = await database.find<UnitTestSuite>(
+    models.unitTestSuite.type,
+    {
+      parentId: workspaceId,
+    },
+    {
+      metaSortKey: 1,
+    }
+  );
+
   invariant(unitTestSuites, 'Unit test suites not found');
 
   return {
@@ -80,6 +94,8 @@ const TestRoute: FC = () => {
     activeProject,
     activeEnvironment,
     activeCookieJar,
+    caCertificate,
+    clientCertificates,
     subEnvironments,
     baseEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
@@ -92,10 +108,11 @@ const TestRoute: FC = () => {
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
+  const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
   const createUnitTestSuiteFetcher = useFetcher();
   const deleteUnitTestSuiteFetcher = useFetcher();
-  const renameTestSuiteFetcher = useFetcher();
+  const updateTestSuiteFetcher = useFetcher();
   const runAllTestsFetcher = useFetcher();
   const runningTests = useFetchers()
     .filter(
@@ -137,11 +154,12 @@ const TestRoute: FC = () => {
             defaultValue: unitTestSuites.find(s => s._id === suiteId)?.name,
             submitName: 'Rename',
             onComplete: name => {
-              name && renameTestSuiteFetcher.submit(
+              name && updateTestSuiteFetcher.submit(
                 { name },
                 {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/rename`,
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/update`,
                   method: 'POST',
+                  encType: 'application/json',
                 }
               );
             },
@@ -174,6 +192,51 @@ const TestRoute: FC = () => {
       },
     },
   ];
+
+  const testSuitesDragAndDrop = useDragAndDrop({
+    getItems: keys => [...keys].map(key => ({ 'text/plain': key.toString() })),
+    onReorder(e) {
+      const source = [...e.keys][0];
+      const sourceTestSuite = unitTestSuites.find(testSuite => testSuite._id === source);
+      const targetTestSuite = unitTestSuites.find(testSuite => testSuite._id === e.target.key);
+      if (!sourceTestSuite || !targetTestSuite) {
+        return;
+      }
+      const dropPosition = e.target.dropPosition;
+      if (dropPosition === 'before') {
+        const currentTestSuiteIndex = unitTestSuites.findIndex(testSuite => testSuite._id === targetTestSuite._id);
+        const previousTestSuite = unitTestSuites[currentTestSuiteIndex - 1];
+        if (!previousTestSuite) {
+          sourceTestSuite.metaSortKey = targetTestSuite.metaSortKey - 1;
+        } else {
+          sourceTestSuite.metaSortKey = (previousTestSuite.metaSortKey + targetTestSuite.metaSortKey) / 2;
+        }
+      }
+      if (dropPosition === 'after') {
+        const currentTestSuiteIndex = unitTestSuites.findIndex(testSuite => testSuite._id === targetTestSuite._id);
+        const nextEnv = unitTestSuites[currentTestSuiteIndex + 1];
+        if (!nextEnv) {
+          sourceTestSuite.metaSortKey = targetTestSuite.metaSortKey + 1;
+        } else {
+          sourceTestSuite.metaSortKey = (nextEnv.metaSortKey + targetTestSuite.metaSortKey) / 2;
+        }
+      }
+
+      updateTestSuiteFetcher.submit({ metaSortKey: sourceTestSuite.metaSortKey }, {
+        method: 'post',
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${sourceTestSuite._id}/update`,
+        encType: 'application/json',
+      });
+    },
+    renderDropIndicator(target) {
+      return (
+        <DropIndicator
+          target={target}
+          className="outline-[--color-surprise] outline-1 outline"
+        />
+      );
+    },
+  });
 
   return (
     <SidebarLayout
@@ -230,7 +293,7 @@ const TestRoute: FC = () => {
                                 borderColor: 'var(--color-font)',
                               }}
                             >
-                              <Icon className='text-xs w-5' icon="refresh" />
+                              <Icon className='text-xs w-5' icon="globe-americas" />
                             </span>
                             <span className='truncate'>
                               {baseEnvironment.name}
@@ -247,7 +310,7 @@ const TestRoute: FC = () => {
                             }}
                           >
                           <Icon
-                            icon={selectedItem.isPrivate ? 'lock' : 'refresh'}
+                            icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
                             style={{
                               color: selectedItem.color ?? 'var(--color-font)',
                             }}
@@ -287,8 +350,8 @@ const TestRoute: FC = () => {
                               }}
                             >
                               <Icon
-                                icon={item.isPrivate ? 'lock' : 'refresh'}
-                                className='text-xs'
+                                icon={item.isPrivate ? 'laptop-code' : 'globe-americas'}
+                                className='text-xs w-5'
                                 style={{
                                   color: item.color ?? 'var(--color-font)',
                                 }}
@@ -325,6 +388,13 @@ const TestRoute: FC = () => {
               <Icon icon="cookie-bite" className='w-5' />
                 <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
             </Button>
+              <Button
+                onPress={() => setCertificatesModalOpen(true)}
+                className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              >
+                <Icon icon="file-contract" className='w-5' />
+                <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates</span>
+              </Button>
           </div>
             <div className="p-[--padding-sm]">
               <Button
@@ -352,6 +422,7 @@ const TestRoute: FC = () => {
                 key: suite._id,
                 ...suite,
               }))}
+              dragAndDropHooks={testSuitesDragAndDrop.dragAndDropHooks}
               className="overflow-y-auto flex-1 data-[empty]:py-0 py-[--padding-sm]"
               disallowEmptySelection
               selectedKeys={[testSuiteId]}
@@ -367,7 +438,7 @@ const TestRoute: FC = () => {
             >
               {item => {
                 return (
-                  <ListBoxItem
+                  <GridListItem
                     key={item._id}
                     id={item._id}
                     textValue={item.name}
@@ -375,6 +446,7 @@ const TestRoute: FC = () => {
                   >
                     <div className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]">
                       <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+                      <Button slot="drag" className="hidden" />
                       <EditableInput
                         value={item.name}
                         name="name"
@@ -386,11 +458,12 @@ const TestRoute: FC = () => {
                           });
                         }}
                         onSubmit={name => {
-                          name && renameTestSuiteFetcher.submit(
+                          name && updateTestSuiteFetcher.submit(
                             { name },
                             {
-                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${item._id}/rename`,
+                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${item._id}/update`,
                               method: 'POST',
+                              encType: 'application/json',
                             }
                           );
                         }}
@@ -429,7 +502,7 @@ const TestRoute: FC = () => {
                         </Popover>
                       </MenuTrigger>
                     </div>
-                  </ListBoxItem>
+                  </GridListItem>
                 );
               }}
             </GridList>
@@ -442,6 +515,9 @@ const TestRoute: FC = () => {
           )}
           {isCookieModalOpen && (
             <CookiesModal onHide={() => setIsCookieModalOpen(false)} />
+          )}
+          {isCertificatesModalOpen && (
+            <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />
           )}
         </ErrorBoundary>
       }
