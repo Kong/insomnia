@@ -1,16 +1,8 @@
-import React, { FunctionComponent } from 'react';
-import styled from 'styled-components';
+import React, { Fragment, FunctionComponent } from 'react';
+import { Button, Header, ListBox, ListBoxItem, Popover, Section, Select, SelectValue } from 'react-aria-components';
 
-import type { GrpcMethodInfo } from '../../../../main/ipc/grpc';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
-import { GrpcMethodTag } from '../../tags/grpc-method-tag';
-import { Tooltip } from '../../tooltip';
-
-const DropdownMethodButtonLabel = styled.div({
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--padding-xs)',
-});
+import type { GrpcMethodInfo, GrpcMethodType } from '../../../../main/ipc/grpc';
+import { Icon } from '../../icon';
 
 interface Props {
   disabled?: boolean;
@@ -21,6 +13,13 @@ interface Props {
 const PROTO_PATH_REGEX = /^\/(?:(?<package>[\w.]+)\.)?(?<service>\w+)\/(?<method>\w+)$/;
 
 export const NO_PACKAGE_KEY = 'no-package';
+
+const GrpcMethodTypeAcronym = {
+  unary: 'U',
+  server: 'SS',
+  client: 'CS',
+  bidi: 'BD',
+} as const;
 
 function groupBy(list: {}[], keyGetter: (item: any) => string): Record<string, any[]> {
   const map = new Map();
@@ -48,9 +47,6 @@ export const getShortGrpcPath = (fullPath: string): string => {
   const methodName = result?.groups?.method;
   return packageName && serviceName && methodName ? `/${serviceName}/${methodName}` : fullPath;
 };
-const NormalCase = styled.span`
-  text-transform: initial;
-`;
 
 export const GrpcMethodDropdown: FunctionComponent<Props> = ({
   disabled,
@@ -59,61 +55,97 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
   handleChange,
 }) => {
   const groupedByPkg = groupGrpcMethodsByPackage(methods);
+  const sections = Object.entries(groupedByPkg).map(([name, pkg]) => ({
+    id: name,
+    name: name !== NO_PACKAGE_KEY ? `pkg: ${name}` : 'No package',
+    display_name: name !== NO_PACKAGE_KEY ? `pkg: ${name}` : 'No package',
+    items: pkg.map(({ type, fullPath, example }) => ({
+      id: fullPath,
+      fullPath,
+      display_name: getShortGrpcPath(fullPath),
+      type,
+      example,
+      isDisabled: disabled,
+    })),
+  }));
   const selectedPath = selectedMethod?.fullPath;
 
   return (
-    <Dropdown
-      aria-label='Select gRPC method dropdown'
-      className="tall wide"
+    <Select
+      aria-label="Select gRPC method"
+      name="method"
+      onSelectionChange={key => {
+        handleChange(key.toString());
+      }}
+      className="h-full"
+      selectedKey={selectedPath}
       isDisabled={methods.length === 0}
-      triggerButton={
-        <DropdownButton
-          size='medium'
-          className='tall wide'
-          removeBorderRadius
-          removePaddings={false}
-          disableHoverBehavior={false}
-          isDisabled={methods.length === 0}
-          style={{ maxWidth: '250px' }}
-        >
-          <Tooltip
-            message={selectedPath || 'Add proto file or use server reflection'}
-            position="bottom"
-            delay={500}
-            style={{ maxWidth: '240px', display: 'flex', alignItems: 'center' }}
-          >
-            <span style={{ maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {!selectedPath ? 'Select Method' : getShortGrpcPath(selectedPath)}
-            </span>
-            <i className="fa fa-caret-down pad-left-sm" />
-          </Tooltip>
-        </DropdownButton>
-      }
     >
-      {Object.entries(groupedByPkg).map(([name, pkg]) => (
-        <DropdownSection
-          key={name}
-          aria-label='Select gRPC method section'
-          title={name !== NO_PACKAGE_KEY && <NormalCase>pkg: {name}</NormalCase>}
+      <Button className="px-4 py-1 disabled:bg-[--hl-xs] h-full disabled:cursor-not-allowed font-semibold flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] data-[pressed]:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+        <SelectValue<{
+          id: string;
+          fullPath: string;
+          display_name: string;
+          type: GrpcMethodType;
+          example: Record<string, any> | undefined;
+        }>
+          className="flex truncate items-center justify-center gap-2"
         >
-          {pkg.map(({ type, fullPath }) => (
-            <DropdownItem
-              key={fullPath}
-              aria-label={fullPath}
-            >
-              <ItemContent
-                isDisabled={disabled}
-                isSelected={fullPath === selectedPath}
-                onClick={() => handleChange(fullPath)}
-              >
-                <Tooltip message={fullPath} position="right" delay={500}>
-                  <DropdownMethodButtonLabel><GrpcMethodTag methodType={type} /> {getShortGrpcPath(fullPath)}</DropdownMethodButtonLabel>
-                </Tooltip>
-              </ItemContent>
-            </DropdownItem>
-          ))}
-        </DropdownSection>
-      ))}
-    </Dropdown>
+          {({ selectedItem }) => {
+            if (!selectedItem) {
+              return (
+                <Fragment>
+                  <span>
+                    {selectedPath ? getShortGrpcPath(selectedPath) : 'Select Method'}
+                  </span>
+                </Fragment>
+              );
+            }
+
+            return (
+              <Fragment>
+                {selectedItem.display_name}
+              </Fragment>
+            );
+          }}
+        </SelectValue>
+        <Icon icon="caret-down" />
+      </Button>
+      <Popover className="min-w-max max-w-xs">
+        <ListBox
+          items={sections}
+          className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+        >
+          {item => (
+            <Section key={item.id}>
+              <Header className='flex px-[--padding-md] items-center gap-2 text-[--hl-md]'><span>{item.display_name}</span><span className='bg-[--hl-md] h-[1px] flex-1' /></Header>
+              {item.items.map(grpcMethod => (
+                <ListBoxItem
+                  id={grpcMethod.id}
+                  key={grpcMethod.id}
+                  className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                  aria-label={grpcMethod.display_name}
+                  textValue={grpcMethod.display_name}
+                  value={grpcMethod}
+                >
+                  {({ isSelected }) => (
+                    <Fragment>
+                      <em>{GrpcMethodTypeAcronym[grpcMethod.type]}</em>
+                      {grpcMethod.display_name}
+                      {isSelected && (
+                        <Icon
+                          icon="check"
+                          className="text-[--color-success] justify-self-end"
+                        />
+                      )}
+                    </Fragment>
+                  )}
+                </ListBoxItem>
+              ))}
+            </Section>
+          )}
+        </ListBox>
+      </Popover>
+    </Select >
   );
 };

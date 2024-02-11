@@ -10,5 +10,5 @@ test('can make a mock route', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Test' }).click();
   await page.getByRole('tab', { name: 'Timeline' }).click();
-  await page.getByText('200').click();
+  await page.getByText('HTTP/2 200').click();
 });
