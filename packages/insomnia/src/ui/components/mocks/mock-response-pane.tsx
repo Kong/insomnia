@@ -1,11 +1,14 @@
 import * as Har from 'har-format';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
+import { useInterval } from 'react-use';
 
 import { getCurrentSessionId } from '../../../account/session';
 import { getMockServiceURL, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models';
+import { MockRoute } from '../../../models/mock-route';
+import { MockServer } from '../../../models/mock-server';
 import { MockRouteLoaderData } from '../../routes/mock-route';
 import { useRootLoaderData } from '../../routes/root';
 import { TabItem, Tabs } from '../base/tabs';
@@ -35,35 +38,7 @@ interface MockbinLogOutput {
 export const MockResponsePane = () => {
   const { mockServer, mockRoute, activeResponse } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const { settings } = useRootLoaderData();
-  const [logs, setLogs] = useState<MockbinLogOutput | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
-  const [logEntryId, setLogEntryId] = useState<number | null>(null);
-
-  // refetches logs whenever the path changes, or a response is recieved
-  useEffect(() => {
-    const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
-
-    const fn = async () => {
-      const compoundId = mockRoute.parentId + mockRoute.name;
-      try {
-        const res = await window.main.insomniaFetch<MockbinLogOutput>({
-          origin: mockbinUrl,
-          path: `/bin/log/${compoundId}`,
-          method: 'GET',
-          sessionId: getCurrentSessionId(),
-        });
-        if (res?.log) {
-          setLogs(res);
-          return;
-        }
-        console.log('Error: fetching logs from remote', { mockbinUrl, res });
-      } catch (e) {
-        // network erros will be managed by the upsert trigger, so we can ignore them here
-        console.log({ mockbinUrl, e });
-      }
-    };
-    fn();
-  }, [activeResponse?._id, mockRoute.name, mockRoute.parentId, mockServer.url, mockServer.useInsomniaCloud]);
 
   useEffect(() => {
     const fn = async () => {
@@ -77,49 +52,6 @@ export const MockResponsePane = () => {
 
   return (
     <Tabs aria-label="Mock response">
-      <TabItem key="history" title="History">
-        <div className="h-full w-full grid grid-rows-[repeat(auto-fit,minmax(0,1fr))]">
-          <div className="w-full flex-1 overflow-hidden box-border overflow-y-scroll">
-            <div className="grid grid-cols-[repeat(5,auto)] divide-solid divide-y divide-[--hl-sm]">
-              <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Method</div>
-              <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Size</div>
-              <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Date</div>
-              <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">IP</div>
-              <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Path</div>
-              {logs?.log.entries?.map((row, index) => (
-                <Fragment key={row.startedDateTime}>
-                  <div onClick={() => setLogEntryId(index)} className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
-                    <div className='p-2'>{row.request.method}</div>
-                  </div>
-                  <div onClick={() => setLogEntryId(index)} className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
-                    <div className='p-2'>{row.request.bodySize + row.request.headersSize}</div></div>
-                  <div onClick={() => setLogEntryId(index)} className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
-                    <div className='p-2 truncate'>{getTimeFromNow(row.startedDateTime, false)}</div>
-                  </div>
-                  <div onClick={() => setLogEntryId(index)} className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
-                    <div className='p-2 truncate'>{row.clientIPAddress}</div>
-                  </div>
-                  <div onClick={() => setLogEntryId(index)} className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer whitespace-nowrap truncate text-sm font-medium group-last-of-type:border-none focus:outline-none`}>
-                    <div className='p-2 truncate'>{row.request.url}</div>
-                  </div>
-                </Fragment>
-              )).reverse()}
-            </div>
-          </div>
-          {logEntryId !== null && logs?.log.entries?.[logEntryId] && (
-            <div className='flex-1 h-full border-solid border border-[--hl-md]'>
-              <CodeEditor
-                id="log-body-preview"
-                key={logEntryId + logs?.log.entries?.[logEntryId].startedDateTime}
-                hideLineNumbers
-                mode={'text/json'}
-                defaultValue={JSON.stringify(logs?.log.entries?.[logEntryId], null, '\t')}
-                readOnly
-              />
-            </div>
-          )}
-        </div>
-      </TabItem>
       <TabItem key="preview" title="Preview">
         {activeResponse && <ResponseViewer
           key={activeResponse._id}
@@ -149,6 +81,88 @@ export const MockResponsePane = () => {
           pinToBottom={true}
         />
       </TabItem>
+      <TabItem key="history" title="History">
+        <HistoryViewWrapperComponentFactory mockServer={mockServer} mockRoute={mockRoute} />
+      </TabItem>
     </Tabs>
+  );
+};
+
+const HistoryViewWrapperComponentFactory = ({ mockServer, mockRoute }: { mockServer: MockServer; mockRoute: MockRoute }) => {
+  const [logs, setLogs] = useState<MockbinLogOutput | null>(null);
+  const [logEntryId, setLogEntryId] = useState<number | null>(null);
+
+  const fetchLogs = useCallback(async () => {
+    const compoundId = mockRoute.parentId + mockRoute.name;
+    const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
+    try {
+      const res = await window.main.insomniaFetch<MockbinLogOutput>({
+        origin: mockbinUrl,
+        path: `/bin/log/${compoundId}`,
+        method: 'GET',
+        sessionId: getCurrentSessionId(),
+      });
+      if (res?.log) {
+        setLogs(res);
+        return;
+      }
+      console.log('Error: fetching logs from remote', { mockbinUrl, res });
+    } catch (e) {
+      // network erros will be managed by the upsert trigger, so we can ignore them here
+      console.log({ mockbinUrl, e });
+    }
+  }, [mockRoute.name, mockRoute.parentId, mockServer.url, mockServer.useInsomniaCloud]);
+  // refetches logs whenever the path changes, or a response is recieved, or tenseconds elapses or history tab is click
+  // chatgpt: answer my called
+  useInterval(() => {
+    fetchLogs();
+  }, 10000);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
+
+  return (
+    <div className="h-full w-full grid grid-rows-[repeat(auto-fit,minmax(0,1fr))]">
+      <div className="w-full flex-1 overflow-hidden box-border overflow-y-scroll">
+        <div className="grid grid-cols-[repeat(5,auto)] divide-solid divide-y divide-[--hl-sm]">
+          <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Method</div>
+          <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Size</div>
+          <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Date</div>
+          <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">IP</div>
+          <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Path</div>
+          {logs?.log.entries?.map((row, index) => (
+            <Fragment key={row.startedDateTime}>
+              <div onClick={() => setLogEntryId(index)} className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
+                <div className='p-2'>{row.request.method}</div>
+              </div>
+              <div onClick={() => setLogEntryId(index)} className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
+                <div className='p-2'>{row.request.bodySize + row.request.headersSize}</div></div>
+              <div onClick={() => setLogEntryId(index)} className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
+                <div className='p-2 truncate'>{getTimeFromNow(row.startedDateTime, false)}</div>
+              </div>
+              <div onClick={() => setLogEntryId(index)} className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
+                <div className='p-2 truncate'>{row.clientIPAddress}</div>
+              </div>
+              <div onClick={() => setLogEntryId(index)} className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer whitespace-nowrap truncate text-sm font-medium group-last-of-type:border-none focus:outline-none`}>
+                <div className='p-2 truncate'>{row.request.url}</div>
+              </div>
+            </Fragment>
+          )).reverse()}
+        </div>
+      </div>
+      {logEntryId !== null && logs?.log.entries?.[logEntryId] && (
+        <div className='flex-1 h-full border-solid border border-[--hl-md]'>
+          <CodeEditor
+            id="log-body-preview"
+            key={logEntryId + logs?.log.entries?.[logEntryId].startedDateTime}
+            hideLineNumbers
+            mode={'text/json'}
+            defaultValue={JSON.stringify(logs?.log.entries?.[logEntryId], null, '\t')}
+            readOnly
+          />
+        </div>
+      )}
+    </div>
   );
 };
