@@ -1,0 +1,196 @@
+_type: export
+__export_format: 4
+__export_date: 2024-02-13T07:27:17.322Z
+__export_source: insomnia.desktop.app:v8.6.1
+resources:
+  - _id: req_bd8b1eb53418482585b70d0a9616a8cc
+    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
+    modified: 1707809216530
+    created: 1707809085329
+    url: https://api.insomnia.rest
+    name: Fetch from remote
+    description: ""
+    method: GET
+    body: {}
+    preRequestScript: |-
+      const res = await fetch('https://api.insomnia.rest');
+      console.log(res)
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/8.6.1
+    authentication: {}
+    metaSortKey: -1707809028549
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_6b9b8455fd784462ae19cd51d7156f86
+    parentId: null
+    modified: 1707808692801
+    created: 1707808692801
+    name: Pre-request Scripts
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: req_244fe815da6c4342a17f0cfd98cf648c
+    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
+    modified: 1707809218855
+    created: 1707808697304
+    url: ""
+    name: Long running task
+    description: ""
+    method: GET
+    body: {}
+    preRequestScript: |-
+      function delay(ms) {
+          return new Promise(resolve => setTimeout(resolve, ms));
+      }
+
+      async function printAfterDelay() {
+          console.log("Delaying");
+          await delay(3000);
+          console.log("Delayed");
+      }
+
+      await printAfterDelay();
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/8.6.1
+    authentication: {}
+    metaSortKey: -1707809028499
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_72099fd8f19e47f99554062989302711
+    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
+    modified: 1707809035895
+    created: 1707809028449
+    url: ""
+    name: Range error
+    description: ""
+    method: GET
+    body: {}
+    preRequestScript: let arr = new Array(-1); // Negative length
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/8.6.1
+    authentication: {}
+    metaSortKey: -1707809028449
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_2e524a047e9346b0a0d568f0f82b1568
+    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
+    modified: 1707808953866
+    created: 1707808727077
+    url: ""
+    name: Syntax error
+    description: ""
+    method: GET
+    body: {}
+    preRequestScript: console.log('Hello, world' // Missing closing parenthesis
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/8.6.1
+    authentication: {}
+    metaSortKey: -1707808727077
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_a398a5e19cc74611ae5fc9212980c14c
+    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
+    modified: 1707808979424
+    created: 1707808961112
+    url: ""
+    name: Type error
+    description: ""
+    method: GET
+    body: {}
+    preRequestScript: |-
+      let greeting = "Hello, world";
+      console.log(greetting); // Typo in variable name
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/8.6.1
+    authentication: {}
+    metaSortKey: -1707808712191
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_3084b61cefc0406e965362cccff9f8ce
+    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
+    modified: 1707809017110
+    created: 1707809000715
+    url: ""
+    name: Reference error
+    description: ""
+    method: GET
+    body: {}
+    preRequestScript: console.log(foo); // Typo in variable name
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/8.6.1
+    authentication: {}
+    metaSortKey: -1707808704748
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: env_f9ef1d097c5e00986051fcb4f7a921eea1a86916
+    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
+    modified: 1707808692805
+    created: 1707808692805
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1707808692805
+    _type: environment
+  - _id: jar_f9ef1d097c5e00986051fcb4f7a921eea1a86916
+    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
+    modified: 1707808692807
+    created: 1707808692807
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
