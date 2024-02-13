@@ -31,7 +31,7 @@ import {
   smartEncodeUrl,
 } from '../utils/url/querystring';
 import { getAuthHeader, getAuthQueryParams } from './authentication';
-import { cancellableCurlRequest } from './cancellation';
+import { cancellableCurlRequest, cancellableRunPreRequestScript } from './cancellation';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
@@ -75,7 +75,7 @@ export const tryToExecutePreRequestScript = async (request: Request, environment
     return request;
   }
   try {
-    const output = await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request, timelinePath } });
+    const output = await cancellableRunPreRequestScript({ script: request.preRequestScript, context: { request, timelinePath } });
     console.log('[network] Pre-request script succeeded', output);
     return output.request;
   } catch (err) {
