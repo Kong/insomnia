@@ -67,7 +67,6 @@ export const fetchRequestData = async (requestId: string) => {
   const responseId = generateId('res');
   const responsesDir = pathJoin((process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
-  await fs.promises.mkdir(responsesDir, { recursive: true });
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
