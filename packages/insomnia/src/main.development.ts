@@ -3,6 +3,7 @@ import electron, { app, ipcMain, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { userDataFolder } from '../config/config.json';
@@ -39,15 +40,8 @@ log.info(`Running version ${getAppVersion()}`);
 
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
-const envDataPath = process.env.INSOMNIA_DATA_PATH;
-if (envDataPath) {
-  app.setPath('userData', envDataPath);
-} else {
-  // Explicitly set userData folder from config because it's sketchy to rely on electron-builder to use productName, which could be changed by accident.
-  const defaultPath = app.getPath('userData');
-  const newPath = path.join(defaultPath, '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
-  app.setPath('userData', newPath);
-}
+const dataPath = process.env.INSOMNIA_DATA_PATH || path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
+app.setPath('userData', dataPath);
 
 // So if (window) checks don't throw
 global.window = global.window || undefined;
@@ -102,6 +96,8 @@ app.on('ready', async () => {
 
   // Init the rest
   await updates.init();
+  // recursive = ignore already exists error
+  await fs.mkdir(path.join(dataPath, 'responses'), { recursive: true });
 });
 
 // Set as default protocol
