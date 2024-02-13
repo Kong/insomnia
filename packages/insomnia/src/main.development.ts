@@ -3,6 +3,7 @@ import electron, { app, ipcMain, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { userDataFolder } from '../config/config.json';
@@ -39,15 +40,8 @@ log.info(`Running version ${getAppVersion()}`);
 
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
-const envDataPath = process.env.INSOMNIA_DATA_PATH;
-if (envDataPath) {
-  app.setPath('userData', envDataPath);
-} else {
-  // Explicitly set userData folder from config because it's sketchy to rely on electron-builder to use productName, which could be changed by accident.
-  const defaultPath = app.getPath('userData');
-  const newPath = path.join(defaultPath, '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
-  app.setPath('userData', newPath);
-}
+const dataPath = process.env.INSOMNIA_DATA_PATH || path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
+app.setPath('userData', dataPath);
 
 // So if (window) checks don't throw
 global.window = global.window || undefined;
@@ -102,6 +96,8 @@ app.on('ready', async () => {
 
   // Init the rest
   await updates.init();
+  // recursive = ignore already exists error
+  await fs.mkdir(path.join(dataPath, 'responses'), { recursive: true });
 });
 
 // Set as default protocol
@@ -160,6 +156,7 @@ const _launchApp = async () => {
       window = windowUtils.getOrCreateWindow();
       windowUtils.createHiddenBrowserWindow();
       window.webContents.send('shell:open', args.join());
+      window.webContents.setZoomFactor(1);
     }
   });
   // Disable deep linking in playwright e2e tests in order to run multiple tests in parallel
@@ -174,6 +171,8 @@ const _launchApp = async () => {
       app.on('second-instance', (_1, args) => {
         console.log('Second instance listener received:', args.join('||'));
         window = windowUtils.getOrCreateWindow();
+        window.webContents.setZoomFactor(1);
+
         if (window) {
           if (window.isMinimized()) {
             window.restore();
@@ -185,10 +184,13 @@ const _launchApp = async () => {
         window.webContents.send('shell:open', lastArg);
       });
       window = windowUtils.getOrCreateWindow();
+      window.webContents.setZoomFactor(1);
 
       app.on('open-url', (_event, url) => {
         console.log('[main] Open Deep Link URL', url);
         window = windowUtils.getOrCreateWindow();
+        window.webContents.setZoomFactor(1);
+
         if (window) {
           if (window.isMinimized()) {
             window.restore();
@@ -202,6 +204,7 @@ const _launchApp = async () => {
     }
   } else {
     window = windowUtils.getOrCreateWindow();
+    window.webContents.setZoomFactor(1);
   }
 
   // Don't send origin header from Insomnia because we're not technically using CORS

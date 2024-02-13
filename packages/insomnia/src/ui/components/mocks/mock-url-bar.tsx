@@ -53,7 +53,7 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
     </div>
     <div className='flex p-1'>
       <Button
-        className="bg-[--hl-sm] px-3 rounded-sm"
+        className="bg-[--hl-sm] px-3 rounded-sm aria-pressed:bg-[--hl-xs] data-[pressed]:bg-[--hl-xs]"
         onPress={() => {
           const compoundId = mockRoute.parentId + pathInput;
           window.clipboard.writeText(mockbinUrl + '/bin/' + compoundId);

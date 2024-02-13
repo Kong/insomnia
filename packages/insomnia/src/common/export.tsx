@@ -465,7 +465,7 @@ export const exportMockServerToFile = async (workspace: Workspace) => {
         return;
       }
       try {
-        const stringifiedExport = await exportMockServer(workspace, 'json');
+        const stringifiedExport = await exportMockServer(workspace, selectedFormat);
         writeExportedFileToFileSystem(fileName, stringifiedExport, err => err && console.warn('Export failed', err));
         window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat, scope: 'mock-server' } });
       } catch (err) {

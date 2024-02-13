@@ -96,8 +96,8 @@ export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]()
 export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequestOutput>(async resolve => {
   try {
     const responsesDir = path.join(getDataDirectory(), 'responses');
-    fs.mkdirSync(responsesDir, { recursive: true });
-
+    // TODO: remove this check, its only used for network.test.ts
+    await fs.promises.mkdir(responsesDir, { recursive: true });
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
 
     const { requestId, req, finalUrl, settings, certificates, caCertficatePath, socketPath, authHeader } = options;

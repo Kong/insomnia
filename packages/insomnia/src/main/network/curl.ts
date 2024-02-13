@@ -109,7 +109,6 @@ const openCurlConnection = async (
   }
 
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
-  fs.mkdirSync(responsesDir, { recursive: true });
 
   const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
