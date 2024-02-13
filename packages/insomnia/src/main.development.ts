@@ -96,7 +96,8 @@ app.on('ready', async () => {
 
   // Init the rest
   await updates.init();
-  await fs.mkdir(path.join(dataPath, 'responses'));
+  // recursive = ignore already exists error
+  await fs.mkdir(path.join(dataPath, 'responses'), { recursive: true });
 });
 
 // Set as default protocol

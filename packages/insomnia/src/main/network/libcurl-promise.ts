@@ -97,7 +97,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
   try {
     const responsesDir = path.join(getDataDirectory(), 'responses');
     // TODO: remove this check, its only used for network.test.ts
-    await fs.promises.mkdir(responsesDir);
+    await fs.promises.mkdir(responsesDir, { recursive: true });
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
 
     const { requestId, req, finalUrl, settings, certificates, caCertficatePath, socketPath, authHeader } = options;
