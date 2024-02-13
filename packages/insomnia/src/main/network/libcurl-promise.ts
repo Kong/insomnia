@@ -96,7 +96,6 @@ export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]()
 export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequestOutput>(async resolve => {
   try {
     const responsesDir = path.join(getDataDirectory(), 'responses');
-    fs.mkdirSync(responsesDir, { recursive: true });
 
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
 

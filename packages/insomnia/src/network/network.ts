@@ -65,7 +65,7 @@ export const fetchRequestData = async (requestId: string) => {
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const caCert = await models.caCertificate.findByParentId(workspaceId);
   const responseId = generateId('res');
-  const responsesDir = pathJoin(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
+  const responsesDir = pathJoin((process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
@@ -337,24 +337,3 @@ async function _applyResponsePluginHooks(
   }
 
 }
-
-// export function storeTimeline(timeline: ResponseTimelineEntry[]): Promise<string> {
-//   const timelineStr = JSON.stringify(timeline, null, '\t');
-//   const timelineHash = uuidv4();
-//   const responsesDir = pathJoin(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'), 'responses');
-
-//   fs.mkdirSync(responsesDir, { recursive: true });
-
-//   const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
-//   if (process.type === 'renderer') {
-//     return window.main.writeFile({ path: timelinePath, content: timelineStr });
-//   }
-//   return new Promise<string>((resolve, reject) => {
-//     fs.writeFile(timelinePath, timelineStr, err => {
-//       if (err != null) {
-//         return reject(err);
-//       }
-//       resolve(timelinePath);
-//     });
-//   });
-// }
