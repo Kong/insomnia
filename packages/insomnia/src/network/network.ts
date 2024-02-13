@@ -87,6 +87,7 @@ export const tryToExecutePreRequestScript = async (
       baseEnvironment: undefined,
     };
   }
+  const settings = await models.settings.get();
 
   try {
     const output = await cancellableRunPreRequestScript({
@@ -94,6 +95,7 @@ export const tryToExecutePreRequestScript = async (
       context: {
         request,
         timelinePath,
+        timeout: settings.timeout,
         // it inputs empty environment data when active environment is the base environment
         // this is more deterministic and avoids that script accidently manipulates baseEnvironment instead of environment
         environment: environment._id === baseEnvironment._id ? {} : (environment?.data || {}),
@@ -126,7 +128,6 @@ export const tryToExecutePreRequestScript = async (
     await fs.promises.appendFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
 
     const requestId = request._id;
-    const settings = await models.settings.get();
     const responsePatch = {
       _id: responseId,
       parentId: requestId,

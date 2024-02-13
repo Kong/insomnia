@@ -10,6 +10,7 @@ export const unsupportedError = (featureName: string, alternative?: string) => {
 export interface RequestContext {
     request: Request;
     timelinePath: string;
+    timeout: number;
     environment?: object;
     baseEnvironment?: object;
     collectionVariables?: object;
