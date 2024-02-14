@@ -2,7 +2,10 @@ import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
 import { KeyCombination } from './settings';
 
-const env = process['env'];
+// Vite is filtering out process.env variables that are not prefixed with VITE_.
+const ENV = 'env';
+
+const env = process[ENV];
 
 // App Stuff
 export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
