@@ -266,7 +266,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                   key="dropdown"
                   className="tall"
                   ref={dropdownRef}
-                    aria-label="Request Options"
+                  aria-label="Request Options"
                   closeOnSelect={false}
                   triggerButton={
                     <StyledDropdownButton
