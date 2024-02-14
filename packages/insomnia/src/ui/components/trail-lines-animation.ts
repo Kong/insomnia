@@ -1,5 +1,5 @@
 import { gsap } from 'gsap';
-import { MotionPathPlugin } from 'gsap/dist/MotionPathPlugin';
+import MotionPathPlugin from 'gsap/MotionPathPlugin';
 import type { RefObject } from 'react';
 export const internals = {
   LINE_WIDTH: 1.5,
