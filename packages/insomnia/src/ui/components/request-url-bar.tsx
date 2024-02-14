@@ -73,16 +73,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     activeWorkspace,
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const {
-    settings,
-  } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
   const { hotKeyRegistry } = settings;
   const { activeRequest, activeRequestMeta: { downloadPath } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const patchRequestMeta = useRequestMetaPatcher();
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditorHandle>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const focusInput = useCallback(() => {
     if (inputRef.current) {
@@ -213,9 +210,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     },
   });
 
-  const handleSendDropdownHide = useCallback(() => {
-    buttonRef.current?.blur();
-  }, []);
   const buttonText = isEventStreamRequest(activeRequest) ? 'Connect' : (downloadPath ? 'Download' : 'Send');
   const { url, method } = activeRequest;
   const isEventStreamOpen = useReadyState({ requestId: activeRequest._id, protocol: 'curl' });
@@ -272,8 +266,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                   key="dropdown"
                   className="tall"
                   ref={dropdownRef}
-                  aria-label="Request Options"
-                  onClose={handleSendDropdownHide}
+                    aria-label="Request Options"
                   closeOnSelect={false}
                   triggerButton={
                     <StyledDropdownButton
