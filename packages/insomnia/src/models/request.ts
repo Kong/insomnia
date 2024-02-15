@@ -303,6 +303,10 @@ export function getById(id: string): Promise<Request | null> {
   return db.get(type, id);
 }
 
+export function getByParentId(parentId: string) {
+  return db.getWhere<Request>(type, { parentId: parentId });
+}
+
 export function findByParentId(parentId: string) {
   return db.find<Request>(type, { parentId: parentId });
 }
