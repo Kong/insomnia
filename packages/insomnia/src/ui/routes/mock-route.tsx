@@ -94,7 +94,7 @@ export const MockRouteRoute = () => {
   const patchMockRoute = useMockRoutePatcher();
   const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
 
-  const requestFetcher = useFetcher();
+  const requestFetcher = useFetcher({ key: 'mock-request-fetcher' });
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
   const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {

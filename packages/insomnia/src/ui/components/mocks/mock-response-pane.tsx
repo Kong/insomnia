@@ -2,6 +2,7 @@ import fs from 'fs';
 import * as Har from 'har-format';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
 import { getCurrentSessionId } from '../../../account/session';
@@ -18,6 +19,8 @@ import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { TabItem, Tabs } from '../base/tabs';
 import { CodeEditor } from '../codemirror/code-editor';
+import { PlaceholderResponsePane } from '../panes/placeholder-response-pane';
+import { ResponseTimer } from '../response-timer';
 import { getTimeFromNow } from '../time-from-now';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
@@ -45,6 +48,7 @@ export const MockResponsePane = () => {
   const { settings } = useRootLoaderData();
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [previewMode, setPreviewMode] = useState<PreviewMode>(PREVIEW_MODE_FRIENDLY);
+  const requestFetcher = useFetcher({ key: 'mock-request-fetcher' });
 
   useEffect(() => {
     const fn = async () => {
@@ -55,7 +59,17 @@ export const MockResponsePane = () => {
     };
     fn();
   }, [activeResponse]);
-
+  if (requestFetcher.state !== 'idle') {
+    return (
+      <PlaceholderResponsePane>
+        {<ResponseTimer
+          handleCancel={() => {
+            // TODO: implement cancel
+          }}
+        />}
+      </PlaceholderResponsePane>
+    );
+  }
   return (
     <Tabs aria-label="Mock response">
       <TabItem
