@@ -1,142 +1,134 @@
-import fs from 'fs';
-import React, { FC, useCallback } from 'react';
-import styled from 'styled-components';
+import { IconName } from '@fortawesome/fontawesome-svg-core';
+import { readFile } from 'fs/promises';
+import React, { FC } from 'react';
+import { Button, Heading, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
 import { documentationLinks } from '../../common/documentation';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
+import { Icon } from './icon';
 import { showPrompt } from './modals';
-import { EmptyStatePane } from './panes/empty-state-pane';
-import { SvgIcon } from './svg-icon';
-const Wrapper = styled.div({
-  position: 'absolute',
-  top: '50%',
-  transform: 'translateY(-50%)',
-  pointerEvents: 'none',
-  width: '100%',
-});
-
-const StyledDropdownButton = styled(DropdownButton)({
-  '&&': {
-    pointerEvents: 'all',
-    color: 'var(--color-font)',
-    marginTop: 'var(--padding-md)',
-    marginLeft: '0 !important', // unfortunately, we're in specificity battle with a default marginLeft
-  },
-});
-
-const ExampleButton = styled.div({
-  cursor: 'pointer',
-  display: 'inline',
-  textDecoration: 'underline',
-  pointerEvents: 'all',
-  '&:hover': {
-    opacity: 'var(--opacity-subtle)',
-  },
-});
 
 interface Props {
   onImport: (contents: string) => void;
 }
 
-const ImportSpecButton: FC<Props> = ({ onImport }) => {
-  const handleImportFile = useCallback(async () => {
-    const { canceled, filePath } = await selectFileOrFolder({
-      extensions: ['yml', 'yaml', 'json'],
-      itemTypes: ['file'],
-    });
-    // Exit if no file selected
-    if (canceled || !filePath) {
-      return;
-    }
-
-    const contents = String(await fs.promises.readFile(filePath));
-    onImport(contents);
-  }, [onImport]);
-
-  const handleImportUri = useCallback(async () => {
-    showPrompt({
-      title: 'Import document from URL',
-      submitName: 'Fetch and Import',
-      label: 'URL',
-      placeholder: 'e.g. https://petstore.swagger.io/v2/swagger.json',
-      onComplete: async (uri: string) => {
-        const response = await window.fetch(uri);
-        if (!response) {
+export const DesignEmptyState: FC<Props> = ({ onImport }) => {
+  const importActionsList = [
+    {
+      id: 'import-file',
+      name: 'Import File',
+      icon: 'file-import',
+      action: async () => {
+        const { canceled, filePath } = await selectFileOrFolder({
+          extensions: ['yml', 'yaml', 'json'],
+          itemTypes: ['file'],
+        });
+        // Exit if no file selected
+        if (canceled || !filePath) {
           return;
         }
-        const contents = await response.text();
+
+        const contents = String(await readFile(filePath));
         onImport(contents);
       },
-    });
-  }, [onImport]);
+    },
+    {
+      id: 'import-url',
+      name: 'Import URL',
+      icon: 'link',
+      action: async () => {
+        showPrompt({
+          title: 'Import document from URL',
+          submitName: 'Fetch and Import',
+          label: 'URL',
+          placeholder: 'e.g. https://petstore.swagger.io/v2/swagger.json',
+          onComplete: async (uri: string) => {
+            const response = await window.fetch(uri);
+            if (!response) {
+              return;
+            }
+            const contents = await response.text();
+            onImport(contents);
+          },
+        });
+      },
+    },
+  ] satisfies {
+    id: string;
+    name: string;
+    icon: IconName;
+    action: () => void;
+  }[];
 
   return (
-    <Dropdown
-      aria-label='Import OpenAPI Dropdown'
-      triggerButton={
-        <StyledDropdownButton
-          variant='outlined'
-          removePaddings={false}
-          disableHoverBehavior={false}
-        >
-          Import OpenAPI
-          <i className="fa fa-caret-down pad-left-sm" />
-        </StyledDropdownButton>
-      }
-    >
-      <DropdownItem aria-label='File'>
-        <ItemContent
-          icon="plus"
-          label="File"
-          onClick={handleImportFile}
-        />
-      </DropdownItem>
-      <DropdownItem aria-label='URL'>
-        <ItemContent
-          icon="link"
-          label="URL"
-          onClick={handleImportUri}
-        />
-      </DropdownItem>
-    </Dropdown>
-  );
-};
+    <div className='flex items-center select-none absolute top-0 left-0 w-full h-full pointer-events-none'>
+      <div className="h-full w-full flex-1 overflow-y-auto divide-solid divide-y divide-[--hl-md] p-[--padding-md] flex flex-col items-center gap-2 overflow-hidden text-[--hl-lg]">
+        <Heading className="text-lg p-[--padding-sm] font-bold flex-1 flex items-center flex-col gap-2">
+          <Icon icon="drafting-compass" className="flex-1 w-28" />
+          <span>Enter an OpenAPI specification here</span>
+        </Heading>
+        <div className="flex-1 w-full flex flex-col justify-evenly items-center gap-2 p-[--padding-sm]">
+          <p className="flex items-center gap-2">
+            <Icon icon="lightbulb" />
+            <span className="truncate flex items-center gap-2">
+              Or import an existing OpenAPI spec or
+              <Button
+                className="pointer-events-auto font-bold text-[--hl-lg] hover:text-[--hl] focus:text-[--hl] transition-colors"
+                onPress={async () => {
+                  const spec = await import('./example-openapi-spec');
 
-const SecondaryAction: FC<Props> = ({ onImport }) => {
-  const PETSTORE_EXAMPLE_URI = 'https://gist.githubusercontent.com/gschier/4e2278d5a50b4bbf1110755d9b48a9f9/raw/801c05266ae102bcb9288ab92c60f52d45557425/petstore-spec.yaml';
-
-  const onClick = useCallback(async () => {
-    const response = await window.fetch(PETSTORE_EXAMPLE_URI);
-    if (!response) {
-      return;
-    }
-    const contents = await response.text();
-    onImport(contents);
-  }, [onImport]);
-
-  return (
-    <div>
-      <div>
-        Or import an existing OpenAPI spec or <ExampleButton onClick={onClick}>start from an example</ExampleButton>
+                  onImport(spec.exampleOpenApiSpec);
+                }}
+              >
+                start from an example
+              </Button>
+            </span>
+          </p>
+          <MenuTrigger>
+            <Button
+              aria-label="Project Actions"
+              className="pointer-events-auto items-center bg-[--hl-xs] gap-2 p-4 hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            >
+              <span>Import OpenAPI</span>
+              <Icon icon="caret-down" />
+            </Button>
+            <Popover className="min-w-max">
+              <Menu
+                aria-label='Import OpenAPI Dropdown'
+                selectionMode="single"
+                onAction={key => {
+                  importActionsList.find(({ id }) => key === id)?.action();
+                }}
+                items={importActionsList}
+                className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+              >
+                {item => (
+                  <MenuItem
+                    key={item.id}
+                    id={item.id}
+                    className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                    aria-label={item.name}
+                  >
+                    <Icon icon={item.icon} />
+                    <span>{item.name}</span>
+                  </MenuItem>
+                )}
+              </Menu>
+            </Popover>
+          </MenuTrigger>
+          <ul className="flex flex-col gap-2">
+            <li>
+              <a
+                className="pointer-events-auto font-bold flex items-center gap-2 text-sm hover:text-[--hl] focus:text-[--hl] transition-colors"
+                href={documentationLinks.workingWithDesignDocs.url}
+              >
+                <span className="truncate">{documentationLinks.workingWithDesignDocs.title}</span>
+                <Icon icon="external-link" />
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
-      <ImportSpecButton onImport={onImport} />
     </div>
-  );
-};
-
-export const DesignEmptyState: FC<Props> = ({ onImport }) => {
-  return (
-    <Wrapper>
-      <EmptyStatePane
-        icon={<SvgIcon icon="drafting-compass" />}
-        documentationLinks={[
-          documentationLinks.workingWithDesignDocs,
-          documentationLinks.introductionToInsomnia,
-        ]}
-        secondaryAction={<SecondaryAction onImport={onImport} />}
-        title="Enter an OpenAPI specification here"
-      />
-    </Wrapper>
   );
 };

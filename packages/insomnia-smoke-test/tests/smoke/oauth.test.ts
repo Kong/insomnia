@@ -17,22 +17,19 @@ test('can make oauth2 requests', async ({ app, page }) => {
   });
 
   const projectView = page.locator('#wrapper');
-  await projectView.getByRole('button', { name: 'Create' }).click();
+  await projectView.getByRole('button', { name: 'Create in project' }).click();
 
   const text = await loadFixture('oauth.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-  await page.getByRole('menuitem', { name: 'Import' }).click();
-  await page.getByText('Clipboard').click();
+  await page.getByRole('menuitemradio', { name: 'Import' }).click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByText('CollectionOAuth Testingjust now').click();
 
-  // Authorization code
-  await projectView.getByRole('button', { name: 'Authorization Code' }).click();
-
   // No PKCE
-  await projectView.getByRole('button', { name: 'No PKCE' }).click();
+  await projectView.getByLabel('Request Collection').getByTestId('No PKCE').press('Enter');
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
 
   const [authorizationCodePage] = await Promise.all([
@@ -77,7 +74,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await expect(tokenInput).not.toHaveValue('');
 
   // PKCE SHA256
-  await page.getByRole('button', { name: 'PKCE SHA256' }).click();
+  await page.getByLabel('Request Collection').getByTestId('PKCE SHA256').press('Enter');
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
   await expect(page.locator('#Grant-Type')).toHaveValue('authorization_code');
   await expect(page.locator('#Code-Challenge-Method')).toHaveValue('S256');
@@ -86,7 +83,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await expect(responseBody).toContainText('"sub": "admin"');
 
   // PKCE Plain
-  await page.getByRole('button', { name: 'PKCE Plain' }).click();
+  await page.getByLabel('Request Collection').getByTestId('PKCE Plain').press('Enter');
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
   await expect(page.locator('#Grant-Type')).toHaveValue('authorization_code');
   await expect(page.locator('#Code-Challenge-Method')).toHaveValue('plain');
@@ -103,11 +100,8 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.locator('button:has-text("Clear OAuth 2 session")').click();
   await page.keyboard.press('Escape');
 
-  // Implicit
-  await page.getByRole('button', { name: 'Implicit' }).click();
-
   // ID Token
-  await page.getByRole('button', { name: 'ID Token' }).click();
+  await page.getByLabel('Request Collection').getByTestId('ID Token').press('Enter');
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/id-token');
   await expect(page.locator('#Grant-Type')).toHaveValue('implicit');
 
@@ -125,7 +119,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await expect(responseBody).toContainText('"sub": "admin"');
 
   // ID and Access Token
-  await page.getByRole('button', { name: 'ID and Access Token' }).click();
+  await page.getByLabel('Request Collection').getByTestId('ID and Access Token').press('Enter');
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
   await expect(page.locator('#Grant-Type')).toHaveValue('implicit');
   await sendButton.click();
@@ -142,7 +136,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.keyboard.press('Escape');
 
   // Client Credentials
-  await page.getByRole('button', { name: 'Client Credentials' }).click();
+  await page.getByLabel('Request Collection').getByTestId('Client Credentials').press('Enter');
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/client-credential');
   await expect(page.locator('#Grant-Type')).toHaveValue('client_credentials');
   await sendButton.click();
@@ -159,7 +153,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.keyboard.press('Escape');
 
   // Resource Owner Password Credentials
-  await page.getByRole('button', { name: 'Resource Owner Password Credentials' }).click();
+  await page.getByLabel('Request Collection').getByTestId('Resource Owner Password Credentials').press('Enter');
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
   await expect(page.locator('#Grant-Type')).toHaveValue('password');
   await sendButton.click();

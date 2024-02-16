@@ -4,7 +4,6 @@ import { Curl, CurlFeature, CurlInfoDebug, HeaderInfo } from '@getinsomnia/node-
 import electron, { BrowserWindow, ipcMain } from 'electron';
 import fs from 'fs';
 import path from 'path';
-import tls from 'tls';
 import { v4 as uuidV4 } from 'uuid';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
@@ -13,7 +12,7 @@ import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { RequestAuthentication, RequestHeader } from '../../models/request';
 import { Response } from '../../models/response';
-import { addSetCookiesToToughCookieJar } from '../../network/network';
+import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
@@ -90,6 +89,7 @@ interface OpenCurlRequestOptions {
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
   initialPayload?: string;
+  suppressUserAgent: boolean;
 }
 const openCurlConnection = async (
   _event: Electron.IpcMainInvokeEvent,
@@ -109,7 +109,6 @@ const openCurlConnection = async (
   }
 
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
-  fs.mkdirSync(responsesDir, { recursive: true });
 
   const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
@@ -122,9 +121,8 @@ const openCurlConnection = async (
   const responseEnvironmentId = environment ? environment._id : null;
 
   const caCert = await models.caCertificate.findByParentId(options.workspaceId);
-  const caCertficatePath = caCert?.path;
-  // attempt to read CA Certificate PEM from disk, fallback to root certificates
-  const caCertificate = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
+  const caCertficatePath = caCert?.path || null;
+  const caCertificate = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString());
 
   try {
     if (!options.url) {
@@ -132,12 +130,12 @@ const openCurlConnection = async (
     }
     const readyStateChannel = `curl.${request._id}.readyState`;
 
-    const settings = await models.settings.getOrCreate();
+    const settings = await models.settings.get();
     const start = performance.now();
     const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
     const filteredClientCertificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), options.url));
     const { curl, debugTimeline } = createConfiguredCurlInstance({
-      req: { ...request, cookieJar: options.cookieJar, cookies: [] },
+      req: { ...request, cookieJar: options.cookieJar, cookies: [], suppressUserAgent: options.suppressUserAgent },
       finalUrl: options.url,
       settings,
       caCert: caCertificate,
@@ -222,7 +220,7 @@ const openCurlConnection = async (
         settingStoreCookies: request.settingStoreCookies,
         bodyCompression: null,
       };
-      const settings = await models.settings.getOrCreate();
+      const settings = await models.settings.get();
       const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
@@ -270,7 +268,7 @@ const openCurlConnection = async (
 };
 
 const createErrorResponse = async (responseId: string, requestId: string, environmentId: string | null, timelinePath: string, message: string) => {
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,

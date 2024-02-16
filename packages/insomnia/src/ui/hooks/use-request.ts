@@ -9,6 +9,7 @@ import { RequestGroupMeta } from '../../models/request-group-meta';
 import { RequestMeta } from '../../models/request-meta';
 import { Settings } from '../../models/settings';
 import { WebSocketRequest } from '../../models/websocket-request';
+import { WorkspaceMeta } from '../../models/workspace-meta';
 
 export const useRequestPatcher = () => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
@@ -69,4 +70,16 @@ export const useSettingsPatcher = () => {
   };
 };
 
-export type CreateRequestType = 'HTTP' | 'gRPC' | 'GraphQL' | 'WebSocket' | 'Event Stream';
+export const useWorkspaceMetaPatcher = () => {
+  const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
+  const fetcher = useFetcher();
+  return (workspaceId: string, patch: Partial<WorkspaceMeta>) => {
+    fetcher.submit(patch, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/update-meta`,
+      method: 'post',
+      encType: 'application/json',
+    });
+  };
+};
+
+export type CreateRequestType = 'HTTP' | 'gRPC' | 'GraphQL' | 'WebSocket' | 'Event Stream' | 'From Curl';

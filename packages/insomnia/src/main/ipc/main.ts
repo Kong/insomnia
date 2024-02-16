@@ -7,9 +7,11 @@ import { oas } from '@stoplight/spectral-rulesets';
 import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
+import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
+import * as models from '../../models';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
-import { exportAllWorkspaces } from '../export';
+import { backup, restoreBackup } from '../backup';
 import { insomniaFetch } from '../insomniaFetch';
 import installPlugin from '../install-plugin';
 import { axiosRequest } from '../network/axios-request';
@@ -24,7 +26,8 @@ export interface MainBridgeAPI {
   restart: () => void;
   halfSecondAfterAppStart: () => void;
   manualUpdateCheck: () => void;
-  exportAllWorkspaces: () => Promise<void>;
+  backup: () => Promise<void>;
+  restoreBackup: (version: string) => Promise<void>;
   spectralRun: (options: { contents: string; rulesetPath: string }) => Promise<ISpectralDiagnostic[]>;
   authorizeUserInWindow: typeof authorizeUserInWindow;
   setMenuBarVisibility: (visible: boolean) => void;
@@ -40,6 +43,13 @@ export interface MainBridgeAPI {
   trackPageView: (options: { name: string }) => void;
   axiosRequest: typeof axiosRequest;
   insomniaFetch: typeof insomniaFetch;
+  showContextMenu: (options: { key: string }) => void;
+  database: {
+    caCertificate: {
+      create: (options: { parentId: string; path: string }) => Promise<string>;
+    };
+  };
+  hiddenBrowserWindow: HiddenBrowserWindowBridgeAPI;
 }
 export function registerMainHandlers() {
   ipcMain.handle('insomniaFetch', async (_, options: Parameters<typeof insomniaFetch>[0]) => {
@@ -48,13 +58,19 @@ export function registerMainHandlers() {
   ipcMain.handle('axiosRequest', async (_, options: Parameters<typeof axiosRequest>[0]) => {
     return axiosRequest(options);
   });
+  ipcMain.handle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
+    return models.caCertificate.create(options);
+  });
   ipcMain.on('loginStateChange', async () => {
     BrowserWindow.getAllWindows().forEach(w => {
       w.webContents.send('loggedIn');
     });
   });
-  ipcMain.handle('exportAllWorkspaces', async () => {
-    return exportAllWorkspaces();
+  ipcMain.handle('backup', async () => {
+    return backup();
+  });
+  ipcMain.handle('restoreBackup', async (_, options: string) => {
+    return restoreBackup(options);
   });
   ipcMain.handle('authorizeUserInWindow', (_, options: Parameters<typeof authorizeUserInWindow>[0]) => {
     const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;

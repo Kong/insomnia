@@ -43,7 +43,8 @@ const main: Window['main'] = {
   openInBrowser: options => ipcRenderer.send('openInBrowser', options),
   halfSecondAfterAppStart: () => ipcRenderer.send('halfSecondAfterAppStart'),
   manualUpdateCheck: () => ipcRenderer.send('manualUpdateCheck'),
-  exportAllWorkspaces: () => ipcRenderer.invoke('exportAllWorkspaces'),
+  backup: () => ipcRenderer.invoke('backup'),
+  restoreBackup: options => ipcRenderer.invoke('restoreBackup', options),
   authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
   spectralRun: options => ipcRenderer.invoke('spectralRun', options),
   setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
@@ -62,6 +63,28 @@ const main: Window['main'] = {
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   axiosRequest: options => ipcRenderer.invoke('axiosRequest', options),
   insomniaFetch: options => ipcRenderer.invoke('insomniaFetch', options),
+  showContextMenu: options => ipcRenderer.send('show-context-menu', options),
+  database: {
+    caCertificate: {
+      create: options => ipcRenderer.invoke('database.caCertificate.create', options),
+    },
+  },
+  hiddenBrowserWindow: {
+    runPreRequestScript: options => new Promise((resolve, reject) => {
+      ipcRenderer.send('open-channel-to-hidden-browser-window');
+      ipcRenderer.once('hidden-browser-window-response-listener', event => {
+        const [port] = event.ports;
+        port.onmessage = event => {
+          console.log('received result:', event.data);
+          if (event.data.error) {
+            reject(new Error(event.data.error));
+          }
+          resolve(event.data);
+        };
+        port.postMessage({ ...options, type: 'runPreRequestScript' });
+      });
+    }),
+  },
 };
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),

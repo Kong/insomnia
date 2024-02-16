@@ -1,6 +1,6 @@
 /* eslint-disable prefer-rest-params -- don't want to change ...arguments usage for these sensitive functions without more testing */
+import NeDB from '@seald-io/nedb';
 import electron from 'electron';
-import NeDB from 'nedb';
 import fsPath from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -16,12 +16,13 @@ import { generateId } from './misc';
 
 export interface Query {
   _id?: string | SpecificQuery;
-  parentId?: string | null;
-  remoteId?: string | null;
+  parentId?: string | SpecificQuery | null;
+  remoteId?: string | SpecificQuery | null;
   plugin?: string;
   key?: string;
   environmentId?: string | null;
   protoFileId?: string;
+  name?: string | SpecificQuery;
 }
 
 type Sort = Record<string, any>;
@@ -35,6 +36,7 @@ export interface SpecificQuery {
   $gt?: number;
   $in?: string[];
   $nin?: string[];
+  $ne?: string | null;
 }
 
 export type ModelQuery<T extends BaseModel> = Partial<Record<keyof T, SpecificQuery>>;
@@ -291,7 +293,6 @@ export const database = {
     if (db._empty) {
       return _send<T>('getWhere', ...arguments);
     }
-    // @ts-expect-error -- TSCONVERSION type narrowing needed
     const docs = await database.find<T>(type, query);
     return docs.length ? docs[0] : null;
   },

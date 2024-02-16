@@ -104,30 +104,14 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
         />
       </PreviewPaneButtons>
       <PreviewPaneContents>
-        {previewMode === PREVIEW_MODE_FRIENDLY &&
-          <CodeEditor
-            hideLineNumbers
-            mode={'text/json'}
-            defaultValue={pretty}
-            uniquenessKey={event._id}
-            readOnly
-          />}
-        {previewMode === PREVIEW_MODE_SOURCE &&
-          <CodeEditor
-            hideLineNumbers
-            mode={'text/json'}
-            defaultValue={raw}
-            uniquenessKey={event._id}
-            readOnly
-          />}
-        {previewMode === PREVIEW_MODE_RAW &&
-          <CodeEditor
-            hideLineNumbers
-            mode={'text/plain'}
-            defaultValue={raw}
-            uniquenessKey={event._id}
-            readOnly
-          />}
+        <CodeEditor
+          id="websocket-body-preview"
+          hideLineNumbers
+          mode={previewMode === PREVIEW_MODE_RAW ? 'text/plain' : 'text/json'}
+          defaultValue={previewMode === PREVIEW_MODE_FRIENDLY ? pretty : raw}
+          uniquenessKey={event._id}
+          readOnly
+        />
       </PreviewPaneContents>
     </PreviewPane>
   );

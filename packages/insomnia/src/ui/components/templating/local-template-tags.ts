@@ -36,6 +36,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           options: [
             { displayName: 'Normal', value: 'normal' },
             { displayName: 'URL', value: 'url' },
+            { displayName: 'Hex', value: 'hex' },
           ],
         },
         {
@@ -44,19 +45,27 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           placeholder: 'My text',
         },
       ],
-      run(_context, action, kind, text) {
+      run(_context, action: 'encode' | 'decode', kind: 'normal' | 'url' | 'hex', text) {
         text = text || '';
         invariant(action === 'encode' || action === 'decode', 'invalid action');
+        invariant(kind === 'normal' || kind === 'url' || kind === 'hex', 'invalid kind');
         if (action === 'encode') {
           if (kind === 'normal') {
             return Buffer.from(text, 'utf8').toString('base64');
-          } else if (kind === 'url') {
+          }
+          if (kind === 'hex') {
+            return Buffer.from(text, 'hex').toString('base64');
+          }
+          if (kind === 'url') {
             return Buffer.from(text, 'utf8')
               .toString('base64')
               .replace(/\+/g, '-')
               .replace(/\//g, '_')
               .replace(/=/g, '');
           }
+        }
+        if (kind === 'hex') {
+          return Buffer.from(text, 'base64').toString('hex');
         }
         return Buffer.from(text, 'base64').toString('utf8');
       },
@@ -718,44 +727,30 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             } catch (err) {
               throw new Error(`Invalid XPath query: ${sanitizedFilter}`);
             }
-            const results: { outer: string; inner: string }[] = [];
+            let results: { outer: string; inner: string | null }[] = [];
+
             // Functions return plain strings
             if (typeof selectedValues === 'string') {
-              results.push({
-                outer: selectedValues,
-                inner: selectedValues,
-              });
-            } else {
-              for (const selectedValue of selectedValues || []) {
-                switch (selectedValue.constructor.name) {
-                  case 'Attr':
-                    results.push({
-                      outer: selectedValue.toString().trim(),
-                      // @ts-expect-error -- needs xpath types
-                      inner: selectedValue.nodeValue,
-                    });
-                    break;
-
-                  case 'Element':
-                    results.push({
-                      outer: selectedValue.toString().trim(),
-                      // @ts-expect-error -- needs xpath types
-                      inner: selectedValue.childNodes.toString(),
-                    });
-                    break;
-
-                  case 'Text':
-                    results.push({
-                      outer: selectedValue.toString().trim(),
-                      inner: selectedValue.toString().trim(),
-                    });
-                    break;
-
-                  default:
-                    break;
-                }
-              }
+              results = [{ outer: selectedValues, inner: selectedValues }];
             }
+
+            results = (selectedValues as Node[])
+              .filter(sv => sv.nodeType === Node.ATTRIBUTE_NODE
+                || sv.nodeType === Node.ELEMENT_NODE
+                || sv.nodeType === Node.TEXT_NODE)
+              .map(selectedValue => {
+                const outer = selectedValue.toString().trim();
+                if (selectedValue.nodeType === Node.ATTRIBUTE_NODE) {
+                  return { outer, inner: selectedValue.nodeValue };
+                }
+                if (selectedValue.nodeType === Node.ELEMENT_NODE) {
+                  return { outer, inner: selectedValue.childNodes.toString() };
+                }
+                if (selectedValue.nodeType === Node.TEXT_NODE) {
+                  return { outer, inner: selectedValue.toString().trim() };
+                }
+                return { outer, inner: null };
+              });
 
             if (results.length === 0) {
               throw new Error(`Returned no results: ${sanitizedFilter}`);

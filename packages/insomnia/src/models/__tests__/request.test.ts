@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import { version } from '../../../package.json';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { CONTENT_TYPE_GRAPHQL } from '../../common/constants';
 import { newBodyGraphQL, updateMimeType } from '../../ui/components/dropdowns/content-type-dropdown';
@@ -21,6 +20,8 @@ describe('init()', () => {
       name: 'New Request',
       description: '',
       parameters: [],
+      pathParameters: [],
+      preRequestScript: '',
       url: '',
       settingStoreCookies: true,
       settingSendCookies: true,
@@ -57,6 +58,8 @@ describe('create()', () => {
       method: 'GET',
       name: 'Test Request',
       parameters: [],
+      pathParameters: [],
+      preRequestScript: '',
       url: '',
       settingStoreCookies: true,
       settingSendCookies: true,
@@ -93,9 +96,6 @@ describe('updateMimeType()', () => {
       {
         name: 'Content-Type',
         value: 'text/html',
-      }, {
-        'name': 'User-Agent',
-        'value': `Insomnia/${version}`,
       },
     ]);
   });
@@ -123,7 +123,7 @@ describe('updateMimeType()', () => {
     const newRequest = await updateMimeType(request, 'text/html');
     expect(newRequest.headers).toEqual([
       {
-        name: 'content-tYPE',
+        name: 'Content-Type',
         value: 'text/html',
       },
       {
@@ -133,10 +133,7 @@ describe('updateMimeType()', () => {
       {
         bad: true,
       },
-      null, {
-        'name': 'User-Agent',
-        'value': `Insomnia/${version}`,
-      },
+      null,
     ]);
   });
 
@@ -155,11 +152,8 @@ describe('updateMimeType()', () => {
     const newRequest = await updateMimeType(request, 'text/html');
     expect(newRequest.headers).toEqual([
       {
-        name: 'content-tYPE',
+        name: 'Content-Type',
         value: 'text/html',
-      }, {
-        'name': 'User-Agent',
-        'value': `Insomnia/${version}`,
       },
     ]);
   });
@@ -178,38 +172,7 @@ describe('updateMimeType()', () => {
     expect(request).not.toBeNull();
     const newRequest = await updateMimeType(request, null);
     expect(newRequest.body).toEqual({});
-    expect(newRequest.headers).toEqual([{
-      'name': 'User-Agent',
-      'value': `Insomnia/${version}`,
-    }]);
-  });
-
-  it('uses saved body when provided', async () => {
-    const request = await models.request.create({
-      name: 'My Request',
-      parentId: 'fld_1',
-      body: {
-        text: 'My Data',
-      },
-    });
-    expect(request).not.toBeNull();
-    const newRequest = await updateMimeType(request, 'application/json', {
-      text: 'Saved Data',
-    });
-    expect(newRequest.body.text).toEqual('Saved Data');
-  });
-
-  it('uses existing body when saved body not provided', async () => {
-    const request = await models.request.create({
-      name: 'My Request',
-      parentId: 'fld_1',
-      body: {
-        text: 'My Data',
-      },
-    });
-    expect(request).not.toBeNull();
-    const newRequest = await updateMimeType(request, 'application/json', {});
-    expect(newRequest.body.text).toEqual('My Data');
+    expect(newRequest.headers).toEqual([]);
   });
 });
 
@@ -429,6 +392,8 @@ describe('migrate()', () => {
       headers: [],
       authentication: {},
       parameters: [],
+      pathParameters: [],
+      preRequestScript: '',
       parentId: null,
       body: {
         mimeType: '',

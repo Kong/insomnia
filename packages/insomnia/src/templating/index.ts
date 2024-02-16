@@ -1,7 +1,6 @@
 import { type Environment } from 'nunjucks';
 import nunjucks from 'nunjucks/browser/nunjucks';
 
-import type { TemplateTag } from '../plugins/index';
 import * as plugins from '../plugins/index';
 import { localTemplateTags } from '../ui/components/templating/local-template-tags';
 import BaseExtension from './base-extension';
@@ -178,16 +177,10 @@ async function getNunjucks(renderMode: string): Promise<NunjucksEnvironment> {
   // Create Env with Extensions //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   const nunjucksEnvironment = nunjucks.configure(config) as NunjucksEnvironment;
-  let allTemplateTagPlugins: TemplateTag[];
 
-  try {
-    const pluginTemplateTags = await plugins.getTemplateTags();
-    allTemplateTagPlugins = [...pluginTemplateTags, ...localTemplateTags] as TemplateTag[];
-  } finally {
-    plugins.clearIgnores();
-  }
+  const pluginTemplateTags = await plugins.getTemplateTags();
 
-  const allExtensions = allTemplateTagPlugins;
+  const allExtensions = [...pluginTemplateTags, ...localTemplateTags];
 
   for (const extension of allExtensions) {
     const { templateTag, plugin } = extension;

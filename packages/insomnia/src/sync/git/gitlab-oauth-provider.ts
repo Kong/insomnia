@@ -3,7 +3,10 @@ import { v4 as uuid } from 'uuid';
 
 import { getApiBaseURL } from '../../common/constants';
 
-const env = process['env'];
+// Vite is filtering out process.env variables that are not prefixed with VITE_.
+const ENV = 'env';
+
+const env = process[ENV];
 
 // Warning: As this is a global fetch we need to handle errors, retries and caching
 // GitLab API config
@@ -25,9 +28,10 @@ const getGitLabConfig = async () => {
     };
   }
 
+  const apiURL = getApiBaseURL();
   // Otherwise fetch the config for the GitLab API
   return window.main.axiosRequest({
-    url: getApiBaseURL() + '/v1/oauth/gitlab/config',
+    url: apiURL + '/v1/oauth/gitlab/config',
     method: 'GET',
   }).then(({ data }) => {
     return {

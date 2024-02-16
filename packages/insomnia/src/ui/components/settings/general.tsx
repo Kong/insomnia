@@ -1,5 +1,4 @@
 import React, { FC, Fragment } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
 
 import * as session from '../../../account/session';
 import {
@@ -15,7 +14,7 @@ import { docsKeyMaps } from '../../../common/documentation';
 import { HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
 import { strings } from '../../../common/strings';
 import { initNewOAuthSession } from '../../../network/o-auth-2/get-token';
-import { RootLoaderData } from '../../routes/root';
+import { useRootLoaderData } from '../../routes/root';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { Tooltip } from '../tooltip';
@@ -41,7 +40,7 @@ const RestartTooltip: FC<{ message: string }> = ({ message }) => (
 export const General: FC = () => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRootLoaderData();
   const isLoggedIn = session.isLoggedIn();
 
   return (
@@ -55,7 +54,7 @@ export const General: FC = () => {
           <BooleanSetting
             label="Use vertical layout"
             setting="forceVerticalLayout"
-            help="If checked, stack request and response panels vertically."
+            help="If checked, stack request and response panels vertically. Otherwise they will be side-by-side above 1200px."
           />
           <BooleanSetting
             label={<RestartTooltip message="Show variable source and value" />}

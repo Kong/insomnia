@@ -58,6 +58,7 @@ const config = {
         arch: 'universal',
       },
     ],
+    mergeASARs: false,
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,
     },
@@ -90,9 +91,6 @@ const config = {
     target: [
       {
         target: 'squirrel',
-      },
-      {
-        target: 'portable',
       },
     ],
   },
@@ -131,6 +129,14 @@ const config = {
       {
         target: 'snap',
       },
+    ],
+  },
+  rpm: {
+    // Prevents RPM from packaging build-id metadata, some of which is the
+    // same across all electron-builder applications, which causes package
+    // conflicts
+    fpm: [
+      '--rpm-rpmbuild-define=_build_id_links none',
     ],
   },
   snap: {

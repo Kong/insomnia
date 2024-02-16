@@ -6,7 +6,7 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { getAppVersion } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import * as models from '../../../models/index';
-import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
+import { Project } from '../../../models/project';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
 import * as plugin from '../data';
 
@@ -16,7 +16,8 @@ describe('init()', () => {
   beforeEach(globalBeforeEach);
 
   it('initializes correctly', async () => {
-    const { data } = plugin.init(DEFAULT_PROJECT_ID);
+    const project = await models.project.create();
+    const { data } = plugin.init(project._id);
     expect(Object.keys(data)).toEqual(['import', 'export']);
     expect(Object.keys(data.export).sort()).toEqual(['har', 'insomnia']);
     expect(Object.keys(data.import).sort()).toEqual(['raw', 'uri']);
@@ -35,6 +36,7 @@ describe('app.import.*', () => {
       modified: 222,
       parentId: project._id,
     });
+    await models.settings.getOrCreate();
   });
 
   it('uri', async () => {
@@ -135,6 +137,7 @@ describe('app.export.*', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     project = await models.project.create();
+    await models.settings.getOrCreate();
     await models.workspace.create({
       _id: 'wrk_1',
       created: 111,
@@ -192,6 +195,8 @@ describe('app.export.*', () => {
           modified: 222,
           name: 'New Request',
           parameters: [],
+          pathParameters: [],
+          preRequestScript: '',
           parentId: 'wrk_1',
           settingDisableRenderRequestBody: false,
           settingEncodeUrl: true,
@@ -229,12 +234,10 @@ describe('app.export.*', () => {
               method: 'GET',
               postData: {
                 mimeType: '',
-                params: [],
                 text: '',
               },
               queryString: [],
               url: 'https://insomnia.rest/',
-              settingEncodeUrl: true,
             },
             response: {
               bodySize: -1,

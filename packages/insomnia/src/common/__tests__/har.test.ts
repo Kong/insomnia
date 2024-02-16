@@ -14,6 +14,7 @@ describe('export', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     await models.project.all();
+    await models.settings.getOrCreate();
   });
 
   describe('exportHar()', () => {
@@ -99,7 +100,6 @@ describe('export', () => {
                 queryString: [],
                 postData: {
                   mimeType: 'application/json',
-                  params: [],
                   text: '{}',
                 },
                 headersSize: -1,
@@ -471,7 +471,6 @@ describe('export', () => {
         method: 'POST',
         postData: {
           mimeType: '',
-          params: [],
           text: 'foo bar',
         },
         queryString: [
@@ -481,7 +480,6 @@ describe('export', () => {
           },
         ],
         url: 'http://google.com/',
-        settingEncodeUrl: true,
       });
     });
 
@@ -556,11 +554,9 @@ describe('export', () => {
               fileName: '/tmp/my_file_2',
             },
           ],
-          text: '',
         },
         queryString: [],
         url: 'http://example.com/post',
-        settingEncodeUrl: true,
       });
     });
   });

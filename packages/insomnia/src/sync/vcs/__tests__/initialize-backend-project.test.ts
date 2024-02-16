@@ -28,7 +28,7 @@ describe('initialize-backend-project', () => {
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
       vcs.clearBackendProject();
 
-      await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
+      await pushSnapshotOnInitialize({ vcs, project, workspace });
 
       expect(pushSpy).not.toHaveBeenCalled();
       await expect(models.workspaceMeta.getByParentId(workspace._id)).resolves.toStrictEqual(workspaceMeta);
@@ -40,7 +40,7 @@ describe('initialize-backend-project', () => {
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
       vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
-      await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
+      await pushSnapshotOnInitialize({ vcs, project, workspace });
 
       expect(pushSpy).not.toHaveBeenCalled();
       await expect(models.workspaceMeta.getByParentId(workspace._id)).resolves.toStrictEqual(workspaceMeta);
@@ -50,36 +50,22 @@ describe('initialize-backend-project', () => {
       const project = await models.project.create({ remoteId: 'abc' });
       const anotherProject = await models.project.create({ remoteId: 'def' });
       const workspace = await models.workspace.create({ parentId: anotherProject._id });
-      const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
       vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
-      await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
+      await pushSnapshotOnInitialize({ vcs, project, workspace });
 
       expect(pushSpy).not.toHaveBeenCalled();
-      // await expect(models.workspaceMeta.getByParentId(workspace._id)).resolves.toStrictEqual(workspaceMeta);
-    });
-
-    it('should not push snapshot if not marked for push', async () => {
-      const project = await models.project.create({ remoteId: 'abc' });
-      const workspace = await models.workspace.create({ parentId: project._id });
-      const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id, pushSnapshotOnInitialize: false });
-      vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
-
-      await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
-
-      expect(pushSpy).not.toHaveBeenCalled();
-      await expect(models.workspaceMeta.getByParentId(workspace._id)).resolves.toStrictEqual(workspaceMeta);
     });
 
     it('should push snapshot if conditions are met', async () => {
-      const project = await models.project.create({ remoteId: 'abc' });
+      const project = await models.project.create({ remoteId: 'abc', parentId: 'team_abc' });
       const workspace = await models.workspace.create({ parentId: project._id });
-      const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id, pushSnapshotOnInitialize: true });
+      await models.workspaceMeta.create({ parentId: workspace._id, pushSnapshotOnInitialize: true });
       vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
-      await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
+      await pushSnapshotOnInitialize({ vcs, project, workspace });
 
-      expect(pushSpy).toHaveBeenCalledWith(project.remoteId);
+      expect(pushSpy).toHaveBeenCalledWith({ teamId: 'team_abc', teamProjectId: project.remoteId });
       const updatedMeta = await models.workspaceMeta.getByParentId(workspace._id);
       expect(updatedMeta?.pushSnapshotOnInitialize).toBe(false);
     });

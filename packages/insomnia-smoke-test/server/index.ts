@@ -11,6 +11,7 @@ import githubApi from './github-api';
 import gitlabApi from './gitlab-api';
 import { schema } from './graphql';
 import { startGRPCServer } from './grpc';
+import insomniaApi from './insomnia-api';
 import { oauthRoutes } from './oauth';
 import { startWebSocketServer } from './websocket';
 
@@ -21,6 +22,13 @@ const grpcPort = 50051;
 
 app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
+});
+
+app.get('/builds/check/*', (_req, res) => {
+  res.status(200).send({
+    url: 'https://github.com/Kong/insomnia/releases/download/core@2023.5.6/Insomnia.Core-2023.5.6.zip',
+    name: '2099.1.0',
+  });
 });
 
 app.get('/sleep', (_req, res) => {
@@ -40,10 +48,11 @@ app.use('/auth/basic', basicAuthRouter);
 
 githubApi(app);
 gitlabApi(app);
+insomniaApi(app);
 
 app.get('/delay/seconds/:duration', (req, res) => {
   const delaySec = Number.parseInt(req.params.duration || '2');
-  setTimeout(function () {
+  setTimeout(() => {
     res.send(`Delayed by ${delaySec} seconds`);
   }, delaySec * 1000);
 });
@@ -100,11 +109,7 @@ startWebSocketServer(app.listen(port, () => {
 
 startWebSocketServer(createServer({
   cert: readFileSync(join(__dirname, '../fixtures/certificates/localhost.pem')),
-  ca: readFileSync(join(__dirname, '../fixtures/certificates/rootCA.pem')),
   key: readFileSync(join(__dirname, '../fixtures/certificates/localhost-key.pem')),
-  // Only allow connections using valid client certificates
-  requestCert: true,
-  rejectUnauthorized: true,
 }, app).listen(httpsPort, () => {
   console.log(`Listening at https://localhost:${httpsPort}`);
   console.log(`Listening at wss://localhost:${httpsPort}`);

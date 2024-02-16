@@ -41,6 +41,7 @@ interface Props {
   }[]) => void;
   pairs: Pair[];
   valuePlaceholder?: string;
+  onBlur?: (e: FocusEvent) => void;
 }
 
 export const KeyValueEditor: FC<Props> = ({
@@ -56,8 +57,10 @@ export const KeyValueEditor: FC<Props> = ({
   onChange,
   pairs,
   valuePlaceholder,
+  onBlur,
 }) => {
   // We should make the pair.id property required and pass them in from the parent
+  // smelly
   const pairsWithIds = pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') }));
 
   const readOnlyPairs = [
@@ -66,7 +69,7 @@ export const KeyValueEditor: FC<Props> = ({
     { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>' },
     { name: 'Sec-WebSocket-Version', value: '13' },
     { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits' },
-  ];
+  ].map(pair => ({ ...pair, id: generateId('pair') }));
 
   const [showDescription, setShowDescription] = React.useState(false);
 
@@ -79,6 +82,7 @@ export const KeyValueEditor: FC<Props> = ({
             onChange([
               ...pairs,
               {
+                // smelly
                 id: generateId('pair'),
                 name: '',
                 value: '',
@@ -107,7 +111,9 @@ export const KeyValueEditor: FC<Props> = ({
             descriptionPlaceholder={descriptionPlaceholder}
             hideButtons
             readOnly
+            onBlur={onBlur}
             onClick={() => onChange([...pairs, {
+              // smelly
               id: generateId('pair'),
               name: '',
               value: '',
@@ -118,19 +124,21 @@ export const KeyValueEditor: FC<Props> = ({
             addPair={() => { }}
           />
         )}
-        {isWebSocketRequest ? readOnlyPairs.map((pair, i) => (
-          <li key={i} className="key-value-editor__row-wrapper">
+        {isWebSocketRequest ? readOnlyPairs.map(pair => (
+          <li key={pair.id} className="key-value-editor__row-wrapper">
             <div className="key-value-editor__row">
               <div className="form-control form-control--underlined form-control--wide">
                 <input
                   style={{ width: '100%' }}
                   defaultValue={pair.name}
+                  readOnly
                 />
               </div>
               <div className="form-control form-control--underlined form-control--wide">
                 <input
                   style={{ width: '100%' }}
                   defaultValue={pair.value}
+                  readOnly
                 />
               </div>
               <button><i className="fa fa-empty" /></button>
@@ -145,6 +153,7 @@ export const KeyValueEditor: FC<Props> = ({
             namePlaceholder={namePlaceholder}
             valuePlaceholder={valuePlaceholder}
             descriptionPlaceholder={descriptionPlaceholder}
+            onBlur={onBlur}
             onChange={pair => onChange(pairsWithIds.map(p => (p.id === pair.id ? pair : p)))}
             onDelete={pair => onChange(pairsWithIds.filter(p => p.id !== pair.id))}
             handleGetAutocompleteNameConstants={handleGetAutocompleteNameConstants}

@@ -8,6 +8,7 @@ import { RemoteProject } from '../../../models/project';
 import { RemoteCollectionsLoaderData } from '../../routes/remote-collections';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { HelpTooltip } from '../help-tooltip';
+import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
 
 interface Props {
@@ -30,7 +31,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
     }
   }, [data, load, organizationId, projectId, state]);
 
-  const remoteBackendProjects = data?.remoteBackendProjects ?? [];
+  const backendProjectsToPull = data?.backendProjectsToPull ?? [];
 
   // Show a disabled button if remote project but not logged in
   if (!isLoggedIn()) {
@@ -52,17 +53,19 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
       onOpen={() => load(`/organization/${organizationId}/project/${projectId}/remote-collections`)}
       triggerButton={
         <StyledDropdownButton
+          className="flex !border-none !ml-0 items-center justify-center !px-4 gap-2 h-full !bg-[--hl-xxs] aria-pressed:!bg-[--hl-sm] rounded-sm text-[--color-font] hover:!bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           variant='outlined'
           removePaddings={false}
           disableHoverBehavior={false}
         >
-          Pull <i className="fa fa-caret-down pad-left-sm" />
+          <Icon icon='cloud-download' />
+          Pull
         </StyledDropdownButton>
       }
     >
       <DropdownSection
         aria-label='Remote Workspaces Section'
-        items={remoteBackendProjects.length === 0 ? [{
+        items={backendProjectsToPull.length === 0 ? [{
           id: 1,
           isDisabled: true,
           label: 'Nothing to pull',
@@ -87,7 +90,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
 
       <DropdownSection
         aria-label='Remote Workspaces Section'
-        items={remoteBackendProjects.length ? remoteBackendProjects : []}
+        items={backendProjectsToPull.length ? backendProjectsToPull : []}
         title={
           <>
             Remote {strings.collection.plural}

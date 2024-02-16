@@ -1,14 +1,17 @@
 import React, { FC, Fragment, useCallback, useState } from 'react';
+import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
+import { exportMockServerToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
 import { CaCertificate } from '../../../models/ca-certificate';
 import { ClientCertificate } from '../../../models/client-certificate';
-import { Project } from '../../../models/project';
+import { MockServer } from '../../../models/mock-server';
+import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
@@ -17,8 +20,8 @@ import { getDocumentActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import { showError, showModal, showPrompt } from '../modals';
-import { AskModal } from '../modals/ask-modal';
+import { Icon } from '../icon';
+import { showError, showPrompt } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { ImportModal } from '../modals/import-modal';
 import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
@@ -29,6 +32,7 @@ interface Props {
   workspace: Workspace;
   workspaceMeta: WorkspaceMeta;
   apiSpec: ApiSpec | null;
+  mockServer: MockServer | null;
   project: Project;
   projects: Project[];
   clientCertificates: ClientCertificate[];
@@ -84,16 +88,19 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 };
 
 export const WorkspaceCardDropdown: FC<Props> = props => {
-  const { workspace, project, projects, workspaceMeta, clientCertificates, caCertificate } = props;
+  const { workspace, mockServer, project, projects } = props;
   const fetcher = useFetcher();
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isDeleteRemoteWorkspaceModalOpen, setIsDeleteRemoteWorkspaceModalOpen] = useState(false);
   const {
     organizationId,
     projectId,
   } = useParams() as { organizationId: string; projectId: string };
+
+  const deleteWorkspaceFetcher = useFetcher();
 
   const workspaceName = workspace.name;
   const projectName = project.name ?? getProductName();
@@ -104,7 +111,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
         aria-label='Workspace Actions Dropdown'
         onOpen={refresh}
         triggerButton={
-          <DropdownButton>
+          <DropdownButton aria-label='Workspace actions menu button' className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
             <SvgIcon icon="ellipsis" />
           </DropdownButton>
         }
@@ -152,7 +159,9 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
             <ItemContent
               label="Export"
               icon="file-export"
-              onClick={() => setIsExportModalOpen(true)}
+              onClick={() => workspace.scope !== 'mock-server'
+                ? setIsExportModalOpen(true)
+                : exportMockServerToFile(workspace)}
             />
           </DropdownItem>
           <DropdownItem aria-label='Settings'>
@@ -172,26 +181,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
               icon="trash-o"
               className="danger"
               onClick={() => {
-                const label = getWorkspaceLabel(workspace);
-                showModal(AskModal, {
-                  title: `Delete ${label.singular}`,
-                  message: `Do you really want to delete "${workspaceName}"?`,
-                  yesText: 'Yes',
-                  noText: 'Cancel',
-                  onDone: async (isYes: boolean) => {
-                    if (!isYes) {
-                      return;
-                    }
-
-                    fetcher.submit(
-                      { workspaceId: workspace._id },
-                      {
-                        action: `/organization/${organizationId}/project/${workspace.parentId}/workspace/delete`,
-                        method: 'post',
-                      }
-                    );
-                  },
-                });
+                setIsDeleteRemoteWorkspaceModalOpen(true);
               }}
             />
           </DropdownItem>
@@ -217,18 +207,77 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
       )}
       {isExportModalOpen && (
         <ExportRequestsModal
-          onHide={() => setIsExportModalOpen(false)}
+          workspace={workspace}
+          onClose={() => setIsExportModalOpen(false)}
         />
       )}
       {isSettingsModalOpen && (
         <WorkspaceSettingsModal
           workspace={workspace}
-          workspaceMeta={workspaceMeta}
-          clientCertificates={clientCertificates}
-          caCertificate={caCertificate}
-          onHide={() => setIsSettingsModalOpen(false)}
+          mockServer={mockServer}
+          onClose={() => setIsSettingsModalOpen(false)}
         />
       )}
+      {isDeleteRemoteWorkspaceModalOpen && (
+        <ModalOverlay
+          isOpen
+          onOpenChange={() => {
+            setIsDeleteRemoteWorkspaceModalOpen(false);
+          }}
+          isDismissable
+          className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
+        >
+          <Modal
+            onOpenChange={() => {
+              setIsDeleteRemoteWorkspaceModalOpen(false);
+            }}
+            className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]"
+          >
+            <Dialog
+              className="outline-none"
+            >
+              {({ close }) => (
+                <div className='flex flex-col gap-4'>
+                  <div className='flex gap-2 items-center justify-between'>
+                    <Heading className='text-2xl'>Delete {getWorkspaceLabel(workspace).singular}</Heading>
+                    <Button
+                      className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                      onPress={close}
+                    >
+                      <Icon icon="x" />
+                    </Button>
+                  </div>
+                  <deleteWorkspaceFetcher.Form
+                    action={`/organization/${organizationId}/project/${workspace.parentId}/workspace/delete`}
+                    method="POST"
+                    className='flex flex-col gap-4'
+                  >
+                    <input type="hidden" name="workspaceId" value={workspace._id} />
+                    <p>
+                      This will permanently delete the {<strong style={{ whiteSpace: 'pre-wrap' }}>{workspace?.name}</strong>}{' '}
+                      {getWorkspaceLabel(workspace).singular} {isRemoteProject(project) ? 'remotely' : ''}.
+                    </p>
+                    {deleteWorkspaceFetcher.data && deleteWorkspaceFetcher.data.error && (
+                      <p className="notice error margin-bottom-sm no-margin-top">
+                        {deleteWorkspaceFetcher.data.error}
+                      </p>
+                    )}
+                    <div className="flex justify-end">
+                      <Button
+                        type="submit"
+                        className="hover:no-underline bg-[--color-danger] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-danger] transition-colors rounded-sm"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </deleteWorkspaceFetcher.Form>
+                </div>
+              )}
+            </Dialog>
+          </Modal>
+        </ModalOverlay>
+      )}
+      { }
     </Fragment>
   );
 };

@@ -3,7 +3,6 @@ import styled from 'styled-components';
 
 import { ProtoDirectory } from '../../../models/proto-directory';
 import type { ProtoFile } from '../../../models/proto-file';
-import { ListGroup, ListGroupItem } from '../list-group';
 import { Button } from '../themed-button';
 
 export type SelectProtoFileHandler = (id: string) => void;
@@ -11,7 +10,7 @@ export type DeleteProtoFileHandler = (protofile: ProtoFile) => void;
 export type DeleteProtoDirectoryHandler = (protoDirectory: ProtoDirectory) => void;
 export type UpdateProtoFileHandler = (protofile: ProtoFile) => Promise<void>;
 export type RenameProtoFileHandler = (protoFile: ProtoFile, name?: string) => Promise<void>;
-export const ProtoListItem = styled(ListGroupItem).attrs(() => ({
+export const ProtoListItem = styled('li').attrs(() => ({
   className: 'row-spaced',
 }))`
   button i.fa {
@@ -42,10 +41,14 @@ const recursiveRender = (
   handleUpdate: UpdateProtoFileHandler,
   handleDelete: DeleteProtoFileHandler,
   handleDeleteDirectory: DeleteProtoDirectoryHandler,
-  selectedId?: string,
-): React.ReactNode => ([
+  selectedId?: string
+): React.ReactNode => [
   dir && (
-    <ProtoListItem indentLevel={indent}>
+    <ProtoListItem
+      style={{
+        paddingLeft: `${indent * 1}rem`,
+      }}
+    >
       <span className="wide">
         <i className="fa fa-folder-open-o pad-right-sm" />
         {dir.name}
@@ -65,14 +68,12 @@ const recursiveRender = (
           </Button>
         </div>
       )}
-    </ProtoListItem>),
+    </ProtoListItem>
+  ),
   ...files.map(f => (
     <ProtoListItem
       key={f._id}
-      selectable
-      isSelected={f._id === selectedId}
       onClick={() => handleSelect(f._id)}
-      indentLevel={indent + 1}
     >
       <>
         <span className="wide">
@@ -106,29 +107,34 @@ const recursiveRender = (
       </>
     </ProtoListItem>
   )),
-  ...subDirs.map(sd => recursiveRender(
-    indent + 1,
-    sd,
-    handleSelect,
-    handleUpdate,
-    handleDelete,
-    handleDeleteDirectory,
-    selectedId,
-  ))]);
+  ...subDirs.map(sd =>
+    recursiveRender(
+      indent + 1,
+      sd,
+      handleSelect,
+      handleUpdate,
+      handleDelete,
+      handleDeleteDirectory,
+      selectedId
+    )
+  ),
+];
 
 export const ProtoFileList: FunctionComponent<Props> = props => (
-  <ListGroup bordered>
+  <ul className="divide-y divide-solid divide-[--hl]">
     {!props.protoDirectories.length && (
-      <ListGroupItem>No proto files exist for this workspace</ListGroupItem>
+      <li>No proto files exist for this workspace</li>
     )}
-    {props.protoDirectories.map(dir => recursiveRender(
-      0,
-      dir,
-      props.handleSelect,
-      props.handleUpdate,
-      props.handleDelete,
-      props.handleDeleteDirectory,
-      props.selectedId
-    ))}
-  </ListGroup>
+    {props.protoDirectories.map(dir =>
+      recursiveRender(
+        0,
+        dir,
+        props.handleSelect,
+        props.handleUpdate,
+        props.handleDelete,
+        props.handleDeleteDirectory,
+        props.selectedId
+      )
+    )}
+  </ul>
 );

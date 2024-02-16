@@ -28,6 +28,7 @@
     "node_modules",
     "src/coverage",
     "src/main.min.js",
-    "src/preload.js"
-  ]
+    "src/preload.js",
+    "src/hidden-window-preload.js",
+  ],
 }

@@ -7,7 +7,6 @@ import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { isWorkspace } from '../../models/workspace';
 import { resetKeys } from '../ignore-keys';
-import { forceWorkspaceScopeToDesign } from './force-workspace-scope-to-design';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';
 import Stat from './stat';
@@ -106,8 +105,6 @@ export class NeDBClient {
       doc.parentId = this._projectId;
     }
 
-    forceWorkspaceScopeToDesign(doc);
-
     await db.upsert(doc, true);
   }
 
@@ -150,6 +147,8 @@ export class NeDBClient {
         models.protoDirectory.type,
         models.webSocketRequest.type,
         models.webSocketPayload.type,
+        models.mockRoute.type,
+        models.mockServer.type,
       ];
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);

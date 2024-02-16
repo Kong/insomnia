@@ -24,7 +24,7 @@ import type { WebSocketResponse } from '../../models/websocket-response';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
-import { addSetCookiesToToughCookieJar } from '../../network/network';
+import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
@@ -118,7 +118,6 @@ const openWebSocketConnection = async (
   }
 
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
-  fs.mkdirSync(responsesDir, { recursive: true });
 
   const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
@@ -179,7 +178,7 @@ const openWebSocketConnection = async (
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
-    const settings = await models.settings.getOrCreate();
+    const settings = await models.settings.get();
     const start = performance.now();
 
     const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
@@ -254,7 +253,7 @@ const openWebSocketConnection = async (
         settingStoreCookies: request.settingStoreCookies,
       };
 
-      const settings = await models.settings.getOrCreate();
+      const settings = await models.settings.get();
       const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
@@ -298,7 +297,7 @@ const openWebSocketConnection = async (
         settingSendCookies: request.settingSendCookies,
         settingStoreCookies: request.settingStoreCookies,
       };
-      const settings = await models.settings.getOrCreate();
+      const settings = await models.settings.get();
       const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
       deleteRequestMaps(request._id, `Unexpected response ${incomingMessage.statusCode}`);
@@ -383,7 +382,7 @@ const openWebSocketConnection = async (
 };
 
 const createErrorResponse = async (responseId: string, requestId: string, environmentId: string | null, timelinePath: string, message: string) => {
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,

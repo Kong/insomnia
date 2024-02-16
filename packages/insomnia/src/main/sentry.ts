@@ -13,7 +13,7 @@ let enabled = false;
  * Watch setting for changes. This must be called after the DB is initialized.
  */
 export function sentryWatchAnalyticsEnabled() {
-  models.settings.getOrCreate().then(settings => {
+  models.settings.get().then(settings => {
     enabled = settings.enableAnalytics || session.isLoggedIn();
   });
 
@@ -22,6 +22,12 @@ export function sentryWatchAnalyticsEnabled() {
       const [event, doc] = change;
       if (isSettings(doc) && event === 'update') {
         enabled = doc.enableAnalytics || session.isLoggedIn();
+      }
+
+      if (event === 'insert' || event === 'update') {
+        if ([models.workspace.type, models.project.type].includes(doc.type) && !doc.parentId) {
+          Sentry.captureException(new Error(`Missing parent ID for ${doc.type} on ${event}`));
+        }
       }
     }
   });

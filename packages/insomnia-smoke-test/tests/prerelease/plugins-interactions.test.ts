@@ -14,7 +14,7 @@ test.describe('Plugins', async () => {
     await page.locator('text=Generate').first().click();
 
     // check if the plugin shows up on the plugin list
-    await expect(page.locator('.app')).toContainText('insomnia-plugin-demo-example');
+    await page.getByRole('cell', { name: 'insomnia-plugin-demo-example' }).click();
   });
 
   test('Check Declarative Config and Kong Kubernetes config', async ({ page }) => {
@@ -26,8 +26,8 @@ test.describe('Plugins', async () => {
     await expect(page.locator('.app')).toContainText('This is a sample server Petstore server');
 
     // Open declarative config
-    await page.getByTestId('workspace-dropdown').locator('button').click();
-    await page.getByRole('menuitem', { name: 'Declarative Config (Legacy)' }).click();
+    await page.getByLabel('Workspace actions').click();
+    await page.getByRole('menuitemradio', { name: 'Declarative Config (Legacy)' }).click();
     // Check for declarative config contents
     await page.getByText('_format_version').click();
 

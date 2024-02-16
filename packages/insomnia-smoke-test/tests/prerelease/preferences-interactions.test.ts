@@ -17,17 +17,17 @@ test('Preferences through keyboard shortcut', async ({ page }) => {
 
 // Quick reproduction for Kong/insomnia#5664 and INS-2267
 test('Check filter responses by environment preference', async ({ app, page }) => {
-  await page.getByRole('button', { name: 'Create' }).click();
+  await page.getByRole('button', { name: 'Create in project' }).click();
   const text = await loadFixture('simple.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-  await page.getByRole('menuitem', { name: 'Import' }).click();
-  await page.getByText('Clipboard').click();
+  await page.getByRole('menuitemradio', { name: 'Import' }).click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByText('Collectionsimplejust now').click();
 
   // Send a request
-  await page.getByRole('button', { name: 'example http' }).click();
+  await page.getByLabel('Request Collection').getByTestId('example http').press('Enter');
   await page.click('[data-testid="request-pane"] button:has-text("Send")');
   await page.click('text=Timeline');
   await page.locator('text=HTTP/1.1 200 OK').click();

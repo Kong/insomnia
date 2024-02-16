@@ -6,11 +6,12 @@ import styled from 'styled-components';
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { documentationLinks } from '../../../common/documentation';
 import { generateId } from '../../../common/misc';
-import { getRenderContext, getRenderedGrpcRequest, getRenderedGrpcRequestMessage, render, RENDER_PURPOSE_SEND } from '../../../common/render';
+import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '../../../common/render';
 import { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
 import type { GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
+import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { GrpcRequestState } from '../../routes/debug';
@@ -151,6 +152,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
             <div className="method-grpc pad-right pad-left vertically-center">gRPC</div>
             <StyledUrlEditor title={activeRequest.url}>
               <OneLineEditor
+                id="grpc-url"
                 key={uniquenessKey}
                 type="text"
                 defaultValue={activeRequest.url}
@@ -195,8 +197,16 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 disabled={!activeRequest.url}
                 onClick={async () => {
                   try {
-                    const renderContext = await getRenderContext({ request: activeRequest, environmentId, purpose: RENDER_PURPOSE_SEND });
-                    const rendered = await render({ url: activeRequest.url, metadata: activeRequest.metadata }, renderContext);
+                    const rendered =
+                      await tryToInterpolateRequestOrShowRenderErrorModal({
+                        request: activeRequest,
+                        environmentId,
+                        payload: {
+                          url: activeRequest.url,
+                          metadata: activeRequest.metadata,
+                          reflectionApi: activeRequest.reflectionApi,
+                        },
+                      });
                     const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
                     setGrpcState({ ...grpcState, methods });
                     patchRequest(requestId, { protoFileId: '', protoMethodName: '' });
@@ -219,12 +229,14 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 </Tooltip>
               </Button>
             </StyledDropdownWrapper>
-            <GrpcSendButton
-              running={running}
-              methodType={methodType}
-              handleCancel={() => window.main.grpc.cancel(requestId)}
-              handleStart={handleRequestSend}
-            />
+            <div className='flex p-1'>
+              <GrpcSendButton
+                running={running}
+                methodType={methodType}
+                handleCancel={() => window.main.grpc.cancel(requestId)}
+                handleStart={handleRequestSend}
+              />
+            </div>
           </StyledUrlBar>
         </PaneHeader>
         <PaneBody>
@@ -270,6 +282,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     {[
                       <TabItem key="body" title="Body">
                         <CodeEditor
+                          id="grpc-request-editor"
                           ref={editorRef}
                           defaultValue={activeRequest.body.text}
                           onChange={text => patchRequest(requestId, { body: { text } })}
@@ -281,6 +294,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                       ...requestMessages.sort((a, b) => a.created - b.created).map((m, index) => (
                         <TabItem key={m.id} title={`Stream ${index + 1}`}>
                           <CodeEditor
+                            id={'grpc-request-editor-tab' + m.id}
                             defaultValue={m.text}
                             mode="application/json"
                             enableNunjucks

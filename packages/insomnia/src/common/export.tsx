@@ -27,6 +27,7 @@ import { showAlert, showError, showModal } from '../ui/components/modals';
 import { AskModal } from '../ui/components/modals/ask-modal';
 import { SelectModal } from '../ui/components/modals/select-modal';
 import { Insomnia4Data } from '../utils/importers/importers';
+import { invariant } from '../utils/invariant';
 import {
   EXPORT_TYPE_API_SPEC,
   EXPORT_TYPE_COOKIE_JAR,
@@ -56,7 +57,6 @@ const getDocWithDescendants = (includePrivateDocs = false) => async (parentDoc: 
     doc => !doc?.isPrivate || includePrivateDocs,
   );
 };
-
 export async function exportWorkspacesHAR(
   workspaces: Workspace[],
   includePrivateDocs = false,
@@ -126,7 +126,6 @@ export async function exportRequestsHAR(
   }
 
   const data = await har.exportHar(harRequests);
-  window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: 'har' } });
   return JSON.stringify(data, null, '\t');
 }
 
@@ -147,7 +146,6 @@ export async function exportRequestsData(
   format: 'json' | 'yaml',
 ) {
   const data: Insomnia4Data = {
-    // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
     _type: 'export',
     __export_format: EXPORT_FORMAT,
     __export_date: new Date(),
@@ -269,7 +267,6 @@ export async function exportRequestsData(
       delete d.type;
       return d;
     });
-  window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: format } });
 
   if (format.toLowerCase() === 'yaml') {
     return YAML.stringify(data);
@@ -367,7 +364,7 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
   fs.writeFile(filename, jsonData, {}, onDone);
 };
 
-export const exportAllToFile = (activeProjectName: string, workspacesForActiveProject: Workspace[]) => {
+export const exportProjectToFile = (activeProjectName: string, workspacesForActiveProject: Workspace[]) => {
   if (!workspacesForActiveProject.length) {
     showAlert({
       title: 'Cannot export',
@@ -407,6 +404,7 @@ export const exportAllToFile = (activeProjectName: string, workspacesForActivePr
           default:
             throw new Error(`selected export format "${selectedFormat}" is invalid`);
         }
+        window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat } });
       } catch (err) {
         showError({
           title: 'Export Failed',
@@ -423,6 +421,64 @@ export const exportAllToFile = (activeProjectName: string, workspacesForActivePr
       });
     },
   });
+};
+const exportMockServer = async (workspace: Workspace, selectedFormat: 'json' | 'yaml') => {
+  const data: Insomnia4Data = {
+    _type: 'export',
+    __export_format: EXPORT_FORMAT,
+    __export_date: new Date(),
+    __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
+    resources: [],
+  };
+  const mockServer = await models.mockServer.getByParentId(workspace._id);
+  invariant(mockServer, 'expected mock server to be defined');
+  const mockRoutes = await models.mockRoute.findByParentId(mockServer._id);
+
+  // unclear why we need a _type here, or if they should match prefix or not
+  data.resources.push({ ...workspace, _type: 'workspace' });
+  data.resources.push({ ...mockServer, _type: 'mock' });
+  mockRoutes.map(mockRoute => data.resources.push({ ...mockRoute, _type: 'mock_route' }));
+  if (selectedFormat === 'yaml') {
+    return YAML.stringify(data);
+  }
+  return JSON.stringify(data);
+};
+export const exportMockServerToFile = async (workspace: Workspace) => {
+  const options = [{ name: 'Insomnia v4 (JSON)', value: VALUE_JSON }, { name: 'Insomnia v4 (YAML)', value: VALUE_YAML }];
+  const lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
+  const defaultValue = options.find(({ value }) => value === lastFormat) ? lastFormat : VALUE_JSON;
+
+  showModal(SelectModal, {
+    title: 'Select Export Type',
+    value: defaultValue,
+    options,
+    message: 'Which format would you like to export as?',
+    onDone: async selectedFormat => {
+      invariant(selectedFormat, 'expected selected format to be defined');
+      invariant(selectedFormat === 'json' || selectedFormat === 'yaml', 'unexpected selected format');
+      window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
+      const fileName = await showSaveExportedFileDialog({
+        exportedFileNamePrefix: workspace.name,
+        selectedFormat,
+      });
+      if (!fileName) {
+        return;
+      }
+      try {
+        const stringifiedExport = await exportMockServer(workspace, selectedFormat);
+        writeExportedFileToFileSystem(fileName, stringifiedExport, err => err && console.warn('Export failed', err));
+        window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat, scope: 'mock-server' } });
+      } catch (err) {
+        showError({
+          title: 'Export Failed',
+          error: err,
+          message: 'Export failed due to an unexpected error',
+        });
+        return;
+      }
+    },
+  });
+
 };
 export const exportRequestsToFile = (requestIds: string[]) => {
   showSelectExportTypeModal({
@@ -478,6 +534,7 @@ export const exportRequestsToFile = (requestIds: string[]) => {
           default:
             throw new Error(`selected export format "${selectedFormat}" is invalid`);
         }
+        window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat } });
       } catch (err) {
         showError({
           title: 'Export Failed',

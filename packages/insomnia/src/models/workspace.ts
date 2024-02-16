@@ -1,10 +1,11 @@
 import type { Merge } from 'type-fest';
 
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../common/constants';
 import { database as db } from '../common/database';
 import { strings } from '../common/strings';
 import type { BaseModel } from './index';
 import * as models from './index';
-import { DEFAULT_PROJECT_ID, isProjectId } from './project';
+import { isProjectId } from './project';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -16,7 +17,7 @@ export interface BaseWorkspace {
   name: string;
   description: string;
   certificates?: any; // deprecated
-  scope: 'design' | 'collection';
+  scope: 'design' | 'collection' | 'mock-server';
 }
 
 export type WorkspaceScope = BaseWorkspace['scope'];
@@ -24,6 +25,7 @@ export type WorkspaceScope = BaseWorkspace['scope'];
 export const WorkspaceScopeKeys = {
   design: 'design',
   collection: 'collection',
+  mockServer: 'mock-server',
 } as const;
 
 export type Workspace = BaseModel & BaseWorkspace;
@@ -40,6 +42,10 @@ export const isCollection = (workspace: Pick<Workspace, 'scope'>) => (
   workspace.scope === WorkspaceScopeKeys.collection
 );
 
+export const isMockServer = (workspace: Pick<Workspace, 'scope'>) => (
+  workspace.scope === WorkspaceScopeKeys.mockServer
+);
+
 export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,
   description: '',
@@ -51,7 +57,6 @@ export function migrate(doc: Workspace) {
     doc = _migrateExtractClientCertificates(doc);
     doc = _migrateEnsureName(doc);
     doc = _migrateScope(doc);
-    doc = _migrateIntoDefaultProject(doc);
     return doc;
   } catch (e) {
     console.log('[db] Error during workspace migration', e);
@@ -136,9 +141,12 @@ type MigrationWorkspace = Merge<Workspace, { scope: OldScopeTypes | Workspace['s
  * Ensure workspace scope is set to a valid entry
  */
 function _migrateScope(workspace: MigrationWorkspace) {
-  if (workspace.scope === WorkspaceScopeKeys.design || workspace.scope === WorkspaceScopeKeys.collection) {
+  if (workspace.scope === WorkspaceScopeKeys.design
+    || workspace.scope === WorkspaceScopeKeys.collection
+    || workspace.scope === WorkspaceScopeKeys.mockServer) {
     return workspace as Workspace;
   }
+  // designer and spec => design, unset => collection
   if (workspace.scope === 'designer' || workspace.scope === 'spec') {
     workspace.scope = WorkspaceScopeKeys.design;
   } else {
@@ -147,17 +155,27 @@ function _migrateScope(workspace: MigrationWorkspace) {
   return workspace as Workspace;
 }
 
-function _migrateIntoDefaultProject(workspace: Workspace) {
-  if (!workspace.parentId) {
-    console.log(`[db] No workspace parentId found for ${workspace._id} setting default ${DEFAULT_PROJECT_ID}`);
-    workspace.parentId = DEFAULT_PROJECT_ID;
-  }
-
-  return workspace;
-}
-
 function expectParentToBeProject(parentId?: string | null) {
   if (parentId && !isProjectId(parentId)) {
     throw new Error('Expected the parent of a Workspace to be a Project');
   }
 }
+
+export const SCRATCHPAD_WORKSPACE_ID = 'wrk_scratchpad';
+
+export function isScratchpad(workspace: Workspace) {
+  return workspace._id === SCRATCHPAD_WORKSPACE_ID;
+}
+
+export const scopeToActivity = (scope: WorkspaceScope) => {
+  switch (scope) {
+    case WorkspaceScopeKeys.collection:
+      return ACTIVITY_DEBUG;
+    case WorkspaceScopeKeys.design:
+      return ACTIVITY_SPEC;
+    case WorkspaceScopeKeys.mockServer:
+      return 'mock-server';
+    default:
+      return ACTIVITY_DEBUG;
+  }
+};

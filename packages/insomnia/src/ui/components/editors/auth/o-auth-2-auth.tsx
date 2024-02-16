@@ -1,7 +1,7 @@
 import React, { ChangeEvent, FC, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { convertEpochToMilliseconds, toKebabCase } from '../../../../common/misc';
+import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
 import * as models from '../../../../models';
@@ -280,7 +280,14 @@ export const OAuth2Auth: FC = () => {
     </>
   );
 };
-
+/**
+  Finds epoch's digit count and converts it to make it exactly 13 digits.
+  Which is the epoch millisecond representation. (trims last 2 digits)
+*/
+export function convertEpochToMilliseconds(epoch: number) {
+  const expDigitCount = epoch.toString().length;
+  return parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
+}
 const renderIdentityTokenExpiry = (token?: Pick<OAuth2Token, 'identityToken'>) => {
   if (!token || !token.identityToken) {
     return;

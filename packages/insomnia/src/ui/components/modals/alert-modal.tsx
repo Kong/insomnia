@@ -43,7 +43,7 @@ export const AlertModal = forwardRef<AlertModalHandle, ModalProps>((_, ref) => {
 
   const { message, title, addCancel, okLabel } = state;
   return (
-    <Modal ref={modalRef} skinny>
+    <Modal ref={modalRef}>
       <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
       <ModalBody className="wide pad">{message}</ModalBody>
       <ModalFooter>

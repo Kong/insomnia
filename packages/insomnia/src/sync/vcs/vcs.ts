@@ -1,15 +1,17 @@
+// @TODOs
+// - [ ] Rename things that run a fetch to fetchSomething...
+// - [ ] Make sure that pull handles updating the parentId to the current project._id
 import clone from 'clone';
 import crypto from 'crypto';
 import path from 'path';
 
 import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
-import { chunkArray, generateId } from '../../common/misc';
+import { generateId } from '../../common/misc';
 import { strings } from '../../common/strings';
 import { BaseModel } from '../../models';
 import Store from '../store';
 import type { BaseDriver } from '../store/drivers/base';
-import type FileSystemDriver from '../store/drivers/file-system-driver';
 import compress from '../store/hooks/compress';
 import type {
   BackendProject,
@@ -43,6 +45,14 @@ const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
 
 type ConflictHandler = (conflicts: MergeConflict[]) => Promise<MergeConflict[]>;
 
+// breaks one array into multiple arrays of size chunkSize
+export function chunkArray<T>(arr: T[], chunkSize: number) {
+  const chunks: T[][] = [];
+  for (let i = 0, j = arr.length; i < j; i += chunkSize) {
+    chunks.push(arr.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
 export class VCS {
   _store: Store;
   _driver: BaseDriver;
@@ -114,10 +124,6 @@ export class VCS {
     await this.setBackendProject(project);
   }
 
-  async teams() {
-    return this._queryTeams();
-  }
-
   async backendProjectTeams() {
     return this._queryBackendProjectTeams();
   }
@@ -126,12 +132,33 @@ export class VCS {
     return this._allBackendProjects();
   }
 
-  async remoteBackendProjects(teamId: string) {
-    return this._queryBackendProjects(teamId);
+  async remoteBackendProjects({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
+    return this._queryBackendProjects(teamId, teamProjectId);
   }
 
   async remoteBackendProjectsInAnyTeam() {
-    return this._queryBackendProjects();
+    const { projects } = await this._runGraphQL(
+      `
+        query ($teamId: ID, $teamProjectId: ID) {
+          projects(teamId: $teamId, teamProjectId: $teamProjectId) {
+            id
+            name
+            rootDocumentId
+            teams {
+              id
+              name
+            }
+          }
+        }
+      `,
+      {
+        teamId: '',
+        teamProjectId: '',
+      },
+      'projects',
+    );
+
+    return (projects as BackendProjectWithTeams[]).map(normalizeBackendProjectTeam);
   }
 
   async blobFromLastSnapshot(key: string) {
@@ -281,7 +308,7 @@ export class VCS {
     const { conflicts, dirty } = preMergeCheck(latestStateCurrent, latestStateNext, candidates);
 
     if (conflicts.length) {
-      throw new Error('Please snapshot current changes before switching branches');
+      throw new Error('Please commit current changes before switching branches');
     }
 
     await this._storeHead({
@@ -322,7 +349,7 @@ export class VCS {
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
 
     if (!snapshot) {
-      throw new Error('Failed to get latest snapshot for all documents');
+      throw new Error('Failed to get latest commit for all documents');
     }
 
     return this._getBlobs(snapshot.state.map(s => s.blob));
@@ -333,7 +360,7 @@ export class VCS {
     const latestSnapshot = await this._getLatestSnapshot(branch.name);
 
     if (!latestSnapshot) {
-      throw new Error('No snapshots to rollback to');
+      throw new Error('No commits to rollback to');
     }
 
     return this.rollback(latestSnapshot.id, candidates);
@@ -343,7 +370,7 @@ export class VCS {
     const rollbackSnapshot: Snapshot | null = await this._getSnapshot(snapshotId);
 
     if (rollbackSnapshot === null) {
-      throw new Error(`Failed to find snapshot by id ${snapshotId}`);
+      throw new Error(`Failed to find commit by id ${snapshotId}`);
     }
 
     const currentState: SnapshotState = candidates.map(candidate => ({
@@ -391,7 +418,7 @@ export class VCS {
       const snapshot = await this._getSnapshot(id);
 
       if (snapshot === null) {
-        throw new Error(`Failed to get snapshot id=${id}`);
+        throw new Error(`Failed to get commit id=${id}`);
       }
 
       snapshots.push(snapshot);
@@ -430,12 +457,12 @@ export class VCS {
     const parent: Snapshot | null = await this._getLatestSnapshot(branch.name);
 
     if (!name) {
-      throw new Error('Snapshot must have a message');
+      throw new Error('Commit must have a message');
     }
 
     // Ensure there is something on the stage
     if (Object.keys(stage).length === 0) {
-      throw new Error('Snapshot does not have any changes');
+      throw new Error('Commit does not have any changes');
     }
 
     const newState: SnapshotState = [];
@@ -468,11 +495,11 @@ export class VCS {
     }
 
     const snapshot = await this._createSnapshotFromState(branch, newState, name);
-    console.log(`[sync] Created snapshot ${snapshot.id} (${name})`);
+    console.log(`[sync] Created commit ${snapshot.id} (${name})`);
   }
 
-  async pull(candidates: StatusCandidate[], teamId: string | undefined | null) {
-    await this._getOrCreateRemoteBackendProject(teamId || '');
+  async pull({ candidates, teamId, teamProjectId }: { candidates: StatusCandidate[]; teamId: string; teamProjectId: string }) {
+    await this._getOrCreateRemoteBackendProject({ teamId, teamProjectId });
     const localBranch = await this._getCurrentBranch();
     const tmpBranchForRemote = await this.customFetch(localBranch.name + '.hidden', localBranch.name);
     // Merge branch and ensure that we use the remote's history when merging
@@ -490,29 +517,29 @@ export class VCS {
     return delta;
   }
 
-  async _getOrCreateRemoteBackendProject(teamId: string) {
+  async _getOrCreateRemoteBackendProject({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
     const localProject = await this._assertBackendProject();
     let remoteProject = await this._queryProject();
 
     if (!remoteProject) {
-      remoteProject = await this._createRemoteProject(localProject, teamId);
+      remoteProject = await this._createRemoteProject({ ...localProject, teamId, teamProjectId });
     }
 
     await this._storeBackendProject(remoteProject);
     return remoteProject;
   }
 
-  async _createRemoteProject({ rootDocumentId, name }: BackendProject, teamId: string) {
+  async _createRemoteProject({ rootDocumentId, name, teamId, teamProjectId }: BackendProject & { teamId: string; teamProjectId: string }) {
     if (!teamId) {
       throw new Error('teamId should be defined');
     }
 
     const teamKeys = await this._queryTeamMemberKeys(teamId);
-    return this._queryCreateProject(rootDocumentId, name, teamId, teamKeys.memberKeys);
+    return this._queryCreateProject(rootDocumentId, name, teamId, teamProjectId, teamKeys.memberKeys);
   }
 
-  async push(teamId: string | undefined | null) {
-    await this._getOrCreateRemoteBackendProject(teamId || '');
+  async push({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
+    await this._getOrCreateRemoteBackendProject({ teamId, teamProjectId });
     const branch = await this._getCurrentBranch();
     // Check branch history to make sure there are no conflicts
     let lastMatchingIndex = 0;
@@ -623,7 +650,7 @@ export class VCS {
 
     if (preConflicts.length) {
       console.log('[sync] Merge failed', preConflicts);
-      throw new Error('Please snapshot current changes or revert them before merging');
+      throw new Error('Please commit current changes or revert them before merging');
     }
 
     const shouldDoNothing1 = latestSnapshotOther && latestSnapshotOther.id === rootSnapshotId;
@@ -698,7 +725,7 @@ export class VCS {
     branch.snapshots.push(snapshot.id);
     await this._storeBranch(branch);
     await this._storeSnapshot(snapshot);
-    console.log(`[sync] Created snapshot '${name}' on ${branch.name}`);
+    console.log(`[sync] Created commit '${name}' on ${branch.name}`);
     return snapshot;
   }
 
@@ -887,7 +914,7 @@ export class VCS {
       );
       // Store them in case something has changed
       await this._storeSnapshots(snapshotsCreate);
-      console.log('[sync] Pushed snapshots', snapshotsCreate.map((s: any) => s.id).join(', '));
+      console.log('[sync] Pushed commits', snapshotsCreate.map((s: any) => s.id).join(', '));
     }
   }
 
@@ -1003,27 +1030,11 @@ export class VCS {
     return projectKey.encSymmetricKey as string;
   }
 
-  async _queryTeams() {
-    const { teams } = await this._runGraphQL(
-      `
-        query {
-          teams {
-            id
-            name
-          }
-        }
-      `,
-      {},
-      'teams',
-    );
-    return teams as Team[];
-  }
-
-  async _queryBackendProjects(teamId?: string) {
+  async _queryBackendProjects(teamId: string, teamProjectId: string) {
     const { projects } = await this._runGraphQL(
       `
-        query ($teamId: ID) {
-          projects(teamId: $teamId) {
+        query ($teamId: ID, $teamProjectId: ID) {
+          projects(teamId: $teamId, teamProjectId: $teamProjectId) {
             id
             name
             rootDocumentId
@@ -1036,6 +1047,7 @@ export class VCS {
       `,
       {
         teamId,
+        teamProjectId,
       },
       'projects',
     );
@@ -1093,8 +1105,14 @@ export class VCS {
     memberKeys: {
       accountId: string;
       publicKey: string;
+      autoLinked: boolean;
     }[];
   }> {
+    console.log('[sync] Fetching team member keys', {
+      teamId,
+      sessionId: session.getCurrentSessionId(),
+    });
+
     const { teamMemberKeys } = await this._runGraphQL(
       `
         query ($teamId: ID!) {
@@ -1102,6 +1120,7 @@ export class VCS {
             memberKeys {
               accountId
               publicKey
+              autoLinked
             }
           }
         }
@@ -1118,24 +1137,27 @@ export class VCS {
     workspaceId: string,
     workspaceName: string,
     teamId: string,
+    teamProjectId: string,
     teamPublicKeys?: {
       accountId: string;
       publicKey: string;
+      autoLinked: boolean;
     }[],
   ) {
     // Generate symmetric key for ResourceGroup
     const symmetricKey = await crypt.generateAES256Key();
     const symmetricKeyStr = JSON.stringify(symmetricKey);
 
-    const teamKeys: {accountId: string; encSymmetricKey: string}[] = [];
+    const teamKeys: { accountId: string; encSymmetricKey: string; autoLinked: boolean }[] = [];
 
     if (!teamId || !teamPublicKeys?.length) {
       throw new Error('teamId and teamPublicKeys must not be null or empty!');
     }
 
     // Encrypt the symmetric key with the public keys of all the team members, ourselves included
-    for (const { accountId, publicKey } of teamPublicKeys) {
+    for (const { accountId, publicKey, autoLinked } of teamPublicKeys) {
       teamKeys.push({
+        autoLinked,
         accountId,
         encSymmetricKey: crypt.encryptRSAWithJWK(JSON.parse(publicKey), symmetricKeyStr),
       });
@@ -1148,6 +1170,7 @@ export class VCS {
           $id: ID!,
           $rootDocumentId: ID!,
           $teamId: ID,
+          $teamProjectId: ID,
           $teamKeys: [ProjectCreateKeyInput!],
         ) {
           projectCreate(
@@ -1156,6 +1179,7 @@ export class VCS {
             rootDocumentId: $rootDocumentId,
             teamId: $teamId,
             teamKeys: $teamKeys,
+            teamProjectId: $teamProjectId
           ) {
             id
             name
@@ -1169,6 +1193,7 @@ export class VCS {
         rootDocumentId: workspaceId,
         teamId: teamId,
         teamKeys: teamKeys,
+        teamProjectId,
       },
       'createProject',
     );
@@ -1382,7 +1407,7 @@ export class VCS {
     }
 
     if (!snapshot) {
-      throw new Error(`Failed to find snapshot id=${id}`);
+      throw new Error(`Failed to find commit id=${id}`);
     }
 
     return snapshot;
@@ -1522,13 +1547,3 @@ function _generateSnapshotID(parentId: string, backendProjectId: string, state: 
 
   return hash.digest('hex');
 }
-
-let vcsInstance: VCS | null = null;
-
-export const getVCS = () => vcsInstance;
-
-export const initVCS = async (driver: FileSystemDriver, conflictHandler: ConflictHandler) => {
-  vcsInstance = new VCS(driver, conflictHandler);
-
-  return vcsInstance;
-};

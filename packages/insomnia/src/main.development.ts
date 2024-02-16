@@ -1,13 +1,18 @@
+
 import electron, { app, ipcMain, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { userDataFolder } from '../config/config.json';
-import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
+import { changelogUrl, getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
 import log, { initializeLogging } from './common/log';
+import { SegmentEvent, trackSegmentEvent } from './main/analytics';
+import { registerInsomniaStreamProtocol } from './main/api.protocol';
+import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
@@ -18,11 +23,13 @@ import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
+import { Project, RemoteProject } from './models/project';
 import type { Stats } from './models/stats';
 import type { ToastNotification } from './ui/components/toast';
 
 initializeSentry();
 
+registerInsomniaStreamProtocol();
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
   process.exit(0);
@@ -33,15 +40,8 @@ log.info(`Running version ${getAppVersion()}`);
 
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
-const envDataPath = process.env.INSOMNIA_DATA_PATH;
-if (envDataPath) {
-  app.setPath('userData', envDataPath);
-} else {
-  // Explicitly set userData folder from config because it's sketchy to rely on electron-builder to use productName, which could be changed by accident.
-  const defaultPath = app.getPath('userData');
-  const newPath = path.join(defaultPath, '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
-  app.setPath('userData', newPath);
-}
+const dataPath = process.env.INSOMNIA_DATA_PATH || path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
+app.setPath('userData', dataPath);
 
 // So if (window) checks don't throw
 global.window = global.window || undefined;
@@ -96,6 +96,8 @@ app.on('ready', async () => {
 
   // Init the rest
   await updates.init();
+  // recursive = ignore already exists error
+  await fs.mkdir(path.join(dataPath, 'responses'), { recursive: true });
 });
 
 // Set as default protocol
@@ -152,6 +154,7 @@ const _launchApp = async () => {
     const args = process.argv.slice(1).filter(a => a !== '.');
     if (args.length) {
       window = windowUtils.getOrCreateWindow();
+      windowUtils.createHiddenBrowserWindow();
       window.webContents.send('shell:open', args.join());
     }
   });
@@ -215,6 +218,21 @@ const _launchApp = async () => {
 async function _createModelInstances() {
   await models.stats.get();
   await models.settings.getOrCreate();
+  try {
+    const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
+    const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
+    if (!scratchpadProject) {
+      console.log('Initializing Scratch Pad Project');
+      await models.project.create({ _id: models.project.SCRATCHPAD_PROJECT_ID, name: getProductName(), remoteId: null, parentId: models.organization.SCRATCHPAD_ORGANIZATION_ID });
+    }
+
+    if (!scratchPad) {
+      console.log('Initializing Scratch Pad');
+      await models.workspace.create({ _id: models.workspace.SCRATCHPAD_WORKSPACE_ID, name: 'Scratch Pad', parentId: models.project.SCRATCHPAD_PROJECT_ID, scope: 'collection' });
+    }
+  } catch (err) {
+    console.warn('Failed to create default project. It probably already exists', err);
+  }
 }
 
 async function _trackStats() {
@@ -228,7 +246,27 @@ async function _trackStats() {
     launches: oldStats.launches + 1,
   });
 
-  ipcMain.once('halfSecondAfterAppStart', () => {
+  const localProjects = await database.count<Project>(models.project.type, {
+    remoteId: null,
+    parentId: { $ne: null },
+    _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
+  });
+
+  const remoteProjects = await database.count<RemoteProject>(models.project.type, {
+    remoteId: { $ne: null },
+    parentId: { $ne: null },
+  });
+
+  trackSegmentEvent(SegmentEvent.appStarted, {
+    localProjects,
+    remoteProjects,
+    createdRequests: stats.createdRequests,
+    deletedRequests: stats.deletedRequests,
+    executedRequests: stats.executedRequests,
+  });
+
+  ipcMain.once('halfSecondAfterAppStart', async () => {
+    backupIfNewerVersionAvailable();
     const { currentVersion, launches, lastVersion } = stats;
 
     const firstLaunch = launches === 1;
@@ -244,7 +282,7 @@ async function _trackStats() {
       message: `Updated to ${currentVersion}`,
     };
     // Wait a bit before showing the user because the app just launched.
-    setTimeout(() => {
+    setTimeout(async () => {
       for (const window of BrowserWindow.getAllWindows()) {
         // @ts-expect-error -- TSCONVERSION likely needs to be window.webContents.send instead
         window.send('show-notification', notification);

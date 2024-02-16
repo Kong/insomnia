@@ -72,10 +72,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
       !gitRepoDataFetcher.data
     ) {
       console.log('[git:fetcher] Fetching git repo data');
-      gitRepoDataFetcher.submit({}, {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/repo`,
-        method: 'post',
-      });
+      gitRepoDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/repo`);
     }
   }, [
     gitRepoDataFetcher,
@@ -258,12 +255,12 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
             <DropdownButton
               size="medium"
               variant='text'
+              aria-label='Git Sync'
               removePaddings={false}
               removeBorderRadius
               style={{
                 width: '100%',
                 borderRadius: '0',
-                borderTop: '1px solid var(--hl-md)',
                 justifyContent: 'flex-start !important',
                 height: 'var(--line-height-sm)',
               }}
@@ -435,13 +432,13 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
           triggerButton={
             <DropdownButton
               size="medium"
+              aria-label='Git Sync'
               variant='text'
               removePaddings={false}
               removeBorderRadius
               style={{
                 width: '100%',
                 borderRadius: '0',
-                borderTop: '1px solid var(--hl-md)',
                 justifyContent: 'flex-start !important',
                 height: 'var(--line-height-sm)',
               }}

@@ -1,114 +1,59 @@
 import '../css/styles.css';
 
-import type { IpcRendererEvent } from 'electron';
+import { IpcRendererEvent } from 'electron';
 import React, { useEffect, useState } from 'react';
-import {
-  LoaderFunction,
-  Outlet,
-  useParams,
-  useRevalidator,
-  useRouteLoaderData,
-} from 'react-router-dom';
-import styled from 'styled-components';
+import { LoaderFunction, Outlet, useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { isLoggedIn, onLoginLogout } from '../../account/session';
 import { isDevelopment } from '../../common/constants';
-import { database } from '../../common/database';
 import * as models from '../../models';
-import { defaultOrganization, Organization } from '../../models/organization';
-import { isRemoteProject } from '../../models/project';
 import { Settings } from '../../models/settings';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
 import { exchangeCodeForToken } from '../../sync/git/github-oauth-provider';
 import { exchangeCodeForGitLabToken } from '../../sync/git/gitlab-oauth-provider';
-import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
-import { getVCS } from '../../sync/vcs/vcs';
-import { submitAuthCode } from '../auth-session-provider';
-import { AccountToolbar } from '../components/account-toolbar';
-import { AppHeader } from '../components/app-header';
 import { ErrorBoundary } from '../components/error-boundary';
 import { showError, showModal } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
 import { AskModal } from '../components/modals/ask-modal';
 import { ImportModal } from '../components/modals/import-modal';
-import { LoginModal } from '../components/modals/login-modal';
 import {
   SettingsModal,
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../components/modals/settings-modal';
-import { OrganizationsNav } from '../components/organizations-navbar';
-import { StatusBar } from '../components/statusbar';
-import { Toast } from '../components/toast';
-import { WorkspaceHeader } from '../components/workspace-header';
 import { AppHooks } from '../containers/app-hooks';
 import { AIProvider } from '../context/app/ai-context';
-import withDragDropContext from '../context/app/drag-drop-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
-import { useSettingsPatcher } from '../hooks/use-request';
 import Modals from './modals';
-import { WorkspaceLoaderData } from './workspace';
 
 export interface RootLoaderData {
-  organizations: Organization[];
   settings: Settings;
+  workspaceCount: number;
 }
 
+export const useRootLoaderData = () => {
+  return useRouteLoaderData('root') as RootLoaderData;
+};
+
 export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
-  // Load all projects
-  try {
-    const vcs = getVCS();
-    if (vcs && isLoggedIn()) {
-      const teams = await vcs.teams();
-      const projects = await Promise.all(teams.map(initializeProjectFromTeam));
-      await database.batchModifyDocs({ upsert: projects });
-    }
-  } catch {
-    console.log('Failed to load projects');
-  }
-  const allProjects = await models.project.all();
-
-  const remoteOrgs = allProjects
-    .filter(isRemoteProject)
-    .map(({ _id, name }) => ({
-      _id,
-      name,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
-
+  const settings = await models.settings.get();
+  const workspaceCount = await models.workspace.count();
   return {
-    organizations: [defaultOrganization, ...remoteOrgs],
-    settings: await models.settings.getOrCreate(),
+    settings,
+    workspaceCount,
   };
 };
 
-const Layout = styled.div({
-  position: 'relative',
-  height: '100%',
-  width: '100%',
-  display: 'grid',
-  backgroundColor: 'var(--color-bg)',
-  gridTemplate: `
-    'Header Header' auto
-    'Navbar Content' 1fr
-    'Statusbar Statusbar' 30px [row-end]
-    / 50px 1fr;
-  `,
-});
-
 const Root = () => {
-  const { revalidate } = useRevalidator();
-  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
-  const [importUri, setImportUri] = useState('');
-  const patchSettings = useSettingsPatcher();
+  const { organizationId, projectId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+  };
 
-  useEffect(() => {
-    onLoginLogout(() => {
-      revalidate();
-    });
-  }, [revalidate]);
+  const [importUri, setImportUri] = useState('');
+  const actionFetcher = useFetcher();
+  const navigate = useNavigate();
 
   useEffect(() => {
     return window.main.on(
@@ -128,7 +73,7 @@ const Root = () => {
         if (isDevelopment()) {
           urlWithoutParams = urlWithoutParams.replace(
             'insomniadev://',
-            'insomnia://'
+            'insomnia://',
           );
         }
         switch (urlWithoutParams) {
@@ -140,11 +85,13 @@ const Root = () => {
             break;
 
           case 'insomnia://app/auth/login':
-            showModal(LoginModal, {
-              title: params.title,
-              message: params.message,
-              reauth: true,
-            });
+            actionFetcher.submit(
+              {},
+              {
+                action: '/auth/logout',
+                method: 'POST',
+              },
+            );
             break;
 
           case 'insomnia://app/import':
@@ -194,14 +141,17 @@ const Root = () => {
                   const mainJsContent = `module.exports.themes = [${JSON.stringify(
                     parsedTheme,
                     null,
-                    2
+                    2,
                   )}];`;
                   await createPlugin(
                     `theme-${parsedTheme.name}`,
                     '0.0.1',
-                    mainJsContent
+                    mainJsContent,
                   );
-                  patchSettings({ theme: parsedTheme.name });
+                  const settings = await models.settings.get();
+                  await models.settings.update(settings, {
+                    theme: parsedTheme.name,
+                  });
                   await reloadPlugins();
                   await setTheme(parsedTheme.name);
                   showModal(SettingsModal, { tab: TAB_INDEX_THEMES });
@@ -219,7 +169,7 @@ const Root = () => {
                   title: 'Error authorizing GitHub',
                   message: error.message,
                 });
-              }
+              },
             );
             break;
           }
@@ -233,64 +183,60 @@ const Root = () => {
                   title: 'Error authorizing GitLab',
                   message: error.message,
                 });
-              }
+              },
             );
             break;
           }
 
           case 'insomnia://app/auth/finish': {
-            submitAuthCode(params.box);
+            actionFetcher.submit(
+              {
+                code: params.box,
+              },
+              {
+                action: '/auth/authorize',
+                method: 'POST',
+                encType: 'application/json',
+              },
+            );
             break;
           }
+
+          case 'insomnia://app/open/organization':
+            navigate(`/organization/${params.organizationId}`);
+            break;
 
           default: {
             console.log(`Unknown deep link: ${url}`);
           }
         }
-      }
+      },
     );
-  }, [patchSettings]);
-
-  const { organizationId } = useParams() as {
-    organizationId: string;
-  };
+  }, [actionFetcher, navigate]);
 
   return (
     <AIProvider>
       <NunjucksEnabledProvider>
-        <AppHooks />
-        <div className="app">
-          <ErrorBoundary showAlert>
-            <Modals />
-            {/* triggered by insomnia://app/import */}
-            {importUri && (
-              <ImportModal
-                onHide={() => setImportUri('')}
-                projectName="Insomnia"
-                organizationId={organizationId}
-                from={{ type: 'uri', defaultValue: importUri }}
-              />
-            )}
-            <Layout>
-              <OrganizationsNav />
-              <AppHeader
-                gridCenter={
-                  workspaceData ? <WorkspaceHeader {...workspaceData} /> : null
-                }
-                gridRight={<AccountToolbar />}
-              />
-              <Outlet />
-              <StatusBar />
-            </Layout>
-          </ErrorBoundary>
-
-          <ErrorBoundary showAlert>
-            <Toast />
-          </ErrorBoundary>
-        </div>
+        <ErrorBoundary>
+          <div className="app">
+            <Outlet />
+          </div>
+          <Modals />
+          <AppHooks />
+          {/* triggered by insomnia://app/import */}
+          {importUri && (
+            <ImportModal
+              onHide={() => setImportUri('')}
+              projectName="Insomnia"
+              defaultProjectId={projectId}
+              organizationId={organizationId}
+              from={{ type: 'uri', defaultValue: importUri }}
+            />
+          )}
+        </ErrorBoundary>
       </NunjucksEnabledProvider>
     </AIProvider>
   );
 };
 
-export default withDragDropContext(Root);
+export default Root;

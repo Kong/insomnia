@@ -1,7 +1,6 @@
-import React, { FC, Fragment } from 'react';
+import React, { FC } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { useVCS } from '../components/dropdowns/workspace-sync-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { registerModal } from '../components/modals';
 import { AddKeyCombinationModal } from '../components/modals/add-key-combination-modal';
@@ -13,7 +12,6 @@ import { ErrorModal } from '../components/modals/error-modal';
 import { FilterHelpModal } from '../components/modals/filter-help-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { GenerateConfigModal } from '../components/modals/generate-config-modal';
-import { LoginModal } from '../components/modals/login-modal';
 import { NunjucksModal } from '../components/modals/nunjucks-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { RequestRenderErrorModal } from '../components/modals/request-render-error-modal';
@@ -27,9 +25,6 @@ import { WorkspaceLoaderData } from './workspace';
 const Modals: FC = () => {
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const { activeWorkspace, activeEnvironment } = workspaceData || {};
-  const vcs = useVCS({
-    workspaceId: activeWorkspace?._id,
-  });
 
   return (
     <div key="modals" className="modals">
@@ -42,7 +37,6 @@ const Modals: FC = () => {
         <WrapperModal
           ref={instance => registerModal(instance, 'WrapperModal')}
         />
-        <LoginModal ref={instance => registerModal(instance, 'LoginModal')} />
         <AskModal ref={instance => registerModal(instance, 'AskModal')} />
         <SelectModal
           ref={instance => registerModal(instance, 'SelectModal')}
@@ -86,16 +80,12 @@ const Modals: FC = () => {
           ref={instance => registerModal(instance, 'EnvironmentEditModal')}
         />
 
-        {activeWorkspace && vcs ? (
-          <Fragment>
-            <SyncMergeModal
-              ref={instance => registerModal(instance, 'SyncMergeModal')}
-            />
-          </Fragment>
-        ) : null}
-
         <AddKeyCombinationModal
           ref={instance => registerModal(instance, 'AddKeyCombinationModal')}
+        />
+
+        <SyncMergeModal
+          ref={instance => registerModal(instance, 'SyncMergeModal')}
         />
 
       </ErrorBoundary>

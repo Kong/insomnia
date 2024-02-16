@@ -1,11 +1,37 @@
 import React, { FC, memo } from 'react';
 
-import * as util from '../../../common/misc';
+import { CONTENT_TYPE_GRAPHQL, METHOD_DELETE, METHOD_OPTIONS } from '../../../common/constants';
+import { isEventStreamRequest, Request } from '../../../models/request';
 
 interface Props {
   method: string;
   override?: string | null;
   fullNames?: boolean;
+}
+function removeVowels(str: string) {
+  return str.replace(/[aeiouyAEIOUY]/g, '');
+}
+
+export const getMethodShortHand = (doc: Request) => {
+  if (isEventStreamRequest(doc)) {
+    return 'SSE';
+  }
+  const isGraphQL = doc.body?.mimeType === CONTENT_TYPE_GRAPHQL;
+  if (isGraphQL) {
+    return 'GQL';
+  }
+  return formatMethodName(doc.method);
+};
+export function formatMethodName(method: string) {
+  let methodName = method || '';
+
+  if (method === METHOD_DELETE || method === METHOD_OPTIONS) {
+    methodName = method.slice(0, 3);
+  } else if (method.length > 4) {
+    methodName = removeVowels(method).slice(0, 4);
+  }
+
+  return methodName;
 }
 
 export const MethodTag: FC<Props> = memo(({ method, override, fullNames }) => {
@@ -13,8 +39,8 @@ export const MethodTag: FC<Props> = memo(({ method, override, fullNames }) => {
   let overrideName = override;
 
   if (!fullNames) {
-    methodName = util.formatMethodName(method);
-    overrideName = override ? util.formatMethodName(override) : override;
+    methodName = formatMethodName(method);
+    overrideName = override ? formatMethodName(override) : override;
   }
 
   return (

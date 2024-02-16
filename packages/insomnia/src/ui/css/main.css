@@ -549,9 +549,6 @@ blockquote p {
 .hide {
   display: none;
 }
-.hidden {
-  visibility: hidden;
-}
 .relative {
   position: relative;
 }
@@ -718,18 +715,6 @@ i.fa.fa--fixed-width {
 .no-margin-left {
   margin-left: 0 !important;
 }
-.block {
-  display: block !important;
-}
-.grid {
-  display: grid !important;
-}
-.flex {
-  display: flex !important;
-}
-.inline-block {
-  display: inline-block !important;
-}
 .ellipsis {
   white-space: nowrap;
   overflow: hidden;
@@ -819,16 +804,6 @@ strong {
   animation: AIfadeIn 0.5s 0.5s ease-in-out forwards;
 }
 /* Styles */
-a {
-  font-weight: 600 !important;
-  text-decoration: none;
-}
-a:not(.a--nocolor) {
-  color: var(--color-surprise);
-}
-a:hover {
-  text-decoration: underline;
-}
 /* Layout */
 .form-control {
   outline: none;
@@ -1147,10 +1122,6 @@ option {
 textarea.no-resize {
   resize: none;
 }
-input[type='color'] {
-  height: var(--line-height-xs) !important;
-  padding: var(--padding-xxs) !important;
-}
 label {
   position: relative;
   z-index: 1;
@@ -1222,7 +1193,7 @@ button {
 .surprise,
 .http-method-GQL,
 .http-method-GET {
-  color: var(--color-surprise) !important;
+  color: var(--color-surprise-font) !important;
 }
 .boring {
   color: var(--color-font) !important;
@@ -1509,6 +1480,12 @@ html {
   flex-direction: row;
   align-items: center;
 }
+
+/* Get the child div element that is inside .Codemirror-scroll, between the elements with class .CodeMirror-sizer and CodeMirror-gutters */
+.editor.editor--single-line .CodeMirror-scroll > div:has(+ .CodeMirror-gutters, + .CodeMirror-sizer) {
+  height: 0!important;
+}
+
 .editor.editor--single-line .nunjucks-tag {
   font-size: 0.8em !important;
   padding-top: 0.3em;
@@ -1681,6 +1658,10 @@ html {
 .editor .CodeMirror-cursor {
   border-left: 1px solid var(--color-font);
 }
+
+[theme="default"] .editor .CodeMirror-foldmarker {
+  color: var(--color-font-surprise);
+}
 .editor .CodeMirror-foldmarker {
   color: var(--color-surprise);
   text-shadow: none;
@@ -1698,6 +1679,14 @@ html {
 .editor .cm-meta,
 .editor .cm-qualifier {
   color: var(--color-font);
+}
+[theme="default"] .editor .cm-atom,
+[theme="default"] .editor .cm-number,
+[theme="default"] .editor .cm-keyword,
+[theme="default"] .editor .cm-variable-3,
+[theme="default"] .editor .cm-link,
+[theme="default"] .editor .cm-header {
+  color: var(--color-font-surprise);
 }
 .editor .cm-atom {
   color: var(--color-surprise);
@@ -1992,6 +1981,12 @@ html {
 .CodeMirror-info .info-description > * {
   margin: var(--padding-xs) 0 var(--padding-sm) 0;
 }
+
+[theme="default"] .CodeMirror-info .type-name,
+[theme="default"] .CodeMirror-info .arg-name {
+  color: var(--color-font-surprise);
+}
+
 .CodeMirror-info .type-name {
   color: var(--color-surprise);
 }
@@ -2390,6 +2385,15 @@ input.editable {
 .markdown-preview__content .hljs .hljs-tag .hljs-attr {
   color: var(--color-surprise);
 }
+[theme="default"] .markdown-preview__content .hljs .hljs-literal,
+[theme="default"] .markdown-preview__content .hljs .hljs-template-variable,
+[theme="default"] .markdown-preview__content .hljs .hljs-built_in,
+[theme="default"] .markdown-preview__content .hljs .hljs-keyword,
+[theme="default"] .markdown-preview__content .hljs .hljs-builtin-name,
+[theme="default"] .markdown-preview__content .hljs .hljs-type,
+[theme="default"] .markdown-preview__content .hljs .hljs-tag .hljs-attr {
+  color: var(--color-surprise);
+}
 .markdown-preview__content .hljs .hljs-symbol,
 .markdown-preview__content .hljs .hljs-bullet,
 .markdown-preview__content .hljs .hljs-section,
@@ -2466,7 +2470,7 @@ input.editable {
   height: 100%;
 }
 .modal.modal--wide .modal__content__wrapper {
-  width: var(--modal-width) wide;
+  width: var(--modal-width);
 }
 .modal.modal--skinny .modal__content__wrapper {
   width: var(--modal-width-skinny);
@@ -3489,4 +3493,12 @@ input.editable {
   top: 0;
   bottom: 0;
   z-index: 9999;
+}
+
+.servers {
+  margin-top: 1rem;
+}
+
+.pane-two {
+  z-index: 0;
 }

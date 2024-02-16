@@ -11,7 +11,6 @@ import {
   PREVIEW_MODE_FRIENDLY,
   PREVIEW_MODE_RAW,
 } from '../../../common/constants';
-import { xmlDecode } from '../../../common/misc';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { ResponseCSVViewer } from './response-csv-viewer';
@@ -25,7 +24,18 @@ let alwaysShowLargeResponses = false;
 export interface ResponseViewerHandle {
   refresh: () => void;
 }
+export function xmlDecode(input: string) {
+  const ESCAPED_CHARACTERS_MAP = {
+    '&amp;': '&',
+    '&quot;': '"',
+    '&lt;': '<',
+    '&gt;': '>',
+  };
 
+  return input.replace(/(&quot;|&lt;|&gt;|&amp;)/g, (_: string, item: keyof typeof ESCAPED_CHARACTERS_MAP) => (
+    ESCAPED_CHARACTERS_MAP[item])
+  );
+}
 export interface ResponseViewerProps {
   bytes: number;
   contentType: string;
@@ -320,6 +330,7 @@ export const ResponseViewer = ({
   if (previewMode === PREVIEW_MODE_RAW) {
     return (
       <CodeEditor
+        id="raw-response-viewer"
         key={responseId}
         ref={editorRef}
         className="raw-editor"
@@ -337,6 +348,7 @@ export const ResponseViewer = ({
   // Show everything else as "source"
   return (
     <CodeEditor
+      id="response-viewer"
       key={disablePreviewLinks ? 'links-disabled' : 'links-enabled'}
       ref={editorRef}
       autoPrettify

@@ -1,12 +1,10 @@
 import clone from 'clone';
-import electron from 'electron';
 import fs from 'fs';
 import { join as pathJoin } from 'path';
-import { v4 as uuidv4 } from 'uuid';
 
-import { cookiesFromJar, jarFromCookies } from '../common/cookies';
 import { database as db } from '../common/database';
 import {
+  generateId,
   getContentTypeHeader,
   getLocationHeader,
   getSetCookieHeaders,
@@ -15,13 +13,11 @@ import type { ExtraRenderInfo, RenderedRequest, RenderPurpose, RequestAndContext
 import {
   getRenderedRequestAndContext,
   RENDER_PURPOSE_NO_RENDER,
-  RENDER_PURPOSE_SEND,
 } from '../common/render';
-import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
+import type { HeaderResult, ResponsePatch } from '../main/network/libcurl-promise';
 import * as models from '../models';
 import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
-import { Cookie } from '../models/cookie-jar';
 import type { Request, RequestAuthentication, RequestParameter } from '../models/request';
 import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
@@ -35,81 +31,25 @@ import {
   smartEncodeUrl,
 } from '../utils/url/querystring';
 import { getAuthHeader, getAuthQueryParams } from './authentication';
-import { cancellableCurlRequest } from './cancellation';
+import { cancellableCurlRequest, cancellableRunPreRequestScript } from './cancellation';
+import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
-// used for oauth grant types
-// creates a new request with the patch args
-// and uses env and settings from workspace
-// not cancellable but currently is
-// used indirectly by send and getAuthHeader to fetch tokens
-// @TODO unpack oauth into regular timeline and remove oauth timeine dialog
-export async function sendWithSettings(
-  requestId: string,
-  requestPatch: Record<string, any>,
-) {
-  console.log(`[network] Sending with settings req=${requestId}`);
-  const { request,
-    environment,
-    settings,
-    clientCertificates,
-    caCert,
-    activeEnvironmentId } = await fetchRequestData(requestId);
-
-  const newRequest: Request = await models.initModel(models.request.type, requestPatch, {
-    _id: request._id + '.other',
-    parentId: request._id,
-  });
-
-  const renderResult = await tryToInterpolateRequest(newRequest, environment._id);
-  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-
-  const response = await sendCurlAndWriteTimeline(
-    renderResult.request,
-    clientCertificates,
-    caCert,
-    { ...settings, validateSSL: settings.validateAuthSSL },
-  );
-  return responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
-}
-
-// used by test feature, inso, and plugin api
-// not all need to be cancellable or to use curl
-export async function send(
-  requestId: string,
-  environmentId?: string,
-  extraInfo?: ExtraRenderInfo,
-) {
-  console.log(`[network] Sending req=${requestId} env=${environmentId || 'null'}`);
-
-  const { request,
-    environment,
-    settings,
-    clientCertificates,
-    caCert,
-    activeEnvironmentId } = await fetchRequestData(requestId);
-
-  const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND, extraInfo);
-  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-  const response = await sendCurlAndWriteTimeline(
-    renderedRequest,
-    clientCertificates,
-    caCert,
-    settings,
-  );
-  return responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
-}
-
-const fetchRequestData = async (requestId: string) => {
+export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
   invariant(request, 'failed to find request');
   const ancestors = await db.withAncestors(request, [
     models.request.type,
     models.requestGroup.type,
     models.workspace.type,
+    models.mockRoute.type,
+    models.mockServer.type,
   ]);
   const workspaceDoc = ancestors.find(isWorkspace);
-  const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
+  invariant(workspaceDoc?._id, 'failed to find workspace');
+
+  const workspaceId = workspaceDoc._id;
+
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
@@ -120,14 +60,42 @@ const fetchRequestData = async (requestId: string) => {
   const environment = activeEnvironment || await models.environment.getOrCreateForParentId(workspace._id);
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   invariant(settings, 'failed to create settings');
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const caCert = await models.caCertificate.findByParentId(workspaceId);
-
-  return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId };
+  const responseId = generateId('res');
+  const responsesDir = pathJoin((process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
+  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+  return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
+export const tryToExecutePreRequestScript = async (request: Request, environmentId: string, timelinePath:string, responseId:string) => {
+  if (!request.preRequestScript) {
+    return request;
+  }
+  try {
+    const output = await cancellableRunPreRequestScript({ script: request.preRequestScript, context: { request, timelinePath } });
+    console.log('[network] Pre-request script succeeded', output);
+    return output.request;
+  } catch (err) {
+    await fs.promises.appendFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
+
+    const requestId = request._id;
+    const settings = await models.settings.get();
+    const responsePatch = {
+      _id: responseId,
+      parentId: requestId,
+      environmentId,
+      timelinePath,
+      statusMessage: 'Error',
+      error: err.message,
+    };
+    const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
+    models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+    return null;
+  }
+};
 export const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
   try {
     return await getRenderedRequestAndContext({
@@ -156,18 +124,19 @@ export async function sendCurlAndWriteTimeline(
   clientCertificates: ClientCertificate[],
   caCert: CaCertificate | null,
   settings: Settings,
+  timelinePath: string,
+  responseId: string,
 ) {
   const requestId = renderedRequest._id;
-  const timeline: ResponseTimelineEntry[] = [];
+  const timelineStrings: string[] = [];
 
   const { finalUrl, socketPath } = transformUrl(renderedRequest.url, renderedRequest.parameters, renderedRequest.authentication, renderedRequest.settingEncodeUrl);
-
-  timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() });
-  timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
-  timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() });
+  timelineStrings.push(JSON.stringify({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineStrings.push(JSON.stringify({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineStrings.push(JSON.stringify({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() }) + '\n');
 
   if (!renderedRequest.settingSendCookies) {
-    timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
+    timelineStrings.push(JSON.stringify({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() }) + '\n');
   }
 
   const authHeader = await getAuthHeader(renderedRequest, finalUrl);
@@ -189,9 +158,10 @@ export async function sendCurlAndWriteTimeline(
   const output = await nodejsCurlRequest(requestOptions);
 
   if ('error' in output) {
-    const timelinePath = await storeTimeline(timeline);
+    await fs.promises.appendFile(timelinePath, timelineStrings.join(''));
 
     return {
+      _id: responseId,
       parentId: requestId,
       url: requestOptions.finalUrl,
       error: output.error,
@@ -202,17 +172,21 @@ export async function sendCurlAndWriteTimeline(
     };
   }
   const { patch, debugTimeline, headerResults, responseBodyPath } = output;
-  const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
+  // todo: move to main process
+  debugTimeline.forEach(entry => timelineStrings.push(JSON.stringify(entry) + '\n'));
   // transform output
   const { cookies, rejectedCookies, totalSetCookies } = await extractCookies(headerResults, renderedRequest.cookieJar, finalUrl, renderedRequest.settingStoreCookies);
-  rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
+  rejectedCookies.forEach(errorMessage => timelineStrings.push(JSON.stringify({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }) + '\n'));
   if (totalSetCookies) {
     await models.cookieJar.update(renderedRequest.cookieJar, { cookies });
-    timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
+    timelineStrings.push(JSON.stringify({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() }) + '\n');
   }
   const lastRedirect = headerResults[headerResults.length - 1];
 
+  await fs.promises.appendFile(timelinePath, timelineStrings.join(''));
+
   return {
+    _id: responseId,
     parentId: renderedRequest._id,
     timelinePath,
     bodyPath: responseBodyPath,
@@ -224,8 +198,8 @@ export async function sendCurlAndWriteTimeline(
     ...patch,
   };
 }
-export const responseTransform = (patch: ResponsePatch, environmentId: string | null, renderedRequest: RenderedRequest, context: Record<string, any>) => {
-  const response = {
+export const responseTransform = async (patch: ResponsePatch, environmentId: string | null, renderedRequest: RenderedRequest, context: Record<string, any>) => {
+  const response: ResponsePatch = {
     ...patch,
     // important for filter by responses
     environmentId,
@@ -239,7 +213,7 @@ export const responseTransform = (patch: ResponsePatch, environmentId: string | 
     return response;
   }
   console.log(`[network] Response succeeded req=${patch.parentId} status=${response.statusCode || '?'}`,);
-  return _applyResponsePluginHooks(
+  return await _applyResponsePluginHooks(
     response,
     renderedRequest,
     context,
@@ -297,22 +271,6 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
   }
 };
 
-export const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentUrl, cookieJar }: any) => {
-  const rejectedCookies: string[] = [];
-  const jar = jarFromCookies(cookieJar.cookies);
-  for (const setCookieStr of setCookieStrings) {
-    try {
-      jar.setCookieSync(setCookieStr, currentUrl);
-    } catch (err) {
-      if (err instanceof Error) {
-        rejectedCookies.push(err.message);
-      }
-    }
-  }
-  const cookies = (await cookiesFromJar(jar)) as Cookie[];
-  return { cookies, rejectedCookies };
-};
-
 async function _applyRequestPluginHooks(
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
@@ -325,7 +283,7 @@ async function _applyRequestPluginHooks(
       ...pluginContexts.data.init(renderedContext.getProjectId()),
       ...(pluginContexts.store.init(plugin) as Record<string, any>),
       ...(pluginContexts.request.init(newRenderedRequest, renderedContext) as Record<string, any>),
-      ...(pluginContexts.network.init(renderedContext.getEnvironmentId?.()) as Record<string, any>),
+      ...(pluginContexts.network.init() as Record<string, any>),
     };
 
     try {
@@ -347,7 +305,6 @@ async function _applyResponsePluginHooks(
   try {
     const newResponse = clone(response);
     const newRequest = clone(renderedRequest);
-
     for (const { plugin, hook } of await plugins.getResponseHooks()) {
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
@@ -355,7 +312,7 @@ async function _applyResponsePluginHooks(
         ...(pluginContexts.store.init(plugin) as Record<string, any>),
         ...(pluginContexts.response.init(newResponse) as Record<string, any>),
         ...(pluginContexts.request.init(newRequest, renderedContext, true) as Record<string, any>),
-        ...(pluginContexts.network.init(renderedContext.getEnvironmentId?.()) as Record<string, any>),
+        ...(pluginContexts.network.init() as Record<string, any>),
       };
 
       try {
@@ -368,9 +325,10 @@ async function _applyResponsePluginHooks(
 
     return newResponse;
   } catch (err) {
+    console.log('[plugin] Response hook failed', err, response);
     return {
       url: renderedRequest.url,
-      error: `[plugin] Response hook failed plugin=${err.plugin.name} err=${err.message}`,
+      error: `[plugin] Response hook failed plugin=${err.plugin?.name} err=${err.message}`,
       elapsedTime: 0, // 0 because this path is hit during plugin calls
       statusMessage: 'Error',
       settingSendCookies: renderedRequest.settingSendCookies,
@@ -378,25 +336,4 @@ async function _applyResponsePluginHooks(
     };
   }
 
-}
-
-export function storeTimeline(timeline: ResponseTimelineEntry[]): Promise<string> {
-  const timelineStr = JSON.stringify(timeline, null, '\t');
-  const timelineHash = uuidv4();
-  const responsesDir = pathJoin(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'), 'responses');
-
-  fs.mkdirSync(responsesDir, { recursive: true });
-
-  const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
-  if (process.type === 'renderer') {
-    return window.main.writeFile({ path: timelinePath, content: timelineStr });
-  }
-  return new Promise<string>((resolve, reject) => {
-    fs.writeFile(timelinePath, timelineStr, err => {
-      if (err != null) {
-        return reject(err);
-      }
-      resolve(timelinePath);
-    });
-  });
 }

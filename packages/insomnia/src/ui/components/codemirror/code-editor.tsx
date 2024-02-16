@@ -8,7 +8,7 @@ import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
@@ -20,8 +20,8 @@ import { NunjucksParsedTag } from '../../../templating/utils';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
-import { RootLoaderData } from '../../routes/root';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
+import { useRootLoaderData } from '../../routes/root';
+import { Icon } from '../icon';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
@@ -81,7 +81,7 @@ export interface CodeEditorProps {
   hideGutters?: boolean;
   hideLineNumbers?: boolean;
   hintOptions?: ShowHintOptions;
-  id?: string;
+  id: string;
   infoOptions?: GraphQLInfoOptions;
   jumpOptions?: ModifiedGraphQLJumpOptions;
   lintOptions?: Record<string, any>;
@@ -91,7 +91,7 @@ export interface CodeEditorProps {
   noMatchBrackets?: boolean;
   noStyleActiveLine?: boolean;
   // used only for saving env editor state
-  onBlur?: () => void;
+  onBlur?: (e: FocusEvent) => void;
   onChange?: (value: string) => void;
   onClickLink?: CodeMirrorLinkClickCallback;
   pinToBottom?: boolean;
@@ -172,7 +172,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   const [originalCode, setOriginalCode] = useState('');
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRootLoaderData();
   const indentSize = settings.editorIndentSize;
   const indentWithTabs = shouldIndentWithTabs({ mode, indentWithTabs: settings.editorIndentWithTabs });
   const indentChars = indentWithTabs ? '\t' : new Array((indentSize || TAB_SIZE) + 1).join(' ');
@@ -338,7 +338,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
     });
 
-    codeMirror.current.on('keydown', (_: CodeMirror.Editor, event: KeyboardEvent) => {
+    codeMirror.current.on('keydown', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
       const pressedKeyComb: KeyCombination = {
         ctrl: event.ctrlKey,
         alt: event.altKey,
@@ -363,19 +363,18 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         event.codemirrorIgnore = true;
       } else {
         event.stopPropagation();
-      }
-    });
-    codeMirror.current.on('keyup', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
-      // Enable graphql completion if we're in that mode
-      if (doc.getOption('mode') === 'graphql') {
-        // Only operate on one-letter keys. This will filter out
-        // any special keys (Backspace, Enter, etc)
-        const isModifier = event.metaKey || event.ctrlKey || event.altKey || event.key.length > 1;
-        // You don't want to re-trigger the hint dropdown if it's already open
-        // for other reasons, like forcing its display with Ctrl+Space
-        const isDropdownActive = codeMirror.current?.isHintDropdownActive();
-        if (!isModifier && !isDropdownActive) {
-          doc.execCommand('autocomplete');
+
+        // Enable graphql completion if we're in that mode
+        if (doc.getOption('mode') === 'graphql') {
+          // Only operate on one-letter keys. This will filter out
+          // any special keys (Backspace, Enter, etc)
+          const isModifier = event.metaKey || event.ctrlKey || event.altKey || event.key.length > 1;
+          // You don't want to re-trigger the hint dropdown if it's already open
+          // for other reasons, like forcing its display with Ctrl+Space
+          const isDropdownActive = codeMirror.current?.isHintDropdownActive();
+          if ((isAutoCompleteBinding || !isModifier) && !isDropdownActive) {
+            doc.execCommand('autocomplete');
+          }
         }
       }
     });
@@ -399,10 +398,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         };
       }
     };
-    codeMirror.current.on('blur', () => {
-      persistState();
-      onBlur?.();
-    });
+
     codeMirror.current.on('scroll', persistState);
     codeMirror.current.on('fold', persistState);
     codeMirror.current.on('unfold', persistState);
@@ -441,7 +437,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     }
   });
   useUnmount(() => {
-    onBlur?.();
     codeMirror.current?.toTextArea();
     codeMirror.current?.closeHintDropdown();
     codeMirror.current = null;
@@ -473,9 +468,9 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   }, [lintOptions, noLint, onChange]);
 
   useEffect(() => {
-    const handleOnBlur = () => onBlur?.();
+    const handleOnBlur = (_: CodeMirror.Editor, e: FocusEvent) => onBlur?.(e);
     codeMirror.current?.on('blur', handleOnBlur);
-    return () => codeMirror.current?.on('blur', handleOnBlur);
+    return () => codeMirror.current?.off('blur', handleOnBlur);
   }, [onBlur]);
 
   const tryToSetOption = (key: keyof EditorConfiguration, value: any) => {
@@ -485,7 +480,8 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       console.log('Failed to set CodeMirror option', err.message, { key, value });
     }
   };
-
+  useEffect(() => window.main.on('context-menu-command', (_, { key, tag }) =>
+    id === key && codeMirror.current?.replaceSelection(tag)), [id]);
   useEffect(() => tryToSetOption('hintOptions', hintOptions), [hintOptions]);
   useEffect(() => tryToSetOption('info', infoOptions), [infoOptions]);
   useEffect(() => tryToSetOption('jump', jumpOptions), [jumpOptions]);
@@ -523,6 +519,13 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       style={style}
       data-editor-type="text"
       data-testid="CodeEditor"
+      onContextMenu={event => {
+        if (readOnly) {
+          return;
+        }
+        event.preventDefault();
+        window.main.showContextMenu({ key: id });
+      }}
     >
       <div
         className={classnames('editor__container', 'input', className)}
@@ -566,8 +569,8 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                   }
                 }}
               />) : null}
-            {showFilter && filterHistory?.length ?
-              ((
+            {/* {showFilter && filterHistory?.length ?
+              (
                 <Dropdown
                   aria-label='Filter History'
                   key="history"
@@ -580,7 +583,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                 >
                   {filterHistory.reverse().map(filter => (
                     <DropdownItem
-                      key={filter}
+                      key={JSON.stringify(filter)}
                       aria-label={filter}
                     >
                       <ItemContent
@@ -599,7 +602,50 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                     </DropdownItem>
                   ))}
                 </Dropdown>
-              )) : null}
+              ) : null} */}
+
+            {showFilter && filterHistory?.length && (
+              <MenuTrigger>
+                <Button
+                  aria-label="Filter History"
+                  className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                >
+                  <Icon icon="clock" />
+                </Button>
+                <Popover className="min-w-max">
+                  <Menu
+                    aria-label="Filter history menu"
+                    selectionMode="single"
+                    onAction={key => {
+                      const index = Number(key);
+                      const filter = filterHistory[index];
+                      if (inputRef.current) {
+                        inputRef.current.value = filter;
+                      }
+                      if (updateFilter) {
+                        updateFilter(filter);
+                      }
+                      maybePrettifyAndSetValue(originalCode, false, filter);
+                    }}
+                    items={filterHistory.map((filter, index) => ({
+                      id: filter,
+                      name: filter,
+                      key: index,
+                    }))}
+                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                  >
+                    {item => (
+                      <MenuItem
+                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                        aria-label={item.name}
+                      >
+                        <span>{item.name}</span>
+                      </MenuItem>
+                    )}
+                  </Menu>
+                </Popover>
+              </MenuTrigger>
+            )}
             {showFilter ?
               (<button key="help" className="btn btn--compact" onClick={() => showModal(FilterHelpModal, { isJSON: Boolean(mode?.includes('json')) })}>
                 <i className="fa fa-question-circle" />

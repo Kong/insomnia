@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, MAX_PANE_HEIGHT, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_HEIGHT, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS } from '../../common/constants';
 import { debounce } from '../../common/misc';
 import * as models from '../../models';
-import { RootLoaderData } from '../routes/root';
+import { useRootLoaderData } from '../routes/root';
 import { WorkspaceLoaderData } from '../routes/workspace';
 import { ErrorBoundary } from './error-boundary';
 import { Sidebar } from './sidebar/sidebar';
@@ -169,7 +169,7 @@ const LayoutGrid = styled.div<{orientation: 'vertical' | 'horizontal'}>(props =>
     gridColumnEnd: 'span 1',
   },
 
-  '@media (max-width: 1200px)': {
+  '@media (max-width: 880px)': {
     ...verticalStyles,
   },
 
@@ -194,16 +194,18 @@ interface Props {
   renderPageSidebar?: ReactNode;
   renderPaneOne?: ReactNode;
   renderPaneTwo?: ReactNode;
+  className?: string;
 }
 
 export const SidebarLayout: FC<Props> = ({
   renderPaneOne,
   renderPaneTwo,
   renderPageSidebar,
+  className,
 }) => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRootLoaderData();
   const { forceVerticalLayout } = settings;
 
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
@@ -369,6 +371,7 @@ export const SidebarLayout: FC<Props> = ({
     <LayoutGrid
       key="wrapper"
       id="wrapper"
+      className={className}
       orientation={forceVerticalLayout ? 'vertical' : 'horizontal'}
       style={{
         gridTemplateColumns: gridColumns,

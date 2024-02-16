@@ -2,11 +2,9 @@
 import { isDevelopment } from '../common/constants';
 import { database } from '../common/database';
 import * as models from '../models';
-import { isNotDefaultProject } from '../models/project';
 import * as plugins from '../plugins';
 import * as themes from '../plugins/misc';
 import * as templating from '../templating';
-import { SegmentEvent } from './analytics';
 import { showModal } from './components/modals';
 import { AskModal } from './components/modals/ask-modal';
 import { SelectModal } from './components/modals/select-modal';
@@ -33,9 +31,7 @@ if (isDevelopment()) {
           const bufferId = await database.bufferChanges();
           console.log(`[developer] clearing all "${type}" entities`);
           const allEntities = await database.all(type);
-          const filteredEntites = allEntities
-            .filter(isNotDefaultProject); // don't clear the default project
-          await database.batchModifyDocs({ remove: filteredEntites });
+          await database.batchModifyDocs({ remove: allEntities });
           database.flushChanges(bufferId);
         }
       },
@@ -57,9 +53,7 @@ if (isDevelopment()) {
             .reverse().map(async type => {
               console.log(`[developer] clearing all "${type}" entities`);
               const allEntities = await database.all(type);
-              const filteredEntites = allEntities
-                .filter(isNotDefaultProject); // don't clear the default project
-              await database.batchModifyDocs({ remove: filteredEntites });
+              await database.batchModifyDocs({ remove: allEntities });
             });
           await Promise.all(promises);
           database.flushChanges(bufferId);
@@ -70,7 +64,7 @@ if (isDevelopment()) {
 }
 
 window.main.on('reload-plugins', async () => {
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   await plugins.reloadPlugins();
   await themes.applyColorScheme(settings);
   templating.reload();
@@ -80,5 +74,3 @@ window.main.on('reload-plugins', async () => {
 window.main.on('toggle-preferences-shortcuts', () => {
   showModal(SettingsModal, { tab: TAB_INDEX_SHORTCUTS });
 });
-
-window.main.trackSegmentEvent({ event: SegmentEvent.appStarted });

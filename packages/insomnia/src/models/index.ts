@@ -3,6 +3,8 @@ import {
   EXPORT_TYPE_COOKIE_JAR,
   EXPORT_TYPE_ENVIRONMENT,
   EXPORT_TYPE_GRPC_REQUEST,
+  EXPORT_TYPE_MOCK_ROUTE,
+  EXPORT_TYPE_MOCK_SERVER,
   EXPORT_TYPE_PROTO_DIRECTORY,
   EXPORT_TYPE_PROTO_FILE,
   EXPORT_TYPE_REQUEST,
@@ -13,7 +15,7 @@ import {
   EXPORT_TYPE_WEBSOCKET_REQUEST,
   EXPORT_TYPE_WORKSPACE,
 } from '../common/constants';
-import { generateId, pluralize } from '../common/misc';
+import { generateId } from '../common/misc';
 import * as _apiSpec from './api-spec';
 import * as _caCertificate from './ca-certificate';
 import * as _clientCertificate from './client-certificate';
@@ -22,6 +24,8 @@ import * as _environment from './environment';
 import * as _gitRepository from './git-repository';
 import * as _grpcRequest from './grpc-request';
 import * as _grpcRequestMeta from './grpc-request-meta';
+import * as _mockRoute from './mock-route';
+import * as _mockServer from './mock-server';
 import * as _oAuth2Token from './o-auth-2-token';
 import * as _pluginData from './plugin-data';
 import * as _project from './project';
@@ -64,6 +68,8 @@ export const caCertificate = _caCertificate;
 export const cookieJar = _cookieJar;
 export const environment = _environment;
 export const gitRepository = _gitRepository;
+export const mockServer = _mockServer;
+export const mockRoute = _mockRoute;
 export const oAuth2Token = _oAuth2Token;
 export const pluginData = _pluginData;
 export const request = _request;
@@ -109,6 +115,8 @@ export function all() {
     requestVersion,
     requestMeta,
     response,
+    mockServer,
+    mockRoute,
     oAuth2Token,
     caCertificate,
     clientCertificate,
@@ -163,18 +171,6 @@ export function canDuplicate(type: string) {
   return model ? model.canDuplicate : false;
 }
 
-export function getModelName(type: string, count = 1) {
-  const model = getModel(type);
-
-  if (!model) {
-    return 'Unknown';
-  } else if (count === 1) {
-    return model.name;
-  } else {
-    return pluralize(model.name);
-  }
-}
-
 export async function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {
   const model = getModel(type);
 
@@ -207,7 +203,6 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   // Migrate the model
   // NOTE: Do migration before pruning because we might need to look at those fields
   const migratedDoc = model.migrate(fullObject);
-
   // Prune extra keys from doc
   for (const key of Object.keys(migratedDoc)) {
     if (!objectDefaults.hasOwnProperty(key)) {
@@ -224,6 +219,8 @@ export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {
   [EXPORT_TYPE_REQUEST]: request,
   [EXPORT_TYPE_WEBSOCKET_PAYLOAD]: webSocketPayload,
   [EXPORT_TYPE_WEBSOCKET_REQUEST]: webSocketRequest,
+  [EXPORT_TYPE_MOCK_SERVER]: mockServer,
+  [EXPORT_TYPE_MOCK_ROUTE]: mockRoute,
   [EXPORT_TYPE_GRPC_REQUEST]: grpcRequest,
   [EXPORT_TYPE_REQUEST_GROUP]: requestGroup,
   [EXPORT_TYPE_UNIT_TEST_SUITE]: unitTestSuite,

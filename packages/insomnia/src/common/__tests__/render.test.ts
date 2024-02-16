@@ -17,6 +17,7 @@ describe('render tests', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     await models.project.all();
+    await models.settings.getOrCreate();
     envBuilder.reset();
     reqGroupBuilder.reset();
   });

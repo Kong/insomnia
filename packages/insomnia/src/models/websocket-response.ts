@@ -60,7 +60,7 @@ export function init(): BaseWebSocketResponse {
   };
 }
 
-export function migrate(doc: Response) {
+export function migrate(doc: WebSocketResponse) {
   return doc;
 }
 
@@ -91,7 +91,7 @@ export async function all() {
 }
 
 export async function removeForRequest(parentId: string, environmentId?: string | null) {
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   const query: Record<string, any> = {
     parentId,
   };
@@ -128,7 +128,7 @@ export async function create(patch: Partial<WebSocketResponse> = {}, maxResponse
   };
 
   if (
-    (await models.settings.getOrCreate()).filterResponsesByEnv &&
+    (await models.settings.get()).filterResponsesByEnv &&
     patch.hasOwnProperty('environmentId')
   ) {
     query.environmentId = patch.environmentId;
@@ -158,7 +158,7 @@ async function _findRecentForRequest(
   };
 
   // Filter responses by environment if setting is enabled
-  if ((await models.settings.getOrCreate()).filterResponsesByEnv) {
+  if ((await models.settings.get()).filterResponsesByEnv) {
     query.environmentId = environmentId;
   }
 

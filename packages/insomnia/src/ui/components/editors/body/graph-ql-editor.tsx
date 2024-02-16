@@ -8,20 +8,19 @@ import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { Maybe } from 'graphql-language-service';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
-import { useRouteLoaderData } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
 
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
-import { jsonParseOr } from '../../../../common/misc';
+import { RENDER_PURPOSE_SEND } from '../../../../common/render';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
 import type { Request } from '../../../../models/request';
-import * as network from '../../../../network/network';
+import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../../../network/network';
 import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
-import { RootLoaderData } from '../../../routes/root';
+import { useRootLoaderData } from '../../../routes/root';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
 import { CodeEditor, CodeEditorHandle } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
@@ -63,7 +62,6 @@ const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionN
 
 const fetchGraphQLSchemaForRequest = async ({
   requestId,
-  environmentId,
   url,
 }: {
   requestId: string;
@@ -74,9 +72,9 @@ const fetchGraphQLSchemaForRequest = async ({
     return;
   }
 
-  const request = await models.request.getById(requestId);
+  const req = await models.request.getById(requestId);
 
-  if (!request) {
+  if (!req) {
     return;
   }
 
@@ -87,10 +85,10 @@ const fetchGraphQLSchemaForRequest = async ({
       operationName: 'IntrospectionQuery',
     });
     const introspectionRequest = await db.upsert(
-      Object.assign({}, request, {
-        _id: request._id + '.graphql',
+      Object.assign({}, req, {
+        _id: req._id + '.graphql',
         settingMaxTimelineDataSize: 5000,
-        parentId: request._id,
+        parentId: req._id,
         isPrivate: true,
         // So it doesn't get synced or exported
         body: {
@@ -99,7 +97,27 @@ const fetchGraphQLSchemaForRequest = async ({
         },
       }),
     );
-    const response = await network.send(introspectionRequest._id, environmentId);
+    const { request,
+      environment,
+      settings,
+      clientCertificates,
+      caCert,
+      activeEnvironmentId,
+      timelinePath,
+      responseId,
+    } = await fetchRequestData(introspectionRequest._id);
+
+    const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
+    const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+    const res = await sendCurlAndWriteTimeline(
+      renderedRequest,
+      clientCertificates,
+      caCert,
+      settings,
+      timelinePath,
+      responseId,
+    );
+    const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
     const statusCode = response.statusCode || 0;
     if (!response) {
       return {
@@ -160,6 +178,7 @@ interface State {
   documentAST: null | DocumentNode;
   disabledOperationMarkers: (TextMarker | undefined)[];
 }
+
 export const GraphQLEditor: FC<Props> = ({
   request,
   environmentId,
@@ -174,16 +193,16 @@ export const GraphQLEditor: FC<Props> = ({
   } catch (err) {
     requestBody = { query: '' };
   }
-  if (typeof requestBody.variables === 'string') {
-    requestBody.variables = jsonParseOr(requestBody.variables, '');
-  }
+
+  requestBody.variables = requestBody.variables || '';
+
   let documentAST;
   try {
     documentAST = parse(requestBody.query || '');
   } catch (error) {
     documentAST = null;
   }
-  const operations = documentAST?.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '') || [];
+  const operations = documentAST?.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '').filter(Boolean) || [];
   const operationName = requestBody.operationName || operations[0] || '';
   const [state, setState] = useState<State>({
     body: {
@@ -237,7 +256,7 @@ export const GraphQLEditor: FC<Props> = ({
   }, [automaticFetch, environmentId, request._id, request.url, workspaceId]);
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRootLoaderData();
   const { editorIndentWithTabs, editorIndentSize } = settings;
   const beautifyRequestBody = async () => {
     const { body } = state;
@@ -263,13 +282,11 @@ export const GraphQLEditor: FC<Props> = ({
   };
   const changeVariables = (variablesInput: string) => {
     try {
-      const variables = JSON.parse(variablesInput || '{}');
-
-      const content = getGraphQLContent(state.body, undefined, operationName, variables);
+      const content = getGraphQLContent(state.body, undefined, operationName, variablesInput);
       onChange(content);
       setState(state => ({
         ...state,
-        body: { ...state.body, variables },
+        body: { ...state.body, variablesInput },
         variablesSyntaxError: '',
       }));
     } catch (err) {
@@ -279,7 +296,7 @@ export const GraphQLEditor: FC<Props> = ({
   const changeQuery = (query: string) => {
     try {
       const documentAST = parse(query);
-      const operations = documentAST.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '');
+      const operations = documentAST.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '').filter(Boolean) || [];
       // default to first operation when none selected
       let operationName = state.body.operationName || operations[0] || '';
       if (operations.length && state.body.operationName) {
@@ -562,6 +579,7 @@ export const GraphQLEditor: FC<Props> = ({
 
       <div className="graphql-editor__query">
         <CodeEditor
+          id="graphql-editor"
           ref={editorRef}
           dynamicHeight
           showPrettifyButton
@@ -608,11 +626,12 @@ export const GraphQLEditor: FC<Props> = ({
       </h2>
       <div className="graphql-editor__variables">
         <CodeEditor
+          id="graphql-editor-variables"
           dynamicHeight
           enableNunjucks
           uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
           showPrettifyButton={false}
-          defaultValue={jsonPrettify(JSON.stringify(requestBody.variables))}
+          defaultValue={jsonPrettify(requestBody.variables)}
           className={className}
           getAutocompleteConstants={() => Object.keys(variableTypes)}
           lintOptions={{

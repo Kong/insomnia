@@ -41,6 +41,7 @@ interface Props {
   onClick?: () => void;
   onKeydown?: (e: React.KeyboardEvent) => void;
   showDescription: boolean;
+  onBlur?: (e: FocusEvent) => void;
 }
 
 export const Row: FC<Props> = ({
@@ -60,6 +61,7 @@ export const Row: FC<Props> = ({
   onKeydown,
   valuePlaceholder,
   showDescription,
+  onBlur,
 }) => {
   const { enabled } = useNunjucksEnabled();
 
@@ -86,11 +88,13 @@ export const Row: FC<Props> = ({
           })}
         >
           <OneLineEditor
+            id={'key-value-editor__name' + pair.id}
             placeholder={namePlaceholder || 'Name'}
             defaultValue={pair.name}
             getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
             readOnly={readOnly}
             onChange={name => onChange({ ...pair, name })}
+            onBlur={onBlur}
           />
         </div>
         <div
@@ -124,15 +128,17 @@ export const Row: FC<Props> = ({
             </button>
           ) : (
             <OneLineEditor
-              readOnly={readOnly}
-
+              id={'key-value-editor__value' + pair.id}
+              onBlur={onBlur}
               type="text"
+              readOnly={readOnly}
               placeholder={valuePlaceholder || 'Value'}
               defaultValue={pair.value}
               onChange={value => onChange({ ...pair, value })}
               getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
             />
-          )}
+          )
+          }
         </div>
         {showDescription ? (
           <div
@@ -142,8 +148,8 @@ export const Row: FC<Props> = ({
             )}
           >
             <OneLineEditor
+              id={'key-value-editor__description' + pair.id}
               readOnly={readOnly}
-
               placeholder={descriptionPlaceholder || 'Description'}
               defaultValue={pair.description || ''}
               onChange={description => onChange({ ...pair, description })}

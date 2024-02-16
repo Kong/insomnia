@@ -7,9 +7,21 @@ import { v4 as uuidv4 } from 'uuid';
 // Default to dev so that the playwright vscode extension works
 export const bundleType = () => process.env.BUNDLE || 'dev';
 
+export const getFixturePath = (fixturePath: string) => path.join(__dirname, '..', 'fixtures', fixturePath);
+
 export const loadFixture = async (fixturePath: string) => {
   const buffer = await fs.promises.readFile(path.join(__dirname, '..', 'fixtures', fixturePath));
   return buffer.toString('utf-8');
+};
+
+export const copyFixtureDatabase = async (fixturePath: string, dataPath: string) => {
+  const fixtureDir = path.join(__dirname, '..', 'fixtures', fixturePath);
+
+  if (!fs.existsSync(fixtureDir)) {
+    throw new Error(`Cannot find fixture directory ${fixtureDir}`);
+  }
+
+  await fs.promises.cp(fixtureDir, dataPath, { recursive: true });
 };
 
 export const randomDataPath = () => path.join(os.tmpdir(), 'insomnia-smoke-test', `${uuidv4()}`);
