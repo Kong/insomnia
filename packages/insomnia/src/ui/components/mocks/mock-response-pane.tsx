@@ -1,16 +1,21 @@
+import fs from 'fs';
 import * as Har from 'har-format';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
 import { getCurrentSessionId } from '../../../account/session';
-import { getMockServiceURL, PREVIEW_MODE_SOURCE } from '../../../common/constants';
+import { getMockServiceURL, getPreviewModeName, PREVIEW_MODE_FRIENDLY, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
+import { exportHarCurrentRequest } from '../../../common/har';
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models';
 import { MockRoute } from '../../../models/mock-route';
 import { MockServer } from '../../../models/mock-server';
+import { Response } from '../../../models/response';
+import { jsonPrettify } from '../../../utils/prettify/json';
 import { MockRouteLoaderData } from '../../routes/mock-route';
 import { useRootLoaderData } from '../../routes/root';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { TabItem, Tabs } from '../base/tabs';
 import { CodeEditor } from '../codemirror/code-editor';
 import { getTimeFromNow } from '../time-from-now';
@@ -39,6 +44,7 @@ export const MockResponsePane = () => {
   const { mockServer, mockRoute, activeResponse } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const { settings } = useRootLoaderData();
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
+  const [previewMode, setPreviewMode] = useState<PreviewMode>(PREVIEW_MODE_FRIENDLY);
 
   useEffect(() => {
     const fn = async () => {
@@ -52,7 +58,16 @@ export const MockResponsePane = () => {
 
   return (
     <Tabs aria-label="Mock response">
-      <TabItem key="preview" title="Preview">
+      <TabItem
+        key="preview"
+        title={activeResponse ?
+          <PreviewModeDropdown
+            activeResponse={activeResponse}
+            previewMode={previewMode}
+            setPreviewMode={setPreviewMode}
+          /> :
+          'Preview'}
+      >
         {activeResponse && <ResponseViewer
           key={activeResponse._id}
           bytes={Math.max(activeResponse.bytesContent, activeResponse.bytesRead)}
@@ -65,7 +80,7 @@ export const MockResponsePane = () => {
           filter={''}
           filterHistory={[]}
           getBody={() => models.response.getBodyBuffer(activeResponse)}
-          previewMode={PREVIEW_MODE_SOURCE}
+          previewMode={previewMode}
           responseId={activeResponse._id}
           updateFilter={activeResponse.error ? undefined : () => { }}
           url={activeResponse.url}
@@ -164,5 +179,138 @@ const HistoryViewWrapperComponentFactory = ({ mockServer, mockRoute }: { mockSer
         </div>
       )}
     </div>
+  );
+};
+
+const PreviewModeDropdown = ({ activeResponse, previewMode, setPreviewMode }: { activeResponse: Response; previewMode: PreviewMode; setPreviewMode: (mode: PreviewMode) => void }) => {
+  return (
+    <Dropdown
+      aria-label='Preview Mode Dropdown'
+      triggerButton={
+        <DropdownButton className="tall !text-[--hl]">
+          {getPreviewModeName(previewMode)}
+          <i className="fa fa-caret-down space-left" />
+        </DropdownButton>
+      }
+    >
+      <DropdownSection
+        aria-label='Preview Mode Section'
+        title="Preview Mode"
+      >
+        {PREVIEW_MODES.map(mode =>
+          <DropdownItem
+            key={mode}
+            aria-label={getPreviewModeName(mode, true)}
+          >
+            <ItemContent
+              icon={previewMode === mode ? 'check' : 'empty'}
+              label={getPreviewModeName(mode, true)}
+              onClick={() => setPreviewMode(mode)}
+            />
+          </DropdownItem>
+        )}
+      </DropdownSection>
+      <DropdownSection
+        aria-label='Action Section'
+        title="Action"
+      >
+        <DropdownItem aria-label='Copy raw response'>
+          <ItemContent
+            icon="copy"
+            label="Copy raw response"
+            onClick={async () => {
+              const bodyBuffer = await models.response.getBodyBuffer(activeResponse);
+              bodyBuffer && window.clipboard.writeText(bodyBuffer.toString('utf8'));
+            }}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label='Export raw response'>
+          <ItemContent
+            icon="save"
+            label="Export raw response"
+            onClick={async () => {
+              const bodyBuffer = await models.response.getBodyBuffer(activeResponse);
+              const { canceled, filePath } = await window.dialog.showSaveDialog({
+                title: 'Save Full Response',
+                buttonLabel: 'Save',
+                defaultPath: `response-${Date.now()}.txt`,
+              });
+
+              if (canceled || !filePath || !bodyBuffer) {
+                return;
+              }
+              fs.promises.writeFile(filePath, bodyBuffer.toString('utf8'));
+            }}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label='Export prettified response'>
+          {activeResponse.contentType.includes('json') &&
+            <ItemContent
+              icon="save"
+              label="Export prettified response"
+              onClick={async () => {
+                const bodyBuffer = await models.response.getBodyBuffer(activeResponse);
+                const { canceled, filePath } = await window.dialog.showSaveDialog({
+                  title: 'Save Full Response',
+                  buttonLabel: 'Save',
+                  defaultPath: `response-${Date.now()}.txt`,
+                });
+
+                if (canceled || !filePath || !bodyBuffer) {
+                  return;
+                }
+                fs.promises.writeFile(filePath, jsonPrettify(bodyBuffer.toString('utf8')));
+              }}
+            />
+          }
+        </DropdownItem>
+        <DropdownItem aria-label='Export HTTP debug'>
+          <ItemContent
+            icon="bug"
+            label="Export HTTP debug"
+            onClick={async () => {
+              const { canceled, filePath } = await window.dialog.showSaveDialog({
+                title: 'Save Full Response',
+                buttonLabel: 'Save',
+                defaultPath: `response-${Date.now()}.txt`,
+              });
+
+              if (canceled || !filePath) {
+                return;
+              }
+              const timeline = models.response.getTimeline(activeResponse);
+              const headers = timeline
+                .filter(v => v.name === 'HeaderIn')
+                .map(v => v.value)
+                .join('');
+
+              fs.promises.writeFile(filePath, headers);
+            }}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label='Export as HAR'>
+          <ItemContent
+            icon="save"
+            label="Export as HAR"
+            onClick={async () => {
+              const activeRequest = await models.request.getById(activeResponse.parentId);
+              const { canceled, filePath } = await window.dialog.showSaveDialog({
+                title: 'Save Full Response',
+                buttonLabel: 'Save',
+                defaultPath: `response-${Date.now()}.txt`,
+              });
+
+              if (canceled || !filePath || !activeRequest) {
+                return;
+              }
+              const data = await exportHarCurrentRequest(activeRequest, activeResponse);
+              const har = JSON.stringify(data, null, '\t');
+
+              fs.promises.writeFile(filePath, har);
+            }}
+          />
+        </DropdownItem>
+      </DropdownSection>
+    </Dropdown>
   );
 };
