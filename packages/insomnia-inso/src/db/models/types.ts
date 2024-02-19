@@ -17,6 +17,7 @@ export type ApiSpec = BaseModel & BaseApiSpec;
 
 interface BaseUnitTestSuite {
     name: string;
+    metaSortKey: number;
 }
 
 export type UnitTestSuite = BaseModel & BaseUnitTestSuite;
@@ -25,6 +26,7 @@ interface BaseUnitTest {
     name: string;
     code: string;
     requestId: string | null;
+    metaSortKey: number;
 }
 
 export type UnitTest = BaseModel & BaseUnitTest;

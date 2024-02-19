@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import YAML from 'yaml';
 
-import { UNKNOWN } from '../../types';
 import type { Database, DbAdapter } from '../index';
 import { emptyDb } from '../index';
 
@@ -22,7 +21,7 @@ const gitAdapter: DbAdapter = async (dir, filterTypes) => {
     // Get contents of each file in type dir and insert into data
     const contents = await fs.promises.readFile(fileName);
     const obj = YAML.parse(contents.toString());
-    (db[type] as UNKNOWN[]).push(obj);
+    (db[type] as {}[]).push(obj);
   };
 
   const types = filterTypes?.length ? filterTypes : Object.keys(db) as (keyof Database)[];

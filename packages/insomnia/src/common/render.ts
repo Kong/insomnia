@@ -561,6 +561,7 @@ export async function getRenderedRequestAndContext(
       settingFollowRedirects: renderedRequest.settingFollowRedirects,
       type: renderedRequest.type,
       url: renderedRequest.url,
+      preRequestScript: renderedRequest.preRequestScript,
     },
   };
 }
@@ -596,5 +597,7 @@ export async function getRenderContextAncestors(base?: Request | GrpcRequest | W
     models.requestGroup.type,
     models.workspace.type,
     models.project.type,
+    models.mockRoute.type,
+    models.mockServer.type,
   ]);
 }

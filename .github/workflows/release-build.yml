@@ -11,6 +11,7 @@ concurrency:
 
 jobs:
   build-and-upload-release-artifacts:
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -144,6 +145,7 @@ jobs:
             !packages/insomnia/build/yarn-standalone.js
 
   update-pull-request:
+    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     needs: build-and-upload-release-artifacts
     runs-on: ubuntu-latest
     steps:

@@ -690,7 +690,7 @@ export const Debug: FC = () => {
                                 borderColor: 'var(--color-font)',
                               }}
                             >
-                              <Icon className='text-xs w-5' icon="refresh" />
+                              <Icon className='text-xs w-5' icon="globe-americas" />
                             </span>
                             <span className='truncate'>
                               {baseEnvironment.name}
@@ -707,7 +707,7 @@ export const Debug: FC = () => {
                             }}
                           >
                           <Icon
-                            icon={selectedItem.isPrivate ? 'lock' : 'refresh'}
+                            icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
                             style={{
                               color: selectedItem.color ?? 'var(--color-font)',
                             }}
@@ -741,14 +741,13 @@ export const Debug: FC = () => {
                         {({ isSelected }) => (
                           <Fragment>
                             <span
-                              // className='p-1 border-solid border w-5 h-5 rounded bg-[--hl-sm] flex-shrink-0 flex items-center justify-center'
                               style={{
                                 borderColor: item.color ?? 'var(--color-font)',
                               }}
                             >
                               <Icon
-                                icon={item.isPrivate ? 'lock' : 'refresh'}
-                                className='text-xs'
+                                icon={item.isPrivate ? 'laptop-code' : 'globe-americas'}
+                                className='text-xs w-5'
                                 style={{
                                   color: item.color ?? 'var(--color-font)',
                                 }}

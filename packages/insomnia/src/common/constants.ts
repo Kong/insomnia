@@ -2,7 +2,10 @@ import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
 import { KeyCombination } from './settings';
 
-const env = process['env'];
+// Vite is filtering out process.env variables that are not prefixed with VITE_.
+const ENV = 'env';
+
+const env = process[ENV];
 
 // App Stuff
 export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
@@ -135,6 +138,7 @@ export enum UpdateURL {
 
 // API
 export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
+export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || 'https://mock.insomnia.rest';
 export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai.insomnia.rest';
 
 export const getUpdatesBaseURL = () => env.INSOMNIA_UPDATES_URL || 'https://updates.insomnia.rest';
@@ -266,7 +270,7 @@ export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
 export const CONTENT_TYPE_FILE = 'application/octet-stream';
 export const CONTENT_TYPE_GRAPHQL = 'application/graphql';
 export const CONTENT_TYPE_OTHER = '';
-const contentTypesMap: Record<string, string[]> = {
+export const contentTypesMap: Record<string, string[]> = {
   [CONTENT_TYPE_EDN]: ['EDN', 'EDN'],
   [CONTENT_TYPE_FILE]: ['File', 'Binary File'],
   [CONTENT_TYPE_FORM_DATA]: ['Multipart', 'Multipart Form'],
@@ -572,6 +576,8 @@ export const EXPORT_TYPE_REQUEST = 'request';
 export const EXPORT_TYPE_GRPC_REQUEST = 'grpc_request';
 export const EXPORT_TYPE_WEBSOCKET_REQUEST = 'websocket_request';
 export const EXPORT_TYPE_WEBSOCKET_PAYLOAD = 'websocket_payload';
+export const EXPORT_TYPE_MOCK_SERVER = 'mock';
+export const EXPORT_TYPE_MOCK_ROUTE = 'mock_route';
 export const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
 export const EXPORT_TYPE_UNIT_TEST_SUITE = 'unit_test_suite';
 export const EXPORT_TYPE_UNIT_TEST = 'unit_test';

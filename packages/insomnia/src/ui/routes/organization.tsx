@@ -6,6 +6,7 @@ import {
   MenuItem,
   MenuTrigger,
   Popover,
+  ProgressBar,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -44,12 +45,14 @@ import { CommandPalette } from '../components/command-palette';
 import { GitHubStarsButton } from '../components/github-stars-button';
 import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';
-import { InsomniaAILogo } from '../components/insomnia-icon';
+import { InsomniaAI } from '../components/insomnia-ai-icon';
+import { InsomniaLogo } from '../components/insomnia-icon';
 import { showAlert, showModal } from '../components/modals';
 import { SettingsModal, showSettingsModal } from '../components/modals/settings-modal';
 import { OrganizationAvatar } from '../components/organization-avatar';
 import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
+import { useAIContext } from '../context/app/ai-context';
 import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-stream-context';
 import { useRootLoaderData } from './root';
 import { UntrackedProjectsLoaderData } from './untracked-projects';
@@ -429,15 +432,21 @@ const OrganizationRoute = () => {
     };
   }, []);
 
+  const {
+    generating: loadingAI,
+    progress: loadingAIProgress,
+  } = useAIContext();
+
   return (
     <InsomniaEventStreamProvider>
       <div className="w-full h-full">
         <div className={`w-full h-full divide-x divide-solid divide-y divide-[--hl-md] ${isScratchPadBannerVisible ? 'grid-template-app-layout-with-banner' : 'grid-template-app-layout'} grid relative bg-[--color-bg]`}>
           <header className="[grid-area:Header] grid grid-cols-3 items-center">
-            <div className="flex items-center">
-              <div className="flex w-[50px] py-2">
-                <InsomniaAILogo />
+            <div className="flex items-center gap-2">
+              <div className="flex shrink-0 w-[50px] justify-center py-2">
+                <InsomniaLogo loading={loadingAI} />
               </div>
+              <CommandPalette />
               {!user ? <GitHubStarsButton /> : null}
             </div>
             <div className="flex place-content-stretch gap-2 flex-nowrap items-center justify-center">
@@ -471,18 +480,18 @@ const OrganizationRoute = () => {
                   <PresentUsers />
                   <Button
                     aria-label="Invite collaborators"
-                    className="px-4 text-[--color-font-surprise] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    className="px-4 text-[--color-font-surprise] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-2 h-full font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-md hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                     onPress={() => {
                       window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/organizations/${organizationId}/collaborators`);
                     }}
                   >
                     <Icon icon="user-plus" />
                     <span className="truncate">
-                      Share
+                      Invite
                     </span>
                   </Button>
                   <MenuTrigger>
-                    <Button data-testid='user-dropdown' className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                    <Button data-testid='user-dropdown' className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                       <Avatar
                         src={user.picture}
                         alt={user.name}
@@ -720,6 +729,36 @@ const OrganizationRoute = () => {
               </div> : null}
             </div>
             <div className='flex items-center gap-2 divide divide-y-[--hl-sm]'>
+              {loadingAI && (
+                <ProgressBar
+                  className="flex items-center gap-2 h-full"
+                  value={loadingAIProgress.progress}
+                  maxValue={loadingAIProgress.total}
+                  minValue={0}
+                  aria-label='AI generation'
+                >
+                  {({ percentage }) => (
+                    <TooltipTrigger>
+                      <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">
+                        <InsomniaAI className='w-4 text-[--color-font] animate-pulse' />
+                        <div className="h-1 w-32 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-40">
+                          <div
+                            className="h-1 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100"
+                            style={{ width: percentage + '%' }}
+                          />
+                        </div>
+                      </Button>
+                      <Tooltip
+                        placement="top"
+                        offset={8}
+                        className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                      >
+                        Generating tests with Insomnia AI
+                      </Tooltip>
+                    </TooltipTrigger>
+                  )}
+                </ProgressBar>
+              )}
               <TooltipTrigger>
                 <Button
                   className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
@@ -755,22 +794,21 @@ const OrganizationRoute = () => {
                 </Tooltip>
               </TooltipTrigger>
               <span className='w-[1px] h-full bg-[--hl-sm]' />
-            <Link>
-              <a
-                className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
-                href="https://konghq.com/"
-              >
-                Made with
+              <Link>
+                <a
+                  className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
+                  href="https://konghq.com/"
+                >
+                  Made with
                   <Icon className="text-[--color-surprise-font]" icon="heart" /> by
-                Kong
-              </a>
-            </Link>
+                  Kong
+                </a>
+              </Link>
             </div>
           </div>
         </div>
         <Toast />
       </div>
-      {workspaceId && <CommandPalette />}
     </InsomniaEventStreamProvider>
   );
 };

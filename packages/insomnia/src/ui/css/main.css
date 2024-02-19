@@ -1480,6 +1480,12 @@ html {
   flex-direction: row;
   align-items: center;
 }
+
+/* Get the child div element that is inside .Codemirror-scroll, between the elements with class .CodeMirror-sizer and CodeMirror-gutters */
+.editor.editor--single-line .CodeMirror-scroll > div:has(+ .CodeMirror-gutters, + .CodeMirror-sizer) {
+  height: 0!important;
+}
+
 .editor.editor--single-line .nunjucks-tag {
   font-size: 0.8em !important;
   padding-top: 0.3em;
@@ -2464,7 +2470,7 @@ input.editable {
   height: 100%;
 }
 .modal.modal--wide .modal__content__wrapper {
-  width: var(--modal-width) wide;
+  width: var(--modal-width);
 }
 .modal.modal--skinny .modal__content__wrapper {
   width: var(--modal-width-skinny);
