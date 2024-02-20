@@ -8,6 +8,7 @@ import { getProductName } from '../../../common/constants';
 import { exportProjectToFile } from '../../../common/export';
 import { exportAllData } from '../../../common/export-all-data';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import { isNotNullOrUndefined } from '../../../common/misc';
 import { strings } from '../../../common/strings';
 import { isScratchpadOrganizationId, Organization } from '../../../models/organization';
 import { Project } from '../../../models/project';
@@ -259,7 +260,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     }
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData | undefined;
-  const workspacesForActiveProject = projectLoaderData?.workspaces.map(w => w.workspace) || [];
+  const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined) || [];
   const projectName = projectLoaderData?.activeProject.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
 

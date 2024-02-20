@@ -5,7 +5,7 @@ import { Button, Collection, ComboBox, Dialog, DialogTrigger, Header, Input, Key
 import { useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';
-import { fuzzyMatch } from '../../common/misc';
+import { fuzzyMatch, isNotNullOrUndefined } from '../../common/misc';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
@@ -36,7 +36,7 @@ export const CommandPalette = () => {
     collection = workspaceData.collection;
     workspaces = workspaceData.workspaces;
   } else if (projectData) {
-    workspaces = projectData.workspaces.map(workspace => workspace.workspace);
+    workspaces = projectData.files.map(file => file.workspace).filter(isNotNullOrUndefined);
   }
 
   const navigate = useNavigate();

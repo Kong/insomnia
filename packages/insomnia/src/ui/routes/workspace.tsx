@@ -44,7 +44,7 @@ export interface WorkspaceLoaderData {
   baseEnvironment: Environment;
   subEnvironments: Environment[];
   activeApiSpec: ApiSpec | null;
-  activeMockServer: MockServer | null;
+  activeMockServer?: MockServer | null;
   clientCertificates: ClientCertificate[];
   caCertificate: CaCertificate | null;
   projects: Project[];
