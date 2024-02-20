@@ -7,6 +7,7 @@ import { getAccountId } from '../../account/session';
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';
 import { fuzzyMatch } from '../../common/misc';
 import { isGrpcRequest } from '../../models/grpc-request';
+import { isScratchpadOrganizationId } from '../../models/organization';
 import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import { isWebSocketRequest } from '../../models/websocket-request';
@@ -27,7 +28,12 @@ export const CommandPalette = () => {
     projectId,
     workspaceId,
     requestId,
-  } = useParams();
+  } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+    requestId: string;
+  };
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | undefined;
   const { settings } = useRouteLoaderData('root') as RootLoaderData;
@@ -38,7 +44,7 @@ export const CommandPalette = () => {
   const projectDataLoader = useFetcher<ProjectLoaderData>();
 
   useEffect(() => {
-    if (!projectData && !projectDataLoader.data && projectDataLoader.state === 'idle') {
+    if (!projectData && !projectDataLoader.data && projectDataLoader.state === 'idle' && !isScratchpadOrganizationId(organizationId)) {
       projectDataLoader.load(`/organization/${organizationId}/project/${projectId}`);
     }
   }, [organizationId, projectData, projectDataLoader, projectId]);
@@ -143,7 +149,7 @@ export const CommandPalette = () => {
     })),
   });
 
-  comboboxSections.push({
+  files.length > 0 && comboboxSections.push({
     id: 'collections-and-documents',
     name: 'Collections and documents',
     children: files.map(file => ({
