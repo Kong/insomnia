@@ -1,20 +1,21 @@
-import { IconName } from '@fortawesome/fontawesome-svg-core';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { Button, Collection, ComboBox, Dialog, DialogTrigger, Header, Input, Keyboard, Label, ListBox, ListBoxItem, Modal, ModalOverlay, Section, Text } from 'react-aria-components';
-import { useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
+import { getAccountId } from '../../account/session';
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';
-import { fuzzyMatch, isNotNullOrUndefined } from '../../common/misc';
+import { fuzzyMatch } from '../../common/misc';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import { isWebSocketRequest } from '../../models/websocket-request';
-import { Workspace } from '../../models/workspace';
 import { scopeToActivity, WorkspaceScope } from '../../models/workspace';
-import { ProjectLoaderData } from '../routes/project';
+import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
+import { InsomniaFile, ProjectLoaderData, scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../routes/project';
 import { RootLoaderData } from '../routes/root';
 import { Collection as WorkspaceCollection, WorkspaceLoaderData } from '../routes/workspace';
+import { AvatarGroup } from './avatar';
 import { Icon } from './icon';
 import { useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { getMethodShortHand } from './tags/method-tag';
@@ -30,16 +31,55 @@ export const CommandPalette = () => {
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | undefined;
   const { settings } = useRouteLoaderData('root') as RootLoaderData;
+  const { presence } = useInsomniaEventStreamContext();
+  const pullFileFetcher = useFetcher();
+  const navigate = useNavigate();
+
+  const projectDataLoader = useFetcher<ProjectLoaderData>();
+
+  useEffect(() => {
+    if (!projectData && !projectDataLoader.data && projectDataLoader.state === 'idle') {
+      projectDataLoader.load(`/organization/${organizationId}/project/${projectId}`);
+    }
+  }, [organizationId, projectData, projectDataLoader, projectId]);
+
   let collection: WorkspaceCollection = [];
-  let workspaces: Workspace[] = [];
+  let files: (InsomniaFile & {
+    loading: boolean; presence: {
+      key: string;
+      alt: string;
+      src: string;
+    }[];
+  })[] = [];
+
   if (workspaceData) {
     collection = workspaceData.collection;
-    workspaces = workspaceData.workspaces;
-  } else if (projectData) {
-    workspaces = projectData.files.map(file => file.workspace).filter(isNotNullOrUndefined);
   }
 
-  const navigate = useNavigate();
+  if (projectData || projectDataLoader.data) {
+    const data = projectData || projectDataLoader.data;
+    if (data) {
+      const accountId = getAccountId();
+      files = data?.files.map(file => {
+        const workspacePresence = presence
+          .filter(p => p.project === data.activeProject.remoteId && p.file === file.id)
+          .filter(p => p.acct !== accountId)
+          .map(user => {
+            return {
+              key: user.acct,
+              alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+              src: user.avatar,
+            };
+          });
+        return {
+          ...file,
+          loading: Boolean(pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.remoteId),
+          presence: workspacePresence,
+        };
+      });
+    }
+  }
+
   useDocBodyKeyboardShortcuts({
     request_quickSwitch: () => {
       setIsOpen(true);
@@ -47,11 +87,74 @@ export const CommandPalette = () => {
   });
 
   const requestSwitchKeyCombination = getPlatformKeyCombinations(settings.hotKeyRegistry.request_quickSwitch)[0];
-  const scopeToIconMap: Record<string, IconName> = {
-    design: 'file',
-    collection: 'bars',
-    'mock-server': 'server',
-  };
+
+  const comboboxSections: {
+    id: string;
+    name: string;
+    children: {
+      id: string;
+      icon: React.ReactNode;
+      name: string;
+      presence: {
+        key: string;
+        alt: string;
+        src: string;
+      }[];
+      description: string;
+      textValue: string;
+    }[];
+  }[] = [];
+
+  collection.length > 0 && comboboxSections.push({
+    id: 'requests',
+    name: 'Requests',
+    children: collection.map(item => item.doc).filter(item => !isRequestGroup(item)).map(item => ({
+      id: item._id,
+      icon: isRequest(item) ? (
+        <span
+          className={
+            `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
+              ${{
+              'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
+              'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
+              'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+              'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+              'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
+              'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
+              'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
+            }[item.method] || 'text-[--color-font] bg-[--hl-md]'}`
+          }
+        >
+          {getMethodShortHand(item)}
+        </span>
+      ) : isWebSocketRequest(item) ? (
+        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+          WS
+        </span>
+      ) : isGrpcRequest(item) && (
+        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+          gRPC
+        </span>
+      ),
+      name: item.name,
+      presence: [],
+      description: !isRequestGroup(item) ? item.url : '',
+      textValue: !isRequestGroup(item) ? `${isRequest(item) ? item.method : isWebSocketRequest(item) ? 'WebSocket' : 'gRPC'} ${item.name} ${item.url}` : '',
+    })),
+  });
+
+  comboboxSections.push({
+    id: 'collections-and-documents',
+    name: 'Collections and documents',
+    children: files.map(file => ({
+      id: file.id,
+      icon: <span className={`${scopeToBgColorMap[file.scope]} ${scopeToTextColorMap[file.scope]} rounded aspect-square h-6 flex items-center justify-center`}><Icon icon={file.loading ? 'spinner' : scopeToIconMap[file.scope]} className={`w-4 ${file.loading ? 'animate-spin' : ''}`} /></span>,
+      name: file.name,
+      description: scopeToLabelMap[file.scope],
+      textValue: file.name + ' ' + scopeToLabelMap[file.scope],
+      presence: file.presence,
+    })),
+  });
 
   return (
     <DialogTrigger onOpenChange={setIsOpen} isOpen={isOpen}>
@@ -84,11 +187,21 @@ export const CommandPalette = () => {
                 if (!itemId) {
                   return;
                 }
-                const isWorkspace = itemId.toString().startsWith('wrk_');
-                if (isWorkspace) {
-                  const [id, scope] = itemId.toString().split('|');
-                  const activity = scopeToActivity(scope as WorkspaceScope);
-                  navigate(`/organization/${organizationId}/project/${projectId}/workspace/${id}/${activity}`);
+
+                const file = files.find(file => file.id === itemId);
+
+                if (file) {
+                  if (file.scope === 'unsynced') {
+                    if (projectData?.activeProject.remoteId && file.remoteId) {
+                      pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: projectData?.activeProject.remoteId }, {
+                        method: 'POST',
+                        action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
+                      });
+                    }
+                  } else {
+                    const activity = scopeToActivity(file.scope as WorkspaceScope);
+                    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${activity}`);
+                  }
                 } else {
                   navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${itemId}`);
                 }
@@ -107,55 +220,7 @@ export const CommandPalette = () => {
               </Label>
               <ListBox
                 className="flex-1 overflow-y-auto outline-none flex flex-col data-[empty]:hidden"
-                items={[
-                  {
-                    id: 'requests',
-                    name: 'Requests',
-                    children: collection.map(item => item.doc).filter(item => !isRequestGroup(item)).map(item => ({
-                      id: item._id,
-                      icon: isRequest(item) ? (
-                        <span
-                          className={
-                            `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
-                            ${{
-                              'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
-                              'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
-                              'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
-                              'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
-                              'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
-                              'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
-                              'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
-                            }[item.method] || 'text-[--color-font] bg-[--hl-md]'}`
-                          }
-                        >
-                          {getMethodShortHand(item)}
-                        </span>
-                      ) : isWebSocketRequest(item) ? (
-                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
-                          WS
-                        </span>
-                      ) : isGrpcRequest(item) && (
-                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
-                          gRPC
-                        </span>
-                      ),
-                      name: item.name,
-                      description: !isRequestGroup(item) ? item.url : '',
-                      textValue: !isRequestGroup(item) ? `${isRequest(item) ? item.method : isWebSocketRequest(item) ? 'WebSocket' : 'gRPC'} ${item.name} ${item.url}` : '',
-                    })),
-                  },
-                  {
-                    id: 'collections-and-documents',
-                    name: 'Collections and documents',
-                    children: workspaces.map(workspace => ({
-                      id: workspace._id + '|' + workspace.scope,
-                      icon: <Icon icon={scopeToIconMap[workspace.scope]} className="text-[--color-font] w-10 flex-shrink-0 flex items-center justify-center" />,
-                      name: workspace.name,
-                      description: '',
-                      textValue: `${workspace.scope} ${workspace.name}`,
-                    })),
-                  },
-                ]}
+                items={comboboxSections}
               >
                 {section => (
                   <Section className='flex-1 flex flex-col'>
@@ -169,6 +234,15 @@ export const CommandPalette = () => {
                             {item.icon}
                             <Text className="flex-1 px-1 truncate" slot="label">{item.name}</Text>
                             <Text className="flex-1 px-1 truncate" slot="description">{item.description}</Text>
+                              <span className='w-[70px]'>
+                              {item.presence.length > 0 && (
+                                <AvatarGroup
+                                  size="small"
+                                  maxAvatars={3}
+                                  items={item.presence}
+                                />
+                              )}
+                              </span>
                           </div>
                         </ListBoxItem>
                       )}

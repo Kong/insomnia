@@ -51,8 +51,6 @@ import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
-import { CaCertificate } from '../../models/ca-certificate';
-import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
 import { MockServer } from '../../models/mock-server';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
@@ -109,26 +107,33 @@ async function getAllTeamProjects(organizationId: string) {
   return response.data as TeamProject[];
 }
 
-export interface WorkspaceWithMetadata {
-  _id: string;
-  hasUnsavedChanges: boolean;
-  lastModifiedTimestamp: number;
-  created: number;
-  modifiedLocally: number;
-  lastCommitTime: number | null | undefined;
-  lastCommitAuthor: string | null | undefined;
-  lastActiveBranch: string | null | undefined;
-  spec: Record<string, any> | null;
-  specFormat: 'openapi' | 'swagger' | null;
-  name: string;
-  apiSpec: ApiSpec | null;
-  mockServer: MockServer | null;
-  specFormatVersion: string | null;
-  workspace: Workspace;
-  workspaceMeta: WorkspaceMeta;
-  clientCertificates: ClientCertificate[];
-  caCertificate: CaCertificate | null;
-}
+export const scopeToLabelMap: Record<WorkspaceScope | 'unsynced', 'Document' | 'Collection' | 'Mock Server' | 'Unsynced'> = {
+  design: 'Document',
+  collection: 'Collection',
+  'mock-server': 'Mock Server',
+  unsynced: 'Unsynced',
+};
+
+export const scopeToIconMap: Record<string, IconName> = {
+  design: 'file',
+  collection: 'bars',
+  'mock-server': 'server',
+  unsynced: 'cloud-download',
+};
+
+export const scopeToBgColorMap: Record<string, string> = {
+  design: 'bg-[--color-info]',
+  collection: 'bg-[--color-surprise]',
+  'mock-server': 'bg-[--color-warning]',
+  unsynced: 'bg-[--hl-md]',
+};
+
+export const scopeToTextColorMap: Record<string, string> = {
+  design: 'text-[--color-font-info]',
+  collection: 'text-[--color-font-surprise]',
+  'mock-server': 'text-[--color-font-warning]',
+  unsynced: 'text-[--color-font]',
+};
 
 async function syncTeamProjects({
   organizationId,
@@ -136,8 +141,7 @@ async function syncTeamProjects({
 }: {
   teamProjects: TeamProject[];
   organizationId: string;
-}) {
-
+  }) {
   // assumption: api teamProjects is the source of truth for migrated projects
   // once migrated orgs become the source of truth for projects
   // its important that migration be completed before this code is run
@@ -260,7 +264,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
 };
 
-interface File {
+export interface InsomniaFile {
   id: string;
   name: string;
   remoteId?: string;
@@ -278,7 +282,7 @@ interface File {
 }
 
 export interface ProjectLoaderData {
-  files: File[];
+  files: InsomniaFile[];
   allFilesCount: number;
   documentsCount: number;
   collectionsCount: number;
@@ -318,7 +322,7 @@ async function getAllLocalFiles({
     },
   });
 
-  const files: File[] = projectWorkspaces.map(workspace => {
+  const files: InsomniaFile[] = projectWorkspaces.map(workspace => {
     const apiSpec = apiSpecs.find(spec => spec.parentId === workspace._id);
     const mockServer = mockServers.find(mock => mock.parentId === workspace._id);
     let spec: ParsedApiSpec['contents'] = null;
@@ -370,7 +374,7 @@ async function getAllLocalFiles({
       id: workspace._id,
       name: workspace.name,
       scope: workspace.scope,
-      label: workspace.scope === 'design' ? 'Document' : workspace.scope === 'collection' ? 'Collection' : workspace.scope === 'mock-server' ? 'Mock Server' : 'Unsynced',
+      label: scopeToLabelMap[workspace.scope],
       created: workspace.created,
       lastModifiedTimestamp: (hasUnsavedChanges && modifiedLocally) || workspaceMeta?.cachedGitLastCommitTime || lastModifiedTimestamp,
       branch: lastActiveBranch || '',
@@ -418,7 +422,7 @@ async function getAllRemoteFiles({
       .filter(p => !workspacesWithBackendProjects.find(w => w._id === p.rootDocumentId));
 
     return backendProjectsToPull.map(backendProject => {
-      const file: File = {
+      const file: InsomniaFile = {
         id: backendProject.rootDocumentId,
         name: backendProject.name,
         scope: 'unsynced',
@@ -843,25 +847,6 @@ const ProjectRoute: FC = () => {
         icon: 'cloud-download',
       },
   ];
-
-  const scopeToIconMap: Record<string, IconName> = {
-    design: 'file',
-    collection: 'bars',
-    'mock-server': 'server',
-    unsynced: 'cloud-download',
-  };
-  const scopeToBgColorMap: Record<string, string> = {
-    design: 'bg-[--color-info]',
-    collection: 'bg-[--color-surprise]',
-    'mock-server': 'bg-[--color-warning]',
-    unsynced: 'bg-[--hl-md]',
-  };
-  const scopeToTextColorMap: Record<string, string> = {
-    design: 'text-[--color-info-font]',
-    collection: 'text-[--color-surprise-font]',
-    'mock-server': 'text-[--color-warning-font]',
-    unsynced: 'text-[--color-font]',
-  };
 
   return (
     <ErrorBoundary>
