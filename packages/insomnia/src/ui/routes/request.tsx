@@ -372,12 +372,12 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   try {
     const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
     const mutatedContext = await tryToExecutePreRequestScript(req, environment, timelinePath, responseId);
-    if (!mutatedContext) {
+    if (!mutatedContext?.request) {
       // exiy early if there was a problem with the pre-request script
       // TODO: improve error message?
       return null;
     }
-    const renderedResult = await tryToInterpolateRequest(mutatedContext.request, mutatedContext.environment || '', RENDER_PURPOSE_SEND);
+    const renderedResult = await tryToInterpolateRequest(mutatedContext.request, mutatedContext.environment || environment._id, RENDER_PURPOSE_SEND);
     const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
 
     // TODO: remove this temporary hack to support GraphQL variables in the request body properly
