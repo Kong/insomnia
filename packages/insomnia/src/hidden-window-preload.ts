@@ -2,15 +2,6 @@ import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
 import { RequestContext } from './sdk/objects/insomnia';
 
-declare global {
-  interface Window {
-    bridge: {
-      requireInterceptor: (module: string) => any;
-      onmessage: (listener: (data: any, callback: (result: any) => void) => void) => void;
-    };
-  }
-}
-
 const bridge: Window['bridge'] = {
   onmessage: listener => {
     const rendererListener = (event: IpcRendererEvent) => {
