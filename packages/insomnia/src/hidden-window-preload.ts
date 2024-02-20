@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-import type { Request } from './models/request';
+import { RequestContext } from './sdk/objects/insomnia';
+
 declare global {
   interface Window {
     bridge: {
@@ -8,10 +9,6 @@ declare global {
       onmessage: (listener: (data: any, callback: (result: any) => void) => void) => void;
     };
   }
-}
-export interface RequestContext {
-  request: Request;
-  timelinePath: string;
 }
 
 const bridge: Window['bridge'] = {
@@ -25,8 +22,9 @@ const bridge: Window['bridge'] = {
     ipcRenderer.on('renderer-listener', rendererListener);
     return () => ipcRenderer.removeListener('renderer-listener', rendererListener);
   },
+
   requireInterceptor: (moduleName: string) => {
-    if (['uuid', 'crypto', 'fs'].includes(moduleName)) {
+    if (['uuid', 'fs'].includes(moduleName)) {
       return require(moduleName);
     }
     throw Error(`no module is found for "${moduleName}"`);
