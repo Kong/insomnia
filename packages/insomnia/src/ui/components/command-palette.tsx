@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useState } from 'react';
 import { Button, Collection, ComboBox, Dialog, DialogTrigger, Header, Input, Keyboard, Label, ListBox, ListBoxItem, Modal, ModalOverlay, Section, Text } from 'react-aria-components';
 import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
@@ -62,28 +62,26 @@ export const CommandPalette = () => {
     collection = workspaceData.collection;
   }
 
-  if (projectData || projectDataLoader.data) {
-    const data = projectData || projectDataLoader.data;
-    if (data) {
-      const accountId = getAccountId();
-      files = data?.files.map(file => {
-        const workspacePresence = presence
-          .filter(p => p.project === data.activeProject.remoteId && p.file === file.id)
-          .filter(p => p.acct !== accountId)
-          .map(user => {
-            return {
-              key: user.acct,
-              alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-              src: user.avatar,
-            };
-          });
-        return {
-          ...file,
-          loading: Boolean(pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.remoteId),
-          presence: workspacePresence,
-        };
-      });
-    }
+  const data = projectData || projectDataLoader.data;
+  if (data) {
+    const accountId = getAccountId();
+    files = data?.files.map(file => {
+      const workspacePresence = presence
+        .filter(p => p.project === data.activeProject.remoteId && p.file === file.id)
+        .filter(p => p.acct !== accountId)
+        .map(user => {
+          return {
+            key: user.acct,
+            alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+            src: user.avatar,
+          };
+        });
+      return {
+        ...file,
+        loading: Boolean(pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.remoteId),
+        presence: workspacePresence,
+      };
+    });
   }
 
   useDocBodyKeyboardShortcuts({
@@ -162,6 +160,15 @@ export const CommandPalette = () => {
     })),
   });
 
+  const prevPullFetcherState = useRef(pullFileFetcher.state);
+  useEffect(() => {
+    if (pullFileFetcher.state === 'idle' && prevPullFetcherState.current !== 'idle') {
+      setIsOpen(false);
+    }
+
+    prevPullFetcherState.current = pullFileFetcher.state;
+  }, [pullFileFetcher.state]);
+
   return (
     <DialogTrigger onOpenChange={setIsOpen} isOpen={isOpen}>
       <Button data-testid='quick-search' className="px-4 py-1 h-[30.5px] flex-shrink-0 flex items-center justify-center gap-2 bg-[--hl-xs] aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] ring-inset ring-transparent ring-1 focus:ring-[--hl-md] transition-all text-sm">
@@ -178,6 +185,7 @@ export const CommandPalette = () => {
             <ComboBox
               aria-label='Quick switcher'
               className='flex flex-col divide-y divide-solid divide-[--hl-sm] overflow-hidden'
+              isDisabled={pullFileFetcher.state !== 'idle'}
               autoFocus
               allowsCustomValue={false}
               menuTrigger='focus'
@@ -198,8 +206,8 @@ export const CommandPalette = () => {
 
                 if (file) {
                   if (file.scope === 'unsynced') {
-                    if (projectData?.activeProject.remoteId && file.remoteId) {
-                      pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: projectData?.activeProject.remoteId }, {
+                    if (data?.activeProject.remoteId && file.remoteId) {
+                      return pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: data?.activeProject.remoteId }, {
                         method: 'POST',
                         action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
                       });
@@ -211,6 +219,7 @@ export const CommandPalette = () => {
                 } else {
                   navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${itemId}`);
                 }
+
                 close();
               }}
             >
@@ -224,38 +233,73 @@ export const CommandPalette = () => {
                   className="py-1 w-full pl-2 pr-7 bg-[--color-bg] text-[--color-font]"
                 />
               </Label>
-              <ListBox
-                className="flex-1 overflow-y-auto outline-none flex flex-col data-[empty]:hidden"
-                items={comboboxSections}
-              >
-                {section => (
-                  <Section className='flex-1 flex flex-col'>
-                    <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
-                    <Collection items={section.children}>
-                      {item => (
-                        <ListBoxItem textValue={item.textValue} className="group outline-none select-none">
-                          <div
-                            className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-data-[focused]:bg-[--hl-sm] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
-                          >
-                            {item.icon}
-                            <Text className="flex-1 px-1 truncate" slot="label">{item.name}</Text>
-                            <Text className="flex-1 px-1 truncate" slot="description">{item.description}</Text>
-                              <span className='w-[70px]'>
-                              {item.presence.length > 0 && (
-                                <AvatarGroup
-                                  size="small"
-                                  maxAvatars={3}
-                                  items={item.presence}
-                                />
-                              )}
-                              </span>
-                          </div>
-                        </ListBoxItem>
-                      )}
-                    </Collection>
-                  </Section>
+                {pullFileFetcher.state === 'idle' && (
+                  <ListBox
+                    className="flex-1 overflow-y-auto outline-none flex flex-col data-[empty]:hidden"
+                    items={comboboxSections}
+                  >
+                    {section => (
+                      <Section className='flex-1 flex flex-col'>
+                        <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
+                        <Collection items={section.children}>
+                          {item => (
+                            <ListBoxItem textValue={item.textValue} className="group outline-none select-none">
+                              <div
+                                className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-data-[focused]:bg-[--hl-sm] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
+                              >
+                                {item.icon}
+                                <Text className="flex-1 px-1 truncate" slot="label">{item.name}</Text>
+                                <Text className="flex-1 px-1 truncate" slot="description">{item.description}</Text>
+                                <span className='w-[70px]'>
+                                  {item.presence.length > 0 && (
+                                    <AvatarGroup
+                                      size="small"
+                                      maxAvatars={3}
+                                      items={item.presence}
+                                    />
+                                  )}
+                                </span>
+                              </div>
+                            </ListBoxItem>
+                          )}
+                        </Collection>
+                      </Section>
+                    )}
+                  </ListBox>
                 )}
-              </ListBox>
+                {pullFileFetcher.state !== 'idle' && (
+                  <div
+                    className="flex-1 overflow-y-auto outline-none flex flex-col data-[empty]:hidden"
+                  >
+                    {comboboxSections.map(section => (
+                      <div className='flex-1 flex flex-col' key={section.id}>
+                        <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
+                        <div>
+                          {section.children.map(item => (
+                            <div key={item.id} className="group cursor-not-allowed outline-none select-none">
+                              <div
+                                className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
+                              >
+                                {item.icon}
+                                <span className="flex-1 px-1 truncate">{item.name}</span>
+                                <span className="flex-1 px-1 truncate">{item.description}</span>
+                                <span className='w-[70px]'>
+                                  {item.presence.length > 0 && (
+                                    <AvatarGroup
+                                      size="small"
+                                      maxAvatars={3}
+                                      items={item.presence}
+                                    />
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
             </ComboBox>
           )}
         </Dialog>

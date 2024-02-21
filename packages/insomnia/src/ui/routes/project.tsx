@@ -30,6 +30,7 @@ import {
   matchPath,
   redirect,
   useFetcher,
+  useFetchers,
   useLoaderData,
   useNavigate,
   useParams,
@@ -541,6 +542,7 @@ const ProjectRoute: FC = () => {
   };
 
   const pullFileFetcher = useFetcher();
+  const loadingBackendProjects = useFetchers().filter(fetcher => fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`).map(f => f.formData?.get('backendProjectId'));
 
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
@@ -592,7 +594,7 @@ const ProjectRoute: FC = () => {
       });
     return {
       ...file,
-      loading: pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.remoteId,
+      loading: loadingBackendProjects.includes(file.remoteId) || pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.remoteId,
       presence: workspacePresence,
     };
   });
