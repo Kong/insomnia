@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useNavigate, useParams } from 'react-router-dom';
 
+import { isNotNullOrUndefined } from '../../../common/misc';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isScratchpadOrganizationId } from '../../../models/organization';
@@ -38,7 +39,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
     }
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData;
-  const workspacesForActiveProject = projectLoaderData?.workspaces.map(w => w.workspace) || [];
+  const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined) || [];
   const [state, setState] = useState<State>({
     defaultPreviewMode: !!request?.description,
     activeWorkspaceIdToCopyTo: '',

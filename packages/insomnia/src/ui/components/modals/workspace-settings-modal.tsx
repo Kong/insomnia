@@ -17,7 +17,7 @@ import { MarkdownEditor } from '../markdown-editor';
 interface Props {
   onClose: () => void;
   workspace: Workspace;
-  mockServer: MockServer | null;
+  mockServer?: MockServer | null;
 }
 
 export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props) => {

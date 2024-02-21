@@ -30,6 +30,7 @@ import {
   matchPath,
   redirect,
   useFetcher,
+  useFetchers,
   useLoaderData,
   useNavigate,
   useParams,
@@ -51,8 +52,6 @@ import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
-import { CaCertificate } from '../../models/ca-certificate';
-import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
 import { MockServer } from '../../models/mock-server';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
@@ -64,12 +63,12 @@ import {
 } from '../../models/project';
 import { isDesign, scopeToActivity, Workspace, WorkspaceScope } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
+import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { showModal } from '../../ui/components/modals';
 import { AskModal } from '../../ui/components/modals/ask-modal';
 import { invariant } from '../../utils/invariant';
 import { AvatarGroup } from '../components/avatar';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
-import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspaces-dropdown';
 import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
@@ -109,26 +108,33 @@ async function getAllTeamProjects(organizationId: string) {
   return response.data as TeamProject[];
 }
 
-export interface WorkspaceWithMetadata {
-  _id: string;
-  hasUnsavedChanges: boolean;
-  lastModifiedTimestamp: number;
-  created: number;
-  modifiedLocally: number;
-  lastCommitTime: number | null | undefined;
-  lastCommitAuthor: string | null | undefined;
-  lastActiveBranch: string | null | undefined;
-  spec: Record<string, any> | null;
-  specFormat: 'openapi' | 'swagger' | null;
-  name: string;
-  apiSpec: ApiSpec | null;
-  mockServer: MockServer | null;
-  specFormatVersion: string | null;
-  workspace: Workspace;
-  workspaceMeta: WorkspaceMeta;
-  clientCertificates: ClientCertificate[];
-  caCertificate: CaCertificate | null;
-}
+export const scopeToLabelMap: Record<WorkspaceScope | 'unsynced', 'Document' | 'Collection' | 'Mock Server' | 'Unsynced'> = {
+  design: 'Document',
+  collection: 'Collection',
+  'mock-server': 'Mock Server',
+  unsynced: 'Unsynced',
+};
+
+export const scopeToIconMap: Record<string, IconName> = {
+  design: 'file',
+  collection: 'bars',
+  'mock-server': 'server',
+  unsynced: 'cloud-download',
+};
+
+export const scopeToBgColorMap: Record<string, string> = {
+  design: 'bg-[--color-info]',
+  collection: 'bg-[--color-surprise]',
+  'mock-server': 'bg-[--color-warning]',
+  unsynced: 'bg-[--hl-md]',
+};
+
+export const scopeToTextColorMap: Record<string, string> = {
+  design: 'text-[--color-font-info]',
+  collection: 'text-[--color-font-surprise]',
+  'mock-server': 'text-[--color-font-warning]',
+  unsynced: 'text-[--color-font]',
+};
 
 async function syncTeamProjects({
   organizationId,
@@ -136,8 +142,7 @@ async function syncTeamProjects({
 }: {
   teamProjects: TeamProject[];
   organizationId: string;
-}) {
-
+  }) {
   // assumption: api teamProjects is the source of truth for migrated projects
   // once migrated orgs become the source of truth for projects
   // its important that migration be completed before this code is run
@@ -260,12 +265,30 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
 };
 
+export interface InsomniaFile {
+  id: string;
+  name: string;
+  remoteId?: string;
+  scope: WorkspaceScope | 'unsynced';
+  label: 'Document' | 'Collection' | 'Mock Server' | 'Unsynced';
+  created: number;
+  lastModifiedTimestamp: number;
+  branch?: string;
+  lastCommit?: string;
+  version?: string;
+  oasFormat?: string;
+  mockServer?: MockServer;
+  workspace?: Workspace;
+  apiSpec?: ApiSpec;
+}
+
 export interface ProjectLoaderData {
-  workspaces: WorkspaceWithMetadata[];
+  files: InsomniaFile[];
   allFilesCount: number;
   documentsCount: number;
   collectionsCount: number;
   mockServersCount: number;
+  unsyncedCount: number;
   projectsCount: number;
   activeProject: Project;
   projects: Project[];
@@ -278,35 +301,31 @@ export interface ProjectLoaderData {
   };
 }
 
-export const loader: LoaderFunction = async ({
-  params,
-  request,
-}): Promise<ProjectLoaderData> => {
-  const { organizationId, projectId } = params;
-  invariant(organizationId, 'Organization ID is required');
-  const sessionId = getCurrentSessionId();
-
-  if (!sessionId) {
-    await logout();
-    throw redirect('/auth/login');
-  }
-  const search = new URL(request.url).searchParams;
-  invariant(projectId, 'projectId parameter is required');
-  const sortOrder = search.get('sortOrder') || 'modified-desc';
-  const filter = search.get('filter') || '';
-  const scope = search.get('scope') || 'all';
-  const projectName = search.get('projectName') || '';
-
-  const project = await models.project.getById(projectId);
-  invariant(project, `Project was not found ${projectId}`);
-
+async function getAllLocalFiles({
+  projectId,
+}: {
+  projectId: string;
+}) {
   const projectWorkspaces = await models.workspace.findByParentId(projectId);
+  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+    parentId: {
+      $in: projectWorkspaces.map(w => w._id),
+    },
+  });
+  const apiSpecs = await database.find<ApiSpec>(models.apiSpec.type, {
+    parentId: {
+      $in: projectWorkspaces.map(w => w._id),
+    },
+  });
+  const mockServers = await database.find<MockServer>(models.mockServer.type, {
+    parentId: {
+      $in: projectWorkspaces.map(w => w._id),
+    },
+  });
 
-  const getWorkspaceMetaData = async (
-    workspace: Workspace
-  ): Promise<WorkspaceWithMetadata> => {
-    const apiSpec = await models.apiSpec.getByParentId(workspace._id);
-    const mockServer = await models.mockServer.getByParentId(workspace._id);
+  const files: InsomniaFile[] = projectWorkspaces.map(workspace => {
+    const apiSpec = apiSpecs.find(spec => spec.parentId === workspace._id);
+    const mockServer = mockServers.find(mock => mock.parentId === workspace._id);
     let spec: ParsedApiSpec['contents'] = null;
     let specFormat: ParsedApiSpec['format'] = null;
     let specFormatVersion: ParsedApiSpec['formatVersion'] = null;
@@ -321,10 +340,8 @@ export const loader: LoaderFunction = async ({
         // TODO: Check for parse errors if it's an invalid spec
       }
     }
-    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
-      workspace._id
-    );
-    invariant(workspaceMeta, 'WorkspaceMeta was not found');
+    const workspaceMeta = workspaceMetas.find(wm => wm.parentId === workspace._id);
+
     const lastActiveBranch = workspaceMeta?.cachedGitRepositoryBranch;
 
     const lastCommitAuthor = workspaceMeta?.cachedGitLastAuthor;
@@ -354,60 +371,99 @@ export const loader: LoaderFunction = async ({
         modifiedLocally > workspaceMeta?.cachedGitLastCommitTime
     );
 
-    const clientCertificates = await models.clientCertificate.findByParentId(
-      workspace._id
-    );
-
     return {
-      _id: workspace._id,
-      hasUnsavedChanges,
-      lastModifiedTimestamp,
-      created: workspace.created,
-      modifiedLocally,
-      lastCommitTime: workspaceMeta?.cachedGitLastCommitTime,
-      lastCommitAuthor,
-      lastActiveBranch,
-      spec,
-      specFormat,
+      id: workspace._id,
       name: workspace.name,
-      apiSpec,
+      scope: workspace.scope,
+      label: scopeToLabelMap[workspace.scope],
+      created: workspace.created,
+      lastModifiedTimestamp: (hasUnsavedChanges && modifiedLocally) || workspaceMeta?.cachedGitLastCommitTime || lastModifiedTimestamp,
+      branch: lastActiveBranch || '',
+      lastCommit: hasUnsavedChanges && workspaceMeta?.cachedGitLastCommitTime && lastCommitAuthor ? `by ${lastCommitAuthor}` : '',
+      version: spec?.info?.version ? `${spec?.info?.version?.startsWith('v') ? '' : 'v'}${spec?.info?.version}` : '',
+      oasFormat: specFormat ? `${specFormat === 'openapi' ? 'OpenAPI' : 'Swagger'} ${specFormatVersion || ''}` : '',
       mockServer,
-      specFormatVersion,
-      workspaceMeta,
-      clientCertificates,
-      caCertificate: await models.caCertificate.findByParentId(workspace._id),
+      apiSpec,
       workspace,
     };
-  };
+  });
 
-  // Fetch all workspace meta data in parallel
-  const workspacesWithMetaData = await Promise.all(
-    projectWorkspaces.map(getWorkspaceMetaData)
-  );
+  return files;
+}
 
-  const workspaces = workspacesWithMetaData
-    .filter(w => (scope !== 'all' ? w.workspace.scope === scope : true))
-    // @TODO - Figure out if the database has a way to sort/filter items that could replace this logic.
-    .filter(workspace =>
-      filter
-        ? Boolean(
-            fuzzyMatchAll(
-              filter,
-              // Use the filter string to match against these properties
-              [
-                workspace.name,
-                workspace.workspace.scope === 'design'
-                  ? 'document'
-                  : 'collection',
-                workspace.lastActiveBranch || '',
-                workspace.specFormatVersion || '',
-              ],
-              { splitSpace: true, loose: true }
-            )?.indexes
-          )
-        : true
-    )
-    .sort((a, b) => sortMethodMap[sortOrder as DashboardSortOrder](a, b));
+async function getAllRemoteFiles({
+  projectId,
+  organizationId,
+}: {
+  projectId: string;
+  organizationId: string;
+}) {
+  try {
+    const project = await models.project.getById(projectId);
+    invariant(project, 'Project not found');
+
+    const remoteId = project.remoteId;
+    invariant(remoteId, 'Project is not a remote project');
+    const vcs = VCSInstance();
+
+    const allPulledBackendProjectsForRemoteId = (await vcs.localBackendProjects()).filter(p => p.id === remoteId);
+    // Remote backend projects are fetched from the backend since they are not stored locally
+    const allFetchedRemoteBackendProjectsForRemoteId = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
+
+    // Get all workspaces that are connected to backend projects and under the current project
+    const workspacesWithBackendProjects = await database.find<Workspace>(models.workspace.type, {
+      _id: {
+        $in: [...allPulledBackendProjectsForRemoteId, ...allFetchedRemoteBackendProjectsForRemoteId].map(p => p.rootDocumentId),
+      },
+      parentId: project._id,
+    });
+
+    // Get the list of remote backend projects that we need to pull
+    const backendProjectsToPull = allFetchedRemoteBackendProjectsForRemoteId
+      .filter(p => !workspacesWithBackendProjects.find(w => w._id === p.rootDocumentId));
+
+    return backendProjectsToPull.map(backendProject => {
+      const file: InsomniaFile = {
+        id: backendProject.rootDocumentId,
+        name: backendProject.name,
+        scope: 'unsynced',
+        label: 'Unsynced',
+        remoteId: backendProject.id,
+        created: 0,
+        lastModifiedTimestamp: 0,
+      };
+
+      return file;
+    });
+  } catch (e) {
+    console.warn('Failed to load backend projects', e);
+  }
+
+  return [];
+}
+
+export const loader: LoaderFunction = async ({
+  params,
+  request,
+}): Promise<ProjectLoaderData> => {
+  const { organizationId, projectId } = params;
+  invariant(organizationId, 'Organization ID is required');
+  const sessionId = getCurrentSessionId();
+
+  if (!sessionId) {
+    await logout();
+    throw redirect('/auth/login');
+  }
+  const search = new URL(request.url).searchParams;
+  invariant(projectId, 'projectId parameter is required');
+  const projectName = search.get('projectName') || '';
+
+  const project = await models.project.getById(projectId);
+  invariant(project, `Project was not found ${projectId}`);
+
+  const localFiles = await getAllLocalFiles({ projectId });
+  const remoteFiles = await getAllRemoteFiles({ projectId, organizationId });
+  const files = [...localFiles, ...remoteFiles];
 
   const organizationProjects = await database.find<Project>(models.project.type, {
     parentId: organizationId,
@@ -445,27 +501,30 @@ export const loader: LoaderFunction = async ({
   }
 
   return {
-    workspaces,
+    files,
     learningFeature,
     projects,
     projectsCount: organizationProjects.length,
     activeProject: project,
-    allFilesCount: workspacesWithMetaData.length,
-    documentsCount: workspacesWithMetaData.filter(
-      w => w.workspace.scope === 'design'
+    allFilesCount: files.length,
+    documentsCount: files.filter(
+      file => file.scope === 'design'
     ).length,
-    collectionsCount: workspacesWithMetaData.filter(
-      w => w.workspace.scope === 'collection'
+    collectionsCount: files.filter(
+      file => file.scope === 'collection'
     ).length,
-    mockServersCount: workspacesWithMetaData.filter(
-      w => w.workspace.scope === 'mock-server'
+    mockServersCount: files.filter(
+      file => file.scope === 'mock-server'
+    ).length,
+    unsyncedCount: files.filter(
+      file => file.scope === 'unsynced'
     ).length,
   };
 };
 
 const ProjectRoute: FC = () => {
   const {
-    workspaces,
+    files,
     activeProject,
     projects,
     allFilesCount,
@@ -473,6 +532,7 @@ const ProjectRoute: FC = () => {
     mockServersCount,
     documentsCount,
     projectsCount,
+    unsyncedCount,
     learningFeature,
   } = useLoaderData() as ProjectLoaderData;
   const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = useLocalStorage('learning-feature-dismissed', '');
@@ -481,15 +541,49 @@ const ProjectRoute: FC = () => {
     projectId: string;
   };
 
+  const pullFileFetcher = useFetcher();
+  const loadingBackendProjects = useFetchers().filter(fetcher => fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`).map(f => f.formData?.get('backendProjectId'));
+
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
   const { features, billing } = useRouteLoaderData(':organizationId') as { features: FeatureList; billing: Billing };
 
   const accountId = getAccountId();
+  const [scope, setScope] = useLocalStorage(`${projectId}:project-dashboard-scope`, 'all');
+  const [sortOrder, setSortOrder] = useLocalStorage(`${projectId}:project-dashboard-sort-order`, 'modified-desc');
+  const [filter, setFilter] = useLocalStorage(`${projectId}:project-dashboard-filter`, '');
+  const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
 
-  const workspacesWithPresence = workspaces.map(workspace => {
+  const organization = organizations.find(o => o.id === organizationId);
+  const isUserOwner = organization && accountId && isOwnerOfOrganization({ organization, accountId });
+  const isPersonalOrg = organization && isPersonalOrganization(organization);
+
+  const filteredFiles = files
+    .filter(w => (scope !== 'all' ? w.scope === scope : true))
+    .filter(workspace =>
+      filter
+        ? Boolean(
+          fuzzyMatchAll(
+            filter,
+            // Use the filter string to match against these properties
+            [
+              workspace.name,
+              workspace.scope === 'design'
+                ? 'document'
+                : 'collection',
+              workspace.branch || '',
+              workspace.oasFormat || '',
+            ],
+            { splitSpace: true, loose: true }
+          )?.indexes
+        )
+        : true
+    )
+    .sort((a, b) => sortMethodMap[sortOrder as DashboardSortOrder](a, b));
+
+  const filesWithPresence = filteredFiles.map(file => {
     const workspacePresence = presence
-      .filter(p => p.project === activeProject.remoteId && p.file === workspace._id)
+      .filter(p => p.project === activeProject.remoteId && p.file === file.id)
       .filter(p => p.acct !== accountId)
       .map(user => {
         return {
@@ -499,7 +593,8 @@ const ProjectRoute: FC = () => {
         };
       });
     return {
-      ...workspace,
+      ...file,
+      loading: loadingBackendProjects.includes(file.remoteId) || pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.remoteId,
       presence: workspacePresence,
     };
   });
@@ -527,12 +622,6 @@ const ProjectRoute: FC = () => {
 
   const fetcher = useFetcher();
   const navigate = useNavigate();
-  const filter = searchParams.get('filter') || '';
-  const sortOrder =
-    (searchParams.get('sortOrder') as DashboardSortOrder) || 'modified-desc';
-  const [importModalType, setImportModalType] = useState<
-    'uri' | 'file' | 'clipboard' | null
-  >(null);
 
   const createNewCollection = () => {
     showPrompt({
@@ -635,15 +724,14 @@ const ProjectRoute: FC = () => {
     }
   }, [createNewProjectFetcher.data, createNewProjectFetcher.state]);
 
-  const currentOrg = organizations.find(organization => (organization.id === organizationId));
   const isGitSyncEnabled = features.gitSync.enabled;
 
   const showUpgradePlanModal = () => {
-    if (!currentOrg || !accountId) {
+    if (!organization || !accountId) {
       return;
     }
     const isOwner = isOwnerOfOrganization({
-      organization: currentOrg,
+      organization,
       accountId,
     });
 
@@ -755,26 +843,12 @@ const ProjectRoute: FC = () => {
           run: createNewMockServer,
         },
       },
+      {
+        id: 'unsynced',
+        label: `Unsynced (${unsyncedCount})`,
+        icon: 'cloud-download',
+      },
   ];
-
-  const organization = organizations.find(o => o.id === organizationId);
-  const isUserOwner = organization && accountId && isOwnerOfOrganization({ organization, accountId });
-  const isPersonalOrg = organization && isPersonalOrganization(organization);
-  const scopeToIconMap: Record<string, IconName> = {
-    design: 'file',
-    collection: 'bars',
-    'mock-server': 'server',
-  };
-  const scopeToBgColorMap: Record<string, string> = {
-    design: 'bg-[--color-info]',
-    collection: 'bg-[--color-surprise]',
-    'mock-server': 'bg-[--color-warning]',
-  };
-  const scopeToTextColorMap: Record<string, string> = {
-    design: 'text-[--color-info-font]',
-    collection: 'text-[--color-surprise-font]',
-    'mock-server': 'text-[--color-warning-font]',
-  };
 
   return (
     <ErrorBoundary>
@@ -1011,15 +1085,13 @@ const ProjectRoute: FC = () => {
                 items={scopeActionList}
                 className="overflow-y-auto flex-shrink-0 flex-1 data-[empty]:py-0 py-[--padding-sm]"
                 disallowEmptySelection
-                selectedKeys={[searchParams.get('scope') || 'all']}
+                selectedKeys={[scope || 'all']}
                 selectionMode="single"
                 onSelectionChange={keys => {
                   if (keys !== 'all') {
                     const value = keys.values().next().value;
-                    setSearchParams({
-                      ...Object.fromEntries(searchParams.entries()),
-                      scope: value,
-                    });
+
+                    setScope(value);
                   }
                 }}
               >
@@ -1095,17 +1167,12 @@ const ProjectRoute: FC = () => {
                   )}
                 </div>
               </div>}
-              <div className="flex justify-between w-full gap-2 p-[--padding-md]">
+              <div className="flex max-w-xl justify-between w-full gap-2 p-[--padding-md]">
                 <SearchField
-                  aria-label="Workspaces filter"
+                  aria-label="Files filter"
                   className="group relative flex-1"
-                  defaultValue={searchParams.get('filter')?.toString()}
-                  onChange={filter => {
-                    setSearchParams({
-                      ...Object.fromEntries(searchParams.entries()),
-                      filter,
-                    });
-                  }}
+                  value={filter}
+                  onChange={filter => setFilter(filter)}
                 >
                   <Input
                     placeholder="Filter"
@@ -1121,12 +1188,7 @@ const ProjectRoute: FC = () => {
                   aria-label="Sort order"
                   className="h-full aspect-square"
                   selectedKey={sortOrder}
-                  onSelectionChange={order =>
-                    setSearchParams({
-                      ...Object.fromEntries(searchParams.entries()),
-                      sortOrder: order.toString(),
-                    })
-                  }
+                  onSelectionChange={order => setSortOrder(order as DashboardSortOrder)}
                 >
                   <Button
                     aria-label="Select sort order"
@@ -1206,27 +1268,33 @@ const ProjectRoute: FC = () => {
                     </Menu>
                   </Popover>
                 </MenuTrigger>
-                {isRemoteProject(activeProject) && (
-                  <RemoteWorkspacesDropdown
-                    key={activeProject._id}
-                    project={activeProject}
-                  />
-                )}
               </div>
 
               <div className='flex-1 overflow-y-auto'>
                 <GridList
-                  aria-label="Workspaces"
-                  items={workspacesWithPresence}
-                  onAction={key => {
+                  aria-label="Files"
+                  className="data-[empty]:flex data-[empty]:justify-center grid [grid-template-columns:repeat(auto-fit,200px)] [grid-template-rows:repeat(auto-fit,200px)] gap-4 p-[--padding-md]"
+                  items={filesWithPresence}
+                  onAction={id => {
                     // hack to workaround gridlist not have access to workspace scope
-                    const [id, scope] = key.toString().split('|');
-                    const activity = scopeToActivity(scope as WorkspaceScope);
+                    const file = files.find(f => f.id === id);
+                    invariant(file, 'File not found');
+                    if (file.scope === 'unsynced') {
+                      if (activeProject.remoteId && file.remoteId) {
+                        return pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: activeProject.remoteId }, {
+                          method: 'POST',
+                          action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
+                        });
+                      }
+
+                      return;
+                    }
+
+                    const activity = scopeToActivity(file.scope);
                     navigate(
                       `/organization/${organizationId}/project/${projectId}/workspace/${id}/${activity}`
                     );
                   }}
-                  className="data-[empty]:flex data-[empty]:justify-center grid [grid-template-columns:repeat(auto-fit,200px)] [grid-template-rows:repeat(auto-fit,200px)] gap-4 p-[--padding-md]"
                   renderEmptyState={() => {
                     if (filter) {
                       return (
@@ -1238,34 +1306,31 @@ const ProjectRoute: FC = () => {
                       );
                     }
 
-                  return (
-                    <EmptyStatePane
-                      createRequestCollection={createNewCollection}
-                      createDesignDocument={createNewDocument}
-                      createMockServer={createNewMockServer}
-                      importFrom={() => setImportModalType('file')}
-                      cloneFromGit={importFromGit}
-                    />
-                  );
-                }}
+                    return (
+                      <EmptyStatePane
+                        createRequestCollection={createNewCollection}
+                        createDesignDocument={createNewDocument}
+                        createMockServer={createNewMockServer}
+                        importFrom={() => setImportModalType('file')}
+                        cloneFromGit={importFromGit}
+                      />
+                    );
+                  }}
                 >
-                {item => {
-                  return (
-                    <GridListItem
-                      key={item._id}
-                      // hack to workaround gridlist not have access to workspace scope
-                      id={item._id + '|' + item.workspace.scope}
-                      textValue={item.name}
-                      className="flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-md hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
-                    >
-                      <div className="flex gap-2 h-[20px]">
-                        <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
-                          <div className={`${scopeToBgColorMap[item.workspace.scope]} ${scopeToTextColorMap[item.workspace.scope]}  px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
-                            <Icon icon={scopeToIconMap[item.workspace.scope]} />
-                          </div>
-                          <span>
-                            {item.workspace.scope === 'design' ? 'Document' : item.workspace.scope === 'collection' ? 'Collection' : item.workspace.scope === 'mock-server' ? 'Mock Server' : 'Unknown'}
-                          </span>
+                  {item => {
+                    return (
+                      <GridListItem
+                        key={item.id}
+                        id={item.id}
+                        textValue={item.name}
+                        className={`flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-md hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all ${item.loading ? 'animate-pulse' : ''}`}
+                      >
+                        <div className="flex gap-2 h-[20px]">
+                          <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
+                            <div className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
+                              <Icon icon={item.loading ? 'spinner' : scopeToIconMap[item.scope]} className={item.loading ? 'animate-spin' : ''} />
+                            </div>
+                            <span>{item.label}</span>
                           </div>
                           <span className="flex-1" />
                           {item.presence.length > 0 && (
@@ -1275,57 +1340,50 @@ const ProjectRoute: FC = () => {
                               items={item.presence}
                             />
                           )}
-                          <WorkspaceCardDropdown
-                            {...item}
-                            project={activeProject}
-                            projects={projects}
-                          />
+                          {item.scope !== 'unsynced' && item.workspace && (
+                            <WorkspaceCardDropdown
+                              workspace={item.workspace}
+                              apiSpec={item.apiSpec}
+                              project={activeProject}
+                              projects={projects}
+                            />
+                          )}
                         </div>
                         <Heading className="pt-4 text-lg font-bold truncate">
-                          {item.workspace.name}
+                          {item.name}
                         </Heading>
                         <div className="flex-1 flex flex-col gap-2 justify-end text-sm text-[--hl]">
-                          {typeof item.spec?.info?.version === 'string' && (
+                          {item.version && (
                             <div className="flex-1 pt-2">
-                              {item.spec.info.version.startsWith('v') ? '' : 'v'}
-                              {item.spec.info.version}
+                              {item.version}
                             </div>
                           )}
-                          {item.specFormat && (
+                          {item.oasFormat && (
                             <div className="text-sm flex items-center gap-2">
                               <Icon icon="file-alt" />
                               <span>
-                                {item.specFormat === 'openapi'
-                                  ? 'OpenAPI'
-                                  : 'Swagger'}{' '}
-                                {item.specFormatVersion}
+                                {item.oasFormat}
                               </span>
                             </div>
                           )}
-                          {item.lastActiveBranch && (
+                          {item.branch && (
                             <div className="text-sm flex items-center gap-2">
                               <Icon icon="code-branch" />
                               <span className="truncate">
-                                {item.lastActiveBranch}
+                                {item.branch}
                               </span>
                             </div>
                           )}
-                          {item.lastModifiedTimestamp && (
+                          {Boolean(item.lastModifiedTimestamp) && (
                             <div className="text-sm flex items-center gap-2 truncate">
                               <Icon icon="clock" />
                               <TimeFromNow
                                 timestamp={
-                                  (item.hasUnsavedChanges &&
-                                    item.modifiedLocally) ||
-                                  item.lastCommitTime ||
                                   item.lastModifiedTimestamp
                                 }
                               />
                               <span className="truncate">
-                                {!item.hasUnsavedChanges &&
-                                  item.lastCommitTime &&
-                                  item.lastCommitAuthor &&
-                                  `by ${item.lastCommitAuthor}`}
+                                {item.lastCommit}
                               </span>
                             </div>
                           )}
