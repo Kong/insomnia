@@ -76,7 +76,7 @@ export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow
     minHeight: MINIMUM_HEIGHT,
     minWidth: MINIMUM_WIDTH,
     webPreferences: {
-      contextIsolation: true,
+      contextIsolation: false,
       nodeIntegration: true,
       preload: path.join(__dirname, 'hidden-window-preload.js'),
       spellcheck: false,

@@ -21,80 +21,28 @@ test.describe('pre-request UI tests', async () => {
 
     const testCases = [
         {
-            name: 'send environment-populated request',
-            preReqScript: `
-                insomnia.environment.set('fromEnv1', 'env1');
-            `,
-            body: `{
-                "fromEnv1": "{{ _.fromEnv1 }}"
-            }`,
-            expectedBody: {
-                fromEnv1: 'env1',
-            },
-        },
-        {
-            name: 'send environment-overridden request',
-            preReqScript: `
-                // 'predefined' is already defined in the base environment, its original value is 'base'
-                insomnia.environment.set('predefined', 'updatedByScript');
-            `,
-            body: `{
-                "predefined": "{{ _.predefined }}"
-            }`,
-            expectedBody: {
-                predefined: 'updatedByScript',
-            },
-        },
-        {
-            name: 'environments / populate environments',
+            name: 'environments setting/overriding',
             preReqScript: `
                 insomnia.baseEnvironment.set('fromBaseEnv', 'baseEnv');
-            `,
-            body: `{
-                "fromBaseEnv": "{{ _.fromBaseEnv }}"
-            }`,
-            expectedBody: {
-                fromBaseEnv: 'baseEnv',
-            },
-        },
-        {
-            name: 'environments / override base environments',
-            preReqScript: `
                 insomnia.baseEnvironment.set('scriptValue', 'fromBase');
                 insomnia.environment.set('scriptValue', 'fromEnv');
-            `,
-            body: `{
-                "scriptValue": "{{ _.scriptValue }}"
-            }`,
-            expectedBody: {
-                scriptValue: 'fromEnv',
-            },
-        },
-        {
-            name: 'environments / override predefined base environment in script',
-            preReqScript: `
                 // "preDefinedValue" is already defined in the base environment modal.
                 // but it is rewritten here
                 insomnia.baseEnvironment.set('preDefinedValue', 'fromScript');
-            `,
-            body: `{
-                "preDefinedValue": "{{ _.preDefinedValue }}"
-            }`,
-            expectedBody: {
-                preDefinedValue: 'fromScript',
-            },
-        },
-        {
-            name: 'environments / envrionment from script should be overidden by folder environment',
-            preReqScript: `
                 // "customValue" is already defined in the folder environment.
                 // folder version will override the following wone
                 insomnia.baseEnvironment.set('customValue', 'fromScript');
             `,
             body: `{
+                "fromBaseEnv": "{{ _.fromBaseEnv }}",
+                "scriptValue": "{{ _.scriptValue }}",
+                "preDefinedValue": "{{ _.preDefinedValue }}",
                 "customValue": "{{ _.customValue }}"
             }`,
             expectedBody: {
+                fromBaseEnv: 'baseEnv',
+                scriptValue: 'fromEnv',
+                preDefinedValue: 'fromScript',
                 customValue: 'fromFolder',
             },
         },
@@ -119,6 +67,25 @@ test.describe('pre-request UI tests', async () => {
                 varStr: 'varStr',
                 varNum: 777,
                 varBool: true,
+            },
+        },
+        {
+            name: 'require / require classes from insomnia-collection module',
+            preReqScript: `
+            const { Property } = require('insomnia-collection');
+            const prop = new Property('pid', 'pname');
+            insomnia.environment.set('propJson', JSON.stringify(prop.toJSON()));
+            `,
+            body: `{
+                "propJson": {{ _.propJson }}
+            }`,
+            expectedBody: {
+                propJson: {
+                    '_kind': 'Property',
+                    'disabled': false,
+                    'id': 'pid',
+                    'name': 'pname',
+                },
             },
         },
     ];
