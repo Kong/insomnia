@@ -1,6 +1,7 @@
 import type { CurlRequestOptions, CurlRequestOutput } from '../main/network/libcurl-promise';
 import { Request } from '../models/request';
 import { RequestContext } from '../sdk/objects/insomnia';
+
 const cancelRequestFunctionMap = new Map<string, () => void>();
 export async function cancelRequestById(requestId: string) {
   const cancel = cancelRequestFunctionMap.get(requestId);
@@ -30,6 +31,7 @@ export const cancellableRunPreRequestScript = async (options: { script: string; 
     return result as {
       request: Request;
       environment: object;
+      baseEnvironment: object;
     };
   } catch (err) {
     if (err.name === 'AbortError') {
@@ -62,6 +64,7 @@ export const cancellableCurlRequest = async (requestOptions: CurlRequestOptions)
     return { statusMessage: 'Error', error: err.message || 'Something went wrong' };
   }
 };
+
 const cancellablePromise = ({ signal, fn }: { signal: AbortSignal; fn: Promise<any> }) => {
   if (signal?.aborted) {
     return Promise.reject(new DOMException('Aborted', 'AbortError'));

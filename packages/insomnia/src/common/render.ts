@@ -298,6 +298,7 @@ interface RenderRequest<T extends Request | GrpcRequest | WebSocketRequest> {
 
 interface BaseRenderContextOptions {
   environment?: string | Environment;
+  baseEnvironment?: Environment;
   purpose?: RenderPurpose;
   extraInfo?: ExtraRenderInfo;
 }
@@ -309,6 +310,7 @@ export async function getRenderContext(
   {
     request,
     environment,
+    baseEnvironment,
     ancestors: _ancestors,
     purpose,
     extraInfo,
@@ -322,7 +324,7 @@ export async function getRenderContext(
     throw new Error('Failed to render. Could not find workspace');
   }
 
-  const rootEnvironment = await models.environment.getOrCreateForParentId(
+  const rootEnvironment = baseEnvironment || await models.environment.getOrCreateForParentId(
     workspace ? workspace._id : 'n/a',
   );
   const subEnvironmentId = environment ?
@@ -466,6 +468,7 @@ export async function getRenderedRequestAndContext(
   {
     request,
     environment,
+    baseEnvironment,
     extraInfo,
     purpose,
   }: RenderRequestOptions,
@@ -474,7 +477,7 @@ export async function getRenderedRequestAndContext(
   const workspace = ancestors.find(isWorkspace);
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
-  const renderContext = await getRenderContext({ request, environment, ancestors, purpose, extraInfo });
+  const renderContext = await getRenderContext({ request, environment, ancestors, purpose, extraInfo, baseEnvironment });
 
   // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
   // https://github.com/kong/insomnia/issues/895

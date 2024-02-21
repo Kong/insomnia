@@ -45,6 +45,31 @@ test.describe('pre-request UI tests', async () => {
                 predefined: 'updatedByScript',
             },
         },
+        {
+            name: 'send base environment-populated request',
+            preReqScript: `
+                insomnia.baseEnvironment.set('fromBaseEnv', 'baseEnv');
+            `,
+            body: `{
+                "fromBaseEnv": "{{ _.fromBaseEnv }}"
+            }`,
+            expectedBody: {
+                fromBaseEnv: 'baseEnv',
+            },
+        },
+        {
+            name: 'send request with overridden base environments',
+            preReqScript: `
+                insomnia.baseEnvironment.set('value', 'fromBase');
+                insomnia.environment.set('value', 'fromEnv');
+            `,
+            body: `{
+                "value": "{{ _.value }}"
+            }`,
+            expectedBody: {
+                value: 'fromEnv',
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
