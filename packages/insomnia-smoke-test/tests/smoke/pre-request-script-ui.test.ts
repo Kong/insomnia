@@ -71,7 +71,7 @@ test.describe('pre-request UI tests', async () => {
             await preRequestScriptEditor.fill(tc.preReqScript);
 
             // TODO: wait for body and pre-request script are persisted to the disk
-            // should improve this part
+            // should improve this part, we should avoid sync this state through db as it introduces race condition
             await page.waitForTimeout(500);
 
             // send
