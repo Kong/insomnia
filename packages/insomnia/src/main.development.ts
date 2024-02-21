@@ -1,4 +1,3 @@
-
 import electron, { app, ipcMain, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';

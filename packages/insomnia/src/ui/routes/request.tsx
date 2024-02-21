@@ -351,6 +351,7 @@ export interface SendActionParams {
   requestId: string;
   shouldPromptForPathAfterResponse?: boolean;
 }
+
 export const sendAction: ActionFunction = async ({ request, params }) => {
   const { requestId, workspaceId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
@@ -370,12 +371,13 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   } = await fetchRequestData(requestId);
   try {
     const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
-    const mutatedRequest = await tryToExecutePreRequestScript(req, environment._id, timelinePath, responseId);
-    if (!mutatedRequest) {
+    const mutatedContext = await tryToExecutePreRequestScript(req, environment, timelinePath, responseId);
+    if (!mutatedContext?.request) {
       // exiy early if there was a problem with the pre-request script
+      // TODO: improve error message?
       return null;
     }
-    const renderedResult = await tryToInterpolateRequest(mutatedRequest, environment._id, RENDER_PURPOSE_SEND);
+    const renderedResult = await tryToInterpolateRequest(mutatedContext.request, mutatedContext.environment || environment._id, RENDER_PURPOSE_SEND);
     const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
 
     // TODO: remove this temporary hack to support GraphQL variables in the request body properly
@@ -439,6 +441,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     return redirect(`${url.pathname}?${url.searchParams}`);
   }
 };
+
 export const createAndSendToMockbinAction: ActionFunction = async ({ request }) => {
   const patch = await request.json() as Partial<Request>;
   invariant(typeof patch.url === 'string', 'URL is required');

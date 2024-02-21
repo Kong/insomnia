@@ -1,4 +1,4 @@
-import { RequestContext } from './hidden-window-preload';
+import { initInsomniaObject, RequestContext } from './sdk/objects/insomnia';
 
 export interface HiddenBrowserWindowBridgeAPI {
   runPreRequestScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
@@ -14,15 +14,15 @@ window.bridge.onmessage(async (data, callback) => {
     callback({ error: err.message });
   }
 });
-const runPreRequestScript = async ({ script, context }: { script: string; context: RequestContext }): Promise<RequestContext> => {
-  console.log(script);
-  const executionContext = {
-    request: {
-      addHeader: (v: string) => context.request.headers.push({ name: v.split(':')[0], value: v.split(':')[1] }),
-    },
-  };
 
+const runPreRequestScript = async (
+  { script, context }: { script: string; context: RequestContext },
+): Promise<RequestContext> => {
+  console.log(script);
+
+  const executionContext = initInsomniaObject(context);
   const log: string[] = [];
+  // TODO: we should at least support info, debug, warn, error
   const consoleInterceptor = {
     log: (...args: any[]) => log.push(JSON.stringify({ value: args.map(a => JSON.stringify(a)).join('\n'), name: 'Text', timestamp: Date.now() }) + '\n'),
   };
@@ -43,9 +43,15 @@ const runPreRequestScript = async ({ script, context }: { script: string; contex
     window.bridge.requireInterceptor,
     consoleInterceptor
   );
+  const mutatedContextObject = mutatedInsomniaObject.toObject();
 
   await window.bridge.requireInterceptor('fs').promises.writeFile(context.timelinePath, log.join('\n'));
-  console.log('mutatedInsomniaObject', mutatedInsomniaObject);
+
+  console.log('mutatedInsomniaObject', mutatedContextObject);
   console.log('context', context);
-  return context;
+
+  return {
+    ...context,
+    environment: mutatedContextObject.environment,
+  };
 };

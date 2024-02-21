@@ -297,7 +297,7 @@ interface RenderRequest<T extends Request | GrpcRequest | WebSocketRequest> {
 }
 
 interface BaseRenderContextOptions {
-  environmentId?: string;
+  environment?: string | Environment;
   purpose?: RenderPurpose;
   extraInfo?: ExtraRenderInfo;
 }
@@ -308,7 +308,7 @@ interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderR
 export async function getRenderContext(
   {
     request,
-    environmentId,
+    environment,
     ancestors: _ancestors,
     purpose,
     extraInfo,
@@ -325,9 +325,14 @@ export async function getRenderContext(
   const rootEnvironment = await models.environment.getOrCreateForParentId(
     workspace ? workspace._id : 'n/a',
   );
-  const subEnvironment = await models.environment.getById(environmentId || 'n/a');
-  const keySource: Record<string, string> = {};
+  const subEnvironmentId = environment ?
+    typeof environment === 'string' ? environment : 'n/a' :
+    'n/a';
+  const subEnvironment = environment ?
+    typeof environment === 'string' ? await models.environment.getById(environment) : environment :
+    await models.environment.getById('n/a');
 
+  const keySource: Record<string, string> = {};
   // Function that gets Keys and stores their Source location
   function getKeySource(subObject: string | Record<string, any>, inKey: string, inSource: string) {
     // Add key to map if it's not root
@@ -393,7 +398,7 @@ export async function getRenderContext(
       const p = extraInfo.find(v => v.name === key);
       return p ? p.value : null;
     },
-    getEnvironmentId: () => environmentId,
+    getEnvironmentId: () => subEnvironmentId,
     // It is possible for a project to not exist because this code path can be reached via Inso/insomnia-send-request which has no concept of a project.
     getProjectId: () => project?._id,
   };
@@ -417,11 +422,11 @@ export async function getRenderedGrpcRequest(
     purpose,
     extraInfo,
     request,
-    environmentId,
+    environment,
     skipBody,
   }: RenderGrpcRequestOptions,
 ) {
-  const renderContext = await getRenderContext({ request, environmentId, purpose, extraInfo });
+  const renderContext = await getRenderContext({ request, environment, purpose, extraInfo });
   const description = request.description;
   // Render description separately because it's lower priority
   request.description = '';
@@ -440,13 +445,13 @@ export async function getRenderedGrpcRequest(
 type RenderGrpcRequestMessageOptions = BaseRenderContextOptions & RenderRequest<GrpcRequest>;
 export async function getRenderedGrpcRequestMessage(
   {
-    environmentId,
+    environment,
     request,
     extraInfo,
     purpose,
   }: RenderGrpcRequestMessageOptions,
 ) {
-  const renderContext = await getRenderContext({ request, environmentId, purpose, extraInfo });
+  const renderContext = await getRenderContext({ request, environment, purpose, extraInfo });
   // Render request body
   const renderedBody: RenderedGrpcRequestBody = await render(request.body, renderContext);
   return renderedBody;
@@ -460,7 +465,7 @@ export interface RequestAndContext {
 export async function getRenderedRequestAndContext(
   {
     request,
-    environmentId,
+    environment,
     extraInfo,
     purpose,
   }: RenderRequestOptions,
@@ -469,7 +474,7 @@ export async function getRenderedRequestAndContext(
   const workspace = ancestors.find(isWorkspace);
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
-  const renderContext = await getRenderContext({ request, environmentId, ancestors, purpose, extraInfo });
+  const renderContext = await getRenderContext({ request, environment, ancestors, purpose, extraInfo });
 
   // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
   // https://github.com/kong/insomnia/issues/895

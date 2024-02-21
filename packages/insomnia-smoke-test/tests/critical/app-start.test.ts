@@ -35,5 +35,4 @@ test('can use node-libcurl, httpsnippet, hidden browser window', async ({ app, p
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect(statusTag).toContainText('200 OK');
   await page.getByRole('tab', { name: 'Timeline' }).click();
-  await expect(responseBody).toContainText('my-pre-request-header:');
 });
