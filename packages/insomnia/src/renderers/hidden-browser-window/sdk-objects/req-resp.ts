@@ -548,6 +548,14 @@ export class Response extends Property {
         // const contentDisposition = this.headers.get('Content-Disposition');
         // const mimeInfo = getMimeInfo(contentType, response.stream || response.body);
         // let fileName = getFileNameFromDispositionHeader(contentDisposition);
+
+        // contentType: "application/pdf"
+        // mimeType: "embed"
+        // mimeFormat: "pdf"
+        // charset: "utf8"
+        // fileExtension: "pdf"
+        // fileName: "response.pdf"
+
         const mimeInfo = {
             extension: '',
             mimeType: '',
@@ -585,10 +593,50 @@ export class Response extends Property {
         return `data:${contentInfo.contentType};baseg4, <base64-encoded-body>`;
     }
 
-    // need a library for this
-    // json(reviver?, strict?) {
+    private findBOM(content: string) {
+        // remove UTF-16 and UTF-32 BOM
+        if ((content.charCodeAt(0) === 0xFEFF) || (content.charCodeAt(0) === 0xBBBF)) {
+            return 1;
+        }
 
-    // }
+        // big endian UTF-16 BOM
+        if ((content.charCodeAt(0) === 0xFE) && (content.charCodeAt(1) === 0xFF)) {
+            return 2;
+        }
+
+        // little endian UTF-16 BOM
+        if ((content.charCodeAt(0) === 0xFF) && (content.charCodeAt(1) === 0xFE)) {
+            return 2;
+        }
+
+        // UTF-8 BOM
+        if ((content.charCodeAt(0) === 0xEF) && (content.charCodeAt(1) === 0xBB) &&
+            (content.charCodeAt(2) === 0xBF)) {
+            return 3;
+        }
+
+        return 0;
+    }
+
+    json(
+        reviver?: ((this: any, key: string, value: any) => any) | undefined,
+        strict?: boolean,
+    ) {
+        let content = this.text();
+        const bomIndex = this.findBOM(this.text());
+        if (bomIndex > 0) {
+            if (strict) {
+                throw Error('byte order mark (BOM) is found while strict=true');
+            }
+            content = this.text().slice(bomIndex);
+        }
+
+        try {
+            return JSON.parse(content, reviver);
+        } catch (e) {
+            throw new Error(`failed to get json of body: ${e.message}`);
+        }
+    }
 
     // jsonp(reviver?, strict?) {
 
@@ -607,6 +655,5 @@ export class Response extends Property {
         return this.body;
     }
 
-    // ResponseContentInfo
-    // timings
+    // timings seems not supported yet
 }
