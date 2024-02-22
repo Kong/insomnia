@@ -13,10 +13,11 @@ export const VCSInstance = () => {
   const driver = FileSystemDriver.create(
     process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
   );
-  vcs = new VCS(driver, async conflicts => {
+  vcs = new VCS(driver, async (conflicts, labels) => {
     return new Promise(resolve => {
       showModal(SyncMergeModal, {
         conflicts,
+        labels,
         handleDone: (conflicts?: MergeConflict[]) =>
           resolve(conflicts || []),
       });

@@ -7,6 +7,7 @@ import { Icon } from '../icon';
 
 export interface SyncMergeModalOptions {
   conflicts?: MergeConflict[];
+  labels: { ours: string; theirs: string };
   handleDone?: (conflicts?: MergeConflict[]) => void;
 }
 export interface SyncMergeModalHandle {
@@ -17,18 +18,21 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
   const [state, setState] = useState<SyncMergeModalOptions & { isOpen: boolean }>({
     conflicts: [],
     isOpen: false,
+    labels: { ours: '', theirs: '' },
   });
 
   useImperativeHandle(ref, () => ({
     hide: () => setState({
       conflicts: [],
       isOpen: false,
+      labels: { ours: '', theirs: '' },
     }),
-    show: ({ conflicts, handleDone }) => {
+    show: ({ conflicts, labels, handleDone }) => {
       setState({
         conflicts,
         handleDone,
         isOpen: true,
+        labels,
       });
 
       window.main.trackSegmentEvent({
@@ -46,6 +50,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
         !isOpen && setState({
           conflicts: [],
           isOpen: false,
+          labels: { ours: '', theirs: '' },
         });
       }}
       isDismissable
@@ -56,6 +61,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
           !isOpen && setState({
             conflicts: [],
             isOpen: false,
+            labels: { ours: '', theirs: '' },
           });
         }}
         className="flex flex-col max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]"
@@ -95,6 +101,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                   setState({
                     conflicts: [],
                     isOpen: false,
+                    labels: { ours: '', theirs: '' },
                   });
                 }}
               >
@@ -162,7 +169,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                                         >
                                           <Icon icon="laptop" />
                                           <span>
-                                            Accept ours
+                                            Accept ours ({state.labels.ours})
                                           </span>
                                         </Radio>
                                         <Radio
@@ -171,7 +178,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                                         >
                                           <Icon icon="globe" />
                                           <span>
-                                            Accept theirs
+                                            Accept theirs ({state.labels.theirs})
                                           </span>
                                         </Radio>
                                       </div>
