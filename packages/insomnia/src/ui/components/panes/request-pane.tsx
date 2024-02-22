@@ -1,3 +1,4 @@
+import { Snippet } from 'codemirror';
 import React, { FC, Fragment, useState } from 'react';
 import { Button, Heading, ToggleButton } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
@@ -8,6 +9,8 @@ import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { getCombinedPathParametersFromUrl, RequestParameter } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
+import { Environment } from '../../../sdk/objects/environments';
+import { InsomniaObject } from '../../../sdk/objects/insomnia';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
@@ -123,6 +126,41 @@ export const RequestPane: FC<Props> = ({
   const contentType =
     getContentTypeFromHeaders(activeRequest.headers) ||
     activeRequest.body.mimeType;
+
+  // TODO: We probably don't want to expose every property like .toObject() so we need a way to filter those out
+  // or make those properties private
+  function getPreRequestScriptSnippets(insomniaObject: any, path: string): Snippet[] {
+    // Recursively get all snippets from the insomnia object
+    let snippets: Snippet[] = [];
+
+    for (const key in insomniaObject) {
+      const value = insomniaObject[key];
+
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        snippets.push({
+          displayValue: `${path}.${value}`,
+          name: `${path}.${key}`,
+          value: `${path}.${key}`,
+        });
+      } else if (typeof value === 'function') {
+        snippets.push({
+          displayValue: `${path}.${key}()`,
+          name: `${path}.${key}()`,
+          value: `${path}.${key}()`,
+        });
+      } else if (Array.isArray(value)) {
+        for (const item of value) {
+          snippets = snippets.concat(getPreRequestScriptSnippets(item, `${path}.${key}`));
+        }
+      } else {
+        snippets = snippets.concat(getPreRequestScriptSnippets(value, `${path}.${key}`));
+      }
+    }
+
+    return snippets;
+  }
+
+  const preRequestScriptSnippets = getPreRequestScriptSnippets(new InsomniaObject({ environment: new Environment(activeEnvironment) }), 'insomnia');
 
   return (
     <Pane type="request">
@@ -303,6 +341,7 @@ export const RequestPane: FC<Props> = ({
               id="pre-request-script-editor"
               showPrettifyButton
               uniquenessKey={uniqueKey}
+              getAutocompleteSnippets={() => preRequestScriptSnippets}
               defaultValue={activeRequest.preRequestScript || ''}
               onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
               mode='text/javascript'
