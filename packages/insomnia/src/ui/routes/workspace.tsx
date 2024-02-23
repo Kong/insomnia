@@ -29,12 +29,13 @@ import { WorkspaceMeta } from '../../models/workspace-meta';
 import { pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { invariant } from '../../utils/invariant';
+import { organizationsData } from './organization';
 
 export type Collection = Child[];
 
 export interface WorkspaceLoaderData {
   workspaces: Workspace[];
-  activeWorkspace: Workspace;
+  activeWorkspace: Workspace & { isCloudSynced: boolean };
   activeWorkspaceMeta: WorkspaceMeta;
   activeProject: Project;
   gitRepository: GitRepository | null;
@@ -67,12 +68,18 @@ export const workspaceLoader: LoaderFunction = async ({
 }): Promise<WorkspaceLoaderData> => {
   const { organizationId, projectId, workspaceId } = params;
   invariant(organizationId, 'Organization ID is required');
+  const organization = organizationsData.organizations.find(({ id }) => id === organizationId);
+  invariant(organization, 'No organization found');
+
   invariant(projectId, 'Project ID is required');
   invariant(workspaceId, 'Workspace ID is required');
 
   const activeWorkspace = await models.workspace.getById(workspaceId);
 
   invariant(activeWorkspace, 'Workspace not found');
+
+  const vcs = VCSInstance();
+  const isCloudSynced = await vcs.hasBackendProjectForRootDocument(activeWorkspace._id);
 
   // I don't know what to say man, this is just how it is
   await models.environment.getOrCreateForParentId(workspaceId);
@@ -232,7 +239,8 @@ export const workspaceLoader: LoaderFunction = async ({
   }
 
   const userSession = await models.userSession.getOrCreate();
-  if (userSession.id && !gitRepository) {
+
+  if (userSession.id && activeProject.remoteId && !gitRepository && (isCloudSynced || organization.storage !== 'local_only')) {
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
@@ -265,7 +273,10 @@ export const workspaceLoader: LoaderFunction = async ({
 
   return {
     workspaces,
-    activeWorkspace,
+    activeWorkspace: {
+      ...activeWorkspace,
+      isCloudSynced,
+    },
     activeProject,
     gitRepository,
     activeWorkspaceMeta,
