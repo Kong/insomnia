@@ -71,6 +71,10 @@ export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow
   const hiddenBrowserWindow = new BrowserWindow({
     show: false,
     title: 'HiddenBrowserWindow',
+    width: DEFAULT_WIDTH,
+    height: DEFAULT_HEIGHT,
+    minHeight: MINIMUM_HEIGHT,
+    minWidth: MINIMUM_WIDTH,
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: true,

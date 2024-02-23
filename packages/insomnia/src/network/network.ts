@@ -73,20 +73,31 @@ export const fetchRequestData = async (requestId: string) => {
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
-export const tryToExecutePreRequestScript = async (request: Request, environment: Environment, timelinePath: string, responseId: string) => {
+export const tryToExecutePreRequestScript = async (
+  request: Request,
+  environment: Environment,
+  timelinePath: string,
+  responseId: string,
+  baseEnvironment: Environment,
+) => {
   if (!request.preRequestScript) {
     return {
       request,
       environment: undefined,
+      baseEnvironment: undefined,
     };
   }
+
   try {
     const output = await cancellableRunPreRequestScript({
       script: request.preRequestScript,
       context: {
         request,
         timelinePath,
-        environment: environment?.data || {},
+        // it inputs empty environment data when active environment is the base environment
+        // this is more deterministic and avoids that script accidently manipulates baseEnvironment instead of environment
+        environment: environment._id === baseEnvironment._id ? {} : (environment?.data || {}),
+        baseEnvironment: baseEnvironment?.data || {},
       },
     });
     console.log('[network] Pre-request script succeeded', output);
@@ -98,10 +109,18 @@ export const tryToExecutePreRequestScript = async (request: Request, environment
     );
     environment.data = output.environment;
     environment.dataPropertyOrder = envPropertyOrder.map;
+    const baseEnvPropertyOrder = orderedJSON.parse(
+      JSON.stringify(output.baseEnvironment),
+      JSON_ORDER_PREFIX,
+      JSON_ORDER_SEPARATOR,
+    );
+    baseEnvironment.data = output.baseEnvironment;
+    baseEnvironment.dataPropertyOrder = baseEnvPropertyOrder.map;
 
     return {
       request: output.request,
-      environment: environment,
+      environment,
+      baseEnvironment,
     };
   } catch (err) {
     await fs.promises.appendFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
@@ -126,12 +145,14 @@ export const tryToInterpolateRequest = async (
   request: Request,
   environment: string | Environment,
   purpose?: RenderPurpose,
-  extraInfo?: ExtraRenderInfo
+  extraInfo?: ExtraRenderInfo,
+  baseEnvironment?: Environment,
 ) => {
   try {
     return await getRenderedRequestAndContext({
       request: request,
       environment,
+      baseEnvironment,
       purpose,
       extraInfo,
     });

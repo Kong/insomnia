@@ -53,5 +53,6 @@ const runPreRequestScript = async (
   return {
     ...context,
     environment: mutatedContextObject.environment,
+    baseEnvironment: mutatedContextObject.baseEnvironment,
   };
 };

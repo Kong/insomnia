@@ -45,6 +45,59 @@ test.describe('pre-request UI tests', async () => {
                 predefined: 'updatedByScript',
             },
         },
+        {
+            name: 'environments / populate environments',
+            preReqScript: `
+                insomnia.baseEnvironment.set('fromBaseEnv', 'baseEnv');
+            `,
+            body: `{
+                "fromBaseEnv": "{{ _.fromBaseEnv }}"
+            }`,
+            expectedBody: {
+                fromBaseEnv: 'baseEnv',
+            },
+        },
+        {
+            name: 'environments / override base environments',
+            preReqScript: `
+                insomnia.baseEnvironment.set('scriptValue', 'fromBase');
+                insomnia.environment.set('scriptValue', 'fromEnv');
+            `,
+            body: `{
+                "scriptValue": "{{ _.scriptValue }}"
+            }`,
+            expectedBody: {
+                scriptValue: 'fromEnv',
+            },
+        },
+        {
+            name: 'environments / override predefined base environment in script',
+            preReqScript: `
+                // "preDefinedValue" is already defined in the base environment modal.
+                // but it is rewritten here
+                insomnia.baseEnvironment.set('preDefinedValue', 'fromScript');
+            `,
+            body: `{
+                "preDefinedValue": "{{ _.preDefinedValue }}"
+            }`,
+            expectedBody: {
+                preDefinedValue: 'fromScript',
+            },
+        },
+        {
+            name: 'environments/ envrionment from script should be overidden by folder environment',
+            preReqScript: `
+                // "customValue" is already defined in the folder environment.
+                // folder version will override the following wone
+                insomnia.baseEnvironment.set('customValue', 'fromScript');
+            `,
+            body: `{
+                "customValue": "{{ _.customValue }}"
+            }`,
+            expectedBody: {
+                customValue: 'fromFolder',
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
