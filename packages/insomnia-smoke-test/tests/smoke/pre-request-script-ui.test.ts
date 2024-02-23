@@ -46,7 +46,7 @@ test.describe('pre-request UI tests', async () => {
             },
         },
         {
-            name: 'send base environment-populated request',
+            name: 'environments / populate environments',
             preReqScript: `
                 insomnia.baseEnvironment.set('fromBaseEnv', 'baseEnv');
             `,
@@ -58,7 +58,7 @@ test.describe('pre-request UI tests', async () => {
             },
         },
         {
-            name: 'send request with overridden base environments',
+            name: 'environments / override base environments',
             preReqScript: `
                 insomnia.baseEnvironment.set('value', 'fromBase');
                 insomnia.environment.set('value', 'fromEnv');
@@ -71,7 +71,7 @@ test.describe('pre-request UI tests', async () => {
             },
         },
         {
-            name: 'send request / override predefined base environment in script',
+            name: 'environments / override predefined base environment in script',
             preReqScript: `
                 // "customValue" is already defined in the base environment modal.
                 // but it is rewritten here
@@ -82,6 +82,20 @@ test.describe('pre-request UI tests', async () => {
             }`,
             expectedBody: {
                 customValue: 'fromScript',
+            },
+        },
+        {
+            name: 'environments/ envrionment from script should be overidden by folder environment',
+            preReqScript: `
+                // "customValue" is already defined in the folder environment.
+                // folder version will override the following wone
+                insomnia.baseEnvironment.set('customValue', 'fromScript');
+            `,
+            body: `{
+                "customValue": "{{ _.customValue }}"
+            }`,
+            expectedBody: {
+                customValue: 'fromFolder',
             },
         },
     ];
