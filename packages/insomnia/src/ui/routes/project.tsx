@@ -637,6 +637,7 @@ const ProjectRoute: FC = () => {
           {
             name,
             scope: 'collection',
+            isCloudSyncEnabled,
           },
           {
             action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
@@ -659,6 +660,7 @@ const ProjectRoute: FC = () => {
           {
             name,
             scope: 'design',
+            isCloudSyncEnabled,
           },
           {
             action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
