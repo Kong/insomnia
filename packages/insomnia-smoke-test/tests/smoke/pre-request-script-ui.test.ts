@@ -72,12 +72,17 @@ test.describe('pre-request UI tests', async () => {
         {
             name: 'require / require classes from insomnia-collection module',
             preReqScript: `
-            const { Property } = require('insomnia-collection');
+            const { Property, Header, Variable } = require('insomnia-collection');
             const prop = new Property('pid', 'pname');
+            const header = new Header({ key: 'headerKey', value: 'headerValue' });
+            const variable = new Variable({ key: 'headerKey', value: 'headerValue' });
+            // set part of values
             insomnia.environment.set('propJson', JSON.stringify(prop.toJSON()));
+            insomnia.environment.set('headerJson', JSON.stringify(header.toJSON()));
             `,
             body: `{
-                "propJson": {{ _.propJson }}
+                "propJson": {{ _.propJson }},
+                "headerJson": {{ _.headerJson }}
             }`,
             expectedBody: {
                 propJson: {
@@ -85,6 +90,14 @@ test.describe('pre-request UI tests', async () => {
                     'disabled': false,
                     'id': 'pid',
                     'name': 'pname',
+                },
+                headerJson: {
+                    '_kind': 'Header',
+                    'key': 'headerKey',
+                    'value': 'headerValue',
+                    'id': '',
+                    'name': '',
+                    'type': '',
                 },
             },
         },
