@@ -184,8 +184,8 @@ export class PropertyList<T extends Property> {
     protected list: T[] = [];
 
     constructor(
-        protected readonly _typeClass: {}, // TODO: it is not used before collection is introduced
-        protected readonly parent: Property | PropertyList<any> | undefined,
+        protected _typeClass: {}, // TODO: it is not used before collection is introduced
+        protected parent: Property | PropertyList<any> | undefined,
         populate: T[],
     ) {
         this.parent = parent;
