@@ -60,28 +60,28 @@ test.describe('pre-request UI tests', async () => {
         {
             name: 'environments / override base environments',
             preReqScript: `
-                insomnia.baseEnvironment.set('value', 'fromBase');
-                insomnia.environment.set('value', 'fromEnv');
+                insomnia.baseEnvironment.set('scriptValue', 'fromBase');
+                insomnia.environment.set('scriptValue', 'fromEnv');
             `,
             body: `{
-                "value": "{{ _.value }}"
+                "scriptValue": "{{ _.scriptValue }}"
             }`,
             expectedBody: {
-                value: 'fromEnv',
+                scriptValue: 'fromEnv',
             },
         },
         {
             name: 'environments / override predefined base environment in script',
             preReqScript: `
-                // "customValue" is already defined in the base environment modal.
+                // "preDefinedValue" is already defined in the base environment modal.
                 // but it is rewritten here
-                insomnia.baseEnvironment.set('customValue', 'fromScript');
+                insomnia.baseEnvironment.set('preDefinedValue', 'fromScript');
             `,
             body: `{
-                "customValue": "{{ _.customValue }}"
+                "preDefinedValue": "{{ _.preDefinedValue }}"
             }`,
             expectedBody: {
-                customValue: 'fromScript',
+                preDefinedValue: 'fromScript',
             },
         },
         {
