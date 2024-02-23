@@ -47,8 +47,11 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
   const updateProjectFetcher = useFetcher();
   const [projectType, setProjectType] = useState<'local' | 'remote' | ''>('');
 
-  const isCloudSyncEnabled = storage === 'cloud_plus_local' || storage === 'cloud_only';
-  const isLocalVaultEnabled = storage === 'cloud_plus_local' || storage === 'local_only';
+  const isCloudSyncOnlyEnabled = storage === 'cloud_only';
+  const isLocalVaultOnlyEnabled = storage === 'local_only';
+  const areBothStorageTypesEnabled = storage === 'cloud_plus_local';
+  const isCloudSyncEnabled = areBothStorageTypesEnabled || isCloudSyncOnlyEnabled;
+  const isLocalVaultEnabled = areBothStorageTypesEnabled || isLocalVaultOnlyEnabled;
 
   const projectActionList: ProjectActionItem[] = [
     {
@@ -196,7 +199,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
                         className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                       />
                     </TextField>
-                    <RadioGroup name="type" defaultValue={project.remoteId && isCloudSyncEnabled ? 'remote' : 'local'} className="flex flex-col gap-2">
+                    <RadioGroup name="type" defaultValue={isCloudSyncOnlyEnabled ? 'remote' : isLocalVaultOnlyEnabled ? 'local' : project.remoteId ? 'remote' : 'local'} className="flex flex-col gap-2">
                       <Label className="text-sm text-[--hl]">
                         Project type
                       </Label>
@@ -208,14 +211,14 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
                         >
                           <div className='flex items-center gap-2'>
                             <Icon icon="globe" />
-                            <Heading className="text-lg font-bold">Secure Cloud</Heading>
+                            <Heading className="text-lg font-bold">Cloud Sync</Heading>
                           </div>
                           <p className='pt-2'>
                             Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
                           </p>
                         </Radio>
                         <Radio
-                          isDisabled={isDefaultOrganizationProject(project) || !isLocalVaultEnabled}
+                          isDisabled={!isLocalVaultEnabled}
                           value="local"
                           className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
@@ -275,7 +278,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
                       <span>
                         {isCloudSyncEnabled && isLocalVaultEnabled ?
                           'For both project types you can optionally enable Git Sync' :
-                          `The owner of the organization allows only ${isCloudSyncEnabled ? 'Secure Cloud' : 'Local Vault'} project creation. You can optionally enable Git Sync`
+                          `The owner of the organization allows only ${isCloudSyncEnabled ? 'Cloud Sync' : 'Local Vault'} project creation. You can optionally enable Git Sync`
                         }
                       </span>
                     </div>

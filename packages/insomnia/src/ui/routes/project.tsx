@@ -23,6 +23,8 @@ import {
   Select,
   SelectValue,
   TextField,
+  Tooltip,
+  TooltipTrigger,
 } from 'react-aria-components';
 import {
   ActionFunction,
@@ -726,8 +728,11 @@ const ProjectRoute: FC = () => {
 
   const isGitSyncEnabled = features.gitSync.enabled;
 
-  const isCloudSyncEnabled = storage === 'cloud_only' || storage === 'cloud_plus_local';
-  const isLocalVaultEnabled = storage === 'local_only' || storage === 'cloud_plus_local';
+  const isCloudSyncOnlyEnabled = storage === 'cloud_only';
+  const isLocalVaultOnlyEnabled = storage === 'local_only';
+  const areBothStorageTypesEnabled = storage === 'cloud_plus_local';
+  const isCloudSyncEnabled = isCloudSyncOnlyEnabled || areBothStorageTypesEnabled;
+  const isLocalVaultEnabled = isLocalVaultOnlyEnabled || areBothStorageTypesEnabled;
 
   const showUpgradePlanModal = () => {
     if (!organization || !userSession.accountId) {
@@ -986,7 +991,7 @@ const ProjectRoute: FC = () => {
                                     >
                                       <div className='flex items-center gap-2'>
                                         <Icon icon="globe" />
-                                        <Heading className="text-lg font-bold">Secure Cloud</Heading>
+                                        <Heading className="text-lg font-bold">Cloud Sync</Heading>
                                       </div>
                                       <p className='pt-2'>
                                         Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
@@ -1013,7 +1018,7 @@ const ProjectRoute: FC = () => {
                                     <span>
                                       {isCloudSyncEnabled && isLocalVaultEnabled ?
                                         'For both project types you can optionally enable Git Sync' :
-                                        `The owner of the organization allows only ${isCloudSyncEnabled ? 'Secure Cloud' : 'Local Vault'} project creation. You can optionally enable Git Sync`
+                                        `The owner of the organization allows only ${isCloudSyncEnabled ? 'Cloud Sync' : 'Local Vault'} project creation. You can optionally enable Git Sync`
                                       }
                                     </span>
                                   </div>
@@ -1073,8 +1078,26 @@ const ProjectRoute: FC = () => {
                               isRemoteProject(item) ? 'globe-americas' : 'laptop'
                             }
                           />
+
                           <span className="truncate">{item.name}</span>
                           <span className="flex-1" />
+                          {((isRemoteProject(item) && !isCloudSyncOnlyEnabled) || (!isRemoteProject(item) && !isLocalVaultOnlyEnabled)) && !areBothStorageTypesEnabled &&
+                            <TooltipTrigger>
+                              <Button>
+                                <Icon
+                                  icon='triangle-exclamation'
+                                  color="var(--color-warning)"
+                                />
+                              </Button>
+                              <Tooltip
+                                placement="top"
+                                offset={4}
+                                className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                              >
+                                {`This project type is not allowed by the organization owner. You can manually convert it to use ${isLocalVaultOnlyEnabled ? 'Local Vault' : 'Cloud Sync'}.`}
+                              </Tooltip>
+                            </TooltipTrigger>
+                          }
                           <AvatarGroup
                             size="small"
                             maxAvatars={3}
@@ -1172,6 +1195,14 @@ const ProjectRoute: FC = () => {
                       Update payment method
                     </a>
                   )}
+                </div>
+              </div>}
+              {((isRemoteProject(activeProject) && !isCloudSyncOnlyEnabled) || (!isRemoteProject(activeProject) && !isLocalVaultOnlyEnabled)) && !areBothStorageTypesEnabled && <div className='p-[--padding-md] pb-0'>
+                <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
+                  <p className='text-base'>
+                    <Icon icon="exclamation-triangle" className='mr-2' />
+                    {isCloudSyncOnlyEnabled ? 'The organization owner mandates that projects must be created and stored in the cloud storage only.' : 'The organization owner mandates that projects must be created and stored locally only. However, you can optionally enable Git Sync.'}
+                  </p>
                 </div>
               </div>}
               <div className="flex max-w-xl justify-between w-full gap-2 p-[--padding-md]">
