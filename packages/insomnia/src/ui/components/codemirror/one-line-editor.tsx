@@ -24,6 +24,7 @@ export interface OneLineEditorProps {
   readOnly?: boolean;
   type?: string;
   onPaste?: (text: string) => void;
+  onBlur?: (e: FocusEvent) => void;
 }
 
 export interface OneLineEditorHandle {
@@ -40,6 +41,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   readOnly,
   type,
   onPaste,
+  onBlur,
 }, ref) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
@@ -120,6 +122,12 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       // TODO: watch out for pasting urls that are curl<something>, e.g. curl.se would be picked up here without the space
       if (onPaste && text && text.startsWith('curl ')) {
         onPaste(text);
+      }
+    });
+
+    codeMirror.current.on('blur', (_, e) => {
+      if (onBlur) {
+        onBlur(e);
       }
     });
 

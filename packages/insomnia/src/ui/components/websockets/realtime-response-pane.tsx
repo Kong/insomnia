@@ -44,13 +44,6 @@ const EventViewWrapper = styled.div({
   height: '100%',
 });
 
-const PaneBodyContent = styled.div({
-  height: '100%',
-  width: '100%',
-  display: 'grid',
-  gridTemplateRows: 'repeat(auto-fit, minmax(0, 1fr))',
-});
-
 const EventSearchFormControl = styled.div({
   outline: 'none',
   width: '100%',
@@ -180,7 +173,7 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
       </PaneHeader>
       <Tabs aria-label="Curl response pane tabs">
         <TabItem key="events" title="Events">
-          <PaneBodyContent>
+          <div className='h-full w-full grid grid-rows-[repeat(auto-fit,minmax(0,1fr))]'>
             {response.error ? <ResponseErrorViewer url={response.url} error={response.error} />
               : <>
                 <EventLogTableWrapper>
@@ -246,17 +239,17 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
                   </EventViewWrapper>
                 )}
               </>}
-          </PaneBodyContent>
+          </div>
         </TabItem>
         <TabItem
           key="headers"
           title={
-            <>
-              Headers{' '}
-              {response?.headers.length > 0 && (
-                <span className="bubble">{response.headers.length}</span>
+            <div className='flex items-center gap-2'>
+              Headers
+              {response.headers.length > 0 && (
+                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{response.headers.length}</span>
               )}
-            </>
+            </div>
           }
         >
           <PanelContainer className="pad">
@@ -268,12 +261,12 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
         <TabItem
           key="cookies"
           title={
-            <>
-              Cookies{' '}
-              {cookieHeaders.length ? (
-                <span className="bubble">{cookieHeaders.length}</span>
-              ) : null}
-            </>
+            <div className='flex items-center gap-2'>
+              Cookies
+              {cookieHeaders.length > 0 && (
+                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{cookieHeaders.length}</span>
+              )}
+            </div>
           }
         >
           <PanelContainer className="pad">

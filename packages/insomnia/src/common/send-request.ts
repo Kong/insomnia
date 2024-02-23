@@ -1,3 +1,5 @@
+import path from 'path';
+
 import { BaseModel, types as modelTypes } from '../models';
 import * as models from '../models';
 import { getBodyBuffer } from '../models/response';
@@ -11,6 +13,7 @@ import {
 } from '../network/network';
 import { invariant } from '../utils/invariant';
 import { database } from './database';
+import { generateId } from './misc';
 import { RENDER_PURPOSE_SEND } from './render';
 
 // The network layer uses settings from the settings model
@@ -60,7 +63,11 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
     const caCert = await models.caCertificate.findByParentId(workspaceId);
 
-    return { request, settings, clientCertificates, caCert };
+    const responseId = generateId('res');
+    const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
+    const timelinePath = path.join(responsesDir, responseId + '.timeline');
+
+    return { request, settings, clientCertificates, caCert, timelinePath, responseId };
   };
   // Return callback helper to send requests
   return async function sendRequest(requestId: string) {
@@ -69,6 +76,8 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       settings,
       clientCertificates,
       caCert,
+      timelinePath,
+      responseId,
     } = await fetchInsoRequestData(requestId);
     // NOTE: inso ignores active environment, using the one passed in
     const renderResult = await tryToInterpolateRequest(request, environmentId, RENDER_PURPOSE_SEND);
@@ -78,6 +87,8 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       clientCertificates,
       caCert,
       settings,
+      timelinePath,
+      responseId,
     );
     const res = await responseTransform(response, environmentId, renderedRequest, renderResult.context);
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;

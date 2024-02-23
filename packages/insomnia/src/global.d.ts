@@ -8,6 +8,10 @@ declare global {
     app: Pick<Electron.App, 'getPath' | 'getAppPath'>;
     shell: Pick<Electron.Shell, 'showItemInFolder'>;
     clipboard: Pick<Electron.Clipboard, 'readText' | 'writeText' | 'clear'>;
+    bridge: {
+      requireInterceptor: (module: string) => any;
+      onmessage: (listener: (data: any, callback: (result: any) => void) => void) => void;
+    };
   }
 }
 

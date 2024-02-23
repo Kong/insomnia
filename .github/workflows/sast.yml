@@ -11,6 +11,7 @@ on:
 
 jobs:
   semgrep:
+    timeout-minutes: 5
     name: Semgrep SAST
     runs-on: ubuntu-latest
     permissions:

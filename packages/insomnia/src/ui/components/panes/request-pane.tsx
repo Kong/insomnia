@@ -14,6 +14,7 @@ import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/us
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
+import { CodeEditor } from '../codemirror/code-editor';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
@@ -76,7 +77,6 @@ export const RequestPane: FC<Props> = ({
     useState(false);
   const patchRequest = useRequestPatcher();
 
-  useState(false);
   const handleImportQueryFromUrl = () => {
     let query;
 
@@ -111,17 +111,19 @@ export const RequestPane: FC<Props> = ({
   if (!activeRequest) {
     return <PlaceholderRequestPane />;
   }
-
   const pathParameters = getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters);
 
   const onPathParameterChange = (pathParameters: RequestParameter[]) => {
     patchRequest(requestId, { pathParameters });
   };
-  const numHeaders = activeRequest.headers.filter(h => !h.disabled).length;
+
+  const parametersCount = pathParameters.length + activeRequest.parameters.filter(p => !p.disabled).length;
+  const headersCount = activeRequest.headers.filter(h => !h.disabled).length;
   const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
   const contentType =
     getContentTypeFromHeaders(activeRequest.headers) ||
     activeRequest.body.mimeType;
+
   return (
     <Pane type="request">
       <PaneHeader>
@@ -139,7 +141,14 @@ export const RequestPane: FC<Props> = ({
       <Tabs aria-label="Request pane tabs">
         <TabItem
           key="query"
-          title={'Parameters'}
+          title={
+            <div className='flex items-center gap-2'>
+              Parameters
+              {parametersCount > 0 && (
+                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{parametersCount}</span>
+              )}
+            </div>
+          }
         >
           <div className='h-full flex flex-col'>
             <div className="p-4">
@@ -249,12 +258,12 @@ export const RequestPane: FC<Props> = ({
         <TabItem
           key="headers"
           title={
-            <>
+            <div className='flex items-center gap-2'>
               Headers{' '}
-              {numHeaders > 0 && (
-                <span className="bubble space-left">{numHeaders}</span>
+              {headersCount > 0 && (
+                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{headersCount}</span>
               )}
-            </>
+            </div>
           }
         >
           <HeaderContainer>
@@ -280,6 +289,26 @@ export const RequestPane: FC<Props> = ({
               </button>
             </TabPanelFooter>
           </HeaderContainer>
+        </TabItem>
+        <TabItem
+          key="pre-request-script"
+          title={'Pre-request Script'}
+          aria-label={'experimental'}
+        >
+          <ErrorBoundary
+            key={uniqueKey}
+            errorClassName="tall wide vertically-align font-error pad text-center"
+          >
+            <CodeEditor
+              id="pre-request-script-editor"
+              showPrettifyButton
+              uniquenessKey={uniqueKey}
+              defaultValue={activeRequest.preRequestScript || ''}
+              onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
+              mode='text/javascript'
+              placeholder="..."
+            />
+          </ErrorBoundary>
         </TabItem>
         <TabItem
           key="docs"

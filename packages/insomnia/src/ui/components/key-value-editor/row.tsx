@@ -41,6 +41,7 @@ interface Props {
   onClick?: () => void;
   onKeydown?: (e: React.KeyboardEvent) => void;
   showDescription: boolean;
+  onBlur?: (e: FocusEvent) => void;
 }
 
 export const Row: FC<Props> = ({
@@ -60,6 +61,7 @@ export const Row: FC<Props> = ({
   onKeydown,
   valuePlaceholder,
   showDescription,
+  onBlur,
 }) => {
   const { enabled } = useNunjucksEnabled();
 
@@ -92,6 +94,7 @@ export const Row: FC<Props> = ({
             getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
             readOnly={readOnly}
             onChange={name => onChange({ ...pair, name })}
+            onBlur={onBlur}
           />
         </div>
         <div
@@ -126,6 +129,7 @@ export const Row: FC<Props> = ({
           ) : (
             <OneLineEditor
               id={'key-value-editor__value' + pair.id}
+              onBlur={onBlur}
               type="text"
               readOnly={readOnly}
               placeholder={valuePlaceholder || 'Value'}

@@ -4,15 +4,14 @@ import { useFetcher, useParams } from 'react-router-dom';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
+import { exportMockServerToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
-import { CaCertificate } from '../../../models/ca-certificate';
-import { ClientCertificate } from '../../../models/client-certificate';
+import { MockServer } from '../../../models/mock-server';
 import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
-import { WorkspaceMeta } from '../../../models/workspace-meta';
 import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
@@ -28,12 +27,10 @@ import { SvgIcon } from '../svg-icon';
 
 interface Props {
   workspace: Workspace;
-  workspaceMeta: WorkspaceMeta;
-  apiSpec: ApiSpec | null;
+  apiSpec?: ApiSpec;
+  mockServer?: MockServer;
   project: Project;
   projects: Project[];
-  clientCertificates: ClientCertificate[];
-  caCertificate: CaCertificate | null;
 }
 
 const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
@@ -85,7 +82,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 };
 
 export const WorkspaceCardDropdown: FC<Props> = props => {
-  const { workspace, project, projects } = props;
+  const { workspace, mockServer, project, projects } = props;
   const fetcher = useFetcher();
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -156,7 +153,9 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
             <ItemContent
               label="Export"
               icon="file-export"
-              onClick={() => setIsExportModalOpen(true)}
+              onClick={() => workspace.scope !== 'mock-server'
+                ? setIsExportModalOpen(true)
+                : exportMockServerToFile(workspace)}
             />
           </DropdownItem>
           <DropdownItem aria-label='Settings'>
@@ -209,6 +208,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
       {isSettingsModalOpen && (
         <WorkspaceSettingsModal
           workspace={workspace}
+          mockServer={mockServer}
           onClose={() => setIsSettingsModalOpen(false)}
         />
       )}

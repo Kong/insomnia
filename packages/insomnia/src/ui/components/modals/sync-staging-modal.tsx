@@ -39,15 +39,16 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
   const modifiedChanges = allChanges.filter(change => !('added' in change));
 
   const { Form, formAction, state, data } = useFetcher();
+  const error = data?.error;
 
   const isPushing = state !== 'idle' && formAction?.endsWith('create-snapshot-and-push');
   const isCreatingSnapshot = state !== 'idle' && formAction?.endsWith('create-snapshot');
 
   useEffect(() => {
-    if (allChanges.length === 0) {
+    if (allChanges.length === 0 && !error) {
       onClose();
     }
-  }, [allChanges, onClose]);
+  }, [allChanges, onClose, error]);
 
   return (
     <ModalOverlay

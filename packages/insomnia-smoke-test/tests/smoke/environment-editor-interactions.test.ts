@@ -49,6 +49,7 @@ test.describe('Environment Editor', async () => {
 
     // Send a request check variables defaulted to base env since new env is empty
     await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
+    // await page.waitForTimeout(60000);
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByRole('tab', { name: 'Timeline' }).click();
     await page.getByText('subenvB0').click();

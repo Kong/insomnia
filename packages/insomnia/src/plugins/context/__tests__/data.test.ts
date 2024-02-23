@@ -196,6 +196,7 @@ describe('app.export.*', () => {
           name: 'New Request',
           parameters: [],
           pathParameters: [],
+          preRequestScript: '',
           parentId: 'wrk_1',
           settingDisableRenderRequestBody: false,
           settingEncodeUrl: true,
@@ -233,12 +234,10 @@ describe('app.export.*', () => {
               method: 'GET',
               postData: {
                 mimeType: '',
-                params: [],
                 text: '',
               },
               queryString: [],
               url: 'https://insomnia.rest/',
-              settingEncodeUrl: true,
             },
             response: {
               bodySize: -1,

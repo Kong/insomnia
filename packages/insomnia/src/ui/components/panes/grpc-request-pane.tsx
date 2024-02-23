@@ -104,7 +104,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
       try {
         const request = await getRenderedGrpcRequest({
           request: activeRequest,
-          environmentId,
+          environment: environmentId,
           purpose: RENDER_PURPOSE_SEND,
           skipBody: canClientStream(methodType),
         });
@@ -197,7 +197,16 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 disabled={!activeRequest.url}
                 onClick={async () => {
                   try {
-                    const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({ request: activeRequest, environmentId, payload: { url: activeRequest.url, metadata: activeRequest.metadata } });
+                    const rendered =
+                      await tryToInterpolateRequestOrShowRenderErrorModal({
+                        request: activeRequest,
+                        environmentId,
+                        payload: {
+                          url: activeRequest.url,
+                          metadata: activeRequest.metadata,
+                          reflectionApi: activeRequest.reflectionApi,
+                        },
+                      });
                     const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
                     setGrpcState({ ...grpcState, methods });
                     patchRequest(requestId, { protoFileId: '', protoMethodName: '' });
@@ -242,7 +251,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                         onClick={async () => {
                           const requestBody = await getRenderedGrpcRequestMessage({
                             request: activeRequest,
-                            environmentId,
+                            environment: environmentId,
                             purpose: RENDER_PURPOSE_SEND,
                           });
                           const preparedMessage = {
