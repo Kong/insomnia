@@ -29,7 +29,7 @@ export const WorkspaceSyncDropdown: FC = () => {
   const isCloudSyncEnabled = storage === 'cloud_only' || storage === 'cloud_plus_local';
   const isLocalVaultEnabled = storage === 'local_only' || storage === 'cloud_plus_local';
 
-  if (isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId && isCloudSyncEnabled) {
+  if ((isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId && isCloudSyncEnabled) || (isRemoteProject(activeProject) && activeWorkspace.isCloudSynced)) {
     return (
       <SyncDropdown
         key={activeWorkspace?._id}
