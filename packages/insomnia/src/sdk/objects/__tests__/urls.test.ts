@@ -68,6 +68,20 @@ describe('test Url object', () => {
         ]);
         expect(url.getQueryString()).toEqual('key2=value2');
         expect(url.toString()).toEqual('https://usernameValue:passwordValue@hostvalue.com:777/pathLevel1/pathLevel2?key2=value2#hashValue');
+
+        const url2 = new Url('https://usernameValue:passwordValue@hostvalue.com:777/pathLevel1/pathLevel2?key1=value1&key2=value2#hashValue');
+        expect(url2.getHost()).toEqual('hostvalue.com');
+        expect(url2.getPath()).toEqual('/pathLevel1/pathLevel2');
+        expect(url2.getQueryString()).toEqual('key1=value1&key2=value2');
+        expect(url2.getPathWithQuery()).toEqual('/pathLevel1/pathLevel2?key1=value1&key2=value2');
+        expect(url2.getRemote(true)).toEqual('hostvalue.com:777');
+        expect(url2.getRemote(false)).toEqual('hostvalue.com:777'); // TODO: add more cases
+
+        url2.removeQueryParams([
+            new QueryParam({ key: 'key1', value: 'value1' }),
+        ]);
+        expect(url2.getQueryString()).toEqual('key2=value2');
+        expect(url2.toString()).toEqual('https://usernameValue:passwordValue@hostvalue.com:777/pathLevel1/pathLevel2?key2=value2#hashValue');
     });
 
     it('test Url static methods', () => {
