@@ -23,6 +23,7 @@ import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/init
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
+import { organizationsData } from './organization';
 
 // Project
 export const createNewProjectAction: ActionFunction = async ({ request, params }) => {
@@ -278,7 +279,8 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
-
+  const organization = organizationsData.organizations.find(({ id }) => id === organizationId);
+  invariant(organization, 'No organization found');
   const project = await models.project.getById(projectId);
 
   invariant(project, 'Project not found');
@@ -319,7 +321,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   await database.flushChanges(flushId);
 
   const { id } = await models.userSession.getOrCreate();
-  if (id && !workspaceMeta.gitRepositoryId) {
+  if (id && !workspaceMeta.gitRepositoryId && organization.storage !== 'local_only') {
     const vcs = VCSInstance();
     await initializeLocalBackendProjectAndMarkForSync({
       vcs,
@@ -375,6 +377,8 @@ export const deleteWorkspaceAction: ActionFunction = async ({
 export const duplicateWorkspaceAction: ActionFunction = async ({ request, params }) => {
   const { organizationId } = params;
   invariant(organizationId, 'Organization Id is required');
+  const organization = organizationsData.organizations.find(({ id }) => id === organizationId);
+  invariant(organization, 'No organization found');
   const formData = await request.formData();
   const projectId = formData.get('projectId');
   invariant(typeof projectId === 'string', 'Project ID is required');
@@ -417,7 +421,7 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
   try {
     const { id } = await models.userSession.getOrCreate();
     // Mark for sync if logged in and in the expected project
-    if (id) {
+    if (id && organization.storage !== 'local_only') {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs: vcs.newInstance(),
