@@ -43,7 +43,7 @@ import {
 
 const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
 
-type ConflictHandler = (conflicts: MergeConflict[]) => Promise<MergeConflict[]>;
+type ConflictHandler = (conflicts: MergeConflict[], labels: { ours: string; theirs: string }) => Promise<MergeConflict[]>;
 
 // breaks one array into multiple arrays of size chunkSize
 export function chunkArray<T>(arr: T[], chunkSize: number) {
@@ -331,6 +331,7 @@ export class VCS {
 
   async handleAnyConflicts(
     conflicts: MergeConflict[],
+    labels: { ours: string; theirs: string },
     errorMsg: string,
   ): Promise<MergeConflict[]> {
     if (conflicts.length === 0) {
@@ -341,7 +342,7 @@ export class VCS {
       throw new Error(errorMsg);
     }
 
-    return this._conflictHandler(conflicts);
+    return this._conflictHandler(conflicts, labels);
   }
 
   async allDocuments(): Promise<Record<string, any>> {
@@ -674,7 +675,7 @@ export class VCS {
         latestStateOther,
       );
       // Update state with conflict resolutions applied
-      const conflictResolutions = await this.handleAnyConflicts(mergeConflicts, '');
+      const conflictResolutions = await this.handleAnyConflicts(mergeConflicts, otherBranchName.includes('.hidden') ? { ours: `${trunkBranchName} local`, theirs: `${otherBranchName.replace('.hidden', '')} remote` } : { ours: trunkBranchName, theirs: otherBranchName }, '');
       const state = updateStateWithConflictResolutions(stateBeforeConflicts, conflictResolutions);
 
       // Sometimes we want to merge into trunk but keep the other branch's history
