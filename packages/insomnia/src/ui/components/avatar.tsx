@@ -76,7 +76,7 @@ const AvatarImage = ({ src, alt, size }: { src: string; alt: string; size: 'smal
 const AvatarPlaceholder = ({ size, children }: { size: 'small' | 'medium'; children: ReactNode }) => {
   return (
     <div
-      className={`border-2 border-solid border-[--color-bg] box-border outline-none rounded-full object-cover object-center bg-cover bg-center m-0 bg-[--color-surprise] text-[--color-font-surprise] ${size === 'small' ? 'w-5 h-5' : 'w-6 h-6'} flex items-center justify-center font-bold text-[var(--font-size-xxs)]`}
+      className={`border-2 border-solid border-[--color-bg] box-border outline-none rounded-full object-cover object-center bg-cover bg-center m-0 bg-[--color-surprise] text-[--color-font-surprise] ${size === 'small' ? 'w-[20px] h-[20px]' : 'w-[24px] h-[24px]'} flex items-center justify-center font-bold text-xs`}
     >
       {children}
     </div>

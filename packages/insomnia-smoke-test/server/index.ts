@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 
+import * as bodyParser from 'body-parser';
 import express from 'express';
 import { readFileSync } from 'fs';
 import { createHandler } from 'graphql-http/lib/use/http';
@@ -19,6 +20,7 @@ const app = express();
 const port = 4010;
 const httpsPort = 4011;
 const grpcPort = 50051;
+const jsonParser = bodyParser.json();
 
 app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
@@ -29,6 +31,10 @@ app.get('/builds/check/*', (_req, res) => {
     url: 'https://github.com/Kong/insomnia/releases/download/core@2023.5.6/Insomnia.Core-2023.5.6.zip',
     name: '2099.1.0',
   });
+});
+
+app.get('/echo', jsonParser, async (req, res) => {
+  res.status(200).send({ data: req.body });
 });
 
 app.get('/sleep', (_req, res) => {

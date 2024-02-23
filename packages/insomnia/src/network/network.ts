@@ -1,7 +1,9 @@
 import clone from 'clone';
 import fs from 'fs';
+import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
 
+import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import {
   generateId,
@@ -18,6 +20,7 @@ import type { HeaderResult, ResponsePatch } from '../main/network/libcurl-promis
 import * as models from '../models';
 import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
+import { Environment } from '../models/environment';
 import type { Request, RequestAuthentication, RequestParameter } from '../models/request';
 import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
@@ -70,14 +73,55 @@ export const fetchRequestData = async (requestId: string) => {
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
-export const tryToExecutePreRequestScript = async (request: Request, environmentId: string, timelinePath:string, responseId:string) => {
+export const tryToExecutePreRequestScript = async (
+  request: Request,
+  environment: Environment,
+  timelinePath: string,
+  responseId: string,
+  baseEnvironment: Environment,
+) => {
   if (!request.preRequestScript) {
-    return request;
+    return {
+      request,
+      environment: undefined,
+      baseEnvironment: undefined,
+    };
   }
+
   try {
-    const output = await cancellableRunPreRequestScript({ script: request.preRequestScript, context: { request, timelinePath } });
+    const output = await cancellableRunPreRequestScript({
+      script: request.preRequestScript,
+      context: {
+        request,
+        timelinePath,
+        // it inputs empty environment data when active environment is the base environment
+        // this is more deterministic and avoids that script accidently manipulates baseEnvironment instead of environment
+        environment: environment._id === baseEnvironment._id ? {} : (environment?.data || {}),
+        baseEnvironment: baseEnvironment?.data || {},
+      },
+    });
     console.log('[network] Pre-request script succeeded', output);
-    return output.request;
+
+    const envPropertyOrder = orderedJSON.parse(
+      JSON.stringify(output.environment),
+      JSON_ORDER_PREFIX,
+      JSON_ORDER_SEPARATOR,
+    );
+    environment.data = output.environment;
+    environment.dataPropertyOrder = envPropertyOrder.map;
+    const baseEnvPropertyOrder = orderedJSON.parse(
+      JSON.stringify(output.baseEnvironment),
+      JSON_ORDER_PREFIX,
+      JSON_ORDER_SEPARATOR,
+    );
+    baseEnvironment.data = output.baseEnvironment;
+    baseEnvironment.dataPropertyOrder = baseEnvPropertyOrder.map;
+
+    return {
+      request: output.request,
+      environment,
+      baseEnvironment,
+    };
   } catch (err) {
     await fs.promises.appendFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
 
@@ -86,7 +130,7 @@ export const tryToExecutePreRequestScript = async (request: Request, environment
     const responsePatch = {
       _id: responseId,
       parentId: requestId,
-      environmentId,
+      environemntId: environment._id,
       timelinePath,
       statusMessage: 'Error',
       error: err.message,
@@ -96,11 +140,19 @@ export const tryToExecutePreRequestScript = async (request: Request, environment
     return null;
   }
 };
-export const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
+
+export const tryToInterpolateRequest = async (
+  request: Request,
+  environment: string | Environment,
+  purpose?: RenderPurpose,
+  extraInfo?: ExtraRenderInfo,
+  baseEnvironment?: Environment,
+) => {
   try {
     return await getRenderedRequestAndContext({
       request: request,
-      environmentId,
+      environment,
+      baseEnvironment,
       purpose,
       extraInfo,
     });
@@ -111,6 +163,7 @@ export const tryToInterpolateRequest = async (request: Request, environmentId: s
     throw new Error(`Failed to render request: ${request._id}`);
   }
 };
+
 export const tryToTransformRequestWithPlugins = async (renderResult: RequestAndContext) => {
   const { request, context } = renderResult;
   try {

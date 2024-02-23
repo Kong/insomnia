@@ -123,9 +123,9 @@ export const pullRemoteCollectionAction: ActionFunction = async ({ request, para
   // Remove all backend projects for workspace first
   await newVCS.removeBackendProjectsForRoot(backendProject.rootDocumentId);
 
-  await pullBackendProject({ vcs: newVCS, backendProject, remoteProject: project });
+  const { workspaceId } = await pullBackendProject({ vcs: newVCS, backendProject, remoteProject: project });
 
-  return null;
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
 };
 
 export interface RemoteCollectionsLoaderData {
