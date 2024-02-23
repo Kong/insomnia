@@ -94,7 +94,9 @@ export const tryToExecutePreRequestScript = async (
       context: {
         request,
         timelinePath,
-        environment: environment?.data || {},
+        // it inputs empty environment data when active environment is the base environment
+        // this is more deterministic and avoids that script accidently manipulates baseEnvironment instead of environment
+        environment: environment._id === baseEnvironment._id ? {} : (environment?.data || {}),
         baseEnvironment: baseEnvironment?.data || {},
       },
     });

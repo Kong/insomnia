@@ -202,7 +202,8 @@ resources:
     modified: 1636140994432
     created: 1636140994432
     name: Base Environment
-    data: {}
+    data:
+      customValue: "fromEnvManager"
     dataPropertyOrder: null
     color: null
     isPrivate: false

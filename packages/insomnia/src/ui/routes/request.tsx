@@ -379,6 +379,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       // TODO: improve error message?
       return null;
     }
+
     const renderedResult = await tryToInterpolateRequest(
       mutatedContext.request,
       mutatedContext.environment || environment._id,

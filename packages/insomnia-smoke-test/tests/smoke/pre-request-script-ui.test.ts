@@ -70,6 +70,20 @@ test.describe('pre-request UI tests', async () => {
                 value: 'fromEnv',
             },
         },
+        {
+            name: 'send request / override predefined base environment in script',
+            preReqScript: `
+                // "customValue" is already defined in the base environment modal.
+                // but it is rewritten here
+                insomnia.baseEnvironment.set('customValue', 'fromScript');
+            `,
+            body: `{
+                "customValue": "{{ _.customValue }}"
+            }`,
+            expectedBody: {
+                customValue: 'fromScript',
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
