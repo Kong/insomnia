@@ -126,7 +126,6 @@ export default class FileSystemDriver implements BaseDriver {
     const p = path.join(this._directory, key);
     // Create base directory
     const newDirectory = await fs.mkdir(path.dirname(p), { recursive: true });
-    console.log({ newDirectory, p });
     return p;
   }
 }
