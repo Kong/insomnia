@@ -72,7 +72,7 @@ test.describe('pre-request UI tests', async () => {
         {
             name: 'require / require classes from insomnia-collection module',
             preReqScript: `
-            const { Property, Header, Variable, QueryParam, Url, ProxyConfig } = require('insomnia-collection');
+            const { Property, Header, Variable, QueryParam, Url, RequestAuth, ProxyConfig } = require('insomnia-collection');
             const prop = new Property('pid', 'pname');
             const header = new Header({ key: 'headerKey', value: 'headerValue' });
             const variable = new Variable({ key: 'headerKey', value: 'headerValue' });
@@ -91,6 +91,13 @@ test.describe('pre-request UI tests', async () => {
                 authenticate: true,
                 username: 'proxy_username',
                 password: 'proxy_password',
+            });
+            const reqAuth = new RequestAuth({
+                type: 'basic',
+                basic: [
+                    { key: 'username', value: 'user1' },
+                    { key: 'password', value: 'pwd1' },
+                ],
             });
             // set part of values
             insomnia.environment.set('propJson', JSON.stringify(prop.toJSON()));
