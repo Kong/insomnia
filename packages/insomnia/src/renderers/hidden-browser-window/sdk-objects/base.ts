@@ -309,7 +309,7 @@ export class PropertyList<T extends Property> {
 
     one(id: string) {
         for (let i = this.list.length - 1; i >= 0; i--) {
-            if (this.list[i].id === id) {
+            if (this.list[i].key === id) {
                 return this.list[i];
             }
         }

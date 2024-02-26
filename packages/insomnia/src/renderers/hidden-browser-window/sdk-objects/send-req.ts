@@ -5,8 +5,8 @@ import { cancellablePromise, deleteCancelRequestFunctionMap, setCancelRequestFun
 import { RequestAuth } from './auth';
 import { Settings } from './common';
 import { CookieOptions } from './cookies';
-import { RequestOptions } from './req-resp';
-import { Request, Response } from './req-resp';
+import { RequestOptions } from './request';
+import { Request, Response } from './request';
 
 export const AUTH_NONE = 'none';
 export const AUTH_API_KEY = 'apikey';

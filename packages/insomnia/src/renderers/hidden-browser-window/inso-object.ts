@@ -2,7 +2,7 @@ import { CookieJar as InsomniaCookieJar } from '../../../src/models/cookie-jar';
 import { AuthOptions } from './sdk-objects/auth';
 import { CertificateOptions } from './sdk-objects/certificates';
 import { Settings } from './sdk-objects/common';
-import { CookieObject, CookieJar } from './sdk-objects/cookies';
+import { CookieObject } from './sdk-objects/cookies';
 import { getIntepolator } from './sdk-objects/intepolator';
 import { ProxyConfigOptions } from './sdk-objects/proxy-configs';
 import { Request, RequestBodyOptions, RequestOptions, Response } from './sdk-objects/req-resp';
