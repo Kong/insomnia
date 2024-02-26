@@ -21,6 +21,7 @@ import { useAIContext } from '../../context/app/ai-context';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Icon } from '../icon';
 import { InsomniaAI } from '../insomnia-ai-icon';
+import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showError, showPrompt } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { configGenerators, showGenerateConfigModal } from '../modals/generate-config-modal';
@@ -62,6 +63,10 @@ export const WorkspaceDropdown: FC = () => {
     access,
     generateTests,
   } = useAIContext();
+
+  useDocBodyKeyboardShortcuts({
+    workspace_showSettings: () => setIsSettingsModalOpen(true),
+  });
 
   const handlePluginClick = useCallback(async ({ action, plugin, label }: WorkspaceAction, workspace: Workspace) => {
     setLoadingActions({ ...loadingActions, [label]: true });
