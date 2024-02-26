@@ -72,7 +72,11 @@ test.describe('pre-request UI tests', async () => {
         {
             name: 'require / require classes from insomnia-collection module and init them',
             preReqScript: `
+<<<<<<< HEAD
             const { Property, Header, Variable, QueryParam, Url, RequestAuth, ProxyConfig, Cookie, Certificate, RequestBody, Request, Response } = require('insomnia-collection');
+=======
+            const { Property, Header, Variable, QueryParam, Url, RequestAuth, ProxyConfig } = require('insomnia-collection');
+>>>>>>> 9b6995534 (feat: enable RequestAuth for pre-request scripting)
             const prop = new Property('pid', 'pname');
             const header = new Header({ key: 'headerKey', value: 'headerValue' });
             const variable = new Variable({ key: 'headerKey', value: 'headerValue' });
