@@ -186,32 +186,25 @@ export interface AuthOptions {
     asap?: AuthOption[];
 }
 
-function rawOptionsToVariables(options: VariableList<Variable> | Variable[] | AuthOptions, targetType?: string): VariableList<Variable>[] {
+function rawOptionsToVariables(
+    options: VariableList<Variable> | Variable[] | object,
+    // targetType?: string,
+): VariableList<Variable> {
     if (VariableList.isVariableList(options)) {
-        return [options as VariableList<Variable>];
-    } else if ('type' in options) {
-        // options is AuthOptions
-        const optsObj = options as AuthOptions;
-        const optsVarLists = Object.entries(optsObj)
-            .filter(optsObjEntry => {
-                return optsObjEntry[0] === targetType;
-            })
-            .map(optsEntry => {
-                const optVars = optsEntry[1].map((opt: AuthOption) => {
-                    return new Variable({
-                        key: opt.key,
-                        value: opt.value,
-                    });
-                });
-                return new VariableList(undefined, optVars);
-            });
-
-        return optsVarLists;
-    } else if ('length' in options) { // array
-        return [new VariableList(undefined, options)];
+        return options as VariableList<Variable>;
+    } else if (Array.isArray(options)) { // array
+        return new VariableList(undefined, options);
     }
 
-    throw Error('options is not valid: it must be VariableList<Variable> | Variable[] | object');
+    const optsVarArray = Object.entries(options)
+        .map(optsEntry => {
+            return new Variable({
+                key: optsEntry[0],
+                value: optsEntry[1],
+            });
+        });
+
+    return new VariableList(undefined, optsVarArray);
 }
 
 export class RequestAuth extends Property {
@@ -225,9 +218,11 @@ export class RequestAuth extends Property {
             throw Error(`invalid auth type ${options.type}`);
         }
 
+        this._kind = 'RequestAuth';
         this.type = options.type;
-        const optsObj = options as AuthOptions;
-        const optsEntries = Object.entries(optsObj)
+        this._parent = parent;
+
+        const optsEntries = Object.entries(options)
             .filter(optsObjEntry => optsObjEntry[0] !== 'type');
 
         optsEntries.map((optsEntry: [string, AuthOption[]]) => {
@@ -241,15 +236,12 @@ export class RequestAuth extends Property {
                 });
 
             return {
-                type: optsEntry[0],
+                authType: optsEntry[0],
                 options: new VariableList(undefined, optVars),
-                };
-            })
-            .forEach(authOpts => {
-                this.authOptions.set(authOpts.type, authOpts.options);
-            });
-
-        this._parent = parent;
+            };
+        }).forEach(authOpts => {
+            this.authOptions.set(authOpts.authType, authOpts.options);
+        });
     }
 
     static isValidType(authType: string) {
@@ -318,28 +310,25 @@ export class RequestAuth extends Property {
         return obj;
     }
 
-    update(options: VariableList<Variable> | Variable[] | AuthOptions, type?: string) {
-        const currentType = type ? type : this.type;
-        const authOpts = rawOptionsToVariables(options, currentType);
-
-        if (authOpts.length > 0) {
-            this.authOptions.set(currentType, authOpts[0]);
-        } else {
-            throw Error('no valid RequestAuth options is found');
-        }
+    update(
+        options: VariableList<Variable> | Variable[] | object,
+        type?: string
+    ) {
+        const authOpts = rawOptionsToVariables(options);
+        const currentType = type || this.type;
+        this.authOptions.set(currentType, authOpts);
     }
 
-    use(type: string, options: VariableList<Variable> | Variable[] | AuthOptions) {
-        if (!RequestAuth.isValidType(type)) {
-            throw Error(`invalid type (${type}), it must be noauth | basic | bearer | jwt | digest | oauth1 | oauth2 | hawk | awsv4 | ntlm | apikey | edgegrid | asap.`);
+    use(
+        authType: string,
+        options: VariableList<Variable> | Variable[] | object,
+    ) {
+        if (!RequestAuth.isValidType(authType)) {
+            throw Error(`invalid type (${authType}), it must be ${Array.from(AuthTypes.values()).join(',')}.`);
         }
 
-        const authOpts = rawOptionsToVariables(options, type);
-        if (authOpts.length > 0) {
-            this.type = type;
-            this.authOptions.set(type, authOpts[0]);
-        } else {
-            throw Error('no valid RequestAuth options is found');
-        }
+        const authOpts = rawOptionsToVariables(options);
+        this.type = authType;
+        this.authOptions.set(authType, authOpts);
     }
 }

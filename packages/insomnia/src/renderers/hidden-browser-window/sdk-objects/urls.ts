@@ -400,7 +400,6 @@ export class UrlMatchPattern extends Property {
 
     testHost(hostStr: string) {
         const patternSegments = this.getHost(this.pattern).split('.');
-        console.log(patternSegments);
 
         const inputHostSegments = hostStr.split('.');
 

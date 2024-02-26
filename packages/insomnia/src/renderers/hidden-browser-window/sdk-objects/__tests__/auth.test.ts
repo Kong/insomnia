@@ -10,7 +10,6 @@ const varListToObject = (obj: VariableList<Variable> | undefined) => {
 
   return obj.map(
     (optVar: Variable) => ({
-      // type: 'any', // TODO: fix type
       key: optVar.key,
       value: optVar.value,
     }),
@@ -49,11 +48,17 @@ describe('test sdk objects', () => {
       ],
     };
 
-    authObj.update(basicAuthOptions2);
+    authObj.update(
+      {
+        username: 'user2',
+        password: 'pwd2',
+      },
+      'basic',
+    );
     const basicAuthOpt2FromAuth = varListToObject(authObj.parameters());
     expect(basicAuthOpt2FromAuth).toEqual(basicAuthOptions2.basic);
 
-    authObj.use('bearer', bearerAuthOptions);
+    authObj.use('bearer', { token: 'mytoken' });
     const beareerAuthOptFromAuth = varListToObject(authObj.parameters());
     expect(beareerAuthOptFromAuth).toEqual(bearerAuthOptions.bearer);
 
