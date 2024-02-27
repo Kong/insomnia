@@ -85,7 +85,7 @@ test.describe('pre-request UI tests', async () => {
             },
         },
         {
-            name: 'environments/ envrionment from script should be overidden by folder environment',
+            name: 'environments / envrionment from script should be overidden by folder environment',
             preReqScript: `
                 // "customValue" is already defined in the folder environment.
                 // folder version will override the following wone
@@ -96,6 +96,29 @@ test.describe('pre-request UI tests', async () => {
             }`,
             expectedBody: {
                 customValue: 'fromFolder',
+            },
+        },
+        {
+            name: 'variables / manipulate variables and set them to environment',
+            preReqScript: `
+                // set local
+                pm.variables.set('varStr', 'varStr');
+                pm.variables.set('varNum', 777);
+                pm.variables.set('varBool', true);
+                // has
+                pm.environment.set('varStr', pm.variables.get('varStr'));
+                pm.environment.set('varNum', pm.variables.get('varNum'));
+                pm.environment.set('varBool', pm.variables.get('varBool'));
+            `,
+            body: `{
+                "varStr": "{{ _.varStr }}",
+                "varNum": {{ _.varNum }},
+                "varBool": {{ _.varBool }}
+            }`,
+            expectedBody: {
+                varStr: 'varStr',
+                varNum: 777,
+                varBool: true,
             },
         },
     ];
