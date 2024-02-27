@@ -67,7 +67,6 @@ export const getClientString = () => `${getAppEnvironment()}::${getAppPlatform()
 export const changelogUrl = () => appConfig.changelogUrl + '#' + version;
 
 // Global Stuff
-export const DB_PERSIST_INTERVAL = 1000 * 60 * 30; // Compact every once in a while
 export const DEBOUNCE_MILLIS = 100;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 
