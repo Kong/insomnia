@@ -221,7 +221,7 @@ test.describe('pre-request UI tests', async () => {
                     "uuid": "{{ _.uuid}}"
             }`,
             expectedBody: {
-                uuid: '00000000-0000-0000-0000-000000000000'
+                uuid: '00000000-0000-0000-0000-000000000000',
             },
         },
         {
@@ -256,6 +256,44 @@ test.describe('pre-request UI tests', async () => {
             }`,
             expectedBody: {
                 url: 'https://usernameValue:passwordValue@hostvalue.com:777/pathLevel1/pathLevel2?key1=value1&key2=value2#hashValue',
+            },
+        },
+        {
+            name: 'sendRequest custom mode - urlencoded body',
+            preReqScript: `
+                const postRequest = {
+                    url: 'http://127.0.0.1:4010/echo',
+                    method: 'POST',
+                    header: {},
+                    body: {
+                        mode: 'urlencoded',
+                        urlencoded: [
+                            { key1: 'value1' },
+                            { key2: 'value2' },
+                        ],
+                    }
+                };
+                // send request
+                const resp = await new Promise((resolve, reject) => {
+                    insomnia.sendRequest(
+                            postRequest,
+                            (err, resp) => {
+                                    if (err != null) {
+                                            reject(err);
+                                    } else {
+                                            resolve(resp);
+                                    }
+                            }
+                    );
+                });
+                // set envs
+                insomnia.environment.set('body', JSON.stringify(JSON.parse(resp.body).data));
+            `,
+            body: `{
+                "body": {{ _.body }},
+            }`,
+            customVerify: (bodyJson: any) => {
+                expect(bodyJson.body).toEqual('key1=value1&key2=value2');
             },
         },
     ];

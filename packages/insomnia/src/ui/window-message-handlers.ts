@@ -2,7 +2,7 @@ import { CookieJar } from '../../src/models/cookie-jar';
 import { Settings } from '../../src/models/settings';
 import { Row } from '../../src/renderers/hidden-browser-window/sdk-objects/console';
 import { RequestBodyMode } from '../../src/renderers/hidden-browser-window/sdk-objects/req-resp';
-import { transformToPreRequestAuth } from '../../src/renderers/hidden-browser-window/sdk-objects/send-req';
+import { toPreRequestAuth } from '../../src/renderers/hidden-browser-window/sdk-objects/send-req';
 import { ClientCertificate } from '../models/client-certificate';
 import type { Request } from '../models/request';
 import { RawObject } from '../renderers/hidden-browser-window/inso-object';
@@ -222,7 +222,7 @@ class WindowMessageHandler {
                 disabled: header.disabled,
             })),
             body: requestBodyObj,
-            auth: transformToPreRequestAuth(request.authentication.type),
+            auth: toPreRequestAuth(request.authentication.type),
             proxy: {
                 // TODO: currently most of configs are not supported in Insomnia
                 match: '<all_urls>',

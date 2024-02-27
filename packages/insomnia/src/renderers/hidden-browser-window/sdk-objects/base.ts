@@ -333,7 +333,7 @@ export class PropertyList<T extends Property> {
         const it: Iterator = iterator;
         it.context = context;
 
-        this.list.reduce(it, accumulator);
+        return this.list.reduce(it, accumulator);
     }
 
     remove(predicate: T | ((item: T) => boolean), context: object) {

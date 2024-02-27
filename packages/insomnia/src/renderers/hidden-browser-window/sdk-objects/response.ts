@@ -159,9 +159,10 @@ export class Response extends Property {
         }
     }
 
-    // jsonp(reviver?, strict?) {
-
-    // }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    jsonp(_reviver?: (key: string, value: any) => any, _strict?: boolean) {
+        throw Error('jsonp: not supported yet');
+    }
 
     reason() {
         return this.status;

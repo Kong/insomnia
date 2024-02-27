@@ -22,7 +22,7 @@ app.use(cookieParser.default());
 const port = 4010;
 const httpsPort = 4011;
 const grpcPort = 50051;
-const jsonParser = bodyParser.json();
+const textParser = bodyParser.text();
 
 app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
@@ -37,8 +37,8 @@ async function echoHandler(req: any, res: any) {
   });
 };
 
-app.get('/echo', jsonParser, echoHandler);
-app.post('/echo', jsonParser, echoHandler);
+app.get('/echo', textParser, echoHandler);
+app.post('/echo', textParser, echoHandler);
 
 app.get('/builds/check/*', (_req, res) => {
   res.status(200).send({

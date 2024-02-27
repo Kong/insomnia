@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { init as initClientCertificate } from '../../src/models/client-certificate';
 import { CookieJar } from '../../src/models/cookie-jar';
-import { transformToPreRequestAuth } from '../../src/renderers/hidden-browser-window/sdk-objects/send-req';
+import { toPreRequestAuth } from '../../src/renderers/hidden-browser-window/sdk-objects/send-req';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { getContentDispositionHeader } from '../common/misc';
 import { RENDER_PURPOSE_SEND } from '../common/render';
@@ -132,7 +132,7 @@ export class RequestSender {
                 this.request.body.fileName = updatedReq.body.file;
                 this.request.body.params = updatedReq.body.urlencoded?.map((param: { key: string; value: string }) => ({ name: param.key, value: param.value }));
                 // TODO: other fields are not supported yet
-                this.request.authentication = transformToPreRequestAuth(updatedReq.auth);
+                this.request.authentication = toPreRequestAuth(updatedReq.auth);
                 this.settings.proxyEnabled = updatedReq.proxy != null && !updatedReq.disabled;
                 const proxyUrl = updatedReq.proxy.host + updatedReq.proxy.port ? `:${updatedReq.proxy.port}` : '';
                 this.settings.httpProxy = proxyUrl.startsWith('http') ? proxyUrl : '';

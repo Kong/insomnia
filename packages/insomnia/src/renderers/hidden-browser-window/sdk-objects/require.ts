@@ -26,7 +26,8 @@ import { Certificate } from './certificates';
 import { Cookie, CookieList } from './cookies';
 import { Header, HeaderList } from './headers';
 import { ProxyConfig, ProxyConfigList } from './proxy-configs';
-import { FormParam, Request, RequestBody, Response } from './request';
+import { FormParam, Request, RequestBody } from './request';
+import { Response } from './response';
 import { QueryParam, Url, UrlMatchPattern, UrlMatchPatternList } from './urls';
 import { Variable, VariableList } from './variables';
 
