@@ -5,3 +5,4 @@ export { QueryParam, Url, UrlMatchPattern, UrlMatchPatternList } from './urls';
 export { ProxyConfig, ProxyConfigList } from './proxy-configs';
 export { RequestAuth } from './auth';
 export { Cookie, CookieList } from './cookies';
+export { Certificate } from './certificates';
