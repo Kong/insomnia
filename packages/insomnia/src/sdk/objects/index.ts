@@ -6,3 +6,5 @@ export { ProxyConfig, ProxyConfigList } from './proxy-configs';
 export { RequestAuth } from './auth';
 export { Cookie, CookieList } from './cookies';
 export { Certificate } from './certificates';
+export { FormParam, RequestBody, Request } from './request';
+export { Response } from './response';

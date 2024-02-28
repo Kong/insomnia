@@ -70,9 +70,9 @@ test.describe('pre-request UI tests', async () => {
             },
         },
         {
-            name: 'require / require classes from insomnia-collection module',
+            name: 'require / require classes from insomnia-collection module and init them',
             preReqScript: `
-            const { Property, Header, Variable, QueryParam, Url, RequestAuth, ProxyConfig, Cookie, Certificate } = require('insomnia-collection');
+            const { Property, Header, Variable, QueryParam, Url, RequestAuth, ProxyConfig, Cookie, Certificate, RequestBody, Request, Response } = require('insomnia-collection');
             const prop = new Property('pid', 'pname');
             const header = new Header({ key: 'headerKey', value: 'headerValue' });
             const variable = new Variable({ key: 'headerKey', value: 'headerValue' });
@@ -106,6 +106,54 @@ test.describe('pre-request UI tests', async () => {
                 key: { src: '/User/path/to/certificate/key' },
                 cert: { src: '/User/path/to/certificate' },
                 passphrase: 'iampassphrase',
+            });
+            const reqBody = new RequestBody({
+                mode: 'urlencoded',
+                urlencoded: [
+                    { key: 'urlencodedKey', value: 'urlencodedValue' },
+                ],
+                options: {},
+            });
+            const req = new Request({
+                url: 'https://hostname.com/path',
+                method: 'GET',
+                header: [
+                    { key: 'header1', value: 'val1' },
+                    { key: 'header2', value: 'val2' },
+                ],
+                body: {
+                    mode: 'raw',
+                    raw: 'body content',
+                },
+                auth: {
+                    type: 'basic',
+                    basic: [
+                        { key: 'username', value: 'myname' },
+                        { key: 'password', value: 'mypwd' },
+                    ],
+                },
+                proxy: undefined,
+                certificate: undefined,
+            });
+            const resp = new Response({
+                code: 200,
+                reason: 'OK',
+                header: [
+                    { key: 'header1', value: 'val1' },
+                    { key: 'header2', value: 'val2' },
+                    { key: 'Content-Length', value: '100' },
+                    { key: 'Content-Disposition', value: 'attachment; filename="filename.txt"' },
+                    { key: 'Content-Type', value: 'text/plain; charset=utf-8' },
+                ],
+                cookie: [
+                    { key: 'header1', value: 'val1' },
+                    { key: 'header2', value: 'val2' },
+                ],
+                body: '{"key": 888}',
+                stream: undefined,
+                responseTime: 100,
+                status: 'OK',
+                originalRequest: req,
             });
             // set part of values
             insomnia.environment.set('propJson', JSON.stringify(prop.toJSON()));
