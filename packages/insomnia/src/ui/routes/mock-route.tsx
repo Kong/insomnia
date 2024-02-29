@@ -94,7 +94,7 @@ export const MockRouteRoute = () => {
   const patchMockRoute = useMockRoutePatcher();
   const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
 
-  const requestFetcher = useFetcher();
+  const requestFetcher = useFetcher({ key: 'mock-request-fetcher' });
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
   const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
@@ -118,7 +118,7 @@ export const MockRouteRoute = () => {
       });
       if (typeof res === 'object' && 'message' in res && 'error' in res) {
         console.error('error response', res);
-        return `${res.error}: ${res.message}`;
+        return `Mock API ${res.error}: ${res.message}`;
       }
 
       if (typeof res === 'string') {
@@ -128,7 +128,7 @@ export const MockRouteRoute = () => {
       return 'Unexpected response, see console for details';
     } catch (e) {
       console.log(e);
-      return 'Unhandled error: ' + e.message;
+      return 'Unhandled Mock API error: ' + e.message;
     }
   };
 
