@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 
 import * as bodyParser from 'body-parser';
+import * as cookieParser from 'cookie-parser';
 import express from 'express';
 import { readFileSync } from 'fs';
 import { createHandler } from 'graphql-http/lib/use/http';
@@ -17,6 +18,7 @@ import { oauthRoutes } from './oauth';
 import { startWebSocketServer } from './websocket';
 
 const app = express();
+app.use(cookieParser.default());
 const port = 4010;
 const httpsPort = 4011;
 const grpcPort = 50051;
@@ -33,9 +35,17 @@ app.get('/builds/check/*', (_req, res) => {
   });
 });
 
-app.get('/echo', jsonParser, async (req, res) => {
-  res.status(200).send({ data: req.body });
-});
+async function echoHandler(req: any, res: any) {
+  res.status(200).send({
+    method: req.method,
+    headers: req.headers,
+    data: req.body,
+    cookies: req.cookies,
+  });
+};
+
+app.get('/echo', jsonParser, echoHandler);
+app.post('/echo', jsonParser, echoHandler);
 
 app.get('/sleep', (_req, res) => {
   res.status(200).send({ sleep: true });

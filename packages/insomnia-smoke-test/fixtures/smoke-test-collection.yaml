@@ -183,7 +183,7 @@ resources:
     url: http://127.0.0.1:4010/echo
     name: echo pre-request script result
     description: ""
-    method: GET
+    method: POST
     body: {}
     parameters: []
     headers: []

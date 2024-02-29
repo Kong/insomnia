@@ -1,6 +1,12 @@
 import type { Request } from '../../models/request';
 import { Environment, Variables } from './environments';
 
+export const unsupportedError = (featureName: string, alternative?: string) => {
+    const message = `${featureName} is not supported yet` +
+        (alternative ? `, please use ${alternative} instead temporarily.` : '');
+    return Error(message);
+};
+
 export interface RequestContext {
     request: Request;
     timelinePath: string;
@@ -16,6 +22,7 @@ export class InsomniaObject {
     public collectionVariables: Environment;
     public baseEnvironment: Environment;
     public variables: Variables;
+
     // TODO: follows will be enabled after Insomnia supports them
     private _globals: Environment;
     private _iterationData: Environment;
@@ -39,12 +46,12 @@ export class InsomniaObject {
 
     // TODO: remove this after enabled globals
     get globals() {
-        throw new Error('Globals is not supported yet');
+        throw unsupportedError('globals', 'base environment');
     }
 
     // TODO: remove this after enabled iterationData
     get iterationData() {
-        throw new Error('iterationData is not supported yet');
+        throw unsupportedError('iterationData', 'environment');
     }
 
     toObject = () => {
