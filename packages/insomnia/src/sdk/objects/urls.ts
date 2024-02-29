@@ -408,7 +408,6 @@ export class UrlMatchPattern extends Property {
 
     testHost(hostStr: string) {
         const patternSegments = this.getHost(this.pattern).split('.');
-        console.log(patternSegments);
 
         const inputHostSegments = hostStr.split('.');
 
@@ -468,12 +467,13 @@ export class UrlMatchPattern extends Property {
         const protocolEndPos = urlStr.indexOf('/') + 2;
         const hostBegPos = protocolEndPos;
 
-        const portBegPos = this.pattern.indexOf(':', protocolEndPos) + 1;
+        let portBegPos = urlStr.indexOf(':', protocolEndPos);
         if (portBegPos <= 0) {
             return '';
         }
+        portBegPos += 1; // the port is after ':'
 
-        let portEndPos = this.pattern.length;
+        let portEndPos = urlStr.length;
         const pathBegPos = urlStr.indexOf('/', hostBegPos);
         const queryBegPos = urlStr.indexOf('?');
         const hashBegPos = urlStr.indexOf('#');
@@ -497,13 +497,21 @@ export class UrlMatchPattern extends Property {
         const portPattern = this.getPort(this.pattern);
         if (portPattern === '*') {
             return true;
-        } else if (portPattern === '') {
+        } else if (portPattern === '' || port === '') {
             const protos = this.getProtocols();
 
-            if (protos.includes('https') && port === '443' && protocol === 'https') {
-                return true;
-            } else if (protos.includes('http') && port === '80' && protocol === 'http') {
-                return true;
+            if (protocol === 'https') {
+                return protos.includes('https') && (
+                    (port === '443' && portPattern === '') ||
+                    (port === '' && portPattern === '443') ||
+                    (port === '' && portPattern === '')
+                );
+            } else if (protocol === 'http') {
+                return protos.includes('http') && (
+                    (port === '80' && portPattern === '') ||
+                    (port === '' && portPattern === '80') ||
+                    (port === '' && portPattern === '')
+                );
             }
         }
 
