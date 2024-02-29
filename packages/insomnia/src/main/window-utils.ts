@@ -584,6 +584,13 @@ export function createWindow(): ElectronBrowserWindow {
           hiddenBrowserWindow.isVisible() ? hiddenBrowserWindow.hide() : hiddenBrowserWindow.show();
         },
       },
+      {
+        label: 'Stop/start hidden browser window ',
+        click: () => {
+          const hiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
+          hiddenBrowserWindow ? stopHiddenBrowserWindow() : createHiddenBrowserWindow();
+        },
+      },
     ],
   };
   const toolsMenu: MenuItemConstructorOptions = {
