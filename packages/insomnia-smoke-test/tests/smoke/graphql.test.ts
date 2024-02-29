@@ -17,7 +17,7 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByText('CollectionSmoke GraphQLjust now').click();
+  await page.getByLabel('Smoke GraphQL').click();
 
   // Open the graphql request
   await page.getByLabel('Request Collection').getByTestId('GraphQL request').press('Enter');
@@ -59,7 +59,7 @@ test('can render schema and send GraphQL requests with object variables', async 
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByText('CollectionSmoke GraphQLjust now').click();
+  await page.getByLabel('Smoke GraphQL').click();
 
   // Open the graphql request
   await page.getByLabel('Request Collection').getByTestId('GraphQL request with variables').press('Enter');
@@ -101,7 +101,7 @@ test('can render numeric environment', async ({ app, page }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByText('CollectionSmoke GraphQLjust now').click();
+  await page.getByLabel('Smoke GraphQL').click();
 
   // Open the graphql request
   await page.getByLabel('Request Collection').getByTestId('GraphQL request with number').press('Enter');
@@ -140,7 +140,7 @@ test('can send GraphQL requests after editing and prettifying query', async ({ a
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByText('CollectionSmoke GraphQLjust now').click();
+  await page.getByLabel('Smoke GraphQL').click();
   await page.getByLabel('Request Collection').getByTestId('GraphQL request').press('Enter');
 
   // Edit and prettify query

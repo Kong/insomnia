@@ -16,7 +16,7 @@ test('can use node-libcurl, httpsnippet, hidden browser window', async ({ app, p
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByText('CollectionSmoke testsjust now').click();
+  await page.getByLabel('Smoke tests').click();
 
   await page.getByLabel('Request Collection').getByTestId('send JSON request').press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();

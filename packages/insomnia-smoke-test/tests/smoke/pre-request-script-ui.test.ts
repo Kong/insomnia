@@ -16,7 +16,7 @@ test.describe('pre-request UI tests', async () => {
         await page.getByRole('button', { name: 'Scan' }).click();
         await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-        await page.getByText('CollectionSmoke testsjust now').click();
+        await page.getByLabel('Smoke tests').click();
     });
 
     const testCases = [
