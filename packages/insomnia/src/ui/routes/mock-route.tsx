@@ -118,7 +118,7 @@ export const MockRouteRoute = () => {
       });
       if (typeof res === 'object' && 'message' in res && 'error' in res) {
         console.error('error response', res);
-        return `${res.error}: ${res.message}`;
+        return `Mock API ${res.error}: ${res.message}`;
       }
 
       if (typeof res === 'string') {
@@ -128,7 +128,7 @@ export const MockRouteRoute = () => {
       return 'Unexpected response, see console for details';
     } catch (e) {
       console.log(e);
-      return 'Unhandled error: ' + e.message;
+      return 'Unhandled Mock API error: ' + e.message;
     }
   };
 
