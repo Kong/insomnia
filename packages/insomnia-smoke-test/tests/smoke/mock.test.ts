@@ -19,6 +19,7 @@ test('can make a mock route', async ({ app, page }) => {
   await page.getByTestId('CodeEditor').getByRole('textbox').fill('123');
 
   await page.getByRole('button', { name: 'Test' }).click();
+  await page.getByText('No body returned for response').click();
   await page.getByRole('tab', { name: 'Timeline' }).click();
   await page.getByText('HTTP/2 200').click();
 });
