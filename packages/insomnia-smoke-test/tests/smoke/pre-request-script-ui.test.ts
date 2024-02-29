@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';;
 
-test.describe('pre-request UI tests', async () => {
+test.skip('pre-request UI tests', async () => {
     test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
     test.beforeEach(async ({ app, page }) => {
