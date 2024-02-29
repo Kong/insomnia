@@ -13,6 +13,7 @@ import * as models from '../../../models';
 import { MockRoute } from '../../../models/mock-route';
 import { MockServer } from '../../../models/mock-server';
 import { Response } from '../../../models/response';
+import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { MockRouteLoaderData } from '../../routes/mock-route';
 import { useRootLoaderData } from '../../routes/root';
@@ -63,9 +64,7 @@ export const MockResponsePane = () => {
     return (
       <PlaceholderResponsePane>
         {<ResponseTimer
-          handleCancel={() => {
-            // TODO: implement cancel
-          }}
+          handleCancel={() => activeResponse && cancelRequestById(activeResponse.parentId)}
         />}
       </PlaceholderResponsePane>
     );
