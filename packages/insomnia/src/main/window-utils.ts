@@ -157,7 +157,7 @@ export function createWindow(): ElectronBrowserWindow {
       nodeIntegration: true,
       webviewTag: true,
       // TODO: enable context isolation
-      contextIsolation: true,
+      contextIsolation: false,
       disableBlinkFeatures: 'Auxclick',
     },
   });
