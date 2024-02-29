@@ -72,10 +72,16 @@ test.describe('pre-request UI tests', async () => {
         {
             name: 'require / require classes from insomnia-collection module',
             preReqScript: `
-            const { Property, Header, Variable } = require('insomnia-collection');
+            const { Property, Header, Variable, QueryParam, Url } = require('insomnia-collection');
             const prop = new Property('pid', 'pname');
             const header = new Header({ key: 'headerKey', value: 'headerValue' });
             const variable = new Variable({ key: 'headerKey', value: 'headerValue' });
+            const qParam = new QueryParam({ key: 'queryKey', value: 'queryValue' });
+            const url = new Url({
+                host: ['insomnia', 'rest'],
+                path: ['path1', 'path2'],
+                protocol: 'https',
+            });
             // set part of values
             insomnia.environment.set('propJson', JSON.stringify(prop.toJSON()));
             insomnia.environment.set('headerJson', JSON.stringify(header.toJSON()));
