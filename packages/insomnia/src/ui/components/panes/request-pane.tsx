@@ -14,7 +14,7 @@ import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/us
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
-// import { CodeEditor } from '../codemirror/code-editor';
+import { CodeEditor } from '../codemirror/code-editor';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
@@ -290,7 +290,7 @@ export const RequestPane: FC<Props> = ({
             </TabPanelFooter>
           </HeaderContainer>
         </TabItem>
-        {/* <TabItem
+        <TabItem
           key="pre-request-script"
           title={'Pre-request Script'}
           aria-label={'experimental'}
@@ -309,7 +309,7 @@ export const RequestPane: FC<Props> = ({
               placeholder="..."
             />
           </ErrorBoundary>
-        </TabItem> */}
+        </TabItem>
         <TabItem
           key="docs"
           title={
