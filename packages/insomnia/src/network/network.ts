@@ -26,7 +26,6 @@ import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
-import { RequestContext } from '../sdk/objects/insomnia';
 import { invariant } from '../utils/invariant';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import {
@@ -111,7 +110,7 @@ export const tryToExecutePreRequestScript = async (
         baseEnvironment: baseEnvironment?.data || {},
       },
     });
-    const output = await Promise.race([timeoutPromise, preRequestPromise]) as RequestContext;
+    const output = await Promise.race([timeoutPromise, preRequestPromise]) as { request: Request; environment: Record<string, any>; baseEnvironment: Record<string, any> };
     console.log('[network] Pre-request script succeeded', output);
 
     const envPropertyOrder = orderedJSON.parse(
@@ -119,6 +118,7 @@ export const tryToExecutePreRequestScript = async (
       JSON_ORDER_PREFIX,
       JSON_ORDER_SEPARATOR,
     );
+
     environment.data = output.environment;
     environment.dataPropertyOrder = envPropertyOrder.map;
     const baseEnvPropertyOrder = orderedJSON.parse(
@@ -126,6 +126,7 @@ export const tryToExecutePreRequestScript = async (
       JSON_ORDER_PREFIX,
       JSON_ORDER_SEPARATOR,
     );
+
     baseEnvironment.data = output.baseEnvironment;
     baseEnvironment.dataPropertyOrder = baseEnvPropertyOrder.map;
 

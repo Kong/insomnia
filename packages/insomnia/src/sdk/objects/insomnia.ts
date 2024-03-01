@@ -11,11 +11,11 @@ export interface RequestContext {
     request: Request;
     timelinePath: string;
     timeout: number;
-    environment?: object;
-    baseEnvironment?: object;
-    collectionVariables?: object;
-    globals?: object;
-    iterationData?: object;
+    environment?: Record<string, any>;
+    baseEnvironment?: Record<string, any>;
+    collectionVariables?: Record<string, any>;
+    globals?: Record<string, any>;
+    iterationData?: Record<string, any>;
 }
 
 export class InsomniaObject {
