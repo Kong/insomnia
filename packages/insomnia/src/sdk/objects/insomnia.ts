@@ -10,11 +10,12 @@ export const unsupportedError = (featureName: string, alternative?: string) => {
 export interface RequestContext {
     request: Request;
     timelinePath: string;
-    environment?: object;
-    baseEnvironment?: object;
-    collectionVariables?: object;
-    globals?: object;
-    iterationData?: object;
+    timeout: number;
+    environment?: Record<string, any>;
+    baseEnvironment?: Record<string, any>;
+    collectionVariables?: Record<string, any>;
+    globals?: Record<string, any>;
+    iterationData?: Record<string, any>;
 }
 
 export class InsomniaObject {

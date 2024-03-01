@@ -576,6 +576,21 @@ export function createWindow(): ElectronBrowserWindow {
           setZoom(() => 4)();
         },
       },
+      {
+        label: 'Show/hide hidden browser window ',
+        click: () => {
+          const hiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
+          invariant(hiddenBrowserWindow, 'hiddenBrowserWindow is not defined');
+          hiddenBrowserWindow.isVisible() ? hiddenBrowserWindow.hide() : hiddenBrowserWindow.show();
+        },
+      },
+      {
+        label: 'Stop/start hidden browser window ',
+        click: () => {
+          const hiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
+          hiddenBrowserWindow ? stopHiddenBrowserWindow() : createHiddenBrowserWindow();
+        },
+      },
     ],
   };
   const toolsMenu: MenuItemConstructorOptions = {

@@ -59,7 +59,7 @@ test.describe('Dashboard', async () => {
       await page.locator('[data-test-id="import-from-clipboard"]').click();
       await page.getByRole('button', { name: 'Scan' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-      await page.getByText('CollectionSmoke testsjust now').click();
+      await page.getByLabel('Smoke tests').click();
       // Check that 10 new workspaces are imported besides the default one
       const workspaceCards = page.getByLabel('Workspaces').getByRole('gridcell');
       await expect(workspaceCards).toHaveCount(11);

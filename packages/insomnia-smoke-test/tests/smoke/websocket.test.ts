@@ -19,7 +19,7 @@ test('can make websocket connection', async ({ app, page }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByText('CollectionWebSocketsjust now').click();
+  await page.getByLabel('WebSockets').click();
 
   await page.getByLabel('Request Collection').getByTestId('localhost:4010').press('Enter');
   await expect(page.locator('.app')).toContainText('ws://localhost:4010');
