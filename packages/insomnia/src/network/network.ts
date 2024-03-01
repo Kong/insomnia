@@ -26,6 +26,7 @@ import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
+import { RequestContext } from '../sdk/objects/insomnia';
 import { invariant } from '../utils/invariant';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import {
@@ -34,7 +35,7 @@ import {
   smartEncodeUrl,
 } from '../utils/url/querystring';
 import { getAuthHeader, getAuthQueryParams } from './authentication';
-import { cancellableCurlRequest, cancellableRunPreRequestScript } from './cancellation';
+import { cancellableCurlRequest, cancellableRunPreRequestScript, cancelRequestById } from './cancellation';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
@@ -90,7 +91,16 @@ export const tryToExecutePreRequestScript = async (
   const settings = await models.settings.get();
 
   try {
-    const output = await cancellableRunPreRequestScript({
+    const timeout = settings.timeout || 5000;
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        cancelRequestById(request._id);
+        reject(new Error('Timeout: Hidden browser window is not responding'));
+        // Add one extra second to ensure the hidden browser window has had a chance to return its timeout
+        // TODO: restart the hidden browser window
+      }, timeout + 1000);
+    });
+    const preRequestPromise = cancellableRunPreRequestScript({
       script: request.preRequestScript,
       context: {
         request,
@@ -102,6 +112,7 @@ export const tryToExecutePreRequestScript = async (
         baseEnvironment: baseEnvironment?.data || {},
       },
     });
+    const output = await Promise.race([timeoutPromise, preRequestPromise]) as RequestContext;
     console.log('[network] Pre-request script succeeded', output);
 
     const envPropertyOrder = orderedJSON.parse(
