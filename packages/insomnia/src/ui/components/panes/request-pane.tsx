@@ -292,7 +292,14 @@ export const RequestPane: FC<Props> = ({
         </TabItem>
         <TabItem
           key="pre-request-script"
-          title={'Pre-request Script'}
+          title={
+            <div className='flex items-center gap-2'>
+              Pre-request Script{' '}
+              {headersCount > 0 && (
+                <span className="p-1 flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">Beta</span>
+              )}
+            </div>
+          }
           aria-label={'experimental'}
         >
           <ErrorBoundary
