@@ -1,9 +1,12 @@
-import React, { useEffect } from 'react';
-import { Button, Cell, Checkbox, Column, Dialog, Heading, Label, Modal, ModalOverlay, Row, Table, TableBody, TableHeader, TextArea, TextField } from 'react-aria-components';
+import 'json-diff-kit/dist/viewer.css';
+
+import { Viewer } from 'json-diff-kit';
+import React, { useEffect, useState } from 'react';
+import { Button, Dialog, GridList, GridListItem, Heading, Label, Modal, ModalOverlay, TextArea, TextField } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { all } from '../../../models';
-import type { Status, StatusCandidate } from '../../../sync/types';
+import type { StageEntry, Status, StatusCandidate } from '../../../sync/types';
 import { Icon } from '../icon';
 
 interface Props {
@@ -27,17 +30,39 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
     organizationId: string;
   };
 
-  const stagedChanges = Object.entries(status.stage);
-  const unstagedChanges = Object.entries(status.unstaged);
-
-  const allChanges = [...stagedChanges, ...unstagedChanges].map(([key, entry]) => ({
+  const stagedChanges = Object.entries(status.stage).map(([key, entry]) => ({
     ...entry,
     document: syncItems.find(item => item.key === key)?.document || 'deleted' in entry ? { type: getModelTypeById(key) } : undefined,
-  }));
+  }));;
+  const unstagedChanges = Object.entries(status.unstaged).map(([key, entry]) => ({
+    ...entry,
+    document: syncItems.find(item => item.key === key)?.document || 'deleted' in entry ? { type: getModelTypeById(key) } : undefined,
+  }));;
 
-  const unversionedChanges = allChanges.filter(change => 'added' in change);
-  const modifiedChanges = allChanges.filter(change => !('added' in change));
+  const stageChangesFetcher = useFetcher();
 
+  const stageChanges = (keys: string[]) => {
+    stageChangesFetcher.submit({
+      keys,
+    }, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/stage`,
+      method: 'POST',
+      encType: 'application/json',
+    });
+  };
+
+  const unstageChanges = (keys: string[]) => {
+    stageChangesFetcher.submit({
+      keys,
+    }, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/unstage`,
+      method: 'POST',
+      encType: 'application/json',
+    });
+  };
+
+  const allChanges = [...stagedChanges, ...unstagedChanges];
+  const allChangesLength = allChanges.length;
   const { Form, formAction, state, data } = useFetcher();
   const error = data?.error;
 
@@ -45,10 +70,12 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
   const isCreatingSnapshot = state !== 'idle' && formAction?.endsWith('create-snapshot');
 
   useEffect(() => {
-    if (allChanges.length === 0 && !error) {
+    if (allChangesLength === 0 && !error) {
       onClose();
     }
-  }, [allChanges, onClose, error]);
+  }, [allChangesLength, onClose, error]);
+
+  const [previewDiffItem, setPreviewDiffItem] = useState<StageEntry | null>(null);
 
   return (
     <ModalOverlay
@@ -63,7 +90,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
-        className="flex flex-col max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]"
+        className="flex flex-col w-[calc(100%-var(--padding-xl))] h-[calc(100%-var(--padding-xl))] rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] bg-[--color-bg] text-[--color-font]"
       >
         <Dialog
           className="outline-none flex-1 h-full flex flex-col overflow-hidden"
@@ -71,7 +98,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
           {({ close }) => (
             <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
               <div className='flex-shrink-0 flex gap-2 items-center justify-between'>
-                <Heading className='text-2xl'>Create commit</Heading>
+                <Heading slot="title" className='text-2xl'>Create commit</Heading>
                 <Button
                   className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   onPress={close}
@@ -79,177 +106,186 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                   <Icon icon="x" />
                 </Button>
               </div>
-              <Form
-                method="POST"
-                className='flex-1 flex flex-col gap-4 overflow-hidden'
-              >
-                <TextField className="flex flex-col gap-2 flex-shrink-0">
-                  <Label className='font-bold'>
-                    Commit message
-                  </Label>
-                  <TextArea
-                    rows={3}
-                    name="message"
-                    className="border border-solid border-[--hl-sm] rounded-sm p-2 resize-none"
-                    placeholder="This is a helpful message that describes the changes made in this snapshot"
-                    required
-                  />
-                </TextField>
-
-                <div className='grid auto-rows-auto gap-2 overflow-y-auto'>
-                  {modifiedChanges.length > 0 && (
-                    <div className='flex flex-col gap-2 overflow-hidden max-h-96'>
-                      <Heading className='font-semibold flex-shrink-0'>Modified Objects</Heading>
-                      <div className='flex-1 overflow-y-auto rounded w-full border border-solid border-[--hl-sm] select-none'>
-                        <Table
-                          selectionMode='multiple'
-                          defaultSelectedKeys="all"
-                          aria-label='Modified objects'
-                          className="border-separate border-spacing-0 w-full"
-                        >
-                          <TableHeader>
-                            <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                              <Checkbox slot="selection" className="group p-0 flex items-center h-full">
-                                <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
-                                  <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
-                                </div>
-                              </Checkbox>
-                            </Column>
-                            <Column isRowHeader className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                              Name
-                            </Column>
-                            <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-right text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                              Description
-                            </Column>
-                          </TableHeader>
-                          <TableBody
-                            className="divide divide-[--hl-sm] divide-solid"
-                            items={
-                              modifiedChanges.map(item => ({
-                                ...item,
-                                id: item.key,
-                              }))
-                            }
-                          >
-                            {item => (
-                              <Row className="group focus:outline-none focus-within:bg-[--hl-xxs] transition-colors">
-                                <Cell className="relative whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                                  <div className='p-2'>
-                                    <Checkbox slot="selection" name="keys" value={item.key} className="group p-0 flex items-center h-full">
-                                      <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
-                                        <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
-                                      </div>
-                                    </Checkbox>
-                                  </div>
-                                </Cell>
-                                <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                                  <div className='p-2'>
-                                    {item.name}
-                                  </div>
-                                </Cell>
-                                <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                                  <div className='flex items-center gap-2 justify-end p-2'>
-                                    <Icon className={'deleted' in item ? 'text-[--color-danger]' : 'added' in item ? 'text-[--color-success]' : ''} icon={'deleted' in item ? 'minus-circle' : 'added' in item ? 'plus-circle' : 'circle'} />
-                                    {item.document?.type}
-                                  </div>
-                                </Cell>
-                              </Row>
-                            )}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </div>
+              <div className='grid [grid-template-columns:300px_1fr] h-full overflow-hidden divide-x divide-solid divide-[--hl-md] gap-2'>
+                <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
+                  <Form method="POST" className='flex flex-col gap-2'>
+                  <TextField className="flex flex-col gap-2 flex-shrink-0">
+                    <Label className='font-bold'>
+                      Commit message
+                    </Label>
+                    <TextArea
+                      rows={3}
+                      name="message"
+                      className="border border-solid border-[--hl-sm] rounded-sm p-2 resize-none"
+                      placeholder="This is a helpful message that describes the changes made in this snapshot"
+                      required
+                    />
+                  </TextField>
+                  {data?.error && (
+                    <p className="notice flex-shrink-0 error margin-top-sm">
+                      {data.error}
+                    </p>
                   )}
 
-                  {unversionedChanges.length > 0 && (
-                    <div className='flex flex-col gap-2 overflow-hidden max-h-96'>
-                      <Heading className='font-semibold flex-shrink-0'>Unversioned Objects</Heading>
-                      <div className='flex-1 overflow-y-auto rounded w-full border border-solid border-[--hl-sm] select-none'>
-                        <Table
-                          selectionMode='multiple'
-                          aria-label='Unversioned objects'
-                          className="border-separate border-spacing-0 w-full"
+                  <div className="flex flex-shrink-0 justify-stretch gap-2 items-center">
+                    <Button
+                      type='submit'
+                      isDisabled={state !== 'idle'}
+                      formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create-snapshot`}
+                      className="hover:no-underline flex-1 flex items-center gap-2 hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                    >
+                      <Icon icon={isCreatingSnapshot ? 'spinner' : 'check'} className={`w-5 ${isCreatingSnapshot ? 'animate-spin' : ''}`} /> Commit
+                    </Button>
+                    <Button
+                      type="submit"
+                      isDisabled={state !== 'idle'}
+                      formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create-snapshot-and-push`}
+                      className="hover:no-underline flex-1 flex items-center gap-2 bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                    >
+                      <Icon icon={isPushing ? 'spinner' : 'cloud-arrow-up'} className={`w-5 ${isPushing ? 'animate-spin' : ''}`} /> Commit and push
+                    </Button>
+                  </div>
+                  </Form>
+
+                  <div className='grid auto-rows-auto gap-2 overflow-y-auto'>
+                    {stagedChanges.length > 0 && <div className='flex flex-col gap-2 overflow-hidden max-h-96 w-full'>
+                      <Heading className='group font-semibold flex-shrink-0 w-full flex items-center py-1 justify-between'>
+                        <span>Staged changes</span>
+                        <Button
+                          className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                          slot={null}
+                          onPress={() => {
+                            unstageChanges(stagedChanges.map(item => item.key));
+                          }}
                         >
-                          <TableHeader>
-                            <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                              <Checkbox slot="selection" className="group p-0 flex items-center h-full">
-                                <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
-                                  <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
+                          <Icon icon="minus" />
+                        </Button>
+                      </Heading>
+                      <div className='flex-1 flex overflow-y-auto w-full select-none'>
+                        <GridList
+                          className="w-full"
+                          items={stagedChanges.map(item => ({
+                            ...item,
+                            id: item.key,
+                            textValue: item.name || item.document?.type || '',
+                          }))}
+                          aria-label='Unstaged changes'
+                          onAction={key => {
+                            const item = allChanges.find(item => item.key === key);
+                            item && setPreviewDiffItem(item);
+                          }}
+                        >
+                          {item => {
+                            return (
+                              <GridListItem className="group outline-none select-none hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
+                                <span className='truncate'>{item.name || item.document?.type}</span>
+                                <div className='flex items-center gap-1'>
+                                  <Button
+                                    className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                                    slot={null}
+                                    onPress={() => {
+                                      unstageChanges([item.key]);
+                                    }}
+                                  >
+                                    <Icon icon="minus" />
+                                  </Button>
                                 </div>
-                              </Checkbox>
-                            </Column>
-                            <Column isRowHeader className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                              Name
-                            </Column>
-                            <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-right text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                              Description
-                            </Column>
-                          </TableHeader>
-                          <TableBody
-                            className="divide divide-[--hl-sm] divide-solid"
-                            items={
-                              unversionedChanges.map(item => ({
-                                ...item,
-                                name: item.name || 'n/a',
-                                id: item.key,
-                              }))
-                            }
+                              </GridListItem>
+                            );
+                          }}
+                        </GridList>
+                      </div>
+                    </div>}
+                    <div className='flex flex-col gap-2 overflow-hidden max-h-96 w-full'>
+                      <Heading className='group font-semibold flex-shrink-0 w-full flex items-center py-1 justify-between'>
+                        <span>Changes</span>
+                        <div className='flex items-center gap-1'>
+                          <Button
+                            className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                            slot={null}
+                            onPress={console.log}
                           >
-                            {item => (
-                              <Row className="group focus:outline-none focus-within:bg-[--hl-xxs] transition-colors">
-                                <Cell className="relative whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                                  <div className='p-2'>
-                                    <Checkbox slot="selection" name="keys" value={item.key} className="group p-0 flex items-center h-full">
-                                      <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
-                                        <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
-                                      </div>
-                                    </Checkbox>
-                                  </div>
-                                </Cell>
-                                <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                                  <div className='p-2'>
-                                    {item.name}
-                                  </div>
-                                </Cell>
-                                <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                                  <div className='flex items-center gap-2 justify-end p-2'>
-                                    <Icon className={'deleted' in item ? 'text-[--color-danger]' : 'added' in item ? 'text-[--color-success]' : ''} icon={'deleted' in item ? 'minus-circle' : 'added' in item ? 'plus-circle' : 'circle'} />
-                                    {item.document?.type}
-                                  </div>
-                                </Cell>
-                              </Row>
-                            )}
-                          </TableBody>
-                        </Table>
+                            <Icon icon="undo" />
+                          </Button>
+                          <Button
+                            className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                            slot={null}
+                            onPress={() => {
+                              stageChanges(unstagedChanges.map(item => item.key));
+                            }}
+                          >
+                            <Icon icon="plus" />
+                          </Button>
+                        </div>
+                      </Heading>
+                      <div className='flex-1 flex overflow-y-auto w-full select-none'>
+                        <GridList
+                          className="w-full"
+                          items={unstagedChanges.map(item => ({
+                            ...item,
+                            id: item.key,
+                            textValue: item.name || item.document?.type || '',
+                          }))}
+                          aria-label='Unstaged changes'
+                          onAction={key => {
+                            const item = allChanges.find(item => item.key === key);
+                            item && setPreviewDiffItem(item);
+                          }}
+                        >
+                          {item => {
+                            return (
+                              <GridListItem className="group outline-none select-none hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
+                                <span className='truncate'>{item.name || item.document?.type}</span>
+                                <div className='flex items-center gap-1'>
+                                  <Button
+                                    className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                                    slot={null}
+                                    onPress={console.log}
+                                  >
+                                    <Icon icon="undo" />
+                                  </Button>
+                                  <Button
+                                    className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                                    slot={null}
+                                    onPress={() => {
+                                      stageChanges([item.key]);
+                                    }}
+                                  ><Icon icon="plus" /></Button>
+                                </div>
+                              </GridListItem>
+                            );
+                          }}
+                        </GridList>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
-
-                {data?.error && (
-                  <p className="notice flex-shrink-0 error margin-top-sm">
-                    {data.error}
+                {previewDiffItem ? <div className='p-2 flex flex-col gap-2 h-full overflow-y-auto'>
+                  <Heading className='font-bold flex items-center gap-2'>
+                    <Icon icon="code-compare" />
+                    {previewDiffItem.name || ('document' in previewDiffItem && previewDiffItem.document && 'type' in previewDiffItem.document ? previewDiffItem.document?.type : '')}
+                  </Heading>
+                  {previewDiffItem && 'diff' in previewDiffItem && previewDiffItem.diff && (
+                    <div
+                      className='bg-[--hl-xs] p-2 flex-1 overflow-y-auto text-[--color-font]'
+                    >
+                      <Viewer
+                        diff={previewDiffItem.diff}
+                        hideUnchangedLines
+                        className='diff-viewer'
+                      />
+                    </div>
+                  )}
+                </div> : <div className='p-2 h-full flex flex-col gap-4 items-center justify-center'>
+                  <Heading className='font-semibold flex justify-center items-center gap-2 text-4xl text-[--hl-md]'>
+                    <Icon icon="code-compare" />
+                    Diff view
+                  </Heading>
+                  <p className='text-[--hl]'>
+                    Select an item to compare
                   </p>
-                )}
-                <div className="flex flex-shrink-0 flex-1 justify-end gap-2 items-center">
-                  <Button
-                    type='submit'
-                    isDisabled={state !== 'idle'}
-                    formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create-snapshot`}
-                    className="hover:no-underline flex items-center gap-2 hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
-                  >
-                    <Icon icon={isCreatingSnapshot ? 'spinner' : 'plus'} className={`w-5 ${isCreatingSnapshot ? 'animate-spin' : ''}`} /> Create
-                  </Button>
-                  <Button
-                    type="submit"
-                    isDisabled={state !== 'idle'}
-                    formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create-snapshot-and-push`}
-                    className="hover:no-underline flex items-center gap-2 bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-                  >
-                    <Icon icon={isPushing ? 'spinner' : 'cloud-arrow-up'} className={`w-5 ${isPushing ? 'animate-spin' : ''}`} /> Create and push
-                  </Button>
-                </div>
-              </Form>
+                </div>}
+              </div>
             </div>
           )}
         </Dialog>

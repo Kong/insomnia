@@ -870,6 +870,14 @@ const router = createMemoryRouter(
                                     (await import('./routes/remote-collections')).syncDataLoader(...args),
                                 },
                                 {
+                                  path: 'stage',
+                                  action: async (...args) => (await import('./routes/remote-collections')).stageChangesAction(...args),
+                                },
+                                {
+                                  path: 'unstage',
+                                  action: async (...args) => (await import('./routes/remote-collections')).unstageChangesAction(...args),
+                                },
+                                {
                                   path: 'pull',
                                   action: async (...args) =>
                                     (await import('./routes/remote-collections')).pullFromRemoteAction(...args),

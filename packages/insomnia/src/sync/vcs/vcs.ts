@@ -3,6 +3,7 @@
 // - [ ] Make sure that pull handles updating the parentId to the current project._id
 import clone from 'clone';
 import crypto from 'crypto';
+import { Differ } from 'json-diff-kit';
 import path from 'path';
 
 import * as crypt from '../../account/crypt';
@@ -53,11 +54,17 @@ export function chunkArray<T>(arr: T[], chunkSize: number) {
   }
   return chunks;
 }
+
+// Stage/Unstage
+// Staged items are about to be commited
+// Unstaged items have changed compared to staged or not and can be staged
+//
 export class VCS {
   _store: Store;
   _driver: BaseDriver;
   _backendProject: BackendProject | null;
   _conflictHandler?: ConflictHandler | null;
+  _stage?: Stage;
 
   constructor(driver: BaseDriver, conflictHandler?: ConflictHandler) {
     this._store = new Store(driver, [compress]);
@@ -178,8 +185,8 @@ export class VCS {
     return this._getBlob(entry.blob);
   }
 
-  async status(candidates: StatusCandidate[], baseStage: Readonly<Stage>) {
-    const stage = clone<Stage>(baseStage);
+  async status(candidates: StatusCandidate[], baseStage: Readonly<Stage>, diff = false) {
+    const stage = clone<Stage>(this._stage || baseStage);
     const branch = await this._getCurrentBranch();
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
     const state = snapshot ? snapshot.state : [];
@@ -189,8 +196,57 @@ export class VCS {
       const { key } = entry;
       const stageEntry = stage[key];
 
+      // If the change is unstaged or has changed
       if (!stageEntry || stageEntry.blobId !== entry.blobId) {
-        unstaged[key] = entry;
+        if (diff && 'blobContent' in entry) {
+          try {
+            const blobId = stage[key] ? stage[key].blobId : snapshot.state.find(s => s.key === key)?.blob || '';
+            // @TODO if it's unversioned (added and did not exist before) then don't diff
+            let blobContents = {};
+            try {
+              blobContents = (await this._getBlob(blobId)) || {};
+            } catch (e) {
+            }
+            const differ = new Differ({
+              detectCircular: true,    // default `true`
+              maxDepth: Infinity,      // default `Infinity`
+              showModifications: true, // default `true`
+              arrayDiffMethod: 'lcs',  // default `"normal"`, but `"lcs"` may be more useful
+            });
+            const diff = differ.diff(blobContents, JSON.parse(entry.blobContent));
+
+            if (diff.length) {
+              unstaged[key] = {
+                ...entry,
+                blobId,
+                diff,
+              };
+            } else {
+              unstaged[key] = entry;
+            }
+          } catch (e) {
+            unstaged[key] = entry;
+          }
+        } else {
+          unstaged[key] = entry;
+        }
+      }
+
+      // Staged changes
+      if (diff && stageEntry && 'blobContent' in entry) {
+        const latestBlobContents = await this.blobFromLastSnapshot(key);
+        const differ = new Differ({
+          detectCircular: true,    // default `true`
+          maxDepth: Infinity,      // default `Infinity`
+          showModifications: true, // default `true`
+          arrayDiffMethod: 'lcs',  // default `"normal"`, but `"lcs"` may be more useful
+        });
+
+        const diff = differ.diff(latestBlobContents, JSON.parse(entry.blobContent));
+        stage[key] = {
+          ...stage[key],
+          diff,
+        };
       }
     }
 
@@ -202,7 +258,7 @@ export class VCS {
   }
 
   async stage(baseStage: Readonly<Stage>, stageEntries: StageEntry[]) {
-    const stage = clone<Stage>(baseStage);
+    const stage = clone<Stage>(this._stage || baseStage);
     const blobsToStore: Record<string, string> = {};
 
     for (const entry of stageEntries) {
@@ -218,16 +274,18 @@ export class VCS {
 
     await this._storeBlobs(blobsToStore);
     console.log(`[sync] Staged ${stageEntries.map(e => e.name).join(', ')}`);
+    this._stage = stage;
     return stage;
   }
 
-  async unstage(baseStage: Readonly<Stage>, stageEntries: StageEntry[]) {
-    const stage = clone<Stage>(baseStage);
+  async unstage(baseStage: Stage, stageEntries: StageEntry[]) {
+    const stage = clone<Stage>(this._stage || baseStage);
     for (const entry of stageEntries) {
       delete stage[entry.key];
     }
 
     console.log(`[sync] Unstaged ${stageEntries.map(e => e.name).join(', ')}`);
+    this._stage = stage;
     return stage;
   }
 

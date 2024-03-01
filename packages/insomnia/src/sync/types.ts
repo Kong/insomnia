@@ -1,3 +1,5 @@
+import { DiffResult } from 'json-diff-kit';
+
 import { BaseModel } from '../models';
 
 export interface Team {
@@ -75,6 +77,7 @@ export interface StageEntryModify {
   name: string;
   blobId: string;
   blobContent: string;
+  diff?: readonly [DiffResult[], DiffResult[]];
 }
 
 export type StageEntry = StageEntryDelete | StageEntryAdd | StageEntryModify;
