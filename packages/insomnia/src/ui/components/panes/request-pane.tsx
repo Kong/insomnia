@@ -314,6 +314,21 @@ export const RequestPane: FC<Props> = ({
               onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
               mode='text/javascript'
               placeholder="..."
+              lintOptions={{
+                globals: {
+                  // https://jshint.com/docs/options/
+                  insomnia: true,
+                  pm: true,
+                  require: true,
+                  console: true,
+                },
+                asi: true,
+                // Don't require semicolons
+                undef: true,
+                // Prevent undefined usages
+                node: true,
+                esversion: 8, // ES8 syntax (async/await, etc)
+              }}
             />
           </ErrorBoundary>
         </TabItem>

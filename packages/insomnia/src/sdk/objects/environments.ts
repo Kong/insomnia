@@ -1,3 +1,5 @@
+import { getIntepolator } from './interpolator';
+
 export class Environment {
     private kvs = new Map<string, boolean | number | string>();
 
@@ -25,10 +27,9 @@ export class Environment {
         this.kvs.clear();
     };
 
-    // TODO: enable this after intepolator is introduced
-    // replaceIn = (template: string) => {
-    //     return getIntepolator().render(template, this.toObject());
-    // };
+    replaceIn = (template: string) => {
+        return getIntepolator().render(template, this.toObject());
+    };
 
     toObject = () => {
         return Object.fromEntries(this.kvs.entries());
@@ -90,10 +91,10 @@ export class Variables {
         this.local.set(variableName, variableValue);
     };
 
-    // replaceIn = (template: string) => {
-    //     const context = this.toObject();
-    //     return getIntepolator().render(template, context);
-    // };
+    replaceIn = (template: string) => {
+        const context = this.toObject();
+        return getIntepolator().render(template, context);
+    };
 
     toObject = () => {
         return [

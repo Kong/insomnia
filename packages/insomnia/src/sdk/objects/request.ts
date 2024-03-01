@@ -1,3 +1,4 @@
+import { Request as InsomniaRequest } from '../../../src/models/request';
 import { AuthOptions, RequestAuth } from './auth';
 import { CertificateOptions } from './certificates';
 import { Certificate } from './certificates';
@@ -5,6 +6,7 @@ import { HeaderDefinition } from './headers';
 import { Header, HeaderList } from './headers';
 import { Property, PropertyBase, PropertyList } from './properties';
 import { ProxyConfig, ProxyConfigOptions } from './proxy-configs';
+import { fromPreRequestAuth } from './send-request';
 import { QueryParam, Url } from './urls';
 import { Variable, VariableList } from './variables';
 
@@ -13,7 +15,7 @@ export type RequestBodyMode = undefined | 'formdata' | 'urlencoded' | 'raw' | 'f
 export interface RequestBodyOptions {
     mode: RequestBodyMode;
     file?: string;
-    formdata?: { key: string; value: string }[];
+    formdata?: { key: string; value: string; type?: string }[];
     graphql?: { query: string; operationName: string; variables: object };
     raw?: string;
     urlencoded?: { key: string; value: string }[];
@@ -23,12 +25,16 @@ export interface RequestBodyOptions {
 export class FormParam extends Property {
     key: string;
     value: string;
+    type?: string;
 
-    constructor(options: { key: string; value: string }) {
+    constructor(options: { key: string; value: string; type?: string }) {
         super();
         this.key = options.key;
         this.value = options.value;
+        this.type = options.type;
     }
+
+    static _index = 'key';
 
     static _postman_propertyAllowsMultipleValues() {
         throw Error('unsupported');
@@ -42,7 +48,7 @@ export class FormParam extends Property {
     // }
 
     toJSON() {
-        return { key: this.key, value: this.value };
+        return { key: this.key, value: this.value, type: this.type };
     }
 
     toString() {
@@ -63,8 +69,7 @@ function getClassFields(opts: RequestBodyOptions) {
             undefined,
             opts.formdata.
                 map(formParamObj => new FormParam({
-                    key: formParamObj.key,
-                    value: formParamObj.value,
+                    ...formParamObj,
                 }))
         ) :
         undefined;
@@ -148,10 +153,13 @@ export class RequestBody extends PropertyBase {
         try {
             switch (this.mode) {
                 case 'formdata':
-                    // TODO: it should return data in "multipart/form-data" format
-                    throw Error('formdata is unsupported yet');
+                    return this.formdata ?
+                        this.formdata.map(param => param.toString(), {}).join('&') :
+                        '';
                 case 'urlencoded':
-                    return this.urlencoded ? this.urlencoded.map(formData => formData.toString(), {}).join('&') : '';
+                    return this.urlencoded ?
+                        this.urlencoded.map(param => param.toString(), {}).join('&') :
+                        '';
                 case 'raw':
                     return this.raw || '';
                 case 'file':
@@ -196,7 +204,14 @@ export interface RequestSize {
 }
 
 function requestOptionsToClassFields(options: RequestOptions) {
+    if (!options.url || options.url === '') {
+        throw Error('Request URL is not specified');
+    }
+    if (typeof options.url === 'string' && !options.url.includes('://')) {
+        options.url += 'https://';
+    }
     const url = typeof options.url === 'string' ? new Url(options.url) : options.url;
+
     const method = options.method || 'GET';
 
     let headers: HeaderList<Header>;
@@ -426,4 +441,77 @@ export class Request extends Property {
         // append new
         this.headers.append(new Header(header));
     }
+}
+
+export function mergeRequests(originalReq: InsomniaRequest, updatedReq: Request): InsomniaRequest {
+    let mimeType = 'application/octet-stream';
+
+    if (updatedReq.body) {
+        switch (updatedReq.body.mode) {
+            case undefined:
+                mimeType = 'application/octet-stream';
+                break;
+            case 'raw':
+                mimeType = 'text/plain';
+                break;
+            case 'file':
+                // TODO: improve this by sniffing
+                mimeType = 'application/octet-stream';
+                break;
+            case 'formdata':
+                // boundary should already be part of Content-Type header
+                mimeType = 'multipart/form-data';
+                break;
+            case 'urlencoded':
+                mimeType = 'application/x-www-form-urlencoded';
+                break;
+            case 'graphql':
+                mimeType = 'application/json';
+                break;
+            default:
+                throw Error(`unknown body mode: ${updatedReq.body.mode}`);
+        }
+    }
+
+    return {
+        url: typeof updatedReq.url === 'string' ? updatedReq.url : updatedReq.url.toString(),
+        name: originalReq.name,
+        description: originalReq.description,
+        method: updatedReq.method,
+        body: {
+            mimeType: mimeType,
+            text: updatedReq.body?.raw,
+            fileName: updatedReq.body?.file,
+            params: updatedReq.body?.urlencoded?.map(
+                (param: { key: string; value: string }) => ({ name: param.key, value: param.value }),
+                {},
+            ),
+        },
+        preRequestScript: originalReq.description,
+        parameters: originalReq.parameters,
+        pathParameters: originalReq.pathParameters,
+        headers: updatedReq.headers.map(
+            (header: Header) => ({
+                name: header.key,
+                value: header.value,
+            }),
+            {},
+        ),
+        authentication: fromPreRequestAuth(updatedReq.auth),
+        metaSortKey: originalReq.metaSortKey,
+        isPrivate: originalReq.isPrivate,
+        // Settings
+        settingStoreCookies: originalReq.settingStoreCookies,
+        settingSendCookies: originalReq.settingSendCookies,
+        settingDisableRenderRequestBody: originalReq.settingDisableRenderRequestBody,
+        settingEncodeUrl: originalReq.settingEncodeUrl,
+        settingRebuildPath: originalReq.settingRebuildPath,
+        settingFollowRedirects: originalReq.settingFollowRedirects,
+        // base model
+        _id: originalReq._id,
+        type: originalReq.type,
+        parentId: originalReq.parentId,
+        modified: originalReq.modified,
+        created: originalReq.created,
+    };
 }

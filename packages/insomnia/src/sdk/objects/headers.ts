@@ -1,4 +1,4 @@
-import { unsupportedError } from './insomnia';
+import { unsupportedError } from './common';
 import { Property, PropertyList } from './properties';
 
 export interface HeaderDefinition {
@@ -35,6 +35,8 @@ export class Header extends Property {
             this.disabled = opts ? opts.disabled : false;
         }
     }
+
+    static _index: string = 'key';
 
     static create(input?: { key: string; value: string } | string, name?: string): Header {
         return new Header(input || { key: '', value: '' }, name);
@@ -114,15 +116,14 @@ export class HeaderList<T extends Header> extends PropertyList<T> {
         throw unsupportedError('eachParent');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    toObject(_excludeDisabled?: boolean, _caseSensitive?: boolean, _multiValue?: boolean, _sanitizeKeys?: boolean) {
-        throw unsupportedError('toObject');
-    }
-
     contentSize(): number {
         return this.list
             .map(header => header.toString())
             .map(headerStr => headerStr.length) // TODO: handle special characters
             .reduce((totalSize, headerSize) => totalSize + headerSize, 0);
+    }
+
+    add(item: T) {
+        this.list.push(item);
     }
 }

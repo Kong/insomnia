@@ -90,6 +90,10 @@ export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow
   hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
   console.log(`[main] Loading ${hiddenBrowserWindowUrl}`);
 
+  hiddenBrowserWindow.on('ready-to-show', () => {
+    hiddenBrowserWindow.webContents.openDevTools();
+  });
+
   hiddenBrowserWindow.on('closed', () => {
     if (browserWindows.get('HiddenBrowserWindow')) {
       console.log('[main] closing hidden browser window');

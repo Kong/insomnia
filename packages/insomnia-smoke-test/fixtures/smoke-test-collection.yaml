@@ -204,6 +204,13 @@ resources:
     name: Base Environment
     data:
       customValue: "fromEnvManager"
+      preDefinedValue: "fromEnvManager"
+      __GLOBALS:
+        globalsValue: "fromGlobals"
+        valueInScopes: "fromGlobals"
+      __ITERATION_DATA:
+        iterationDataValue: "fromIterationData"
+        valueInScopes: "fromIterationData"
     dataPropertyOrder: null
     color: null
     isPrivate: false

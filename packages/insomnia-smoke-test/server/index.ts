@@ -22,7 +22,10 @@ app.use(cookieParser.default());
 const port = 4010;
 const httpsPort = 4011;
 const grpcPort = 50051;
-const jsonParser = bodyParser.json();
+const rawParser = bodyParser.raw({
+  inflate: true,
+  type: '*/*',
+});
 
 app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
@@ -36,16 +39,17 @@ app.get('/builds/check/*', (_req, res) => {
 });
 
 async function echoHandler(req: any, res: any) {
+  console.log(req.body.toString());
   res.status(200).send({
     method: req.method,
     headers: req.headers,
-    data: req.body,
+    data: req.body.toString(),
     cookies: req.cookies,
   });
 };
 
-app.get('/echo', jsonParser, echoHandler);
-app.post('/echo', jsonParser, echoHandler);
+app.get('/echo', rawParser, echoHandler);
+app.post('/echo', rawParser, echoHandler);
 
 app.get('/sleep', (_req, res) => {
   res.status(200).send({ sleep: true });

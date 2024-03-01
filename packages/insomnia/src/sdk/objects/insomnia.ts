@@ -1,32 +1,24 @@
-import type { Request } from '../../models/request';
+// import * as _ from 'lodash';
+
+import { RequestContext } from './common';
 import { Environment, Variables } from './environments';
+import { Request as ScriptRequest, RequestBodyOptions, RequestOptions } from './request';
+import { Response as ScriptResponse } from './response';
+import { HttpSendRequest, toPreRequestAuth } from './send-request';
 
-export const unsupportedError = (featureName: string, alternative?: string) => {
-    const message = `${featureName} is not supported yet` +
-        (alternative ? `, please use ${alternative} instead temporarily.` : '');
-    return Error(message);
-};
-
-export interface RequestContext {
-    request: Request;
-    timelinePath: string;
-    timeout: number;
-    environment?: Record<string, any>;
-    baseEnvironment?: Record<string, any>;
-    collectionVariables?: Record<string, any>;
-    globals?: Record<string, any>;
-    iterationData?: Record<string, any>;
-}
+// TODO: remove these when global environment and iteration data are supported in general
+// const globalsEnvName = '__GLOBALS';
+// const iterationDataEnvName = '__ITERATION_DATA';
 
 export class InsomniaObject {
     public environment: Environment;
     public collectionVariables: Environment;
     public baseEnvironment: Environment;
     public variables: Variables;
-
-    // TODO: follows will be enabled after Insomnia supports them
-    private _globals: Environment;
-    private _iterationData: Environment;
+    public request: ScriptRequest;
+    private httpRequestSender: HttpSendRequest;
+    private globals: Environment;
+    private iterationData: Environment;
 
     constructor(
         rawObj: {
@@ -35,33 +27,75 @@ export class InsomniaObject {
             environment: Environment;
             baseEnvironment: Environment;
             variables: Variables;
+            request: ScriptRequest;
         },
     ) {
-        this._globals = rawObj.globals;
         this.environment = rawObj.environment;
         this.baseEnvironment = rawObj.baseEnvironment;
         this.collectionVariables = this.baseEnvironment; // collectionVariables is mapped to baseEnvironment
-        this._iterationData = rawObj.iterationData;
         this.variables = rawObj.variables;
+        this.request = rawObj.request;
+        this.globals = rawObj.globals;
+        this.iterationData = rawObj.iterationData;
+
+        // fallback to specific fields in baseEnvironment
+        // const workaroundGlobals = this.baseEnvironment.get(globalsEnvName);
+        // if (
+        //     _.isEqual(this.globals.toObject(), {})
+        //     && workaroundGlobals != null
+        //     && typeof workaroundGlobals === 'object'
+        // ) {
+        //     this.globals = new Environment(workaroundGlobals);
+        // }
+        // const workaroundIterationData = this.baseEnvironment.get(iterationDataEnvName);
+        // if (
+        //     _.isEqual(this.iterationData.toObject(), {})
+        //     && workaroundIterationData != null
+        //     && typeof workaroundIterationData === 'object'
+        // ) {
+        //     this.iterationData = new Environment(workaroundIterationData);
+        // }
+
+        this.httpRequestSender = new HttpSendRequest({
+            preferredHttpVersion: '',
+            maxRedirects: 0,
+            proxyEnabled: false,
+            timeout: 0,
+            validateSSL: false,
+            followRedirects: false,
+            maxTimelineDataSizeKB: 0,
+            httpProxy: '',
+            httpsProxy: '',
+            noProxy: '',
+        });
     }
 
-    // TODO: remove this after enabled globals
-    get globals() {
-        throw unsupportedError('globals', 'base environment');
-    }
-
-    // TODO: remove this after enabled iterationData
-    get iterationData() {
-        throw unsupportedError('iterationData', 'environment');
+    sendRequest(
+        request: string | ScriptRequest,
+        cb: (error?: string, response?: ScriptResponse) => void
+    ) {
+        return this.httpRequestSender.sendRequest(request, cb);
     }
 
     toObject = () => {
+        // currently, globals and iterationData are not supported in Insomnia
+        // so they are rendered here so that they will finally work in rendering
+        // remove this part after they are supported in general
+        // const flattenedEnv = {
+        //     ...this.globals.toObject(),
+        //     ...this.baseEnvironment.toObject(),
+        //     ...this.environment.toObject(),
+        //     ...this.iterationData.toObject(),
+        // };
+
         return {
-            globals: this._globals.toObject(),
+            globals: this.globals.toObject(),
+            // environment: flattenedEnv,
             environment: this.environment.toObject(),
             baseEnvironment: this.baseEnvironment.toObject(),
-            iterationData: this._iterationData.toObject(),
+            iterationData: this.iterationData.toObject(),
             variables: this.variables.toObject(),
+            request: this.request,
         };
     };
 }
@@ -82,6 +116,39 @@ export function initInsomniaObject(
         data: iterationData,
     });
 
+    let reqBodyOpt: RequestBodyOptions = { mode: undefined };
+    if (rawObj.request.body.text != null) {
+        reqBodyOpt = {
+            mode: 'raw',
+            raw: rawObj.request.body.text,
+        };
+    } else if (rawObj.request.body.fileName != null && rawObj.request.body.fileName !== '') {
+        reqBodyOpt = {
+            mode: 'file',
+            file: rawObj.request.body.fileName,
+        };
+    } else if (rawObj.request.body.params != null) {
+        reqBodyOpt = {
+            mode: 'urlencoded',
+            urlencoded: rawObj.request.body.params.map(
+                param => ({ key: param.name, value: param.value })
+            ),
+        };
+    }
+
+    const reqOpt: RequestOptions = {
+        url: rawObj.request.url,
+        method: rawObj.request.method,
+        header: rawObj.request.headers.map(
+            header => ({ key: header.name, value: header.value })
+        ),
+        body: reqBodyOpt,
+        auth: toPreRequestAuth(rawObj.request.authentication),
+        // proxy: ProxyConfigOptions, from settings
+        // certificate: CertificateOptions,
+    };
+    const request = new ScriptRequest(reqOpt);
+
     return new InsomniaObject(
         {
             globals,
@@ -89,6 +156,7 @@ export function initInsomniaObject(
             baseEnvironment,
             iterationData,
             variables,
+            request,
         },
     );
 };

@@ -1,4 +1,4 @@
-import { unsupportedError } from './insomnia';
+import { unsupportedError } from './common';
 import { Property, PropertyList } from './properties';
 
 export interface VariableDefinition {
@@ -26,6 +26,8 @@ export class Variable extends Property {
         this.type = def && def.type ? def.type : 'Variable';
         this.disabled = def ? def.disabled : false;
     }
+
+    static _index = 'key';
 
     // unknown usage and unsupported
     static types() {

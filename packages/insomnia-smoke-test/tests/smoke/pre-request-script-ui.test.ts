@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 
-import { loadFixture } from '../../playwright/paths';
+import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';;
 
 test.describe('pre-request UI tests', async () => {
@@ -30,15 +30,10 @@ test.describe('pre-request UI tests', async () => {
                 // but it is rewritten here
                 insomnia.baseEnvironment.set('preDefinedValue', 'fromScript');
                 // "customValue" is already defined in the folder environment.
-                // folder version will override the following wone
+                // folder version will override the following one
                 insomnia.baseEnvironment.set('customValue', 'fromScript');
             `,
-            body: `{
-                "fromBaseEnv": "{{ _.fromBaseEnv }}",
-                "scriptValue": "{{ _.scriptValue }}",
-                "preDefinedValue": "{{ _.preDefinedValue }}",
-                "customValue": "{{ _.customValue }}"
-            }`,
+            body: '{ "fromBaseEnv": "{{ _.fromBaseEnv }}", "scriptValue": "{{ _.scriptValue }}", "preDefinedValue": "{{ _.preDefinedValue }}", "customValue": "{{ _.customValue }}" }',
             expectedBody: {
                 fromBaseEnv: 'baseEnv',
                 scriptValue: 'fromEnv',
@@ -58,11 +53,7 @@ test.describe('pre-request UI tests', async () => {
                 pm.environment.set('varNum', pm.variables.get('varNum'));
                 pm.environment.set('varBool', pm.variables.get('varBool'));
             `,
-            body: `{
-                "varStr": "{{ _.varStr }}",
-                "varNum": {{ _.varNum }},
-                "varBool": {{ _.varBool }}
-            }`,
+            body: '{ "varStr": "{{ _.varStr }}", "varNum": {{ _.varNum }}, "varBool": {{ _.varBool }} }',
             expectedBody: {
                 varStr: 'varStr',
                 varNum: 777,
@@ -159,19 +150,14 @@ test.describe('pre-request UI tests', async () => {
             insomnia.environment.set('propJson', JSON.stringify(prop.toJSON()));
             insomnia.environment.set('headerJson', JSON.stringify(header.toJSON()));
             `,
-            body: `{
-                "propJson": {{ _.propJson }},
-                "headerJson": {{ _.headerJson }}
-            }`,
+            body: '{ "propJson": {{ _.propJson }}, "headerJson": {{ _.headerJson }} }',
             expectedBody: {
                 propJson: {
-                    '_kind': 'Property',
                     'disabled': false,
                     'id': 'pid',
                     'name': 'pname',
                 },
                 headerJson: {
-                    '_kind': 'Header',
                     'key': 'headerKey',
                     'value': 'headerValue',
                     'id': '',
@@ -180,6 +166,174 @@ test.describe('pre-request UI tests', async () => {
                 },
             },
         },
+        {
+            name: 'sendRequest custom mode',
+            preReqScript: `
+            const rawReq = {
+                url: 'http://127.0.0.1:4010/echo',
+                method: 'POST',
+                header: {
+                    'Content-Type': 'text/plain',
+                },
+                body: {
+                    mode: 'raw',
+                    raw: 'rawContent',
+                },
+            };
+            const urlencodedReq = {
+                url: 'http://127.0.0.1:4010/echo',
+                method: 'POST',
+                header: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: {
+                    mode: 'urlencoded',
+                    urlencoded: [
+                        { key: 'k1', value: 'v1' },
+                        { key: 'k2', value: 'v2' },
+                    ],
+                },
+            };
+            const gqlReq = {
+                url: 'http://127.0.0.1:4010/echo',
+                method: 'POST',
+                header: {
+                    'Content-Type': 'application/graphql',
+                },
+                body: {
+                    mode: 'graphql',
+                    graphql: {
+                        query: 'query',
+                        operationName: 'operation',
+                        variables: 'var',
+                    },
+                },
+            };
+            const fileReq = {
+                url: 'http://127.0.0.1:4010/echo',
+                method: 'POST',
+                header: {
+                    'Content-Type': 'application/octet-stream',
+                },
+                body: {
+                    mode: 'file',
+                    file: "${getFixturePath('files/rawfile.txt')}",
+                },
+            };
+            const formdataReq = {
+                url: 'http://127.0.0.1:4010/echo',
+                method: 'POST',
+                header: {
+                    // 'Content-Type': 'multipart/form-data',
+                },
+                body: {
+                    mode: 'formdata',
+                    formdata: [
+                        { key: 'k1', type: 'text', value: 'v1' },
+                        { key: 'k2', type: 'file', value: "${getFixturePath('files/rawfile.txt')}" },
+                    ],
+                },
+            };
+            const promises = [rawReq, urlencodedReq, gqlReq, fileReq, formdataReq].map(req => {
+                return new Promise((resolve, reject) => {
+                    insomnia.sendRequest(
+                        req,
+                        (err, resp) => {
+                            if (err != null) {
+                                reject(err);
+                            } else {
+                                resolve(resp);
+                            }
+                        }
+                    );
+                });
+            });
+            // send request
+            const resps = await Promise.all(promises);
+            // set envs
+            insomnia.environment.set('rawBody', resps[0].body);
+            insomnia.environment.set('urlencodedBody', resps[1].body);
+            insomnia.environment.set('gqlBody', resps[2].body);
+            insomnia.environment.set('fileBody', resps[3].body);
+            insomnia.environment.set('formdataBody', resps[4].body);
+            `,
+            body: '{ "rawBody": {{ _.rawBody }}, "urlencodedBody": {{ _.urlencodedBody }}, "gqlBody": {{ _.gqlBody }}, "fileBody": {{ _.fileBody }}, "formdataBody": {{ _.formdataBody }} }',
+            customVerify: (bodyJson: any) => {
+                const reqBodyJsons = JSON.parse(bodyJson.data);
+                expect(reqBodyJsons.rawBody.data).toEqual('rawContent');
+                expect(reqBodyJsons.urlencodedBody.data).toEqual('k1=v1&k2=v2');
+                expect(JSON.parse(reqBodyJsons.gqlBody.data)).toEqual({
+                    query: 'query',
+                    operationName: 'operation',
+                    variables: 'var',
+                });
+                expect(reqBodyJsons.fileBody.data).toEqual('raw file content');
+                expect(reqBodyJsons.formdataBody.data).toEqual('--X-INSOMNIA-BOUNDARY\r\nContent-Disposition: form-data; name=\"k1\"\r\n\r\nv1\r\n--X-INSOMNIA-BOUNDARY\r\nContent-Disposition: form-data; name=\"k2\"; filename=\"rawfile.txt\"\r\nContent-Type: text/plain\r\n\r\nraw file content\r\n--X-INSOMNIA-BOUNDARY--\r\n');
+            },
+        },
+        {
+            name: 'insomnia.request manipulation',
+            preReqScript: `
+                const { Header } = require('insomnia-collection');
+                insomnia.request.method = 'GET';
+                insomnia.request.url.addQueryParams('k1=v1');
+                insomnia.request.headers.add(new Header({
+                    key: 'Content-Type',
+                    value: 'text/plain'
+                }));
+                insomnia.request.headers.add(new Header({
+                    key: 'X-Hello',
+                    value: 'hello'
+                }));
+                insomnia.request.body.update({
+                    mode: 'raw',
+                    raw: 'rawContent',                    
+                });
+                insomnia.request.auth.update(
+                    {
+                        type: 'bearer',
+                        bearer: [
+                                {key: 'token', value: 'tokenValue'},
+                        ],
+                    },
+                    'bearer'
+                );
+                // insomnia.request.proxy.update({}); // TODO: enable proxy and test it
+                // insomnia.request.certificate.update({});
+            `,
+            body: '{}',
+            customVerify: (bodyJson: any) => {
+                expect(bodyJson.method).toEqual('GET');
+                expect(bodyJson.headers['x-hello']).toEqual('hello');
+                expect(bodyJson.data).toEqual('rawContent');
+            },
+        },
+        // {
+        //     name: 'WORKAROUND: support .globals and .iterationData in script',
+        //     preReqScript: `
+        //         insomnia.environment.set('valueInScopes', 'fromEnvironment');
+        //         insomnia.environment.set(
+        //             'shouldFromIterationData',
+        //             insomnia.toObject().environment.valueInScopes,
+        //         );
+        //         insomnia.iterationData.unset('valueInScopes');
+        //         insomnia.environment.set(
+        //             'shouldFromEnvironment',
+        //             insomnia.toObject().environment.valueInScopes,
+        //         );
+        //         insomnia.environment.unset('valueInScopes');
+        //         insomnia.environment.set(
+        //             'shouldFromGlobals',
+        //             insomnia.toObject().environment.valueInScopes,
+        //         );
+        //     `,
+        //     body: '{ "shouldFromIterationData": "{{ _.shouldFromIterationData }}", "shouldFromEnvironment": "{{ _.shouldFromEnvironment }}", "shouldFromGlobals": "{{ _.shouldFromGlobals }}" }',
+        //     expectedBody: {
+        //         shouldFromIterationData: 'fromIterationData',
+        //         shouldFromEnvironment: 'fromEnvironment',
+        //         shouldFromGlobals: 'fromGlobals',
+        //     },
+        // },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
@@ -215,13 +369,20 @@ test.describe('pre-request UI tests', async () => {
             // verify
             await page.waitForSelector('[data-testid="response-status-tag"]:visible');
 
+            // await page.waitForTimeout(600000);
             await expect(statusTag).toContainText('200 OK');
 
             const rows = await responseBody.allInnerTexts();
             expect(rows.length).toBeGreaterThan(0);
 
             const bodyJson = JSON.parse(rows.join('\n'));
-            expect(bodyJson.data).toEqual(tc.expectedBody);
+
+            if (tc.expectedBody) {
+                expect(JSON.parse(bodyJson.data)).toEqual(tc.expectedBody);
+            }
+            if (tc.customVerify) {
+                tc.customVerify(bodyJson);
+            }
         });
     }
 });

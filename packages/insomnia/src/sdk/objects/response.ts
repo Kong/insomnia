@@ -1,8 +1,7 @@
 import { RESPONSE_CODE_REASONS } from '../../common/constants';
-import { Cookie, CookieOptions } from './cookies';
-import { CookieList } from './cookies';
+import { unsupportedError } from './common';
+import { Cookie, CookieList, CookieOptions } from './cookies';
 import { Header, HeaderDefinition, HeaderList } from './headers';
-import { unsupportedError } from './insomnia';
 import { Property } from './properties';
 import { Request } from './request';
 

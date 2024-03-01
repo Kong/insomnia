@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
 import * as CollectionModule from './sdk/objects';
-import { RequestContext } from './sdk/objects/insomnia';
+import { RequestContext } from './sdk/objects/common';
 
 const bridge: Window['bridge'] = {
   onmessage: listener => {
@@ -24,6 +24,10 @@ const bridge: Window['bridge'] = {
 
     throw Error(`no module is found for "${moduleName}"`);
   },
+
+  curlRequest: options => ipcRenderer.invoke('curlRequest', options),
+  cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
+  readCurlResponse: options => ipcRenderer.invoke('readCurlResponse', options),
 };
 
 if (process.contextIsolated) {
