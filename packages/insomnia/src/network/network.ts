@@ -94,7 +94,6 @@ export const tryToExecutePreRequestScript = async (
     const timeout = settings.timeout || 5000;
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
-        cancelRequestById(request._id);
         reject(new Error('Timeout: Hidden browser window is not responding'));
         // Add one extra second to ensure the hidden browser window has had a chance to return its timeout
         // TODO: restart the hidden browser window
