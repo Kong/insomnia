@@ -35,7 +35,7 @@ import {
   smartEncodeUrl,
 } from '../utils/url/querystring';
 import { getAuthHeader, getAuthQueryParams } from './authentication';
-import { cancellableCurlRequest, cancellableRunPreRequestScript, cancelRequestById } from './cancellation';
+import { cancellableCurlRequest, cancellableRunPreRequestScript } from './cancellation';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
