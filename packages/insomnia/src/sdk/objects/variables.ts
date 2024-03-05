@@ -1,4 +1,4 @@
-import { unsupportedError } from './insomnia';
+import { unsupportedError } from './properties';
 import { Property, PropertyList } from './properties';
 
 export interface VariableDefinition {

@@ -4,12 +4,6 @@ import { Environment, Variables } from './environments';
 import { RequestContext } from './interfaces';
 import { Request as ScriptRequest, RequestBodyOptions, RequestOptions } from './request';
 
-export const unsupportedError = (featureName: string, alternative?: string) => {
-    const message = `${featureName} is not supported yet` +
-        (alternative ? `, please use ${alternative} instead temporarily.` : '');
-    return Error(message);
-};
-
 export class InsomniaObject {
     public environment: Environment;
     public collectionVariables: Environment;
