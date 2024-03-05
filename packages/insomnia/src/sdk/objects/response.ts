@@ -2,8 +2,7 @@ import { RESPONSE_CODE_REASONS } from '../../common/constants';
 import { Cookie, CookieOptions } from './cookies';
 import { CookieList } from './cookies';
 import { Header, HeaderDefinition, HeaderList } from './headers';
-import { unsupportedError } from './insomnia';
-import { Property } from './properties';
+import { Property, unsupportedError } from './properties';
 import { Request } from './request';
 
 export interface ResponseOptions {
