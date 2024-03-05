@@ -16,6 +16,7 @@
       "_id": "__REQ_1__",
       "_type": "request",
       "parentId": "__GRP_1__",
+      "preRequestScript": "",
       "url": "https://insomnia.rest",
       "name": "Bearer Token",
       "description": "",

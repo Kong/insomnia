@@ -54,6 +54,7 @@
         }
       ],
       "parentId": "__GRP_2__",
+      "preRequestScript": "",
       "url": ""
     },
     {
@@ -102,6 +103,7 @@
         }
       ],
       "parentId": "__GRP_2__",
+      "preRequestScript": "",
       "url": ""
     },
     {
@@ -132,6 +134,7 @@
       "name": "Create a new project.",
       "parameters": [],
       "parentId": "__GRP_2__",
+      "preRequestScript": "",
       "url": ""
     },
     {
@@ -162,6 +165,7 @@
       "name": "Display the specified project.",
       "parameters": [],
       "parentId": "__GRP_2__",
+      "preRequestScript": "",
       "url": ""
     },
     {
@@ -202,6 +206,7 @@
       "name": "Update the specified project.",
       "parameters": [],
       "parentId": "__GRP_2__",
+      "preRequestScript": "",
       "url": ""
     }
   ]
