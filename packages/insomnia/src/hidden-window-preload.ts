@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
 import * as CollectionModule from './sdk/objects';
-import { RequestContext } from './sdk/objects/insomnia';
+import { RequestContext } from './sdk/objects/interfaces';
 
 const bridge: Window['bridge'] = {
   onmessage: listener => {
