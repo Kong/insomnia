@@ -7,7 +7,6 @@ import { Request as ScriptRequest, RequestBodyOptions, RequestOptions } from './
 import { Response as ScriptResponse } from './response';
 import { HttpSendRequest } from './send-request';
 
-
 export class InsomniaObject {
     public environment: Environment;
     public collectionVariables: Environment;
