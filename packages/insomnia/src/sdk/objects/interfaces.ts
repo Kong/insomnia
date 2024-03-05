@@ -8,4 +8,5 @@ export interface RequestContext {
     collectionVariables?: object;
     globals?: object;
     iterationData?: object;
+    timeout: number;
 }
