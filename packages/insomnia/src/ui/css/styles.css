@@ -74,7 +74,7 @@ table.json-diff-viewer {
   }
 
   td {
-    padding: 1px;
+    padding: 1px 4px;
     font-size: 0;
   }
   
@@ -82,18 +82,18 @@ table.json-diff-viewer {
     vertical-align: top;
 
     .line-remove {
-      background: var(--color-danger);
-      color: var(--color-font-danger)
+      background: rgba(var(--color-danger-rgb), 0.2);
+      color: var(--color-font)
     }
 
     .line-add {
-      background: var(--color-success);
-      color: var(--color-font-success);
+      background: rgba(var(--color-success-rgb), 0.2);
+      color: var(--color-font);
     }
 
     .line-modify {
-      background: var(--color-warning);
-      color: var(--color-font-warning);
+      background: rgba(var(--color-warning-rgb), 0.2);
+      color: var(--color-font);
     }
 
     &.expand-line {

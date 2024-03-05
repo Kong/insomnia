@@ -185,8 +185,8 @@ export class VCS {
     return this._getBlob(entry.blob);
   }
 
-  async status(candidates: StatusCandidate[], baseStage: Readonly<Stage>, diff = false) {
-    const stage = clone<Stage>(this._stage || baseStage);
+  async status(candidates: StatusCandidate[], diff = false) {
+    const stage = clone<Stage>(this._stage || {});
     const branch = await this._getCurrentBranch();
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
     const state = snapshot ? snapshot.state : [];
@@ -257,8 +257,8 @@ export class VCS {
     };
   }
 
-  async stage(baseStage: Readonly<Stage>, stageEntries: StageEntry[]) {
-    const stage = clone<Stage>(this._stage || baseStage);
+  async stage(stageEntries: StageEntry[]) {
+    const stage = clone<Stage>(this._stage || {});
     const blobsToStore: Record<string, string> = {};
 
     for (const entry of stageEntries) {
@@ -511,17 +511,19 @@ export class VCS {
     return this._merge(candidates, branch.name, otherBranchName, snapshotMessage);
   }
 
-  async takeSnapshot(stage: Stage, name: string) {
+  async takeSnapshot(name: string) {
+    const stage = this._stage || {};
+
+    // Ensure there is something on the stage
+    if (Object.keys(stage).length === 0) {
+      throw new Error('No changes to commit. Please stage your changes first.');
+    }
+
     const branch: Branch = await this._getCurrentBranch();
     const parent: Snapshot | null = await this._getLatestSnapshot(branch.name);
 
     if (!name) {
       throw new Error('Commit must have a message');
-    }
-
-    // Ensure there is something on the stage
-    if (Object.keys(stage).length === 0) {
-      throw new Error('Commit does not have any changes');
     }
 
     const newState: SnapshotState = [];
@@ -554,6 +556,12 @@ export class VCS {
     }
 
     const snapshot = await this._createSnapshotFromState(branch, newState, name);
+
+    // Clear the staged changes
+    for (const key of Object.keys(stage)) {
+      delete stage[key];
+    }
+    this._stage = stage;
     console.log(`[sync] Created commit ${snapshot.id} (${name})`);
   }
 
