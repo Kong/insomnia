@@ -8,11 +8,9 @@ describe('test Property objects', () => {
         const pbase = new PropertyBase('my property');
 
         expect(pbase.toJSON()).toEqual({
-            _kind: 'PropertyBase',
             description: 'my property',
         });
         expect(pbase.toObject()).toEqual({
-            _kind: 'PropertyBase',
             description: 'my property',
         });
     });
@@ -26,7 +24,6 @@ describe('test Property objects', () => {
         );
 
         expect(prop.toJSON()).toEqual({
-            _kind: 'Property',
             disabled: false,
             id: 'real_id',
             name: 'real_name',
@@ -47,19 +44,16 @@ describe('test Property objects', () => {
         expect(propList.count()).toBe(3);
         expect(propList.all()).toEqual([
             {
-                _kind: 'Property',
                 disabled: false,
                 id: 'id1',
                 name: 'p1',
             },
             {
-                _kind: 'Property',
                 disabled: false,
                 id: 'id2',
                 name: 'p2',
             },
             {
-                _kind: 'Property',
                 disabled: false,
                 id: 'id3',
                 name: 'p3',
@@ -141,7 +135,11 @@ describe('test Property objects', () => {
         ]);
 
         expect(propList.toString()).toEqual(
-            '[{"_kind":"Property","id":"id1","name":"p1","disabled":false}; {"_kind":"Property","id":"id2","name":"p2","disabled":false}]',
+            '[{"id":"id1","name":"p1","disabled":false}; {"id":"id2","name":"p2","disabled":false}]',
+        );
+
+        expect(propList.toObject()).toEqual(
+            [{ 'disabled': false, 'id': 'id1', 'name': 'p1' }, { 'disabled': false, 'id': 'id2', 'name': 'p2' }]
         );
     });
 });
