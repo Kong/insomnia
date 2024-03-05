@@ -11,15 +11,15 @@ interface Props {
 }
 
 const getEnvVar = 'insomnia.environment.get("variable_name");\n';
-const getGlbVar = 'insomnia.globals.get("variable_name");\n';
+// const getGlbVar = 'insomnia.globals.get("variable_name");\n';
 const getVar = 'insomnia.variables.get("variable_name");\n';
 const getCollectionVar = 'insomnia.collectionVariables.get("variable_name");\n';
 const setEnvVar = 'insomnia.environment.set("variable_name", "variable_value");\n';
-const setGlbVar = 'insomnia.globals.set("variable_name", "variable_value");\n';
+// const setGlbVar = 'insomnia.globals.set("variable_name", "variable_value");\n';
 const setVar = 'insomnia.variables.set("variable_name", "variable_value");\n';
 const setCollectionVar = 'insomnia.collectionVariables.set("variable_name", "variable_value");\n';
 const unsetEnvVar = 'insomnia.environment.unset("variable_name");\n';
-const unsetGlbVar = 'insomnia.globals.unset("variable_name");\n';
+// const unsetGlbVar = 'insomnia.globals.unset("variable_name");\n';
 const unsetCollectionVar = 'insomnia.collectionVariables.unset("variable_name");\n';
 const sendReq =
   `const resp = await new Promise((resolve, reject) => {
@@ -65,9 +65,10 @@ export const PreRequestScriptEditor: FC<Props> = ({
       snippet,
       ...rows.slice(cursorRow + 1),
     ];
+    const newPosition = cursorRow + snippet.split('\n').length;
 
     editorRef.current?.setValue(newRows.join('\n'));
-    editorRef.current?.setCursorLine(cursorRow + 1);
+    editorRef.current?.setCursorLine(cursorRow + newPosition);
   };
 
   return (
@@ -115,13 +116,13 @@ export const PreRequestScriptEditor: FC<Props> = ({
               onClick={() => addSnippet(getEnvVar)}
             />
           </DropdownItem>
-          <DropdownItem textValue='Get a global variable' arial-label={'Get a global variable'}>
+          {/* <DropdownItem textValue='Get a global variable' arial-label={'Get a global variable'}>
             <ItemContent
               icon="sliders"
               label='Get a global variable'
               onClick={() => addSnippet(getGlbVar)}
             />
-          </DropdownItem>
+          </DropdownItem> */}
           <DropdownItem textValue='Get a variable' arial-label={'Get a variable'}>
             <ItemContent
               icon="sliders"
@@ -143,13 +144,13 @@ export const PreRequestScriptEditor: FC<Props> = ({
               onClick={() => addSnippet(setEnvVar)}
             />
           </DropdownItem>
-          <DropdownItem textValue='Set a global variable' arial-label={'Set a global variable'}>
+          {/* <DropdownItem textValue='Set a global variable' arial-label={'Set a global variable'}>
             <ItemContent
               icon="plus"
               label='Set a global variable'
               onClick={() => addSnippet(setGlbVar)}
             />
-          </DropdownItem>
+          </DropdownItem> */}
           <DropdownItem textValue='Set a variable' arial-label={'Set a variable'}>
             <ItemContent
               icon="plus"
@@ -171,13 +172,13 @@ export const PreRequestScriptEditor: FC<Props> = ({
               onClick={() => addSnippet(unsetEnvVar)}
             />
           </DropdownItem>
-          <DropdownItem textValue='Clear a global variable' arial-label={'Clear a global variable'}>
+          {/* <DropdownItem textValue='Clear a global variable' arial-label={'Clear a global variable'}>
             <ItemContent
               icon="minus"
               label='Clear a global variable'
               onClick={() => addSnippet(unsetGlbVar)}
             />
-          </DropdownItem>
+          </DropdownItem> */}
           <DropdownItem textValue='Clear a collection variable' arial-label={'Clear a collection variable'}>
             <ItemContent
               icon="minus"
