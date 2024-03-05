@@ -1,5 +1,4 @@
-import { unsupportedError } from './insomnia';
-import { Property, PropertyList } from './properties';
+import { Property, PropertyList, unsupportedError } from './properties';
 
 export interface HeaderDefinition {
     key: string;

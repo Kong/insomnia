@@ -1,4 +1,5 @@
-import { AuthOptions, RequestAuth } from './auth';
+import { Request as InsomniaRequest } from '../../../src/models/request';
+import { AuthOptions, fromPreRequestAuth, RequestAuth } from './auth';
 import { CertificateOptions } from './certificates';
 import { Certificate } from './certificates';
 import { HeaderDefinition } from './headers';
@@ -426,4 +427,64 @@ export class Request extends Property {
         // append new
         this.headers.append(new Header(header));
     }
+}
+
+export function mergeRequests(
+    originalReq: InsomniaRequest,
+    updatedReq: Request
+): InsomniaRequest {
+    let mimeType = 'application/octet-stream';
+    if (updatedReq.body) {
+        switch (updatedReq.body.mode) {
+            case undefined:
+                mimeType = 'application/octet-stream';
+                break;
+            case 'raw':
+                mimeType = 'text/plain';
+                break;
+            case 'file':
+                // TODO: improve this by sniffing
+                mimeType = 'application/octet-stream';
+                break;
+            case 'formdata':
+                // boundary should already be part of Content-Type header
+                mimeType = 'multipart/form-data';
+                break;
+            case 'urlencoded':
+                mimeType = 'application/x-www-form-urlencoded';
+                break;
+            case 'graphql':
+                mimeType = 'application/json';
+                break;
+            default:
+                throw Error(`unknown body mode: ${updatedReq.body.mode}`);
+        }
+    }
+
+    const updatedReqProperties: Partial<InsomniaRequest> = {
+        url: typeof updatedReq.url === 'string' ? updatedReq.url : updatedReq.url.toString(),
+        method: updatedReq.method,
+        body: {
+            mimeType: mimeType,
+            text: updatedReq.body?.raw,
+            fileName: updatedReq.body?.file,
+            params: updatedReq.body?.urlencoded?.map(
+                (param: { key: string; value: string }) => ({ name: param.key, value: param.value }),
+                {},
+            ),
+        },
+        headers: updatedReq.headers.map(
+            (header: Header) => ({
+                name: header.key,
+                value: header.value,
+            }),
+            {},
+        ),
+        authentication: fromPreRequestAuth(updatedReq.auth),
+    };
+
+    return {
+        ...originalReq,
+        ...updatedReqProperties,
+    };
 }
