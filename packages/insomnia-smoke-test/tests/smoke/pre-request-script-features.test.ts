@@ -258,7 +258,6 @@ test.describe('pre-request features tests', async () => {
             expect(rows.length).toBeGreaterThan(0);
 
             const bodyJson = JSON.parse(rows.join(' '));
-
             if (tc.expectedBody) {
                 expect(JSON.parse(bodyJson.data)).toEqual(tc.expectedBody);
             }
