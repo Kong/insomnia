@@ -367,6 +367,7 @@ ipcMain.handle('readCurlResponse', async (_, options: { bodyPath?: string; bodyC
   const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
   const bodyBufferOrErrMsg = getBodyBuffer(options, readFailureMsg);
   // TODO(jackkav): simplify the fail msg and reuse in other getBodyBuffer renderer calls
+
   if (!bodyBufferOrErrMsg) {
     return { body: '', error: readFailureMsg };
   } else if (typeof bodyBufferOrErrMsg === 'string') {

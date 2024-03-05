@@ -10,6 +10,7 @@ export interface ProxyConfigOptions {
     authenticate: boolean;
     username: string;
     password: string;
+    bypass?: string[];
 }
 
 export class ProxyConfig extends Property {
@@ -23,6 +24,7 @@ export class ProxyConfig extends Property {
     authenticate: boolean;
     username: string;
     password: string;
+    bypass: string[]; // it is for compatibility with Insomnia's bypass list
 
     static authenticate: boolean = false;
     static bypass: UrlMatchPatternList<UrlMatchPattern> = new UrlMatchPatternList<UrlMatchPattern>(undefined, []);
@@ -46,7 +48,7 @@ export class ProxyConfig extends Property {
         authenticate: boolean;
         username: string;
         password: string;
-
+        bypass?: string[];
     }) {
         super();
 
@@ -62,6 +64,7 @@ export class ProxyConfig extends Property {
         this.authenticate = def.authenticate;
         this.username = def.username;
         this.password = def.password;
+        this.bypass = def.bypass || [];
     }
 
     static isProxyConfig(obj: object) {
@@ -75,23 +78,20 @@ export class ProxyConfig extends Property {
     }
 
     getProxyUrl(): string {
-        const protos = this.getProtocols();
-        // TODO: how to pick up a protocol?
-        if (protos.length === 0) {
-            return '';
-        }
-
         // http://proxy_username:proxy_password@proxy.com:8080
         // TODO: check if port is not given
         if (this.authenticate) {
-            return `${protos[0]}://${this.username}:${this.password}@${this.host}:${this.port}`;
+            return `${this.username}:${this.password}@${this.host}:${this.port}`;
         }
-        return `${protos[0]}://${this.host}:${this.port}`;
+        return `${this.host}:${this.port}`;
     }
 
     test(url?: string) {
         if (!url) {
             // TODO: it is confusing in which case url arg is optional
+            return false;
+        }
+        if (this.bypass.includes(url)) {
             return false;
         }
 

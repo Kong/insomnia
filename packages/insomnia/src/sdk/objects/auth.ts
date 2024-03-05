@@ -335,6 +335,7 @@ export class RequestAuth extends Property {
 
 export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
     const authObj = auth.toJSON();
+
     const findValueInKvArray = (targetKey: string, kvs?: { key: string; value: string }[]) =>
         kvs?.find(({ key }) => key === targetKey)?.value || '';
 
@@ -342,7 +343,7 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
         targetKey: string,
         kvs?: { key: string; value: string }[] | OAuth2AuthOption[]
     ) => {
-        if (!kvs) {
+        if (kvs == null) {
             return '';
         }
 
@@ -351,7 +352,7 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
                 return kv.value;
             } else if (Array.isArray(kv.value)) {
                 const matched = kv.value.find(subKv => subKv.key === targetKey);
-                if (matched) {
+                if (matched != null) {
                     return matched.value;
                 }
             }
@@ -464,6 +465,9 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
                 }
             })();
 
+            const audience = findValueInOauth2Options('audience', authObj.oauth2);
+            const resource = findValueInOauth2Options('resource', authObj.oauth2);
+
             const responseType = ((): OAuth2ResponseType => {
                 const inputResponseType = findValueInOauth2Options('response_type', authObj.oauth2);
                 if (['code', 'id_token', 'id_token token', 'none', 'token'].includes(inputResponseType)) {
@@ -491,9 +495,8 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
                 state: findValueInOauth2Options('state', authObj.oauth2),
                 refreshToken: findValueInOauth2Options('refreshTokenUrl', authObj.oauth2),
                 credentialsInBody: findValueInOauth2Options('client_authentication', authObj.oauth2) === 'body',
-                audience: findValueInOauth2Options('audience', authObj.oauth2) || '',
-                resource: findValueInOauth2Options('resource', authObj.oauth2) || '',
-
+                audience: audience || '',
+                resource: resource || '',
                 // following properties are not supported yet in the script side, just try to find and set them
                 tokenPrefix: findValueInOauth2Options('tokenPrefix', authObj.oauth2),
                 responseType: responseType,

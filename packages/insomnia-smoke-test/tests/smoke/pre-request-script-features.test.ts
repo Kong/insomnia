@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import { expect } from '@playwright/test';
 import { Buffer } from 'buffer';
 
@@ -405,4 +407,97 @@ test.describe('pre-request features tests', async () => {
             }
         });
     }
+
+    test('insomnia.request / update proxy configuration', async ({ page }) => {
+        const responsePane = page.getByTestId('response-pane');
+
+        // update proxy configuration
+        await page.locator('[data-testid="settings-button"]').click();
+        await page.locator('text=Insomnia Preferences').first().click();
+        await page.locator('text=Enable proxy').click();
+        await page.locator('[name="httpProxy"]').fill('localhost:1111');
+        await page.locator('[name="httpsProxy"]').fill('localhost:2222');
+        await page.locator('[name="noProxy"]').fill('http://a.com,https://b.com');
+        await page.locator('.app').press('Escape');
+
+        await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+
+        // enter script
+        const preRequestScriptTab = page.getByRole('tab', { name: 'Pre-request Script' });
+        await preRequestScriptTab.click();
+        const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
+        await preRequestScriptEditor.fill(`
+            console.log(insomnia.request.proxy.getProxyUrl());
+            insomnia.request.proxy.update({
+                    host: 'localhost',
+                    match: '<all_urls>',
+                    port: 8888,
+                    tunnel: false,
+                    authenticate: false,
+                    username: '',
+                    password: '',
+            });
+        `);
+
+        // TODO: wait for body and pre-request script are persisted to the disk
+        // should improve this part, we should avoid sync this state through db as it introduces race condition
+        await page.waitForTimeout(500);
+
+        // send
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+        // verify
+        await page.getByRole('tab', { name: 'Timeline' }).click();
+        await expect(responsePane).toContainText('localhost:2222'); // original proxy
+        await expect(responsePane).toContainText('Trying 127.0.0.1:8888'); // updated proxy
+    });
+
+    test('insomnia.request / update clientCertificate', async ({ page }) => {
+        const responsePane = page.getByTestId('response-pane');
+        const fixturePath = getFixturePath('certificates');
+
+        // update proxy configuration
+        await page.locator('text=Add Certificates').click();
+        await page.locator('text=Add client certificate').click();
+        await page.locator('[name="host"]').fill('a.com');
+        await page.locator('[data-key="pfx"]').click();
+
+        const fileChooserPromise = page.waitForEvent('filechooser');
+        await page.locator('text=Add PFX or PKCS12 file').click();
+        const fileChooser = await fileChooserPromise;
+        await fileChooser.setFiles(path.join(fixturePath, 'fake.pfx'));
+        await page.getByRole('button', { name: 'Add certificate' }).click();
+        await page.getByRole('button', { name: 'Done' }).click();
+
+        await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+
+        // enter script
+        const preRequestScriptTab = page.getByRole('tab', { name: 'Pre-request Script' });
+        await preRequestScriptTab.click();
+        const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
+        await preRequestScriptEditor.fill(`
+            // print the original one
+            console.log('key:', insomnia.request.certificate.key.src);
+            console.log('cert:', insomnia.request.certificate.cert.src);
+            console.log('passphrass:', insomnia.request.certificate.passphrass);
+            console.log('pfx:', insomnia.request.certificate.pfx.src);
+            // update
+            insomnia.request.certificate.update({
+                disabled: true,
+                key: {src: 'invalid.key'},
+                cert: {src: 'invalid.cert'},
+                passphrase: '',
+                pfx: {src: ''},
+            });
+        `);
+
+        // TODO: wait for body and pre-request script are persisted to the disk
+        // should improve this part, we should avoid sync this state through db as it introduces race condition
+        await page.waitForTimeout(500);
+        // send
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+        // verify
+        await page.getByRole('tab', { name: 'Timeline' }).click();
+        await expect(responsePane).toContainText('fixtures/certificates/fake.pfx'); // original proxy
+    });
 });

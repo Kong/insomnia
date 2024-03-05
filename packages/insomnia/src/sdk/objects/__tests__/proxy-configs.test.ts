@@ -31,7 +31,7 @@ describe('test ProxyConfig object', () => {
         );
 
         expect(proxyConfig.getProxyUrl()).toEqual(
-            'http://proxy_username:proxy_password@proxy.com:8080'
+            'proxy_username:proxy_password@proxy.com:8080'
         );
 
         expect(

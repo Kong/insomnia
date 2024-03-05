@@ -1,6 +1,6 @@
 import { initInsomniaObject } from './sdk/objects/insomnia';
 import { RequestContext } from './sdk/objects/interfaces';
-import { mergeRequests } from './sdk/objects/request';
+import { mergeClientCertificates, mergeRequests, mergeSettings } from './sdk/objects/request';
 
 export interface HiddenBrowserWindowBridgeAPI {
   runPreRequestScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
@@ -32,7 +32,13 @@ const runPreRequestScript = async (
   const log: string[] = [];
   // TODO: we should at least support info, debug, warn, error
   const consoleInterceptor = {
-    log: (...args: any[]) => log.push(JSON.stringify({ value: args.map(a => JSON.stringify(a)).join('\n'), name: 'Text', timestamp: Date.now() }) + '\n'),
+    log: (...args: any[]) => log.push(
+      JSON.stringify({
+        value: args.map(a => JSON.stringify(a)).join('\n'),
+        name: 'Text',
+        timestamp: Date.now(),
+      }) + '\n',
+    ),
   };
 
   const AsyncFunction = (async () => { }).constructor;
@@ -53,6 +59,8 @@ const runPreRequestScript = async (
   );
   const mutatedContextObject = mutatedInsomniaObject.toObject();
   const updatedRequest = mergeRequests(context.request, mutatedContextObject.request);
+  const updatedSettings = mergeSettings(context.settings, mutatedContextObject.request);
+  const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
 
   await window.bridge.requireInterceptor('fs').promises.writeFile(context.timelinePath, log.join('\n'));
 
@@ -64,5 +72,7 @@ const runPreRequestScript = async (
     environment: mutatedContextObject.environment,
     baseEnvironment: mutatedContextObject.baseEnvironment,
     request: updatedRequest,
+    settings: updatedSettings,
+    clientCertificates: updatedCertificates,
   };
 };
