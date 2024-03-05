@@ -38,6 +38,7 @@
       "name": "auth code",
       "parameters": [],
       "parentId": "__GRP_1__",
+      "preRequestScript": "",
       "url": "mockbin.org/request/any"
     },
     {
@@ -68,6 +69,7 @@
       "name": "pkce",
       "parameters": [],
       "parentId": "__GRP_1__",
+      "preRequestScript": "",
       "url": "mockbin.org/request/any"
     },
     {
@@ -97,6 +99,7 @@
       "name": "implicit",
       "parameters": [],
       "parentId": "__GRP_1__",
+      "preRequestScript": "",
       "url": "mockbin.org/request/any"
     },
     {
@@ -126,6 +129,7 @@
       "name": "password",
       "parameters": [],
       "parentId": "__GRP_1__",
+      "preRequestScript": "",
       "url": "mockbin.org/request/any"
     },
     {
@@ -155,6 +159,7 @@
       "name": "client",
       "parameters": [],
       "parentId": "__GRP_1__",
+      "preRequestScript": "",
       "url": "mockbin.org/request/any"
     }
   ]

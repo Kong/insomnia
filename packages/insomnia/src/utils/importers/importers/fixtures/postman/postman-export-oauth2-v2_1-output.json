@@ -39,6 +39,7 @@
       "name": "Example request with OAuth2",
       "parameters": [],
       "parentId": "__GRP_1__",
+      "preRequestScript": "",
       "url": ""
     }
   ]

@@ -1,6 +1,7 @@
 import { Converter, ImportRequest, Parameter } from '../entities';
 import {
   Auth as V200Auth,
+  EventList as V200EventList,
   Folder as V200Folder,
   FormParameter as V200FormParameter,
   Header as V200Header,
@@ -14,6 +15,7 @@ import {
 import {
   Auth as V210Auth,
   Auth1 as V210Auth1,
+  EventList as V210EventList,
   Folder as V210Folder,
   FormParameter as V210FormParameter,
   Header as V210Header,
@@ -30,7 +32,7 @@ export const name = 'Postman';
 export const description = 'Importer for Postman collections';
 
 type PostmanCollection = V200Schema | V210Schema;
-
+type EventList = V200EventList | V210EventList;
 type Variable = V200Variable2 | V210Variable2;
 
 type Authetication = V200Auth | V210Auth;
@@ -112,8 +114,29 @@ export class ImportPostman {
     }, []);
   };
 
+  importPreRequestScript = (events: EventList | undefined): string => {
+    if (events == null) {
+      return '';
+    }
+
+    const preRequestEvent = events.find(
+      event => event.listen === 'prerequest'
+    );
+
+    const scriptOrRows = preRequestEvent != null ? preRequestEvent.script : '';
+    if (scriptOrRows == null || scriptOrRows === '') {
+      return '';
+    }
+
+    const scriptContent = scriptOrRows.exec != null ?
+      (Array.isArray(scriptOrRows.exec) ? scriptOrRows.exec.join('\n') : scriptOrRows.exec) :
+      '';
+
+    return scriptContent;
+  };
+
   importRequestItem = (
-    { request, name = '' }: Item,
+    { request, name = '', event }: Item,
     parentId: string,
   ): ImportRequest => {
     if (typeof request === 'string') {
@@ -127,6 +150,8 @@ export class ImportPostman {
     if (typeof request.url === 'object' && request.url.query) {
       parameters = this.importParameters(request.url?.query);
     }
+
+    const preRequestScript = this.importPreRequestScript(event);
     return {
       parentId,
       _id: `__REQ_${requestCount++}__`,
@@ -144,6 +169,7 @@ export class ImportPostman {
       })),
       body: this.importBody(request.body, headers.find(({ key }) => key === 'Content-Type')?.value),
       authentication,
+      preRequestScript,
     };
   };
 

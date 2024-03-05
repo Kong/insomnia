@@ -16,6 +16,7 @@
       "_id": "__REQ_1__",
       "_type": "request",
       "parentId": "__GRP_1__",
+      "preRequestScript": "",
       "url": "https://jigsaw.w3.org/HTTP/Digest/",
       "name": "Digest Auth",
       "description": "",
