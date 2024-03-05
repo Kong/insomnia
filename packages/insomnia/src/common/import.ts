@@ -155,7 +155,7 @@ export async function importResourcesToProject({ projectId }: { projectId: strin
   const postmanTopLevelFolder = resources.find(
     resource => isRequestGroup(resource) && resource.parentId === '__WORKSPACE_ID__'
   ) as Workspace | undefined;
-  if (postmanTopLevelFolder) {
+  if (ResourceCache.type.id === 'postman' && postmanTopLevelFolder) {
     await importResourcesToNewWorkspace(projectId, postmanTopLevelFolder);
     return { resources };
   }
