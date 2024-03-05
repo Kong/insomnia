@@ -180,6 +180,43 @@ test.describe('pre-request UI tests', async () => {
                 },
             },
         },
+        {
+            name: 'insomnia.request manipulation',
+            preReqScript: `
+                const { Header } = require('insomnia-collection');
+                insomnia.request.method = 'GET';
+                insomnia.request.url.addQueryParams('k1=v1');
+                insomnia.request.headers.add(new Header({
+                    key: 'Content-Type',
+                    value: 'text/plain'
+                }));
+                insomnia.request.headers.add(new Header({
+                    key: 'X-Hello',
+                    value: 'hello'
+                }));
+                insomnia.request.body.update({
+                    mode: 'raw',
+                    raw: 'rawContent',
+                });
+                insomnia.request.auth.update(
+                    {
+                        type: 'bearer',
+                        bearer: [
+                                {key: 'token', value: 'tokenValue'},
+                        ],
+                    },
+                    'bearer'
+                );
+                // insomnia.request.proxy.update({}); // TODO: enable proxy and test it
+                // insomnia.request.certificate.update({});
+            `,
+            body: '{}',
+            customVerify: (bodyJson: any) => {
+                expect(bodyJson.method).toEqual('GET');
+                expect(bodyJson.headers['x-hello']).toEqual('hello');
+                expect(bodyJson.data).toEqual('rawContent');
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
@@ -221,7 +258,13 @@ test.describe('pre-request UI tests', async () => {
             expect(rows.length).toBeGreaterThan(0);
 
             const bodyJson = JSON.parse(rows.join('\n'));
-            expect(bodyJson.data).toEqual(tc.expectedBody);
+
+            if (tc.expectedBody) {
+                expect(JSON.parse(bodyJson.data)).toEqual(tc.expectedBody);
+            }
+            if (tc.customVerify) {
+                tc.customVerify(bodyJson);
+            }
         });
     }
 });
