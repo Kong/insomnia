@@ -31,6 +31,8 @@ export class FormParam extends Property {
         this.value = options.value;
     }
 
+    static _index = 'key';
+
     static _postman_propertyAllowsMultipleValues() {
         throw Error('unsupported');
     }

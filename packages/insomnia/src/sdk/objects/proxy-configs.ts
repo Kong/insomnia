@@ -64,6 +64,8 @@ export class ProxyConfig extends Property {
         this.password = def.password;
     }
 
+    static _index: string = 'key';
+
     static isProxyConfig(obj: object) {
         return '_kind' in obj && obj._kind === 'ProxyConfig';
     }

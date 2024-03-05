@@ -45,6 +45,8 @@ export class Cookie extends Property {
         this.cookie = cookie;
     }
 
+    static _index = 'key';
+
     static isCookie(obj: Property) {
         return '_kind' in obj && obj._kind === 'Cookie';
     }

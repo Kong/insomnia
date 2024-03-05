@@ -45,6 +45,8 @@ export class QueryParam extends Property {
     // (static) _postman_propertyAllowsMultipleValues :Boolean
     // (static) _postman_propertyIndexKey :String
 
+    static _index: string = 'key';
+
     static parse(queryStr: string) {
         const params = new UrlSearchParams(queryStr);
         return Array.from(params.entries())
@@ -106,6 +108,7 @@ export class QueryParam extends Property {
 }
 
 export interface UrlOptions {
+    id?: string;
     auth?: {
         username: string;
         password: string;
@@ -122,6 +125,7 @@ export interface UrlOptions {
 export class Url extends PropertyBase {
     _kind: string = 'Url';
 
+    id?: string;
     // TODO: should be related to RequestAuth
     // but the implementation seems only supports username + password
     auth?: { username: string; password: string };
@@ -144,6 +148,9 @@ export class Url extends PropertyBase {
         const urlObj = typeof def === 'string' ? Url.parse(def) : def;
 
         if (urlObj) {
+            // `id` could be undefined, it is mainly for methods such as `indexOf`.
+            this.id = urlObj.id;
+
             this.auth = urlObj.auth;
             this.hash = urlObj.hash;
             this.host = urlObj.host;
@@ -175,6 +182,8 @@ export class Url extends PropertyBase {
             throw Error(`url is invalid: ${def}`); // TODO:
         }
     }
+
+    static _index: string = 'key';
 
     static isUrl(obj: object) {
         return '_kind' in obj && obj._kind === 'Url';
@@ -344,6 +353,7 @@ export class UrlMatchPattern extends Property {
     // "http://localhost/*"
     // It doesn't support match patterns for top Level domains (TLD).
 
+    id: string = '';
     private pattern: string;
 
     constructor(pattern: string) {
@@ -351,6 +361,8 @@ export class UrlMatchPattern extends Property {
 
         this.pattern = pattern;
     }
+
+    static _index = 'id';
 
     static readonly MATCH_ALL_URLS: string = '<all_urls>';
     static pattern: string | undefined = undefined; // TODO: its usage is unknown
