@@ -15,6 +15,7 @@
     {
       "_id": "__REQ_1__",
       "parentId": "__GRP_1__",
+      "preRequestScript": "",
       "url": "mockbin.org/request/any",
       "name": "New Request",
       "description": "",
