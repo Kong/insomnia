@@ -2,6 +2,7 @@ import { RequestBodyParameter, RequestHeader } from '../../models/request';
 import { toPreRequestAuth } from './auth';
 import { Environment, Variables } from './environments';
 import { RequestContext } from './interfaces';
+import { unsupportedError } from './properties';
 import { Request as ScriptRequest, RequestBodyOptions, RequestOptions } from './request';
 
 export class InsomniaObject {
