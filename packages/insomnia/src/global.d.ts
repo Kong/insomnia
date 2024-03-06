@@ -11,6 +11,9 @@ declare global {
     bridge: {
       requireInterceptor: (module: string) => any;
       onmessage: (listener: (data: any, callback: (result: any) => void) => void) => void;
+      cancelCurlRequest: (id: string) => void;
+      curlRequest: (options: any) => Promise<any>;
+      readCurlResponse: (options: { bodyPath: string; bodyCompression: Compression }) => Promise<{ body: string; error: string }>;
     };
   }
 }

@@ -24,6 +24,10 @@ const bridge: Window['bridge'] = {
 
     throw Error(`no module is found for "${moduleName}"`);
   },
+
+  curlRequest: options => ipcRenderer.invoke('curlRequest', options),
+  cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
+  readCurlResponse: options => ipcRenderer.invoke('readCurlResponse', options),
 };
 
 if (process.contextIsolated) {
