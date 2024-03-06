@@ -27,17 +27,10 @@ export class PropertyBase {
         return _.trimStart(key, '_');
     }
 
-    static toJSON(obj: object) {
-        if ('toJSON' in obj && typeof obj.toJSON === 'function') {
-            return obj.toJSON();
-        } else {
-            try {
-                return JSON.parse(JSON.stringify(obj));
-            } catch (e) {
-                throw Error(`failed to call "toJSON" for ${obj}`);
-            }
-        }
-    }
+    // TODO: temporarily disable this
+    // static toJSON(obj: { toJSON: () => string }) {
+    //     return obj.toJSON();
+    // }
 
     meta() {
         return {};

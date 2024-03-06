@@ -12,6 +12,7 @@ export interface CertificateOptions {
     cert?: SrcRef;
     passphrase?: string;
     pfx?: SrcRef; // PFX or PKCS12 Certificate
+    disabled?: boolean;
 }
 
 export class Certificate extends Property {
@@ -38,6 +39,7 @@ export class Certificate extends Property {
         this.cert = options.cert;
         this.passphrase = options.passphrase;
         this.pfx = options.pfx;
+        this.disabled = options.disabled;
     }
 
     static isCertificate(obj: object) {
