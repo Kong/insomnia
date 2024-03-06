@@ -446,7 +446,9 @@ export function mergeSettings(
     originalSettings: Settings,
     updatedReq: Request,
 ): Settings {
-    const proxyEnabled = updatedReq.proxy != null && updatedReq.proxy.getProxyUrl() !== '';
+    const proxyEnabled = updatedReq.proxy != null
+        && !updatedReq.proxy.disabled
+        && updatedReq.proxy.getProxyUrl() !== '';
     if (!proxyEnabled) {
         return originalSettings;
     }
@@ -477,6 +479,12 @@ export function mergeClientCertificates(
     // - if not, it returns original certs
 
     if (!updatedReq.certificate) {
+        return originalClientCertificates;
+    } else if (
+        updatedReq.certificate.key == null &&
+        updatedReq.certificate.cert == null &&
+        updatedReq.certificate.pfx == null
+    ) {
         return originalClientCertificates;
     }
 

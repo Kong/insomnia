@@ -32,7 +32,13 @@ const runPreRequestScript = async (
   const log: string[] = [];
   // TODO: we should at least support info, debug, warn, error
   const consoleInterceptor = {
-    log: (...args: any[]) => log.push(JSON.stringify({ value: args.map(a => JSON.stringify(a)).join('\n'), name: 'Text', timestamp: Date.now() }) + '\n'),
+    log: (...args: any[]) => log.push(
+      JSON.stringify({
+        value: args.map(a => JSON.stringify(a)).join('\n'),
+        name: 'Text',
+        timestamp: Date.now(),
+      }) + '\n',
+    ),
   };
 
   const AsyncFunction = (async () => { }).constructor;
