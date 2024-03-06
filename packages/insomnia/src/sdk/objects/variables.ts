@@ -27,6 +27,8 @@ export class Variable extends Property {
         this.disabled = def ? def.disabled : false;
     }
 
+    static _index = 'key';
+
     // unknown usage and unsupported
     static types() {
         throw unsupportedError('types');

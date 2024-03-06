@@ -35,6 +35,8 @@ export class Header extends Property {
         }
     }
 
+    static _index: string = 'key';
+
     static create(input?: { key: string; value: string } | string, name?: string): Header {
         return new Header(input || { key: '', value: '' }, name);
     }
