@@ -93,6 +93,7 @@ export const PreRequestScriptEditor: FC<Props> = ({
       <div className="h-[calc(var(--line-height-xs))] border-solid border-t border-[var(--hl-md)] text-[var(--font-size-sm)] p-[var(--padding-xs)]">
         <Dropdown
           aria-label='Snippets'
+          placement='top left'
           triggerButton={
             <DropdownButton>
               <ItemContent
