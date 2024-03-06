@@ -29,7 +29,7 @@ const sendReq =
       err != null ? reject(err) : resolve(resp);
     }
   );
-});`;
+});\n`;
 const logValue = 'console.log("log", variableName);\n';
 
 const lintOptions = {
@@ -56,24 +56,25 @@ export const PreRequestScriptEditor: FC<Props> = ({
 }) => {
   const editorRef = useRef<CodeEditorHandle>(null);
 
-  // handlers
+  // Inserts at the line below the cursor and moves to the line beneath
   const addSnippet = (snippet: string) => {
     const cursorRow = editorRef.current?.getCursor()?.line || 0;
-    const rows = (editorRef.current?.getValue() || '').split('\n');
-    const newRows = [
-      ...rows.slice(0, cursorRow + 1),
-      snippet,
-      ...rows.slice(cursorRow + 1),
-    ];
-    const newPosition = cursorRow + snippet.split('\n').length;
+    const nextRow = cursorRow + 1;
+    const value = editorRef.current?.getValue() || '';
 
-    editorRef.current?.setValue(newRows.join('\n'));
-    editorRef.current?.setCursorLine(cursorRow + newPosition);
+    editorRef.current?.setValue([
+      ...value.split('\n').slice(0, nextRow),
+      snippet,
+      ...value.split('\n').slice(nextRow),
+    ].join('\n'));
+
+    editorRef.current?.focus();
+    editorRef.current?.setCursorLine(cursorRow + snippet.split('\n').length);
   };
 
   return (
     <Fragment>
-      <div style={{ height: 'calc(100% - var(--line-height-xs))' }}>
+      <div className="h-[calc(100%-var(--line-height-xs))]">
         <CodeEditor
           key={uniquenessKey}
           id="pre-request-script-editor"
@@ -89,14 +90,7 @@ export const PreRequestScriptEditor: FC<Props> = ({
           ref={editorRef}
         />
       </div>
-      <div
-        style={{
-          height: 'calc(var(--line-height-xs))',
-          borderTop: '1px solid var(--hl-md)',
-          fontSize: 'var(--font-size-sm)',
-          padding: 'var(--padding-xs)',
-        }}
-      >
+      <div className="h-[calc(var(--line-height-xs))] border-solid border-t border-[var(--hl-md)] text-[var(--font-size-sm)] p-[var(--padding-xs)]">
         <Dropdown
           aria-label='Snippets'
           triggerButton={
