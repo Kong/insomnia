@@ -165,13 +165,11 @@ test.describe('pre-request features tests', async () => {
             }`,
             expectedBody: {
                 propJson: {
-                    '_kind': 'Property',
                     'disabled': false,
                     'id': 'pid',
                     'name': 'pname',
                 },
                 headerJson: {
-                    '_kind': 'Header',
                     'key': 'headerKey',
                     'value': 'headerValue',
                     'id': '',

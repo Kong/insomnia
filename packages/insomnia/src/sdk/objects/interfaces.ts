@@ -1,4 +1,6 @@
+import { ClientCertificate } from '../../models/client-certificate';
 import type { Request } from '../../models/request';
+import { Settings } from '../../models/settings';
 
 export interface RequestContext {
     request: Request;
@@ -9,4 +11,6 @@ export interface RequestContext {
     globals?: object;
     iterationData?: object;
     timeout: number;
+    settings: Settings;
+    clientCertificates: ClientCertificate[];
 }

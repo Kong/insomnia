@@ -1,4 +1,6 @@
+import { ClientCertificate } from '../../models/client-certificate';
 import { RequestBodyParameter, RequestHeader } from '../../models/request';
+import { Settings } from '../../models/settings';
 import { toPreRequestAuth } from './auth';
 import { Environment, Variables } from './environments';
 import { RequestContext } from './interfaces';
@@ -14,6 +16,8 @@ export class InsomniaObject {
     public variables: Variables;
     public request: ScriptRequest;
     private httpRequestSender: HttpSendRequest;
+    private settings: Settings;
+    private clientCertificates: ClientCertificate[];
 
     // TODO: follows will be enabled after Insomnia supports them
     private _globals: Environment;
@@ -27,6 +31,8 @@ export class InsomniaObject {
             baseEnvironment: Environment;
             variables: Variables;
             request: ScriptRequest;
+            settings: Settings;
+            clientCertificates: ClientCertificate[];
         },
     ) {
         this._globals = rawObj.globals;
@@ -35,7 +41,10 @@ export class InsomniaObject {
         this.collectionVariables = this.baseEnvironment; // collectionVariables is mapped to baseEnvironment
         this._iterationData = rawObj.iterationData;
         this.variables = rawObj.variables;
+
         this.request = rawObj.request;
+        this.settings = rawObj.settings;
+        this.clientCertificates = rawObj.clientCertificates;
 
         this.httpRequestSender = new HttpSendRequest({
             preferredHttpVersion: '',
@@ -76,6 +85,8 @@ export class InsomniaObject {
             iterationData: this._iterationData.toObject(),
             variables: this.variables.toObject(),
             request: this.request,
+            settings: this.settings,
+            clientCertificates: this.clientCertificates,
         };
     };
 }
@@ -137,6 +148,8 @@ export function initInsomniaObject(
             iterationData,
             variables,
             request,
+            settings: rawObj.settings,
+            clientCertificates: rawObj.clientCertificates,
         },
     );
 };
