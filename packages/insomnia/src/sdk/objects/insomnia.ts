@@ -4,6 +4,8 @@ import { Environment, Variables } from './environments';
 import { RequestContext } from './interfaces';
 import { unsupportedError } from './properties';
 import { Request as ScriptRequest, RequestBodyOptions, RequestOptions } from './request';
+import { Response as ScriptResponse } from './response';
+import { HttpSendRequest } from './send-request';
 
 export class InsomniaObject {
     public environment: Environment;
@@ -11,6 +13,7 @@ export class InsomniaObject {
     public baseEnvironment: Environment;
     public variables: Variables;
     public request: ScriptRequest;
+    private httpRequestSender: HttpSendRequest;
 
     // TODO: follows will be enabled after Insomnia supports them
     private _globals: Environment;
@@ -33,6 +36,26 @@ export class InsomniaObject {
         this._iterationData = rawObj.iterationData;
         this.variables = rawObj.variables;
         this.request = rawObj.request;
+
+        this.httpRequestSender = new HttpSendRequest({
+            preferredHttpVersion: '',
+            maxRedirects: 0,
+            proxyEnabled: false,
+            timeout: 0,
+            validateSSL: false,
+            followRedirects: false,
+            maxTimelineDataSizeKB: 0,
+            httpProxy: '',
+            httpsProxy: '',
+            noProxy: '',
+        });
+    }
+
+    sendRequest(
+        request: string | ScriptRequest,
+        cb: (error?: string, response?: ScriptResponse) => void
+    ) {
+        return this.httpRequestSender.sendRequest(request, cb);
     }
 
     // TODO: remove this after enabled globals
