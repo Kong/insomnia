@@ -34,10 +34,10 @@ test.describe('pre-request UI tests', async () => {
                 insomnia.baseEnvironment.set('customValue', 'fromScript');
             `,
             body: `{
-                "fromBaseEnv": "{{ _.fromBaseEnv }}",
-                "scriptValue": "{{ _.scriptValue }}",
-                "preDefinedValue": "{{ _.preDefinedValue }}",
-                "customValue": "{{ _.customValue }}"
+"fromBaseEnv": "{{ _.fromBaseEnv }}",
+"scriptValue": "{{ _.scriptValue }}",
+"preDefinedValue": "{{ _.preDefinedValue }}",
+"customValue": "{{ _.customValue }}"
             }`,
             expectedBody: {
                 fromBaseEnv: 'baseEnv',
@@ -59,9 +59,9 @@ test.describe('pre-request UI tests', async () => {
                 pm.environment.set('varBool', pm.variables.get('varBool'));
             `,
             body: `{
-                "varStr": "{{ _.varStr }}",
-                "varNum": {{ _.varNum }},
-                "varBool": {{ _.varBool }}
+"varStr": "{{ _.varStr }}",
+"varNum": {{ _.varNum }},
+"varBool": {{ _.varBool }}
             }`,
             expectedBody: {
                 varStr: 'varStr',
@@ -160,8 +160,8 @@ test.describe('pre-request UI tests', async () => {
             insomnia.environment.set('headerJson', JSON.stringify(header.toJSON()));
             `,
             body: `{
-                "propJson": {{ _.propJson }},
-                "headerJson": {{ _.headerJson }}
+"propJson": {{ _.propJson }},
+"headerJson": {{ _.headerJson }}
             }`,
             expectedBody: {
                 propJson: {
@@ -257,7 +257,7 @@ test.describe('pre-request UI tests', async () => {
             const rows = await responseBody.allInnerTexts();
             expect(rows.length).toBeGreaterThan(0);
 
-            const bodyJson = JSON.parse(rows.join('\n'));
+            const bodyJson = JSON.parse(rows.join(' '));
 
             if (tc.expectedBody) {
                 expect(JSON.parse(bodyJson.data)).toEqual(tc.expectedBody);
