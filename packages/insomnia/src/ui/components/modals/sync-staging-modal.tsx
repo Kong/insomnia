@@ -76,9 +76,9 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
   }, [allChangesLength, onClose, error]);
 
   // const [previewDiffItem, setPreviewDiffItem] = useState<StageEntry | null>(null);
-  const [selectedItemId, setSelectedItemId] = useState<string>('');
+  const [selectedItemBlobId, setSelectedItemBlobId] = useState<string>('');
 
-  const previewDiffItem = allChanges.find(item => item.key === selectedItemId);
+  const previewDiffItem = allChanges.find(item => item.blobId === selectedItemBlobId);
 
   return (
     <ModalOverlay
@@ -168,19 +168,20 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                       <div className='flex-1 flex overflow-y-auto w-full select-none'>
                         <GridList
                           className="w-full"
-                          items={stagedChanges.map(item => ({
-                            ...item,
-                            id: item.key,
-                            textValue: item.name || item.document?.type || '',
+                          items={stagedChanges.map(entry => ({
+                            entry,
+                            id: entry.blobId,
+                            key: entry.blobId,
+                            textValue: entry.name || entry.document?.type || '',
                           }))}
                           aria-label='Unstaged changes'
-                          selectedKeys={[selectedItemId]}
+                          selectedKeys={[selectedItemBlobId]}
                           selectionMode='single'
                           onSelectionChange={keys => {
                             if (keys !== 'all') {
                               const key = keys.values().next().value;
-                              console.log({ key });
-                              setSelectedItemId(key);
+
+                              setSelectedItemBlobId(key);
                             }
                           }}
                           renderEmptyState={() => (
@@ -192,13 +193,13 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                           {item => {
                             return (
                               <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
-                                <span className='truncate'>{item.name || item.document?.type}</span>
+                                <span className='truncate'>{item.entry.name || item.entry.document?.type}</span>
                                 <div className='flex items-center gap-1'>
                                   <Button
                                     className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
                                     slot={null}
                                     onPress={() => {
-                                      unstageChanges([item.key]);
+                                      unstageChanges([item.entry.key]);
                                     }}
                                   >
                                     <Icon icon="minus" />
@@ -236,26 +237,27 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                       <div className='flex-1 flex overflow-y-auto w-full select-none'>
                         <GridList
                           className="w-full"
-                          items={unstagedChanges.map(item => ({
-                            ...item,
-                            id: item.key,
-                            textValue: item.name || item.document?.type || '',
+                          items={unstagedChanges.map(entry => ({
+                            entry,
+                            id: entry.blobId,
+                            key: entry.blobId,
+                            textValue: entry.name || entry.document?.type || '',
                           }))}
                           aria-label='Unstaged changes'
-                          selectedKeys={[selectedItemId]}
+                          selectedKeys={[selectedItemBlobId]}
                           selectionMode='single'
                           onSelectionChange={keys => {
                             if (keys !== 'all') {
                               const key = keys.values().next().value;
-                              console.log({ key });
-                              setSelectedItemId(key);
+
+                              setSelectedItemBlobId(key);
                             }
                           }}
                         >
                           {item => {
                             return (
                               <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
-                                <span className='truncate'>{item.name || item.document?.type}</span>
+                                <span className='truncate'>{item.entry.name || item.entry.document?.type}</span>
                                 <div className='flex items-center gap-1'>
                                   <Button
                                     className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
@@ -268,7 +270,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                                     className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
                                     slot={null}
                                     onPress={() => {
-                                      stageChanges([item.key]);
+                                      stageChanges([item.entry.key]);
                                     }}
                                   ><Icon icon="plus" /></Button>
                                 </div>

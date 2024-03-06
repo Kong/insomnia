@@ -197,7 +197,7 @@ export class VCS {
       const stageEntry = stage[key];
 
       // If the change is unstaged or has changed
-      if (!stageEntry || stageEntry.blobId !== entry.blobId) {
+      if (!stageEntry) {
         if (diff && 'blobContent' in entry) {
           try {
             const blobId = stage[key] ? stage[key].blobId : snapshot.state.find(s => s.key === key)?.blob || '';
@@ -230,6 +230,33 @@ export class VCS {
         } else {
           unstaged[key] = entry;
         }
+      } else if (stageEntry.blobId !== entry.blobId) {
+        if (diff && 'blobContent' in entry) {
+          try {
+            const blobContents = 'blobContent' in stageEntry ? JSON.parse(stageEntry.blobContent) : {};
+            const differ = new Differ({
+              detectCircular: true,    // default `true`
+              maxDepth: Infinity,      // default `Infinity`
+              showModifications: true, // default `true`
+              arrayDiffMethod: 'lcs',  // default `"normal"`, but `"lcs"` may be more useful
+            });
+            const diff = differ.diff(blobContents, JSON.parse(entry.blobContent));
+
+            if (diff.length) {
+              unstaged[key] = {
+                ...entry,
+                blobId: entry.blobId || stageEntry.blobId,
+                diff,
+              };
+            } else {
+              unstaged[key] = entry;
+            }
+          } catch (e) {
+            unstaged[key] = entry;
+          }
+        } else {
+          unstaged[key] = entry;
+        }
       }
 
       // Staged changes
@@ -242,7 +269,9 @@ export class VCS {
           arrayDiffMethod: 'lcs',  // default `"normal"`, but `"lcs"` may be more useful
         });
 
-        const diff = differ.diff(latestBlobContents, JSON.parse(entry.blobContent));
+        const blobContent = 'blobContent' in stageEntry ? JSON.parse(stageEntry.blobContent) : {};
+
+        const diff = differ.diff(latestBlobContents, blobContent);
         stage[key] = {
           ...stage[key],
           diff,
