@@ -188,14 +188,14 @@ export const PreRequestScriptEditor: FC<Props> = ({
           </DropdownItem>
           <DropdownItem textValue='Send a request' arial-label={'Send a request'}>
             <ItemContent
-              icon="minus"
+              icon="circle-play"
               label='Send a request'
               onClick={() => addSnippet(sendReq)}
             />
           </DropdownItem>
           <DropdownItem textValue='Print log' arial-label={'Print log'}>
             <ItemContent
-              icon="list"
+              icon="print"
               label='Print log'
               onClick={() => addSnippet(logValue)}
             />
