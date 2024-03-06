@@ -133,6 +133,8 @@ export interface CodeEditorHandle {
   selectAll: () => void;
   focus: () => void;
   focusEnd: () => void;
+  getCursor: () => CodeMirror.Position | undefined;
+  setCursorLine: (lineNumber: number) => void;
 }
 export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   autoPrettify,
@@ -503,6 +505,12 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         codeMirror.current.focus();
       }
       codeMirror.current?.getDoc()?.setCursor(codeMirror.current.getDoc().lineCount(), 0);
+    },
+    getCursor: () => {
+      return codeMirror.current?.getCursor();
+    },
+    setCursorLine: (lineNumber: number) => {
+      codeMirror.current?.setCursor(lineNumber);
     },
   }), []);
 
