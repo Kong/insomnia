@@ -79,6 +79,7 @@ export const tryToExecutePreRequestScript = async (
   timelinePath: string,
   responseId: string,
   baseEnvironment: Environment,
+  clientCertificates: ClientCertificate[],
 ) => {
   if (!request.preRequestScript) {
     return {
@@ -108,9 +109,17 @@ export const tryToExecutePreRequestScript = async (
         // this is more deterministic and avoids that script accidently manipulates baseEnvironment instead of environment
         environment: environment._id === baseEnvironment._id ? {} : (environment?.data || {}),
         baseEnvironment: baseEnvironment?.data || {},
+        clientCertificates,
+        settings,
       },
     });
-    const output = await Promise.race([timeoutPromise, preRequestPromise]) as { request: Request; environment: Record<string, any>; baseEnvironment: Record<string, any> };
+    const output = await Promise.race([timeoutPromise, preRequestPromise]) as {
+      request: Request;
+      environment: Record<string, any>;
+      baseEnvironment: Record<string, any>;
+      settings: Settings;
+      clientCertificates: ClientCertificate[];
+    };
     console.log('[network] Pre-request script succeeded', output);
 
     const envPropertyOrder = orderedJSON.parse(
@@ -118,15 +127,14 @@ export const tryToExecutePreRequestScript = async (
       JSON_ORDER_PREFIX,
       JSON_ORDER_SEPARATOR,
     );
-
     environment.data = output.environment;
     environment.dataPropertyOrder = envPropertyOrder.map;
+
     const baseEnvPropertyOrder = orderedJSON.parse(
       JSON.stringify(output.baseEnvironment),
       JSON_ORDER_PREFIX,
       JSON_ORDER_SEPARATOR,
     );
-
     baseEnvironment.data = output.baseEnvironment;
     baseEnvironment.dataPropertyOrder = baseEnvPropertyOrder.map;
 
@@ -134,6 +142,8 @@ export const tryToExecutePreRequestScript = async (
       request: output.request,
       environment,
       baseEnvironment,
+      settings: output.settings,
+      clientCertificates: output.clientCertificates,
     };
   } catch (err) {
     await fs.promises.appendFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');

@@ -373,7 +373,14 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
 
   try {
     const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
-    const mutatedContext = await tryToExecutePreRequestScript(req, environment, timelinePath, responseId, baseEnvironment);
+    const mutatedContext = await tryToExecutePreRequestScript(
+      req,
+      environment,
+      timelinePath,
+      responseId,
+      baseEnvironment,
+      clientCertificates,
+    );
     if (!mutatedContext?.request) {
       // exiy early if there was a problem with the pre-request script
       // TODO: improve error message?
@@ -404,9 +411,9 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
 
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
-      clientCertificates,
+      mutatedContext.clientCertificates || clientCertificates,
       caCert,
-      settings,
+      mutatedContext.settings || settings,
       timelinePath,
       responseId
     );
