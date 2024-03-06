@@ -7,7 +7,7 @@ import { GrpcRequest, isGrpcRequest } from '../models/grpc-request';
 import { BaseModel, getModel } from '../models/index';
 import * as models from '../models/index';
 import { isMockRoute, MockRoute } from '../models/mock-route';
-import { isRequest, Request } from '../models/request';
+import { isRequest, Request, RequestHeader } from '../models/request';
 import { isUnitTest, UnitTest } from '../models/unit-test';
 import { isUnitTestSuite, UnitTestSuite } from '../models/unit-test-suite';
 import {
@@ -212,29 +212,14 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
   for (const resource of optionalResources) {
     const model = getModel(resource.type);
     if (model) {
-      // Make sure we point to the new proto file
       if (isGrpcRequest(resource)) {
-        await db.docCreate(model.type, {
-          ...resource,
-          _id: ResourceIdMap.get(resource._id),
-          protoFileId: ResourceIdMap.get(resource.protoFileId),
-          parentId: ResourceIdMap.get(resource.parentId),
-        });
-
-        // Make sure we point unit test to the new request
+        await db.docCreate(model.type, replaceIdsInGrpcRequest(resource, ResourceIdMap));
       } else if (isUnitTest(resource)) {
-        await db.docCreate(model.type, {
-          ...resource,
-          _id: ResourceIdMap.get(resource._id),
-          requestId: ResourceIdMap.get(resource.requestId),
-          parentId: ResourceIdMap.get(resource.parentId),
-        });
+        await db.docCreate(model.type, replaceIdsInUnitTest(resource, ResourceIdMap));
+      } else if (isRequest(resource)) {
+        await db.docCreate(model.type, replaceIdsInRequest(resource, ResourceIdMap));
       } else {
-        await db.docCreate(model.type, {
-          ...resource,
-          _id: ResourceIdMap.get(resource._id),
-          parentId: ResourceIdMap.get(resource.parentId),
-        });
+        await db.docCreate(model.type, replaceIdsInBaseModel(resource, ResourceIdMap));
       }
     }
   }
@@ -310,25 +295,13 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
 
     if (model) {
       if (isGrpcRequest(resource)) {
-        await db.docCreate(model.type, {
-          ...resource,
-          _id: ResourceIdMap.get(resource._id),
-          protoFileId: ResourceIdMap.get(resource.protoFileId),
-          parentId: ResourceIdMap.get(resource.parentId),
-        });
+        await db.docCreate(model.type, replaceIdsInGrpcRequest(resource, ResourceIdMap));
       } else if (isUnitTest(resource)) {
-        await db.docCreate(model.type, {
-          ...resource,
-          _id: ResourceIdMap.get(resource._id),
-          requestId: ResourceIdMap.get(resource.requestId),
-          parentId: ResourceIdMap.get(resource.parentId),
-        });
+        await db.docCreate(model.type, replaceIdsInUnitTest(resource, ResourceIdMap));
+      } else if (isRequest(resource)) {
+        await db.docCreate(model.type, replaceIdsInRequest(resource, ResourceIdMap));
       } else {
-        await db.docCreate(model.type, {
-          ...resource,
-          _id: ResourceIdMap.get(resource._id),
-          parentId: ResourceIdMap.get(resource.parentId),
-        });
+        await db.docCreate(model.type, replaceIdsInBaseModel(resource, ResourceIdMap));
       }
     }
   }
@@ -359,3 +332,49 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
     workspace: newWorkspace,
   };
 };
+
+function replaceIdsInGrpcRequest(resource: GrpcRequest, ResourceIdMap: Map<any, any>) {
+  return {
+    ...resource,
+    _id: ResourceIdMap.get(resource._id),
+    protoFileId: ResourceIdMap.get(resource.protoFileId),
+    parentId: ResourceIdMap.get(resource.parentId),
+  };
+}
+
+function replaceIdsInUnitTest(resource: UnitTest, ResourceIdMap: Map<any, any>) {
+  return {
+    ...resource,
+    _id: ResourceIdMap.get(resource._id),
+    requestId: ResourceIdMap.get(resource.requestId),
+    parentId: ResourceIdMap.get(resource.parentId),
+  };
+}
+
+function replaceIdsInRequest(resource: Request, ResourceIdMap: Map<any, any>) {
+  return {
+    ...resource,
+    _id: ResourceIdMap.get(resource._id),
+    parentId: ResourceIdMap.get(resource.parentId),
+    headers: resource.headers.map(header => replaceIdsInRequestHeader(header, ResourceIdMap)),
+  };
+}
+
+function replaceIdsInRequestHeader(header: RequestHeader, ResourceIdMap: Map<string, string>) {
+  let { value } = header;
+  if (value.startsWith('{%') && value.endsWith('%}')) {
+    for (const [idA, idB] of ResourceIdMap.entries()) {
+      value = value.replace(new RegExp(idA, 'g'), idB);
+    }
+    return { ...header, value };
+  }
+  return header;
+}
+
+function replaceIdsInBaseModel(resource: BaseModel, ResourceIdMap: Map<string, string>) {
+  return {
+    ...resource,
+    _id: ResourceIdMap.get(resource._id),
+    parentId: ResourceIdMap.get(resource.parentId),
+  };
+}
