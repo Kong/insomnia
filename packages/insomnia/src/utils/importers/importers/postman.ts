@@ -170,6 +170,7 @@ export class ImportPostman {
       body: this.importBody(request.body, headers.find(({ key }) => key === 'Content-Type')?.value),
       authentication,
       preRequestScript,
+      metaSortKey: requestCount,
     };
   };
 
