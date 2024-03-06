@@ -3,11 +3,11 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';;
 
-test.describe('pre-request UI tests', async () => {
+test.describe('pre-request features tests', async () => {
     test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
     test.beforeEach(async ({ app, page }) => {
-        const text = await loadFixture('smoke-test-collection.yaml');
+        const text = await loadFixture('pre-request-collection.yaml');
         await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
         await page.getByRole('button', { name: 'Create in project' }).click();
@@ -16,7 +16,7 @@ test.describe('pre-request UI tests', async () => {
         await page.getByRole('button', { name: 'Scan' }).click();
         await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-        await page.getByLabel('Smoke tests').click();
+        await page.getByLabel('Pre-request Scripts').click();
     });
 
     const testCases = [
