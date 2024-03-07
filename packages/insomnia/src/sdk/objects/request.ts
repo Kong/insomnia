@@ -41,6 +41,7 @@ export class FormParam extends Property {
     static _postman_propertyAllowsMultipleValues() {
         throw Error('unsupported');
     }
+
     static _postman_propertyIndexKey() {
         throw Error('unsupported');
     }
@@ -458,8 +459,9 @@ export function mergeSettings(
         return originalSettings;
     }
 
-    const httpProxy = proxyUrl.startsWith('http') ? proxyUrl : originalSettings.httpProxy;
-    const httpsProxy = proxyUrl.startsWith('https') ? proxyUrl : originalSettings.httpsProxy;
+    // it always override both http and https proxies
+    const httpProxy = proxyUrl;
+    const httpsProxy = proxyUrl;
 
     return {
         ...originalSettings,
