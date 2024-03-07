@@ -45,6 +45,8 @@ export class QueryParam extends Property {
     // (static) _postman_propertyAllowsMultipleValues :Boolean
     // (static) _postman_propertyIndexKey :String
 
+    static _index = 'key';
+
     static parse(queryStr: string) {
         const params = new UrlSearchParams(queryStr);
         return Array.from(params.entries())

@@ -115,11 +115,6 @@ export class HeaderList<T extends Header> extends PropertyList<T> {
         throw unsupportedError('eachParent');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    toObject(_excludeDisabled?: boolean, _caseSensitive?: boolean, _multiValue?: boolean, _sanitizeKeys?: boolean) {
-        throw unsupportedError('toObject');
-    }
-
     contentSize(): number {
         return this.list
             .map(header => header.toString())
