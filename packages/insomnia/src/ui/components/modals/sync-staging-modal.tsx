@@ -2,7 +2,7 @@ import 'json-diff-kit/dist/viewer.css';
 
 import { Viewer } from 'json-diff-kit';
 import React, { useEffect, useState } from 'react';
-import { Button, Dialog, GridList, GridListItem, Heading, Label, Modal, ModalOverlay, TextArea, TextField } from 'react-aria-components';
+import { Button, Dialog, GridList, GridListItem, Heading, Label, Modal, ModalOverlay, TextArea, TextField, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { all } from '../../../models';
@@ -204,6 +204,17 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                                   >
                                     <Icon icon="minus" />
                                   </Button>
+                                  <TooltipTrigger>
+                                    <Button className="cursor-default">
+                                      {'added' in item.entry ? 'U' : 'deleted' in item.entry ? 'D' : 'M'}
+                                    </Button>
+                                    <Tooltip
+                                      offset={8}
+                                      className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                                    >
+                                      {'added' in item.entry ? 'Untracked' : 'deleted' in item.entry ? 'Deleted' : 'Modified'}
+                                    </Tooltip>
+                                  </TooltipTrigger>
                                 </div>
                               </GridListItem>
                             );
@@ -272,7 +283,20 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                                     onPress={() => {
                                       stageChanges([item.entry.key]);
                                     }}
-                                  ><Icon icon="plus" /></Button>
+                                  >
+                                    <Icon icon="plus" />
+                                  </Button>
+                                  <TooltipTrigger>
+                                    <Button className="cursor-default">
+                                      {'added' in item.entry ? 'U' : 'deleted' in item.entry ? 'D' : 'M'}
+                                    </Button>
+                                    <Tooltip
+                                      offset={8}
+                                      className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                                    >
+                                      {'added' in item.entry ? 'Untracked' : 'deleted' in item.entry ? 'Deleted' : 'Modified'}
+                                    </Tooltip>
+                                  </TooltipTrigger>
                                 </div>
                               </GridListItem>
                             );
