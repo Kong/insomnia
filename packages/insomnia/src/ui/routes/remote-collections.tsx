@@ -690,7 +690,7 @@ export const unstageChangesAction: ActionFunction = async ({
     })
     .filter(isNotNullOrUndefined);
 
-  await vcs.unstage(status.stage, itemsToUnstage);
+  await vcs.unstage(itemsToUnstage);
 
   return null;
 };

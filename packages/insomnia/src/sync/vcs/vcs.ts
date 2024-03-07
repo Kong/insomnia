@@ -64,7 +64,7 @@ export class VCS {
   _driver: BaseDriver;
   _backendProject: BackendProject | null;
   _conflictHandler?: ConflictHandler | null;
-  _stage?: Stage;
+  _stageByBackendProjectId: Record<string, Stage> = {};
 
   constructor(driver: BaseDriver, conflictHandler?: ConflictHandler) {
     this._store = new Store(driver, [compress]);
@@ -186,7 +186,7 @@ export class VCS {
   }
 
   async status(candidates: StatusCandidate[], diff = false) {
-    const stage = clone<Stage>(this._stage || {});
+    const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
     const branch = await this._getCurrentBranch();
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
     const state = snapshot ? snapshot.state : [];
@@ -287,7 +287,7 @@ export class VCS {
   }
 
   async stage(stageEntries: StageEntry[]) {
-    const stage = clone<Stage>(this._stage || {});
+    const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
     const blobsToStore: Record<string, string> = {};
 
     for (const entry of stageEntries) {
@@ -303,18 +303,18 @@ export class VCS {
 
     await this._storeBlobs(blobsToStore);
     console.log(`[sync] Staged ${stageEntries.map(e => e.name).join(', ')}`);
-    this._stage = stage;
+    this._stageByBackendProjectId[this._backendProjectId()] = stage;
     return stage;
   }
 
-  async unstage(baseStage: Stage, stageEntries: StageEntry[]) {
-    const stage = clone<Stage>(this._stage || baseStage);
+  async unstage(stageEntries: StageEntry[]) {
+    const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
     for (const entry of stageEntries) {
       delete stage[entry.key];
     }
 
     console.log(`[sync] Unstaged ${stageEntries.map(e => e.name).join(', ')}`);
-    this._stage = stage;
+    this._stageByBackendProjectId[this._backendProjectId()] = stage;
     return stage;
   }
 
@@ -541,7 +541,7 @@ export class VCS {
   }
 
   async takeSnapshot(name: string) {
-    const stage = this._stage || {};
+    const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
 
     // Ensure there is something on the stage
     if (Object.keys(stage).length === 0) {
@@ -590,7 +590,7 @@ export class VCS {
     for (const key of Object.keys(stage)) {
       delete stage[key];
     }
-    this._stage = stage;
+    this._stageByBackendProjectId[this._backendProjectId()] = stage;
     console.log(`[sync] Created commit ${snapshot.id} (${name})`);
   }
 
