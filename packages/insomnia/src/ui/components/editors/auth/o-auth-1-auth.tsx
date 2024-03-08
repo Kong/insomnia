@@ -1,6 +1,7 @@
 import React, { FC } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
+import { AUTH_OAUTH_1 } from '../../../../common/constants';
 import {
   OAuth1SignatureMethod,
   SIGNATURE_METHOD_HMAC_SHA1,
@@ -8,6 +9,7 @@ import {
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
 } from '../../../../network/o-auth-1/constants';
+import { invariant } from '../../../../utils/invariant';
 import { RequestLoaderData } from '../../../routes/request';
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthPrivateKeyRow } from './components/auth-private-key-row';
@@ -16,7 +18,7 @@ import { AuthTableBody } from './components/auth-table-body';
 import { AuthToggleRow } from './components/auth-toggle-row';
 
 const blankForDefault = 'Leave blank for default';
-const signatureMethodOptions: {name: string; value: OAuth1SignatureMethod}[] = [{
+export const signatureMethodOptions: { name: OAuth1SignatureMethod; value: OAuth1SignatureMethod }[] = [{
   name: 'HMAC-SHA1',
   value: SIGNATURE_METHOD_HMAC_SHA1,
 },
@@ -34,8 +36,9 @@ const signatureMethodOptions: {name: string; value: OAuth1SignatureMethod}[] = [
 }];
 
 export const OAuth1Auth: FC = () => {
-  const { activeRequest: { authentication: { signatureMethod } } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-
+  const { activeRequest: { authentication } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  invariant(authentication.type === AUTH_OAUTH_1, 'OAuth1Auth must be used with OAuth1 authentication');
+  const { signatureMethod } = authentication;
   return (
     <AuthTableBody>
       <AuthToggleRow label="Enabled" property="disabled" invert />

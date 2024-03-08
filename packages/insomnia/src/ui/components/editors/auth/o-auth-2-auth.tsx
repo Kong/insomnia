@@ -1,12 +1,13 @@
 import React, { ChangeEvent, FC, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
+import { AUTH_OAUTH_2 } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
 import * as models from '../../../../models';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
-import type { AuthTypeOAuth2, OAuth2ResponseType, Request } from '../../../../models/request';
+import type { AuthTypeOAuth2, OAuth2ResponseType, RequestAuthentication } from '../../../../models/request';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,
@@ -17,6 +18,7 @@ import {
 } from '../../../../network/o-auth-2/constants';
 import { getOAuth2Token } from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/get-token';
+import { invariant } from '../../../../utils/invariant';
 import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
 import { RequestLoaderData } from '../../../routes/request';
 import { Link } from '../../base/link';
@@ -88,7 +90,7 @@ const credentialsInBodyOptions = [
   },
 ];
 
-const getFields = (authentication: Request['authentication']) => {
+const getFields = (authentication: Extract<RequestAuthentication, { type: typeof AUTH_OAUTH_2 }>) => {
   const clientId = <AuthInputRow label='Client ID' property='clientId' key='clientId' />;
   const clientSecret = <AuthInputRow label='Client Secret' property='clientSecret' key='clientSecret' />;
   const usePkce = <AuthToggleRow label='Use PKCE' property='usePkce' key='usePkce' onTitle='Disable PKCE' offTitle='Enable PKCE' />;
@@ -146,7 +148,7 @@ const getFields = (authentication: Request['authentication']) => {
   };
 };
 
-const getFieldsForGrantType = (authentication: Request['authentication']) => {
+const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { type: typeof AUTH_OAUTH_2 }>) => {
   const {
     clientId,
     clientSecret,
@@ -245,7 +247,7 @@ const getFieldsForGrantType = (authentication: Request['authentication']) => {
 
 export const OAuth2Auth: FC = () => {
   const { activeRequest: { authentication } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-
+  invariant(authentication.type === AUTH_OAUTH_2, 'OAuth2Auth required');
   const { basic, advanced } = getFieldsForGrantType(authentication);
 
   return (

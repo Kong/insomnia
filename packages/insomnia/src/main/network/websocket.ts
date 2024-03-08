@@ -156,20 +156,20 @@ const openWebSocketConnection = async (
       }
       if (options.authentication.type === AUTH_API_KEY) {
         const { key, value, addTo } = options.authentication;
-        if (addTo === HEADER) {
+        if (addTo === HEADER && key && value) {
           headers.push({ name: key, value: value });
         } else if (addTo === COOKIE) {
           authCookie = `${key}=${value}`;
         } else if (addTo === QUERY_PARAMS) {
           const authQueryParam = {
-            name: key,
-            value: value,
+            name: key || '', // Ensure name is not undefined
+            value: value || '',
           };
           const qs = authQueryParam ? buildQueryStringFromParams([authQueryParam]) : '';
           url = joinUrlAndQueryString(options.url, qs);
         }
       }
-      if (options.authentication.type === AUTH_BEARER) {
+      if (options.authentication.type === AUTH_BEARER && options.authentication.token && options.authentication.prefix) {
         const { token, prefix } = options.authentication;
         headers.push(getBearerAuthHeader(token, prefix));
       }

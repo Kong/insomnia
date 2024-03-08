@@ -6,3 +6,4 @@ src/*.js
 src/*.js.map
 **/svgr
 svgr.config.js
+**/transformAuthToAnotherType.js

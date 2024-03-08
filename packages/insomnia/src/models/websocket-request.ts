@@ -42,7 +42,7 @@ export const init = (): BaseWebSocketRequest => ({
   url: '',
   metaSortKey: -1 * Date.now(),
   headers: [],
-  authentication: {},
+  authentication: { type: 'none' },
   parameters: [],
   pathParameters: [],
   settingEncodeUrl: true,
