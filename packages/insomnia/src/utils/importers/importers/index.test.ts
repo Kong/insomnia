@@ -38,8 +38,8 @@ describe('Fixtures', () => {
 
         const results = await convert(inputContents);
         const expected = JSON.parse(outputContents);
-        expected.__export_date = results.data.__export_date;
-        expect(results.data).toMatchSnapshot(expected);
+        results.data.__export_date = expected.__export_date;
+        expect(expected).toMatchSnapshot(results.data);
 
         const ids = new Set();
         for (const resource of results.data.resources) {
