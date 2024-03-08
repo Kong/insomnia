@@ -25,6 +25,23 @@ test.describe('pre-request features tests', async () => {
     const testCases = [
         {
             name: 'environments setting and overriding',
+            preReqScript: `
+                insomnia.baseEnvironment.set('fromBaseEnv', 'baseEnv');
+                insomnia.baseEnvironment.set('scriptValue', 'fromBase');
+                insomnia.environment.set('scriptValue', 'fromEnv');
+                // "preDefinedValue" is already defined in the base environment modal.
+                // but it is rewritten here
+                insomnia.baseEnvironment.set('preDefinedValue', 'fromScript');
+                // "customValue" is already defined in the folder environment.
+                // folder version will override the following one
+                insomnia.baseEnvironment.set('customValue', 'fromScript');
+            `,
+            body: `{
+"fromBaseEnv": "{{ _.fromBaseEnv }}",
+"scriptValue": "{{ _.scriptValue }}",
+"preDefinedValue": "{{ _.preDefinedValue }}",
+"customValue": "{{ _.customValue }}"
+            }`,
             expectedBody: {
                 fromBaseEnv: 'baseEnv',
                 scriptValue: 'fromEnv',
@@ -61,6 +78,24 @@ test.describe('pre-request features tests', async () => {
         },
         {
             name: 'insomnia.request manipulation',
+            preReqScript: `
+                const { Header } = require('insomnia-collection');
+                insomnia.request.method = 'GET';
+                insomnia.request.url.addQueryParams('k1=v1');
+                insomnia.request.headers.add(new Header({
+                    key: 'Content-Type',
+                    value: 'text/plain'
+                }));
+                insomnia.request.headers.add(new Header({
+                    key: 'X-Hello',
+                    value: 'hello'
+                }));
+                insomnia.request.body.update({
+                    mode: 'raw',
+                    raw: 'rawContent',
+                });
+            `,
+            body: '{}',
             customVerify: (bodyJson: any) => {
                 expect(bodyJson.method).toEqual('GET');
                 expect(bodyJson.headers['x-hello']).toEqual('hello');
@@ -92,8 +127,6 @@ test.describe('pre-request features tests', async () => {
         },
         {
             name: 'require the url module',
-<<<<<<< HEAD
-=======
             preReqScript: `
                 const { URL } = require('url');
                 const url = new URL('https://user:pwd@insomnia.com:6666/p1?q1=a&q2=b#hashcontent');
@@ -124,7 +157,6 @@ test.describe('pre-request features tests', async () => {
 "username": "{{ _.username }}",
 "seachParam": "{{ _.seachParam }}"
             }`,
->>>>>>> e2166fe09 (feat: enable requiring node.js modules)
             customVerify: (bodyJson: any) => {
                 const reqBodyJsons = JSON.parse(bodyJson.data);
                 expect(reqBodyJsons).toEqual({
@@ -144,11 +176,7 @@ test.describe('pre-request features tests', async () => {
             },
         },
         {
-<<<<<<< HEAD
-            name: 'require node.js modules',
-            expectedBody: {
-=======
-            name: 'require the uuid module',
+            name: 'require / the uuid module',
             preReqScript: `
                 const uuid = require('uuid');
                 insomnia.environment.set('uuid', uuid.NIL);
@@ -161,7 +189,7 @@ test.describe('pre-request features tests', async () => {
             },
         },
         {
-            name: 'require node.js modules',
+            name: 'require / node.js modules',
             preReqScript: `
                 const uuid = require('uuid');
                 const path = require('path');
@@ -208,7 +236,6 @@ test.describe('pre-request features tests', async () => {
             }`,
             expectedBody: {
                 uuid: true,
->>>>>>> e2166fe09 (feat: enable requiring node.js modules)
                 path: true,
                 assert: true,
                 buffer: true,
