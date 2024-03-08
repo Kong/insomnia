@@ -252,14 +252,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                     <div className='flex flex-col gap-2 overflow-hidden max-h-96 w-full'>
                       <Heading className='group font-semibold flex-shrink-0 w-full flex items-center py-1 justify-between'>
                         <span>Changes</span>
-                        <div className='flex items-center gap-1'>
-                          <Button
-                            className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
-                            slot={null}
-                            onPress={console.log}
-                          >
-                            <Icon icon="undo" />
-                          </Button>
+                        <div className='flex items-center gap-2'>
                           <Button
                             className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
                             slot={null}
@@ -297,13 +290,6 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                               <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
                                 <span className='truncate'>{item.entry.name || item.entry.document?.type}</span>
                                 <div className='flex items-center gap-1'>
-                                  <Button
-                                    className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
-                                    slot={null}
-                                    onPress={console.log}
-                                  >
-                                    <Icon icon="undo" />
-                                  </Button>
                                   <Button
                                     className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
                                     slot={null}
