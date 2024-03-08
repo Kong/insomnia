@@ -41,8 +41,6 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
         'stream',
         'timers',
         'events',
-        // follows should be npm modules
-        // but they are moved to here to avoid introducing additional dependencies
       ].includes(moduleName)
     ) {
       return require(moduleName);

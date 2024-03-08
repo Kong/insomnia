@@ -92,6 +92,39 @@ test.describe('pre-request features tests', async () => {
         },
         {
             name: 'require the url module',
+<<<<<<< HEAD
+=======
+            preReqScript: `
+                const { URL } = require('url');
+                const url = new URL('https://user:pwd@insomnia.com:6666/p1?q1=a&q2=b#hashcontent');
+                insomnia.environment.set('hash', "#hashcontent");
+                insomnia.environment.set('host', "insomnia.com:6666");
+                insomnia.environment.set('hostname', "insomnia.com");
+                insomnia.environment.set('href', "https://user:pwd@insomnia.com:6666/p1?q1=a&q2=b#hashcontent");
+                insomnia.environment.set('origin', "https://insomnia.com:6666");
+                insomnia.environment.set('password', "pwd");
+                insomnia.environment.set('pathname', "/p1");
+                insomnia.environment.set('port', "6666");
+                insomnia.environment.set('protocol', "https:");
+                insomnia.environment.set('search', "?q1=a&q2=b");
+                insomnia.environment.set('username', "user");
+                insomnia.environment.set('seachParam', url.searchParams.toString());
+            `,
+            body: `{
+"hash": "{{ _.hash }}",
+"host": "{{ _.host }}",
+"hostname": "{{ _.hostname }}",
+"href": "{{ _.href }}",
+"origin": "{{ _.origin }}",
+"password": "{{ _.password }}",
+"pathname": "{{ _.pathname }}",
+"port": "{{ _.port }}",
+"protocol": "{{ _.protocol }}",
+"search": "{{ _.search }}",
+"username": "{{ _.username }}",
+"seachParam": "{{ _.seachParam }}"
+            }`,
+>>>>>>> e2166fe09 (feat: enable requiring node.js modules)
             customVerify: (bodyJson: any) => {
                 const reqBodyJsons = JSON.parse(bodyJson.data);
                 expect(reqBodyJsons).toEqual({
@@ -111,8 +144,71 @@ test.describe('pre-request features tests', async () => {
             },
         },
         {
+<<<<<<< HEAD
             name: 'require node.js modules',
             expectedBody: {
+=======
+            name: 'require the uuid module',
+            preReqScript: `
+                const uuid = require('uuid');
+                insomnia.environment.set('uuid', uuid.NIL);
+            `,
+            body: `{
+"uuid": "{{ _.uuid}}"
+            }`,
+            expectedBody: {
+                uuid: '00000000-0000-0000-0000-000000000000',
+            },
+        },
+        {
+            name: 'require node.js modules',
+            preReqScript: `
+                const uuid = require('uuid');
+                const path = require('path');
+                const assert = require('assert');
+                const buffer = require('buffer');
+                const util = require('util');
+                const url = require('url');
+                const punycode = require('punycode');
+                const querystring = require('querystring');
+                const stringDecoder = require('string_decoder');
+                const stream = require('stream');
+                const timers = require('timers');
+                const events = require('events');
+                const fs = require('fs');
+                // set them
+                insomnia.environment.set('uuid', uuid != null);
+                insomnia.environment.set('path', path != null);
+                insomnia.environment.set('assert', assert != null);
+                insomnia.environment.set('buffer', buffer != null);
+                insomnia.environment.set('util', util != null);
+                insomnia.environment.set('url', url != null);
+                insomnia.environment.set('punycode', punycode != null);
+                insomnia.environment.set('querystring', querystring != null);
+                insomnia.environment.set('stringDecoder', stringDecoder != null);
+                insomnia.environment.set('stream', stream != null);
+                insomnia.environment.set('timers', timers != null);
+                insomnia.environment.set('events', events != null);
+                insomnia.environment.set('fs', fs != null);                
+            `,
+            body: `{
+"uuid": {{ _.uuid }},
+"path": {{ _.path }},
+"assert": {{ _.assert }},
+"buffer": {{ _.buffer }},
+"util": {{ _.util }},
+"url": {{ _.url }},
+"punycode": {{ _.punycode }},
+"querystring": {{ _.querystring }},
+"stringDecoder": {{ _.stringDecoder }},
+"stream": {{ _.stream }},
+"timers": {{ _.timers }},
+"events": {{ _.events }},
+"fs": {{ _.fs }}
+            }`,
+            expectedBody: {
+                uuid: true,
+>>>>>>> e2166fe09 (feat: enable requiring node.js modules)
                 path: true,
                 assert: true,
                 buffer: true,
