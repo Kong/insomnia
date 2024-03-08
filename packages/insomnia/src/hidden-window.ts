@@ -1,4 +1,4 @@
-import { initInsomniaObject } from './sdk/objects/insomnia';
+import { initInsomniaObject, InsomniaObject } from './sdk/objects/insomnia';
 import { RequestContext } from './sdk/objects/interfaces';
 import { mergeClientCertificates, mergeRequests, mergeSettings } from './sdk/objects/request';
 import { invariant } from './utils/invariant';
@@ -66,6 +66,9 @@ const runPreRequestScript = async (
     consoleInterceptor,
     evalInterceptor,
   );
+  if (mutatedInsomniaObject == null || !(mutatedInsomniaObject instanceof InsomniaObject)) {
+    throw Error('insomnia object is invalid or script returns earlier than expected.');
+  }
   const mutatedContextObject = mutatedInsomniaObject.toObject();
   const updatedRequest = mergeRequests(context.request, mutatedContextObject.request);
   const updatedSettings = mergeSettings(context.settings, mutatedContextObject.request);
