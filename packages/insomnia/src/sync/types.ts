@@ -59,6 +59,7 @@ export interface StageEntryDelete {
   key: string;
   name: string;
   blobId: string;
+  previousBlobContent?: string;
 }
 
 export interface StageEntryAdd {
@@ -75,6 +76,7 @@ export interface StageEntryModify {
   name: string;
   blobId: string;
   blobContent: string;
+  previousBlobContent?: string;
 }
 
 export type StageEntry = StageEntryDelete | StageEntryAdd | StageEntryModify;

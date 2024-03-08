@@ -53,11 +53,17 @@ export function chunkArray<T>(arr: T[], chunkSize: number) {
   }
   return chunks;
 }
+
+// Stage/Unstage
+// Staged items are about to be commited
+// Unstaged items have changed compared to staged or not and can be staged
+//
 export class VCS {
   _store: Store;
   _driver: BaseDriver;
   _backendProject: BackendProject | null;
   _conflictHandler?: ConflictHandler | null;
+  _stageByBackendProjectId: Record<string, Stage> = {};
 
   constructor(driver: BaseDriver, conflictHandler?: ConflictHandler) {
     this._store = new Store(driver, [compress]);
@@ -178,8 +184,8 @@ export class VCS {
     return this._getBlob(entry.blob);
   }
 
-  async status(candidates: StatusCandidate[], baseStage: Readonly<Stage>) {
-    const stage = clone<Stage>(baseStage);
+  async status(candidates: StatusCandidate[]) {
+    const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
     const branch = await this._getCurrentBranch();
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
     const state = snapshot ? snapshot.state : [];
@@ -189,8 +195,52 @@ export class VCS {
       const { key } = entry;
       const stageEntry = stage[key];
 
-      if (!stageEntry || stageEntry.blobId !== entry.blobId) {
-        unstaged[key] = entry;
+      // The entry is not staged
+      if (!stageEntry) {
+        if ('deleted' in entry) {
+          let previousBlobContent: BaseModel | null = null;
+          try {
+            previousBlobContent = await this.blobFromLastSnapshot(key);
+
+          } catch (e) {
+            // No previous blob found
+          } finally {
+            unstaged[key] = {
+              ...entry,
+              previousBlobContent: JSON.stringify(previousBlobContent),
+            };
+          }
+        } else {
+          const blobId = snapshot ? snapshot.state.find(s => s.key === key)?.blob || '' : '';
+          let previousBlobContent: BaseModel | null = null;
+          try {
+            previousBlobContent = (await this._getBlob(blobId)) || null;
+          } catch (e) {
+            // No previous blob found
+          } finally {
+            unstaged[key] = {
+              ...entry,
+              previousBlobContent: JSON.stringify(previousBlobContent),
+            };
+          }
+        }
+      } else if (stageEntry.blobId !== entry.blobId) {
+        if ('blobContent' in entry) {
+          let previousBlobContent: BaseModel | null = null;
+          try {
+            previousBlobContent = 'blobContent' in stageEntry ? JSON.parse(stageEntry.blobContent) : {};
+          } catch (e) {
+            // No previous blob found
+          } finally {
+            unstaged[key] = {
+              ...entry,
+              blobId: entry.blobId || stageEntry.blobId,
+              previousBlobContent: JSON.stringify(previousBlobContent),
+            };
+          }
+        } else {
+          unstaged[key] = entry;
+        }
       }
     }
 
@@ -201,8 +251,8 @@ export class VCS {
     };
   }
 
-  async stage(baseStage: Readonly<Stage>, stageEntries: StageEntry[]) {
-    const stage = clone<Stage>(baseStage);
+  async stage(stageEntries: StageEntry[]) {
+    const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
     const blobsToStore: Record<string, string> = {};
 
     for (const entry of stageEntries) {
@@ -218,16 +268,18 @@ export class VCS {
 
     await this._storeBlobs(blobsToStore);
     console.log(`[sync] Staged ${stageEntries.map(e => e.name).join(', ')}`);
+    this._stageByBackendProjectId[this._backendProjectId()] = stage;
     return stage;
   }
 
-  async unstage(baseStage: Readonly<Stage>, stageEntries: StageEntry[]) {
-    const stage = clone<Stage>(baseStage);
+  async unstage(stageEntries: StageEntry[]) {
+    const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
     for (const entry of stageEntries) {
       delete stage[entry.key];
     }
 
     console.log(`[sync] Unstaged ${stageEntries.map(e => e.name).join(', ')}`);
+    this._stageByBackendProjectId[this._backendProjectId()] = stage;
     return stage;
   }
 
@@ -453,17 +505,19 @@ export class VCS {
     return this._merge(candidates, branch.name, otherBranchName, snapshotMessage);
   }
 
-  async takeSnapshot(stage: Stage, name: string) {
+  async takeSnapshot(name: string) {
+    const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
+
+    // Ensure there is something on the stage
+    if (Object.keys(stage).length === 0) {
+      throw new Error('No changes to commit. Please stage your changes first.');
+    }
+
     const branch: Branch = await this._getCurrentBranch();
     const parent: Snapshot | null = await this._getLatestSnapshot(branch.name);
 
     if (!name) {
       throw new Error('Commit must have a message');
-    }
-
-    // Ensure there is something on the stage
-    if (Object.keys(stage).length === 0) {
-      throw new Error('Commit does not have any changes');
     }
 
     const newState: SnapshotState = [];
@@ -496,6 +550,12 @@ export class VCS {
     }
 
     const snapshot = await this._createSnapshotFromState(branch, newState, name);
+
+    // Clear the staged changes
+    for (const key of Object.keys(stage)) {
+      delete stage[key];
+    }
+    this._stageByBackendProjectId[this._backendProjectId()] = stage;
     console.log(`[sync] Created commit ${snapshot.id} (${name})`);
   }
 

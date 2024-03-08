@@ -6,8 +6,6 @@ import { Workspace } from '../../models/workspace';
 import { StatusCandidate } from '../types';
 import { VCS } from './vcs';
 
-const blankStage = {};
-
 export const initializeLocalBackendProjectAndMarkForSync = async ({ vcs, workspace }: { vcs: VCS; workspace: Workspace }) => {
   // Create local project
   await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
@@ -18,13 +16,13 @@ export const initializeLocalBackendProjectAndMarkForSync = async ({ vcs, workspa
     name: doc.name || '',
     document: doc,
   }));
-  const status = await vcs.status(candidates, blankStage);
+  const status = await vcs.status(candidates);
 
   // Stage everything
-  const stage = await vcs.stage(blankStage, Object.values(status.unstaged));
+  await vcs.stage(Object.values(status.unstaged));
 
   // Snapshot
-  await vcs.takeSnapshot(stage, 'Initial Snapshot');
+  await vcs.takeSnapshot('Initial Snapshot');
 
   // Mark for pushing to the active project
   await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: true });

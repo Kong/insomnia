@@ -63,3 +63,65 @@ input[type="color"]::-webkit-color-swatch {
   color: var(--color-font);
   overflow: hidden;
 }
+
+table.json-diff-viewer {
+  colgroup {
+    width: 100%;
+
+    col {
+      width: 50%
+    }
+  }
+
+  td {
+    padding: 1px 4px;
+    font-size: 0;
+  }
+  
+  tr {
+    vertical-align: top;
+
+    .line-remove {
+      background: rgba(var(--color-danger-rgb), 0.2);
+      color: var(--color-font)
+    }
+
+    .line-add {
+      background: rgba(var(--color-success-rgb), 0.2);
+      color: var(--color-font);
+    }
+
+    .line-modify {
+      background: rgba(var(--color-warning-rgb), 0.2);
+      color: var(--color-font);
+    }
+
+    &.expand-line {
+      text-align: center;
+
+      button {
+        margin: 0 0.5em;
+        padding: 0;
+        color: var(--color-font);
+        font-size: 12px;
+        border: none;
+        background: transparent;
+        user-select: none;
+        cursor: pointer;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  pre {
+    margin: 0;
+    font-size: 12px;
+    line-height: 16px;
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+} 
