@@ -322,6 +322,19 @@ test.describe('pre-request features tests', async () => {
                 expect(reqBodyJsons.formdataBody.data).toEqual('--X-INSOMNIA-BOUNDARY\r\nContent-Disposition: form-data; name=\"k1\"\r\n\r\nv1\r\n--X-INSOMNIA-BOUNDARY\r\nContent-Disposition: form-data; name=\"k2\"; filename=\"rawfile.txt\"\r\nContent-Type: text/plain\r\n\r\nraw file content\r\n--X-INSOMNIA-BOUNDARY--\r\n');
             },
         },
+        {
+            name: 'eval() works in script',
+            preReqScript: `
+                const evalResult = eval('8+8');
+                insomnia.environment.set('evalResult', evalResult);
+            `,
+            body: `{
+"evalResult": {{ _.evalResult }}
+            }`,
+            expectedBody: {
+                evalResult: 16,
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
