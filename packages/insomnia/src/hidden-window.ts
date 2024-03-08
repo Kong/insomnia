@@ -1,3 +1,4 @@
+import { invariant } from '../src/utils/invariant';
 import { initInsomniaObject, InsomniaObject } from './sdk/objects/insomnia';
 import { RequestContext } from './sdk/objects/interfaces';
 import { mergeClientCertificates, mergeRequests, mergeSettings } from './sdk/objects/request';
@@ -34,7 +35,7 @@ const runPreRequestScript = async (
   const consoleInterceptor = {
     log: (...args: any[]) => log.push(
       JSON.stringify({
-        value: args.map(a => JSON.stringify(a)).join('\n'),
+        value: args.map(a => JSON.stringify(a, null, 2)).join('\n'),
         name: 'Text',
         timestamp: Date.now(),
       }) + '\n',

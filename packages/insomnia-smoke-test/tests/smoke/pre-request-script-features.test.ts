@@ -539,9 +539,6 @@ test.describe('unhappy paths', async () => {
         test(tc.name, async ({ page }) => {
             const responsePane = page.getByTestId('response-pane');
 
-            // const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-            // const responseBody = page.getByTestId('response-pane').getByTestId('CodeEditor').locator('.CodeMirror-line');
-
             await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
 
             // set request body
