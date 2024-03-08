@@ -495,12 +495,13 @@ export function fromPreRequestAuth(auth: RequestAuth) {
             return '';
         }
 
-        return kvs.find(
+        const matchedKv = kvs.find(
             (kv: { key: string; value: string }) => {
-                return kv.key === targetKey ? kv.value : '';
+                return kv.key === targetKey;
             },
-            '',
         );
+
+        return matchedKv?.value || '';
     };
 
     switch (authObj.type) {
