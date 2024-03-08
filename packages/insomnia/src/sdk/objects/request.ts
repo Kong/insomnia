@@ -333,7 +333,7 @@ export class Request extends Property {
         return headersObj;
     }
 
-    removeHeader(toRemove: string | Header, options: { ignoreCase: boolean }) {
+    removeHeader(toRemove: string | Header, options?: { ignoreCase: boolean }) {
         const filteredHeaders = this.headers.filter(
             header => {
                 if (!header.key) {
@@ -341,7 +341,7 @@ export class Request extends Property {
                 }
 
                 if (typeof toRemove === 'string') {
-                    return options.ignoreCase ?
+                    return options != null && options.ignoreCase ?
                         header.key.toLocaleLowerCase() !== toRemove.toLocaleLowerCase() :
                         header.key !== toRemove;
                 } else if (toRemove instanceof Header) {
@@ -349,7 +349,7 @@ export class Request extends Property {
                         return false;
                     }
 
-                    return options.ignoreCase ?
+                    return options != null && options.ignoreCase ?
                         header.key.toLocaleLowerCase() !== toRemove.key.toLocaleLowerCase() :
                         header.key !== toRemove.key;
                 } else {
