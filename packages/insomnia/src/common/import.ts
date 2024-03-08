@@ -8,6 +8,7 @@ import { BaseModel, getModel } from '../models/index';
 import * as models from '../models/index';
 import { isMockRoute, MockRoute } from '../models/mock-route';
 import { isRequest, Request } from '../models/request';
+import { isRequestGroup } from '../models/request-group';
 import { isUnitTest, UnitTest } from '../models/unit-test';
 import { isUnitTestSuite, UnitTestSuite } from '../models/unit-test-suite';
 import {
@@ -151,10 +152,19 @@ export async function importResourcesToProject({ projectId }: { projectId: strin
   invariant(ResourceCache, 'No resources to import');
   const resources = ResourceCache.resources;
   const bufferId = await db.bufferChanges();
+  const postmanTopLevelFolder = resources.find(
+    resource => isRequestGroup(resource) && resource.parentId === '__WORKSPACE_ID__'
+  ) as Workspace | undefined;
+  if (ResourceCache.type.id === 'postman' && postmanTopLevelFolder) {
+    await importResourcesToNewWorkspace(projectId, postmanTopLevelFolder);
+    return { resources };
+  }
+  // No workspace, so create one
   if (!resources.find(isWorkspace)) {
     await importResourcesToNewWorkspace(projectId);
     return { resources };
   }
+  // One or more workspaces
   const r = await Promise.all(resources.filter(isWorkspace)
     .map(resource => importResourcesToNewWorkspace(projectId, resource)));
 
