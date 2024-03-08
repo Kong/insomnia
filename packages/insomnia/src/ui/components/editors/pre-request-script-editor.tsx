@@ -31,6 +31,10 @@ const sendReq =
   );
 });\n`;
 const logValue = 'console.log("log", variableName);\n';
+const addHeader = "insomnia.request.addHeader({key: 'X-Header-Name', value: 'header_value' });\n";
+const removeHeader = "insomnia.request.removeHeader('X-Header-Name');\n";
+const setMethod = "insomnia.request.method = 'GET';\n";
+const addQueryParams = "insomnia.request.url.addQueryParams('k1=v1');\n";
 
 const lintOptions = {
   globals: {
@@ -92,14 +96,13 @@ export const PreRequestScriptEditor: FC<Props> = ({
       </div>
       <div className="h-[calc(var(--line-height-xs))] border-solid border-t border-[var(--hl-md)] text-[var(--font-size-sm)] p-[var(--padding-xs)]">
         <Dropdown
-          aria-label='Snippets'
+          aria-label='Variable Snippets'
           placement='top left'
           triggerButton={
             <DropdownButton>
               <ItemContent
                 icon="code"
-                label='Add Snippets'
-                onClick={() => addSnippet(getEnvVar)}
+                label='Variable Snippets'
               />
             </DropdownButton>
           }
@@ -181,6 +184,61 @@ export const PreRequestScriptEditor: FC<Props> = ({
               onClick={() => addSnippet(unsetCollectionVar)}
             />
           </DropdownItem>
+        </Dropdown>
+
+        <Dropdown
+          aria-label='Request Manipulation'
+          placement='top left'
+          triggerButton={
+            <DropdownButton>
+              <ItemContent
+                icon="code"
+                label='Request Manipulation'
+              />
+            </DropdownButton>
+          }
+        >
+          <DropdownItem textValue='Add query param' arial-label={'Add query param'}>
+            <ItemContent
+              icon="header"
+              label='Add a query param'
+              onClick={() => addSnippet(addQueryParams)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Set method' arial-label={'Set method'}>
+            <ItemContent
+              icon="header"
+              label='Set method'
+              onClick={() => addSnippet(setMethod)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Add header' arial-label={'Add header'}>
+            <ItemContent
+              icon="header"
+              label='Add a header'
+              onClick={() => addSnippet(addHeader)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Remove header' arial-label={'Remove header'}>
+            <ItemContent
+              icon="header"
+              label='Remove a header'
+              onClick={() => addSnippet(removeHeader)}
+            />
+          </DropdownItem>
+        </Dropdown>
+        <Dropdown
+          aria-label='Misc'
+          placement='top left'
+          triggerButton={
+            <DropdownButton>
+              <ItemContent
+                icon="code"
+                label='Misc'
+              />
+            </DropdownButton>
+          }
+        >
           <DropdownItem textValue='Send a request' arial-label={'Send a request'}>
             <ItemContent
               icon="circle-play"
