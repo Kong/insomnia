@@ -216,42 +216,42 @@ export const PreRequestScriptEditor: FC<Props> = ({
         >
           <DropdownItem textValue='Add query param' arial-label={'Add query param'}>
             <ItemContent
-              icon="header"
+              icon="p"
               label='Add a query param'
               onClick={() => addSnippet(addQueryParams)}
             />
           </DropdownItem>
           <DropdownItem textValue='Set method' arial-label={'Set method'}>
             <ItemContent
-              icon="header"
+              icon="m"
               label='Set method'
               onClick={() => addSnippet(setMethod)}
             />
           </DropdownItem>
           <DropdownItem textValue='Add a header' arial-label={'Add a header'}>
             <ItemContent
-              icon="header"
+              icon="h"
               label='Add a header'
               onClick={() => addSnippet(addHeader)}
             />
           </DropdownItem>
           <DropdownItem textValue='Remove header' arial-label={'Remove header'}>
             <ItemContent
-              icon="header"
+              icon="h"
               label='Remove a header'
               onClick={() => addSnippet(removeHeader)}
             />
           </DropdownItem>
           <DropdownItem textValue='Update body as raw' arial-label={'Update body as raw'}>
             <ItemContent
-              icon="header"
+              icon="b"
               label='Update body as raw'
               onClick={() => addSnippet(updateRequestBody)}
             />
           </DropdownItem>
           <DropdownItem textValue='Update auth method' arial-label={'Update auth method'}>
             <ItemContent
-              icon="header"
+              icon="circle-user"
               label='Update auth method'
               onClick={() => addSnippet(updateRequestAuth)}
             />
