@@ -207,8 +207,6 @@ test.describe('pre-request features tests', async () => {
                     },
                     'bearer'
                 );
-                // insomnia.request.proxy.update({}); // TODO: enable proxy and test it
-                // insomnia.request.certificate.update({});
             `,
             body: '{}',
             customVerify: (bodyJson: any) => {
