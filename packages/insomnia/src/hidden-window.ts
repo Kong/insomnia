@@ -41,11 +41,18 @@ const runPreRequestScript = async (
     ),
   };
 
+  const evalInterceptor = (script: string) => {
+    invariant(script && typeof script === 'string', 'eval is called with invalid or empty value');
+    const result = eval(script);
+    return result;
+  };
+
   const AsyncFunction = (async () => { }).constructor;
   const executeScript = AsyncFunction(
     'insomnia',
     'require',
     'console',
+    'eval',
     `
       const $ = insomnia, pm = insomnia;
        ${script};
@@ -55,7 +62,8 @@ const runPreRequestScript = async (
   const mutatedInsomniaObject = await executeScript(
     executionContext,
     window.bridge.requireInterceptor,
-    consoleInterceptor
+    consoleInterceptor,
+    evalInterceptor,
   );
   const mutatedContextObject = mutatedInsomniaObject.toObject();
   const updatedRequest = mergeRequests(context.request, mutatedContextObject.request);

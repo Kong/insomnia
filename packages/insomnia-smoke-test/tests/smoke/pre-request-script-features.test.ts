@@ -84,6 +84,19 @@ test.describe('pre-request features tests', async () => {
                 expect(bodyJson.headers['authorization']).toEqual(`Basic ${expectedEncCred}`);
             },
         },
+        {
+            name: 'eval() works in script',
+            preReqScript: `
+                const evalResult = eval('8+8');
+                insomnia.environment.set('evalResult', evalResult);
+            `,
+            body: `{
+"evalResult": {{ _.evalResult }}
+            }`,
+            expectedBody: {
+                evalResult: 16,
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
