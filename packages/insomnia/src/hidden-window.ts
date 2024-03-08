@@ -35,7 +35,7 @@ const runPreRequestScript = async (
   const consoleInterceptor = {
     log: (...args: any[]) => log.push(
       JSON.stringify({
-        value: args.map(a => JSON.stringify(a)).join('\n'),
+        value: args.map(a => JSON.stringify(a, null, 2)).join('\n'),
         name: 'Text',
         timestamp: Date.now(),
       }) + '\n',
