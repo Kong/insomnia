@@ -2,7 +2,7 @@
 
 exports[`Fixtures Import curl complex-input.sh 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -48,7 +48,7 @@ exports[`Fixtures Import curl complex-input.sh 1`] = `
 
 exports[`Fixtures Import curl dollar-sign-input.sh 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -99,7 +99,7 @@ exports[`Fixtures Import curl dollar-sign-input.sh 1`] = `
 
 exports[`Fixtures Import curl form-input.sh 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -141,7 +141,7 @@ exports[`Fixtures Import curl form-input.sh 1`] = `
 
 exports[`Fixtures Import curl from-chrome-input.sh 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -213,7 +213,7 @@ exports[`Fixtures Import curl from-chrome-input.sh 1`] = `
 
 exports[`Fixtures Import curl get-input.sh 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -241,7 +241,7 @@ exports[`Fixtures Import curl get-input.sh 1`] = `
 
 exports[`Fixtures Import curl header-colon-input.sh 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -269,7 +269,7 @@ exports[`Fixtures Import curl header-colon-input.sh 1`] = `
 
 exports[`Fixtures Import curl multi-data-input.sh 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -309,7 +309,7 @@ exports[`Fixtures Import curl multi-data-input.sh 1`] = `
 
 exports[`Fixtures Import curl multi-input.sh 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -373,7 +373,7 @@ exports[`Fixtures Import curl multi-input.sh 1`] = `
 
 exports[`Fixtures Import curl no-url-input.sh 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -396,7 +396,7 @@ exports[`Fixtures Import curl no-url-input.sh 1`] = `
 
 exports[`Fixtures Import curl question-mark-input.sh 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -428,7 +428,7 @@ exports[`Fixtures Import curl question-mark-input.sh 1`] = `
 
 exports[`Fixtures Import curl simple-url-input.sh 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -451,7 +451,7 @@ exports[`Fixtures Import curl simple-url-input.sh 1`] = `
 
 exports[`Fixtures Import curl url-only-input.sh 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -474,7 +474,7 @@ exports[`Fixtures Import curl url-only-input.sh 1`] = `
 
 exports[`Fixtures Import curl urlencoded-input.sh 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -514,7 +514,7 @@ exports[`Fixtures Import curl urlencoded-input.sh 1`] = `
 
 exports[`Fixtures Import har deep-input.json 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -569,7 +569,7 @@ exports[`Fixtures Import har deep-input.json 1`] = `
 
 exports[`Fixtures Import har form-data-input.json 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -604,7 +604,7 @@ exports[`Fixtures Import har form-data-input.json 1`] = `
 
 exports[`Fixtures Import har minimal-input.json 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -627,7 +627,7 @@ exports[`Fixtures Import har minimal-input.json 1`] = `
 
 exports[`Fixtures Import har no-requests-input.json 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -637,7 +637,7 @@ exports[`Fixtures Import har no-requests-input.json 1`] = `
 
 exports[`Fixtures Import har shallow-input.json 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -682,7 +682,7 @@ exports[`Fixtures Import har shallow-input.json 1`] = `
 
 exports[`Fixtures Import insomnia-1 complex-input.json 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -735,7 +735,7 @@ exports[`Fixtures Import insomnia-1 complex-input.json 1`] = `
 
 exports[`Fixtures Import insomnia-1 form-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:30.350Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -833,7 +833,7 @@ exports[`Fixtures Import insomnia-1 form-input.json 1`] = `
 
 exports[`Fixtures Import insomnia-1 minimal-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:30.571Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -866,7 +866,7 @@ exports[`Fixtures Import insomnia-1 minimal-input.json 1`] = `
 
 exports[`Fixtures Import insomnia-2 complex-input.json 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -946,7 +946,7 @@ exports[`Fixtures Import insomnia-2 complex-input.json 1`] = `
 
 exports[`Fixtures Import insomnia-3 basic-input.json 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -967,7 +967,7 @@ exports[`Fixtures Import insomnia-3 basic-input.json 1`] = `
 
 exports[`Fixtures Import insomnia-4 basic-input.yaml 1`] = `
 {
-  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -988,7 +988,7 @@ exports[`Fixtures Import insomnia-4 basic-input.yaml 1`] = `
 
 exports[`Fixtures Import openapi3 dereferenced-input.json 1`] = `
 {
-  "__export_date": "2019-08-15T19:31:41.712Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -1425,7 +1425,7 @@ exports[`Fixtures Import openapi3 dereferenced-input.json 1`] = `
 
 exports[`Fixtures Import openapi3 dereferenced-with-tags-input.json 1`] = `
 {
-  "__export_date": "2019-08-15T19:31:41.767Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -1886,7 +1886,7 @@ exports[`Fixtures Import openapi3 dereferenced-with-tags-input.json 1`] = `
 
 exports[`Fixtures Import openapi3 endpoint-security-input.yaml 1`] = `
 {
-  "__export_date": "2020-05-13T23:55:24.712Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -2175,7 +2175,7 @@ exports[`Fixtures Import openapi3 endpoint-security-input.yaml 1`] = `
 
 exports[`Fixtures Import openapi3 example-with-server-variables-input.yaml 1`] = `
 {
-  "__export_date": "2020-05-11T00:51:52.464Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -2225,7 +2225,7 @@ exports[`Fixtures Import openapi3 example-with-server-variables-input.yaml 1`] =
 
 exports[`Fixtures Import openapi3 example-without-servers-input.yaml 1`] = `
 {
-  "__export_date": "2020-03-24T06:16:20.516Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -2287,7 +2287,7 @@ exports[`Fixtures Import openapi3 example-without-servers-input.yaml 1`] = `
 
 exports[`Fixtures Import openapi3 global-security-input.yaml 1`] = `
 {
-  "__export_date": "2020-02-19T03:46:03.524Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -2370,7 +2370,7 @@ exports[`Fixtures Import openapi3 global-security-input.yaml 1`] = `
 
 exports[`Fixtures Import openapi3 multiple-api-keys-input.yml 1`] = `
 {
-  "__export_date": "2022-08-05T10:38:46.184Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -2481,7 +2481,7 @@ exports[`Fixtures Import openapi3 multiple-api-keys-input.yml 1`] = `
 
 exports[`Fixtures Import openapi3 oauth2-input.yaml 1`] = `
 {
-  "__export_date": "2020-05-13T23:55:24.712Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -2585,7 +2585,7 @@ exports[`Fixtures Import openapi3 oauth2-input.yaml 1`] = `
 
 exports[`Fixtures Import openapi3 path-plugin-input.yaml 1`] = `
 {
-  "__export_date": "2020-04-27T06:07:10.686Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -2635,7 +2635,7 @@ exports[`Fixtures Import openapi3 path-plugin-input.yaml 1`] = `
 
 exports[`Fixtures Import openapi3 petstore-input.json 1`] = `
 {
-  "__export_date": "2019-08-15T19:32:12.775Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -3086,7 +3086,7 @@ exports[`Fixtures Import openapi3 petstore-input.json 1`] = `
 
 exports[`Fixtures Import openapi3 petstore-readonly-input.yml 1`] = `
 {
-  "__export_date": "2019-08-15T19:32:12.806Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -3178,7 +3178,7 @@ exports[`Fixtures Import openapi3 petstore-readonly-input.yml 1`] = `
 
 exports[`Fixtures Import openapi3 petstore-with-tags-input.json 1`] = `
 {
-  "__export_date": "2019-08-15T19:32:12.839Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -3639,7 +3639,7 @@ exports[`Fixtures Import openapi3 petstore-with-tags-input.json 1`] = `
 
 exports[`Fixtures Import openapi3 petstore-yml-input.yml 1`] = `
 {
-  "__export_date": "2019-08-15T19:45:14.616Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -3719,7 +3719,7 @@ exports[`Fixtures Import openapi3 petstore-yml-input.yml 1`] = `
 
 exports[`Fixtures Import openapi3 petstore-yml-with-tags-input.yml 1`] = `
 {
-  "__export_date": "2019-08-15T19:50:19.680Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -3825,7 +3825,7 @@ exports[`Fixtures Import openapi3 petstore-yml-with-tags-input.yml 1`] = `
 
 exports[`Fixtures Import postman api-key-default-v2_1-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:36.171Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -3865,7 +3865,7 @@ exports[`Fixtures Import postman api-key-default-v2_1-input.json 1`] = `
 
 exports[`Fixtures Import postman api-key-header-v2_1-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:36.424Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -3905,7 +3905,7 @@ exports[`Fixtures Import postman api-key-header-v2_1-input.json 1`] = `
 
 exports[`Fixtures Import postman api-key-queryParams-v2_1-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:36.642Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -3945,7 +3945,7 @@ exports[`Fixtures Import postman api-key-queryParams-v2_1-input.json 1`] = `
 
 exports[`Fixtures Import postman aws-signature-auth-v2_0-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:36.856Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -3987,7 +3987,7 @@ exports[`Fixtures Import postman aws-signature-auth-v2_0-input.json 1`] = `
 
 exports[`Fixtures Import postman aws-signature-auth-v2_1-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:37.067Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -4029,7 +4029,7 @@ exports[`Fixtures Import postman aws-signature-auth-v2_1-input.json 1`] = `
 
 exports[`Fixtures Import postman basic-auth-v2_0-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:37.282Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -4068,7 +4068,7 @@ exports[`Fixtures Import postman basic-auth-v2_0-input.json 1`] = `
 
 exports[`Fixtures Import postman basic-auth-v2_1-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:37.495Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -4107,7 +4107,7 @@ exports[`Fixtures Import postman basic-auth-v2_1-input.json 1`] = `
 
 exports[`Fixtures Import postman bearer-token-v2_0-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:37.707Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -4146,7 +4146,7 @@ exports[`Fixtures Import postman bearer-token-v2_0-input.json 1`] = `
 
 exports[`Fixtures Import postman bearer-token-v2_1-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:37.919Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -4185,7 +4185,7 @@ exports[`Fixtures Import postman bearer-token-v2_1-input.json 1`] = `
 
 exports[`Fixtures Import postman complex-url-v2_0-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:38.136Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -4225,7 +4225,7 @@ exports[`Fixtures Import postman complex-url-v2_0-input.json 1`] = `
 
 exports[`Fixtures Import postman complex-url-v2_1-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:38.360Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -4265,7 +4265,7 @@ exports[`Fixtures Import postman complex-url-v2_1-input.json 1`] = `
 
 exports[`Fixtures Import postman complex-v2_0_fromHeaders-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:38.811Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -4518,7 +4518,7 @@ Changing a project's parent or children is currently not possible.
 
 exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:38.581Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -4676,7 +4676,7 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
 
 exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:39.037Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -4840,7 +4840,7 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
 
 exports[`Fixtures Import postman digest-auth-v2_0-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:39.265Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -4879,7 +4879,7 @@ exports[`Fixtures Import postman digest-auth-v2_0-input.json 1`] = `
 
 exports[`Fixtures Import postman digest-auth-v2_1-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:39.487Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -4918,7 +4918,7 @@ exports[`Fixtures Import postman digest-auth-v2_1-input.json 1`] = `
 
 exports[`Fixtures Import postman minimal-v2_0-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:39.713Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -4952,7 +4952,7 @@ exports[`Fixtures Import postman minimal-v2_0-input.json 1`] = `
 
 exports[`Fixtures Import postman minimal-v2_1-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:39.972Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -4986,7 +4986,7 @@ exports[`Fixtures Import postman minimal-v2_1-input.json 1`] = `
 
 exports[`Fixtures Import postman oauth1_0-auth-v2_0-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:40.189Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -5155,7 +5155,7 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_0-input.json 1`] = `
 
 exports[`Fixtures Import postman oauth1_0-auth-v2_1-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:40.411Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -5324,7 +5324,7 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_1-input.json 1`] = `
 
 exports[`Fixtures Import postman oauth2_0-auth-v2_0-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:40.624Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -5389,7 +5389,7 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_0-input.json 1`] = `
 
 exports[`Fixtures Import postman oauth2_0-auth-v2_1-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:40.848Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -5568,7 +5568,7 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_1-input.json 1`] = `
 
 exports[`Fixtures Import postman postman-export-oauth2-v2_1-input.json 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:41.082Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -5619,7 +5619,7 @@ exports[`Fixtures Import postman postman-export-oauth2-v2_1-input.json 1`] = `
 
 exports[`Fixtures Import postman-env basic-input.json 1`] = `
 {
-  "__export_date": "2016-12-01T03:24:37.929Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -5639,7 +5639,7 @@ exports[`Fixtures Import postman-env basic-input.json 1`] = `
 
 exports[`Fixtures Import postman-env no-name-input.json 1`] = `
 {
-  "__export_date": "2016-12-01T03:24:37.929Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -5659,7 +5659,7 @@ exports[`Fixtures Import postman-env no-name-input.json 1`] = `
 
 exports[`Fixtures Import swagger2 dereferenced-input.json 1`] = `
 {
-  "__export_date": "2018-01-09T23:32:46.908Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -6163,7 +6163,7 @@ exports[`Fixtures Import swagger2 dereferenced-input.json 1`] = `
 
 exports[`Fixtures Import swagger2 dereferenced-with-tags-input.json 1`] = `
 {
-  "__export_date": "2019-11-22T18:54:59.926Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -6667,7 +6667,7 @@ exports[`Fixtures Import swagger2 dereferenced-with-tags-input.json 1`] = `
 
 exports[`Fixtures Import swagger2 petstore-input.json 1`] = `
 {
-  "__export_date": "2018-01-09T23:32:54.091Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -7171,7 +7171,7 @@ exports[`Fixtures Import swagger2 petstore-input.json 1`] = `
 
 exports[`Fixtures Import swagger2 petstore-with-tags-input.json 1`] = `
 {
-  "__export_date": "2019-11-22T18:56:19.505Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -7675,7 +7675,7 @@ exports[`Fixtures Import swagger2 petstore-with-tags-input.json 1`] = `
 
 exports[`Fixtures Import swagger2 petstore-yml-input.yml 1`] = `
 {
-  "__export_date": "2019-11-22T18:54:59.959Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -7807,7 +7807,7 @@ exports[`Fixtures Import swagger2 petstore-yml-input.yml 1`] = `
 
 exports[`Fixtures Import swagger2 petstore-yml-with-tags-input.yml 1`] = `
 {
-  "__export_date": "2019-11-22T18:56:29.797Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -7898,7 +7898,7 @@ exports[`Fixtures Import swagger2 petstore-yml-with-tags-input.yml 1`] = `
 
 exports[`Fixtures Import swagger2 user-example-input.json 1`] = `
 {
-  "__export_date": "2019-11-22T18:56:44.435Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -7957,7 +7957,7 @@ exports[`Fixtures Import swagger2 user-example-input.json 1`] = `
 
 exports[`Fixtures Import wsdl addition-input.wsdl 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:44.363Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
@@ -8038,7 +8038,7 @@ exports[`Fixtures Import wsdl addition-input.wsdl 1`] = `
 
 exports[`Fixtures Import wsdl calculator-input.wsdl 1`] = `
 {
-  "__export_date": "2024-03-08T09:13:44.713Z",
+  "__export_date": "",
   "__export_format": 4,
   "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
