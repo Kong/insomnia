@@ -35,6 +35,22 @@ const addHeader = "insomnia.request.addHeader({key: 'X-Header-Name', value: 'hea
 const removeHeader = "insomnia.request.removeHeader('X-Header-Name');\n";
 const setMethod = "insomnia.request.method = 'GET';\n";
 const addQueryParams = "insomnia.request.url.addQueryParams('k1=v1');\n";
+const updateRequestBody =
+  `insomnia.request.body.update({
+  mode: 'raw',
+  raw: 'rawContent',
+});\n`;
+
+const updateRequestAuth =
+  `insomnia.request.auth.update(
+  {
+      type: 'bearer',
+      bearer: [
+              {key: 'token', value: 'tokenValue'},
+      ],
+  },
+  'bearer'
+);\n`;
 
 const lintOptions = {
   globals: {
@@ -212,7 +228,7 @@ export const PreRequestScriptEditor: FC<Props> = ({
               onClick={() => addSnippet(setMethod)}
             />
           </DropdownItem>
-          <DropdownItem textValue='Add header' arial-label={'Add header'}>
+          <DropdownItem textValue='Add a header' arial-label={'Add a header'}>
             <ItemContent
               icon="header"
               label='Add a header'
@@ -224,6 +240,20 @@ export const PreRequestScriptEditor: FC<Props> = ({
               icon="header"
               label='Remove a header'
               onClick={() => addSnippet(removeHeader)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Update body as raw' arial-label={'Update body as raw'}>
+            <ItemContent
+              icon="header"
+              label='Update body as raw'
+              onClick={() => addSnippet(updateRequestBody)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Update auth method' arial-label={'Update auth method'}>
+            <ItemContent
+              icon="header"
+              label='Update auth method'
+              onClick={() => addSnippet(updateRequestAuth)}
             />
           </DropdownItem>
         </Dropdown>

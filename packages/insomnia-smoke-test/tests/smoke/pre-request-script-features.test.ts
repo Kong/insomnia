@@ -198,18 +198,15 @@ test.describe('pre-request features tests', async () => {
                     mode: 'raw',
                     raw: 'rawContent',
                 });
-                // insomnia.request.auth.update(
-                //     {
-                //         type: 'bearer',
-                //         bearer: [
-                //                 {key: 'token', value: 'tokenValue'},
-                //         ],
-                //     },
-                //     'bearer'
-                // );
-                // TODO: enable proxy and test it
-                // insomnia.request.proxy.update({});
-                // insomnia.request.certificate.update({});
+                insomnia.request.auth.update(
+                    {
+                        type: 'bearer',
+                        bearer: [
+                                {key: 'token', value: 'tokenValue'},
+                        ],
+                    },
+                    'bearer'
+                );
             `,
             body: '{}',
             customVerify: (bodyJson: any) => {
