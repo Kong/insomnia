@@ -42,6 +42,7 @@ import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dr
 import { EditableInput } from '../components/editable-input';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
+import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showPrompt } from '../components/modals';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
@@ -108,6 +109,7 @@ const TestRoute: FC = () => {
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
+  const [isEnvironmentSelectOpen, setIsEnvironmentSelectOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
   const createUnitTestSuiteFetcher = useFetcher();
@@ -123,6 +125,12 @@ const TestRoute: FC = () => {
     .some(({ state }) => state !== 'idle');
 
   const navigate = useNavigate();
+
+  useDocBodyKeyboardShortcuts({
+    environment_showEditor: () => setEnvironmentModalOpen(true),
+    environment_showSwitchMenu: () => setIsEnvironmentSelectOpen(true),
+    showCookiesEditor: () => setIsCookieModalOpen(true),
+  });
 
   const testSuiteActionList: {
     id: string;
@@ -264,6 +272,8 @@ const TestRoute: FC = () => {
               <Select
                 aria-label="Select an environment"
                 className="overflow-hidden"
+                isOpen={isEnvironmentSelectOpen}
+                onOpenChange={setIsEnvironmentSelectOpen}
                 onSelectionChange={environmentId => {
                   setActiveEnvironmentFetcher.submit(
                     {
