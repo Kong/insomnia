@@ -16,7 +16,37 @@ const bridge: Window['bridge'] = {
   },
 
   requireInterceptor: (moduleName: string) => {
-    if (['uuid', 'fs'].includes(moduleName)) {
+    if (
+      [
+        // node.js modules
+        'path',
+        'assert',
+        'buffer',
+        'util',
+        'url',
+        'punycode',
+        'querystring',
+        'string_decoder',
+        'stream',
+        'timers',
+        'events',
+        'fs',
+        // npm modules
+        'uuid',
+        // 'ajv',
+        // 'atob',
+        // 'btoa',
+        // 'chai',
+        // 'cheerio',
+        // 'crypto-js',
+        // 'csv-parse/lib/sync',
+        // 'lodash',
+        // 'moment',
+        // 'tv4',
+        // 'uuid',
+        // 'xml2js',
+      ].includes(moduleName)
+    ) {
       return require(moduleName);
     } else if (moduleName === 'insomnia-collection' || moduleName === 'postman-collection') {
       return CollectionModule;
