@@ -544,7 +544,6 @@ test.describe('unhappy paths', async () => {
 
         test(tc.name, async ({ page }) => {
             const responsePane = page.getByTestId('response-pane');
-
             await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
 
             // set request body
