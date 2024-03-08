@@ -338,6 +338,7 @@ export class RequestAuth extends Property {
         const authOpts = rawOptionsToVariables(options, currentType);
 
         if (authOpts.length > 0) {
+            this.type = currentType;
             this.authOptions.set(currentType, authOpts[0]);
         } else {
             throw Error('no valid RequestAuth options is found');

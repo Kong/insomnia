@@ -23,7 +23,7 @@ test.describe('pre-request features tests', async () => {
 
     const testCases = [
         {
-            name: 'environments setting/overriding',
+            name: 'environments / setting and overriding',
             preReqScript: `
                 insomnia.baseEnvironment.set('fromBaseEnv', 'baseEnv');
                 insomnia.baseEnvironment.set('scriptValue', 'fromBase');
@@ -181,7 +181,7 @@ test.describe('pre-request features tests', async () => {
             },
         },
         {
-            name: 'insomnia.request manipulation',
+            name: 'insomnia.request / manipulation',
             preReqScript: `
                 const { Header } = require('insomnia-collection');
                 insomnia.request.method = 'GET';
@@ -218,7 +218,7 @@ test.describe('pre-request features tests', async () => {
             },
         },
         {
-            name: 'sendRequest custom mode',
+            name: 'sendRequest / custom mode',
             preReqScript: `
             const rawReq = {
                 url: 'http://127.0.0.1:4010/echo',
@@ -323,7 +323,7 @@ test.describe('pre-request features tests', async () => {
             },
         },
         {
-            name: 'eval() works in script',
+            name: 'eval() / works in script',
             preReqScript: `
                 const evalResult = eval('8+8');
                 insomnia.environment.set('evalResult', evalResult);
@@ -336,7 +336,7 @@ test.describe('pre-request features tests', async () => {
             },
         },
         {
-            name: 'require the url module',
+            name: 'require / the url module',
             preReqScript: `
                 const { URL } = require('url');
                 const url = new URL('https://user:pwd@insomnia.com:6666/p1?q1=a&q2=b#hashcontent');
@@ -386,7 +386,7 @@ test.describe('pre-request features tests', async () => {
             },
         },
         {
-            name: 'require the uuid module',
+            name: 'require / the uuid module',
             preReqScript: `
                 const uuid = require('uuid');
                 insomnia.environment.set('uuid', uuid.NIL);
@@ -399,7 +399,7 @@ test.describe('pre-request features tests', async () => {
             },
         },
         {
-            name: 'require node.js modules',
+            name: 'require / node.js modules',
             preReqScript: `
                 const uuid = require('uuid');
                 const path = require('path');
