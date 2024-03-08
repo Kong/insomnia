@@ -1,12 +1,12 @@
 import 'json-diff-kit/dist/viewer.css';
 
-import { Viewer } from 'json-diff-kit';
+import { Differ, Viewer } from 'json-diff-kit';
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, GridList, GridListItem, Heading, Label, Modal, ModalOverlay, TextArea, TextField, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { all } from '../../../models';
-import type { Status, StatusCandidate } from '../../../sync/types';
+import type { StageEntry, Status, StatusCandidate } from '../../../sync/types';
 import { Icon } from '../icon';
 
 interface Props {
@@ -14,6 +14,32 @@ interface Props {
   status: Status;
   syncItems: StatusCandidate[];
   onClose: () => void;
+}
+
+const differ = new Differ({
+  detectCircular: true,
+  maxDepth: Infinity,
+  showModifications: true,
+  arrayDiffMethod: 'lcs',
+});
+
+function getDiff(previewDiffItem: StageEntry) {
+  let previousContent = null;
+  let content = null;
+
+  try {
+    previousContent = 'previousBlobContent' in previewDiffItem && previewDiffItem.previousBlobContent ? JSON.parse(previewDiffItem.previousBlobContent) : null;
+  } catch (err) {
+    console.error('Failed to parse previous blob content', err);
+  }
+
+  try {
+    content = 'blobContent' in previewDiffItem && previewDiffItem.blobContent ? JSON.parse(previewDiffItem.blobContent) : null;
+  } catch (err) {
+    console.error('Failed to parse blob content', err);
+  }
+
+  return differ.diff(previousContent, content);
 }
 
 function getModelTypeById(id: string) {
@@ -33,10 +59,12 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
   const stagedChanges = Object.entries(status.stage).map(([key, entry]) => ({
     ...entry,
     document: syncItems.find(item => item.key === key)?.document || 'deleted' in entry ? { type: getModelTypeById(key) } : undefined,
+    id: `staged-${key}`,
   }));;
   const unstagedChanges = Object.entries(status.unstaged).map(([key, entry]) => ({
     ...entry,
     document: syncItems.find(item => item.key === key)?.document || 'deleted' in entry ? { type: getModelTypeById(key) } : undefined,
+    id: `unstaged-${key}`,
   }));;
 
   const stageChangesFetcher = useFetcher();
@@ -75,10 +103,9 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
     }
   }, [allChangesLength, onClose, error]);
 
-  // const [previewDiffItem, setPreviewDiffItem] = useState<StageEntry | null>(null);
-  const [selectedItemBlobId, setSelectedItemBlobId] = useState<string>('');
+  const [selectedItemId, setSelectedItemId] = useState<string>('');
 
-  const previewDiffItem = allChanges.find(item => item.blobId === selectedItemBlobId);
+  const previewDiffItem = allChanges.find(item => item.id === selectedItemId);
 
   return (
     <ModalOverlay
@@ -170,18 +197,18 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                           className="w-full"
                           items={stagedChanges.map(entry => ({
                             entry,
-                            id: entry.blobId,
-                            key: entry.blobId,
+                            id: entry.id,
+                            key: entry.id,
                             textValue: entry.name || entry.document?.type || '',
                           }))}
                           aria-label='Unstaged changes'
-                          selectedKeys={[selectedItemBlobId]}
+                          selectedKeys={[selectedItemId]}
                           selectionMode='single'
                           onSelectionChange={keys => {
                             if (keys !== 'all') {
                               const key = keys.values().next().value;
 
-                              setSelectedItemBlobId(key);
+                              setSelectedItemId(key);
                             }
                           }}
                           renderEmptyState={() => (
@@ -250,18 +277,18 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                           className="w-full"
                           items={unstagedChanges.map(entry => ({
                             entry,
-                            id: entry.blobId,
-                            key: entry.blobId,
+                            id: entry.id,
+                            key: entry.id,
                             textValue: entry.name || entry.document?.type || '',
                           }))}
                           aria-label='Unstaged changes'
-                          selectedKeys={[selectedItemBlobId]}
+                          selectedKeys={[selectedItemId]}
                           selectionMode='single'
                           onSelectionChange={keys => {
                             if (keys !== 'all') {
                               const key = keys.values().next().value;
 
-                              setSelectedItemBlobId(key);
+                              setSelectedItemId(key);
                             }
                           }}
                         >
@@ -311,12 +338,12 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                     <Icon icon="code-compare" />
                     {previewDiffItem.name || ('document' in previewDiffItem && previewDiffItem.document && 'type' in previewDiffItem.document ? previewDiffItem.document?.type : '')}
                   </Heading>
-                  {previewDiffItem && 'diff' in previewDiffItem && previewDiffItem.diff && (
+                  {previewDiffItem && (
                     <div
                       className='bg-[--hl-xs] rounded-sm p-2 flex-1 overflow-y-auto text-[--color-font]'
                     >
                       <Viewer
-                        diff={previewDiffItem.diff}
+                        diff={getDiff(previewDiffItem)}
                         hideUnchangedLines
                         highlightInlineDiff
                         className='diff-viewer'

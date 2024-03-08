@@ -3,7 +3,6 @@
 // - [ ] Make sure that pull handles updating the parentId to the current project._id
 import clone from 'clone';
 import crypto from 'crypto';
-import { Differ } from 'json-diff-kit';
 import path from 'path';
 
 import * as crypt from '../../account/crypt';
@@ -185,7 +184,7 @@ export class VCS {
     return this._getBlob(entry.blob);
   }
 
-  async status(candidates: StatusCandidate[], diff = false) {
+  async status(candidates: StatusCandidate[]) {
     const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
     const branch = await this._getCurrentBranch();
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
@@ -196,86 +195,52 @@ export class VCS {
       const { key } = entry;
       const stageEntry = stage[key];
 
-      // If the change is unstaged or has changed
+      // The entry is not staged
       if (!stageEntry) {
-        if (diff && 'blobContent' in entry) {
+        if ('deleted' in entry) {
+          let previousBlobContent: BaseModel | null = null;
           try {
-            const blobId = stage[key] ? stage[key].blobId : snapshot.state.find(s => s.key === key)?.blob || '';
-            // @TODO if it's unversioned (added and did not exist before) then don't diff
-            let blobContents = {};
-            try {
-              blobContents = (await this._getBlob(blobId)) || {};
-            } catch (e) {
-            }
-            const differ = new Differ({
-              detectCircular: true,    // default `true`
-              maxDepth: Infinity,      // default `Infinity`
-              showModifications: true, // default `true`
-              arrayDiffMethod: 'lcs',  // default `"normal"`, but `"lcs"` may be more useful
-            });
-            const diff = differ.diff(blobContents, JSON.parse(entry.blobContent));
+            previousBlobContent = await this.blobFromLastSnapshot(key);
 
-            if (diff.length) {
-              unstaged[key] = {
-                ...entry,
-                blobId,
-                diff,
-              };
-            } else {
-              unstaged[key] = entry;
-            }
           } catch (e) {
-            unstaged[key] = entry;
+            // No previous blob found
+          } finally {
+            unstaged[key] = {
+              ...entry,
+              previousBlobContent: JSON.stringify(previousBlobContent),
+            };
           }
         } else {
-          unstaged[key] = entry;
+          const blobId = snapshot.state.find(s => s.key === key)?.blob || '';
+          let previousBlobContent: BaseModel | null = null;
+          try {
+            previousBlobContent = (await this._getBlob(blobId)) || null;
+          } catch (e) {
+            // No previous blob found
+          } finally {
+            unstaged[key] = {
+              ...entry,
+              previousBlobContent: JSON.stringify(previousBlobContent),
+            };
+          }
         }
       } else if (stageEntry.blobId !== entry.blobId) {
-        if (diff && 'blobContent' in entry) {
+        if ('blobContent' in entry) {
+          let previousBlobContent: BaseModel | null = null;
           try {
-            const blobContents = 'blobContent' in stageEntry ? JSON.parse(stageEntry.blobContent) : {};
-            const differ = new Differ({
-              detectCircular: true,    // default `true`
-              maxDepth: Infinity,      // default `Infinity`
-              showModifications: true, // default `true`
-              arrayDiffMethod: 'lcs',  // default `"normal"`, but `"lcs"` may be more useful
-            });
-            const diff = differ.diff(blobContents, JSON.parse(entry.blobContent));
-
-            if (diff.length) {
-              unstaged[key] = {
-                ...entry,
-                blobId: entry.blobId || stageEntry.blobId,
-                diff,
-              };
-            } else {
-              unstaged[key] = entry;
-            }
+            previousBlobContent = 'blobContent' in stageEntry ? JSON.parse(stageEntry.blobContent) : {};
           } catch (e) {
-            unstaged[key] = entry;
+            // No previous blob found
+          } finally {
+            unstaged[key] = {
+              ...entry,
+              blobId: entry.blobId || stageEntry.blobId,
+              previousBlobContent: JSON.stringify(previousBlobContent),
+            };
           }
         } else {
           unstaged[key] = entry;
         }
-      }
-
-      // Staged changes
-      if (diff && stageEntry && 'blobContent' in entry) {
-        const latestBlobContents = await this.blobFromLastSnapshot(key);
-        const differ = new Differ({
-          detectCircular: true,    // default `true`
-          maxDepth: Infinity,      // default `Infinity`
-          showModifications: true, // default `true`
-          arrayDiffMethod: 'lcs',  // default `"normal"`, but `"lcs"` may be more useful
-        });
-
-        const blobContent = 'blobContent' in stageEntry ? JSON.parse(stageEntry.blobContent) : {};
-
-        const diff = differ.diff(latestBlobContents, blobContent);
-        stage[key] = {
-          ...stage[key],
-          diff,
-        };
       }
     }
 

@@ -314,7 +314,7 @@ export const syncDataLoader: LoaderFunction = async ({
       b.created > a.created ? 1 : -1
     );
     const historyCount = await vcs.getHistoryCount();
-    const status = await vcs.status(syncItems, true);
+    const status = await vcs.status(syncItems);
     const compare =
       remoteCompareCache[workspaceId] || (await vcs.compareRemoteBranch());
     const remoteBackendProjects =
