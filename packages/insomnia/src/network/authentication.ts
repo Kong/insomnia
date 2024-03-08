@@ -54,7 +54,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     return getBasicAuthHeader(username, password, encoding);
   }
 
-  if (authentication.type === AUTH_BEARER && authentication.token && authentication.prefix) {
+  if (authentication.type === AUTH_BEARER && authentication.token) {
     const { token, prefix } = authentication;
     return getBearerAuthHeader(token, prefix);
   }
@@ -68,7 +68,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
       const tokenId = requestId.match(/\.graphql$/) ? requestId.replace(/\.graphql$/, '') : requestId;
       const oAuth2Token = await getOAuth2Token(tokenId, authentication as AuthTypeOAuth2);
 
-      if (oAuth2Token && authentication.tokenPrefix) {
+      if (oAuth2Token) {
         const token = oAuth2Token.accessToken;
         return _buildBearerHeader(token, authentication.tokenPrefix);
       }
@@ -171,7 +171,7 @@ export function getAuthQueryParams(authentication: RequestAuthentication) {
   return;
 }
 
-export const _buildBearerHeader = (accessToken: string, prefix: string) => {
+export const _buildBearerHeader = (accessToken: string, prefix?: string) => {
   if (!accessToken) {
     return;
   }
