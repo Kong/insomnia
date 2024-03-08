@@ -78,6 +78,7 @@ export interface ImportRequest<T extends {} = {}> extends Comment {
   queryString?: QueryString[];
   url?: string;
   preRequestScript?: string;
+  metaSortKey?: number;
 }
 
 export type Converter<T extends {} = {}> = (

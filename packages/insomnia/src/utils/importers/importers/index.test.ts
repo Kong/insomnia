@@ -19,27 +19,21 @@ describe('Fixtures', () => {
 
     for (const input of inputs) {
       const prefix = input.replace(/-input\.[^.]+/, '');
-      const output = `${prefix}-output.json`;
 
       if (prefix.startsWith('skip')) {
         continue;
       }
 
       it(input, async () => {
-        expect.assertions(5);
+        expect.assertions(3);
 
         expect(typeof input).toBe('string');
         const inputContents = fs.readFileSync(path.join(dir, input), 'utf8');
         expect(typeof inputContents).toBe('string');
 
-        expect(typeof output).toBe('string');
-        const outputContents = fs.readFileSync(path.join(dir, output), 'utf8');
-        expect(typeof outputContents).toBe('string');
-
         const results = await convert(inputContents);
-        const expected = JSON.parse(outputContents);
-        expected.__export_date = results.data.__export_date;
-        expect(results.data).toEqual(expected);
+        results.data.__export_date = '';
+        expect(results.data).toMatchSnapshot();
 
         const ids = new Set();
         for (const resource of results.data.resources) {
