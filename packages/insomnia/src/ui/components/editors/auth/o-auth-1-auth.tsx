@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { AUTH_OAUTH_1 } from '../../../../common/constants';
+import { AuthTypeOAuth1 } from '../../../../models/request';
 import {
   OAuth1SignatureMethod,
   SIGNATURE_METHOD_HMAC_SHA1,
@@ -9,7 +9,6 @@ import {
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
 } from '../../../../network/o-auth-1/constants';
-import { invariant } from '../../../../utils/invariant';
 import { RequestLoaderData } from '../../../routes/request';
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthPrivateKeyRow } from './components/auth-private-key-row';
@@ -36,8 +35,9 @@ export const signatureMethodOptions: { name: OAuth1SignatureMethod; value: OAuth
 }];
 
 export const OAuth1Auth: FC = () => {
-  const { activeRequest: { authentication } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  invariant(authentication.type === AUTH_OAUTH_1, 'OAuth1Auth must be used with OAuth1 authentication');
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const authentication = activeRequest.authentication as AuthTypeOAuth1;
+
   const { signatureMethod } = authentication;
   return (
     <AuthTableBody>

@@ -143,7 +143,7 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
       return;
     }
 
-    const { authentication } = activeRequest;
+    const authentication = activeRequest.authentication as RequestAuthentication;
 
     if (type === authentication.type) {
       // Type didn't change
@@ -181,12 +181,15 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
     if (!activeRequest || !('authentication' in activeRequest)) {
       return false;
     }
-    return type === (activeRequest.authentication.type || 'none');
+    const authentication = activeRequest.authentication as RequestAuthentication;
+
+    return type === (authentication.type || 'none');
   }, [activeRequest]);
 
   if (!activeRequest) {
     return null;
   }
+  const authentication = activeRequest.authentication as RequestAuthentication;
 
   return (
     <Dropdown
@@ -194,7 +197,7 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
       isDisabled={disabled}
       triggerButton={
         <DropdownButton className="tall !text-[--hl]">
-          {'authentication' in activeRequest ? getAuthTypeName(activeRequest.authentication.type) || 'Auth' : 'Auth'}
+          {'authentication' in activeRequest ? getAuthTypeName(authentication.type) || 'Auth' : 'Auth'}
           <i className="fa fa-caret-down space-left" />
         </DropdownButton>
       }

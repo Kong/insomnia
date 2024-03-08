@@ -23,7 +23,9 @@ interface Header {
 }
 
 export async function getAuthHeader(renderedRequest: RenderedRequest, url: string) {
-  const { method, authentication, body } = renderedRequest;
+  const { method, body } = renderedRequest;
+  const authentication = renderedRequest.authentication as RequestAuthentication;
+
   const requestId = renderedRequest._id;
 
   if (authentication.disabled) {

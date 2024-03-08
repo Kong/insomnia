@@ -13,7 +13,7 @@ import { isWorkspace, Workspace } from '../models/workspace';
 import * as templating from '../templating';
 import * as templatingUtils from '../templating/utils';
 import { setDefaultProtocol } from '../utils/url/protocol';
-import { AUTH_NONE, CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
+import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 
 export const KEEP_ON_ERROR = 'keep';
@@ -517,8 +517,8 @@ export async function getRenderedRequestAndContext(
   }
 
   // Remove disabled authentication
-  if (renderedRequest.authentication && renderedRequest.authentication.disabled) {
-    renderedRequest.authentication = { type: AUTH_NONE };
+  if (renderedRequest.authentication && 'disabled' in renderedRequest.authentication) {
+    renderedRequest.authentication = {};
   }
 
   // Default the proto if it doesn't exist

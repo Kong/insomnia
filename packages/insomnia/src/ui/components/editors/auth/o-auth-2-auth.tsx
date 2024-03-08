@@ -18,7 +18,6 @@ import {
 } from '../../../../network/o-auth-2/constants';
 import { getOAuth2Token } from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/get-token';
-import { invariant } from '../../../../utils/invariant';
 import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
 import { RequestLoaderData } from '../../../routes/request';
 import { Link } from '../../base/link';
@@ -246,8 +245,8 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
 };
 
 export const OAuth2Auth: FC = () => {
-  const { activeRequest: { authentication } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  invariant(authentication.type === AUTH_OAUTH_2, 'OAuth2Auth required');
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const authentication = activeRequest.authentication as AuthTypeOAuth2;
   const { basic, advanced } = getFieldsForGrantType(authentication);
 
   return (

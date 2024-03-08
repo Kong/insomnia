@@ -255,7 +255,7 @@ export interface BaseRequest {
   parameters: RequestParameter[];
   pathParameters: RequestPathParameter[];
   headers: RequestHeader[];
-  authentication: RequestAuthentication;
+  authentication: RequestAuthentication | {};
   metaSortKey: number;
   isPrivate: boolean;
   // Settings
@@ -291,7 +291,7 @@ export function init(): BaseRequest {
     preRequestScript: '',
     parameters: [],
     headers: [],
-    authentication: { type: AUTH_NONE },
+    authentication: {},
     metaSortKey: -1 * Date.now(),
     isPrivate: false,
     pathParameters: [],
@@ -438,8 +438,8 @@ function migrateWeirdUrls(request: Request) {
  * @param request
  */
 function migrateAuthType(request: Request) {
-  const isAuthSet = 'username' in request.authentication && request.authentication.username;
-
+  const isAuthSet = request?.authentication && 'username' in request.authentication && request.authentication.username;
+  // @ts-expect-error -- old model
   if (isAuthSet && !request.authentication.type) {
     // @ts-expect-error -- old model
     request.authentication.type = AUTH_BASIC;

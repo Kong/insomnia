@@ -18,7 +18,7 @@ export interface BaseWebSocketRequest {
   url: string;
   metaSortKey: number;
   headers: RequestHeader[];
-  authentication: RequestAuthentication;
+  authentication: RequestAuthentication | {};
   parameters: RequestParameter[];
   pathParameters: RequestPathParameter[];
   settingEncodeUrl: boolean;
@@ -42,7 +42,7 @@ export const init = (): BaseWebSocketRequest => ({
   url: '',
   metaSortKey: -1 * Date.now(),
   headers: [],
-  authentication: { type: 'none' },
+  authentication: {},
   parameters: [],
   pathParameters: [],
   settingEncodeUrl: true,
