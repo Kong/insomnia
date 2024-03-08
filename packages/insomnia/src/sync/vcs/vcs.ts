@@ -211,7 +211,7 @@ export class VCS {
             };
           }
         } else {
-          const blobId = snapshot.state.find(s => s.key === key)?.blob || '';
+          const blobId = snapshot ? snapshot.state.find(s => s.key === key)?.blob || '' : '';
           let previousBlobContent: BaseModel | null = null;
           try {
             previousBlobContent = (await this._getBlob(blobId)) || null;
