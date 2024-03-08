@@ -1,28 +1,16 @@
-import type { Request } from '../../models/request';
+import { RequestBodyParameter, RequestHeader } from '../../models/request';
+import { toPreRequestAuth } from './auth';
 import { Environment, Variables } from './environments';
-
-export const unsupportedError = (featureName: string, alternative?: string) => {
-    const message = `${featureName} is not supported yet` +
-        (alternative ? `, please use ${alternative} instead temporarily.` : '');
-    return Error(message);
-};
-
-export interface RequestContext {
-    request: Request;
-    timelinePath: string;
-    timeout: number;
-    environment?: Record<string, any>;
-    baseEnvironment?: Record<string, any>;
-    collectionVariables?: Record<string, any>;
-    globals?: Record<string, any>;
-    iterationData?: Record<string, any>;
-}
+import { RequestContext } from './interfaces';
+import { unsupportedError } from './properties';
+import { Request as ScriptRequest, RequestBodyOptions, RequestOptions } from './request';
 
 export class InsomniaObject {
     public environment: Environment;
     public collectionVariables: Environment;
     public baseEnvironment: Environment;
     public variables: Variables;
+    public request: ScriptRequest;
 
     // TODO: follows will be enabled after Insomnia supports them
     private _globals: Environment;
@@ -35,6 +23,7 @@ export class InsomniaObject {
             environment: Environment;
             baseEnvironment: Environment;
             variables: Variables;
+            request: ScriptRequest;
         },
     ) {
         this._globals = rawObj.globals;
@@ -43,6 +32,7 @@ export class InsomniaObject {
         this.collectionVariables = this.baseEnvironment; // collectionVariables is mapped to baseEnvironment
         this._iterationData = rawObj.iterationData;
         this.variables = rawObj.variables;
+        this.request = rawObj.request;
     }
 
     // TODO: remove this after enabled globals
@@ -62,6 +52,7 @@ export class InsomniaObject {
             baseEnvironment: this.baseEnvironment.toObject(),
             iterationData: this._iterationData.toObject(),
             variables: this.variables.toObject(),
+            request: this.request,
         };
     };
 }
@@ -82,6 +73,39 @@ export function initInsomniaObject(
         data: iterationData,
     });
 
+    let reqBodyOpt: RequestBodyOptions = { mode: undefined };
+    if (rawObj.request.body.text != null) {
+        reqBodyOpt = {
+            mode: 'raw',
+            raw: rawObj.request.body.text,
+        };
+    } else if (rawObj.request.body.fileName != null && rawObj.request.body.fileName !== '') {
+        reqBodyOpt = {
+            mode: 'file',
+            file: rawObj.request.body.fileName,
+        };
+    } else if (rawObj.request.body.params != null) {
+        reqBodyOpt = {
+            mode: 'urlencoded',
+            urlencoded: rawObj.request.body.params.map(
+                (param: RequestBodyParameter) => ({ key: param.name, value: param.value })
+            ),
+        };
+    }
+
+    const reqOpt: RequestOptions = {
+        url: rawObj.request.url,
+        method: rawObj.request.method,
+        header: rawObj.request.headers.map(
+            (header: RequestHeader) => ({ key: header.name, value: header.value })
+        ),
+        body: reqBodyOpt,
+        auth: toPreRequestAuth(rawObj.request.authentication),
+        // proxy: ProxyConfigOptions, from settings
+        // certificate: CertificateOptions,
+    };
+    const request = new ScriptRequest(reqOpt);
+
     return new InsomniaObject(
         {
             globals,
@@ -89,6 +113,7 @@ export function initInsomniaObject(
             baseEnvironment,
             iterationData,
             variables,
+            request,
         },
     );
 };

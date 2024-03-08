@@ -1,6 +1,6 @@
 import type { CurlRequestOptions, CurlRequestOutput } from '../main/network/libcurl-promise';
 import { Request } from '../models/request';
-import { RequestContext } from '../sdk/objects/insomnia';
+import { RequestContext } from '../sdk/objects/interfaces';
 
 const cancelRequestFunctionMap = new Map<string, () => void>();
 export async function cancelRequestById(requestId: string) {

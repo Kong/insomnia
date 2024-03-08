@@ -3,11 +3,11 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';;
 
-test.describe('pre-request UI tests', async () => {
+test.describe('pre-request features tests', async () => {
     test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
     test.beforeEach(async ({ app, page }) => {
-        const text = await loadFixture('smoke-test-collection.yaml');
+        const text = await loadFixture('pre-request-collection.yaml');
         await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
         await page.getByRole('button', { name: 'Create in project' }).click();
@@ -16,7 +16,7 @@ test.describe('pre-request UI tests', async () => {
         await page.getByRole('button', { name: 'Scan' }).click();
         await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-        await page.getByLabel('Smoke tests').click();
+        await page.getByLabel('Pre-request Scripts').click();
     });
 
     const testCases = [
@@ -34,10 +34,10 @@ test.describe('pre-request UI tests', async () => {
                 insomnia.baseEnvironment.set('customValue', 'fromScript');
             `,
             body: `{
-                "fromBaseEnv": "{{ _.fromBaseEnv }}",
-                "scriptValue": "{{ _.scriptValue }}",
-                "preDefinedValue": "{{ _.preDefinedValue }}",
-                "customValue": "{{ _.customValue }}"
+"fromBaseEnv": "{{ _.fromBaseEnv }}",
+"scriptValue": "{{ _.scriptValue }}",
+"preDefinedValue": "{{ _.preDefinedValue }}",
+"customValue": "{{ _.customValue }}"
             }`,
             expectedBody: {
                 fromBaseEnv: 'baseEnv',
@@ -59,9 +59,9 @@ test.describe('pre-request UI tests', async () => {
                 pm.environment.set('varBool', pm.variables.get('varBool'));
             `,
             body: `{
-                "varStr": "{{ _.varStr }}",
-                "varNum": {{ _.varNum }},
-                "varBool": {{ _.varBool }}
+"varStr": "{{ _.varStr }}",
+"varNum": {{ _.varNum }},
+"varBool": {{ _.varBool }}
             }`,
             expectedBody: {
                 varStr: 'varStr',
@@ -160,8 +160,8 @@ test.describe('pre-request UI tests', async () => {
             insomnia.environment.set('headerJson', JSON.stringify(header.toJSON()));
             `,
             body: `{
-                "propJson": {{ _.propJson }},
-                "headerJson": {{ _.headerJson }}
+"propJson": {{ _.propJson }},
+"headerJson": {{ _.headerJson }}
             }`,
             expectedBody: {
                 propJson: {
@@ -178,6 +178,43 @@ test.describe('pre-request UI tests', async () => {
                     'name': '',
                     'type': '',
                 },
+            },
+        },
+        {
+            name: 'insomnia.request manipulation',
+            preReqScript: `
+                const { Header } = require('insomnia-collection');
+                insomnia.request.method = 'GET';
+                insomnia.request.url.addQueryParams('k1=v1');
+                insomnia.request.headers.add(new Header({
+                    key: 'Content-Type',
+                    value: 'text/plain'
+                }));
+                insomnia.request.headers.add(new Header({
+                    key: 'X-Hello',
+                    value: 'hello'
+                }));
+                insomnia.request.body.update({
+                    mode: 'raw',
+                    raw: 'rawContent',
+                });
+                insomnia.request.auth.update(
+                    {
+                        type: 'bearer',
+                        bearer: [
+                                {key: 'token', value: 'tokenValue'},
+                        ],
+                    },
+                    'bearer'
+                );
+                // insomnia.request.proxy.update({}); // TODO: enable proxy and test it
+                // insomnia.request.certificate.update({});
+            `,
+            body: '{}',
+            customVerify: (bodyJson: any) => {
+                expect(bodyJson.method).toEqual('GET');
+                expect(bodyJson.headers['x-hello']).toEqual('hello');
+                expect(bodyJson.data).toEqual('rawContent');
             },
         },
     ];
@@ -220,8 +257,14 @@ test.describe('pre-request UI tests', async () => {
             const rows = await responseBody.allInnerTexts();
             expect(rows.length).toBeGreaterThan(0);
 
-            const bodyJson = JSON.parse(rows.join('\n'));
-            expect(bodyJson.data).toEqual(tc.expectedBody);
+            const bodyJson = JSON.parse(rows.join(' '));
+
+            if (tc.expectedBody) {
+                expect(JSON.parse(bodyJson.data)).toEqual(tc.expectedBody);
+            }
+            if (tc.customVerify) {
+                tc.customVerify(bodyJson);
+            }
         });
     }
 });

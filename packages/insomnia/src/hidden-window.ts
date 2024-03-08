@@ -1,4 +1,6 @@
-import { initInsomniaObject, RequestContext } from './sdk/objects/insomnia';
+import { initInsomniaObject } from './sdk/objects/insomnia';
+import { RequestContext } from './sdk/objects/interfaces';
+import { mergeRequests } from './sdk/objects/request';
 
 export interface HiddenBrowserWindowBridgeAPI {
   runPreRequestScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
@@ -50,6 +52,7 @@ const runPreRequestScript = async (
     consoleInterceptor
   );
   const mutatedContextObject = mutatedInsomniaObject.toObject();
+  const updatedRequest = mergeRequests(context.request, mutatedContextObject.request);
 
   await window.bridge.requireInterceptor('fs').promises.writeFile(context.timelinePath, log.join('\n'));
 
@@ -60,5 +63,6 @@ const runPreRequestScript = async (
     ...context,
     environment: mutatedContextObject.environment,
     baseEnvironment: mutatedContextObject.baseEnvironment,
+    request: updatedRequest,
   };
 };

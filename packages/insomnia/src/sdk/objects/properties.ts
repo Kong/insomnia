@@ -2,7 +2,11 @@ import clone from 'clone';
 import equal from 'deep-equal';
 import _ from 'lodash';
 
-import { unsupportedError } from './insomnia';
+export const unsupportedError = (featureName: string, alternative?: string) => {
+    const message = `${featureName} is not supported yet` +
+        (alternative ? `, please use ${alternative} instead temporarily.` : '');
+    return Error(message);
+};
 
 export class PropertyBase {
     public _kind = 'PropertyBase';
