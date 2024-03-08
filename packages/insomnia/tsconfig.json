@@ -24,7 +24,6 @@
     "src/coverage",
     "src/main.min.js",
     "src/preload.js",
-    "svgr.config.js",
-    "**/transformAuthToAnotherType.js"
+    "svgr.config.js"
   ],
 }

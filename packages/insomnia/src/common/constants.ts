@@ -28,21 +28,7 @@ export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () => appConfig.segmentWriteKeys[(isDevelopment() || env.PLAYWRIGHT) ? 'development' : 'production'];
 export const getSentryDsn = () => appConfig.sentryDsn;
 export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
-export type AuthType =
-  | 'none'
-  | 'apikey'
-  | 'oauth2'
-  | 'oauth1'
-  | 'basic'
-  | 'digest'
-  | 'bearer'
-  | 'ntlm'
-  | 'hawk'
-  | 'iam'
-  | 'netrc'
-  | 'asap'
-  | 'sha256'
-  | 'sha1';
+
 export const getBrowserUserAgent = () => encodeURIComponent(
   String(window.navigator.userAgent)
     .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')

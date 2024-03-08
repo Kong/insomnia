@@ -30,6 +30,18 @@ export const prefix = 'req';
 export const canDuplicate = true;
 
 export const canSync = true;
+export type AuthTypes = 'none'
+  | 'apikey'
+  | 'oauth2'
+  | 'oauth1'
+  | 'basic'
+  | 'digest'
+  | 'bearer'
+  | 'ntlm'
+  | 'hawk'
+  | 'iam'
+  | 'netrc'
+  | 'asap';
 
 export interface AuthTypeBasic {
   type: typeof AUTH_BASIC;
