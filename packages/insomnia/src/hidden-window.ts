@@ -1,6 +1,7 @@
 import { initInsomniaObject } from './sdk/objects/insomnia';
 import { RequestContext } from './sdk/objects/interfaces';
 import { mergeClientCertificates, mergeRequests, mergeSettings } from './sdk/objects/request';
+import { invariant } from './utils/invariant';
 
 export interface HiddenBrowserWindowBridgeAPI {
   runPreRequestScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
@@ -41,11 +42,18 @@ const runPreRequestScript = async (
     ),
   };
 
+  const evalInterceptor = (script: string) => {
+    invariant(script && typeof script === 'string', 'eval is called with invalid or empty value');
+    const result = eval(script);
+    return result;
+  };
+
   const AsyncFunction = (async () => { }).constructor;
   const executeScript = AsyncFunction(
     'insomnia',
     'require',
     'console',
+    'eval',
     `
       const $ = insomnia, pm = insomnia;
        ${script};
@@ -55,7 +63,8 @@ const runPreRequestScript = async (
   const mutatedInsomniaObject = await executeScript(
     executionContext,
     window.bridge.requireInterceptor,
-    consoleInterceptor
+    consoleInterceptor,
+    evalInterceptor,
   );
   const mutatedContextObject = mutatedInsomniaObject.toObject();
   const updatedRequest = mergeRequests(context.request, mutatedContextObject.request);
