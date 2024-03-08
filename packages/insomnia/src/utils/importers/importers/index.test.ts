@@ -39,7 +39,7 @@ describe('Fixtures', () => {
         const results = await convert(inputContents);
         const expected = JSON.parse(outputContents);
         expected.__export_date = results.data.__export_date;
-        expect(results.data).toEqual(expected);
+        expect(results.data).toMatchSnapshot(expected);
 
         const ids = new Set();
         for (const resource of results.data.resources) {
