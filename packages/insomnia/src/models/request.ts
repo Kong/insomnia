@@ -17,7 +17,7 @@ import {
   METHOD_GET,
 } from '../common/constants';
 import { database as db } from '../common/database';
-import { OAuth1SignatureMethod } from '../network/o-auth-1/constants';
+import type { OAuth1SignatureMethod } from '../network/o-auth-1/constants';
 import { deconstructQueryStringToParams } from '../utils/url/querystring';
 import type { BaseModel } from './index';
 

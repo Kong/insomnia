@@ -7,7 +7,6 @@ import OAuth1 from 'oauth-1.0a';
 
 import { AUTH_OAUTH_1, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import type { RequestAuthentication, RequestBody } from '../../models/request';
-import { signatureMethodOptions } from '../../ui/components/editors/auth/o-auth-1-auth';
 import type { OAuth1SignatureMethod } from './constants';
 import {
   SIGNATURE_METHOD_HMAC_SHA1,
@@ -57,7 +56,7 @@ export default async function(
     },
     signature_method: authentication.signatureMethod,
     version: authentication.version,
-    hash_function: hashFunction(authentication.signatureMethod || signatureMethodOptions[0].value),
+    hash_function: hashFunction(authentication.signatureMethod || 'HMAC-SHA1'),
     realm: authentication.realm,
   });
   const requestData: OAuth1.RequestOptions = {
