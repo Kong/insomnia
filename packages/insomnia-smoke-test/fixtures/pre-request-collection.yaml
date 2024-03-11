@@ -42,7 +42,7 @@ resources:
     parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
     modified: 1707809218855
     created: 1707808697304
-    url: ""
+    url: http://127.0.0.1:4010/echo
     name: Long running task
     description: ""
     method: GET
@@ -78,7 +78,7 @@ resources:
     parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
     modified: 1707809035895
     created: 1707809028449
-    url: ""
+    url: http://127.0.0.1:4010/echo
     name: Range error
     description: ""
     method: GET
@@ -103,7 +103,7 @@ resources:
     parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
     modified: 1707808953866
     created: 1707808727077
-    url: ""
+    url: http://127.0.0.1:4010/echo
     name: Syntax error
     description: ""
     method: GET
@@ -128,7 +128,7 @@ resources:
     parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
     modified: 1707808979424
     created: 1707808961112
-    url: ""
+    url: http://127.0.0.1:4010/echo
     name: Type error
     description: ""
     method: GET
@@ -155,7 +155,7 @@ resources:
     parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
     modified: 1707809017110
     created: 1707809000715
-    url: ""
+    url: http://127.0.0.1:4010/echo
     name: Reference error
     description: ""
     method: GET
@@ -194,3 +194,35 @@ resources:
     name: Default Jar
     cookies: []
     _type: cookie_jar
+  - _id: fld_01de564274824ecaad272330339ea6b2
+    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
+    modified: 1668533312225
+    created: 1668533312225
+    name: FolderWithEnv
+    description: ""
+    environment:
+      customValue: "fromFolder"
+    environmentPropertyOrder: null
+    metaSortKey: -1668533312225
+    _type: request_group
+  - _id: req_89dade2ee9ee42fbb22d588783a9df3c
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: echo pre-request script result
+    description: ""
+    method: POST
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request

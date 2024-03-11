@@ -76,7 +76,7 @@ export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow
     minHeight: MINIMUM_HEIGHT,
     minWidth: MINIMUM_WIDTH,
     webPreferences: {
-      contextIsolation: true,
+      contextIsolation: false,
       nodeIntegration: true,
       preload: path.join(__dirname, 'hidden-window-preload.js'),
       spellcheck: false,
@@ -574,6 +574,21 @@ export function createWindow(): ElectronBrowserWindow {
             height: 1080,
           });
           setZoom(() => 4)();
+        },
+      },
+      {
+        label: 'Show/hide hidden browser window ',
+        click: () => {
+          const hiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
+          invariant(hiddenBrowserWindow, 'hiddenBrowserWindow is not defined');
+          hiddenBrowserWindow.isVisible() ? hiddenBrowserWindow.hide() : hiddenBrowserWindow.show();
+        },
+      },
+      {
+        label: 'Stop/start hidden browser window ',
+        click: () => {
+          const hiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
+          hiddenBrowserWindow ? stopHiddenBrowserWindow() : createHiddenBrowserWindow();
         },
       },
     ],

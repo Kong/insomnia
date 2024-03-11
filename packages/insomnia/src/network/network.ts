@@ -87,19 +87,30 @@ export const tryToExecutePreRequestScript = async (
       baseEnvironment: undefined,
     };
   }
+  const settings = await models.settings.get();
 
   try {
-    const output = await cancellableRunPreRequestScript({
+    const timeout = settings.timeout || 5000;
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Timeout: Hidden browser window is not responding'));
+        // Add one extra second to ensure the hidden browser window has had a chance to return its timeout
+        // TODO: restart the hidden browser window
+      }, timeout + 1000);
+    });
+    const preRequestPromise = cancellableRunPreRequestScript({
       script: request.preRequestScript,
       context: {
         request,
         timelinePath,
+        timeout: settings.timeout,
         // it inputs empty environment data when active environment is the base environment
         // this is more deterministic and avoids that script accidently manipulates baseEnvironment instead of environment
         environment: environment._id === baseEnvironment._id ? {} : (environment?.data || {}),
         baseEnvironment: baseEnvironment?.data || {},
       },
     });
+    const output = await Promise.race([timeoutPromise, preRequestPromise]) as { request: Request; environment: Record<string, any>; baseEnvironment: Record<string, any> };
     console.log('[network] Pre-request script succeeded', output);
 
     const envPropertyOrder = orderedJSON.parse(
@@ -107,6 +118,7 @@ export const tryToExecutePreRequestScript = async (
       JSON_ORDER_PREFIX,
       JSON_ORDER_SEPARATOR,
     );
+
     environment.data = output.environment;
     environment.dataPropertyOrder = envPropertyOrder.map;
     const baseEnvPropertyOrder = orderedJSON.parse(
@@ -114,6 +126,7 @@ export const tryToExecutePreRequestScript = async (
       JSON_ORDER_PREFIX,
       JSON_ORDER_SEPARATOR,
     );
+
     baseEnvironment.data = output.baseEnvironment;
     baseEnvironment.dataPropertyOrder = baseEnvPropertyOrder.map;
 
@@ -126,7 +139,6 @@ export const tryToExecutePreRequestScript = async (
     await fs.promises.appendFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
 
     const requestId = request._id;
-    const settings = await models.settings.get();
     const responsePatch = {
       _id: responseId,
       parentId: requestId,

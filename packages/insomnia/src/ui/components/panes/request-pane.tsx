@@ -14,12 +14,12 @@ import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/us
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
-import { CodeEditor } from '../codemirror/code-editor';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
+import { PreRequestScriptEditor } from '../editors/pre-request-script-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
@@ -292,21 +292,24 @@ export const RequestPane: FC<Props> = ({
         </TabItem>
         <TabItem
           key="pre-request-script"
-          title={'Pre-request Script'}
+          title={
+            <div className='flex items-center gap-2'>
+              Pre-request Script{' '}
+              {headersCount > 0 && (
+                <span className="p-1 flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">Beta</span>
+              )}
+            </div>
+          }
           aria-label={'experimental'}
         >
           <ErrorBoundary
             key={uniqueKey}
             errorClassName="tall wide vertically-align font-error pad text-center"
           >
-            <CodeEditor
-              id="pre-request-script-editor"
-              showPrettifyButton
+            <PreRequestScriptEditor
               uniquenessKey={uniqueKey}
               defaultValue={activeRequest.preRequestScript || ''}
               onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
-              mode='text/javascript'
-              placeholder="..."
             />
           </ErrorBoundary>
         </TabItem>

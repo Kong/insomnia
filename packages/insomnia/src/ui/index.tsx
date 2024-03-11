@@ -434,7 +434,7 @@ const router = createMemoryRouter(
                               ],
                             },
                             {
-                              path: 'mock-server',
+                              path: 'mock-server/*',
                               id: 'mock-server',
                               loader: async (...args) =>
                                 (await import('./routes/mock-server')).loader(
@@ -868,6 +868,14 @@ const router = createMemoryRouter(
                                     (await import('./routes/remote-collections')).syncDataAction(...args),
                                   loader: async (...args) =>
                                     (await import('./routes/remote-collections')).syncDataLoader(...args),
+                                },
+                                {
+                                  path: 'stage',
+                                  action: async (...args) => (await import('./routes/remote-collections')).stageChangesAction(...args),
+                                },
+                                {
+                                  path: 'unstage',
+                                  action: async (...args) => (await import('./routes/remote-collections')).unstageChangesAction(...args),
                                 },
                                 {
                                   path: 'pull',

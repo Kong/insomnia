@@ -19,14 +19,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch # Check out the release branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ env.RELEASE_BRANCH }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
@@ -221,6 +221,16 @@ jobs:
         uses: Homebrew/actions/git-user-config@master
         with:
           username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
+
+      - name: Update CHANGELOG
+        id: changelog
+        uses: requarks/changelog-action@v1
+        with:
+          token: ${{ secrets.RELEASE_GH_TOKEN }}
+          tag: ${{ env.RELEASE_CORE_TAG }}
+
+      - name: Git Commit Changelog
+        run: git commit -am "update CHANGELOG.md for ${{ env.RELEASE_VERSION }} [skip ci]"
 
       - name: Merge git branch into develop
         run: |

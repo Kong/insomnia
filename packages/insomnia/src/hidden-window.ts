@@ -1,4 +1,6 @@
-import { initInsomniaObject, RequestContext } from './sdk/objects/insomnia';
+import { initInsomniaObject } from './sdk/objects/insomnia';
+import { RequestContext } from './sdk/objects/interfaces';
+import { mergeRequests } from './sdk/objects/request';
 
 export interface HiddenBrowserWindowBridgeAPI {
   runPreRequestScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
@@ -7,7 +9,13 @@ export interface HiddenBrowserWindowBridgeAPI {
 window.bridge.onmessage(async (data, callback) => {
   console.log('[hidden-browser-window] recieved message', data);
   try {
-    const result = await runPreRequestScript(data);
+    const timeout = data.context.timeout || 5000;
+    const timeoutPromise = new Promise(resolve => {
+      setTimeout(() => {
+        resolve({ error: 'Timeout: Pre-request script took too long' });
+      }, timeout);
+    });
+    const result = await Promise.race([timeoutPromise, runPreRequestScript(data)]);
     callback(result);
   } catch (err) {
     console.error('error', err);
@@ -44,6 +52,7 @@ const runPreRequestScript = async (
     consoleInterceptor
   );
   const mutatedContextObject = mutatedInsomniaObject.toObject();
+  const updatedRequest = mergeRequests(context.request, mutatedContextObject.request);
 
   await window.bridge.requireInterceptor('fs').promises.writeFile(context.timelinePath, log.join('\n'));
 
@@ -54,5 +63,6 @@ const runPreRequestScript = async (
     ...context,
     environment: mutatedContextObject.environment,
     baseEnvironment: mutatedContextObject.baseEnvironment,
+    request: updatedRequest,
   };
 };

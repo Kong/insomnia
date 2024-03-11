@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-import { RequestContext } from './sdk/objects/insomnia';
+import * as CollectionModule from './sdk/objects';
+import { RequestContext } from './sdk/objects/interfaces';
 
 const bridge: Window['bridge'] = {
   onmessage: listener => {
@@ -17,7 +18,10 @@ const bridge: Window['bridge'] = {
   requireInterceptor: (moduleName: string) => {
     if (['uuid', 'fs'].includes(moduleName)) {
       return require(moduleName);
+    } else if (moduleName === 'insomnia-collection' || moduleName === 'postman-collection') {
+      return CollectionModule;
     }
+
     throw Error(`no module is found for "${moduleName}"`);
   },
 };

@@ -60,6 +60,7 @@ import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { Icon } from '../components/icon';
 import { InsomniaAI } from '../components/insomnia-ai-icon';
+import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
@@ -220,6 +221,7 @@ const Design: FC = () => {
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
+  const [isEnvironmentSelectOpen, setIsEnvironmentSelectOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
   const { apiSpec, lintMessages, rulesetPath, parsedSpec } = useLoaderData() as LoaderData;
@@ -351,6 +353,12 @@ const Design: FC = () => {
     );
   };
 
+  useDocBodyKeyboardShortcuts({
+    environment_showEditor: () => setEnvironmentModalOpen(true),
+    environment_showSwitchMenu: () => setIsEnvironmentSelectOpen(true),
+    showCookiesEditor: () => setIsCookieModalOpen(true),
+  });
+
   const specActionList: SpecActionItem[] = [
     {
       id: 'ai-generate-tests-in-collection',
@@ -417,6 +425,8 @@ const Design: FC = () => {
               <Select
                 aria-label="Select an environment"
                 className="overflow-hidden"
+                isOpen={isEnvironmentSelectOpen}
+                onOpenChange={setIsEnvironmentSelectOpen}
                 onSelectionChange={environmentId => {
                   setActiveEnvironmentFetcher.submit(
                     {

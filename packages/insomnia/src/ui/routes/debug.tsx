@@ -195,6 +195,7 @@ export const Debug: FC = () => {
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
     useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
+  const [isEnvironmentSelectOpen, setIsEnvironmentSelectOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
   const patchRequest = useRequestPatcher();
@@ -386,10 +387,8 @@ export const Debug: FC = () => {
           ),
       });
     },
-    // TODO: fix these
-    request_showRecent: () => { },
-    request_quickSwitch: () => { },
     environment_showEditor: () => setEnvironmentModalOpen(true),
+    environment_showSwitchMenu: () => setIsEnvironmentSelectOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
     request_showGenerateCodeEditor: () => {
       if (activeRequest && isRequest(activeRequest)) {
@@ -661,6 +660,8 @@ export const Debug: FC = () => {
               <Select
                 aria-label="Select an environment"
                 className="overflow-hidden"
+                onOpenChange={setIsEnvironmentSelectOpen}
+                isOpen={isEnvironmentSelectOpen}
                 onSelectionChange={environmentId => {
                   setActiveEnvironmentFetcher.submit(
                     {

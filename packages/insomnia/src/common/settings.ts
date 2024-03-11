@@ -34,8 +34,6 @@ export type KeyboardShortcut =
   | 'preferences_showKeyboardShortcuts'
   | 'preferences_showGeneral'
   | 'request_quickSwitch'
-  | 'request_showRecent'
-  | 'request_showRecentPrevious'
   | 'plugin_reload'
   | 'showAutocomplete'
   | 'request_send'

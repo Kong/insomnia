@@ -2,9 +2,6 @@ dist
 build
 
 # Generated
-src/main.min.js
-src/main.min.js.map
-src/preload.js
-src/preload.js.map
-src/hidden-window-preload.js
-src/hidden-window-preload.js.map
+src/*.js
+src/*.js.map
+
