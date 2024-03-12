@@ -222,16 +222,6 @@ jobs:
         with:
           username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
 
-      - name: Update CHANGELOG
-        id: changelog
-        uses: requarks/changelog-action@v1
-        with:
-          token: ${{ secrets.RELEASE_GH_TOKEN }}
-          tag: ${{ env.RELEASE_CORE_TAG }}
-
-      - name: Git Commit Changelog
-        run: git commit -am "update CHANGELOG.md for ${{ env.RELEASE_VERSION }} [skip ci]"
-
       - name: Merge git branch into develop
         run: |
           remote_repo="https://${GITHUB_ACTOR}:${RELEASE_GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
