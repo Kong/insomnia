@@ -1,0 +1,90 @@
+name: Release Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        description: Release version (e.g. 2022.1.0 or 2022.1.0-beta.0)
+
+env:
+  RELEASE_VERSION: ${{ github.event.inputs.version }}
+  RELEASE_BRANCH: release/${{ github.event.inputs.version }}
+  IS_PRERELEASE: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
+
+
+jobs:
+  publish:
+    timeout-minutes: 25
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch # Check out the release branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_BRANCH }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Download artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: release-build.yml
+          workflow_conclusion: success
+          branch: ${{ env.RELEASE_BRANCH }} # Branch workflow ran on != branch the workflow created
+          path: ./artifacts/
+
+      - name: Create Release for Inso CLI
+        uses: ncipollo/release-action@v1
+        id: release_inso_cli
+        with:
+          tag: lib@${{ env.RELEASE_VERSION }}
+          name: "Inso CLI ${{ env.RELEASE_VERSION }} 📦"
+          body: "Full changelog ⇒ https://insomnia.rest/changelog"
+          commit: ${{ env.RELEASE_BRANCH }}
+          prerelease: ${{ env.IS_PRERELEASE }}
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Inso CLI artifacts to release
+        uses: xresloader/upload-to-github-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.release_inso_cli.outputs.id }}
+          tag_name: lib@${{ env.RELEASE_VERSION }}
+          file: "./artifacts/*-latest-artifacts/insomnia-inso/artifacts/**"
+          prerelease: ${{ env.IS_PRERELEASE }}
+          draft: false
+
+      - name: Create Tag and Release
+        uses: ncipollo/release-action@v1
+        id: core_tag_and_release
+        with:
+          tag: core@${{ env.RELEASE_VERSION }}
+          name: "Insomnia ${{ env.RELEASE_VERSION }} 📦"
+          body: "Full changelog ⇒ https://insomnia.rest/changelog"
+          commit: ${{ env.RELEASE_BRANCH }}
+          prerelease: ${{ env.IS_PRERELEASE }}
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Changelog
+        id: changelog
+        uses: Requarks/changelog-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: core@${{ env.RELEASE_VERSION }}
+          writeToFile: false
