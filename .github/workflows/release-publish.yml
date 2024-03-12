@@ -9,13 +9,12 @@ on:
 
 env:
   RELEASE_VERSION: ${{ github.event.inputs.version }}
-  RELEASE_CORE_TAG: core@${{ github.event.inputs.version }}
   RELEASE_BRANCH: release/${{ github.event.inputs.version }}
   IS_PRERELEASE: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
 
 jobs:
   publish:
-    timeout-minutes: 15
+    timeout-minutes: 25
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch # Check out the release branch
@@ -60,27 +59,12 @@ jobs:
           file_path: ${GITHUB_WORKSPACE}/artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}.exe
           output_path: ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist/squirrel-windows
 
-      # - name: Code-sign Windows portable .exe artifact
-      #   uses: sslcom/actions-codesigner@develop
-      #   with:
-      #     command: sign
-      #     username: ${{secrets.ES_USERNAME}}
-      #     password: ${{secrets.ES_PASSWORD}}
-      #     credential_id: ${{secrets.ES_CREDENTIAL_ID}}
-      #     totp_secret: ${{secrets.ES_TOTP_SECRET}}
-      #     file_path: ${GITHUB_WORKSPACE}/artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}-portable.exe
-      #     output_path: ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist
-
-      - name: Set Inso CLI version on Github Env
-        run:
-          echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
-
       - name: Create Release for Inso CLI
         uses: ncipollo/release-action@v1
         id: release_inso_cli
         with:
-          tag: lib@${{ env.INSO_VERSION }}
-          name: "Inso CLI ${{ env.INSO_VERSION }} 📦"
+          tag: lib@${{ env.RELEASE_VERSION }}
+          name: "Inso CLI ${{ env.RELEASE_VERSION }} 📦"
           body: "Full changelog ⇒ https://insomnia.rest/changelog"
           commit: ${{ env.RELEASE_BRANCH }}
           prerelease: ${{ env.IS_PRERELEASE }}
@@ -94,7 +78,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           release_id: ${{ steps.release_inso_cli.outputs.id }}
-          tag_name: lib@${{ env.INSO_VERSION }}
+          tag_name: lib@${{ env.RELEASE_VERSION }}
           file: "./artifacts/*-latest-artifacts/insomnia-inso/artifacts/**"
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
@@ -103,7 +87,7 @@ jobs:
         uses: ncipollo/release-action@v1
         id: core_tag_and_release
         with:
-          tag: ${{ env.RELEASE_CORE_TAG }}
+          tag: core@${{ env.RELEASE_VERSION }}
           name: "Insomnia ${{ env.RELEASE_VERSION }} 📦"
           body: "Full changelog ⇒ https://insomnia.rest/changelog"
           commit: ${{ env.RELEASE_BRANCH }}
@@ -124,7 +108,7 @@ jobs:
           draft: false
 
       - name: Publish beta/stable of Insomnia to Insomnia API
-        if: "!contains(github.event.inputs.version, 'alpha')"
+        if: '!contains(github.event.inputs.version, "alpha")'
         run: |
           curl \
             --fail \
@@ -140,25 +124,8 @@ jobs:
           RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
           RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
-      - name: Publish beta/stable of inso to Insomnia API
-        if: "!contains(github.event.inputs.version, 'alpha')"
-        run: |
-          curl \
-            --fail \
-            --request POST \
-            --url $INSOMNIA_API_URL/v1/releases \
-            --header "Authorization: Bearer ${INSOMNIA_API_TOKEN}" \
-            --header "Content-Type: application/json" \
-            --data "{ \"app\": \"${RELEASE_APP}\", \"version\": \"${RELEASE_VERSION}\", \"channel\": \"${RELEASE_CHANNEL}\", \"release_date\": \"$(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*\([+-]\)/\1\2/g')\" }"
-        env:
-          INSOMNIA_API_URL: ${{ secrets.INSOMNIA_API_URL }}
-          INSOMNIA_API_TOKEN: ${{ secrets.INSOMNIA_API_TOKEN }}
-          RELEASE_APP: com.insomnia.inso
-          RELEASE_VERSION: ${{ env.INSO_VERSION }}
-          RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
-
       - name: Upload to snapcraft (beta and stable only)
-        if: "!contains(github.event.inputs.version, 'alpha')"
+        if: '!contains(github.event.inputs.version, "alpha")'
         uses: snapcore/action-publish@7fe468c9de12396a9c8964af5d0dfd1d5b493bd7
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
@@ -192,9 +159,9 @@ jobs:
         run: |
           echo -n $DOCKER_REGISTRY_TOKEN | docker login -u "$DOCKER_REGISTRY_USER" --password-stdin $DOCKER_REGISTRY
           docker load -i ./artifacts/ubuntu-latest-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
-          docker tag insomnia-inso:temp ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${{ env.INSO_VERSION }}
+          docker tag insomnia-inso:temp ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${{ env.RELEASE_VERSION }}
           docker tag insomnia-inso:temp ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}
-          docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${{ env.INSO_VERSION }}
+          docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${{ env.RELEASE_VERSION }}
           docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}
 
         env:
