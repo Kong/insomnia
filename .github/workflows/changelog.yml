@@ -1,4 +1,4 @@
-name: Release Publish
+name: Changelog
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ env:
 
 
 jobs:
-  publish:
+  changelog:
     timeout-minutes: 25
     runs-on: ubuntu-latest
     steps:
@@ -88,3 +88,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: core@${{ env.RELEASE_VERSION }}
           writeToFile: false
+          includeInvalidCommits: true
