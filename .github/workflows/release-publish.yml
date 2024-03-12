@@ -96,13 +96,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Generate Changelog
+        id: changelog
+        uses: Requarks/changelog-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: core@${{ env.RELEASE_VERSION }}
+          writeToFile: false
+          includeInvalidCommits: true
+
       - name: Upload artifacts to release
         uses: xresloader/upload-to-github-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           release_id: ${{ steps.core_tag_and_release.outputs.id }}
-          tag_name: ${{ env.RELEASE_CORE_TAG }}
+          tag_name: core@${{ env.RELEASE_VERSION }}
           file: "./artifacts/*-latest-artifacts/insomnia/**"
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
