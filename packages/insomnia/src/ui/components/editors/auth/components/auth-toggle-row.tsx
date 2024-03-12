@@ -30,6 +30,7 @@ export const AuthToggleRow: FC<Props> = ({
   const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const patchRequest = useRequestPatcher();
 
+  // @ts-expect-error -- garbage abstraction
   const databaseValue = Boolean(authentication[property]);
   const toggle = useCallback((value?: boolean) => patchRequest(requestId, { authentication: { ...authentication, [property]: value } }), [authentication, patchRequest, property, requestId]);
 

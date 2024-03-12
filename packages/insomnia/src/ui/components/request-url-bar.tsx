@@ -124,6 +124,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       event: SegmentEvent.requestExecute,
       properties: {
         preferredHttpVersion: settings.preferredHttpVersion,
+        // @ts-expect-error -- who cares
         authenticationType: activeRequest.authentication?.type,
         mimeType: activeRequest.body.mimeType,
       },

@@ -194,8 +194,9 @@ export async function sendCurlAndWriteTimeline(
 ) {
   const requestId = renderedRequest._id;
   const timelineStrings: string[] = [];
+  const authentication = renderedRequest.authentication as RequestAuthentication;
 
-  const { finalUrl, socketPath } = transformUrl(renderedRequest.url, renderedRequest.parameters, renderedRequest.authentication, renderedRequest.settingEncodeUrl);
+  const { finalUrl, socketPath } = transformUrl(renderedRequest.url, renderedRequest.parameters, authentication, renderedRequest.settingEncodeUrl);
   timelineStrings.push(JSON.stringify({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() }) + '\n');
   timelineStrings.push(JSON.stringify({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() }) + '\n');
   timelineStrings.push(JSON.stringify({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() }) + '\n');

@@ -1,22 +1,23 @@
 import {
+  AUTH_API_KEY,
   AUTH_ASAP,
   AUTH_AWS_IAM,
   AUTH_BASIC,
+  AUTH_BEARER,
   AUTH_DIGEST,
   AUTH_HAWK,
   AUTH_NETRC,
   AUTH_NONE,
   AUTH_NTLM,
   AUTH_OAUTH_1,
-  AUTH_OAUTH_2,
   CONTENT_TYPE_FORM_URLENCODED,
   getContentTypeFromHeaders,
+  HAWK_ALGORITHM_SHA1,
   HAWK_ALGORITHM_SHA256,
   METHOD_GET,
 } from '../common/constants';
 import { database as db } from '../common/database';
-import { SIGNATURE_METHOD_HMAC_SHA1 } from '../network/o-auth-1/constants';
-import { GRANT_TYPE_AUTHORIZATION_CODE } from '../network/o-auth-2/constants';
+import type { OAuth1SignatureMethod } from '../network/o-auth-1/constants';
 import { deconstructQueryStringToParams } from '../utils/url/querystring';
 import type { BaseModel } from './index';
 
@@ -29,11 +30,36 @@ export const prefix = 'req';
 export const canDuplicate = true;
 
 export const canSync = true;
+export type AuthTypes = 'none'
+  | 'apikey'
+  | 'oauth2'
+  | 'oauth1'
+  | 'basic'
+  | 'digest'
+  | 'bearer'
+  | 'ntlm'
+  | 'hawk'
+  | 'iam'
+  | 'netrc'
+  | 'asap';
 
-export type RequestAuthentication = Record<string, any>;
-export type OAuth2ResponseType = 'code' | 'id_token' | 'id_token token' | 'none' | 'token';
+export interface AuthTypeBasic {
+  type: typeof AUTH_BASIC;
+  useISO88591?: boolean;
+  disabled?: boolean;
+  username?: string;
+  password?: string;
+}
+export interface AuthTypeAPIKey {
+  type: typeof AUTH_API_KEY;
+  disabled?: boolean;
+  key?: string;
+  value?: string;
+  addTo?: string;
+}
 export interface AuthTypeOAuth2 {
   type: 'oauth2';
+  disabled?: boolean;
   grantType: 'authorization_code' | 'client_credentials' | 'password' | 'implicit' | 'refresh_token';
   accessTokenUrl?: string;
   authorizationUrl?: string;
@@ -56,6 +82,92 @@ export interface AuthTypeOAuth2 {
   responseType?: OAuth2ResponseType;
   origin?: string;
 }
+export interface AuthTypeHawk {
+  type: typeof AUTH_HAWK;
+  disabled?: boolean;
+  algorithm: typeof HAWK_ALGORITHM_SHA256 | typeof HAWK_ALGORITHM_SHA1;
+  id: string;
+  key: string;
+  ext?: string;
+  validatePayload?: boolean;
+}
+export interface AuthTypeOAuth1 {
+  type: typeof AUTH_OAUTH_1;
+  disabled?: boolean;
+  signatureMethod?: OAuth1SignatureMethod;
+  consumerKey?: string;
+  consumerSecret?: string;
+  tokenKey?: string;
+  tokenSecret?: string;
+  privateKey?: string;
+  version?: string;
+  nonce?: string;
+  timestamp?: string;
+  callback?: string;
+  realm?: string;
+  verifier?: string;
+  includeBodyHash?: boolean;
+}
+export interface AuthTypeDigest {
+  type: typeof AUTH_DIGEST;
+  disabled?: boolean;
+  username?: string;
+  password?: string;
+}
+export interface AuthTypeNTLM {
+  type: typeof AUTH_NTLM;
+  disabled?: boolean;
+  username?: string;
+  password?: string;
+}
+export interface AuthTypeBearer {
+  type: typeof AUTH_BEARER;
+  disabled?: boolean;
+  token?: string;
+  prefix?: string;
+}
+export interface AuthTypeAwsIam {
+  type: typeof AUTH_AWS_IAM;
+  disabled?: boolean;
+  accessKeyId?: string;
+  secretAccessKey?: string;
+  sessionToken?: string;
+  region?: string;
+  service?: string;
+}
+export interface AuthTypeNetrc {
+  type: typeof AUTH_NETRC;
+  disabled?: boolean;
+}
+export interface AuthTypeAsap {
+  type: typeof AUTH_ASAP;
+  disabled?: boolean;
+  issuer: string;
+  subject?: string;
+  audience: string;
+  additionalClaims?: string;
+  keyId: string;
+  privateKey: string;
+}
+export interface AuthTypeNone {
+  type: typeof AUTH_NONE;
+  disabled?: boolean;
+}
+export type RequestAuthentication = AuthTypeOAuth2
+  | AuthTypeBasic
+  | AuthTypeBearer
+  | AuthTypeDigest
+  | AuthTypeHawk
+  | AuthTypeOAuth1
+  | AuthTypeAwsIam
+  | AuthTypeNetrc
+  | AuthTypeAsap
+  | AuthTypeNone
+  | AuthTypeAPIKey
+  | AuthTypeNTLM;
+
+export type OAuth2ResponseType = 'code' | 'id_token' | 'id_token token' | 'none' | 'token';
+
 export interface RequestHeader {
   name: string;
   value: string;
@@ -143,7 +255,7 @@ export interface BaseRequest {
   parameters: RequestParameter[];
   pathParameters: RequestPathParameter[];
   headers: RequestHeader[];
-  authentication: RequestAuthentication;
+  authentication: RequestAuthentication | {};
   metaSortKey: number;
   isPrivate: boolean;
   // Settings
@@ -191,92 +303,6 @@ export function init(): BaseRequest {
     settingRebuildPath: true,
     settingFollowRedirects: 'global',
   };
-}
-
-export function newAuth(type: string, oldAuth: RequestAuthentication = {}): RequestAuthentication {
-  switch (type) {
-    // No Auth
-    case AUTH_NONE:
-      return {};
-
-    // HTTP Basic Authentication
-    case AUTH_BASIC:
-      return {
-        type,
-        useISO88591: oldAuth.useISO88591 || false,
-        disabled: oldAuth.disabled || false,
-        username: oldAuth.username || '',
-        password: oldAuth.password || '',
-      };
-
-    case AUTH_DIGEST:
-    case AUTH_NTLM:
-      return {
-        type,
-        disabled: oldAuth.disabled || false,
-        username: oldAuth.username || '',
-        password: oldAuth.password || '',
-      };
-
-    case AUTH_OAUTH_1:
-      return {
-        type,
-        disabled: false,
-        signatureMethod: SIGNATURE_METHOD_HMAC_SHA1,
-        consumerKey: '',
-        consumerSecret: '',
-        tokenKey: '',
-        tokenSecret: '',
-        privateKey: '',
-        version: '1.0',
-        nonce: '',
-        timestamp: '',
-        callback: '',
-      };
-
-    // OAuth 2.0
-    case AUTH_OAUTH_2:
-      return {
-        type,
-        grantType: GRANT_TYPE_AUTHORIZATION_CODE,
-      };
-
-    // Aws IAM
-    case AUTH_AWS_IAM:
-      return {
-        type,
-        disabled: oldAuth.disabled || false,
-        accessKeyId: oldAuth.accessKeyId || '',
-        secretAccessKey: oldAuth.secretAccessKey || '',
-        sessionToken: oldAuth.sessionToken || '',
-      };
-
-    // Hawk
-    case AUTH_HAWK:
-      return {
-        type,
-        algorithm: HAWK_ALGORITHM_SHA256,
-      };
-
-    // Atlassian ASAP
-    case AUTH_ASAP:
-      return {
-        type,
-        issuer: '',
-        subject: '',
-        audience: '',
-        additionalClaims: '',
-        keyId: '',
-        privateKey: '',
-      };
-
-    // Types needing no defaults
-    case AUTH_NETRC:
-    default:
-      return {
-        type,
-      };
-  }
 }
 
 export function migrate(doc: Request): Request {
@@ -412,9 +438,10 @@ function migrateWeirdUrls(request: Request) {
  * @param request
  */
 function migrateAuthType(request: Request) {
-  const isAuthSet = request.authentication && request.authentication.username;
-
+  const isAuthSet = request?.authentication && 'username' in request.authentication && request.authentication.username;
+  // @ts-expect-error -- old model
   if (isAuthSet && !request.authentication.type) {
+    // @ts-expect-error -- old model
     request.authentication.type = AUTH_BASIC;
   }
 
