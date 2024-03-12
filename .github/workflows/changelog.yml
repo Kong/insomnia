@@ -3,7 +3,7 @@ name: Update changelog
 on:
   push:
     tags:
-      - core@\d+(\.\d+)(\.\d+)?(-beta\.\d+)?
+      - core@(\d+\.\d+\.\d+)(?:-(alpha|beta)\.\d+)?
 
 jobs:
   changelog:
