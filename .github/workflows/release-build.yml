@@ -161,6 +161,8 @@ jobs:
         uses: kt3k/update-pr-description@v2.0.0
         with:
           pr_body: |
+            **WARNING: Do not merge this PR. This is an automated release PR. It should be released using the "Publish" workflow.**
+
             Download release artifacts [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
             ## Steps for Publish:

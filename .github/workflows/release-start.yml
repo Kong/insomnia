@@ -13,7 +13,7 @@ on:
         - stable
       version:
         required: false
-        description: force version of the release (e.g. 2022.1.0)
+        description: force version of the release (e.g. 9.0.0) leave blank to increment automatically
 
 jobs:
   setup-release-branch:
