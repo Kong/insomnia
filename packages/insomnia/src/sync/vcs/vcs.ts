@@ -735,7 +735,24 @@ export class VCS {
         latestStateOther,
       );
       // Update state with conflict resolutions applied
-      const conflictResolutions = await this.handleAnyConflicts(mergeConflicts, otherBranchName.includes('.hidden') ? { ours: `${trunkBranchName} local`, theirs: `${otherBranchName.replace('.hidden', '')} remote` } : { ours: trunkBranchName, theirs: otherBranchName }, '');
+      const conflictsWithContent = await Promise.all(mergeConflicts.map(async conflict => {
+        let mineBlobContent: BaseModel | null = null;
+        let theirsBlobContent: BaseModel | null = null;
+        try {
+          mineBlobContent = conflict.mineBlob ? await this._getBlob(conflict.mineBlob) : null;
+          theirsBlobContent = conflict.theirsBlob ? await this._getBlob(conflict.theirsBlob) : null;
+        } catch (e) {
+          // No previous blob found
+        }
+        return {
+          ...conflict,
+          mineBlobContent,
+          theirsBlobContent,
+        };
+      }));
+
+      const conflictResolutions = await this.handleAnyConflicts(conflictsWithContent, otherBranchName.includes('.hidden') ? { ours: `${trunkBranchName} local`, theirs: `${otherBranchName.replace('.hidden', '')} remote` } : { ours: trunkBranchName, theirs: otherBranchName }, '');
+
       const state = updateStateWithConflictResolutions(stateBeforeConflicts, conflictResolutions);
 
       // Sometimes we want to merge into trunk but keep the other branch's history
