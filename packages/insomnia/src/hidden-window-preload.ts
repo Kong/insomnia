@@ -17,8 +17,11 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
       console.log('[preload] opened port to insomnia renderer');
       const callback = (result: RequestContext) => port.postMessage(result);
       port.onmessage = event => listener(event.data, callback);
+      ipcRenderer.invoke('hidden-window-received-port');
     };
+
     ipcRenderer.on('renderer-listener', rendererListener);
+    ipcRenderer.invoke('renderer-listener-ready');
     return () => ipcRenderer.removeListener('renderer-listener', rendererListener);
   },
 

@@ -4,6 +4,7 @@ import {
   type BrowserWindow as ElectronBrowserWindow,
   clipboard,
   dialog,
+  ipcMain,
   Menu,
   type MenuItemConstructorOptions,
   MessageChannelMain,
@@ -49,64 +50,79 @@ export function init() {
   initLocalStorage();
 }
 
-export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow> {
-  // if open, close it
-  if (browserWindows.get('HiddenBrowserWindow')) {
-    await new Promise<void>(resolve => {
-      const hiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
-      invariant(hiddenBrowserWindow, 'hiddenBrowserWindow is not defined');
+export async function createHiddenBrowserWindow() {
+  const mainWindow = browserWindows.get('Insomnia');
+  invariant(mainWindow, 'MainWindow is not defined, please restart the app.');
 
-      // overwrite the closed handler
-      hiddenBrowserWindow.on('closed', () => {
-        if (hiddenBrowserWindow) {
-          console.log('[main] restarting hidden browser window');
-          browserWindows.delete('HiddenBrowserWindow');
-        }
+  // when the main window runs a script
+  // if the hidden window is down, start it
+  ipcMain.handle('open-channel-to-hidden-browser-window', async event => {
+    if (browserWindows.get('HiddenBrowserWindow')) {
+      return;
+    }
+
+    const hiddenBrowserWindow = new BrowserWindow({
+      show: false,
+      title: 'HiddenBrowserWindow',
+      width: DEFAULT_WIDTH,
+      height: DEFAULT_HEIGHT,
+      minHeight: MINIMUM_HEIGHT,
+      minWidth: MINIMUM_WIDTH,
+      webPreferences: {
+        contextIsolation: false,
+        nodeIntegration: true,
+        preload: path.join(__dirname, 'hidden-window-preload.js'),
+        spellcheck: false,
+        devTools: process.env.NODE_ENV === 'development',
+      },
+    });
+
+    hiddenBrowserWindow.on('closed', () => {
+      if (browserWindows.get('HiddenBrowserWindow')) {
+        console.log('[main] closing hidden browser window');
+        browserWindows.delete('HiddenBrowserWindow');
+      }
+    });
+
+    const hiddenBrowserWindowPath = path.resolve(__dirname, 'hidden-window.html');
+    const hiddenBrowserWindowUrl = process.env.HIDDEN_BROWSER_WINDOW_URL || pathToFileURL(hiddenBrowserWindowPath).href;
+    hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
+    console.log(`[main] Loading ${hiddenBrowserWindowUrl}`);
+
+    ipcMain.removeHandler('renderer-listener-ready');
+    const hiddenWinListenerReady = new Promise<void>(resolve => {
+      ipcMain.handleOnce('renderer-listener-ready', () => {
+        console.log('[main] hidden window listener is ready');
         resolve();
       });
-
-      stopHiddenBrowserWindow();
     });
-  }
-  const hiddenBrowserWindow = new BrowserWindow({
-    show: false,
-    title: 'HiddenBrowserWindow',
-    width: DEFAULT_WIDTH,
-    height: DEFAULT_HEIGHT,
-    minHeight: MINIMUM_HEIGHT,
-    minWidth: MINIMUM_WIDTH,
-    webPreferences: {
-      contextIsolation: false,
-      nodeIntegration: true,
-      preload: path.join(__dirname, 'hidden-window-preload.js'),
-      spellcheck: false,
-      devTools: process.env.NODE_ENV === 'development',
-    },
-  });
-  browserWindows.set('HiddenBrowserWindow', hiddenBrowserWindow);
+    await hiddenWinListenerReady;
 
-  const hiddenBrowserWindowPath = path.resolve(__dirname, 'hidden-window.html');
-  const hiddenBrowserWindowUrl = process.env.HIDDEN_BROWSER_WINDOW_URL || pathToFileURL(hiddenBrowserWindowPath).href;
-  hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
-  console.log(`[main] Loading ${hiddenBrowserWindowUrl}`);
+    ipcMain.removeHandler('hidden-window-received-port');
+    const hiddenWinPortReady = new Promise<void>(resolve => {
+      ipcMain.handleOnce('hidden-window-received-port', () => {
+        console.log('[main] hidden window has received port');
+        resolve();
+      });
+    });
 
-  hiddenBrowserWindow.on('closed', () => {
-    if (browserWindows.get('HiddenBrowserWindow')) {
-      console.log('[main] closing hidden browser window');
-      browserWindows.delete('HiddenBrowserWindow');
-    }
-  });
-  const mainWindow = browserWindows.get('Insomnia');
-
-  invariant(mainWindow, 'mainWindow is not defined');
-  mainWindow.webContents.mainFrame.ipc.on('open-channel-to-hidden-browser-window', event => {
     const { port1, port2 } = new MessageChannelMain();
     hiddenBrowserWindow.webContents.postMessage('renderer-listener', null, [port1]);
+    await hiddenWinPortReady;
+
+    ipcMain.removeHandler('main-window-script-port-ready');
+    const mainWinPortReady = new Promise<void>(resolve => {
+      ipcMain.handleOnce('main-window-script-port-ready', () => {
+        console.log('[main] main window has received hidden window port');
+        resolve();
+      });
+    });
+
     event.senderFrame.postMessage('hidden-browser-window-response-listener', null, [port2]);
-    port1.close();
-    port2.close();
+    await mainWinPortReady;
+
+    browserWindows.set('HiddenBrowserWindow', hiddenBrowserWindow);
   });
-  return hiddenBrowserWindow;
 }
 
 export function stopHiddenBrowserWindow() {
@@ -214,7 +230,7 @@ export function createWindow(): ElectronBrowserWindow {
     submenu: [
       {
         label: `${MNEMONIC_SYM}Preferences`,
-        click: function(_menuItem, window) {
+        click: function (_menuItem, window) {
           if (!window || !window.webContents) {
             return;
           }
@@ -224,7 +240,7 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `${MNEMONIC_SYM}Changelog`,
-        click: function(_menuItem, window) {
+        click: function (_menuItem, window) {
           if (!window || !window.webContents) {
             return;
           }
@@ -541,7 +557,7 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `Take ${MNEMONIC_SYM}Screenshot`,
-        click: function() {
+        click: function () {
           // @ts-expect-error -- TSCONVERSION not accounted for in the electron types to provide a function
           mainBrowserWindow.capturePage(image => {
             const buffer = image.toPNG();
@@ -552,13 +568,13 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `${MNEMONIC_SYM}Clear a model`,
-        click: function(_menuItem, window) {
+        click: function (_menuItem, window) {
           window?.webContents?.send('clear-model');
         },
       },
       {
         label: `Clear ${MNEMONIC_SYM}all models`,
-        click: function(_menuItem, window) {
+        click: function (_menuItem, window) {
           window?.webContents?.send('clear-all-models');
         },
       },
