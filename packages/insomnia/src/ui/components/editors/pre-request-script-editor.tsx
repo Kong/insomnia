@@ -1,5 +1,11 @@
+import { Snippet } from 'codemirror';
 import React, { FC, Fragment, useRef } from 'react';
 
+import { Settings } from '../../../models/settings';
+import { Environment, Variables } from '../../../sdk/objects/environments';
+import { InsomniaObject } from '../../../sdk/objects/insomnia';
+import { Request as ScriptRequest } from '../../../sdk/objects/request';
+import { Url } from '../../../sdk/objects/urls';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 
@@ -8,6 +14,7 @@ interface Props {
   defaultValue: string;
   uniquenessKey: string;
   className?: string;
+  settings: Settings;
 }
 
 const getEnvVar = 'insomnia.environment.get("variable_name");\n';
@@ -68,11 +75,63 @@ const lintOptions = {
   esversion: 8, // ES8 syntax (async/await, etc)
 };
 
+// TODO: We probably don't want to expose every property like .toObject() so we need a way to filter those out
+// or make those properties private
+// TODO: introduce this functionality for other objects, such as Url, UrlMatchPattern and so on
+// TODO: introduce function arguments
+// TODO: provide snippets for environment keys if possible
+function getPreRequestScriptSnippets(insomniaObject: InsomniaObject, path: string): Snippet[] {
+  let snippets: Snippet[] = [];
+  const refs = new Set<object>();
+  const insomniaRecords = insomniaObject as Record<any, any>;
+
+  for (const key in insomniaObject) {
+    if (typeof key === 'string' && key.startsWith('_')) {
+      // skip internal fields
+      continue;
+    }
+
+    const value = insomniaRecords[key];
+
+    if (typeof key === 'object') {
+      if (refs.has(value)) {
+        // avoid cyclic referring
+        continue;
+      } else {
+        refs.add(value);
+      }
+    }
+
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      snippets.push({
+        displayValue: `${path}.${value}`,
+        name: `${path}.${key}`,
+        value: `${path}.${key}`,
+      });
+    } else if (typeof value === 'function') {
+      snippets.push({
+        displayValue: `${path}.${key}()`,
+        name: `${path}.${key}()`,
+        value: `${path}.${key}()`,
+      });
+    } else if (Array.isArray(value)) {
+      for (const item of value) {
+        snippets = snippets.concat(getPreRequestScriptSnippets(item, `${path}.${key}`));
+      }
+    } else {
+      snippets = snippets.concat(getPreRequestScriptSnippets(value, `${path}.${key}`));
+    }
+  }
+
+  return snippets;
+}
+
 export const PreRequestScriptEditor: FC<Props> = ({
   className,
   defaultValue,
   onChange,
   uniquenessKey,
+  settings,
 }) => {
   const editorRef = useRef<CodeEditorHandle>(null);
 
@@ -92,6 +151,28 @@ export const PreRequestScriptEditor: FC<Props> = ({
     editorRef.current?.setCursorLine(cursorRow + snippet.split('\n').length);
   };
 
+  // TODO(george): use real data probably
+  const preRequestScriptSnippets = getPreRequestScriptSnippets(
+    new InsomniaObject({
+      globals: new Environment({}),
+      iterationData: new Environment({}),
+      environment: new Environment({}),
+      baseEnvironment: new Environment({}),
+      variables: new Variables({
+        globals: new Environment({}),
+        environment: new Environment({}),
+        collection: new Environment({}),
+        data: new Environment({}),
+      }),
+      request: new ScriptRequest({
+        url: new Url('http://placeholder.com'),
+      }),
+      settings,
+      clientCertificates: [],
+    }),
+    'insomnia',
+  );
+
   return (
     <Fragment>
       <div className="h-[calc(100%-var(--line-height-xs))]">
@@ -108,6 +189,7 @@ export const PreRequestScriptEditor: FC<Props> = ({
           placeholder="..."
           lintOptions={lintOptions}
           ref={editorRef}
+          getAutocompleteSnippets={() => preRequestScriptSnippets}
         />
       </div>
       <div className="h-[calc(var(--line-height-xs))] border-solid border-t border-[var(--hl-md)] text-[var(--font-size-sm)] p-[var(--padding-xs)]">

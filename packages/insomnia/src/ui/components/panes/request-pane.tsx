@@ -310,6 +310,7 @@ export const RequestPane: FC<Props> = ({
               uniquenessKey={uniqueKey}
               defaultValue={activeRequest.preRequestScript || ''}
               onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
+              settings={settings}
             />
           </ErrorBoundary>
         </TabItem>
