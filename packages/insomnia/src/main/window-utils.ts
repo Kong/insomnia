@@ -230,7 +230,7 @@ export function createWindow(): ElectronBrowserWindow {
     submenu: [
       {
         label: `${MNEMONIC_SYM}Preferences`,
-        click: function (_menuItem, window) {
+        click: function(_menuItem, window) {
           if (!window || !window.webContents) {
             return;
           }
@@ -240,7 +240,7 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `${MNEMONIC_SYM}Changelog`,
-        click: function (_menuItem, window) {
+        click: function(_menuItem, window) {
           if (!window || !window.webContents) {
             return;
           }
@@ -557,7 +557,7 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `Take ${MNEMONIC_SYM}Screenshot`,
-        click: function () {
+        click: function() {
           // @ts-expect-error -- TSCONVERSION not accounted for in the electron types to provide a function
           mainBrowserWindow.capturePage(image => {
             const buffer = image.toPNG();
@@ -568,13 +568,13 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `${MNEMONIC_SYM}Clear a model`,
-        click: function (_menuItem, window) {
+        click: function(_menuItem, window) {
           window?.webContents?.send('clear-model');
         },
       },
       {
         label: `Clear ${MNEMONIC_SYM}all models`,
-        click: function (_menuItem, window) {
+        click: function(_menuItem, window) {
           window?.webContents?.send('clear-all-models');
         },
       },
