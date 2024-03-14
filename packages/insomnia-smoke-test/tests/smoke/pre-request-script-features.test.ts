@@ -249,6 +249,63 @@ test.describe('pre-request features tests', async () => {
                 events: true,
             },
         },
+        {
+            name: 'require npm modules and built-in lodash',
+            preReqScript: `
+                const atob = require('atob');
+                const btoa = require('btoa');
+                const chai = require('chai');
+                const cheerio = require('cheerio');
+                const crypto = require('crypto-js');
+                const csv = require('csv-parse/lib/sync');
+                const lodash = require('lodash');
+                const moment = require('moment');
+                const tv4 = require('tv4');
+                const uuid = require('uuid');
+                const xml2js = require('xml2js');
+                // set them
+                insomnia.environment.set('atob', atob != null);
+                insomnia.environment.set('btoa', btoa != null);
+                insomnia.environment.set('chai', chai != null);
+                insomnia.environment.set('cheerio', cheerio != null);
+                insomnia.environment.set('crypto', crypto != null);
+                insomnia.environment.set('csv', csv != null);
+                insomnia.environment.set('lodash', lodash != null);
+                insomnia.environment.set('moment', moment != null);
+                insomnia.environment.set('tv4', tv4 != null);
+                insomnia.environment.set('uuid', uuid != null);
+                insomnia.environment.set('xml2js', xml2js != null);
+                insomnia.environment.set('builtInLodash', _ != null);
+            `,
+            body: `{
+"atob": {{ _.atob }},
+"btoa": {{ _.btoa }},
+"chai": {{ _.chai }},
+"cheerio": {{ _.cheerio }},
+"crypto": {{ _.crypto }},
+"csv": {{ _.csv }},
+"lodash": {{ _.lodash }},
+"moment": {{ _.moment }},
+"tv4": {{ _.tv4 }},
+"uuid": {{ _.uuid }},
+"xml2js": {{ _.xml2js }},
+"builtInLodash": {{ _.builtInLodash }}
+            }`,
+            expectedBody: {
+                atob: true,
+                btoa: true,
+                chai: true,
+                cheerio: true,
+                crypto: true,
+                csv: true,
+                lodash: true,
+                moment: true,
+                tv4: true,
+                uuid: true,
+                xml2js: true,
+                builtInLodash: true,
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
