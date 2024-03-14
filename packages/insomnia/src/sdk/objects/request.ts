@@ -150,13 +150,9 @@ export class RequestBody extends PropertyBase {
         try {
             switch (this.mode) {
                 case 'formdata':
-                    return this.formdata ?
-                        this.formdata.map(param => param.toString(), {}).join('&') :
-                        '';
+                    return this.formdata?.map(param => param.toString(), {}).join('&') || '';
                 case 'urlencoded':
-                    return this.urlencoded ?
-                        this.urlencoded.map(param => param.toString(), {}).join('&') :
-                        '';
+                    return this.urlencoded?.map(param => param.toString(), {}).join('&') || '';
                 case 'raw':
                     return this.raw || '';
                 case 'file':

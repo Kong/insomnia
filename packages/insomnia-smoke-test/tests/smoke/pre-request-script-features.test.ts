@@ -207,7 +207,8 @@ test.describe('pre-request features tests', async () => {
                     },
                     'bearer'
                 );
-                // insomnia.request.proxy.update({}); // TODO: enable proxy and test it
+                // TODO: enable proxy and test it
+                // insomnia.request.proxy.update({});
                 // insomnia.request.certificate.update({});
             `,
             body: '{}',
@@ -218,7 +219,7 @@ test.describe('pre-request features tests', async () => {
             },
         },
         {
-            name: 'sendRequest custom mode',
+            name: 'sendRequest every content type',
             preReqScript: `
             const rawReq = {
                 url: 'http://127.0.0.1:4010/echo',
@@ -275,6 +276,7 @@ test.describe('pre-request features tests', async () => {
                 url: 'http://127.0.0.1:4010/echo',
                 method: 'POST',
                 header: {
+                    // TODO: try to understand why this breaks the test
                     // 'Content-Type': 'multipart/form-data',
                 },
                 body: {

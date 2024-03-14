@@ -46,7 +46,7 @@ export class InsomniaObject {
             preferredHttpVersion: '',
             maxRedirects: 0,
             proxyEnabled: false,
-            timeout: 0,
+            timeout: 5000,
             validateSSL: false,
             followRedirects: false,
             maxTimelineDataSizeKB: 0,

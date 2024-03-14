@@ -1,10 +1,12 @@
 import { Cookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
-import { RequestAuthentication } from '../../models/request';
+import type { CurlRequestOutput } from '../../main/network/libcurl-promise';
+import type { RequestAuthentication } from '../../models/request';
+import type { Settings } from '../../models/settings';
 import { RequestAuth } from './auth';
-import { CookieOptions } from './cookies';
-import { Request, RequestOptions } from './request';
+import type { CookieOptions } from './cookies';
+import { Request, type RequestOptions } from './request';
 import { Response } from './response';
 
 export const AUTH_NONE = 'none';
@@ -21,76 +23,6 @@ export const AUTH_NETRC = 'netrc';
 export const AUTH_ASAP = 'asap';
 export const HAWK_ALGORITHM_SHA256 = 'sha256';
 export const HAWK_ALGORITHM_SHA1 = 'sha1';
-
-export interface Settings {
-    preferredHttpVersion: string;
-    maxRedirects: number;
-    proxyEnabled: boolean;
-    timeout: number;
-    validateSSL: boolean;
-    followRedirects: boolean;
-    maxTimelineDataSizeKB: number;
-    httpProxy: string;
-    httpsProxy: string;
-    noProxy: string;
-}
-
-export enum CurlInfoDebug {
-    Text,
-    HeaderIn,
-    HeaderOut,
-    DataIn,
-    DataOut,
-    SslDataIn,
-    SslDataOut,
-}
-
-export interface ResponsePatch {
-    bodyCompression?: 'zip' | null;
-    bodyPath?: string;
-    bytesContent?: number;
-    bytesRead?: number;
-    contentType?: string;
-    elapsedTime: number;
-    environmentId?: string | null;
-    error?: string;
-    headers?: {
-        name: string;
-        value: string;
-    }[];
-    httpVersion?: string;
-    message?: string;
-    parentId?: string;
-    settingSendCookies?: boolean;
-    settingStoreCookies?: boolean;
-    statusCode?: number;
-    statusMessage?: string;
-    timelinePath?: string;
-    url?: string;
-}
-
-export interface HeaderResult {
-    headers: {
-        name: string;
-        value: string;
-    }[];
-    version: string;
-    code: number;
-    reason: string;
-}
-
-export interface ResponseTimelineEntry {
-    name: keyof typeof CurlInfoDebug;
-    timestamp: number;
-    value: string;
-}
-
-interface CurlRequestOutput {
-    patch: ResponsePatch;
-    debugTimeline: ResponseTimelineEntry[];
-    headerResults: HeaderResult[];
-    responseBodyPath?: string;
-}
 
 export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
     const authObj = auth.toJSON();
