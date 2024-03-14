@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+
 import { invariant } from '../src/utils/invariant';
 import { initInsomniaObject, InsomniaObject } from './sdk/objects/insomnia';
 import { RequestContext } from './sdk/objects/interfaces';
@@ -54,6 +56,7 @@ const runPreRequestScript = async (
     'require',
     'console',
     'eval',
+    '_',
     `
       const $ = insomnia, pm = insomnia;
        ${script};
@@ -65,6 +68,7 @@ const runPreRequestScript = async (
     window.bridge.requireInterceptor,
     consoleInterceptor,
     evalInterceptor,
+    _,
   );
   if (mutatedInsomniaObject == null || !(mutatedInsomniaObject instanceof InsomniaObject)) {
     throw Error('insomnia object is invalid or script returns earlier than expected.');

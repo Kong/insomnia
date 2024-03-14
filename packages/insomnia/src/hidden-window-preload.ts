@@ -38,22 +38,28 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
         'timers',
         'events',
         'fs',
-        // npm modules
-        'uuid',
-        // 'ajv',
-        // 'atob',
-        // 'btoa',
-        // 'chai',
-        // 'cheerio',
-        // 'crypto-js',
-        // 'csv-parse/lib/sync',
-        // 'lodash',
-        // 'moment',
-        // 'tv4',
-        // 'uuid',
-        // 'xml2js',
       ].includes(moduleName)
     ) {
+      return require(moduleName);
+    } else if (
+      [
+        // npm modules
+        'atob',
+        'btoa',
+        'chai',
+        'cheerio',
+        'crypto-js',
+        'csv-parse/lib/sync',
+        'lodash',
+        'moment',
+        'tv4',
+        'uuid',
+        'xml2js',
+      ].includes(moduleName)
+    ) {
+      if (moduleName === 'csv-parse/lib/sync') {
+        return require('csv-parse/sync');
+      }
       return require(moduleName);
     } else if (moduleName === 'insomnia-collection' || moduleName === 'postman-collection') {
       return CollectionModule;
