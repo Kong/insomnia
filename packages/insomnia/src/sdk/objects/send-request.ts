@@ -9,119 +9,99 @@ import type { CookieOptions } from './cookies';
 import { Request, type RequestOptions } from './request';
 import { Response } from './response';
 
-export const AUTH_NONE = 'none';
-export const AUTH_API_KEY = 'apikey';
-export const AUTH_OAUTH_2 = 'oauth2';
-export const AUTH_OAUTH_1 = 'oauth1';
-export const AUTH_BASIC = 'basic';
-export const AUTH_DIGEST = 'digest';
-export const AUTH_BEARER = 'bearer';
-export const AUTH_NTLM = 'ntlm';
-export const AUTH_HAWK = 'hawk';
-export const AUTH_AWS_IAM = 'iam';
-export const AUTH_NETRC = 'netrc';
-export const AUTH_ASAP = 'asap';
-export const HAWK_ALGORITHM_SHA256 = 'sha256';
-export const HAWK_ALGORITHM_SHA1 = 'sha1';
-
 export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
     const authObj = auth.toJSON();
-    const findValueInObj = (targetKey: string, kvs?: { key: string; value: string }[]) => {
-        if (!kvs) {
-            return '';
-        }
+    // const findValueInObj = (targetKey: string, kvs?: { key: string; value: string }[]) => {
+    //     if (!kvs) {
+    //         return '';
+    //     }
 
-        return kvs.find(
-            (kv: { key: string; value: string }) => {
-                return kv.key === targetKey ? kv.value : '';
-            },
-            '',
-        );
-    };
+    //     return kvs.find((kv: { key: string; value: string }) => kv.key === targetKey ? kv.value : '', '');
+    // };
 
     switch (authObj.type) {
         case 'noauth':
-            return {};
+            return { type: 'none' };
         // TODO: these 2 methods are not supported yet
-        case 'apikey':
+        // case 'apikey':
+        //     return {
+        //         disabled: false,
+        //         type: 'apikey',
+        //         key: findValueInObj('key', authObj.apikey),
+        //         value: findValueInObj('value', authObj.apikey),
+        //         in: findValueInObj('in', authObj.apikey),
+        //     };
+        // case 'bearer':
+        //     return {
+        //         type: 'bearer',
+        //         disabled: false,
+        //         token: findValueInObj('token', authObj.bearer),
+        //     };
+        // case 'basic':
+        //     return {
+        //         type: 'basic',
+        //         useISO88591: false,
+        //         disabled: false,
+        //         username: findValueInObj('username', authObj.basic),
+        //         password: findValueInObj('password', authObj.basic),
+        //     };
+        // case 'digest':
+        //     return {
+        //         type: 'digest',
+        //         disabled: false,
+        //         username: findValueInObj('username', authObj.digest),
+        //         password: findValueInObj('password', authObj.digest),
+        //     };
+        // case 'ntlm':
+        //     return {
+        //         type: 'ntlm',
+        //         disabled: false,
+        //         username: findValueInObj('username', authObj.ntlm),
+        //         password: findValueInObj('password', authObj.ntlm),
+        //     };
+        // case 'oauth1':
+        //     return {
+        //         type: 'oauth1',
+        //         disabled: false,
+        //         signatureMethod: 'HMAC-SHA1',
+        //         consumerKey: findValueInObj('consumerKey', authObj.oauth1),
+        //         consumerSecret: findValueInObj('consumerSecret', authObj.oauth1),
+        //         tokenKey: findValueInObj('token', authObj.oauth1),
+        //         tokenSecret: findValueInObj('tokenSecret', authObj.oauth1),
+        //         privateKey: findValueInObj('verifier', authObj.oauth1),
+        //         version: '1.0',
+        //         nonce: findValueInObj('nonce', authObj.oauth1),
+        //         timestamp: findValueInObj('timestamp', authObj.oauth1),
+        //         callback: findValueInObj('callback', authObj.oauth1),
+        //     };
+        case 'oauth2':
             return {
-                disabled: false,
-                type: AUTH_API_KEY,
-                key: findValueInObj('key', authObj.apikey),
-                value: findValueInObj('value', authObj.apikey),
-                in: findValueInObj('in', authObj.apikey),
-            };
-        case 'bearer':
-            return {
-                type: AUTH_BEARER,
-                disabled: false,
-                token: findValueInObj('token', authObj.bearer),
-            };
-        case 'basic':
-            return {
-                type: AUTH_BASIC,
-                useISO88591: false,
-                disabled: false,
-                username: findValueInObj('username', authObj.basic),
-                password: findValueInObj('password', authObj.basic),
-            };
-        case 'digest':
-            return {
-                type: AUTH_DIGEST,
-                disabled: false,
-                username: findValueInObj('username', authObj.digest),
-                password: findValueInObj('password', authObj.digest),
-            };
-        case 'ntlm':
-            return {
-                type: AUTH_NTLM,
-                disabled: false,
-                username: findValueInObj('username', authObj.ntlm),
-                password: findValueInObj('password', authObj.ntlm),
-            };
-        case 'oauth1':
-            return {
-                type: AUTH_OAUTH_1,
-                disabled: false,
-                signatureMethod: 'HMAC-SHA1',
-                consumerKey: findValueInObj('consumerKey', authObj.oauth1),
-                consumerSecret: findValueInObj('consumerSecret', authObj.oauth1),
-                tokenKey: findValueInObj('token', authObj.oauth1),
-                tokenSecret: findValueInObj('tokenSecret', authObj.oauth1),
-                privateKey: findValueInObj('verifier', authObj.oauth1),
-                version: '1.0',
-                nonce: findValueInObj('nonce', authObj.oauth1),
-                timestamp: findValueInObj('timestamp', authObj.oauth1),
-                callback: findValueInObj('callback', authObj.oauth1),
-            };
-        case AUTH_OAUTH_2:
-            return {
-                type: AUTH_OAUTH_2,
+                type: 'oauth2',
                 grantType: 'authorization_code',
             };
-        case 'awsv4':
-            return {
-                type: AUTH_AWS_IAM,
-                disabled: false,
-                accessKeyId: findValueInObj('accessKey', authObj.awsv4),
-                secretAccessKey: findValueInObj('secretKey', authObj.awsv4),
-                sessionToken: findValueInObj('sessionToken', authObj.awsv4),
-            };
-        case 'hawk':
-            return {
-                type: AUTH_HAWK,
-                algorithm: HAWK_ALGORITHM_SHA256,
-            };
-        case 'asap':
-            return {
-                type: AUTH_ASAP,
-                issuer: findValueInObj('iss', authObj.asap),
-                subject: findValueInObj('sub', authObj.asap),
-                audience: findValueInObj('aud', authObj.asap),
-                additionalClaims: findValueInObj('claims', authObj.asap),
-                keyId: findValueInObj('kid', authObj.asap),
-                verifier: findValueInObj('privateKey', authObj.asap),
-            };
+        // case 'awsv4':
+        //     return {
+        //         type: 'iam',
+        //         disabled: false,
+        //         accessKeyId: findValueInObj('accessKey', authObj.awsv4),
+        //         secretAccessKey: findValueInObj('secretKey', authObj.awsv4),
+        //         sessionToken: findValueInObj('sessionToken', authObj.awsv4),
+        //     };
+        // case 'hawk':
+        //     return {
+        //         type: 'hawk',
+        //         algorithm: 'sha256',
+        //     };
+        // case 'asap':
+        //     return {
+        //         type: 'asap',
+        //         issuer: findValueInObj('iss', authObj.asap),
+        //         subject: findValueInObj('sub', authObj.asap),
+        //         audience: findValueInObj('aud', authObj.asap),
+        //         additionalClaims: findValueInObj('claims', authObj.asap),
+        //         keyId: findValueInObj('kid', authObj.asap),
+        //         verifier: findValueInObj('privateKey', authObj.asap),
+        //     };
         case 'netrc':
             throw Error('netrc auth is not supported yet');
         default:
@@ -135,25 +115,26 @@ export function toPreRequestAuth(auth: RequestAuthentication) {
     }
 
     switch (auth.type) {
-        case AUTH_NONE:
+        case 'none':
             return { type: 'noauth' };
-        case AUTH_API_KEY:
+        case 'apikey':
             return {
                 type: 'apikey',
                 apikey: [
-                    { key: 'key', value: auth.key },
-                    { key: 'value', value: auth.value },
-                    { key: 'in', value: auth.in || 'header' },
+                    // TODO: make this work
+                    // { key: 'key', value: auth.key },
+                    // { key: 'value', value: auth.value },
+                    // { key: 'in', value: auth.in || 'header' },
                 ],
             };
-        case AUTH_BEARER:
+        case 'bearer':
             return {
                 type: 'bearer',
                 bearer: [
                     { key: 'token', value: auth.token },
                 ],
             };
-        case AUTH_BASIC:
+        case 'basic':
             return {
                 type: 'basic',
                 basic: [
@@ -163,7 +144,7 @@ export function toPreRequestAuth(auth: RequestAuthentication) {
                     { key: 'password', value: auth.password },
                 ],
             };
-        case AUTH_DIGEST:
+        case 'digest':
             return {
                 type: 'digest',
                 digest: [
@@ -172,7 +153,7 @@ export function toPreRequestAuth(auth: RequestAuthentication) {
                     { key: 'password', value: auth.password },
                 ],
             };
-        case AUTH_NTLM:
+        case 'ntlm':
             return {
                 type: 'ntlm',
                 ntlm: [
@@ -181,7 +162,7 @@ export function toPreRequestAuth(auth: RequestAuthentication) {
                     { key: 'password', value: auth.password },
                 ],
             };
-        case AUTH_OAUTH_1:
+        case 'oauth1':
             return {
                 type: 'oauth1',
                 oauth1: [
@@ -197,17 +178,18 @@ export function toPreRequestAuth(auth: RequestAuthentication) {
                     { key: 'callback', value: auth.callback },
                 ],
             };
-        case AUTH_OAUTH_2:
+        case 'oauth2':
             return {
                 type: 'oauth2',
                 oauth2: [
-                    { key: 'key', value: auth.key },
-                    { key: 'value', value: auth.value },
-                    { key: 'enabled', value: auth.enabled },
-                    { key: 'send_as', value: auth.send_as },
+                    // TODO: make this work
+                    // { key: 'key', value: auth.key },
+                    // { key: 'value', value: auth.value },
+                    // { key: 'enabled', value: auth.enabled },
+                    // { key: 'send_as', value: auth.send_as },
                 ],
             };
-        case AUTH_AWS_IAM:
+        case 'iam':
             return {
                 type: 'awsv4',
                 awsv4: [
@@ -217,43 +199,46 @@ export function toPreRequestAuth(auth: RequestAuthentication) {
                     { key: 'sessionToken', value: auth.sessionToken },
                 ],
             };
-        case AUTH_HAWK:
+        case 'hawk':
             // TODO: actually it is not supported
             return {
                 type: 'hawk',
                 hawk: [
-                    { key: 'includePayloadHash', value: auth.includePayloadHash },
-                    { key: 'timestamp', value: auth.timestamp },
-                    { key: 'delegation', value: auth.delegation },
-                    { key: 'app', value: auth.app },
-                    { key: 'extraData', value: auth.extraData },
-                    { key: 'nonce', value: auth.nonce },
-                    { key: 'user', value: auth.user },
-                    { key: 'authKey', value: auth.authKey },
-                    { key: 'authId', value: auth.authId },
-                    { key: 'algorithm', value: auth.algorithm },
-                    { key: 'id', value: auth.id },
+                    // TODO: make this work
+                    // { key: 'includePayloadHash', value: auth.includePayloadHash },
+                    // { key: 'timestamp', value: auth.timestamp },
+                    // { key: 'delegation', value: auth.delegation },
+                    // { key: 'app', value: auth.app },
+                    // { key: 'extraData', value: auth.extraData },
+                    // { key: 'nonce', value: auth.nonce },
+                    // { key: 'user', value: auth.user },
+                    // { key: 'authKey', value: auth.authKey },
+                    // { key: 'authId', value: auth.authId },
+                    // { key: 'algorithm', value: auth.algorithm },
+                    // { key: 'id', value: auth.id },
                 ],
             };
-        case AUTH_ASAP:
+        case 'asap':
             return {
                 type: 'asap',
                 asap: [
-                    { key: 'exp', value: auth.exp },
-                    { key: 'claims', value: auth.claims },
-                    { key: 'sub', value: auth.sub },
-                    { key: 'privateKey', value: auth.privateKey },
-                    { key: 'kid', value: auth.kid },
-                    { key: 'aud', value: auth.aud },
-                    { key: 'iss', value: auth.iss },
-                    { key: 'alg', value: auth.alg },
-                    { key: 'id', value: auth.id },
+                    // TODO: make this work
+                    // { key: 'exp', value: auth.exp },
+                    // { key: 'claims', value: auth.claims },
+                    // { key: 'sub', value: auth.sub },
+                    // { key: 'privateKey', value: auth.privateKey },
+                    // { key: 'kid', value: auth.kid },
+                    // { key: 'aud', value: auth.aud },
+                    // { key: 'iss', value: auth.iss },
+                    // { key: 'alg', value: auth.alg },
+                    // { key: 'id', value: auth.id },
                 ],
             };
-        case AUTH_NETRC:
+        case 'netrc':
             // TODO: not supported yet
             throw Error('net rc is not supported yet');
         default:
+            // @ts-expect-error - user can input any string
             throw Error(`unknown auth type: ${auth.type}`);
     }
 }
@@ -348,14 +333,14 @@ function requestToCurlOptions(req: string | Request | RequestOptions, settings: 
         const authHeaders = [];
         const authObj = fromPreRequestAuth(finalReq.auth);
         switch (authObj.type) {
-            case AUTH_API_KEY:
+            case 'apikey':
                 if (authObj.in === 'header') {
                     authHeaders.push({
                         name: authObj.key,
                         value: authObj.key,
                     });
                 }
-            case AUTH_BEARER:
+            case 'bearer':
                 authHeaders.push({
                     name: 'Authorization',
                     value: `Bearer ${authObj.token}`,
