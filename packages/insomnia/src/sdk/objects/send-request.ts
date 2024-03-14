@@ -246,7 +246,7 @@ export function toPreRequestAuth(auth: RequestAuthentication) {
 export function sendRequest(
     request: string | Request | RequestOptions,
     cb: (error?: string, response?: Response) => void,
-    settings: Settings,
+    settings: Settings, // TODO: modify this after introducing settings
 ) {
     // TODO(george): enable cascading cancellation later as current solution just adds complexity
     const requestOptions = requestToCurlOptions(request, settings);
@@ -330,24 +330,24 @@ function requestToCurlOptions(req: string | Request | RequestOptions, settings: 
             }
         }
 
-        const authHeaders = [];
-        const authObj = fromPreRequestAuth(finalReq.auth);
-        switch (authObj.type) {
-            case 'apikey':
-                if (authObj.in === 'header') {
-                    authHeaders.push({
-                        name: authObj.key,
-                        value: authObj.key,
-                    });
-                }
-            case 'bearer':
-                authHeaders.push({
-                    name: 'Authorization',
-                    value: `Bearer ${authObj.token}`,
-                });
-            default:
-            // TODO: support other methods
-        }
+        // const authHeaders = [];
+        // const authObj = fromPreRequestAuth(finalReq.auth);
+        // switch (authObj.type) {
+        //     case 'apikey':
+        //         if (authObj.in === 'header') {
+        //             authHeaders.push({
+        //                 name: authObj.key,
+        //                 value: authObj.key,
+        //             });
+        //         }
+        //     case 'bearer':
+        //         authHeaders.push({
+        //             name: 'Authorization',
+        //             value: `Bearer ${authObj.token}`,
+        //         });
+        //     default:
+        //     // TODO: support other methods
+        // }
 
         const urlencodedParams = finalReq.body?.urlencoded?.all().map(
             param => ({ name: param.key, value: param.value }),

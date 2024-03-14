@@ -1,4 +1,6 @@
+import { ClientCertificate } from '../../models/client-certificate';
 import { RequestBodyParameter, RequestHeader } from '../../models/request';
+import { Settings } from '../../models/settings';
 import { toPreRequestAuth } from './auth';
 import { Environment, Variables } from './environments';
 import { RequestContext } from './interfaces';
@@ -13,6 +15,8 @@ export class InsomniaObject {
     public baseEnvironment: Environment;
     public variables: Variables;
     public request: ScriptRequest;
+    private settings: Settings;
+    private clientCertificates: ClientCertificate[];
 
     // TODO: follows will be enabled after Insomnia supports them
     private _globals: Environment;
@@ -26,6 +30,8 @@ export class InsomniaObject {
             baseEnvironment: Environment;
             variables: Variables;
             request: ScriptRequest;
+            settings: Settings;
+            clientCertificates: ClientCertificate[];
         },
     ) {
         this._globals = rawObj.globals;
@@ -35,6 +41,8 @@ export class InsomniaObject {
         this._iterationData = rawObj.iterationData;
         this.variables = rawObj.variables;
         this.request = rawObj.request;
+        this.settings = rawObj.settings;
+        this.clientCertificates = rawObj.clientCertificates;
     }
 
     sendRequest(
@@ -42,18 +50,7 @@ export class InsomniaObject {
         cb: (error?: string, response?: ScriptResponse) => void
     ) {
         // TODO: hook to settings later
-        return sendRequest(request, cb, {
-            preferredHttpVersion: '',
-            maxRedirects: 0,
-            proxyEnabled: false,
-            timeout: 5000,
-            validateSSL: false,
-            followRedirects: false,
-            maxTimelineDataSizeKB: 0,
-            httpProxy: '',
-            httpsProxy: '',
-            noProxy: '',
-        });
+        return sendRequest(request, cb, this.settings);
     }
 
     // TODO: remove this after enabled globals
@@ -74,6 +71,8 @@ export class InsomniaObject {
             iterationData: this._iterationData.toObject(),
             variables: this.variables.toObject(),
             request: this.request,
+            settings: this.settings,
+            clientCertificates: this.clientCertificates,
         };
     };
 }
@@ -135,6 +134,8 @@ export function initInsomniaObject(
             iterationData,
             variables,
             request,
+            settings: rawObj.settings,
+            clientCertificates: rawObj.clientCertificates,
         },
     );
 };
