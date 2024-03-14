@@ -4,14 +4,6 @@ import { RequestContext } from '../sdk/objects/interfaces';
 
 const cancelRequestFunctionMap = new Map<string, () => void>();
 
-export function setCancelRequestFunctionMap(id: string, cb: () => void) {
-  return cancelRequestFunctionMap.set(id, cb);
-}
-
-export function deleteCancelRequestFunctionMap(id: string) {
-  return cancelRequestFunctionMap.delete(id);
-}
-
 export async function cancelRequestById(requestId: string) {
   const cancel = cancelRequestFunctionMap.get(requestId);
   if (cancel) {

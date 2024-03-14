@@ -1,7 +1,7 @@
 import { Cookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
-import { cancellablePromise, deleteCancelRequestFunctionMap, setCancelRequestFunctionMap } from '../../network/cancellation';
+// import { cancellablePromise, deleteCancelRequestFunctionMap, setCancelRequestFunctionMap } from '../../network/cancellation';
 import { RequestAuth } from './auth';
 import { CookieOptions } from './cookies';
 import { Request, RequestOptions } from './request';
@@ -326,27 +326,17 @@ export function toPreRequestAuth(auth: Record<string, any>) {
     }
 }
 
-export class HttpSendRequest {
-    constructor(private settings: Settings) { }
+export function sendRequest(
+    request: string | Request | RequestOptions,
+    cb: (error?: string, response?: Response) => void,
+    settings: Settings,
+) {
+    // TODO(george): enable cascading cancellation later as current solution just adds complexity
+    const requestOptions = requestToCurlOptions(request, settings);
 
-    sendRequest(
-        request: string | Request | RequestOptions,
-        cb: (error?: string, response?: Response) => void
-    ) {
-        const requestOptions = requestToCurlOptions(request, this.settings);
-
-        const controller = new AbortController();
-        const cancelRequest = () => {
-            window.bridge.cancelCurlRequest(requestOptions.requestId);
-            controller.abort();
-        };
-        setCancelRequestFunctionMap(requestOptions.requestId, cancelRequest);
-
-        try {
-            cancellablePromise({
-                signal: controller.signal,
-                fn: window.bridge.curlRequest(requestOptions),
-            }).then(result => {
+    try {
+        window.bridge.curlRequest(requestOptions)
+            .then(result => {
                 const output = result as CurlRequestOutput;
                 return curlOutputToResponse(output, request);
             }).then(transformedOutput => {
@@ -354,19 +344,15 @@ export class HttpSendRequest {
             }).catch(e => {
                 cb(e, undefined);
             });
-        } catch (err) {
-            if (err.name === 'AbortError') {
-                cb(`Request was cancelled: ${err.message}`, undefined);
-                return;
-            }
-            cb(`Something went wrong: ${err.message}`, undefined);
-        } finally {
-            deleteCancelRequestFunctionMap(requestOptions.requestId);
+    } catch (err) {
+        if (err.name === 'AbortError') {
+            cb(`Request was cancelled: ${err.message}`, undefined);
+            return;
         }
+        cb(`Something went wrong: ${err.message}`, undefined);
     }
-}
+};
 
-// function requestToCurlOptions(req: string | Request, settings: Settings): CurlRequestOptions {
 function requestToCurlOptions(req: string | Request | RequestOptions, settings: Settings) {
     const id = uuidv4();
     const settingFollowRedirects: 'global' | 'on' | 'off' = settings.followRedirects ? 'on' : 'off';
