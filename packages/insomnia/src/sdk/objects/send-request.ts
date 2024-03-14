@@ -1,7 +1,7 @@
 import { Cookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
-// import { cancellablePromise, deleteCancelRequestFunctionMap, setCancelRequestFunctionMap } from '../../network/cancellation';
+import { RequestAuthentication } from '../../models/request';
 import { RequestAuth } from './auth';
 import { CookieOptions } from './cookies';
 import { Request, RequestOptions } from './request';
@@ -92,7 +92,7 @@ interface CurlRequestOutput {
     responseBodyPath?: string;
 }
 
-export function fromPreRequestAuth(auth: RequestAuth) {
+export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
     const authObj = auth.toJSON();
     const findValueInObj = (targetKey: string, kvs?: { key: string; value: string }[]) => {
         if (!kvs) {
@@ -197,7 +197,7 @@ export function fromPreRequestAuth(auth: RequestAuth) {
     }
 }
 
-export function toPreRequestAuth(auth: Record<string, any>) {
+export function toPreRequestAuth(auth: RequestAuthentication) {
     if (!auth || !auth.type) {
         return { type: 'noauth' };
     }
