@@ -87,6 +87,7 @@ interface OpenCurlRequestOptions {
   workspaceId: string;
   url: string;
   headers: RequestHeader[];
+  authHeader?: { name: string; value: string };
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
   initialPayload?: string;
@@ -142,11 +143,15 @@ const openCurlConnection = async (
       caCert: caCertificate,
       certificates: filteredClientCertificates,
     });
+    // set method
+    curl.setOpt(Curl.option.CUSTOMREQUEST, request.method);
+    // TODO: support all post data content types
+    curl.setOpt(Curl.option.POSTFIELDS, request.body?.text || '');
     debugTimeline.forEach(entry => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(entry) + '\n'));
     CurlConnections.set(options.requestId, curl);
     CurlConnections.get(options.requestId)?.enable(CurlFeature.StreamResponse);
-    // TODO: add authHeader and request body?
-    const headerStrings = parseHeaderStrings({ req: request, finalUrl: options.url });
+    const headerStrings = parseHeaderStrings({ req: request, finalUrl: options.url, authHeader: options.authHeader });
+
     CurlConnections.get(options.requestId)?.setOpt(Curl.option.HTTPHEADER, headerStrings);
     CurlConnections.get(options.requestId)?.on('error', async (error, errorCode) => {
       const errorEvent: CurlErrorEvent = {
