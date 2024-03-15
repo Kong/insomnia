@@ -14,7 +14,7 @@ export type RequestBodyMode = undefined | 'formdata' | 'urlencoded' | 'raw' | 'f
 export interface RequestBodyOptions {
     mode: RequestBodyMode;
     file?: string;
-    formdata?: { key: string; value: string }[];
+    formdata?: { key: string; value: string; type?: string }[];
     graphql?: { query: string; operationName: string; variables: object };
     raw?: string;
     urlencoded?: { key: string; value: string }[];
@@ -24,11 +24,13 @@ export interface RequestBodyOptions {
 export class FormParam extends Property {
     key: string;
     value: string;
+    type?: string;
 
-    constructor(options: { key: string; value: string }) {
+    constructor(options: { key: string; value: string; type?: string }) {
         super();
         this.key = options.key;
         this.value = options.value;
+        this.type = options.type;
     }
 
     static _postman_propertyAllowsMultipleValues() {
@@ -43,7 +45,7 @@ export class FormParam extends Property {
     // }
 
     toJSON() {
-        return { key: this.key, value: this.value };
+        return { key: this.key, value: this.value, type: this.type };
     }
 
     toString() {
@@ -64,8 +66,7 @@ function getClassFields(opts: RequestBodyOptions) {
             undefined,
             opts.formdata.
                 map(formParamObj => new FormParam({
-                    key: formParamObj.key,
-                    value: formParamObj.value,
+                    ...formParamObj,
                 }))
         ) :
         undefined;
@@ -149,10 +150,9 @@ export class RequestBody extends PropertyBase {
         try {
             switch (this.mode) {
                 case 'formdata':
-                    // TODO: it should return data in "multipart/form-data" format
-                    throw Error('formdata is unsupported yet');
+                    return this.formdata?.map(param => param.toString(), {}).join('&') || '';
                 case 'urlencoded':
-                    return this.urlencoded ? this.urlencoded.map(formData => formData.toString(), {}).join('&') : '';
+                    return this.urlencoded?.map(param => param.toString(), {}).join('&') || '';
                 case 'raw':
                     return this.raw || '';
                 case 'file':
@@ -197,6 +197,10 @@ export interface RequestSize {
 }
 
 function requestOptionsToClassFields(options: RequestOptions) {
+    if (!options.url || options.url === '') {
+        throw Error('Request URL is not specified');
+    }
+
     const url = typeof options.url === 'string' ? new Url(options.url) : options.url;
     const method = options.method || 'GET';
 

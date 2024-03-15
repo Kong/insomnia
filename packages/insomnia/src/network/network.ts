@@ -79,6 +79,7 @@ export const tryToExecutePreRequestScript = async (
   timelinePath: string,
   responseId: string,
   baseEnvironment: Environment,
+  clientCertificates: ClientCertificate[],
 ) => {
   if (!request.preRequestScript) {
     return {
@@ -108,9 +109,15 @@ export const tryToExecutePreRequestScript = async (
         // this is more deterministic and avoids that script accidently manipulates baseEnvironment instead of environment
         environment: environment._id === baseEnvironment._id ? {} : (environment?.data || {}),
         baseEnvironment: baseEnvironment?.data || {},
+        clientCertificates,
+        settings,
       },
     });
-    const output = await Promise.race([timeoutPromise, preRequestPromise]) as { request: Request; environment: Record<string, any>; baseEnvironment: Record<string, any> };
+    const output = await Promise.race([timeoutPromise, preRequestPromise]) as {
+      request: Request;
+      environment: Record<string, any>;
+      baseEnvironment: Record<string, any>;
+    };
     console.log('[network] Pre-request script succeeded', output);
 
     const envPropertyOrder = orderedJSON.parse(

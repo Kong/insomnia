@@ -1,9 +1,16 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
+import type { Compression } from './models/response';
 import * as CollectionModule from './sdk/objects';
-import { RequestContext } from './sdk/objects/interfaces';
+import type { RequestContext } from './sdk/objects/interfaces';
 
-const bridge: Window['bridge'] = {
+export interface HiddenBrowserWindowToMainBridgeAPI {
+  requireInterceptor: (module: string) => any;
+  onmessage: (listener: (data: any, callback: (result: any) => void) => void) => void;
+  curlRequest: (options: any) => Promise<any>;
+  readCurlResponse: (options: { bodyPath: string; bodyCompression: Compression }) => Promise<{ body: string; error: string }>;
+}
+const bridge: HiddenBrowserWindowToMainBridgeAPI = {
   onmessage: listener => {
     const rendererListener = (event: IpcRendererEvent) => {
       const [port] = event.ports;
@@ -24,6 +31,9 @@ const bridge: Window['bridge'] = {
 
     throw Error(`no module is found for "${moduleName}"`);
   },
+
+  curlRequest: options => ipcRenderer.invoke('curlRequest', options),
+  readCurlResponse: options => ipcRenderer.invoke('readCurlResponse', options),
 };
 
 if (process.contextIsolated) {

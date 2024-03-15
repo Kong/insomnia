@@ -3,6 +3,7 @@ import { Request } from '../models/request';
 import { RequestContext } from '../sdk/objects/interfaces';
 
 const cancelRequestFunctionMap = new Map<string, () => void>();
+
 export async function cancelRequestById(requestId: string) {
   const cancel = cancelRequestFunctionMap.get(requestId);
   if (cancel) {
@@ -65,7 +66,7 @@ export const cancellableCurlRequest = async (requestOptions: CurlRequestOptions)
   }
 };
 
-const cancellablePromise = ({ signal, fn }: { signal: AbortSignal; fn: Promise<any> }) => {
+export const cancellablePromise = ({ signal, fn }: { signal: AbortSignal; fn: Promise<any> }) => {
   if (signal?.aborted) {
     return Promise.reject(new DOMException('Aborted', 'AbortError'));
   }

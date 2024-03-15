@@ -141,6 +141,12 @@ export class Url extends PropertyBase {
     }
 
     private setFields(def: UrlOptions | string) {
+        if (typeof def === 'string') {
+            def = def.includes('://') ? def : 'http://' + def;
+        } else if (!def.protocol || def.protocol === '') {
+            def.protocol = 'http://';
+        }
+
         const urlObj = typeof def === 'string' ? Url.parse(def) : def;
 
         if (urlObj) {
