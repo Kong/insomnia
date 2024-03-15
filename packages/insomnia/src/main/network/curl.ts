@@ -163,11 +163,11 @@ const openCurlConnection = async (
         timestamp: Date.now(),
       };
       console.error('curl - error: ', error, errorCode);
+      CurlConnections.get(options.requestId)?.close();
       deleteRequestMaps(request._id, error.message, errorEvent);
       for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send(readyStateChannel, false);
       }
-      curl.close();
       if (errorCode) {
         const res = await models.response.getById(responseId);
         if (!res) {
@@ -258,8 +258,20 @@ const openCurlConnection = async (
         };
         eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
       }
-      // NOTE: this can only happen if the stream is closed cleanly by the remote server
-      eventLogFileStreams.get(options.requestId)?.end();
+
+      // NOTE: when stream is closed by remote server
+      const closeEvent: CurlCloseEvent = {
+        _id: uuidV4(),
+        requestId: options.requestId,
+        type: 'close',
+        timestamp: Date.now(),
+        statusCode,
+        reason: '',
+        code: 0,
+        wasClean: true,
+      };
+      CurlConnections.get(options.requestId)?.close();
+      deleteRequestMaps(options.requestId, 'Closing connection', closeEvent);
       for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send(readyStateChannel, false);
       }
