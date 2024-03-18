@@ -1,4 +1,18 @@
-import type { OAuth2ResponseType, RequestAuthentication } from '../../models/request';
+import {
+    AUTH_API_KEY,
+    AUTH_ASAP,
+    AUTH_AWS_IAM,
+    AUTH_BASIC,
+    AUTH_BEARER,
+    AUTH_DIGEST,
+    AUTH_HAWK,
+    AUTH_NETRC,
+    AUTH_NONE,
+    AUTH_NTLM,
+    AUTH_OAUTH_1,
+    AUTH_OAUTH_2,
+} from '../../common/constants';
+import { OAuth2ResponseType, RequestAuthentication } from '../../models/request';
 import { OAuth1SignatureMethod } from '../../network/o-auth-1/constants';
 import { Property } from './properties';
 import { Variable, VariableList } from './variables';
@@ -50,12 +64,12 @@ export interface OAuth2AuthOption {
 export interface BasicOptions {
     password: string;
     username: string;
-    id?: string;
+    id: string;
 }
 
 export interface BearerOptions {
     token: string;
-    id?: string;
+    id: string;
 }
 
 export interface JWTOptions {
@@ -67,7 +81,7 @@ export interface JWTOptions {
     headerPrefix: string;
     queryParamKey: string;
     header: string; // e.g. "{}"
-    id?: string;
+    id: string;
 }
 
 export interface DigestOptions {
@@ -80,7 +94,7 @@ export interface DigestOptions {
     password: string;
     username: string;
     algorithm: string;
-    id?: string;
+    id: string;
 }
 
 export interface OAuth1Options {
@@ -98,7 +112,7 @@ export interface OAuth1Options {
     signatureMethod: string; // "HMAC-SHA1"
     version: string;
     addParamsToHeader: string;
-    id?: string;
+    id: string;
 }
 
 export interface OAuth2Param {
@@ -118,12 +132,9 @@ export interface OAuth2Options {
     scope: string;
     clientSecret: string;
     clientId: string;
-    accessTokenUrl: string;
-    authUrl: string;
     tokenName: string;
     addTokenTo: string;
-    code_verifier: string;
-    id?: string;
+    id: string;
 }
 
 export interface HAWKOptions {
@@ -137,7 +148,7 @@ export interface HAWKOptions {
     authKey: string;
     authId: string;
     algorithm: string;
-    id?: string;
+    id: string;
 }
 
 export interface AWSV4Options {
@@ -146,7 +157,7 @@ export interface AWSV4Options {
     region: string;
     secretKey: string;
     accessKey: string;
-    id?: string;
+    id: string;
 }
 
 export interface NTLMOptions {
@@ -154,13 +165,13 @@ export interface NTLMOptions {
     domain: string;
     password: string;
     username: string;
-    id?: string;
+    id: string;
 }
 
 export interface APIKeyOptions {
     key: string;
     value: string;
-    id?: string;
+    id: string;
 }
 
 export interface EdgegridOptions {
@@ -171,7 +182,7 @@ export interface EdgegridOptions {
     clientSecret: string;
     clientToken: string;
     accessToken: string;
-    id?: string;
+    id: string;
 }
 
 export interface ASAPOptions {
@@ -183,7 +194,7 @@ export interface ASAPOptions {
     aud: string; // audience
     iss: string; // issuer
     alg: string; // e.g., RS256
-    id?: string;
+    id: string;
 }
 
 export function authOptionsToParams(
@@ -203,7 +214,7 @@ export interface AuthOptions {
     jwt?: AuthOption[];
     digest?: AuthOption[];
     oauth1?: AuthOption[];
-    oauth2?: OAuth2AuthOption[];
+    oauth2?: AuthOption[];
     hawk?: AuthOption[];
     awsv4?: AuthOption[];
     ntlm?: AuthOption[];
