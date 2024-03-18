@@ -1,4 +1,5 @@
 import { expect } from '@playwright/test';
+import { Buffer } from 'buffer';
 
 import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';;
@@ -198,18 +199,6 @@ test.describe('pre-request features tests', async () => {
                     mode: 'raw',
                     raw: 'rawContent',
                 });
-                // insomnia.request.auth.update(
-                //     {
-                //         type: 'bearer',
-                //         bearer: [
-                //                 {key: 'token', value: 'tokenValue'},
-                //         ],
-                //     },
-                //     'bearer'
-                // );
-                // TODO: enable proxy and test it
-                // insomnia.request.proxy.update({});
-                // insomnia.request.certificate.update({});
             `,
             body: '{}',
             customVerify: (bodyJson: any) => {
@@ -322,6 +311,49 @@ test.describe('pre-request features tests', async () => {
                 });
                 expect(reqBodyJsons.fileBody.data).toEqual('raw file content');
                 expect(reqBodyJsons.formdataBody.data).toEqual('--X-INSOMNIA-BOUNDARY\r\nContent-Disposition: form-data; name=\"k1\"\r\n\r\nv1\r\n--X-INSOMNIA-BOUNDARY\r\nContent-Disposition: form-data; name=\"k2\"; filename=\"rawfile.txt\"\r\nContent-Type: text/plain\r\n\r\nraw file content\r\n--X-INSOMNIA-BOUNDARY--\r\n');
+            },
+        },
+        {
+            name: 'insomnia.request auth manipulation (bearer)',
+            preReqScript: `
+                insomnia.request.auth.update(
+                    {
+                        type: 'bearer',
+                        bearer: [
+                                {key: 'token', value: 'tokenValue'},
+                                {key: 'prefix', value: 'CustomTokenPrefix'},
+                        ],
+                    },
+                    'bearer'
+                );
+            `,
+            body: '{}',
+            customVerify: (bodyJson: any) => {
+                const authzHeader = bodyJson.headers['authorization'];
+                expect(authzHeader != null).toBeTruthy();
+                expect(bodyJson.headers['authorization']).toEqual('CustomTokenPrefix tokenValue');
+            },
+        },
+        {
+            name: 'insomnia.request auth manipulation (basic)',
+            preReqScript: `
+                insomnia.request.auth.update(
+                    {
+                        type: 'basic',
+                        basic: [
+                                {key: 'username', value: 'myName'},
+                                {key: 'password', value: 'myPwd'},
+                        ],
+                    },
+                    'basic'
+                );
+            `,
+            body: '{}',
+            customVerify: (bodyJson: any) => {
+                const authzHeader = bodyJson.headers['authorization'];
+                expect(authzHeader != null).toBeTruthy();
+                const expectedEncCred = Buffer.from('myName:myPwd', 'utf-8').toString('base64');
+                expect(bodyJson.headers['authorization']).toEqual(`Basic ${expectedEncCred}`);
             },
         },
     ];
