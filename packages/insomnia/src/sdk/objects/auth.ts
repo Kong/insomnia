@@ -3,6 +3,21 @@ import { OAuth1SignatureMethod } from '../../network/o-auth-1/constants';
 import { Property } from './properties';
 import { Variable, VariableList } from './variables';
 
+export type AuthOptionTypes =
+    'noauth'
+    | 'basic'
+    | 'bearer'
+    | 'jwt'
+    | 'digest'
+    | 'oauth1'
+    | 'oauth2'
+    | 'hawk'
+    | 'awsv4'
+    | 'ntlm'
+    | 'apikey'
+    | 'edgegrid'
+    | 'asap'
+    | 'netrc';
 export const AuthTypes = new Set([
     'noauth',
     'basic',
@@ -17,6 +32,7 @@ export const AuthTypes = new Set([
     'apikey',
     'edgegrid',
     'asap',
+    'netrc',
 ]);
 
 export interface AuthOption {
@@ -180,7 +196,6 @@ export function authOptionsToParams(
             value: entry[1],
         }));
 }
-type AuthOptionTypes = 'noauth' | 'basic' | 'bearer' | 'jwt' | 'digest' | 'oauth1' | 'oauth2' | 'hawk' | 'awsv4' | 'ntlm' | 'apikey' | 'edgegrid' | 'asap' | 'netrc';
 export interface AuthOptions {
     type: AuthOptionTypes;
     basic?: AuthOption[];

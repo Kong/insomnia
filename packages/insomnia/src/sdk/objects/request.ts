@@ -1,5 +1,5 @@
 import { Request as InsomniaRequest } from '../../../src/models/request';
-import { AuthOptions, fromPreRequestAuth, RequestAuth } from './auth';
+import { AuthOptions, AuthOptionTypes, fromPreRequestAuth, RequestAuth } from './auth';
 import { CertificateOptions } from './certificates';
 import { Certificate } from './certificates';
 import { HeaderDefinition } from './headers';
@@ -283,7 +283,7 @@ export class Request extends Property {
         this.url.addQueryParams(params);
     }
 
-    authorizeUsing(authType: string | AuthOptions, options?: VariableList<Variable>) {
+    authorizeUsing(authType: AuthOptionTypes | AuthOptions, options?: VariableList<Variable>) {
         const selectedAuth = typeof authType === 'string' ? authType : authType.type;
         this.auth.use(selectedAuth, options || { type: 'noauth' });
     }
