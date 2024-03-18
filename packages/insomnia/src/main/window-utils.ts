@@ -38,6 +38,7 @@ const MINIMUM_HEIGHT = 400;
 
 const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
 let localStorage: LocalStorage | null = null;
+let hiddenWindowIsBusy = false;
 
 interface Bounds {
   height?: number;
@@ -55,9 +56,31 @@ export async function createHiddenBrowserWindow() {
   invariant(mainWindow, 'MainWindow is not defined, please restart the app.');
 
   console.log('[main] Registering the hidden window restarting handler');
+  ipcMain.on('set-hidden-window-busy-status', (_, busyStatus) => {
+    hiddenWindowIsBusy = busyStatus;
+  });
   // when the main window runs a script
   // if the hidden window is down, start it
   ipcMain.handle('open-channel-to-hidden-browser-window', async event => {
+    if (hiddenWindowIsBusy) {
+      const runningHiddenWindow = browserWindows.get('HiddenBrowserWindow');
+      if (runningHiddenWindow == null) {
+        hiddenWindowIsBusy = false;
+      } else {
+        await new Promise<void>(resolve => {
+          invariant(runningHiddenWindow, 'hiddenBrowserWindow is running');
+          // overwrite the closed handler
+          runningHiddenWindow.on('closed', () => {
+            if (runningHiddenWindow) {
+              console.log('[main] restarting hidden browser window:', runningHiddenWindow.id);
+              browserWindows.delete('HiddenBrowserWindow');
+            }
+            resolve();
+          });
+          stopHiddenBrowserWindow();
+        });
+      }
+    }
     if (browserWindows.get('HiddenBrowserWindow')) {
       return;
     }
