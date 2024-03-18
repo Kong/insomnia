@@ -203,7 +203,7 @@ test.describe('pre-request features tests', async () => {
                 const stream = require('stream');
                 const timers = require('timers');
                 const events = require('events');
-                const fs = require('fs');
+                const fs = require('__fs');
                 // set them
                 insomnia.environment.set('uuid', uuid != null);
                 insomnia.environment.set('path', path != null);
