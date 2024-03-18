@@ -17,17 +17,17 @@ interface Props {
   settings: Settings;
 }
 
-const getEnvVar = 'insomnia.environment.get("variable_name");\n';
-// const getGlbVar = 'insomnia.globals.get("variable_name");\n';
-const getVar = 'insomnia.variables.get("variable_name");\n';
-const getCollectionVar = 'insomnia.collectionVariables.get("variable_name");\n';
-const setEnvVar = 'insomnia.environment.set("variable_name", "variable_value");\n';
-// const setGlbVar = 'insomnia.globals.set("variable_name", "variable_value");\n';
-const setVar = 'insomnia.variables.set("variable_name", "variable_value");\n';
-const setCollectionVar = 'insomnia.collectionVariables.set("variable_name", "variable_value");\n';
-const unsetEnvVar = 'insomnia.environment.unset("variable_name");\n';
-// const unsetGlbVar = 'insomnia.globals.unset("variable_name");\n';
-const unsetCollectionVar = 'insomnia.collectionVariables.unset("variable_name");\n';
+const getEnvVar = 'insomnia.environment.get("variable_name");';
+// const getGlbVar = 'insomnia.globals.get("variable_name");';
+const getVar = 'insomnia.variables.get("variable_name");';
+const getCollectionVar = 'insomnia.collectionVariables.get("variable_name");';
+const setEnvVar = 'insomnia.environment.set("variable_name", "variable_value");';
+// const setGlbVar = 'insomnia.globals.set("variable_name", "variable_value");';
+const setVar = 'insomnia.variables.set("variable_name", "variable_value");';
+const setCollectionVar = 'insomnia.collectionVariables.set("variable_name", "variable_value");';
+const unsetEnvVar = 'insomnia.environment.unset("variable_name");';
+// const unsetGlbVar = 'insomnia.globals.unset("variable_name");';
+const unsetCollectionVar = 'insomnia.collectionVariables.unset("variable_name");';
 const sendReq =
   `const resp = await new Promise((resolve, reject) => {
   insomnia.sendRequest(
@@ -36,17 +36,17 @@ const sendReq =
       err != null ? reject(err) : resolve(resp);
     }
   );
-});\n`;
-const logValue = 'console.log("log", variableName);\n';
-const addHeader = "insomnia.request.addHeader({key: 'X-Header-Name', value: 'header_value' });\n";
-const removeHeader = "insomnia.request.removeHeader('X-Header-Name');\n";
-const setMethod = "insomnia.request.method = 'GET';\n";
-const addQueryParams = "insomnia.request.url.addQueryParams('k1=v1');\n";
+});`;
+const logValue = 'console.log("log", variableName);';
+const addHeader = "insomnia.request.addHeader({key: 'X-Header-Name', value: 'header_value' });";
+const removeHeader = "insomnia.request.removeHeader('X-Header-Name');";
+const setMethod = "insomnia.request.method = 'GET';";
+const addQueryParams = "insomnia.request.url.addQueryParams('k1=v1');";
 const updateRequestBody =
   `insomnia.request.body.update({
   mode: 'raw',
   raw: 'rawContent',
-});\n`;
+});`;
 
 const updateRequestAuth =
   `insomnia.request.auth.update(
@@ -57,7 +57,7 @@ const updateRequestAuth =
       ],
   },
   'bearer'
-);\n`;
+);`;
 
 const lintOptions = {
   globals: {
@@ -82,12 +82,13 @@ const lintOptions = {
 // TODO: provide snippets for environment keys if possible
 function getPreRequestScriptSnippets(insomniaObject: InsomniaObject, path: string): Snippet[] {
   let snippets: Snippet[] = [];
-  const refs = new Set<object>();
-  const insomniaRecords = insomniaObject as Record<any, any>;
+
+  const refs = new Set();
+  const insomniaRecords = insomniaObject as Record<string, any>;
 
   for (const key in insomniaObject) {
-    if (typeof key === 'string' && key.startsWith('_')) {
-      // skip internal fields
+    const isPrivate = typeof key === 'string' && key.startsWith('_');
+    if (isPrivate) {
       continue;
     }
 
@@ -144,6 +145,7 @@ export const PreRequestScriptEditor: FC<Props> = ({
     editorRef.current?.setValue([
       ...value.split('\n').slice(0, nextRow),
       snippet,
+      '\n',
       ...value.split('\n').slice(nextRow),
     ].join('\n'));
 
@@ -151,7 +153,7 @@ export const PreRequestScriptEditor: FC<Props> = ({
     editorRef.current?.setCursorLine(cursorRow + snippet.split('\n').length);
   };
 
-  // TODO(george): use real data probably
+  // TODO(george): Add more to this object to provide improved autocomplete
   const preRequestScriptSnippets = getPreRequestScriptSnippets(
     new InsomniaObject({
       globals: new Environment({}),
