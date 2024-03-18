@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { RequestAuth } from '../auth';
+import { fromPreRequestAuth, RequestAuth, toPreRequestAuth } from '../auth';
 import { Variable, VariableList } from '../variables';
 
 const varListToObject = (obj: VariableList<Variable> | undefined) => {
@@ -59,5 +59,136 @@ describe('test sdk objects', () => {
 
         authObj.clear('bearer');
         expect(authObj.parameters()).toBeUndefined();
+    });
+});
+
+describe('test auth transforming', () => {
+    it('transforming from script side to Insomnia and the reverse direction', () => {
+        const basicAuth = {
+            type: 'basic',
+            useISO88591: true,
+            disabled: false,
+            username: 'uname',
+            password: 'pwd',
+        };
+        const apikeyAuth = {
+            type: 'apikey',
+            disabled: false,
+            key: 'key',
+            value: 'value',
+            addTo: 'addto',
+        };
+        const hawkAuth = {
+            type: 'hawk',
+            disabled: true,
+            algorithm: 'sha256',
+            id: 'id',
+            key: 'key',
+            ext: 'ext',
+            validatePayload: true,
+        };
+        const oauth1Auth = {
+            type: 'oauth1',
+            disabled: true,
+            signatureMethod: 'HMAC-SHA1',
+            consumerKey: 'consumerKey',
+            consumerSecret: 'consumerSecret',
+            tokenKey: 'tokenKey',
+            tokenSecret: 'tokenSecret',
+            privateKey: 'privateKey',
+            version: 'version',
+            nonce: 'nonce',
+            timestamp: 'timestamp',
+            callback: 'callback',
+            realm: 'realm',
+            verifier: 'verifier',
+            includeBodyHash: true,
+        };
+        const digestAuth = {
+            type: 'digest',
+            disabled: true,
+            username: 'username',
+            password: 'password',
+        };
+        const digestNtlm = {
+            type: 'ntlm',
+            disabled: true,
+            username: 'username',
+            password: 'password',
+        };
+        const bearerAuth = {
+            type: 'bearer',
+            disabled: true,
+            token: 'token',
+            prefix: 'prefix',
+        };
+        const awsv4Auth = {
+            type: 'iam',
+            disabled: true,
+            accessKeyId: 'accessKeyId',
+            secretAccessKey: 'secretAccessKey',
+            sessionToken: 'sessionToken',
+            region: 'region',
+            service: 'service',
+        };
+        const asapAuth = {
+            type: 'asap',
+            disabled: true,
+            issuer: 'issuer',
+            subject: 'subject',
+            audience: 'audience',
+            additionalClaims: 'additionalClaims',
+            keyId: 'keyId',
+            privateKey: 'privateKey',
+        };
+        const noneAuth = {
+            type: 'none',
+            disabled: true,
+        };
+        const oauth2Auth = {
+            type: 'oauth2',
+            disabled: true,
+            grantType: 'authorization_code',
+            accessTokenUrl: 'accessTokenUrl',
+            authorizationUrl: 'authorizationUrl',
+            clientId: 'clientId',
+            clientSecret: 'clientSecret',
+            audience: 'audience',
+            scope: 'scope',
+            resource: 'resource',
+            username: 'username',
+            password: 'password',
+            redirectUrl: 'redirectUrl',
+            credentialsInBody: true,
+            state: 'state',
+            code: 'code',
+            accessToken: 'accessToken',
+            refreshToken: 'refreshToken',
+            tokenPrefix: 'tokenPrefix',
+            usePkce: true,
+            pkceMethod: 'pkceMethod',
+            responseType: 'id_token',
+            origin: 'origin',
+        };
+
+        [
+            basicAuth,
+            apikeyAuth,
+            hawkAuth,
+            oauth1Auth,
+            digestAuth,
+            digestNtlm,
+            bearerAuth,
+            awsv4Auth,
+            asapAuth,
+            noneAuth,
+            oauth2Auth,
+        ].forEach(authMethod => {
+            expect(fromPreRequestAuth(
+                new RequestAuth(
+                    toPreRequestAuth(authMethod)),
+            )
+            ).toEqual(authMethod);
+        });
     });
 });
