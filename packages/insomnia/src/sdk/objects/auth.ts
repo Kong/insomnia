@@ -180,9 +180,9 @@ export function authOptionsToParams(
             value: entry[1],
         }));
 }
-
+type AuthOptionTypes = 'noauth' | 'basic' | 'bearer' | 'jwt' | 'digest' | 'oauth1' | 'oauth2' | 'hawk' | 'awsv4' | 'ntlm' | 'apikey' | 'edgegrid' | 'asap' | 'netrc';
 export interface AuthOptions {
-    type: string;
+    type: AuthOptionTypes;
     basic?: AuthOption[];
     bearer?: AuthOption[];
     jwt?: AuthOption[];
@@ -226,7 +226,7 @@ function rawOptionsToVariables(options: VariableList<Variable> | Variable[] | Au
 }
 
 export class RequestAuth extends Property {
-    private type: string;
+    private type: AuthOptionTypes;
     private authOptions: Map<string, VariableList<Variable>> = new Map();
 
     constructor(options: AuthOptions, parent?: Property) {
@@ -284,52 +284,14 @@ export class RequestAuth extends Property {
             return obj;
         }
 
-        const authOptionJSON = authOption.map(optValue => optValue.toJSON(), {});
-
-        switch (this.type) {
-            case 'basic':
-                obj.basic = authOptionJSON;
-                break;
-            case 'bearer':
-                obj.bearer = authOptionJSON;
-                break;
-            case 'jwt':
-                obj.jwt = authOptionJSON;
-                break;
-            case 'digest':
-                obj.digest = authOptionJSON;
-                break;
-            case 'oauth1':
-                obj.oauth1 = authOptionJSON;
-                break;
-            case 'oauth2':
-                obj.oauth2 = authOptionJSON;
-                break;
-            case 'hawk':
-                obj.hawk = authOptionJSON;
-                break;
-            case 'awsv4':
-                obj.awsv4 = authOptionJSON;
-                break;
-            case 'ntlm':
-                obj.ntlm = authOptionJSON;
-                break;
-            case 'apikey':
-                obj.apikey = authOptionJSON;
-                break;
-            case 'edgegrid':
-                obj.edgegrid = authOptionJSON;
-                break;
-            case 'asap':
-                obj.asap = authOptionJSON;
-                break;
-            default: // noauth, no op
+        if (this.type === 'noauth' || this.type === 'netrc') {
+            return obj;
         }
-
+        obj[this.type] = authOption.map(optValue => optValue.toJSON(), {});
         return obj;
     }
 
-    update(options: VariableList<Variable> | Variable[] | AuthOptions, type?: string) {
+    update(options: VariableList<Variable> | Variable[] | AuthOptions, type?: AuthOptionTypes) {
         const currentType = type ? type : this.type;
         const authOpts = rawOptionsToVariables(options, currentType);
 
@@ -341,7 +303,7 @@ export class RequestAuth extends Property {
         }
     }
 
-    use(type: string, options: VariableList<Variable> | Variable[] | AuthOptions) {
+    use(type: AuthOptionTypes, options: VariableList<Variable> | Variable[] | AuthOptions) {
         if (!RequestAuth.isValidType(type)) {
             throw Error(`invalid type (${type}), it must be noauth | basic | bearer | jwt | digest | oauth1 | oauth2 | hawk | awsv4 | ntlm | apikey | edgegrid | asap.`);
         }
@@ -358,17 +320,8 @@ export class RequestAuth extends Property {
 
 export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
     const authObj = auth.toJSON();
-    const findValueInKvArray = (
-        targetKey: string,
-        kvs?: { key: string; value: string }[]
-    ) => {
-        if (!kvs) {
-            return '';
-        }
-
-        const matchedKv = kvs.find((kv: { key: string; value: string }) => kv.key === targetKey);
-        return matchedKv ? matchedKv.value : '';
-    };
+    const findValueInKvArray = (targetKey: string, kvs?: { key: string; value: string }[]) =>
+        kvs?.find(({ key }) => key === targetKey)?.value || '';
 
     const findValueInOauth2Options = (
         targetKey: string,
@@ -383,7 +336,7 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
                 return kv.value;
             } else if (Array.isArray(kv.value)) {
                 const matched = kv.value.find(subKv => subKv.key === targetKey);
-                if (matched != null) {
+                if (matched) {
                     return matched.value;
                 }
             }
@@ -496,9 +449,6 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
                 }
             })();
 
-            const audience = findValueInOauth2Options('audience', authObj.oauth2);
-            const resource = findValueInOauth2Options('resource', authObj.oauth2);
-
             const responseType = ((): OAuth2ResponseType => {
                 const inputResponseType = findValueInOauth2Options('response_type', authObj.oauth2);
                 if (['code', 'id_token', 'id_token token', 'none', 'token'].includes(inputResponseType)) {
@@ -526,8 +476,8 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
                 state: findValueInOauth2Options('state', authObj.oauth2),
                 refreshToken: findValueInOauth2Options('refreshTokenUrl', authObj.oauth2),
                 credentialsInBody: findValueInOauth2Options('client_authentication', authObj.oauth2) === 'body',
-                audience: audience || '',
-                resource: resource || '',
+                audience: findValueInOauth2Options('audience', authObj.oauth2) || '',
+                resource: findValueInOauth2Options('resource', authObj.oauth2) || '',
 
                 // following properties are not supported yet in the script side, just try to find and set them
                 tokenPrefix: findValueInOauth2Options('tokenPrefix', authObj.oauth2),
