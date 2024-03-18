@@ -46,6 +46,7 @@ test('handle hidden browser window getting closed', async ({ app, page }) => {
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
   await page.getByTestId('settings-button').click();
+  // ensure timeout is respected
   await page.getByLabel('Request timeout (ms)').fill('1');
   await page.getByRole('button', { name: '' }).click();
   await page.getByRole('button', { name: 'Send' }).click();
@@ -55,7 +56,11 @@ test('handle hidden browser window getting closed', async ({ app, page }) => {
   await page.getByRole('tab', { name: 'Preview ' }).click();
   const windows = await app.windows();
   const hiddenWindow = windows[1];
+  // ensure hidden window communication issue is caught
   hiddenWindow.close();
   await page.getByRole('button', { name: 'Send' }).click();
-  await page.getByText('Timeout: Hidden browser window is not responding').click();
+  await page.getByText('Timeout: Hidden browser window is not responding, please try again').click();
+
+  await page.getByRole('button', { name: 'Send' }).click();
+  await page.getByText('200 OK');
 });
