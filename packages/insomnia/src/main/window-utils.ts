@@ -54,6 +54,7 @@ export async function createHiddenBrowserWindow() {
   const mainWindow = browserWindows.get('Insomnia');
   invariant(mainWindow, 'MainWindow is not defined, please restart the app.');
 
+  console.log('[main] Registering the hidden window restarting handler');
   // when the main window runs a script
   // if the hidden window is down, start it
   ipcMain.handle('open-channel-to-hidden-browser-window', async event => {
@@ -61,6 +62,7 @@ export async function createHiddenBrowserWindow() {
       return;
     }
 
+    console.log('[main] hidden window is down, restarting');
     const hiddenBrowserWindow = new BrowserWindow({
       show: false,
       title: 'HiddenBrowserWindow',
@@ -753,6 +755,8 @@ function initLocalStorage() {
   localStorage = new LocalStorage(localStoragePath);
 }
 
-export function getOrCreateWindow() {
-  return browserWindows.get('Insomnia') ?? createWindow();
+export function createWindowsAndReturnMain() {
+  const mainWindow = browserWindows.get('Insomnia') ?? createWindow();
+  createHiddenBrowserWindow();
+  return mainWindow;
 }

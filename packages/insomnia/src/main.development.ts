@@ -151,9 +151,9 @@ const _launchApp = async () => {
   ipcMain.once('halfSecondAfterAppStart', () => {
     console.log('[main] Window ready, handling command line arguments', process.argv);
     const args = process.argv.slice(1).filter(a => a !== '.');
+    console.log('[main] Check args and create windows', args);
     if (args.length) {
-      window = windowUtils.getOrCreateWindow();
-      windowUtils.createHiddenBrowserWindow();
+      window = windowUtils.createWindowsAndReturnMain();
       window.webContents.send('shell:open', args.join());
     }
   });
@@ -168,7 +168,7 @@ const _launchApp = async () => {
       // Called when second instance launched with args (Windows/Linux)
       app.on('second-instance', (_1, args) => {
         console.log('Second instance listener received:', args.join('||'));
-        window = windowUtils.getOrCreateWindow();
+        window = windowUtils.createWindowsAndReturnMain();
         if (window) {
           if (window.isMinimized()) {
             window.restore();
@@ -179,24 +179,24 @@ const _launchApp = async () => {
         console.log('[main] Open Deep Link URL sent from second instance', lastArg);
         window.webContents.send('shell:open', lastArg);
       });
-      window = windowUtils.getOrCreateWindow();
+      window = windowUtils.createWindowsAndReturnMain();
 
       app.on('open-url', (_event, url) => {
         console.log('[main] Open Deep Link URL', url);
-        window = windowUtils.getOrCreateWindow();
+        window = windowUtils.createWindowsAndReturnMain();
         if (window) {
           if (window.isMinimized()) {
             window.restore();
           }
           window.focus();
         } else {
-          window = windowUtils.getOrCreateWindow();
+          window = windowUtils.createWindowsAndReturnMain();
         }
         window.webContents.send('shell:open', url);
       });
     }
   } else {
-    window = windowUtils.getOrCreateWindow();
+    window = windowUtils.createWindowsAndReturnMain();
   }
 
   // Don't send origin header from Insomnia because we're not technically using CORS
