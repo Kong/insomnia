@@ -37,7 +37,6 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
         'stream',
         'timers',
         'events',
-        'fs',
       ].includes(moduleName)
     ) {
       return require(moduleName);
@@ -61,8 +60,12 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
         return require('csv-parse/sync');
       }
       return require(moduleName);
-    } else if (moduleName === 'insomnia-collection' || moduleName === 'postman-collection') {
+    } if (moduleName === 'insomnia-collection' || moduleName === 'postman-collection') {
       return CollectionModule;
+    } else if (moduleName === '__fs') {
+      // this is one additional module which is required by internal impplementation
+      // TODO: ideally it should be disabled
+      return require('fs');
     }
 
     throw Error(`no module is found for "${moduleName}"`);

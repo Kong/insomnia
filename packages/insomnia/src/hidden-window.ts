@@ -78,7 +78,7 @@ const runPreRequestScript = async (
   const updatedSettings = mergeSettings(context.settings, mutatedContextObject.request);
   const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
 
-  await window.bridge.requireInterceptor('fs').promises.writeFile(context.timelinePath, log.join('\n'));
+  await window.bridge.requireInterceptor('__fs').promises.writeFile(context.timelinePath, log.join('\n'));
 
   console.log('mutatedInsomniaObject', mutatedContextObject);
   console.log('context', context);
