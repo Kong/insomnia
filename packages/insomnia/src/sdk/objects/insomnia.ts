@@ -15,12 +15,12 @@ export class InsomniaObject {
     public baseEnvironment: Environment;
     public variables: Variables;
     public request: ScriptRequest;
-    private settings: Settings;
     private clientCertificates: ClientCertificate[];
 
     // TODO: follows will be enabled after Insomnia supports them
     private _globals: Environment;
     private _iterationData: Environment;
+    private _settings: Settings;
 
     constructor(
         rawObj: {
@@ -41,7 +41,7 @@ export class InsomniaObject {
         this._iterationData = rawObj.iterationData;
         this.variables = rawObj.variables;
         this.request = rawObj.request;
-        this.settings = rawObj.settings;
+        this._settings = rawObj.settings;
         this.clientCertificates = rawObj.clientCertificates;
     }
 
@@ -50,7 +50,7 @@ export class InsomniaObject {
         cb: (error?: string, response?: ScriptResponse) => void
     ) {
         // TODO: hook to settings later
-        return sendRequest(request, cb, this.settings);
+        return sendRequest(request, cb, this._settings);
     }
 
     // TODO: remove this after enabled globals
@@ -61,6 +61,11 @@ export class InsomniaObject {
     // TODO: remove this after enabled iterationData
     get iterationData() {
         throw unsupportedError('iterationData', 'environment');
+    }
+
+    // TODO: remove this after enabled iterationData
+    get settings() {
+        return undefined;
     }
 
     toObject = () => {
