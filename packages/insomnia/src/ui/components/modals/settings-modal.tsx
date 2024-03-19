@@ -41,7 +41,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
   }), []);
 
   return (
-    <Modal ref={modalRef} tall {...props}>
+    <Modal className='!z-10' ref={modalRef} tall {...props}>
       <ModalHeader>
         {getProductName()} Preferences
         <span className="faint txt-sm">
