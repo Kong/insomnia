@@ -11,7 +11,6 @@ import { CopyButton as _CopyButton } from './base/copy-button';
 const Wrapper = styled.div({
   display: 'flex',
   justifyContent: 'space-between',
-  alignItems: 'center',
   overflow: 'auto',
   position: 'relative',
   height: '100%',
