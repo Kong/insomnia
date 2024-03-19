@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import * as fs from 'node:fs';
 
 import { invariant } from '../src/utils/invariant';
 import { initInsomniaObject, InsomniaObject } from './sdk/objects/insomnia';
@@ -78,7 +79,7 @@ const runPreRequestScript = async (
   const updatedSettings = mergeSettings(context.settings, mutatedContextObject.request);
   const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
 
-  await window.bridge.requireInterceptor('__fs').promises.writeFile(context.timelinePath, log.join('\n'));
+  await fs.promises.writeFile(context.timelinePath, log.join('\n'));
 
   console.log('mutatedInsomniaObject', mutatedContextObject);
   console.log('context', context);
