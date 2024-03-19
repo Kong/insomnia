@@ -343,7 +343,7 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
         targetKey: string,
         kvs?: { key: string; value: string }[] | OAuth2AuthOption[]
     ) => {
-        if (kvs == null) {
+        if (!kvs) {
             return '';
         }
 
