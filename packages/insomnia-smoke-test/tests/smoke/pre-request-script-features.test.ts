@@ -203,7 +203,6 @@ test.describe('pre-request features tests', async () => {
                 const stream = require('stream');
                 const timers = require('timers');
                 const events = require('events');
-                const fs = require('__fs');
                 // set them
                 insomnia.environment.set('uuid', uuid != null);
                 insomnia.environment.set('path', path != null);
@@ -217,7 +216,6 @@ test.describe('pre-request features tests', async () => {
                 insomnia.environment.set('stream', stream != null);
                 insomnia.environment.set('timers', timers != null);
                 insomnia.environment.set('events', events != null);
-                insomnia.environment.set('fs', fs != null);                
             `,
             body: `{
 "uuid": {{ _.uuid }},
@@ -232,7 +230,6 @@ test.describe('pre-request features tests', async () => {
 "stream": {{ _.stream }},
 "timers": {{ _.timers }},
 "events": {{ _.events }},
-"fs": {{ _.fs }}
             }`,
             expectedBody: {
                 uuid: true,
