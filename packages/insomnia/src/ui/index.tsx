@@ -129,6 +129,10 @@ const router = createMemoryRouter(
           element: <Migrate />,
         },
         {
+          path: 'commands',
+          loader: async (...args) => (await import('./routes/commands')).loader(...args),
+        },
+        {
           path: 'import',
           children: [
             {
