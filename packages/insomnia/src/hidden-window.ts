@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 
 import * as _ from 'lodash';
+import * as fs from 'node:fs';
 
 import { invariant } from '../src/utils/invariant';
 import { initInsomniaObject, InsomniaObject } from './sdk/objects/insomnia';
