@@ -39,6 +39,7 @@ export const CommandPalette = () => {
   const { settings } = useRouteLoaderData('root') as RootLoaderData;
   const { presence } = useInsomniaEventStreamContext();
   const pullFileFetcher = useFetcher();
+  const setActiveEnvironmentFetcher = useFetcher();
   const navigate = useNavigate();
 
   const projectDataLoader = useFetcher<ProjectLoaderData>();
@@ -59,6 +60,7 @@ export const CommandPalette = () => {
       setIsOpen(true);
       const searchParams = new URLSearchParams();
 
+      searchParams.set('organizationId', organizationId);
       searchParams.set('workspaceId', workspaceId);
       searchParams.set('projectId', projectId);
 
@@ -85,22 +87,62 @@ export const CommandPalette = () => {
     }[];
   }[] = [];
 
-  const currentRequests = commandsLoader.data?.current.requests || [];
+  const currentRequests = commandsLoader.data?.current.requests.map(request => ({
+    ...request,
+    action: () => {
+      navigate(request.url);
+    },
+  })) || [];
+
   const currentFiles = projectData?.files.map(file => ({
     ...file,
-    action: file.scope === 'unsynced' ? () => {
-      if (!projectData || !file.remoteId) {
+    action: () => {
+      if (file.scope === 'unsynced') {
+        if (!projectData || !file.remoteId) {
+          return null;
+        }
+        pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: projectData?.activeProject.remoteId }, {
+          method: 'POST',
+          action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
+        });
+
+        return true;
+      } else {
+        navigate(`/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${scopeToActivity(file.scope)}`);
         return null;
       }
-      return pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: projectData?.activeProject.remoteId }, {
-        method: 'POST',
-        action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
-      });
-    } : undefined,
-    url: file.scope !== 'unsynced' ? `/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${scopeToActivity(file.scope)}` : '',
+    },
   })) || [];
-  const otherRequests = commandsLoader.data?.other.requests || [];
-  const otherFiles = commandsLoader.data?.other.files || [];
+
+  const currentEnvironments = commandsLoader.data?.current.environments.map(environment => ({
+    ...environment,
+    id: environment._id,
+    action: () => {
+      setActiveEnvironmentFetcher.submit(
+        {
+          environmentId: environment._id,
+        },
+        {
+          method: 'POST',
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
+        }
+      );
+    },
+  })) || [];
+
+  const otherRequests = commandsLoader.data?.other.requests.map(request => ({
+    ...request,
+    action: () => {
+      navigate(request.url);
+    },
+  })) || [];
+
+  const otherFiles = commandsLoader.data?.other.files.map(file => ({
+    ...file,
+    action: () => {
+      navigate(file.url);
+    },
+  })) || [];
 
   currentRequests.length > 0 && comboboxSections.push({
     id: 'current-requests',
@@ -160,6 +202,27 @@ export const CommandPalette = () => {
             src: user.avatar,
           };
         }),
+    })),
+  });
+
+  currentEnvironments.length > 0 && comboboxSections.push({
+    id: 'environments',
+    name: 'Environments',
+    children: currentEnvironments.map(environment => ({
+      id: environment._id,
+      icon: <span className='w-10 py-1 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font] bg-[--hl-md]'>
+        <Icon
+          icon={environment.isPrivate ? 'laptop-code' : 'globe-americas'}
+          className='text-xs w-5'
+          style={{
+            color: environment.color ?? 'var(--color-font)',
+          }}
+        />
+      </span>,
+      name: environment.name,
+      presence: [],
+      description: `${environment.isPrivate ? 'Private' : 'Shared'} environment`,
+      textValue: environment.name,
     })),
   });
 
@@ -269,8 +332,9 @@ export const CommandPalette = () => {
               onInputChange={filter => {
                 const searchParams = new URLSearchParams();
 
-                searchParams.set('workspaceId', workspaceId);
+                searchParams.set('organizationId', organizationId);
                 searchParams.set('projectId', projectId);
+                searchParams.set('workspaceId', workspaceId);
                 searchParams.set('filter', filter);
 
                 commandsLoader.load(`/commands?${searchParams.toString()}`);
@@ -290,17 +354,16 @@ export const CommandPalette = () => {
                 const item = [
                   ...currentRequests,
                   ...currentFiles,
+                  ...currentEnvironments,
                   ...otherRequests,
                   ...otherFiles,
                 ].find(item => item.id === itemId);
 
-                if (item && item.url) {
-                  navigate(item.url);
-                } else if (item && 'action' in item && item.action) {
-                  return item.action();
-                }
+                const result = item?.action();
 
-                close();
+                if (!result) {
+                  close();
+                }
               }}
             >
               <Label
