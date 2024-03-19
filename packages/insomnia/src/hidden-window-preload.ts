@@ -39,11 +39,16 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
         'events',
         // follows should be npm modules
         // but they are moved to here to avoid introducing additional dependencies
+      ].includes(moduleName)
+    ) {
+      return require(moduleName);
+    } else if (
+      [
         'atob',
         'btoa',
       ].includes(moduleName)
     ) {
-      return require(moduleName);
+      return moduleName === 'atob' ? atob : btoa;
     } else if (
       [
         // npm modules
