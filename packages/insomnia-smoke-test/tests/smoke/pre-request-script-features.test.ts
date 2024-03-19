@@ -229,7 +229,7 @@ test.describe('pre-request features tests', async () => {
 "stringDecoder": {{ _.stringDecoder }},
 "stream": {{ _.stream }},
 "timers": {{ _.timers }},
-"events": {{ _.events }},
+"events": {{ _.events }}
             }`,
             expectedBody: {
                 uuid: true,
