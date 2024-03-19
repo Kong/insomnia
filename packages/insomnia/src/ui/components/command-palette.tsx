@@ -97,7 +97,7 @@ export const CommandPalette = () => {
         action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
       });
     } : undefined,
-    url: file.scope !== 'unsynced' ? `/organizations/${organizationId}/projects/${projectId}/workspaces/${file.id}/${scopeToActivity(file.scope)}` : '',
+    url: file.scope !== 'unsynced' ? `/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${scopeToActivity(file.scope)}` : '',
   })) || [];
   const otherRequests = commandsLoader.data?.other.requests || [];
   const otherFiles = commandsLoader.data?.other.files || [];
