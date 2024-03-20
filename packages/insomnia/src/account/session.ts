@@ -129,11 +129,11 @@ export async function sendPasswordChangeCode() {
 }
 
 export async function getPublicKey() {
-  return (await _getSessionData())?.publicKey;
+  return (await getUserSession())?.publicKey;
 }
 
 export async function getPrivateKey() {
-  const sessionData = await _getSessionData();
+  const sessionData = await getUserSession();
 
   if (!sessionData) {
     throw new Error("Can't get private key: session is blank.");
@@ -169,15 +169,15 @@ export async function getCurrentSessionId() {
 }
 
 export async function getAccountId() {
-  return (await _getSessionData())?.accountId;
+  return (await getUserSession())?.accountId;
 }
 
 export async function getEmail() {
-  return (await _getSessionData())?.email;
+  return (await getUserSession())?.email;
 }
 
 export async function getFullName() {
-  const { firstName, lastName } = await _getSessionData() || {};
+  const { firstName, lastName } = await getUserSession() || {};
   return `${firstName} ${lastName}`.trim();
 }
 
@@ -241,7 +241,7 @@ export async function setSessionData(
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
 async function _getSymmetricKey() {
-  return (await _getSessionData())?.symmetricKey;
+  return (await getUserSession())?.symmetricKey;
 }
 
 async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse> {
@@ -270,7 +270,7 @@ async function _getAuthSalts(email: string) {
   return response;
 }
 
-const _getSessionData = async (): Promise<SessionData | null> => {
+export async function getUserSession(): Promise<SessionData> {
   const userData = await user.getOrCreate();
 
   return userData;

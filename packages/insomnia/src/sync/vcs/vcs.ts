@@ -812,7 +812,7 @@ export class VCS {
     variables: Record<string, any>,
     name: string,
   ): Promise<Record<string, any>> {
-    const { sessionId } = this._assertSession();
+    const { sessionId } = await this._assertSession();
 
     const { data, errors } = await window.main.insomniaFetch<{ data: {}; errors: [{ message: string }] }>({
       method: 'POST',
@@ -940,7 +940,7 @@ export class VCS {
   }
 
   async _queryPushSnapshots(allSnapshots: Snapshot[]) {
-    const { accountId } = this._assertSession();
+    const { accountId } = await this._assertSession();
 
     for (const snapshots of chunkArray(allSnapshots, 20)) {
       // This bit of logic fills in any missing author IDs from times where
@@ -1290,7 +1290,7 @@ export class VCS {
   }
 
   async _getBackendProjectSymmetricKey() {
-    const { privateKey } = this._assertSession();
+    const { privateKey } = await this._assertSession();
 
     const encSymmetricKey = await this._queryBackendProjectKey();
     const symmetricKeyStr = crypt.decryptRSAWithJWK(privateKey, encSymmetricKey);
@@ -1327,16 +1327,18 @@ export class VCS {
     return this._getOrCreateBranch(head.branch);
   }
 
-  _assertSession() {
+  async _assertSession() {
     if (!session.isLoggedIn()) {
       throw new Error('Not logged in');
     }
 
+    const { accountId, id, encPrivateKey, publicKey } = await session.getUserSession();
+
     return {
-      accountId: session.getAccountId(),
-      sessionId: session.getCurrentSessionId(),
-      privateKey: session.getPrivateKey(),
-      publicKey: session.getPublicKey(),
+      accountId,
+      sessionId: id,
+      privateKey: encPrivateKey,
+      publicKey,
     };
   }
 

@@ -62,9 +62,9 @@ try {
 
   if (insomniaSession) {
     const session = JSON.parse(insomniaSession) as SessionData;
-    setSessionData(
+    await setSessionData(
       session.id,
-      session.sessionExpiry,
+      session.sessionExpiry || new Date(),
       session.accountId,
       session.firstName,
       session.lastName,

@@ -35,7 +35,8 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
   const projectType = formData.get('type');
   invariant(projectType === 'local' || projectType === 'remote', 'Project type is required');
 
-  const sessionId = session.getCurrentSessionId();
+  const user = await models.user.getOrCreate();
+  const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to create a project');
 
   if (projectType === 'local') {
@@ -109,7 +110,8 @@ export const updateProjectAction: ActionFunction = async ({
 
   invariant(project, 'Project not found');
 
-  const sessionId = session.getCurrentSessionId();
+  const user = await models.user.getOrCreate();
+  const sessionId = user.id;
 
   try {
     // If its a cloud project, and we are renaming, then patch
@@ -207,7 +209,8 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  const sessionId = session.getCurrentSessionId();
+  const user = await models.user.getOrCreate();
+  const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to delete a project');
 
   try {
@@ -832,12 +835,15 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
           throw new Error('Request not found');
         }
 
+        const user = await models.user.getOrCreate();
+        const sessionId = user.id;
+
         const methodInfo = resolveComponentSchemaRefs(spec, getMethodInfo(request));
         const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
           method: 'POST',
           origin: getAIServiceURL(),
           path: '/v1/generate-test',
-          sessionId: session.getCurrentSessionId(),
+          sessionId,
           data: {
             teamId: organizationId,
             request: requests.find(r => r._id === test.requestId),
@@ -913,12 +919,14 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
 
   async function generateTests() {
     async function generateTest(test: Partial<UnitTest>) {
+      const user = await models.user.getOrCreate();
+      const sessionId = user.id;
       try {
         const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
           method: 'POST',
           origin: getAIServiceURL(),
           path: '/v1/generate-test',
-          sessionId: session.getCurrentSessionId(),
+          sessionId,
           data: {
             teamId: organizationId,
             request: requests.find(r => r._id === test.requestId),
@@ -958,11 +966,13 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
   invariant(typeof organizationId === 'string', 'Organization ID is required');
 
   try {
+    const user = await models.user.getOrCreate();
+    const sessionId = user.id;
     const response = await window.main.insomniaFetch<{ enabled: boolean }>({
       method: 'POST',
       origin: getAIServiceURL(),
       path: '/v1/access',
-      sessionId: session.getCurrentSessionId(),
+      sessionId,
       data: {
         teamId: organizationId,
       },
