@@ -54,25 +54,9 @@ try {
   // In order to run playwight tests that simulate a logged in user
   // we need to inject state into localStorage
   const skipOnboarding = getSkipOnboarding();
-  const insomniaSession = getInsomniaSession();
   if (skipOnboarding) {
     window.localStorage.setItem('hasSeenOnboarding', skipOnboarding.toString());
     window.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
-  }
-
-  if (insomniaSession) {
-    const session = JSON.parse(insomniaSession) as SessionData;
-    setSessionData(
-      session.id,
-      session.sessionExpiry || new Date(),
-      session.accountId,
-      session.firstName,
-      session.lastName,
-      session.email,
-      session.symmetricKey,
-      session.publicKey,
-      session.encPrivateKey
-    );
   }
 } catch (e) {
   console.log('Failed to parse session data', e);
@@ -1066,6 +1050,26 @@ router.subscribe(({ location, navigation }) => {
 async function renderApp() {
   await database.initClient();
   await initPlugins();
+
+  const insomniaSession = getInsomniaSession();
+  if (insomniaSession) {
+    try {
+      const session = JSON.parse(insomniaSession) as SessionData;
+      await setSessionData(
+        session.id,
+        session.sessionExpiry || new Date(),
+        session.accountId,
+        session.firstName,
+        session.lastName,
+        session.email,
+        session.symmetricKey,
+        session.publicKey,
+        session.encPrivateKey
+      );
+    } catch (e) {
+      console.log('Failed to parse session data', e);
+    }
+  }
 
   const settings = await models.settings.getOrCreate();
 
