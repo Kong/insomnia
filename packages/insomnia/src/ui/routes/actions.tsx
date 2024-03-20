@@ -3,7 +3,6 @@ import { generate, runTests, type Test } from 'insomnia-testing';
 import path from 'path';
 import { ActionFunction, redirect } from 'react-router-dom';
 
-import * as session from '../../account/session';
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
 import { ACTIVITY_DEBUG, getAIServiceURL } from '../../common/constants';
 import { database } from '../../common/database';
@@ -311,7 +310,9 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
   await database.flushChanges(flushId);
-  if (session.isLoggedIn() && !workspaceMeta.gitRepositoryId) {
+
+  const { id } = await models.user.getOrCreate();
+  if (id && !workspaceMeta.gitRepositoryId) {
     const vcs = VCSInstance();
     await initializeLocalBackendProjectAndMarkForSync({
       vcs,
@@ -407,8 +408,9 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
   await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
 
   try {
+    const { id } = await models.user.getOrCreate();
     // Mark for sync if logged in and in the expected project
-    if (session.isLoggedIn()) {
+    if (id) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs: vcs.newInstance(),

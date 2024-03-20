@@ -40,8 +40,8 @@ export interface SessionData {
   encPrivateKey: crypt.AESMessage;
 }
 export function onLoginLogout(loginCallback: LoginCallback) {
-  window.main.on('loggedIn', () => {
-    loginCallback(isLoggedIn());
+  window.main.on('loggedIn', async () => {
+    loginCallback(await isLoggedIn());
   });
 }
 
@@ -182,8 +182,8 @@ export async function getFullName() {
 }
 
 /** Check if we (think) we have a session */
-export function isLoggedIn() {
-  return !!getCurrentSessionId();
+export async function isLoggedIn() {
+  return Boolean(await getCurrentSessionId());
 }
 
 /** Log out and delete session data */

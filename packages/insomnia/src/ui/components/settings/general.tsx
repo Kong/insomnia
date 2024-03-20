@@ -1,6 +1,5 @@
 import React, { FC, Fragment } from 'react';
 
-import * as session from '../../../account/session';
 import {
   EditorKeyMap,
   isMac,
@@ -40,8 +39,9 @@ const RestartTooltip: FC<{ message: string }> = ({ message }) => (
 export const General: FC = () => {
   const {
     settings,
+    user,
   } = useRootLoaderData();
-  const isLoggedIn = session.isLoggedIn();
+  const isLoggedIn = Boolean(user.id);
 
   return (
     <div className="pad-bottom">

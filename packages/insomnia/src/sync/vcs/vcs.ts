@@ -1328,11 +1328,11 @@ export class VCS {
   }
 
   async _assertSession() {
-    if (!session.isLoggedIn()) {
+    const { accountId, id, encPrivateKey, publicKey } = await session.getUserSession();
+
+    if (!id) {
       throw new Error('Not logged in');
     }
-
-    const { accountId, id, encPrivateKey, publicKey } = await session.getUserSession();
 
     return {
       accountId,

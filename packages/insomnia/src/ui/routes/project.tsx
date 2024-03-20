@@ -39,7 +39,7 @@ import {
 } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
 
-import { isLoggedIn, logout } from '../../account/session';
+import { logout } from '../../account/session';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   DASHBOARD_SORT_ORDERS,
@@ -222,9 +222,10 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   let teamProjects: TeamProject[] = [];
 
   try {
+    const user = await models.user.getOrCreate();
     teamProjects = await getAllTeamProjects(organizationId);
     // ensure we don't sync projects in the wrong place
-    if (teamProjects.length > 0 && isLoggedIn() && !isScratchpadOrganizationId(organizationId)) {
+    if (teamProjects.length > 0 && user.id && !isScratchpadOrganizationId(organizationId)) {
       await syncTeamProjects({
         organizationId,
         teamProjects,

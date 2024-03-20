@@ -259,7 +259,8 @@ export interface OrganizationLoaderData {
 }
 
 export const loader: LoaderFunction = async () => {
-  if (session.isLoggedIn()) {
+  const { id } = await user.getOrCreate();
+  if (id) {
     return organizationsData;
   } else {
     return {
