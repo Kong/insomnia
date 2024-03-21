@@ -780,6 +780,8 @@ function initLocalStorage() {
 
 export function createWindowsAndReturnMain() {
   const mainWindow = browserWindows.get('Insomnia') ?? createWindow();
-  createHiddenBrowserWindow();
+  if (!browserWindows.get('HiddenBrowserWindow')) {
+    createHiddenBrowserWindow();
+  }
   return mainWindow;
 }
