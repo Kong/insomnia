@@ -4,12 +4,11 @@ import { Link, Route, Routes, useLocation } from 'react-router-dom';
 
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
-import insomnia_ai from '../images/onboarding/insomnia_ai.png';
-import introducing_organizations from '../images/onboarding/introducing_organizations.png';
-import real_time_collaboration from '../images/onboarding/real_time_collaboration.png';
-import sharing_projects from '../images/onboarding/sharing_projects.png';
-import social_and_enterprise_sso from '../images/onboarding/social_and_enterprise_sso.png';
-import sse_api_support from '../images/onboarding/sse_api_support.png';
+import auto_pull from '../images/onboarding/auto_pull.png';
+import diff_view from '../images/onboarding/diff_view.png';
+import mocks from '../images/onboarding/mocks.png';
+import prerequest_scripts from '../images/onboarding/prerequest_scripts.png';
+import storage_options from '../images/onboarding/storage_options.png';
 
 const features = [
   {
@@ -18,7 +17,7 @@ const features = [
     title: 'Pre-request scripting',
     description:
       'Insomnia finally ships with pre-request scripting, including Postman compatibility so you can use both "insomnia.*" and "pm.*" to write your scripts.',
-    image: sharing_projects,
+    image: prerequest_scripts,
   },
   {
     id: 'api_mocking',
@@ -26,7 +25,7 @@ const features = [
     title: 'Native API mocking',
     description:
       'In addition to collections, design documents and tests you can now also create API mocks to accelerate development and simulate APIs.',
-    image: real_time_collaboration,
+    image: mocks,
   },
   {
     id: 'storage_control',
@@ -34,14 +33,14 @@ const features = [
     title: 'Storage control',
     description:
       'With this enterprise capabillity you can mandate that data in an organization is stored only locally, on Git or in the cloud for every collaborator.',
-    image: introducing_organizations,
+    image: storage_options,
   },
   {
     id: 'diff_editor',
     icon: 'file-invoice',
     title: 'New diff editor',
     description: 'When synchronizing your data on Git or in the Cloud, it\'s now very easy to understand all the updates before pushing them.',
-    image: social_and_enterprise_sso,
+    image: diff_view,
   },
   {
     id: 'global_search',
@@ -49,7 +48,7 @@ const features = [
     title: 'Global search in command palette',
     description:
       'You can now search for documents an collections across one or more organizations from one place, simply by using the new global search.',
-    image: sse_api_support,
+    image: prerequest_scripts,
   },
   {
     id: 'auto_pull',
@@ -57,7 +56,7 @@ const features = [
     title: 'Auto-pulling of files',
     description:
       'To simplify collaboration in Insomnia, we are introducing auto-pulling of files in the dashboard without having to explicitly pull each file.',
-    image: insomnia_ai,
+    image: auto_pull,
   },
 ] satisfies {
   id: string;
@@ -182,7 +181,7 @@ const Onboarding = () => {
                   <span />
                 )}
                 <Link
-                  className="hover:no-underline bg-[--color-surprise] text-sm hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                  className="hover:no-underline bg-[--color-surprise] text-sm hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                   to="/onboarding/migrate"
                   onClick={() => window.localStorage.setItem('hasSeenOnboarding', 'true')}
                 >
