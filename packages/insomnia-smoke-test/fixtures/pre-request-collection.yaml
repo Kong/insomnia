@@ -226,3 +226,70 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df3d
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: test certificate manipulation
+    description: ""
+    method: POST
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      // print the original one
+      console.log('key:', insomnia.request.certificate.key.src);
+      console.log('cert:', insomnia.request.certificate.cert.src);
+      console.log('passphrass:', insomnia.request.certificate.passphrass);
+      console.log('pfx:', insomnia.request.certificate.pfx.src);
+      // update
+      insomnia.request.certificate.update({
+          disabled: true,
+          key: {src: 'invalid.key'},
+          cert: {src: 'invalid.cert'},
+          passphrase: '',
+          pfx: {src: ''},
+      });    
+    _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df3e
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: test proxies manipulation
+    description: ""
+    method: POST
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      console.log(insomnia.request.proxy.getProxyUrl());
+      insomnia.request.proxy.update({
+              host: 'localhost',
+              match: '<all_urls>',
+              port: 8888,
+              tunnel: false,
+              authenticate: false,
+              username: '',
+              password: '',
+      });
+    _type: request

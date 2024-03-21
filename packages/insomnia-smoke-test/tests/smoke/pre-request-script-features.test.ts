@@ -420,28 +420,7 @@ test.describe('pre-request features tests', async () => {
         await page.locator('[name="noProxy"]').fill('http://a.com,https://b.com');
         await page.locator('.app').press('Escape');
 
-        await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
-
-        // enter script
-        const preRequestScriptTab = page.getByRole('tab', { name: 'Pre-request Script' });
-        await preRequestScriptTab.click();
-        const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
-        await preRequestScriptEditor.fill(`
-            console.log(insomnia.request.proxy.getProxyUrl());
-            insomnia.request.proxy.update({
-                    host: 'localhost',
-                    match: '<all_urls>',
-                    port: 8888,
-                    tunnel: false,
-                    authenticate: false,
-                    username: '',
-                    password: '',
-            });
-        `);
-
-        // TODO: wait for body and pre-request script are persisted to the disk
-        // should improve this part, we should avoid sync this state through db as it introduces race condition
-        await page.waitForTimeout(500);
+        await page.getByLabel('Request Collection').getByTestId('test proxies manipulation').press('Enter');
 
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -469,27 +448,7 @@ test.describe('pre-request features tests', async () => {
         await page.getByRole('button', { name: 'Add certificate' }).click();
         await page.getByRole('button', { name: 'Done' }).click();
 
-        await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
-
-        // enter script
-        const preRequestScriptTab = page.getByRole('tab', { name: 'Pre-request Script' });
-        await preRequestScriptTab.click();
-        const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
-        await preRequestScriptEditor.fill(`
-            // print the original one
-            console.log('key:', insomnia.request.certificate.key.src);
-            console.log('cert:', insomnia.request.certificate.cert.src);
-            console.log('passphrass:', insomnia.request.certificate.passphrass);
-            console.log('pfx:', insomnia.request.certificate.pfx.src);
-            // update
-            insomnia.request.certificate.update({
-                disabled: true,
-                key: {src: 'invalid.key'},
-                cert: {src: 'invalid.cert'},
-                passphrase: '',
-                pfx: {src: ''},
-            });
-        `);
+        await page.getByLabel('Request Collection').getByTestId('test certificate manipulation').press('Enter');
 
         // TODO: wait for body and pre-request script are persisted to the disk
         // should improve this part, we should avoid sync this state through db as it introduces race condition
