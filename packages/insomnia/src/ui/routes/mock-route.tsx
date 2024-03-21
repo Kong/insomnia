@@ -91,7 +91,7 @@ export const useMockRoutePatcher = () => {
 
 export const MockRouteRoute = () => {
   const { mockServer, mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
-  const { user } = useRootLoaderData();
+  const { userSession } = useRootLoaderData();
   const patchMockRoute = useMockRoutePatcher();
   const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
 
@@ -108,7 +108,7 @@ export const MockRouteRoute = () => {
         path: `/bin/upsert/${compoundId}`,
         method: 'PUT',
         organizationId,
-        sessionId: user.id,
+        sessionId: userSession.id,
         data: mockRouteToHar({
           statusCode: mockRoute.statusCode,
           statusText: mockRoute.statusText,

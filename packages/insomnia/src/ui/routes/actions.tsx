@@ -34,7 +34,7 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
   const projectType = formData.get('type');
   invariant(projectType === 'local' || projectType === 'remote', 'Project type is required');
 
-  const user = await models.user.getOrCreate();
+  const user = await models.userSession.getOrCreate();
   const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to create a project');
 
@@ -109,7 +109,7 @@ export const updateProjectAction: ActionFunction = async ({
 
   invariant(project, 'Project not found');
 
-  const user = await models.user.getOrCreate();
+  const user = await models.userSession.getOrCreate();
   const sessionId = user.id;
 
   try {
@@ -208,7 +208,7 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  const user = await models.user.getOrCreate();
+  const user = await models.userSession.getOrCreate();
   const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to delete a project');
 
@@ -311,7 +311,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
 
   await database.flushChanges(flushId);
 
-  const { id } = await models.user.getOrCreate();
+  const { id } = await models.userSession.getOrCreate();
   if (id && !workspaceMeta.gitRepositoryId) {
     const vcs = VCSInstance();
     await initializeLocalBackendProjectAndMarkForSync({
@@ -408,7 +408,7 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
   await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
 
   try {
-    const { id } = await models.user.getOrCreate();
+    const { id } = await models.userSession.getOrCreate();
     // Mark for sync if logged in and in the expected project
     if (id) {
       const vcs = VCSInstance();
@@ -837,7 +837,7 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
           throw new Error('Request not found');
         }
 
-        const user = await models.user.getOrCreate();
+        const user = await models.userSession.getOrCreate();
         const sessionId = user.id;
 
         const methodInfo = resolveComponentSchemaRefs(spec, getMethodInfo(request));
@@ -921,7 +921,7 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
 
   async function generateTests() {
     async function generateTest(test: Partial<UnitTest>) {
-      const user = await models.user.getOrCreate();
+      const user = await models.userSession.getOrCreate();
       const sessionId = user.id;
       try {
         const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
@@ -968,7 +968,7 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
   invariant(typeof organizationId === 'string', 'Organization ID is required');
 
   try {
-    const user = await models.user.getOrCreate();
+    const user = await models.userSession.getOrCreate();
     const sessionId = user.id;
     const response = await window.main.insomniaFetch<{ enabled: boolean }>({
       method: 'POST',

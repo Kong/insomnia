@@ -75,7 +75,7 @@ async function getInitialEntry() {
 
     const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
 
-    const user = await models.user.getOrCreate();
+    const user = await models.userSession.getOrCreate();
     if (user.id) {
       return '/organization';
     }

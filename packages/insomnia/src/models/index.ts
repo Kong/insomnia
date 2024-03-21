@@ -42,7 +42,7 @@ import * as _stats from './stats';
 import * as _unitTest from './unit-test';
 import * as _unitTestResult from './unit-test-result';
 import * as _unitTestSuite from './unit-test-suite';
-import * as _user from './user';
+import * as _userSession from './user-session';
 import * as _webSocketPayload from './websocket-payload';
 import * as _webSocketRequest from './websocket-request';
 import * as _webSocketResponse from './websocket-response';
@@ -95,7 +95,7 @@ export const webSocketResponse = _webSocketResponse;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
 export * as organization from './organization';
-export const user = _user;
+export const userSession = _userSession;
 
 export function all() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
@@ -133,7 +133,7 @@ export function all() {
     webSocketPayload,
     webSocketRequest,
     webSocketResponse,
-    user,
+    userSession,
   ] as const;
 }
 

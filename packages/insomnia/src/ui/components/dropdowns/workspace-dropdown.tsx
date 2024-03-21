@@ -39,7 +39,7 @@ interface WorkspaceActionItem {
 export const WorkspaceDropdown: FC = () => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   invariant(organizationId, 'Expected organizationId');
-  const { user } = useRootLoaderData();
+  const { userSession } = useRootLoaderData();
   const {
     activeWorkspace,
     activeProject,
@@ -187,7 +187,7 @@ export const WorkspaceDropdown: FC = () => {
         icon: <Icon icon='code' />,
         action: () => handleGenerateConfig(generator.label),
       } satisfies WorkspaceActionItem)) : [],
-    ...user.id && access.enabled && activeWorkspace.scope === 'design' ? [{
+    ...userSession.id && access.enabled && activeWorkspace.scope === 'design' ? [{
         id: 'insomnia-ai/generate-test-suite',
         name: 'Auto-generate Tests For Collection',
         action: generateTests,

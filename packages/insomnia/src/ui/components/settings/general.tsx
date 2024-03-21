@@ -39,9 +39,9 @@ const RestartTooltip: FC<{ message: string }> = ({ message }) => (
 export const General: FC = () => {
   const {
     settings,
-    user,
+    userSession,
   } = useRootLoaderData();
-  const isLoggedIn = Boolean(user.id);
+  const isLoggedIn = Boolean(userSession.id);
 
   return (
     <div className="pad-bottom">

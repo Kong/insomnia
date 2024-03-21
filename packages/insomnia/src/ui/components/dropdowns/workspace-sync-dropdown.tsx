@@ -19,10 +19,10 @@ export const WorkspaceSyncDropdown: FC = () => {
     ':workspaceId'
   ) as WorkspaceLoaderData;
 
-  const { user } = useRootLoaderData();
+  const { userSession } = useRootLoaderData();
   const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
 
-  if (!user.id) {
+  if (!userSession.id) {
     return null;
   }
 

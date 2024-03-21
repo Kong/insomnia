@@ -51,7 +51,7 @@ import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
-import { user } from '../../models';
+import { userSession } from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { sortProjects } from '../../models/helpers/project';
 import { MockServer } from '../../models/mock-server';
@@ -90,7 +90,7 @@ interface TeamProject {
 }
 
 async function getAllTeamProjects(organizationId: string) {
-  const { id: sessionId } = await user.getOrCreate();
+  const { id: sessionId } = await userSession.getOrCreate();
   console.log('Fetching projects for team', organizationId);
   if (!sessionId) {
     return [];
@@ -222,7 +222,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   let teamProjects: TeamProject[] = [];
 
   try {
-    const user = await models.user.getOrCreate();
+    const user = await models.userSession.getOrCreate();
     teamProjects = await getAllTeamProjects(organizationId);
     // ensure we don't sync projects in the wrong place
     if (teamProjects.length > 0 && user.id && !isScratchpadOrganizationId(organizationId)) {
@@ -451,7 +451,7 @@ export const loader: LoaderFunction = async ({
 }): Promise<ProjectLoaderData> => {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
-  const { id: sessionId } = await user.getOrCreate();
+  const { id: sessionId } = await userSession.getOrCreate();
 
   if (!sessionId) {
     await logout();
@@ -544,7 +544,7 @@ const ProjectRoute: FC = () => {
     projectId: string;
   };
 
-  const { user } = useRootLoaderData();
+  const { userSession } = useRootLoaderData();
   const pullFileFetcher = useFetcher();
   const loadingBackendProjects = useFetchers().filter(fetcher => fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`).map(f => f.formData?.get('backendProjectId'));
 
@@ -558,7 +558,7 @@ const ProjectRoute: FC = () => {
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
 
   const organization = organizations.find(o => o.id === organizationId);
-  const isUserOwner = organization && user.accountId && isOwnerOfOrganization({ organization, accountId: user.accountId });
+  const isUserOwner = organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && isPersonalOrganization(organization);
 
   const filteredFiles = files
@@ -587,7 +587,7 @@ const ProjectRoute: FC = () => {
   const filesWithPresence = filteredFiles.map(file => {
     const workspacePresence = presence
       .filter(p => p.project === activeProject.remoteId && p.file === file.id)
-      .filter(p => p.acct !== user.accountId)
+      .filter(p => p.acct !== userSession.accountId)
       .map(user => {
         return {
           key: user.acct,
@@ -605,7 +605,7 @@ const ProjectRoute: FC = () => {
   const projectsWithPresence = projects.map(project => {
     const projectPresence = presence
       .filter(p => p.project === project.remoteId)
-      .filter(p => p.acct !== user.accountId)
+      .filter(p => p.acct !== userSession.accountId)
       .map(user => {
         return {
           key: user.acct,
@@ -730,12 +730,12 @@ const ProjectRoute: FC = () => {
   const isGitSyncEnabled = features.gitSync.enabled;
 
   const showUpgradePlanModal = () => {
-    if (!organization || !user.accountId) {
+    if (!organization || !userSession.accountId) {
       return;
     }
     const isOwner = isOwnerOfOrganization({
       organization,
-      accountId: user.accountId,
+      accountId: userSession.accountId,
     });
 
     isOwner ?

@@ -35,14 +35,14 @@ export const CommandPalette = () => {
     };
 
   const projectRouteData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | undefined;
-  const { settings, user } = useRouteLoaderData('root') as RootLoaderData;
+  const { settings, userSession } = useRouteLoaderData('root') as RootLoaderData;
   const { presence } = useInsomniaEventStreamContext();
   const pullFileFetcher = useFetcher();
   const setActiveEnvironmentFetcher = useFetcher();
   const navigate = useNavigate();
 
   const projectDataLoader = useFetcher<ProjectLoaderData>();
-  const accountId = user.accountId;
+  const accountId = userSession.accountId;
 
   useEffect(() => {
     if (!projectRouteData && !projectDataLoader.data && projectDataLoader.state === 'idle' && !isScratchpadOrganizationId(organizationId)) {

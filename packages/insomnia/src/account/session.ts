@@ -1,6 +1,6 @@
 import * as srp from 'srp-js';
 
-import { user } from '../models';
+import { userSession } from '../models';
 import * as crypt from './crypt';
 
 type LoginCallback = (isLoggedIn: boolean) => void;
@@ -150,7 +150,7 @@ export async function getPrivateKey() {
 }
 
 export async function getCurrentSessionId() {
-  const { id, sessionExpiry } = await user.getOrCreate();
+  const { id, sessionExpiry } = await userSession.getOrCreate();
   try {
     if (typeof sessionExpiry !== 'string' || !sessionExpiry) {
       return '';
@@ -231,8 +231,8 @@ export async function setSessionData(
     lastName,
   };
 
-  const userData = await user.getOrCreate();
-  await user.update(userData, sessionData);
+  const userData = await userSession.getOrCreate();
+  await userSession.update(userData, sessionData);
 
   return sessionData;
 }
@@ -271,14 +271,14 @@ async function _getAuthSalts(email: string) {
 }
 
 export async function getUserSession(): Promise<SessionData> {
-  const userData = await user.getOrCreate();
+  const userData = await userSession.getOrCreate();
 
   return userData;
 };
 
 async function _unsetSessionData() {
-  await user.getOrCreate();
-  await user.update(await user.getOrCreate(), {
+  await userSession.getOrCreate();
+  await userSession.update(await userSession.getOrCreate(), {
     id: '',
     sessionExpiry: null,
     accountId: '',

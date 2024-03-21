@@ -27,7 +27,7 @@ export const TAB_INDEX_AI = 'ai';
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
-  const { user } = useRootLoaderData();
+  const { userSession } = useRootLoaderData();
   const modalRef = useRef<ModalHandle>(null);
 
   useImperativeHandle(ref, () => ({
@@ -46,7 +46,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
         {getProductName()} Preferences
         <span className="faint txt-sm">
           &nbsp;&nbsp;–&nbsp; v{getAppVersion()}
-          {(user.id && user.email) ? ` – ${user.email}` : null}
+          {(userSession.id && userSession.email) ? ` – ${userSession.email}` : null}
         </span>
       </ModalHeader>
       <ModalBody noScroll>

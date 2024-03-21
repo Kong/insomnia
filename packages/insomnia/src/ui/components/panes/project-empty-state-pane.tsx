@@ -82,7 +82,7 @@ interface Props {
 export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, createMockServer, importFrom, cloneFromGit }) => {
   const { organizationId } = useParams<{ organizationId: string }>();
   const { organizations } = useOrganizationLoaderData();
-  const { user } = useRootLoaderData();
+  const { userSession } = useRootLoaderData();
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
   const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
 
@@ -95,7 +95,7 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
     }
     const isOwner = isOwnerOfOrganization({
       organization: currentOrg,
-      accountId: user.accountId,
+      accountId: userSession.accountId,
     });
 
     isOwner ?

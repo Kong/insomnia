@@ -32,7 +32,7 @@ const ONE_MINUTE_IN_MS = 1000 * 60;
 export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   const { organizations } = useOrganizationLoaderData();
-  const { user } = useRootLoaderData();
+  const { userSession } = useRootLoaderData();
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
   const [isSyncHistoryModalOpen, setIsSyncHistoryModalOpen] = useState(false);
@@ -150,7 +150,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
     }
     const isOwner = isOwnerOfOrganization({
       organization: currentOrg,
-      accountId: user.accountId,
+      accountId: userSession.accountId,
     });
 
     isOwner ?

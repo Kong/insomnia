@@ -52,7 +52,7 @@ const StyledFooter = styled.footer`
 type SeenNotifications = Record<string, boolean>;
 
 export const Toast: FC = () => {
-  const { user } = useRootLoaderData();
+  const { userSession } = useRootLoaderData();
   const [notification, setNotification] = useState<ToastNotification | null>(null);
   const [visible, setVisible] = useState(false);
   const handleNotification = (notification: ToastNotification | null | undefined) => {
@@ -109,7 +109,7 @@ export const Toast: FC = () => {
         method: 'POST',
         path: '/notification',
         data,
-        sessionId: user.id,
+        sessionId: userSession.id,
       });
       if (notificationOrEmpty && typeof notificationOrEmpty !== 'string') {
         updatedNotification = notificationOrEmpty;

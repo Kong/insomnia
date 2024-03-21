@@ -10,7 +10,7 @@ import { AvatarGroup } from './avatar';
 export const PresentUsers = () => {
   const { presence } = useInsomniaEventStreamContext();
   const { workspaceId } = useParams() as { workspaceId: string };
-  const { user } = useRootLoaderData();
+  const { userSession } = useRootLoaderData();
   const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
   const remoteId = projectData?.activeProject.remoteId || workspaceData?.activeProject.remoteId;
@@ -23,7 +23,7 @@ export const PresentUsers = () => {
     .filter(p => {
       return p.project === remoteId && p.file === workspaceId;
     })
-    .filter(p => p.acct !== user.accountId)
+    .filter(p => p.acct !== userSession.accountId)
     .map(user => {
       return {
         key: user.acct,

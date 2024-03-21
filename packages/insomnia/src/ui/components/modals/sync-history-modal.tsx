@@ -42,14 +42,14 @@ const RestoreButton = ({ snapshot }: { snapshot: Snapshot }) => {
 };
 
 export const SyncHistoryModal = ({ history, onClose }: Props) => {
-  const { user } = useRootLoaderData();
+  const { userSession } = useRootLoaderData();
   const authorName = (snapshot: Snapshot) => {
     let fullName = '';
     if (snapshot.authorAccount) {
       const { firstName, lastName } = snapshot.authorAccount;
       fullName += `${firstName} ${lastName}`;
     }
-    if (snapshot.author === user.accountId) {
+    if (snapshot.author === userSession.accountId) {
       fullName += ' (you)';
     }
 

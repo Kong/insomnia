@@ -28,7 +28,7 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
     workspaceId: string;
   };
 
-  const { user } = useRootLoaderData();
+  const { userSession } = useRootLoaderData();
   const [progress, setProgress] = React.useState({
     total: 0,
     progress: 0,
@@ -41,7 +41,7 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
   const previousOrganizationIdRef = useRef(organizationId);
 
   useEffect(() => {
-    if (!user.id) {
+    if (!userSession.id) {
       return;
     }
 
@@ -55,7 +55,7 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
         action: `/organization/${organizationId}/ai/access`,
       });
     }
-  }, [aiAccessFetcher, organizationId, user.id]);
+  }, [aiAccessFetcher, organizationId, userSession.id]);
 
   const isAIEnabled = Boolean(aiAccessFetcher.data?.enabled);
 

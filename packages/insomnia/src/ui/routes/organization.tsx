@@ -28,7 +28,7 @@ import { useLocalStorage } from 'react-use';
 import * as session from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { database } from '../../common/database';
-import { user } from '../../models';
+import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
 import { Project } from '../../models/project';
@@ -133,7 +133,7 @@ function sortOrganizations(accountId: string, organizations: Organization[]): Or
 }
 
 export const indexLoader: LoaderFunction = async () => {
-  const { id: sessionId, accountId } = await user.getOrCreate();
+  const { id: sessionId, accountId } = await userSession.getOrCreate();
   if (sessionId) {
     try {
       const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
@@ -214,7 +214,7 @@ export const indexLoader: LoaderFunction = async () => {
 };
 
 export const syncOrganizationsAction: ActionFunction = async () => {
-  const { id: sessionId, accountId } = await user.getOrCreate();
+  const { id: sessionId, accountId } = await userSession.getOrCreate();
 
   if (sessionId) {
     try {
@@ -259,7 +259,7 @@ export interface OrganizationLoaderData {
 }
 
 export const loader: LoaderFunction = async () => {
-  const { id } = await user.getOrCreate();
+  const { id } = await userSession.getOrCreate();
   if (id) {
     return organizationsData;
   } else {
@@ -288,7 +288,7 @@ export interface Billing {
 
 export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params as { organizationId: string };
-  const { id: sessionId } = await user.getOrCreate();
+  const { id: sessionId } = await userSession.getOrCreate();
   const fallbackFeatures = {
     gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
@@ -384,7 +384,7 @@ const UpgradeButton = ({
 };
 
 const OrganizationRoute = () => {
-  const { user: userSession, settings } = useRootLoaderData();
+  const { userSession, settings } = useRootLoaderData();
 
   const { organizations, user, currentPlan } =
     useLoaderData() as OrganizationLoaderData;
