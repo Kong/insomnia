@@ -450,9 +450,6 @@ test.describe('pre-request features tests', async () => {
 
         await page.getByLabel('Request Collection').getByTestId('test certificate manipulation').press('Enter');
 
-        // TODO: wait for body and pre-request script are persisted to the disk
-        // should improve this part, we should avoid sync this state through db as it introduces race condition
-        await page.waitForTimeout(500);
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
         // verify
