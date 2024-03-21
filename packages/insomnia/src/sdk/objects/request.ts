@@ -555,6 +555,9 @@ export function mergeRequests(
                 throw Error(`unknown body mode: ${updatedReq.body.mode}`);
         }
     }
+    if (originalReq.body.mimeType) {
+        mimeType = originalReq.body.mimeType;
+    }
 
     const updatedReqProperties: Partial<InsomniaRequest> = {
         url: typeof updatedReq.url === 'string' ? updatedReq.url : updatedReq.url.toString(),
