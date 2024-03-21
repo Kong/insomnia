@@ -45,6 +45,8 @@ export class QueryParam extends Property {
     // (static) _postman_propertyAllowsMultipleValues :Boolean
     // (static) _postman_propertyIndexKey :String
 
+    static _index = 'key';
+
     static parse(queryStr: string) {
         const params = new UrlSearchParams(queryStr);
         return Array.from(params.entries())
@@ -365,9 +367,10 @@ export class UrlMatchPattern extends Property {
     // TODO: the url can not start with -
 
     getProtocols(): string[] {
+        // the pattern could be <all_urls>
         const protocolEndPos = this.pattern.indexOf('://');
         if (protocolEndPos < 0) {
-            throw Error('UrlMatchPattern: protocol is not specified');
+            return [];
         }
 
         const protocolPattern = this.pattern.slice(0, protocolEndPos);

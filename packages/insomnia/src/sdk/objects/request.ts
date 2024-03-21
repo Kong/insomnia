@@ -1,4 +1,7 @@
+import { init as initClientCertificate } from '../../../src/models/client-certificate';
 import { Request as InsomniaRequest } from '../../../src/models/request';
+import { ClientCertificate } from '../../models/client-certificate';
+import { Settings } from '../../models/settings';
 import { AuthOptions, AuthOptionTypes, fromPreRequestAuth, RequestAuth } from './auth';
 import { CertificateOptions } from './certificates';
 import { Certificate } from './certificates';
@@ -36,6 +39,7 @@ export class FormParam extends Property {
     static _postman_propertyAllowsMultipleValues() {
         throw Error('unsupported');
     }
+
     static _postman_propertyIndexKey() {
         throw Error('unsupported');
     }
@@ -433,6 +437,93 @@ export class Request extends Property {
     }
 }
 
+export function mergeSettings(
+    originalSettings: Settings,
+    updatedReq: Request,
+): Settings {
+    const proxyEnabled = updatedReq.proxy != null
+        && !updatedReq.proxy.disabled
+        && updatedReq.proxy.getProxyUrl() !== '';
+    if (!proxyEnabled) {
+        return originalSettings;
+    }
+
+    const proxyUrl = updatedReq.proxy?.getProxyUrl();
+    if (!proxyUrl) {
+        return originalSettings;
+    }
+
+    // it always override both http and https proxies
+    const httpProxy = proxyUrl;
+    const httpsProxy = proxyUrl;
+
+    return {
+        ...originalSettings,
+        proxyEnabled,
+        httpProxy,
+        httpsProxy,
+    };
+}
+
+export function mergeClientCertificates(
+    originalClientCertificates: ClientCertificate[],
+    updatedReq: Request,
+): ClientCertificate[] {
+    // as Pre-request script request only supports one certificate while Insomnia supports configuring multiple ones
+    // then the mapping rule is:
+    // - if the pre-request script request cert is specified, it replaces all original certs
+    // - if not, it returns original certs
+
+    if (!updatedReq.certificate) {
+        return originalClientCertificates;
+    } else if (
+        updatedReq.certificate.key == null &&
+        updatedReq.certificate.cert == null &&
+        updatedReq.certificate.pfx == null
+    ) {
+        return originalClientCertificates;
+    }
+
+    const baseCertificate = originalClientCertificates && originalClientCertificates.length > 0 ?
+        originalClientCertificates[0] :
+        {
+            ...initClientCertificate(),
+            // TODO: remove baseModelPart when it is not necessary for certs
+            _id: '',
+            type: '',
+            parentId: '',
+            modified: 0,
+            created: 0,
+            isPrivate: false,
+            name: '',
+        };
+
+    if (updatedReq.certificate.pfx != null && updatedReq.certificate.pfx?.src !== '') {
+        return [{
+            ...baseCertificate,
+            key: null,
+            cert: null,
+            passphrase: updatedReq.certificate.passphrase || null,
+            pfx: updatedReq.certificate.pfx?.src,
+        }];
+    } else if (
+        updatedReq.certificate.key != null &&
+        updatedReq.certificate.cert != null &&
+        updatedReq.certificate.key?.src !== '' &&
+        updatedReq.certificate.cert?.src !== ''
+    ) {
+        return [{
+            ...baseCertificate,
+            key: updatedReq.certificate.key?.src,
+            cert: updatedReq.certificate.cert?.src,
+            passphrase: updatedReq.certificate.passphrase || null,
+            pfx: null,
+        }];
+    }
+
+    throw Error('Invalid certificate configuration: "cert+key" and "pfx" can not be set at the same time');
+}
+
 export function mergeRequests(
     originalReq: InsomniaRequest,
     updatedReq: Request
@@ -463,6 +554,9 @@ export function mergeRequests(
             default:
                 throw Error(`unknown body mode: ${updatedReq.body.mode}`);
         }
+    }
+    if (originalReq.body.mimeType) {
+        mimeType = originalReq.body.mimeType;
     }
 
     const updatedReqProperties: Partial<InsomniaRequest> = {

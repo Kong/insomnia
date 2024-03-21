@@ -40,6 +40,7 @@ export class InsomniaObject {
         this.collectionVariables = this.baseEnvironment; // collectionVariables is mapped to baseEnvironment
         this._iterationData = rawObj.iterationData;
         this.variables = rawObj.variables;
+
         this.request = rawObj.request;
         this._settings = rawObj.settings;
         this.clientCertificates = rawObj.clientCertificates;
@@ -49,7 +50,6 @@ export class InsomniaObject {
         request: string | ScriptRequest,
         cb: (error?: string, response?: ScriptResponse) => void
     ) {
-        // TODO: hook to settings later
         return sendRequest(request, cb, this._settings);
     }
 
@@ -118,6 +118,52 @@ export function initInsomniaObject(
         };
     }
 
+    const certificate = rawObj.clientCertificates != null && rawObj.clientCertificates.length > 0 ?
+        {
+            disabled: false,
+            name: 'The first certificate from Settings',
+            matches: [rawObj.clientCertificates[0].host],
+            key: { src: rawObj.clientCertificates[0].key || '' },
+            cert: { src: rawObj.clientCertificates[0].cert || '' },
+            passphrase: rawObj.clientCertificates[0].passphrase || undefined,
+            pfx: { src: rawObj.clientCertificates[0].pfx || '' }, // PFX or PKCS12 Certificate
+        } :
+        { disabled: true };
+
+    const bestProxy = rawObj.settings.httpsProxy || rawObj.settings.httpProxy;
+    const enabledProxy = rawObj.settings.proxyEnabled && bestProxy !== '';
+    const bypassProxyList = rawObj.settings.noProxy ?
+        rawObj.settings.noProxy
+            .split(',')
+            .map(urlStr => urlStr.trim()) :
+        [];
+    const proxy = {
+        disabled: !enabledProxy,
+        match: '<all_urls>',
+        bypass: bypassProxyList,
+        host: '',
+        port: 0,
+        tunnel: false,
+        authenticate: false,
+        username: '',
+        password: '',
+    };
+    if (bestProxy !== '') {
+        const portStartPos = bestProxy.indexOf(':');
+        if (portStartPos > 0) {
+            proxy.host = bestProxy.slice(0, portStartPos);
+            const port = bestProxy.slice(portStartPos + 1);
+            try {
+                proxy.port = parseInt(port);
+            } catch (e) {
+                throw Error(`Invalid proxy port: ${bestProxy}`);
+            }
+        } else {
+            proxy.host = bestProxy;
+            proxy.port = 0;
+        }
+    }
+
     const reqOpt: RequestOptions = {
         url: rawObj.request.url,
         method: rawObj.request.method,
@@ -126,8 +172,8 @@ export function initInsomniaObject(
         ),
         body: reqBodyOpt,
         auth: toPreRequestAuth(rawObj.request.authentication),
-        // proxy: ProxyConfigOptions, from settings
-        // certificate: CertificateOptions,
+        proxy,
+        certificate,
     };
     const request = new ScriptRequest(reqOpt);
 

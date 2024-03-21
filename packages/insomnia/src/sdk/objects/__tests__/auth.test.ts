@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { fromPreRequestAuth, RequestAuth, toPreRequestAuth } from '../auth';
+import { AuthOptions, fromPreRequestAuth, RequestAuth, toPreRequestAuth } from '../auth';
 import { Variable, VariableList } from '../variables';
 
 const varListToObject = (obj: VariableList<Variable> | undefined) => {
@@ -28,7 +28,7 @@ describe('test sdk objects', () => {
                 { key: 'username', value: 'user1' },
                 { key: 'password', value: 'pwd1' },
             ],
-        };
+        } as AuthOptions;
 
         const authObj = new RequestAuth(basicAuthOptions);
 
@@ -41,13 +41,13 @@ describe('test sdk objects', () => {
                 { key: 'username', value: 'user2' },
                 { key: 'password', value: 'pwd2' },
             ],
-        };
+        } as AuthOptions;
         const bearerAuthOptions = {
             type: 'bearer',
             bearer: [
                 { key: 'token', value: 'mytoken' },
             ],
-        };
+        } as AuthOptions;
 
         authObj.update(basicAuthOptions2);
         const basicAuthOpt2FromAuth = varListToObject(authObj.parameters());

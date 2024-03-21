@@ -411,9 +411,9 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
 
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
-      clientCertificates,
+      mutatedContext.clientCertificates || clientCertificates,
       caCert,
-      settings,
+      mutatedContext.settings || settings,
       timelinePath,
       responseId
     );

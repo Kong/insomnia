@@ -3,7 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import type { CurlRequestOutput } from '../../main/network/libcurl-promise';
 import type { Settings } from '../../models/settings';
-import { fromPreRequestAuth, RequestAuth } from './auth';
+import { RequestAuth } from './auth';
+import { fromPreRequestAuth } from './auth';
 import type { CookieOptions } from './cookies';
 import { Request, type RequestOptions } from './request';
 import { Response } from './response';
