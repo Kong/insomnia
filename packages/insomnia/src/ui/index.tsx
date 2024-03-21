@@ -9,7 +9,7 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 
-import { SessionData, setSessionData } from '../account/session';
+import { migrateFromLocalStorage, SessionData, setSessionData } from '../account/session';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
@@ -93,6 +93,8 @@ async function getInitialEntry() {
 async function renderApp() {
   await database.initClient();
   await initPlugins();
+
+  await migrateFromLocalStorage();
   const insomniaSession = getInsomniaSession();
   if (insomniaSession) {
     try {

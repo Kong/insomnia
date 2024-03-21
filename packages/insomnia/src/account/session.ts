@@ -298,3 +298,38 @@ function _getSrpParams() {
 function _sanitizePassphrase(passphrase: string) {
   return passphrase.trim().normalize('NFKD');
 }
+
+export async function migrateFromLocalStorage() {
+  const sessionId = window.localStorage.getItem('currentSessionId');
+
+  if (!sessionId) {
+    return;
+  }
+
+  const sessionKey = `session__${(sessionId || '').slice(0, 10)}`;
+  const session = window.localStorage.getItem(sessionKey);
+
+  if (!session) {
+    return;
+  }
+
+  try {
+    const sessionData = JSON.parse(session) as SessionData;
+
+    const currentUserSession = await userSession.getOrCreate();
+
+    if (currentUserSession.id) {
+      console.warn('Session already exists, skipping migration');
+    } else {
+      await userSession.update(currentUserSession, sessionData);
+    }
+  } catch (e) {
+    console.error('Failed to parse session data', e);
+  } finally {
+    // Clean up local storage session data
+    window.localStorage.removeItem(sessionKey);
+    window.localStorage.removeItem('currentSessionId');
+  }
+
+  return;
+}
