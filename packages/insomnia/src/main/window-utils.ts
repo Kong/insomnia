@@ -62,27 +62,33 @@ export async function createHiddenBrowserWindow() {
   // when the main window runs a script
   // if the hidden window is down, start it
   ipcMain.handle('open-channel-to-hidden-browser-window', async event => {
-    if (hiddenWindowIsBusy) {
-      const runningHiddenWindow = browserWindows.get('HiddenBrowserWindow');
-      if (runningHiddenWindow == null) {
-        hiddenWindowIsBusy = false;
-      } else {
-        await new Promise<void>(resolve => {
-          invariant(runningHiddenWindow, 'hiddenBrowserWindow is running');
-          // overwrite the closed handler
-          runningHiddenWindow.on('closed', () => {
-            if (runningHiddenWindow) {
-              console.log('[main] restarting hidden browser window:', runningHiddenWindow.id);
-              browserWindows.delete('HiddenBrowserWindow');
-            }
-            resolve();
-          });
-          stopHiddenBrowserWindow();
-        });
-      }
-    }
-    if (browserWindows.get('HiddenBrowserWindow')) {
+    // sync the hidden window status
+    const runningHiddenWindow = browserWindows.get('HiddenBrowserWindow');
+    const isAvailable = !hiddenWindowIsBusy && runningHiddenWindow;
+    if (isAvailable) {
       return;
+    }
+    const isOccupied = hiddenWindowIsBusy && runningHiddenWindow;
+    if (isOccupied) {
+      // stop and sync the map
+      await new Promise<void>(resolve => {
+        invariant(runningHiddenWindow, 'hiddenBrowserWindow is running');
+        // overwrite the closed handler
+        runningHiddenWindow.on('closed', () => {
+          if (runningHiddenWindow) {
+            console.log('[main] restarting hidden browser window:', runningHiddenWindow.id);
+            browserWindows.delete('HiddenBrowserWindow');
+          }
+          resolve();
+        });
+        stopHiddenBrowserWindow();
+        hiddenWindowIsBusy = false;
+      });
+    }
+
+    const windowWasClosedUnexpectedly = hiddenWindowIsBusy && !runningHiddenWindow;
+    if (windowWasClosedUnexpectedly) {
+      hiddenWindowIsBusy = false;
     }
 
     console.log('[main] hidden window is down, restarting');
