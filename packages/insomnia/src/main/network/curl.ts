@@ -87,6 +87,7 @@ interface OpenCurlRequestOptions {
   workspaceId: string;
   url: string;
   headers: RequestHeader[];
+  authHeader?: { name: string; value: string };
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
   initialPayload?: string;
@@ -142,11 +143,15 @@ const openCurlConnection = async (
       caCert: caCertificate,
       certificates: filteredClientCertificates,
     });
+    // set method
+    curl.setOpt(Curl.option.CUSTOMREQUEST, request.method);
+    // TODO: support all post data content types
+    curl.setOpt(Curl.option.POSTFIELDS, request.body?.text || '');
     debugTimeline.forEach(entry => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(entry) + '\n'));
     CurlConnections.set(options.requestId, curl);
     CurlConnections.get(options.requestId)?.enable(CurlFeature.StreamResponse);
-    // TODO: add authHeader and request body?
-    const headerStrings = parseHeaderStrings({ req: request, finalUrl: options.url });
+    const headerStrings = parseHeaderStrings({ req: request, finalUrl: options.url, authHeader: options.authHeader });
+
     CurlConnections.get(options.requestId)?.setOpt(Curl.option.HTTPHEADER, headerStrings);
     CurlConnections.get(options.requestId)?.on('error', async (error, errorCode) => {
       const errorEvent: CurlErrorEvent = {
@@ -158,11 +163,11 @@ const openCurlConnection = async (
         timestamp: Date.now(),
       };
       console.error('curl - error: ', error, errorCode);
+      CurlConnections.get(options.requestId)?.close();
       deleteRequestMaps(request._id, error.message, errorEvent);
       for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send(readyStateChannel, false);
       }
-      curl.close();
       if (errorCode) {
         const res = await models.response.getById(responseId);
         if (!res) {
@@ -253,8 +258,20 @@ const openCurlConnection = async (
         };
         eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
       }
-      // NOTE: this can only happen if the stream is closed cleanly by the remote server
-      eventLogFileStreams.get(options.requestId)?.end();
+
+      // NOTE: when stream is closed by remote server
+      const closeEvent: CurlCloseEvent = {
+        _id: uuidV4(),
+        requestId: options.requestId,
+        type: 'close',
+        timestamp: Date.now(),
+        statusCode,
+        reason: '',
+        code: 0,
+        wasClean: true,
+      };
+      CurlConnections.get(options.requestId)?.close();
+      deleteRequestMaps(options.requestId, 'Closing connection', closeEvent);
       for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send(readyStateChannel, false);
       }
