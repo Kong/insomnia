@@ -11,11 +11,11 @@ import { isScratchpadOrganizationId } from '../../models/organization';
 import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import { isWebSocketRequest } from '../../models/websocket-request';
-import { scopeToActivity, WorkspaceScope } from '../../models/workspace';
+import { scopeToActivity } from '../../models/workspace';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
-import { InsomniaFile, ProjectLoaderData, scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../routes/project';
+import { LoaderResult } from '../routes/commands';
+import { ProjectLoaderData, scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../routes/project';
 import { RootLoaderData } from '../routes/root';
-import { Collection as WorkspaceCollection, WorkspaceLoaderData } from '../routes/workspace';
 import { AvatarGroup } from './avatar';
 import { Icon } from './icon';
 import { useDocBodyKeyboardShortcuts } from './keydown-binder';
@@ -33,60 +33,38 @@ export const CommandPalette = () => {
     projectId: string;
     workspaceId: string;
     requestId: string;
-  };
-  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
-  const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | undefined;
+    };
+
+  const projectRouteData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | undefined;
   const { settings } = useRouteLoaderData('root') as RootLoaderData;
   const { presence } = useInsomniaEventStreamContext();
   const pullFileFetcher = useFetcher();
+  const setActiveEnvironmentFetcher = useFetcher();
   const navigate = useNavigate();
 
   const projectDataLoader = useFetcher<ProjectLoaderData>();
+  const accountId = getAccountId();
 
   useEffect(() => {
-    if (!projectData && !projectDataLoader.data && projectDataLoader.state === 'idle' && !isScratchpadOrganizationId(organizationId)) {
+    if (!projectRouteData && !projectDataLoader.data && projectDataLoader.state === 'idle' && !isScratchpadOrganizationId(organizationId)) {
       projectDataLoader.load(`/organization/${organizationId}/project/${projectId}`);
     }
-  }, [organizationId, projectData, projectDataLoader, projectId]);
+  }, [organizationId, projectRouteData, projectDataLoader, projectId]);
 
-  let collection: WorkspaceCollection = [];
-  let files: (InsomniaFile & {
-    loading: boolean; presence: {
-      key: string;
-      alt: string;
-      src: string;
-    }[];
-  })[] = [];
+  const commandsLoader = useFetcher<LoaderResult>();
 
-  if (workspaceData) {
-    collection = workspaceData.collection;
-  }
-
-  const data = projectData || projectDataLoader.data;
-  if (data) {
-    const accountId = getAccountId();
-    files = data?.files.map(file => {
-      const workspacePresence = presence
-        .filter(p => p.project === data.activeProject.remoteId && p.file === file.id)
-        .filter(p => p.acct !== accountId)
-        .map(user => {
-          return {
-            key: user.acct,
-            alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-            src: user.avatar,
-          };
-        });
-      return {
-        ...file,
-        loading: Boolean(pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.remoteId),
-        presence: workspacePresence,
-      };
-    });
-  }
+  const projectData = projectRouteData || projectDataLoader.data;
 
   useDocBodyKeyboardShortcuts({
     request_quickSwitch: () => {
       setIsOpen(true);
+      const searchParams = new URLSearchParams();
+
+      searchParams.set('organizationId', organizationId);
+      searchParams.set('workspaceId', workspaceId);
+      searchParams.set('projectId', projectId);
+
+      commandsLoader.load(`/commands?${searchParams.toString()}`);
     },
   });
 
@@ -104,17 +82,74 @@ export const CommandPalette = () => {
         alt: string;
         src: string;
       }[];
-      description: string;
+      description: React.ReactNode;
       textValue: string;
     }[];
   }[] = [];
 
-  collection.length > 0 && comboboxSections.push({
-    id: 'requests',
+  const currentRequests = commandsLoader.data?.current.requests.map(request => ({
+    ...request,
+    action: () => {
+      navigate(request.url);
+    },
+  })) || [];
+
+  const currentFiles = projectData?.files.map(file => ({
+    ...file,
+    action: () => {
+      if (file.scope === 'unsynced') {
+        if (!projectData || !file.remoteId) {
+          return null;
+        }
+        pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: projectData?.activeProject.remoteId }, {
+          method: 'POST',
+          action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
+        });
+
+        return true;
+      } else {
+        navigate(`/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${scopeToActivity(file.scope)}`);
+        return null;
+      }
+    },
+  })) || [];
+
+  const currentEnvironments = commandsLoader.data?.current.environments.map(environment => ({
+    ...environment,
+    id: environment._id,
+    action: () => {
+      setActiveEnvironmentFetcher.submit(
+        {
+          environmentId: environment._id,
+        },
+        {
+          method: 'POST',
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
+        }
+      );
+    },
+  })) || [];
+
+  const otherRequests = commandsLoader.data?.other.requests.map(request => ({
+    ...request,
+    action: () => {
+      navigate(request.url);
+    },
+  })) || [];
+
+  const otherFiles = commandsLoader.data?.other.files.map(file => ({
+    ...file,
+    action: () => {
+      navigate(file.url);
+    },
+  })) || [];
+
+  currentRequests.length > 0 && comboboxSections.push({
+    id: 'current-requests',
     name: 'Requests',
-    children: collection.map(item => item.doc).filter(item => !isRequestGroup(item)).map(item => ({
-      id: item._id,
-      icon: isRequest(item) ? (
+    children: currentRequests.map(request => ({
+      id: request.item._id,
+      icon: isRequest(request.item) ? (
         <span
           className={
             `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
@@ -126,37 +161,128 @@ export const CommandPalette = () => {
               'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
               'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
               'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
-            }[item.method] || 'text-[--color-font] bg-[--hl-md]'}`
+            }[request.item.method] || 'text-[--color-font] bg-[--hl-md]'}`
           }
         >
-          {getMethodShortHand(item)}
+          {getMethodShortHand(request.item)}
         </span>
-      ) : isWebSocketRequest(item) ? (
+      ) : isWebSocketRequest(request.item) ? (
         <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
           WS
         </span>
-      ) : isGrpcRequest(item) && (
+        ) : isGrpcRequest(request.item) && (
         <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
           gRPC
         </span>
       ),
-      name: item.name,
+      name: request.name,
       presence: [],
-      description: !isRequestGroup(item) ? item.url : '',
-      textValue: !isRequestGroup(item) ? `${isRequest(item) ? item.method : isWebSocketRequest(item) ? 'WebSocket' : 'gRPC'} ${item.name} ${item.url}` : '',
+      description: request.item.url,
+      textValue: `${isRequest(request.item) ? request.item.method : isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name} ${request.url}`,
     })),
   });
 
-  files.length > 0 && comboboxSections.push({
+  currentFiles.length > 0 && comboboxSections.push({
     id: 'collections-and-documents',
     name: 'Collections and documents',
-    children: files.map(file => ({
+    children: currentFiles.map(file => ({
       id: file.id,
-      icon: <span className={`${scopeToBgColorMap[file.scope]} ${scopeToTextColorMap[file.scope]} rounded aspect-square h-6 flex items-center justify-center`}><Icon icon={file.loading ? 'spinner' : scopeToIconMap[file.scope]} className={`w-4 ${file.loading ? 'animate-spin' : ''}`} /></span>,
+      icon: <span className={`${scopeToBgColorMap[file.scope]} ${scopeToTextColorMap[file.scope]} rounded aspect-square h-6 flex items-center justify-center`}><Icon icon={scopeToIconMap[file.scope]} className="w-4" /></span>,
       name: file.name,
-      description: scopeToLabelMap[file.scope],
+      description: <span className='flex items-center gap-1'><span className='px-2 text-[--hl]'>{scopeToLabelMap[file.scope]}</span></span>,
       textValue: file.name + ' ' + scopeToLabelMap[file.scope],
-      presence: file.presence,
+      loading: Boolean(pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.remoteId),
+      presence: presence
+        .filter(p => p.project === projectData?.activeProject.remoteId && p.file === file.id)
+        .filter(p => p.acct !== accountId)
+        .map(user => {
+          return {
+            key: user.acct,
+            alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+            src: user.avatar,
+          };
+        }),
+    })),
+  });
+
+  currentEnvironments.length > 0 && comboboxSections.push({
+    id: 'environments',
+    name: 'Environments',
+    children: currentEnvironments.map(environment => ({
+      id: environment._id,
+      icon: <span className='w-10 py-1 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font] bg-[--hl-md]'>
+        <Icon
+          icon={environment.isPrivate ? 'laptop-code' : 'globe-americas'}
+          className='text-xs w-5'
+          style={{
+            color: environment.color ?? 'var(--color-font)',
+          }}
+        />
+      </span>,
+      name: environment.name,
+      presence: [],
+      description: `${environment.isPrivate ? 'Private' : 'Shared'} environment`,
+      textValue: environment.name,
+    })),
+  });
+
+  otherRequests.length > 0 && comboboxSections.push({
+    id: 'other-requests',
+    name: 'Other Requests',
+    children: otherRequests.map(request => ({
+      id: request.item._id,
+      icon: isRequest(request.item) ? (
+        <span
+          className={
+            `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
+              ${{
+              'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
+              'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
+              'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+              'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+              'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
+              'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
+              'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
+            }[request.item.method] || 'text-[--color-font] bg-[--hl-md]'}`
+          }
+        >
+          {getMethodShortHand(request.item)}
+        </span>
+      ) : isWebSocketRequest(request.item) ? (
+        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+          WS
+        </span>
+      ) : isGrpcRequest(request.item) && (
+        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+          gRPC
+        </span>
+      ),
+      name: request.name,
+      presence: [],
+      description: <span className='flex items-center gap-1'>{request.organizationName}<span>/</span>{request.projectName}<span>/</span>{request.workspaceName}</span>,
+      textValue: !isRequestGroup(request.item) ? `${isRequest(request.item) ? request.item.method : isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name} ${request.url}` : '',
+    })),
+  });
+
+  otherFiles.length > 0 && comboboxSections.push({
+    id: 'other-collections-and-documents',
+    name: 'Other collections and documents',
+    children: otherFiles.map(file => ({
+      id: file.item._id,
+      icon: <span className={`${scopeToBgColorMap[file.item.scope]} ${scopeToTextColorMap[file.item.scope]} rounded aspect-square h-6 flex items-center justify-center`}><Icon icon={scopeToIconMap[file.item.scope]} className="w-4" /></span>,
+      name: file.name,
+      description: <span className='flex items-center gap-1'><span className='px-2 text-[--hl]'>{scopeToLabelMap[file.item.scope]}</span>{file.organizationName}<span>/</span>{file.projectName}</span>,
+      textValue: file.name + ' ' + scopeToLabelMap[file.item.scope],
+      presence: presence
+        .filter(p => p.project === projectData?.activeProject.remoteId && p.file === file.id)
+        .filter(p => p.acct !== accountId)
+        .map(user => {
+          return {
+            key: user.acct,
+            alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+            src: user.avatar,
+          };
+        }),
     })),
   });
 
@@ -170,7 +296,20 @@ export const CommandPalette = () => {
   }, [pullFileFetcher.state]);
 
   return (
-    <DialogTrigger onOpenChange={setIsOpen} isOpen={isOpen}>
+    <DialogTrigger
+      onOpenChange={isOpen => {
+        setIsOpen(isOpen);
+        if (isOpen) {
+          const searchParams = new URLSearchParams();
+
+          searchParams.set('workspaceId', workspaceId);
+          searchParams.set('projectId', projectId);
+
+          commandsLoader.load(`/commands?${searchParams.toString()}`);
+        }
+      }}
+      isOpen={isOpen}
+    >
       <Button data-testid='quick-search' className="px-4 py-1 h-[30.5px] flex-shrink-0 flex items-center justify-center gap-2 bg-[--hl-xs] aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] ring-inset ring-transparent ring-1 focus:ring-[--hl-md] transition-all text-sm">
         <Icon icon="search" />
         Search..
@@ -179,7 +318,7 @@ export const CommandPalette = () => {
         </Keyboard>}
       </Button>
       <ModalOverlay isDismissable className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex pt-20 justify-center bg-black/30">
-      <Modal className="max-w-2xl h-max w-full rounded-md flex flex-col overflow-hidden border border-solid border-[--hl-sm] max-h-[80vh] bg-[--color-bg] text-[--color-font]">
+        <Modal className="max-w-3xl h-max w-full rounded-md flex flex-col overflow-hidden border border-solid border-[--hl-sm] max-h-[80vh] bg-[--color-bg] text-[--color-font]">
         <Dialog className="outline-none h-max overflow-hidden flex flex-col">
           {({ close }) => (
             <ComboBox
@@ -190,11 +329,21 @@ export const CommandPalette = () => {
               allowsCustomValue={false}
               menuTrigger='focus'
               shouldFocusWrap
-              defaultFilter={(text, filter) => {
+              onInputChange={filter => {
+                const searchParams = new URLSearchParams();
+
+                searchParams.set('organizationId', organizationId);
+                searchParams.set('projectId', projectId);
+                searchParams.set('workspaceId', workspaceId);
+                searchParams.set('filter', filter);
+
+                commandsLoader.load(`/commands?${searchParams.toString()}`);
+              }}
+              defaultFilter={(textValue, filter) => {
                 return Boolean(fuzzyMatch(
-                    filter,
-                    text,
-                    { splitSpace: false, loose: true }
+                  filter,
+                  textValue,
+                  { splitSpace: false, loose: true }
                 )?.indexes);
               }}
               onSelectionChange={itemId => {
@@ -202,25 +351,19 @@ export const CommandPalette = () => {
                   return;
                 }
 
-                const file = files.find(file => file.id === itemId);
+                const item = [
+                  ...currentRequests,
+                  ...currentFiles,
+                  ...currentEnvironments,
+                  ...otherRequests,
+                  ...otherFiles,
+                ].find(item => item.id === itemId);
 
-                if (file) {
-                  if (file.scope === 'unsynced') {
-                    if (data?.activeProject.remoteId && file.remoteId) {
-                      return pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: data?.activeProject.remoteId }, {
-                        method: 'POST',
-                        action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
-                      });
-                    }
-                  } else {
-                    const activity = scopeToActivity(file.scope as WorkspaceScope);
-                    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${activity}`);
-                  }
-                } else {
-                  navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${itemId}`);
+                const result = item?.action();
+
+                if (!result) {
+                  close();
                 }
-
-                close();
               }}
             >
               <Label
@@ -235,7 +378,7 @@ export const CommandPalette = () => {
               </Label>
                 {pullFileFetcher.state === 'idle' && (
                   <ListBox
-                    className="flex-1 overflow-y-auto outline-none flex flex-col data-[empty]:hidden"
+                    className="outline-none relative overflow-y-auto flex-1"
                     items={comboboxSections}
                   >
                     {section => (
@@ -248,17 +391,17 @@ export const CommandPalette = () => {
                                 className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-data-[focused]:bg-[--hl-sm] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
                               >
                                 {item.icon}
-                                <Text className="flex-1 px-1 truncate" slot="label">{item.name}</Text>
-                                <Text className="flex-1 px-1 truncate" slot="description">{item.description}</Text>
-                                <span className='w-[70px]'>
-                                  {item.presence.length > 0 && (
+                                <Text className="flex-shrink-0 px-1 truncate" slot="label">{item.name}</Text>
+                                {item.presence.length > 0 && (
+                                  <span className='w-[70px]'>
                                     <AvatarGroup
                                       size="small"
                                       maxAvatars={3}
                                       items={item.presence}
                                     />
-                                  )}
-                                </span>
+                                  </span>
+                                )}
+                                <Text className="flex-1 px-1 truncate text-sm text-[--hl-md]" slot="description">{item.description}</Text>
                               </div>
                             </ListBoxItem>
                           )}
