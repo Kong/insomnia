@@ -11,10 +11,6 @@ import mocks from '../images/onboarding/mocks.png';
 import prerequest_scripts from '../images/onboarding/prerequest_scripts.png';
 import storage_options from '../images/onboarding/storage_options.png';
 
-// Global search remove background add 3 items (request, env, global request)
-// Storage options rounded and smaller
-// New Project Radio icons and replace E2EE with encrytion throughout the app.
-
 const features = [
   {
     id: 'prerequest_scripts',
