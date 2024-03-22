@@ -55,7 +55,7 @@ try {
   // we need to inject state into localStorage
   const skipOnboarding = getSkipOnboarding();
   if (skipOnboarding) {
-    window.localStorage.setItem('hasSeenOnboarding', skipOnboarding.toString());
+    window.localStorage.setItem('hasSeenOnboardingV9', skipOnboarding.toString());
     window.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
   }
 } catch (e) {
@@ -67,9 +67,9 @@ async function getInitialEntry() {
   // Otherwise if the user is not logged in and has not logged in before, then show the login
   // Otherwise if the user is logged in, then show the organization
   try {
-    const hasSeenOnboarding = Boolean(window.localStorage.getItem('hasSeenOnboarding'));
+    const hasSeenOnboardingV9 = Boolean(window.localStorage.getItem('hasSeenOnboardingV9'));
 
-    if (!hasSeenOnboarding) {
+    if (!hasSeenOnboardingV9) {
       return '/onboarding';
     }
 
