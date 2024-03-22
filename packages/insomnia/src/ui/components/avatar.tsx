@@ -68,7 +68,7 @@ const AvatarImage = ({ src, alt, size }: { src: string; alt: string; size: 'smal
       src={src}
       width={size === 'small' ? 20 : 24}
       height={size === 'small' ? 20 : 24}
-      className={'border-2 border-solid border-[--color-bg] box-border outline-none rounded-full object-cover object-center bg-cover bg-center'}
+      className={'border-2 bounce-in border-solid border-[--color-bg] box-border outline-none rounded-full object-cover object-center bg-cover bg-center'}
     />
   );
 };
