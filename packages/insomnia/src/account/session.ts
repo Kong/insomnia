@@ -146,7 +146,7 @@ export async function getPrivateKey() {
   }
 
   const privateKeyStr = crypt.decryptAES(symmetricKey, encPrivateKey);
-  return JSON.parse(privateKeyStr);
+  return JSON.parse(privateKeyStr) as JsonWebKey;
 }
 
 export async function getCurrentSessionId() {

@@ -1328,16 +1328,17 @@ export class VCS {
   }
 
   async _assertSession() {
-    const { accountId, id, encPrivateKey, publicKey } = await session.getUserSession();
-
+    const { accountId, id, publicKey } = await session.getUserSession();
+    const privateKey = await session.getPrivateKey();
     if (!id) {
       throw new Error('Not logged in');
     }
 
+    console.log({ privateKey });
     return {
       accountId,
       sessionId: id,
-      privateKey: encPrivateKey,
+      privateKey,
       publicKey,
     };
   }
