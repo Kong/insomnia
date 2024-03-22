@@ -150,7 +150,6 @@ test.describe('pre-request features tests', async () => {
 
             const bodyJson = JSON.parse(rows.join(' '));
             if (tc.expectedBody) {
-                // await page.waitForTimeout(600000);
                 expect(JSON.parse(bodyJson.data)).toEqual(tc.expectedBody);
             }
             if (tc.customVerify) {
