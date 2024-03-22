@@ -55,13 +55,6 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
       return moduleName === 'atob' ? atob : btoa;
     } else if (
       [
-        'atob',
-        'btoa',
-      ].includes(moduleName)
-    ) {
-      return moduleName === 'atob' ? atob : btoa;
-    } else if (
-      [
         // npm modules
         'chai',
         'cheerio',
@@ -78,7 +71,7 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
         return require('csv-parse/sync');
       }
       return require(moduleName);
-    } if (moduleName === 'insomnia-collection' || moduleName === 'postman-collection') {
+    } else if (moduleName === 'insomnia-collection' || moduleName === 'postman-collection') {
       return CollectionModule;
     }
 
