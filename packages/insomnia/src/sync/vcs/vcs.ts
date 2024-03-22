@@ -1188,7 +1188,6 @@ export class VCS {
   }> {
     console.log('[sync] Fetching team member keys', {
       teamId,
-      sessionId: session.getCurrentSessionId(),
     });
 
     const { teamMemberKeys } = await this._runGraphQL(

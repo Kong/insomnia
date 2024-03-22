@@ -129,7 +129,7 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                           <Icon icon="globe" />
                           <Heading className="text-lg font-bold">Cloud Mock</Heading>
                           <p className='pt-2'>
-                            The mock server runs on Insomnia cloud. Ideal for collaboration.
+                            The mock server runs on Insomnia cloud. ideal for out of the box collaboration.
                           </p>
                         </Radio>
                         <Radio

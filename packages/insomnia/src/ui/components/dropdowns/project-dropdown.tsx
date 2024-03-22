@@ -200,10 +200,12 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
                           value="remote"
                           className="data-[selected]:border-[--color-surprise] flex-1 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
-                          <Icon icon="globe" />
-                          <Heading className="text-lg font-bold">Secure Cloud</Heading>
+                          <div className='flex items-center gap-2'>
+                            <Icon icon="globe" />
+                            <Heading className="text-lg font-bold">Secure Cloud</Heading>
+                          </div>
                           <p className='pt-2'>
-                            End-to-end encrypted (E2EE) and synced securely to the cloud, ideal for collaboration.
+                            Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
                           </p>
                         </Radio>
                         <Radio
@@ -211,8 +213,10 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
                           value="local"
                           className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
-                          <Icon icon="laptop" />
-                          <Heading className="text-lg font-bold">Local Vault</Heading>
+                          <div className='flex items-center gap-2'>
+                            <Icon icon="laptop" />
+                            <Heading className="text-lg font-bold">Local Vault</Heading>
+                          </div>
                           <p className="pt-2">
                             Stored locally only with no cloud. Ideal when collaboration is not needed.
                           </p>
@@ -246,10 +250,10 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
                     <div className='text-[--color-font] flex flex-col gap-4'>
                       <div className='flex flex-col gap-4'>
                         <p>
-                          We will be synchronizing your local project to Insomnia's Cloud in a secure end-to-end encrypted format (E2EE) which will enable cloud collaboration.
+                          We will be synchronizing your local project to Insomnia's Cloud in a secure encrypted format which will enable cloud collaboration.
                         </p>
                         <ul className='text-left flex flex-col gap-2'>
-                          <li><i className="fa fa-check text-emerald-600" /> Your data in the cloud is end-to-end encrypted (E2EE) and secure.</li>
+                          <li><i className="fa fa-check text-emerald-600" /> Your data in the cloud is encrypted and secure.</li>
                           <li><i className="fa fa-check text-emerald-600" /> You can now collaborate with any amount of users and use cloud features.</li>
                           <li><i className="fa fa-check text-emerald-600" /> Your project will be always available on any client after logging in.</li>
                         </ul>

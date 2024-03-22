@@ -1,7 +1,6 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useFetcher, useParams, useRevalidator, useRouteLoaderData } from 'react-router-dom';
 
-import { getCurrentSessionId } from '../../../account/session';
 import { ProjectLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
@@ -119,7 +118,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   }, [organizationId, remoteId, userSession.id, workspaceId]);
 
   useEffect(() => {
-    const sessionId = getCurrentSessionId();
+    const sessionId = userSession.id;
     if (sessionId && remoteId) {
       try {
         const source = new EventSource(`insomnia-event-source://v1/teams/${sanitizeTeamId(organizationId)}/streams?sessionId=${sessionId}`);
@@ -176,7 +175,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
       }
     }
     return;
-  }, [organizationId, projectId, remoteId, revalidate, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, workspaceId]);
+  }, [organizationId, projectId, remoteId, revalidate, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, userSession.id, workspaceId]);
 
   return (
     <InsomniaEventStreamContext.Provider
