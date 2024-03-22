@@ -1,4 +1,9 @@
-import { initInsomniaObject } from './sdk/objects/insomnia';
+import * as fs from 'node:fs';
+
+import * as _ from 'lodash';
+
+import { invariant } from '../src/utils/invariant';
+import { initInsomniaObject, InsomniaObject } from './sdk/objects/insomnia';
 import { RequestContext } from './sdk/objects/interfaces';
 import { mergeClientCertificates, mergeRequests, mergeSettings } from './sdk/objects/request';
 
@@ -37,11 +42,17 @@ const runPreRequestScript = async (
   const consoleInterceptor = {
     log: (...args: any[]) => log.push(
       JSON.stringify({
-        value: args.map(a => JSON.stringify(a)).join('\n'),
+        value: args.map(a => JSON.stringify(a, null, 2)).join('\n'),
         name: 'Text',
         timestamp: Date.now(),
       }) + '\n',
     ),
+  };
+
+  const evalInterceptor = (script: string) => {
+    invariant(script && typeof script === 'string', 'eval is called with invalid or empty value');
+    const result = eval(script);
+    return result;
   };
 
   const AsyncFunction = (async () => { }).constructor;
@@ -49,6 +60,8 @@ const runPreRequestScript = async (
     'insomnia',
     'require',
     'console',
+    'eval',
+    '_',
     `
       const $ = insomnia, pm = insomnia;
        ${script};
@@ -58,14 +71,19 @@ const runPreRequestScript = async (
   const mutatedInsomniaObject = await executeScript(
     executionContext,
     window.bridge.requireInterceptor,
-    consoleInterceptor
+    consoleInterceptor,
+    evalInterceptor,
+    _,
   );
+  if (mutatedInsomniaObject == null || !(mutatedInsomniaObject instanceof InsomniaObject)) {
+    throw Error('insomnia object is invalid or script returns earlier than expected.');
+  }
   const mutatedContextObject = mutatedInsomniaObject.toObject();
   const updatedRequest = mergeRequests(context.request, mutatedContextObject.request);
   const updatedSettings = mergeSettings(context.settings, mutatedContextObject.request);
   const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
 
-  await window.bridge.requireInterceptor('fs').promises.writeFile(context.timelinePath, log.join('\n'));
+  await fs.promises.writeFile(context.timelinePath, log.join('\n'));
 
   console.log('mutatedInsomniaObject', mutatedContextObject);
   console.log('context', context);

@@ -40,11 +40,6 @@ test('handle hidden browser window getting closed', async ({ app, page }) => {
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-  await page.getByText('Pre-request Scripts').click();
-
-  await page.getByLabel('Request Collection').getByTestId('Long running task').press('Enter');
-  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-
   await page.getByTestId('settings-button').click();
   await page.getByLabel('Request timeout (ms)').fill('1');
   await page.getByRole('button', { name: '' }).click();

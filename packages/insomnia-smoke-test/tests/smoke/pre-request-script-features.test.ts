@@ -84,6 +84,48 @@ test.describe('pre-request features tests', async () => {
                 expect(bodyJson.headers['authorization']).toEqual(`Basic ${expectedEncCred}`);
             },
         },
+        {
+            name: 'eval() works in script',
+            expectedBody: {
+                evalResult: 16,
+            },
+        },
+        {
+            name: 'require the url module',
+            customVerify: (bodyJson: any) => {
+                const reqBodyJsons = JSON.parse(bodyJson.data);
+                expect(reqBodyJsons).toEqual({
+                    hash: '#hashcontent',
+                    host: 'insomnia.com:6666',
+                    hostname: 'insomnia.com',
+                    href: 'https://user:pwd@insomnia.com:6666/p1?q1=a&q2=b#hashcontent',
+                    origin: 'https://insomnia.com:6666',
+                    password: 'pwd',
+                    pathname: '/p1',
+                    port: '6666',
+                    protocol: 'https:',
+                    search: '?q1=a&q2=b',
+                    username: 'user',
+                    seachParam: 'q1=a&q2=b',
+                });
+            },
+        },
+        {
+            name: 'require node.js modules',
+            expectedBody: {
+                path: true,
+                assert: true,
+                buffer: true,
+                util: true,
+                url: true,
+                punycode: true,
+                querystring: true,
+                stringDecoder: true,
+                stream: true,
+                timers: true,
+                events: true,
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
@@ -108,7 +150,6 @@ test.describe('pre-request features tests', async () => {
 
             const bodyJson = JSON.parse(rows.join(' '));
             if (tc.expectedBody) {
-                // await page.waitForTimeout(600000);
                 expect(JSON.parse(bodyJson.data)).toEqual(tc.expectedBody);
             }
             if (tc.customVerify) {
@@ -303,4 +344,92 @@ test.describe('pre-request features tests', async () => {
         await page.getByRole('tab', { name: 'Timeline' }).click();
         await expect(responsePane).toContainText('fixtures/certificates/fake.pfx'); // original proxy
     });
+});
+
+test.describe('unhappy paths', async () => {
+    test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
+
+    test.beforeEach(async ({ app, page }) => {
+        const text = await loadFixture('pre-request-collection.yaml');
+        await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
+
+        await page.getByRole('button', { name: 'Create in project' }).click();
+        await page.getByRole('menuitemradio', { name: 'Import' }).click();
+        await page.locator('[data-test-id="import-from-clipboard"]').click();
+        await page.getByRole('button', { name: 'Scan' }).click();
+        await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+        await page.getByLabel('Pre-request Scripts').click();
+    });
+
+    const testCases = [
+        {
+            name: 'invalid result is returned',
+            preReqScript: `
+          return;
+          `,
+            context: {
+                insomnia: {},
+            },
+            expectedResult: {
+                message: 'insomnia object is invalid or script returns earlier than expected.',
+            },
+        },
+        {
+            name: 'custom error is returned',
+            preReqScript: `
+          throw Error('my custom error');
+          `,
+            context: {
+                insomnia: {},
+            },
+            expectedResult: {
+                message: 'my custom error',
+            },
+        },
+        {
+            name: 'syntax error',
+            preReqScript: `
+          insomnia.INVALID_FIELD.set('', '')
+          `,
+            context: {
+                insomnia: {},
+            },
+            expectedResult: {
+                message: "Cannot read properties of undefined (reading 'set')",
+            },
+        },
+    ];
+
+    for (let i = 0; i < testCases.length; i++) {
+        const tc = testCases[i];
+
+        test(tc.name, async ({ page }) => {
+            const responsePane = page.getByTestId('response-pane');
+
+            await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+
+            // set request body
+            await page.getByRole('tab', { name: 'Body' }).click();
+            await page.getByRole('button', { name: 'Body' }).click();
+            await page.getByRole('menuitem', { name: 'JSON' }).click();
+
+            // enter script
+            const preRequestScriptTab = page.getByRole('tab', { name: 'Pre-request Script' });
+            await preRequestScriptTab.click();
+            const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
+            await preRequestScriptEditor.fill(tc.preReqScript);
+
+            // TODO: wait for body and pre-request script are persisted to the disk
+            // should improve this part, we should avoid sync this state through db as it introduces race condition
+            await page.waitForTimeout(500);
+
+            // send
+            await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+            // verify
+            await page.waitForSelector('[data-testid="response-status-tag"]:visible');
+            await expect(responsePane).toContainText(tc.expectedResult.message);
+        });
+    }
 });

@@ -66,6 +66,7 @@ const lintOptions = {
     pm: true,
     require: true,
     console: true,
+    _: true,
   },
   asi: true,
   // Don't require semicolons
