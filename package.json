@@ -21,7 +21,6 @@
     "packages/insomnia",
     "packages/insomnia-inso",
     "packages/insomnia-smoke-test",
-    "packages/insomnmia-sdk",
     "packages/insomnia-sdk"
   ],
   "scripts": {
