@@ -226,3 +226,380 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df3d
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: test certificate manipulation
+    description: ""
+    method: POST
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      // print the original one
+      console.log('key:', insomnia.request.certificate.key.src);
+      console.log('cert:', insomnia.request.certificate.cert.src);
+      console.log('passphrass:', insomnia.request.certificate.passphrass);
+      console.log('pfx:', insomnia.request.certificate.pfx.src);
+      // update
+      insomnia.request.certificate.update({
+          disabled: true,
+          key: {src: 'invalid.key'},
+          cert: {src: 'invalid.cert'},
+          passphrase: '',
+          pfx: {src: ''},
+      });    
+    _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df3e
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: test proxies manipulation
+    description: ""
+    method: POST
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      console.log(insomnia.request.proxy.getProxyUrl());
+      insomnia.request.proxy.update({
+              host: 'localhost',
+              match: '<all_urls>',
+              port: 8888,
+              tunnel: false,
+              authenticate: false,
+              username: '',
+              password: '',
+      });
+    _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df00
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: environments setting and overriding
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      insomnia.baseEnvironment.set('fromBaseEnv', 'baseEnv');
+      insomnia.baseEnvironment.set('scriptValue', 'fromBase');
+      insomnia.environment.set('scriptValue', 'fromEnv');
+      // "preDefinedValue" is already defined in the base environment modal.
+      // but it is rewritten here
+      insomnia.baseEnvironment.set('preDefinedValue', 'fromScript');
+      // "customValue" is already defined in the folder environment.
+      // folder version will override the following one
+      insomnia.baseEnvironment.set('customValue', 'fromScript');
+    body:
+      mimeType: "application/json"
+      text: |-
+        {
+          "fromBaseEnv": "{{ _.fromBaseEnv }}",
+          "scriptValue": "{{ _.scriptValue }}",
+          "preDefinedValue": "{{ _.preDefinedValue }}",
+          "customValue": "{{ _.customValue }}"
+        }
+    _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df01
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: variables / manipulate variables and set them to environment
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      // set local
+      pm.variables.set('varStr', 'varStr');
+      pm.variables.set('varNum', 777);
+      pm.variables.set('varBool', true);
+      // has
+      pm.environment.set('varStr', pm.variables.get('varStr'));
+      pm.environment.set('varNum', pm.variables.get('varNum'));
+      pm.environment.set('varBool', pm.variables.get('varBool'));
+    body:
+      mimeType: "application/json"
+      text: |-
+        {
+          "varStr": "{{ _.varStr }}",
+          "varNum": {{ _.varNum }},
+          "varBool": {{ _.varBool }}
+        }
+    _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df02
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: require / require classes from insomnia-collection module and init them
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      const { Property, Header, Variable, QueryParam, Url, RequestAuth, ProxyConfig, Cookie, Certificate, RequestBody, Request, Response } = require('insomnia-collection');
+      const prop = new Property('pid', 'pname');
+      const header = new Header({ key: 'headerKey', value: 'headerValue' });
+      const variable = new Variable({ key: 'headerKey', value: 'headerValue' });
+      const qParam = new QueryParam({ key: 'queryKey', value: 'queryValue' });
+      const url = new Url({
+          host: ['insomnia', 'rest'],
+          path: ['path1', 'path2'],
+          protocol: 'https',
+      });
+      const proxyConfig = new ProxyConfig({
+          match: 'http+https://*.example.com:80/*',
+          host: 'proxy.com',
+          port: 8080,
+          tunnel: true,
+          disabled: false,
+          authenticate: true,
+          username: 'proxy_username',
+          password: 'proxy_password',
+      });
+      const reqAuth = new RequestAuth({
+          type: 'basic',
+          basic: [
+              { key: 'username', value: 'user1' },
+              { key: 'password', value: 'pwd1' },
+          ],
+      });
+      const cookie = new Cookie({ key: 'queryKey', value: 'queryValue' });
+      const cert = new Certificate({
+          name: 'Certificate for example.com',
+          matches: ['https://example.com'],
+          key: { src: '/User/path/to/certificate/key' },
+          cert: { src: '/User/path/to/certificate' },
+          passphrase: 'iampassphrase',
+      });
+      const reqBody = new RequestBody({
+          mode: 'urlencoded',
+          urlencoded: [
+              { key: 'urlencodedKey', value: 'urlencodedValue' },
+          ],
+          options: {},
+      });
+      const req = new Request({
+          url: 'https://hostname.com/path',
+          method: 'GET',
+          header: [
+              { key: 'header1', value: 'val1' },
+              { key: 'header2', value: 'val2' },
+          ],
+          body: {
+              mode: 'raw',
+              raw: 'body content',
+          },
+          auth: {
+              type: 'basic',
+              basic: [
+                  { key: 'username', value: 'myname' },
+                  { key: 'password', value: 'mypwd' },
+              ],
+          },
+          proxy: undefined,
+          certificate: undefined,
+      });
+      const resp = new Response({
+          code: 200,
+          reason: 'OK',
+          header: [
+              { key: 'header1', value: 'val1' },
+              { key: 'header2', value: 'val2' },
+              { key: 'Content-Length', value: '100' },
+              { key: 'Content-Disposition', value: 'attachment; filename="filename.txt"' },
+              { key: 'Content-Type', value: 'text/plain; charset=utf-8' },
+          ],
+          cookie: [
+              { key: 'header1', value: 'val1' },
+              { key: 'header2', value: 'val2' },
+          ],
+          body: '{"key": 888}',
+          stream: undefined,
+          responseTime: 100,
+          status: 'OK',
+          originalRequest: req,
+      });
+      // set part of values
+      insomnia.environment.set('propJson', JSON.stringify(prop.toJSON()));
+      insomnia.environment.set('headerJson', JSON.stringify(header.toJSON()));
+    body:
+      mimeType: "application/json"
+      text: |-
+        {
+          "propJson": {{ _.propJson }},
+          "headerJson": {{ _.headerJson }}
+        }
+    _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df03
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: insomnia.request manipulation
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      const { Header } = require('insomnia-collection');
+      insomnia.request.method = 'GET';
+      insomnia.request.url.addQueryParams('k1=v1');
+      insomnia.request.headers.add(new Header({
+          key: 'Content-Type',
+          value: 'text/plain'
+      }));
+      insomnia.request.headers.add(new Header({
+          key: 'X-Hello',
+          value: 'hello'
+      }));
+      insomnia.request.body.update({
+          mode: 'raw',
+          raw: 'rawContent',
+      });
+    body:
+      mimeType: "application/json"
+      text: |-
+        {}
+    _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df05
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: insomnia.request auth manipulation (bearer)
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      insomnia.request.auth.update(
+          {
+              type: 'bearer',
+              bearer: [
+                      {key: 'token', value: 'tokenValue'},
+                      {key: 'prefix', value: 'CustomTokenPrefix'},
+              ],
+          },
+          'bearer'
+      );
+    body:
+      mimeType: "application/json"
+      text: '{}'
+    _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df06
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: insomnia.request auth manipulation (basic)
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      insomnia.request.auth.update(
+          {
+              type: 'basic',
+              basic: [
+                      {key: 'username', value: 'myName'},
+                      {key: 'password', value: 'myPwd'},
+              ],
+          },
+          'basic'
+      );
+    body:
+      mimeType: "application/json"
+      text: '{}'
+    _type: request
