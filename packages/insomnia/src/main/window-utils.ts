@@ -4,6 +4,7 @@ import {
   type BrowserWindow as ElectronBrowserWindow,
   clipboard,
   dialog,
+  ipcMain,
   Menu,
   type MenuItemConstructorOptions,
   MessageChannelMain,
@@ -37,6 +38,7 @@ const MINIMUM_HEIGHT = 400;
 
 const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
 let localStorage: LocalStorage | null = null;
+let hiddenWindowIsBusy = false;
 
 interface Bounds {
   height?: number;
@@ -49,64 +51,109 @@ export function init() {
   initLocalStorage();
 }
 
-export async function createHiddenBrowserWindow(): Promise<ElectronBrowserWindow> {
-  // if open, close it
-  if (browserWindows.get('HiddenBrowserWindow')) {
-    await new Promise<void>(resolve => {
-      const hiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
-      invariant(hiddenBrowserWindow, 'hiddenBrowserWindow is not defined');
+export async function createHiddenBrowserWindow() {
+  const mainWindow = browserWindows.get('Insomnia');
+  invariant(mainWindow, 'MainWindow is not defined, please restart the app.');
 
-      // overwrite the closed handler
-      hiddenBrowserWindow.on('closed', () => {
-        if (hiddenBrowserWindow) {
-          console.log('[main] restarting hidden browser window');
-          browserWindows.delete('HiddenBrowserWindow');
-        }
+  console.log('[main] Registering the hidden window restarting handler');
+  ipcMain.on('set-hidden-window-busy-status', (_, busyStatus) => {
+    hiddenWindowIsBusy = busyStatus;
+  });
+  // when the main window runs a script
+  // if the hidden window is down, start it
+  ipcMain.handle('open-channel-to-hidden-browser-window', async event => {
+    // sync the hidden window status
+    const runningHiddenWindow = browserWindows.get('HiddenBrowserWindow');
+    const isAvailable = !hiddenWindowIsBusy && runningHiddenWindow;
+    if (isAvailable) {
+      return;
+    }
+    const isOccupied = hiddenWindowIsBusy && runningHiddenWindow;
+    if (isOccupied) {
+      // stop and sync the map
+      await new Promise<void>(resolve => {
+        invariant(runningHiddenWindow, 'hiddenBrowserWindow is running');
+        // overwrite the closed handler
+        runningHiddenWindow.on('closed', () => {
+          if (runningHiddenWindow) {
+            console.log('[main] restarting hidden browser window:', runningHiddenWindow.id);
+            browserWindows.delete('HiddenBrowserWindow');
+          }
+          resolve();
+        });
+        stopHiddenBrowserWindow();
+        hiddenWindowIsBusy = false;
+      });
+    }
+
+    const windowWasClosedUnexpectedly = hiddenWindowIsBusy && !runningHiddenWindow;
+    if (windowWasClosedUnexpectedly) {
+      hiddenWindowIsBusy = false;
+    }
+
+    console.log('[main] hidden window is down, restarting');
+    const hiddenBrowserWindow = new BrowserWindow({
+      show: false,
+      title: 'HiddenBrowserWindow',
+      width: DEFAULT_WIDTH,
+      height: DEFAULT_HEIGHT,
+      minHeight: MINIMUM_HEIGHT,
+      minWidth: MINIMUM_WIDTH,
+      webPreferences: {
+        contextIsolation: false,
+        nodeIntegration: true,
+        preload: path.join(__dirname, 'hidden-window-preload.js'),
+        spellcheck: false,
+        devTools: process.env.NODE_ENV === 'development',
+      },
+    });
+
+    hiddenBrowserWindow.on('closed', () => {
+      if (browserWindows.get('HiddenBrowserWindow')) {
+        console.log('[main] closing hidden browser window');
+        browserWindows.delete('HiddenBrowserWindow');
+      }
+    });
+
+    const hiddenBrowserWindowPath = path.resolve(__dirname, 'hidden-window.html');
+    const hiddenBrowserWindowUrl = process.env.HIDDEN_BROWSER_WINDOW_URL || pathToFileURL(hiddenBrowserWindowPath).href;
+    hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
+    console.log(`[main] Loading ${hiddenBrowserWindowUrl}`);
+
+    ipcMain.removeHandler('renderer-listener-ready');
+    const hiddenWinListenerReady = new Promise<void>(resolve => {
+      ipcMain.handleOnce('renderer-listener-ready', () => {
+        console.log('[main] hidden window listener is ready');
         resolve();
       });
-
-      stopHiddenBrowserWindow();
     });
-  }
-  const hiddenBrowserWindow = new BrowserWindow({
-    show: false,
-    title: 'HiddenBrowserWindow',
-    width: DEFAULT_WIDTH,
-    height: DEFAULT_HEIGHT,
-    minHeight: MINIMUM_HEIGHT,
-    minWidth: MINIMUM_WIDTH,
-    webPreferences: {
-      contextIsolation: false,
-      nodeIntegration: true,
-      preload: path.join(__dirname, 'hidden-window-preload.js'),
-      spellcheck: false,
-      devTools: process.env.NODE_ENV === 'development',
-    },
-  });
-  browserWindows.set('HiddenBrowserWindow', hiddenBrowserWindow);
+    await hiddenWinListenerReady;
 
-  const hiddenBrowserWindowPath = path.resolve(__dirname, 'hidden-window.html');
-  const hiddenBrowserWindowUrl = process.env.HIDDEN_BROWSER_WINDOW_URL || pathToFileURL(hiddenBrowserWindowPath).href;
-  hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
-  console.log(`[main] Loading ${hiddenBrowserWindowUrl}`);
+    ipcMain.removeHandler('hidden-window-received-port');
+    const hiddenWinPortReady = new Promise<void>(resolve => {
+      ipcMain.handleOnce('hidden-window-received-port', () => {
+        console.log('[main] hidden window has received port');
+        resolve();
+      });
+    });
 
-  hiddenBrowserWindow.on('closed', () => {
-    if (browserWindows.get('HiddenBrowserWindow')) {
-      console.log('[main] closing hidden browser window');
-      browserWindows.delete('HiddenBrowserWindow');
-    }
-  });
-  const mainWindow = browserWindows.get('Insomnia');
-
-  invariant(mainWindow, 'mainWindow is not defined');
-  mainWindow.webContents.mainFrame.ipc.on('open-channel-to-hidden-browser-window', event => {
     const { port1, port2 } = new MessageChannelMain();
     hiddenBrowserWindow.webContents.postMessage('renderer-listener', null, [port1]);
+    await hiddenWinPortReady;
+
+    ipcMain.removeHandler('main-window-script-port-ready');
+    const mainWinPortReady = new Promise<void>(resolve => {
+      ipcMain.handleOnce('main-window-script-port-ready', () => {
+        console.log('[main] main window has received hidden window port');
+        resolve();
+      });
+    });
+
     event.senderFrame.postMessage('hidden-browser-window-response-listener', null, [port2]);
-    port1.close();
-    port2.close();
+    await mainWinPortReady;
+
+    browserWindows.set('HiddenBrowserWindow', hiddenBrowserWindow);
   });
-  return hiddenBrowserWindow;
 }
 
 export function stopHiddenBrowserWindow() {
@@ -737,6 +784,10 @@ function initLocalStorage() {
   localStorage = new LocalStorage(localStoragePath);
 }
 
-export function getOrCreateWindow() {
-  return browserWindows.get('Insomnia') ?? createWindow();
+export function createWindowsAndReturnMain() {
+  const mainWindow = browserWindows.get('Insomnia') ?? createWindow();
+  if (!browserWindows.get('HiddenBrowserWindow')) {
+    createHiddenBrowserWindow();
+  }
+  return mainWindow;
 }

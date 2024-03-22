@@ -7,6 +7,7 @@ export interface HiddenBrowserWindowBridgeAPI {
 };
 
 window.bridge.onmessage(async (data, callback) => {
+  window.bridge.setBusy(true);
   console.log('[hidden-browser-window] recieved message', data);
   try {
     const timeout = data.context.timeout || 5000;
@@ -20,6 +21,8 @@ window.bridge.onmessage(async (data, callback) => {
   } catch (err) {
     console.error('error', err);
     callback({ error: err.message });
+  } finally {
+    window.bridge.setBusy(false);
   }
 });
 
