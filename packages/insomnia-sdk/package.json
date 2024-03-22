@@ -18,6 +18,16 @@
   "homepage": "https://github.com/Kong/insomnia#readme",
   "main": "src/objects/index.ts",
   "types": "src/objects/index.ts",
-  "devDependencies": {},
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "@types/xml2js": "^0.4.14",
+    "ajv": "^8.12.0",
+    "cheerio": "^1.0.0-rc.12",
+    "crypto-js": "^4.2.0",
+    "csv-parse": "^5.5.5",
+    "lodash": "^4.17.21",
+    "moment": "^2.30.1",
+    "tv4": "^1.3.0",
+    "xml2js": "^0.6.2"
+  }
 }

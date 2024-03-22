@@ -1,8 +1,5 @@
 import { Snippet } from 'codemirror';
-import { Environment, Variables } from 'insomnia-sdk/src/sdk/objects/environments';
-import { InsomniaObject } from 'insomnia-sdk/src/sdk/objects/insomnia';
-import { Request as ScriptRequest } from 'insomnia-sdk/src/sdk/objects/request';
-import { Url } from 'insomnia-sdk/src/sdk/objects/urls';
+import { Environment, InsomniaObject, Request as ScriptRequest, Url, Variables } from 'insomnia-sdk';
 import React, { FC, Fragment, useRef } from 'react';
 
 import { Settings } from '../../../models/settings';

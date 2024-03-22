@@ -1,8 +1,8 @@
 import * as fs from 'node:fs';
 
-import { initInsomniaObject, InsomniaObject } from 'insomnia-sdk/sdk/objects/insomnia';
-import { RequestContext } from 'insomnia-sdk/sdk/objects/interfaces';
-import { mergeClientCertificates, mergeRequests, mergeSettings } from 'insomnia-sdk/sdk/objects/request';
+import { initInsomniaObject, InsomniaObject } from 'insomnia-sdk';
+import { RequestContext } from 'insomnia-sdk';
+import { mergeClientCertificates, mergeRequests, mergeSettings } from 'insomnia-sdk';
 import * as _ from 'lodash';
 
 import { invariant } from '../src/utils/invariant';
