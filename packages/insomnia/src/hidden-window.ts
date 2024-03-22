@@ -1,11 +1,11 @@
 import * as fs from 'node:fs';
 
+import { initInsomniaObject, InsomniaObject } from 'insomnia-sdk/sdk/objects/insomnia';
+import { RequestContext } from 'insomnia-sdk/sdk/objects/interfaces';
+import { mergeClientCertificates, mergeRequests, mergeSettings } from 'insomnia-sdk/sdk/objects/request';
 import * as _ from 'lodash';
 
 import { invariant } from '../src/utils/invariant';
-import { initInsomniaObject, InsomniaObject } from './sdk/objects/insomnia';
-import { RequestContext } from './sdk/objects/interfaces';
-import { mergeClientCertificates, mergeRequests, mergeSettings } from './sdk/objects/request';
 
 export interface HiddenBrowserWindowBridgeAPI {
   runPreRequestScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;

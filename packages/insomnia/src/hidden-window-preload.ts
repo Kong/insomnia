@@ -1,8 +1,8 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import * as CollectionModule from 'insomnia-sdk/src/sdk/objects';
+import type { RequestContext } from 'insomnia-sdk/src/sdk/objects/interfaces';
 
 import type { Compression } from './models/response';
-import * as CollectionModule from './sdk/objects';
-import type { RequestContext } from './sdk/objects/interfaces';
 
 export interface HiddenBrowserWindowToMainBridgeAPI {
   requireInterceptor: (module: string) => any;

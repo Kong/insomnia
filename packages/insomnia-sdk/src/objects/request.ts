@@ -1,7 +1,8 @@
-import { init as initClientCertificate } from '../../../src/models/client-certificate';
-import { Request as InsomniaRequest } from '../../../src/models/request';
-import { ClientCertificate } from '../../models/client-certificate';
-import { Settings } from '../../models/settings';
+import { ClientCertificate } from 'insomnia/src//models/client-certificate';
+import { Settings } from 'insomnia/src//models/settings';
+import { init as initClientCertificate } from 'insomnia/src/models/client-certificate';
+import { Request as InsomniaRequest } from 'insomnia/src/models/request';
+
 import { AuthOptions, AuthOptionTypes, fromPreRequestAuth, RequestAuth } from './auth';
 import { CertificateOptions } from './certificates';
 import { Certificate } from './certificates';

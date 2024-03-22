@@ -1,6 +1,6 @@
+import { Cookie as InsomniaCookie, CookieJar as InsomniaCookieJar } from 'insomnia/src/models/cookie-jar';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
-import { Cookie as InsomniaCookie, CookieJar as InsomniaCookieJar } from '../../../src/models/cookie-jar';
 import { Property, PropertyList } from './properties';
 
 export interface CookieOptions {

@@ -20,7 +20,9 @@
     "packages/insomnia-send-request",
     "packages/insomnia",
     "packages/insomnia-inso",
-    "packages/insomnia-smoke-test"
+    "packages/insomnia-smoke-test",
+    "packages/insomnmia-sdk",
+    "packages/insomnia-sdk"
   ],
   "scripts": {
     "dev": "npm start --workspace=packages/insomnia",
