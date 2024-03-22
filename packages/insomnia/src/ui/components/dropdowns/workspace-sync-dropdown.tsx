@@ -2,9 +2,9 @@ import { FC } from 'react';
 import React from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { isLoggedIn } from '../../../account/session';
 import { isRemoteProject } from '../../../models/project';
 import { FeatureList } from '../../routes/organization';
+import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { GitSyncDropdown } from './git-sync-dropdown';
 import { SyncDropdown } from './sync-dropdown';
@@ -19,9 +19,10 @@ export const WorkspaceSyncDropdown: FC = () => {
     ':workspaceId'
   ) as WorkspaceLoaderData;
 
+  const { userSession } = useRootLoaderData();
   const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
 
-  if (!isLoggedIn()) {
+  if (!userSession.id) {
     return null;
   }
 

@@ -3,6 +3,7 @@ import { useFetcher, useParams, useRevalidator, useRouteLoaderData } from 'react
 
 import { getCurrentSessionId } from '../../../account/session';
 import { ProjectLoaderData } from '../../routes/project';
+import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 
 const InsomniaEventStreamContext = createContext<{
@@ -75,6 +76,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
       workspaceId: string;
   };
 
+  const { userSession } = useRootLoaderData();
   const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
   const remoteId = projectData?.activeProject.remoteId || workspaceData?.activeProject.remoteId;
@@ -88,7 +90,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   // Update presence when the user switches org, projects, workspaces
   useEffect(() => {
     async function updatePresence() {
-      const sessionId = getCurrentSessionId();
+      const sessionId = userSession.id;
       if (sessionId && remoteId) {
         try {
           const response = await window.main.insomniaFetch<{
@@ -114,7 +116,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     }
 
     updatePresence();
-  }, [organizationId, remoteId, workspaceId]);
+  }, [organizationId, remoteId, userSession.id, workspaceId]);
 
   useEffect(() => {
     const sessionId = getCurrentSessionId();
