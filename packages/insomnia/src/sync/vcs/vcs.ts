@@ -1334,7 +1334,6 @@ export class VCS {
       throw new Error('Not logged in');
     }
 
-    console.log({ privateKey });
     return {
       accountId,
       sessionId: id,
