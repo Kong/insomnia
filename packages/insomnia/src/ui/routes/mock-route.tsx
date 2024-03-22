@@ -2,7 +2,6 @@ import * as Har from 'har-format';
 import React from 'react';
 import { LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { getCurrentSessionId } from '../../account/session';
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TYPE_YAML, contentTypesMap, getMockServiceURL, RESPONSE_CODE_REASONS } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { getResponseCookiesFromHeaders } from '../../common/har';
@@ -22,6 +21,7 @@ import { showAlert } from '../components/modals';
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { SvgIcon } from '../components/svg-icon';
+import { useRootLoaderData } from './root';
 
 export interface MockRouteLoaderData {
   mockServer: MockServer;
@@ -91,6 +91,7 @@ export const useMockRoutePatcher = () => {
 
 export const MockRouteRoute = () => {
   const { mockServer, mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
+  const { userSession } = useRootLoaderData();
   const patchMockRoute = useMockRoutePatcher();
   const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
 
@@ -107,7 +108,7 @@ export const MockRouteRoute = () => {
         path: `/bin/upsert/${compoundId}`,
         method: 'PUT',
         organizationId,
-        sessionId: getCurrentSessionId(),
+        sessionId: userSession.id,
         data: mockRouteToHar({
           statusCode: mockRoute.statusCode,
           statusText: mockRoute.statusText,

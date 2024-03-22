@@ -1,7 +1,6 @@
 import React from 'react';
 import { LoaderFunction, Outlet } from 'react-router-dom';
 
-import { isLoggedIn } from '../../account/session';
 import { SortOrder } from '../../common/constants';
 import { database } from '../../common/database';
 import { fuzzyMatchAll } from '../../common/misc';
@@ -232,7 +231,8 @@ export const workspaceLoader: LoaderFunction = async ({
     return collection;
   }
 
-  if (isLoggedIn() && !gitRepository) {
+  const userSession = await models.userSession.getOrCreate();
+  if (userSession.id && !gitRepository) {
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);

@@ -5,8 +5,8 @@ import { SENTRY_OPTIONS } from '../common/sentry';
 
 /** Configures user info in Sentry scope. */
 function sentryConfigureUserInfo() {
-  Sentry.configureScope(scope => {
-    const id = getAccountId();
+  Sentry.configureScope(async scope => {
+    const id = await getAccountId();
     if (id) {
       scope.setUser({ id });
     } else {

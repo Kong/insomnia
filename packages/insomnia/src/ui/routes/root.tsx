@@ -7,6 +7,7 @@ import { LoaderFunction, Outlet, useFetcher, useNavigate, useParams, useRouteLoa
 import { isDevelopment } from '../../common/constants';
 import * as models from '../../models';
 import { Settings } from '../../models/settings';
+import { UserSession } from '../../models/user-session';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
@@ -30,6 +31,7 @@ import Modals from './modals';
 export interface RootLoaderData {
   settings: Settings;
   workspaceCount: number;
+  userSession: UserSession;
 }
 
 export const useRootLoaderData = () => {
@@ -39,9 +41,12 @@ export const useRootLoaderData = () => {
 export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
   const settings = await models.settings.get();
   const workspaceCount = await models.workspace.count();
+  const userSession = await models.userSession.getOrCreate();
+
   return {
     settings,
     workspaceCount,
+    userSession,
   };
 };
 

@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Button, Collection, ComboBox, Dialog, DialogTrigger, Header, Input, Keyboard, Label, ListBox, ListBoxItem, Modal, ModalOverlay, Section, Text } from 'react-aria-components';
 import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { getAccountId } from '../../account/session';
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';
 import { fuzzyMatch } from '../../common/misc';
 import { isGrpcRequest } from '../../models/grpc-request';
@@ -36,14 +35,14 @@ export const CommandPalette = () => {
     };
 
   const projectRouteData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | undefined;
-  const { settings } = useRouteLoaderData('root') as RootLoaderData;
+  const { settings, userSession } = useRouteLoaderData('root') as RootLoaderData;
   const { presence } = useInsomniaEventStreamContext();
   const pullFileFetcher = useFetcher();
   const setActiveEnvironmentFetcher = useFetcher();
   const navigate = useNavigate();
 
   const projectDataLoader = useFetcher<ProjectLoaderData>();
-  const accountId = getAccountId();
+  const accountId = userSession.accountId;
 
   useEffect(() => {
     if (!projectRouteData && !projectDataLoader.data && projectDataLoader.state === 'idle' && !isScratchpadOrganizationId(organizationId)) {

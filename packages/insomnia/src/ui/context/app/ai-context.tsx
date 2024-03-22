@@ -1,7 +1,7 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useRef } from 'react';
 import { useFetcher, useFetchers, useParams } from 'react-router-dom';
 
-import { isLoggedIn } from '../../../account/session';
+import { useRootLoaderData } from '../../routes/root';
 
 const AIContext = createContext({
   generating: false,
@@ -28,6 +28,7 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
     workspaceId: string;
   };
 
+  const { userSession } = useRootLoaderData();
   const [progress, setProgress] = React.useState({
     total: 0,
     progress: 0,
@@ -37,11 +38,10 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
   const aiGenerateTestsFromSpecFetcher = useFetcher();
   const loading = useFetchers().filter(loader => loader.formAction?.includes('/ai/generate/')).some(loader => loader.state !== 'idle');
 
-  const loggedIn = isLoggedIn();
   const previousOrganizationIdRef = useRef(organizationId);
 
   useEffect(() => {
-    if (!loggedIn) {
+    if (!userSession.id) {
       return;
     }
 
@@ -55,7 +55,7 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
         action: `/organization/${organizationId}/ai/access`,
       });
     }
-  }, [aiAccessFetcher, organizationId, loggedIn]);
+  }, [aiAccessFetcher, organizationId, userSession.id]);
 
   const isAIEnabled = Boolean(aiAccessFetcher.data?.enabled);
 

@@ -26,12 +26,9 @@ import {
 import { useLocalStorage } from 'react-use';
 
 import * as session from '../../account/session';
-import {
-  getAccountId,
-  getCurrentSessionId,
-} from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { database } from '../../common/database';
+import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
 import { Project } from '../../models/project';
@@ -136,7 +133,7 @@ function sortOrganizations(accountId: string, organizations: Organization[]): Or
 }
 
 export const indexLoader: LoaderFunction = async () => {
-  const sessionId = getCurrentSessionId();
+  const { id: sessionId, accountId } = await userSession.getOrCreate();
   if (sessionId) {
     try {
       const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
@@ -163,7 +160,6 @@ export const indexLoader: LoaderFunction = async () => {
 
       const { organizations } = organizationsResult;
 
-      const accountId = getAccountId();
       invariant(accountId, 'Account ID is not defined');
       organizationsData.organizations = sortOrganizations(accountId, organizations);
       organizationsData.user = user;
@@ -218,7 +214,8 @@ export const indexLoader: LoaderFunction = async () => {
 };
 
 export const syncOrganizationsAction: ActionFunction = async () => {
-  const sessionId = getCurrentSessionId();
+  const { id: sessionId, accountId } = await userSession.getOrCreate();
+
   if (sessionId) {
     try {
 
@@ -243,7 +240,6 @@ export const syncOrganizationsAction: ActionFunction = async () => {
       invariant(organizationsResult, 'Failed to load organizations');
       invariant(user, 'Failed to load user');
       invariant(currentPlan, 'Failed to load current plan');
-      const accountId = getAccountId();
       invariant(accountId, 'Account ID is not defined');
       organizationsData.organizations = sortOrganizations(accountId, organizationsResult.organizations);
       organizationsData.user = user;
@@ -263,7 +259,8 @@ export interface OrganizationLoaderData {
 }
 
 export const loader: LoaderFunction = async () => {
-  if (session.isLoggedIn()) {
+  const { id } = await userSession.getOrCreate();
+  if (id) {
     return organizationsData;
   } else {
     return {
@@ -291,7 +288,7 @@ export interface Billing {
 
 export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params as { organizationId: string };
-
+  const { id: sessionId } = await userSession.getOrCreate();
   const fallbackFeatures = {
     gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
@@ -319,7 +316,7 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
     const response = await window.main.insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
       method: 'GET',
       path: `/v1/organizations/${organizationId}/features`,
-      sessionId: session.getCurrentSessionId(),
+      sessionId,
     });
 
     return {
@@ -387,7 +384,7 @@ const UpgradeButton = ({
 };
 
 const OrganizationRoute = () => {
-  const { settings } = useRootLoaderData();
+  const { userSession, settings } = useRootLoaderData();
 
   const { organizations, user, currentPlan } =
     useLoaderData() as OrganizationLoaderData;
@@ -626,7 +623,7 @@ const OrganizationRoute = () => {
                     >
                       {isPersonalOrganization(organization) && isOwnerOfOrganization({
                         organization,
-                        accountId: getAccountId() || '',
+                        accountId: userSession.accountId || '',
                       }) ? (
                         <Icon icon="home" />
                       ) : (
