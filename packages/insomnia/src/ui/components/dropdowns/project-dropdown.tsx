@@ -205,7 +205,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
                             <Heading className="text-lg font-bold">Secure Cloud</Heading>
                           </div>
                           <p className='pt-2'>
-                            Encrypted and synced securely to the cloud, ideal for collaboration.
+                            Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
                           </p>
                         </Radio>
                         <Radio

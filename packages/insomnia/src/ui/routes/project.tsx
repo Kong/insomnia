@@ -291,7 +291,6 @@ export interface ProjectLoaderData {
   documentsCount: number;
   collectionsCount: number;
   mockServersCount: number;
-  unsyncedCount: number;
   projectsCount: number;
   activeProject: Project;
   projects: Project[];
@@ -519,9 +518,6 @@ export const loader: LoaderFunction = async ({
     mockServersCount: files.filter(
       file => file.scope === 'mock-server'
     ).length,
-    unsyncedCount: files.filter(
-      file => file.scope === 'unsynced'
-    ).length,
   };
 };
 
@@ -535,7 +531,6 @@ const ProjectRoute: FC = () => {
     mockServersCount,
     documentsCount,
     projectsCount,
-    unsyncedCount,
     learningFeature,
   } = useLoaderData() as ProjectLoaderData;
   const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = useLocalStorage('learning-feature-dismissed', '');
@@ -846,11 +841,6 @@ const ProjectRoute: FC = () => {
           run: createNewMockServer,
         },
       },
-      {
-        id: 'unsynced',
-        label: `Unsynced (${unsyncedCount})`,
-        icon: 'cloud-download',
-      },
   ];
 
   return (
@@ -993,7 +983,7 @@ const ProjectRoute: FC = () => {
                                         <Heading className="text-lg font-bold">Secure Cloud</Heading>
                                       </div>
                                       <p className='pt-2'>
-                                        Encrypted and synced securely to the cloud, ideal for collaboration.
+                                        Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
                                       </p>
                                     </Radio>
                                     <Radio

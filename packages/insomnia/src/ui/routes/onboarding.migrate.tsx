@@ -61,11 +61,11 @@ export const Migrate = () => {
                     <div className="flex gap-2">
                       <Radio
                         value="local"
-                        className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-2 focus:outline-none transition-colors"
+                        className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                       >
                         <div className='flex items-center gap-2'>
                           <Icon icon="laptop" />
-                          <Heading className="text-lg font-bold">Keep storing in Local Vault</Heading>
+                          <Heading className="text-lg font-bold">Store in Local Vault</Heading>
                         </div>
                         <p className="pt-2">
                           Stored locally only, with no cloud. Ideal when collaboration is not needed.
@@ -73,7 +73,7 @@ export const Migrate = () => {
                       </Radio>
                       <Radio
                         value="remote"
-                        className="data-[selected]:border-[--color-surprise] flex-1 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-2 focus:outline-none transition-colors"
+                        className="data-[selected]:border-[--color-surprise] flex-1 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                       >
                         <div className='flex items-center gap-2'>
 
@@ -81,7 +81,7 @@ export const Migrate = () => {
                           <Heading className="text-lg font-bold">Enable Cloud Sync</Heading>
                         </div>
                         <p className='pt-2'>
-                          Encrypted and synced securely to the cloud, ideal for collaboration.
+                          Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
                         </p>
                       </Radio>
                     </div>
