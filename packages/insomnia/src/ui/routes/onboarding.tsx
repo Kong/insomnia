@@ -6,9 +6,14 @@ import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
 import auto_pull from '../images/onboarding/auto_pull.png';
 import diff_view from '../images/onboarding/diff_view.png';
+import global_search from '../images/onboarding/global_search.png';
 import mocks from '../images/onboarding/mocks.png';
 import prerequest_scripts from '../images/onboarding/prerequest_scripts.png';
 import storage_options from '../images/onboarding/storage_options.png';
+
+// Global search remove background add 3 items (request, env, global request)
+// Storage options rounded and smaller
+// New Project Radio icons and replace E2EE with encrytion throughout the app.
 
 const features = [
   {
@@ -16,7 +21,7 @@ const features = [
     icon: 'code',
     title: 'Pre-request scripting',
     description:
-      'Insomnia finally ships with pre-request scripting, including Postman compatibility so you can use both "insomnia.*" and "pm.*" to write your scripts.',
+      'Insomnia finally ships with pre-request scripting for more complex flows, including Postman compatibility so it\'s easier to migrate your collections to Insomnia.',
     image: prerequest_scripts,
   },
   {
@@ -45,10 +50,10 @@ const features = [
   {
     id: 'global_search',
     icon: 'search',
-    title: 'Global search in command palette',
+    title: 'Global search',
     description:
       'You can now search for documents an collections across one or more organizations from one place, simply by using the new global search.',
-    image: prerequest_scripts,
+    image: global_search,
   },
   {
     id: 'auto_pull',
@@ -76,11 +81,11 @@ const FeatureWizardView = () => {
             {features.map(feature => (
               <li key={feature.id}>
                 <Link
-                  className="w-full hover:bg-[--hl-sm] bg-[--hl-xs] transition-colors select-none h-24 border-solid flex flex-col items-center justify-center text-xs border border-[--hl-md] rounded-sm p-4 gap-2 hover:no-underline"
+                  className="w-full hover:bg-[--hl-sm] bg-[--hl-xs] transition-colors select-none h-32 border-solid flex flex-col items-center justify-center border border-[--hl-md] rounded-sm p-4 gap-2 hover:no-underline"
                   to={`/onboarding/${feature.id}`}
                 >
-                  <i className={`fa fa-${feature.icon} text-lg`} />
-                  <span className="text-center">{feature.title}</span>
+                  <i className={`fa fa-${feature.icon} text-xl`} />
+                  <span className="text-center text-sm">{feature.title}</span>
                 </Link>
               </li>
             ))}
@@ -161,8 +166,7 @@ const Onboarding = () => {
               </h1>
               <div>
                 <p>
-                  This new version is the biggest one ever! Notable features
-                  are:
+                  We shipped hundreds of improvements including the following notable features:
                 </p>
               </div>
               <div className="w-full relative flex-1">

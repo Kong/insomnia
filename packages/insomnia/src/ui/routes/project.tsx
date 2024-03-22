@@ -988,18 +988,22 @@ const ProjectRoute: FC = () => {
                                       value="remote"
                                       className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
-                                      <Icon icon="globe" />
-                                      <Heading className="text-lg font-bold">Secure Cloud</Heading>
+                                      <div className='flex items-center gap-2'>
+                                        <Icon icon="globe" />
+                                        <Heading className="text-lg font-bold">Secure Cloud</Heading>
+                                      </div>
                                       <p className='pt-2'>
-                                        End-to-end encrypted (E2EE) and synced securely to the cloud, ideal for collaboration.
+                                        Encrypted and synced securely to the cloud, ideal for collaboration.
                                       </p>
                                     </Radio>
                                     <Radio
                                       value="local"
                                       className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
-                                      <Icon icon="laptop" />
-                                      <Heading className="text-lg font-bold">Local Vault</Heading>
+                                      <div className="flex items-center gap-2">
+                                        <Icon icon="laptop" />
+                                        <Heading className="text-lg font-bold">Local Vault</Heading>
+                                      </div>
                                       <p className="pt-2">
                                         Stored locally only with no cloud. Ideal when collaboration is not needed.
                                       </p>
