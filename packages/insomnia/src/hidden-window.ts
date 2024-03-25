@@ -36,9 +36,8 @@ const runPreRequestScript = async (
 ): Promise<RequestContext> => {
   console.log(script);
 
-  const executionContext = initInsomniaObject(context);
-  const log: string[] = [];
   // TODO: we should at least support info, debug, warn, error
+  const log: string[] = [];
   const consoleInterceptor = {
     log: (...args: any[]) => log.push(
       JSON.stringify({
@@ -48,6 +47,8 @@ const runPreRequestScript = async (
       }) + '\n',
     ),
   };
+
+  const executionContext = initInsomniaObject(context, consoleInterceptor.log);
 
   const evalInterceptor = (script: string) => {
     invariant(script && typeof script === 'string', 'eval is called with invalid or empty value');
