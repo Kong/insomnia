@@ -47,12 +47,13 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
     content.query = query;
   }
 
-  if (operationName) {
-    content.operationName = operationName;
+  // The below items are optional; should be set to empty if undefined
+  if (operationName !== undefined) {
+    content.operationName = operationName.length ? operationName : undefined;
   }
 
-  if (variables) {
-    content.variables = variables;
+  if (variables !== undefined) {
+    content.variables = variables.length ? variables : undefined;
   }
 
   return JSON.stringify(content);
@@ -284,9 +285,11 @@ export const GraphQLEditor: FC<Props> = ({
     try {
       const content = getGraphQLContent(state.body, undefined, operationName, variablesInput);
       onChange(content);
+
       setState(state => ({
         ...state,
-        body: { ...state.body, variablesInput },
+        // If variables are empty, remove them from the body
+        body: { ...state.body, variables: variablesInput.length ? variablesInput : undefined },
         variablesSyntaxError: '',
       }));
     } catch (err) {
