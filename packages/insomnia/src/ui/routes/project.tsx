@@ -373,6 +373,8 @@ async function getAllLocalFiles({
         modifiedLocally > workspaceMeta?.cachedGitLastCommitTime
     );
 
+    const specVersion = spec?.info?.version ? String(spec?.info?.version) : '';
+
     return {
       id: workspace._id,
       name: workspace.name,
@@ -382,7 +384,7 @@ async function getAllLocalFiles({
       lastModifiedTimestamp: (hasUnsavedChanges && modifiedLocally) || workspaceMeta?.cachedGitLastCommitTime || lastModifiedTimestamp,
       branch: lastActiveBranch || '',
       lastCommit: hasUnsavedChanges && workspaceMeta?.cachedGitLastCommitTime && lastCommitAuthor ? `by ${lastCommitAuthor}` : '',
-      version: spec?.info?.version ? `${spec?.info?.version?.startsWith('v') ? '' : 'v'}${spec?.info?.version}` : '',
+      version: specVersion ? `${specVersion?.startsWith('v') ? '' : 'v'}${specVersion}` : '',
       oasFormat: specFormat ? `${specFormat === 'openapi' ? 'OpenAPI' : 'Swagger'} ${specFormatVersion || ''}` : '',
       mockServer,
       apiSpec,
