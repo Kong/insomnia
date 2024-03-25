@@ -47,7 +47,7 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
     content.query = query;
   }
 
-  // The below items are optional; should be set to empty if undefined
+  // The below items are optional; should be set to undefined if present and empty
   if (operationName !== undefined) {
     content.operationName = operationName.length ? operationName : undefined;
   }
