@@ -19,7 +19,7 @@ export class InsomniaObject {
     public variables: Variables;
     public request: ScriptRequest;
     private clientCertificates: ClientCertificate[];
-    private expect = expect;
+    private _expect = expect;
     private _test = test;
 
     // TODO: follows will be enabled after Insomnia supports them
@@ -65,6 +65,10 @@ export class InsomniaObject {
 
     test(msg: string, fn: () => void) {
         this._test(msg, fn, this._log);
+    }
+
+    expect(exp: boolean | number | string | object) {
+        return this._expect(exp);
     }
 
     // TODO: remove this after enabled globals
