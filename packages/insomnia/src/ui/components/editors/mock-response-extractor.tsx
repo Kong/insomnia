@@ -3,11 +3,10 @@ import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  // useFetcher,
+  useFetcher,
   useRouteLoaderData,
 } from 'react-router-dom';
 
-import * as models from '../../../models';
 import { invariant } from '../../../utils/invariant';
 import { useMockRoutePatcher } from '../../routes/mock-route';
 import { RequestLoaderData } from '../../routes/request';
@@ -26,9 +25,9 @@ export const MockResponseExtractor = () => {
   const {
     organizationId,
     projectId,
-    // workspaceId,
+    workspaceId,
   } = useParams();
-  // const fetcher = useFetcher();
+  const fetcher = useFetcher();
   const [selectedMockServer, setSelectedMockServer] = useState('');
   const [selectedMockRoute, setSelectedMockRoute] = useState('');
   return (
@@ -68,38 +67,24 @@ export const MockResponseExtractor = () => {
               defaultValue: path,
               label: 'Name',
               onComplete: async name => {
-                // TODO: prompt for for mock server name and fallback to collection name
-                const workspace = await models.workspace.create({
-                  name: activeWorkspace.name,
-                  scope: 'mock-server',
-                  parentId: projectId,
-                });
-                // create a mock server under the workspace with the same name
-                const newServer = await models.mockServer.getOrCreateForParentId(workspace._id, { name: activeWorkspace.name });
                 invariant(activeResponse, 'Active response must be defined');
                 const body = await fs.readFile(activeResponse.bodyPath);
-                const newRoute = await models.mockRoute.create({
-                  name: name,
-                  parentId: newServer._id,
-                  body: body.toString(),
-                  mimeType: activeResponse.contentType,
-                  statusCode: activeResponse.statusCode,
-                  headers: activeResponse.headers,
-                });
-
-                setSelectedMockServer(newServer._id);
-                setSelectedMockRoute(newRoute._id);
-
-                // fetcher.submit(
-                //   {
-                //     name,
-                //     scope: 'mock-server',
-                //   },
-                //   {
-                //     action: `/organization/${organizationId}/project/${projectId}/workspace/new`,
-                //     method: 'post',
-                //   }
-                // );
+                // TODO: consider setting selected mock server here rather than redirecting
+                fetcher.submit(
+                  JSON.stringify({
+                    name: name,
+                    body: body.toString(),
+                    mimeType: activeResponse.contentType,
+                    statusCode: activeResponse.statusCode,
+                    headers: activeResponse.headers,
+                    mockServerName: activeWorkspace.name,
+                  }),
+                  {
+                    encType: 'application/json',
+                    method: 'post',
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/new`,
+                  }
+                );
               },
             });
             return;
@@ -112,27 +97,24 @@ export const MockResponseExtractor = () => {
               onComplete: async name => {
                 invariant(activeResponse, 'Active response must be defined');
                 const body = await fs.readFile(activeResponse.bodyPath);
-                const newRoute = await models.mockRoute.create({
-                  name: name,
-                  parentId: selectedMockServer,
-                  body: body.toString(),
-                  mimeType: activeResponse.contentType,
-                  statusCode: activeResponse.statusCode,
-                  headers: activeResponse.headers,
-                });
-                setSelectedMockRoute(newRoute._id);
 
-                // fetcher.submit(
-                //   {
-                //     name: name,
-                //     parentId: selectedMockServer,
-                //   },
-                //   {
-                //     encType: 'application/json',
-                //     method: 'post',
-                //     action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/new`,
-                //   }
-                // );
+                // setSelectedMockRoute(newRoute._id);
+
+                fetcher.submit(
+                  JSON.stringify({
+                    name: name,
+                    parentId: selectedMockServer,
+                    body: body.toString(),
+                    mimeType: activeResponse.contentType,
+                    statusCode: activeResponse.statusCode,
+                    headers: activeResponse.headers,
+                  }),
+                  {
+                    encType: 'application/json',
+                    method: 'post',
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/new`,
+                  }
+                );
               },
             });
           }
