@@ -1,6 +1,6 @@
 import * as Har from 'har-format';
 import React from 'react';
-import { LoaderFunction, useFetcher, useLoaderData, useParams, useRouteLoaderData } from 'react-router-dom';
+import { LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TYPE_YAML, contentTypesMap, getMockServiceURL, RESPONSE_CODE_REASONS } from '../../common/constants';
 import { database as db } from '../../common/database';
