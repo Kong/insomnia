@@ -8,13 +8,18 @@ import {
 } from 'react-router-dom';
 
 import * as models from '../../../models';
+import { invariant } from '../../../utils/invariant';
 import { useMockRoutePatcher } from '../../routes/mock-route';
 import { RequestLoaderData } from '../../routes/request';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { showPrompt } from '../modals';
 
 export const MockResponseExtractor = () => {
+  const {
+    activeWorkspace,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const { mockServerAndRoutes, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const patchMockRoute = useMockRoutePatcher();
   const navigate = useNavigate();
@@ -49,58 +54,74 @@ export const MockResponseExtractor = () => {
                 headers: activeResponse.headers,
               });
             }
+            return;
           }
-          // if unselect server create both if unselected route create route
-
-          // if (!selectedMockServer) {
-          //   showPrompt({
-          //     title: 'Create Mock Server',
-          //     defaultValue: 'New Mock Server',
-          //     selectText: true,
-          //     label: 'Name',
-          //     onComplete: name => {
-          //       fetcher.submit(
-          //         {
-          //           name,
-          //           scope: 'mock-server',
-          //         },
-          //         {
-          //           action: `/organization/${organizationId}/project/${projectId}/workspace/new`,
-          //           method: 'post',
-          //         }
-          //       );
-          //     },
-          //   });
-          // }
-          if (!selectedMockRoute) {
-            let path = '/new-route';
-            try {
-              path = activeResponse ? new URL(activeResponse.url).pathname : '/new-route';
-            } catch (e) {
-              console.log(e);
-            }
+          let path = '/new-route';
+          try {
+            path = activeResponse ? new URL(activeResponse.url).pathname : '/new-route';
+          } catch (e) {
+            console.log(e);
+          }
+          if (!selectedMockServer) {
             showPrompt({
               title: 'Create Mock Route',
               defaultValue: path,
-              selectText: true,
               label: 'Name',
               onComplete: async name => {
+                // TODO: prompt for for mock server name and fallback to collection name
+                const workspace = await models.workspace.create({
+                  name: activeWorkspace.name,
+                  scope: 'mock-server',
+                  parentId: projectId,
+                });
+                // create a mock server under the workspace with the same name
+                const newServer = await models.mockServer.getOrCreateForParentId(workspace._id, { name: activeWorkspace.name });
+                invariant(activeResponse, 'Active response must be defined');
+                const body = await fs.readFile(activeResponse.bodyPath);
+                const newRoute = await models.mockRoute.create({
+                  name: name,
+                  parentId: newServer._id,
+                  body: body.toString(),
+                  mimeType: activeResponse.contentType,
+                  statusCode: activeResponse.statusCode,
+                  headers: activeResponse.headers,
+                });
+
+                setSelectedMockServer(newServer._id);
+                setSelectedMockRoute(newRoute._id);
+
+                // fetcher.submit(
+                //   {
+                //     name,
+                //     scope: 'mock-server',
+                //   },
+                //   {
+                //     action: `/organization/${organizationId}/project/${projectId}/workspace/new`,
+                //     method: 'post',
+                //   }
+                // );
+              },
+            });
+            return;
+          }
+          if (!selectedMockRoute) {
+            showPrompt({
+              title: 'Create Mock Route',
+              defaultValue: path,
+              label: 'Name',
+              onComplete: async name => {
+                invariant(activeResponse, 'Active response must be defined');
+                const body = await fs.readFile(activeResponse.bodyPath);
                 const newRoute = await models.mockRoute.create({
                   name: name,
                   parentId: selectedMockServer,
+                  body: body.toString(),
+                  mimeType: activeResponse.contentType,
+                  statusCode: activeResponse.statusCode,
+                  headers: activeResponse.headers,
                 });
                 setSelectedMockRoute(newRoute._id);
-                if (activeResponse) {
-                  // TODO: move this out of the renderer, and upsert mock
-                  const body = await fs.readFile(activeResponse.bodyPath);
 
-                  patchMockRoute(newRoute._id, {
-                    body: body.toString(),
-                    mimeType: activeResponse.contentType,
-                    statusCode: activeResponse.statusCode,
-                    headers: activeResponse.headers,
-                  });
-                }
                 // fetcher.submit(
                 //   {
                 //     name: name,
