@@ -172,7 +172,10 @@ export const PreRequestScriptEditor: FC<Props> = ({
       }),
       settings,
       clientCertificates: [],
-    }),
+    },
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      (_msg: string, _fn: () => void) => { }
+    ),
     'insomnia',
   );
 
