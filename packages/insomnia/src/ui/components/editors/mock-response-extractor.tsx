@@ -2,12 +2,17 @@ import fs from 'fs/promises';
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useRouteLoaderData } from 'react-router-dom';
+import {
+  // useFetcher,
+  useRouteLoaderData,
+} from 'react-router-dom';
 
+import * as models from '../../../models';
 import { useMockRoutePatcher } from '../../routes/mock-route';
 import { RequestLoaderData } from '../../routes/request';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
+import { showPrompt } from '../modals';
 
 export const MockResponseExtractor = () => {
   const { mockServerAndRoutes, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
@@ -16,7 +21,9 @@ export const MockResponseExtractor = () => {
   const {
     organizationId,
     projectId,
+    // workspaceId,
   } = useParams();
+  // const fetcher = useFetcher();
   const [selectedMockServer, setSelectedMockServer] = useState('');
   const [selectedMockRoute, setSelectedMockRoute] = useState('');
   return (
@@ -30,21 +37,85 @@ export const MockResponseExtractor = () => {
       <form
         onSubmit={async e => {
           e.preventDefault();
-          if (!selectedMockServer || !selectedMockRoute) {
-            return;
+          if (selectedMockServer && selectedMockRoute) {
+            if (activeResponse) {
+              // TODO: move this out of the renderer, and upsert mock
+              const body = await fs.readFile(activeResponse.bodyPath);
+
+              patchMockRoute(selectedMockRoute, {
+                body: body.toString(),
+                mimeType: activeResponse.contentType,
+                statusCode: activeResponse.statusCode,
+                headers: activeResponse.headers,
+              });
+            }
           }
+          // if unselect server create both if unselected route create route
 
-          if (activeResponse) {
-            // TODO: move this out of the renderer, and upsert mock
-            const body = await fs.readFile(activeResponse.bodyPath);
+          // if (!selectedMockServer) {
+          //   showPrompt({
+          //     title: 'Create Mock Server',
+          //     defaultValue: 'New Mock Server',
+          //     selectText: true,
+          //     label: 'Name',
+          //     onComplete: name => {
+          //       fetcher.submit(
+          //         {
+          //           name,
+          //           scope: 'mock-server',
+          //         },
+          //         {
+          //           action: `/organization/${organizationId}/project/${projectId}/workspace/new`,
+          //           method: 'post',
+          //         }
+          //       );
+          //     },
+          //   });
+          // }
+          if (!selectedMockRoute) {
+            let path = '/new-route';
+            try {
+              path = activeResponse ? new URL(activeResponse.url).pathname : '/new-route';
+            } catch (e) {
+              console.log(e);
+            }
+            showPrompt({
+              title: 'Create Mock Route',
+              defaultValue: path,
+              selectText: true,
+              label: 'Name',
+              onComplete: async name => {
+                const newRoute = await models.mockRoute.create({
+                  name: name,
+                  parentId: selectedMockServer,
+                });
+                setSelectedMockRoute(newRoute._id);
+                if (activeResponse) {
+                  // TODO: move this out of the renderer, and upsert mock
+                  const body = await fs.readFile(activeResponse.bodyPath);
 
-            patchMockRoute(selectedMockRoute, {
-              body: body.toString(),
-              mimeType: activeResponse.contentType,
-              statusCode: activeResponse.statusCode,
-              headers: activeResponse.headers,
+                  patchMockRoute(newRoute._id, {
+                    body: body.toString(),
+                    mimeType: activeResponse.contentType,
+                    statusCode: activeResponse.statusCode,
+                    headers: activeResponse.headers,
+                  });
+                }
+                // fetcher.submit(
+                //   {
+                //     name: name,
+                //     parentId: selectedMockServer,
+                //   },
+                //   {
+                //     encType: 'application/json',
+                //     method: 'post',
+                //     action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/new`,
+                //   }
+                // );
+              },
             });
           }
+
         }}
       >
         <div className="form-row">
@@ -61,7 +132,7 @@ export const MockResponseExtractor = () => {
                   setSelectedMockServer(selected);
                 }}
               >
-                <option value="">-- Select... --</option>
+                <option value="">-- Create new... --</option>
                 {mockServerAndRoutes
                   .map(w => (
                     <option key={w._id} value={w._id}>
@@ -87,7 +158,7 @@ export const MockResponseExtractor = () => {
                   setSelectedMockRoute(selected);
                 }}
               >
-                <option value="">-- Select... --</option>
+                <option value="">-- Create new... --</option>
                 {mockServerAndRoutes.find(s => s._id === selectedMockServer)?.routes
                   .map(w => (
                     <option key={w._id} value={w._id}>
@@ -112,10 +183,9 @@ export const MockResponseExtractor = () => {
           </Button>
           <Button
             type="submit"
-            isDisabled={!selectedMockServer || !selectedMockRoute}
             className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
           >
-            Export
+            Extract to mock route
           </Button>
         </div>
       </form>
