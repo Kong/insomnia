@@ -217,6 +217,9 @@ export const flexibleEncodeComponent = (str = '', ignore = '') => {
   // Sometimes spaces screw things up because of url.parse
   str = str.replace(/%20/g, ' ');
 
+  // Handle an escape % character
+  str = str.replace(/\\%/g, '%25');
+
   // Handle all already-encoded characters so we don't touch them
   str = str.replace(/%([0-9a-fA-F]{2})/g, '__ENC__$1');
 
