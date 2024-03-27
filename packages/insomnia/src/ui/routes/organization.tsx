@@ -253,7 +253,7 @@ export const syncOrganizationsAction: ActionFunction = async () => {
 };
 
 export interface OrganizationLoaderData {
-  organizations: Organization[];
+  organizations: (Organization & { storage?: StorageType })[];
   user?: UserProfileResponse;
   currentPlan?: CurrentPlan;
 }
@@ -286,6 +286,13 @@ export interface Billing {
   isActive: boolean;
 }
 
+export type StorageType = 'cloud_plus_local' | 'cloud_only' | 'local_only';
+
+export interface StorageRule {
+  storage: StorageType;
+  isOverridden: boolean;
+}
+
 export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params as { organizationId: string };
   const { id: sessionId } = await userSession.getOrCreate();
@@ -303,6 +310,7 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
     return {
       features: fallbackFeatures,
       billing: fallbackBilling,
+      storage: 'cloud_plus_local',
     };
   }
 
@@ -319,14 +327,24 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
       sessionId,
     });
 
+    const ruleResponse = await window.main.insomniaFetch<StorageRule | undefined>({
+      method: 'GET',
+      path: `/v1/organizations/${organizationId}/storage-rule`,
+      sessionId,
+    });
+
+    organization.storage = ruleResponse?.storage || 'cloud_plus_local';
+
     return {
       features: response?.features || fallbackFeatures,
       billing: response?.billing || fallbackBilling,
+      storage: organization.storage,
     };
   } catch (err) {
     return {
       features: fallbackFeatures,
       billing: fallbackBilling,
+      storage: 'cloud_plus_local',
     };
   }
 };
