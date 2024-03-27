@@ -35,7 +35,7 @@
     "cross-env": "^7.0.3",
     "esbuild-runner": "2.2.2",
     "execa": "^5.0.0",
-    "express": "^4.17.1",
+    "express": "^4.19.2",
     "express-basic-auth": "^1.2.0",
     "graphql-http": "^1.21.0",
     "faker": "^5.1.0",
