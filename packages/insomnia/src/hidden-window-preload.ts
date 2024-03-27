@@ -1,8 +1,7 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import { Collection as CollectionModule, RequestContext } from 'insomnia-sdk';
 
 import type { Compression } from './models/response';
-import * as CollectionModule from './sdk/objects';
-import type { RequestContext } from './sdk/objects/interfaces';
 
 export interface HiddenBrowserWindowToMainBridgeAPI {
   requireInterceptor: (module: string) => any;
@@ -53,6 +52,25 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
       ].includes(moduleName)
     ) {
       return moduleName === 'atob' ? atob : btoa;
+    } else if (
+      [
+        // npm modules
+        'ajv',
+        'chai',
+        'cheerio',
+        'crypto-js',
+        'csv-parse/lib/sync',
+        'lodash',
+        'moment',
+        'tv4',
+        'uuid',
+        'xml2js',
+      ].includes(moduleName)
+    ) {
+      if (moduleName === 'csv-parse/lib/sync') {
+        return require('csv-parse/sync');
+      }
+      return require(moduleName);
     } else if (moduleName === 'insomnia-collection' || moduleName === 'postman-collection') {
       return CollectionModule;
     }
