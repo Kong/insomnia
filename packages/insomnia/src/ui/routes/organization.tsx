@@ -330,7 +330,7 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
     const ruleResponse = await window.main.insomniaFetch<StorageRule | undefined>({
       method: 'GET',
       path: `/v1/organizations/${organizationId}/storage-rule`,
-      sessionId: session.getCurrentSessionId(),
+      sessionId,
     });
 
     organization.storage = ruleResponse?.storage || 'cloud_plus_local';
