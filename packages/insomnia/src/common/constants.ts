@@ -67,7 +67,6 @@ export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 */
 export const REQUEST_SETUP_TEARDOWN_COMPENSATION = 200;
 export const STATUS_CODE_PLUGIN_ERROR = -222;
-export const LARGE_RESPONSE_MB = 5;
 export const HUGE_RESPONSE_MB = 100;
 export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ\-_.]+[/\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ.\-+=:\][@%^*&!#?;$~'(),]*/;
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 24;

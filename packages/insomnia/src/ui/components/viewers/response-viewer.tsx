@@ -7,7 +7,6 @@ import React, {
 
 import {
   HUGE_RESPONSE_MB,
-  LARGE_RESPONSE_MB,
   PREVIEW_MODE_FRIENDLY,
   PREVIEW_MODE_RAW,
 } from '../../../common/constants';
@@ -38,6 +37,7 @@ export function xmlDecode(input: string) {
 }
 export interface ResponseViewerProps {
   bytes: number;
+  maxResponseSizeKB: number;
   contentType: string;
   disableHtmlPreviewJs: boolean;
   disablePreviewLinks: boolean;
@@ -55,6 +55,7 @@ export interface ResponseViewerProps {
 
 export const ResponseViewer = ({
   bytes,
+  maxResponseSizeKB,
   getBody,
   contentType: originalContentType,
   disableHtmlPreviewJs,
@@ -69,7 +70,7 @@ export const ResponseViewer = ({
   updateFilter,
   url,
 }: ResponseViewerProps) => {
-  const largeResponse = bytes > LARGE_RESPONSE_MB * 1024 * 1024;
+  const largeResponse = maxResponseSizeKB > 0 ? bytes > maxResponseSizeKB * 1024 : false;
   const hugeResponse = bytes > HUGE_RESPONSE_MB * 1024 * 1024;
   const [blockingBecauseTooLarge, setBlockingBecauseTooLarge] = useState(!alwaysShowLargeResponses && largeResponse);
   const [parseError, setParseError] = useState('');
@@ -191,7 +192,7 @@ export const ResponseViewer = ({
         ) : (
           <Fragment>
             <p className="pad faint">
-              Response over {LARGE_RESPONSE_MB}MB hidden for performance reasons
+                Response over {maxResponseSizeKB}KB hidden for performance reasons
             </p>
             <div>
               <button
