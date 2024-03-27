@@ -215,7 +215,14 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
   // Create new ids for each resource below optionalResources
   for (const resource of optionalResources) {
     const model = getModel(resource.type);
-    model && ResourceIdMap.set(resource._id, generateId(model.prefix));
+    if (model) {
+      if (!resource._id) {
+        ResourceIdMap.set(resource._id, generateId(model.prefix));
+      } else {
+        console.log('[Import Scan] Retaining ID: ', resource._id);
+        ResourceIdMap.set(resource._id, resource._id);
+      }
+    }
   }
 
   // Preserve optionalResource relationships
@@ -312,7 +319,14 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
 
   for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
     const model = getModel(resource.type);
-    model && ResourceIdMap.set(resource._id, generateId(model.prefix));
+    if (model) {
+      if (!resource._id) {
+        ResourceIdMap.set(resource._id, generateId(model.prefix));
+      } else {
+        console.log('[Import Scan] Retaining ID: ', resource._id);
+        ResourceIdMap.set(resource._id, resource._id);
+      }
+    }
   }
 
   for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
