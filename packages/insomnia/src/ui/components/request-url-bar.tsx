@@ -190,7 +190,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     };
   }, [sendOrConnect]);
 
-  useInterval(sendOrConnect, currentInterval ? currentInterval : null);
+  useInterval(sendOrConnect, currentInterval && fetcher.state === 'idle' ? currentInterval : null);
   useTimeoutWhen(sendOrConnect, currentTimeout, !!currentTimeout);
   const patchRequest = useRequestPatcher();
 
@@ -327,6 +327,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                           defaultValue: '3',
                           submitName: 'Start',
                           onComplete: seconds => {
+                            sendOrConnect();
                             setCurrentInterval(+seconds * 1000);
                           },
                         })}
