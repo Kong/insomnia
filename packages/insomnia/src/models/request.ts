@@ -199,7 +199,7 @@ export interface RequestPathParameter {
   value: string;
 }
 
-export const PATH_PARAMETER_REGEX = /\/:[^/?#]+/g;
+export const PATH_PARAMETER_REGEX = /\/:[^/?#:]+/g;
 
 export const getPathParametersFromUrl = (url: string): string[] => {
   // Find all path parameters in the URL. Path parameters are defined as segments of the URL that start with a colon.
