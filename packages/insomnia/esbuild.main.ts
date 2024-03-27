@@ -54,6 +54,10 @@ export default async function build(options: Options) {
     sourcemap: true,
     format: 'cjs',
     external: ['electron'],
+    loader: {
+      // ensures .node binaries are copied to ./dist
+      '.node': 'copy',
+    },
   });
   const main = esbuild.build({
     entryPoints: ['./src/main.development.ts'],
