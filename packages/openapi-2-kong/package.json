@@ -2,7 +2,7 @@
   "private": true,
   "name": "openapi-2-kong",
   "license": "Apache-2.0",
-  "version": "9.0.0-beta.2",
+  "version": "9.0.0-beta.3",
   "author": "Kong <office@konghq.com>",
   "main": "src/index.ts",
   "types": "src/index.ts",
