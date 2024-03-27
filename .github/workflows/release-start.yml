@@ -37,20 +37,25 @@ jobs:
       - name: Install packages
         run: npm ci
 
-      - name: App version (stable, no version doing patch)
+      - name: App version (stable, patch latest stable)
         if: github.event.inputs.channel == 'stable' && !github.event.inputs.version
         run: npm --workspaces version patch
 
-      - name: App version (stable)
+      - name: App version (stable, with a specific version)
         if: github.event.inputs.channel == 'stable' && github.event.inputs.version
         run: npm --workspaces version "${{ github.event.inputs.version }}"
 
-      # required for 8.0.0 beta
-      - name: App version (initial alpha/beta where we specify a new general version)
-        if: github.event.inputs.channel != 'stable' && github.event.inputs.version
+    # handle new "major" beta releases, e.g. 10.0, 11.0, 12.0 ...
+      - name: App version (alpha/beta, with new general version)
+        if: github.event.inputs.channel != 'stable' && github.event.inputs.version && !contains(github.event.inputs.version, "-${{ github.event.inputs.channel }}")
         run: npm --workspaces version "${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.0"
 
-      - name: App version (alpha/beta)
+    # handle botched alpha/beta releases, e.g. for iterations that were merged before running release-publish
+      - name: App version (alpha/beta, with a specific version)
+        if: github.event.inputs.channel != 'stable' && github.event.inputs.version && contains(github.event.inputs.version, "-${{ github.event.inputs.channel }}")
+        run: npm --workspaces version "${{ github.event.inputs.version }}"
+
+      - name: App version (alpha/beta, patch latest)
         if: github.event.inputs.channel != 'stable' && !github.event.inputs.version
         run: npm --workspaces version --preid "${{ github.event.inputs.channel }}" prerelease
 
