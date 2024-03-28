@@ -1,3 +1,5 @@
+import { expect } from 'chai';
+
 import { ClientCertificate } from '../../models/client-certificate';
 import { RequestBodyParameter, RequestHeader } from '../../models/request';
 import { Settings } from '../../models/settings';
@@ -8,6 +10,7 @@ import { unsupportedError } from './properties';
 import { Request as ScriptRequest, RequestBodyOptions, RequestOptions } from './request';
 import { Response as ScriptResponse } from './response';
 import { sendRequest } from './send-request';
+import { test } from './test';
 
 export class InsomniaObject {
     public environment: Environment;
@@ -16,11 +19,15 @@ export class InsomniaObject {
     public variables: Variables;
     public request: ScriptRequest;
     private clientCertificates: ClientCertificate[];
+    private _expect = expect;
+    private _test = test;
 
     // TODO: follows will be enabled after Insomnia supports them
     private _globals: Environment;
     private _iterationData: Environment;
     private _settings: Settings;
+
+    private _log: (...msgs: any[]) => void;
 
     constructor(
         rawObj: {
@@ -33,6 +40,7 @@ export class InsomniaObject {
             settings: Settings;
             clientCertificates: ClientCertificate[];
         },
+        log: (...msgs: any[]) => void,
     ) {
         this._globals = rawObj.globals;
         this.environment = rawObj.environment;
@@ -44,6 +52,8 @@ export class InsomniaObject {
         this.request = rawObj.request;
         this._settings = rawObj.settings;
         this.clientCertificates = rawObj.clientCertificates;
+
+        this._log = log;
     }
 
     sendRequest(
@@ -51,6 +61,14 @@ export class InsomniaObject {
         cb: (error?: string, response?: ScriptResponse) => void
     ) {
         return sendRequest(request, cb, this._settings);
+    }
+
+    test(msg: string, fn: () => void) {
+        this._test(msg, fn, this._log);
+    }
+
+    expect(exp: boolean | number | string | object) {
+        return this._expect(exp);
     }
 
     // TODO: remove this after enabled globals
@@ -84,6 +102,7 @@ export class InsomniaObject {
 
 export function initInsomniaObject(
     rawObj: RequestContext,
+    log: (...args: any[]) => void,
 ) {
     const globals = new Environment(rawObj.globals);
     const environment = new Environment(rawObj.environment);
@@ -188,5 +207,6 @@ export function initInsomniaObject(
             settings: rawObj.settings,
             clientCertificates: rawObj.clientCertificates,
         },
+        log,
     );
 };

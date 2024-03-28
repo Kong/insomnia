@@ -300,7 +300,7 @@ export const CommandPalette = () => {
         setIsOpen(isOpen);
         if (isOpen) {
           const searchParams = new URLSearchParams();
-
+          searchParams.set('organizationId', organizationId);
           searchParams.set('workspaceId', workspaceId);
           searchParams.set('projectId', projectId);
 

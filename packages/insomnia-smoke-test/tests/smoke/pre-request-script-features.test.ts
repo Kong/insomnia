@@ -344,6 +344,21 @@ test.describe('pre-request features tests', async () => {
         await page.getByRole('tab', { name: 'Timeline' }).click();
         await expect(responsePane).toContainText('fixtures/certificates/fake.pfx'); // original proxy
     });
+
+    test('insomnia.test and insomnia.expect can work together ', async ({ page }) => {
+        const responsePane = page.getByTestId('response-pane');
+
+        await page.getByLabel('Request Collection').getByTestId('insomnia.test').press('Enter');
+
+        // send
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+        // verify
+        await page.getByRole('tab', { name: 'Timeline' }).click();
+
+        await expect(responsePane).toContainText('✓ happy tests'); // original proxy
+        await expect(responsePane).toContainText('✕ unhappy tests: AssertionError: expected 199 to deeply equal 200'); // updated proxy
+    });
 });
 
 test.describe('unhappy paths', async () => {

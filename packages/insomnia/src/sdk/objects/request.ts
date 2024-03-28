@@ -579,6 +579,7 @@ export function mergeRequests(
             {},
         ),
         authentication: fromPreRequestAuth(updatedReq.auth),
+        preRequestScript: '',
     };
 
     return {

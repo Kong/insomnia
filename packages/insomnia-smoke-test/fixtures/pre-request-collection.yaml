@@ -750,3 +750,49 @@ resources:
           "events": {{ _.events }}
         }
     _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df1
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: insomnia.test
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      insomnia.test('happy tests', () => {
+        pm.expect(200).to.eql(200);
+        pm.expect('uname').to.be.a('string');
+        pm.expect('a').to.have.lengthOf(1);
+        pm.expect('xxx_customer_id_yyy').to.include("customer_id");
+        pm.expect(201).to.be.oneOf([201,202]);
+        pm.expect(199).to.be.below(200);
+        // test objects
+        pm.expect({a: 1, b: 2}).to.have.all.keys('a', 'b');
+        pm.expect({a: 1, b: 2}).to.have.any.keys('a', 'b');
+        pm.expect({a: 1, b: 2}).to.not.have.any.keys('c', 'd');
+        pm.expect({a: 1}).to.have.property('a');
+        pm.expect({a: 1, b: 2}).to.be.a('object')
+          .that.has.all.keys('a', 'b');
+      });
+      insomnia.test('unhappy tests', () => {
+        pm.expect(199).to.eql(200);
+        pm.expect(199).to.be.oneOf([201,202]);
+      });
+    body:
+      mimeType: "application/json"
+      text: |-
+        {}
+    _type: request
