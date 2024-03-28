@@ -48,11 +48,12 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
   }
 
   // The below items are optional; should be set to undefined if present and empty
-  if (operationName !== undefined) {
+  const isString = (value?: string): value is string => typeof value === 'string' || (value as unknown) instanceof String;
+  if (isString(operationName)) {
     content.operationName = operationName.length ? operationName : undefined;
   }
 
-  if (variables !== undefined) {
+  if (isString(variables)) {
     content.variables = variables.length ? variables : undefined;
   }
 
