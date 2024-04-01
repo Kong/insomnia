@@ -801,7 +801,7 @@ resources:
     modified: 1636707449231
     created: 1636141014552
     url: http://127.0.0.1:4010/echo
-    name: sendRequest simple mode
+    name: get sendRequest response through await or callback
     description: ""
     method: GET
     parameters: []

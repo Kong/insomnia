@@ -48,6 +48,8 @@ export class Cookie extends Property {
         this.cookie = cookie;
     }
 
+    static _index = 'key';
+
     static isCookie(obj: Property) {
         return '_kind' in obj && obj._kind === 'Cookie';
     }
@@ -134,7 +136,7 @@ export class Cookie extends Property {
         return this.cookie.toJSON().value;
     };
 
-    key = () => {
+    get key() {
         return this.cookie.toJSON().key;
     };
 
@@ -207,6 +209,7 @@ export class CookieObject extends CookieList {
         super(cookies);
         const scriptCookieJar = cookieJar ? new CookieJar(cookieJar.name, cookies) : new CookieJar('', []);
         this.cookieJar = scriptCookieJar;
+        this.typeClass = Cookie;
     }
 
     jar() {
