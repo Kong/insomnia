@@ -126,6 +126,14 @@ test.describe('pre-request features tests', async () => {
                 events: true,
             },
         },
+        {
+            name: 'get sendRequest response through await or callback',
+            customVerify: (bodyJson: any) => {
+                const requestBody = JSON.parse(bodyJson.data);
+                expect(requestBody.bodyFromAwait.method).toEqual('GET');
+                expect(requestBody.bodyFromCallback.method).toEqual('GET');
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
