@@ -355,7 +355,7 @@ const writeToDownloadPath = (downloadPathAndName: string, responsePatch: Respons
 export interface SendActionParams {
   requestId: string;
   shouldPromptForPathAfterResponse?: boolean;
-  ignoreEmptyEnvVariable?: boolean;
+  ignoreUndefinedEnvVariable?: boolean;
 }
 // TODO ignore Error when click continue(add params field)
 export const sendAction: ActionFunction = async ({ request, params }) => {
@@ -379,7 +379,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
   try {
-    const { shouldPromptForPathAfterResponse, ignoreEmptyEnvVariable } = await request.json() as SendActionParams;
+    const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
     const mutatedContext = await tryToExecutePreRequestScript(
       req,
       environment,
@@ -409,7 +409,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       RENDER_PURPOSE_SEND,
       undefined,
       mutatedContext.baseEnvironment,
-      ignoreEmptyEnvVariable,
+      ignoreUndefinedEnvVariable,
     );
     const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
 
@@ -475,7 +475,6 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       url.searchParams.set('envVariableMissing', '1');
       url.searchParams.set('missingKey', e?.extraInfo?.missingKey);
     }
-    console.log(url.pathname, url.searchParams, 'redirect url');
     return redirect(`${url.pathname}?${url.searchParams}`);
   }
 };

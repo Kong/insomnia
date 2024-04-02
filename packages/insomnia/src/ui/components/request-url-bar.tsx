@@ -56,9 +56,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const [showEnvVariableMissingModal, setShowEnvVariableMissingModal] = useState(false);
   const [missingKey, setMissingKey] = useState('');
   if (searchParams.has('error')) {
-    if (searchParams.has('envVariableMissing')) {
+    if (searchParams.has('envVariableMissing') && searchParams.get('missingKey')) {
       setShowEnvVariableMissingModal(true);
-      setMissingKey(searchParams.get('missingKey') || '');
+      setMissingKey(searchParams.get('missingKey')!);
     } else {
       showAlert({
         title: 'Unexpected Request Failure',
@@ -127,7 +127,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       });
   }, [fetcher, organizationId, projectId, requestId, workspaceId]);
 
-  const sendOrConnect = useCallback(async (shouldPromptForPathAfterResponse?: boolean, ignoreEmptyEnvVariable?: boolean) => {
+  const sendOrConnect = useCallback(async (shouldPromptForPathAfterResponse?: boolean, ignoreUndefinedEnvVariable?: boolean) => {
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
       event: SegmentEvent.requestExecute,
@@ -171,7 +171,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     }
 
     try {
-      send({ requestId, shouldPromptForPathAfterResponse, ignoreEmptyEnvVariable });
+      send({ requestId, shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable });
     } catch (err) {
       showAlert({
         title: 'Unexpected Request Failure',

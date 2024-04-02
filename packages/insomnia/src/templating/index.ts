@@ -54,7 +54,7 @@ export function render(
     context?: Record<string, any>;
     path?: string;
     renderMode?: string;
-    ignoreEmptyEnvVariable?: boolean;
+    ignoreUndefinedEnvVariable?: boolean;
   } = {},
 ) {
   const hasNunjucksInterpolationSymbols = text.includes('{{') && text.includes('}}');
@@ -73,7 +73,7 @@ export function render(
   return new Promise<string | null>(async (resolve, reject) => {
     // NOTE: this is added as a breadcrumb because renderString sometimes hangs
     const id = setTimeout(() => console.log('Warning: nunjucks failed to respond within 5 seconds'), 5000);
-    const nj = await getNunjucks(renderMode, config.ignoreEmptyEnvVariable);
+    const nj = await getNunjucks(renderMode, config.ignoreUndefinedEnvVariable);
     nj?.renderString(text, templatingContext, (err: Error | null, result: any) => {
       clearTimeout(id);
       if (err) {
@@ -143,9 +143,9 @@ export async function getTagDefinitions() {
     }));
 }
 
-async function getNunjucks(renderMode: string, ignoreEmptyEnvVariable?: boolean): Promise<NunjucksEnvironment> {
+async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: boolean): Promise<NunjucksEnvironment> {
   let throwOnUndefined = true;
-  if (ignoreEmptyEnvVariable) {
+  if (ignoreUndefinedEnvVariable) {
     throwOnUndefined = false;
   } else {
     if (renderMode === RENDER_VARS && nunjucksVariablesOnly) {
@@ -210,9 +210,9 @@ async function getNunjucks(renderMode: string, ignoreEmptyEnvVariable?: boolean)
   }
 
   // ~~~~~~~~~~~~~~~~~~~~ //
-  // Cache Env and Return (when ignoreEmptyEnvVariable is false) //
+  // Cache Env and Return (when ignoreUndefinedEnvVariable is false) //
   // ~~~~~~~~~~~~~~~~~~~~ //
-  if (ignoreEmptyEnvVariable) {
+  if (ignoreUndefinedEnvVariable) {
     return nunjucksEnvironment;
   }
   if (renderMode === RENDER_VARS) {
