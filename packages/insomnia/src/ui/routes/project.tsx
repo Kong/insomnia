@@ -23,8 +23,6 @@ import {
   Select,
   SelectValue,
   TextField,
-  Tooltip,
-  TooltipTrigger,
 } from 'react-aria-components';
 import {
   ActionFunction,
@@ -1083,28 +1081,11 @@ const ProjectRoute: FC = () => {
 
                           <span className="truncate">{item.name}</span>
                           <span className="flex-1" />
-                          {((isRemoteProject(item) && !isCloudSyncOnlyEnabled) || (!isRemoteProject(item) && !isLocalVaultOnlyEnabled)) && !areBothStorageTypesEnabled &&
-                            <TooltipTrigger>
-                              <Button>
-                                <Icon
-                                  icon='triangle-exclamation'
-                                  color="var(--color-warning)"
-                                />
-                              </Button>
-                              <Tooltip
-                                placement="top"
-                                offset={4}
-                                className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                              >
-                                {`This project type is not allowed by the organization owner. You can manually convert it to use ${isLocalVaultOnlyEnabled ? 'Local Vault' : 'Cloud Sync'}.`}
-                              </Tooltip>
-                            </TooltipTrigger>
-                          }
-                          <AvatarGroup
+                          {item.presence.length > 0 && <AvatarGroup
                             size="small"
                             maxAvatars={3}
                             items={item.presence}
-                          />
+                          />}
                           {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} storage={storage} />}
                         </div>
                       </GridListItem>
