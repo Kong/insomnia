@@ -61,7 +61,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       setMissingKey(searchParams.get('missingKey') || '');
     } else {
       showAlert({
-        title: 'Unexpected Request Failure 11111',
+        title: 'Unexpected Request Failure',
         message: (
           <div>
             <p>The request failed due to an unhandled error:</p>
@@ -381,14 +381,14 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       {showEnvVariableMissingModal && (
         <CommonModal
           title="An environment variable is missing"
-          okText='execute anyways'
+          okText='Continue anyways'
           onOk={() => sendOrConnect(false, true)}
           onClose={() => setShowEnvVariableMissingModal(false)}
           content={
             <p className="flex items-center gap-2">
               The environment variable
               <Button className="flex items-center bg-[--color-surprise] text-[--color-font-surprise] px-3 rounded-sm">{missingKey}</Button>
-              has been defined but has not been valued
+              has been defined but has no value defined on a currently Active Environment
             </p>
           }
         />
