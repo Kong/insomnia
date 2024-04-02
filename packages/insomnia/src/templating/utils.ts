@@ -276,3 +276,9 @@ export function decodeEncoding<T>(value: T) {
 
   return value;
 }
+
+export function extractVariableKey(text: string): string {
+  const regexVariable = /{{\s*([^ }]+)\s*[^}]*\s*}}/;
+  const res = text.match(regexVariable);
+  return res?.[1] || '';
+}

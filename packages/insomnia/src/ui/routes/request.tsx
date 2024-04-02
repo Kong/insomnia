@@ -27,6 +27,7 @@ import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../.
 import { WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { RenderErrorSubType } from '../../templating';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
@@ -354,8 +355,9 @@ const writeToDownloadPath = (downloadPathAndName: string, responsePatch: Respons
 export interface SendActionParams {
   requestId: string;
   shouldPromptForPathAfterResponse?: boolean;
+  ignoreEmptyEnvVariable?: boolean;
 }
-
+// TODO ignore Error when click continue(add params field)
 export const sendAction: ActionFunction = async ({ request, params }) => {
   const { requestId, workspaceId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
@@ -377,7 +379,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
   try {
-    const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
+    const { shouldPromptForPathAfterResponse, ignoreEmptyEnvVariable } = await request.json() as SendActionParams;
     const mutatedContext = await tryToExecutePreRequestScript(
       req,
       environment,
@@ -407,6 +409,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       RENDER_PURPOSE_SEND,
       undefined,
       mutatedContext.baseEnvironment,
+      ignoreEmptyEnvVariable,
     );
     const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
 
@@ -468,6 +471,11 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     console.log('Failed to send request', e);
     const url = new URL(request.url);
     url.searchParams.set('error', e);
+    if (e?.extraInfo && e?.extraInfo?.subType === RenderErrorSubType.EnvironmentVariable) {
+      url.searchParams.set('envVariableMissing', '1');
+      url.searchParams.set('missingKey', e?.extraInfo?.missingKey);
+    }
+    console.log(url.pathname, url.searchParams, 'redirect url');
     return redirect(`${url.pathname}?${url.searchParams}`);
   }
 };
