@@ -11,17 +11,18 @@ import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dr
 import { EditableInput } from '../components/editable-input';
 import { Icon } from '../components/icon';
 import { showModal, showPrompt } from '../components/modals';
+import { AlertModal } from '../components/modals/alert-modal';
 import { AskModal } from '../components/modals/ask-modal';
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { SvgIcon } from '../components/svg-icon';
 import { formatMethodName } from '../components/tags/method-tag';
 import { MockRouteResponse, MockRouteRoute, useMockRoutePatcher } from './mock-route';
-interface LoaderData {
+export interface MockServerLoaderData {
   mockServerId: string;
   mockRoutes: MockRoute[];
 }
-export const loader: LoaderFunction = async ({ params }): Promise<LoaderData> => {
+export const loader: LoaderFunction = async ({ params }): Promise<MockServerLoaderData> => {
   const { organizationId, projectId, workspaceId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
@@ -46,7 +47,7 @@ const MockServerRoute = () => {
     workspaceId: string;
     mockRouteId: string;
   };
-  const { mockServerId, mockRoutes } = useLoaderData() as LoaderData;
+  const { mockServerId, mockRoutes } = useLoaderData() as MockServerLoaderData;
   const fetcher = useFetcher();
   const navigate = useNavigate();
   const patchMockRoute = useMockRoutePatcher();
@@ -66,6 +67,14 @@ const MockServerRoute = () => {
             defaultValue: mockRoutes.find(s => s._id === id)?.name,
             submitName: 'Rename',
             onComplete: name => {
+              const hasRouteInServer = mockRoutes.filter(m => m._id !== id).find(m => m.name === name);
+              if (hasRouteInServer) {
+                showModal(AlertModal, {
+                  title: 'Error',
+                  message: `Path "${name}" must be unique. Please enter a different name.`,
+                });
+                return;
+              };
               name && patchMockRoute(id, { name });
             },
           });
@@ -195,6 +204,14 @@ const MockServerRoute = () => {
                       });
                     }}
                     onSubmit={name => {
+                      const hasRouteInServer = mockRoutes.filter(m => m._id !== item._id).find(m => m.name === name);
+                      if (hasRouteInServer) {
+                        showModal(AlertModal, {
+                          title: 'Error',
+                          message: `Path "${name}" must be unique. Please enter a different name.`,
+                        });
+                        return;
+                      };
                       name && fetcher.submit(
                         { name },
                         {
