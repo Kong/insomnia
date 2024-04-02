@@ -1,4 +1,5 @@
 import { ClientCertificate } from '../../models/client-certificate';
+import { CookieJar as InsomniaCookieJar } from '../../models/cookie-jar';
 import type { Request } from '../../models/request';
 import { Settings } from '../../models/settings';
 
@@ -13,4 +14,5 @@ export interface RequestContext {
     timeout: number;
     settings: Settings;
     clientCertificates: ClientCertificate[];
+    cookieJar: InsomniaCookieJar;
 }
