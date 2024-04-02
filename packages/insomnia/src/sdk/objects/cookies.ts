@@ -331,14 +331,14 @@ export class CookieJar {
 
 export function mergeCookieJar(
     originalCookieJar: InsomniaCookieJar,
-    updatedCookieJar: InsomniaCookieJar
+    updatedCookieJar: { name: string; cookies: Partial<InsomniaCookie>[] },
 ): InsomniaCookieJar {
-    const cookiesWithId = updatedCookieJar.cookies.map(cookie => {
+    const cookiesWithId = updatedCookieJar.cookies.map((cookie): InsomniaCookie => {
         if (!cookie.id) {
             // this follows the genration apporach in the `cookie-list.tsx`
             cookie.id = uuidv4();
         }
-        return cookie;
+        return cookie as InsomniaCookie;
     });
 
     return {
