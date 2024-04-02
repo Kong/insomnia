@@ -1,22 +1,15 @@
-import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test('can make a mock route', async ({ app, page }) => {
+test('can make a mock route', async ({ page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
-  const text = await loadFixture('smoke-test-collection.yaml');
-  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-
-  await page.getByRole('button', { name: 'Create in project' }).click();
-  await page.getByRole('menuitemradio', { name: 'Import' }).click();
-  await page.locator('[data-test-id="import-from-clipboard"]').click();
-  await page.getByRole('button', { name: 'Scan' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
   await page.getByLabel('New Mock Server').click();
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await page.getByRole('button', { name: 'New Mock Route' }).click();
-  await page.getByText('GET/').click();
-  await page.getByTestId('CodeEditor').getByRole('textbox').fill('123');
+  await page.getByLabel('Project Actions').click();
+  await page.getByText('Rename').click();
+  await page.locator('#prompt-input').fill('/123');
+  await page.getByRole('button', { name: 'Rename' }).click();
 
   await page.getByRole('button', { name: 'Test' }).click();
   await page.getByText('No body returned for response').click();
