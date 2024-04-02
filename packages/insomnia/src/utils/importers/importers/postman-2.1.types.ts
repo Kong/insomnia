@@ -328,7 +328,7 @@ export interface Event {
   [k: string]: unknown;
 }
 /**
- * A script is a snippet of Javascript code that can be used to to perform setup or teardown operations on a particular response.
+ * A script is a snippet of Javascript code that can be used to perform setup or teardown operations on a particular response.
  */
 export interface Script {
   /**
