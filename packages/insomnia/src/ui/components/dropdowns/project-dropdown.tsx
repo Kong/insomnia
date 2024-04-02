@@ -15,11 +15,14 @@ import {
   Radio,
   RadioGroup,
   TextField,
+  Tooltip,
+  TooltipTrigger,
 } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 
 import {
   isDefaultOrganizationProject,
+  isRemoteProject,
   Project,
 } from '../../../models/project';
 import { type StorageType } from '../../routes/organization';
@@ -98,6 +101,26 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
 
   return (
     <Fragment>
+      {((isRemoteProject(project) && !isCloudSyncOnlyEnabled) || (!isRemoteProject(project) && !isLocalVaultOnlyEnabled)) && !areBothStorageTypesEnabled &&
+        <TooltipTrigger>
+          <Button
+            onPress={() => setIsProjectSettingsModalOpen(true)}
+            className="opacity-80 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          >
+            <Icon
+              icon='triangle-exclamation'
+              color="var(--color-warning)"
+            />
+          </Button>
+          <Tooltip
+            placement="top"
+            offset={4}
+            className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+          >
+            {`This project type is not allowed by the organization owner. You can manually convert it to use ${isLocalVaultOnlyEnabled ? 'Local Vault' : 'Cloud Sync'}.`}
+          </Tooltip>
+        </TooltipTrigger>
+      }
       <MenuTrigger>
         <Button
           aria-label="Project Actions"
