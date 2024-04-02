@@ -67,11 +67,11 @@ const MockServerRoute = () => {
             defaultValue: mockRoutes.find(s => s._id === id)?.name,
             submitName: 'Rename',
             onComplete: name => {
-              const hasRouteInServer = mockRoutes.find(s => s.name === name);
+              const hasRouteInServer = mockRoutes.filter(m => m._id !== id).find(m => m.name === name);
               if (hasRouteInServer) {
                 showModal(AlertModal, {
                   title: 'Error',
-                  message: 'Route name must be unique. Please enter a different name.',
+                  message: `Path "${name}" must be unique. Please enter a different name.`,
                 });
                 return;
               };
@@ -204,11 +204,11 @@ const MockServerRoute = () => {
                       });
                     }}
                     onSubmit={name => {
-                      const hasRouteInServer = mockRoutes.find(s => s.name === name);
+                      const hasRouteInServer = mockRoutes.filter(m => m._id !== item._id).find(m => m.name === name);
                       if (hasRouteInServer) {
                         showModal(AlertModal, {
                           title: 'Error',
-                          message: 'Route name must be unique. Please enter a different name.',
+                          message: `Path "${name}" must be unique. Please enter a different name.`,
                         });
                         return;
                       };

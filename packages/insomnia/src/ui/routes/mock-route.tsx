@@ -146,11 +146,11 @@ export const MockRouteRoute = () => {
       });
 
   const upsertMockbinHar = async (pathInput?: string) => {
-    const hasRouteInServer = mockRoutes.find(m => m.name === pathInput);
+    const hasRouteInServer = mockRoutes.filter(m => m._id !== mockRoute._id).find(m => m.name === pathInput);
     if (hasRouteInServer) {
       showModal(AlertModal, {
         title: 'Error',
-        message: 'Route name must be unique. Please enter a different name.',
+        message: `Path "${pathInput}" must be unique. Please enter a different name.`,
       });
 
       return;
@@ -176,11 +176,11 @@ export const MockRouteRoute = () => {
     });
   };
   const onSend = async (pathInput: string) => {
-    const hasRouteInServer = mockRoutes.find(m => m.name === pathInput);
+    const hasRouteInServer = mockRoutes.filter(m => m._id !== mockRoute._id).find(m => m.name === pathInput);
     if (hasRouteInServer) {
       showModal(AlertModal, {
         title: 'Error',
-        message: 'Route name must be unique. Please enter a different name.',
+        message: `Path "${pathInput}" must be unique. Please enter a different name.`,
       });
 
       return;
