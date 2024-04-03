@@ -253,7 +253,7 @@ export const syncOrganizationsAction: ActionFunction = async () => {
 };
 
 export interface OrganizationLoaderData {
-  organizations: (Organization & { storage?: StorageType })[];
+  organizations: Organization[];
   user?: UserProfileResponse;
   currentPlan?: CurrentPlan;
 }
@@ -291,13 +291,13 @@ export interface StorageRule {
   isOverridden: boolean;
 }
 
-export interface OrganizationLoader {
+export interface OrganizationFeatureLoaderData {
   features: FeatureList;
   billing: Billing;
   storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
 }
 
-export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<OrganizationLoader> => {
+export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<OrganizationFeatureLoaderData> => {
   const { organizationId } = params as { organizationId: string };
   const { id: sessionId } = await userSession.getOrCreate();
   const fallbackFeatures = {
@@ -323,7 +323,7 @@ export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<Organ
   const organization = organizationsData.organizations.find(o => o.id === organizationId);
 
   if (!organization) {
-    return redirect('/organization');
+    throw redirect('/organization');
   }
 
   try {

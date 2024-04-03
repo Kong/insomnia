@@ -3,7 +3,7 @@ import React from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { isRemoteProject } from '../../../models/project';
-import { OrganizationLoader } from '../../routes/organization';
+import { OrganizationFeatureLoaderData } from '../../routes/organization';
 import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { GitSyncDropdown } from './git-sync-dropdown';
@@ -20,7 +20,7 @@ export const WorkspaceSyncDropdown: FC = () => {
   ) as WorkspaceLoaderData;
 
   const { userSession } = useRootLoaderData();
-  const { features, storage } = useRouteLoaderData(':organizationId') as OrganizationLoader;
+  const { features, storage } = useRouteLoaderData(':organizationId') as OrganizationFeatureLoaderData;
 
   if (!userSession.id) {
     return null;

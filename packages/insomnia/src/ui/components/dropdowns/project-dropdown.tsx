@@ -48,11 +48,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
   const deleteProjectFetcher = useFetcher();
   const updateProjectFetcher = useFetcher();
   const [projectType, setProjectType] = useState<'local' | 'remote' | ''>('');
-  // const isCloudSyncOnlyEnabled = storage === 'cloud_only';
-  // const isLocalVaultOnlyEnabled = storage === 'local_only';
-  // const areBothStorageTypesEnabled = storage === 'cloud_plus_local';
-  // const isCloudSyncEnabled = areBothStorageTypesEnabled || isCloudSyncOnlyEnabled;
-  // const isLocalVaultEnabled = areBothStorageTypesEnabled || isLocalVaultOnlyEnabled;
+
   const isRemoteProjectInconsistent = isRemoteProject(project) && storage === 'local_only';
   const isLocalProjectInconsistent = !isRemoteProject(project) && storage === 'cloud_only';
   const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent;

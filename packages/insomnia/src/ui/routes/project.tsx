@@ -81,7 +81,7 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
-import { OrganizationLoader, useOrganizationLoaderData } from './organization';
+import { OrganizationFeatureLoaderData, useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
 interface TeamProject {
@@ -547,7 +547,7 @@ const ProjectRoute: FC = () => {
 
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
-  const { features, billing, storage } = useRouteLoaderData(':organizationId') as OrganizationLoader;
+  const { features, billing, storage } = useRouteLoaderData(':organizationId') as OrganizationFeatureLoaderData;
   const [scope, setScope] = useLocalStorage(`${projectId}:project-dashboard-scope`, 'all');
   const [sortOrder, setSortOrder] = useLocalStorage(`${projectId}:project-dashboard-sort-order`, 'modified-desc');
   const [filter, setFilter] = useLocalStorage(`${projectId}:project-dashboard-filter`, '');
