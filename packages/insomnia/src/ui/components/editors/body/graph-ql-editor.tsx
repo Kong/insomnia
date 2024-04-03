@@ -448,7 +448,6 @@ export const GraphQLEditor: FC<Props> = ({
   if (schema) {
     graphqlOptions = {
       hintOptions: {
-        schema,
         completeSingle: false,
       },
       infoOptions: {
