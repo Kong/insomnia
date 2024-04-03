@@ -286,14 +286,18 @@ export interface Billing {
   isActive: boolean;
 }
 
-export type StorageType = 'cloud_plus_local' | 'cloud_only' | 'local_only';
-
 export interface StorageRule {
-  storage: StorageType;
+  storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
   isOverridden: boolean;
 }
 
-export const singleOrgLoader: LoaderFunction = async ({ params }) => {
+export interface OrganizationLoader {
+  features: FeatureList;
+  billing: Billing;
+  storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
+}
+
+export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<OrganizationLoader> => {
   const { organizationId } = params as { organizationId: string };
   const { id: sessionId } = await userSession.getOrCreate();
   const fallbackFeatures = {
@@ -338,13 +342,13 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
     return {
       features: response?.features || fallbackFeatures,
       billing: response?.billing || fallbackBilling,
-      canUseCloudSync: storage === 'cloud_plus_local' || storage === 'cloud_only',
+      storage,
     };
   } catch (err) {
     return {
       features: fallbackFeatures,
       billing: fallbackBilling,
-      canUseCloudSync: true,
+      storage: fallbackStorage,
     };
   }
 };

@@ -3,7 +3,7 @@ import React from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { isRemoteProject } from '../../../models/project';
-import { FeatureList, StorageType } from '../../routes/organization';
+import { OrganizationLoader } from '../../routes/organization';
 import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { GitSyncDropdown } from './git-sync-dropdown';
@@ -20,11 +20,13 @@ export const WorkspaceSyncDropdown: FC = () => {
   ) as WorkspaceLoaderData;
 
   const { userSession } = useRootLoaderData();
-  const { features, canUseCloudSync } = useRouteLoaderData(':organizationId') as { features: FeatureList; canUseCloudSync: boolean };
+  const { features, storage } = useRouteLoaderData(':organizationId') as OrganizationLoader;
 
   if (!userSession.id) {
     return null;
   }
+
+  const canUseCloudSync = storage !== 'local_only';
 
   const shouldShowCloudSyncDropdown = isRemoteProject(activeProject)
     && !activeWorkspaceMeta?.gitRepositoryId
