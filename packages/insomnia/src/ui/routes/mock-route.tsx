@@ -17,10 +17,12 @@ import { CodeEditor } from '../components/codemirror/code-editor';
 import { MockResponseHeadersEditor } from '../components/editors/mock-response-headers-editor';
 import { MockResponsePane } from '../components/mocks/mock-response-pane';
 import { MockUrlBar } from '../components/mocks/mock-url-bar';
-import { showAlert } from '../components/modals';
+import { showAlert, showModal } from '../components/modals';
+import { AlertModal } from '../components/modals/alert-modal';
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { SvgIcon } from '../components/svg-icon';
+import { MockServerLoaderData } from './mock-server';
 import { useRootLoaderData } from './root';
 
 export interface MockRouteLoaderData {
@@ -91,6 +93,8 @@ export const useMockRoutePatcher = () => {
 
 export const MockRouteRoute = () => {
   const { mockServer, mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
+  const { mockRoutes } = useRouteLoaderData('mock-server') as MockServerLoaderData;
+
   const { userSession } = useRootLoaderData();
   const patchMockRoute = useMockRoutePatcher();
   const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
@@ -142,6 +146,15 @@ export const MockRouteRoute = () => {
       });
 
   const upsertMockbinHar = async (pathInput?: string) => {
+    const hasRouteInServer = mockRoutes.filter(m => m._id !== mockRoute._id).find(m => m.name === pathInput);
+    if (hasRouteInServer) {
+      showModal(AlertModal, {
+        title: 'Error',
+        message: `Path "${pathInput}" must be unique. Please enter a different name.`,
+      });
+
+      return;
+    };
     const compoundId = mockRoute.parentId + pathInput;
     const error = await upsertBinOnRemoteFromResponse(compoundId);
     if (error) {
@@ -163,6 +176,15 @@ export const MockRouteRoute = () => {
     });
   };
   const onSend = async (pathInput: string) => {
+    const hasRouteInServer = mockRoutes.filter(m => m._id !== mockRoute._id).find(m => m.name === pathInput);
+    if (hasRouteInServer) {
+      showModal(AlertModal, {
+        title: 'Error',
+        message: `Path "${pathInput}" must be unique. Please enter a different name.`,
+      });
+
+      return;
+    };
     await upsertMockbinHar(pathInput);
     const compoundId = mockRoute.parentId + pathInput;
     createandSendPrivateRequest({
