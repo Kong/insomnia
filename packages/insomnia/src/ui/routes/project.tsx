@@ -81,7 +81,7 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
-import { Billing, type FeatureList, type StorageType, useOrganizationLoaderData } from './organization';
+import { OrganizationLoader, useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
 interface TeamProject {
@@ -547,8 +547,7 @@ const ProjectRoute: FC = () => {
 
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
-  const { features, billing, storage } = useRouteLoaderData(':organizationId') as { features: FeatureList; billing: Billing; storage: StorageType };
-
+  const { features, billing, storage } = useRouteLoaderData(':organizationId') as OrganizationLoader;
   const [scope, setScope] = useLocalStorage(`${projectId}:project-dashboard-scope`, 'all');
   const [sortOrder, setSortOrder] = useLocalStorage(`${projectId}:project-dashboard-sort-order`, 'modified-desc');
   const [filter, setFilter] = useLocalStorage(`${projectId}:project-dashboard-filter`, '');
@@ -852,7 +851,10 @@ const ProjectRoute: FC = () => {
         },
       },
   ];
-
+  const defaultStorageSelection = storage === 'local_only' ? 'local' : 'remote';
+  const isRemoteProjectInconsistent = isRemoteProject(activeProject) && storage === 'local_only';
+  const isLocalProjectInconsistent = !isRemoteProject(activeProject) && storage === 'cloud_only';
+  const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent;
   return (
     <ErrorBoundary>
       <Fragment>
@@ -979,13 +981,13 @@ const ProjectRoute: FC = () => {
                                     className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                                   />
                                 </TextField>
-                                <RadioGroup name="type" defaultValue={isCloudSyncEnabled ? 'remote' : 'local'} className="flex flex-col gap-2">
+                                <RadioGroup name="type" defaultValue={defaultStorageSelection} className="flex flex-col gap-2">
                                   <Label className="text-sm text-[--hl]">
                                     Project type
                                   </Label>
                                   <div className="flex gap-2">
                                     <Radio
-                                      isDisabled={!isCloudSyncEnabled}
+                                      isDisabled={storage === 'local_only'}
                                       value="remote"
                                       className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
@@ -998,7 +1000,7 @@ const ProjectRoute: FC = () => {
                                       </p>
                                     </Radio>
                                     <Radio
-                                      isDisabled={!isLocalVaultEnabled}
+                                      isDisabled={storage === 'cloud_only'}
                                       value="local"
                                       className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
@@ -1180,11 +1182,11 @@ const ProjectRoute: FC = () => {
                   )}
                 </div>
               </div>}
-              {((isRemoteProject(activeProject) && !isCloudSyncOnlyEnabled) || (!isRemoteProject(activeProject) && !isLocalVaultOnlyEnabled)) && !areBothStorageTypesEnabled && <div className='p-[--padding-md] pb-0'>
+              {isProjectInconsistent && <div className='p-[--padding-md] pb-0'>
                 <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
                   <p className='text-base'>
                     <Icon icon="exclamation-triangle" className='mr-2' />
-                    {isCloudSyncOnlyEnabled ? 'The organization owner mandates that projects must be created and stored in the cloud storage only.' : 'The organization owner mandates that projects must be created and stored locally only. However, you can optionally enable Git Sync.'}
+                    The organization owner mandates that projects must be created and stored {storage.split('_').join(' ')}. However, you can optionally enable Git Sync.
                   </p>
                 </div>
               </div>}
