@@ -67,7 +67,6 @@ export const workspaceLoader: LoaderFunction = async ({
 }): Promise<WorkspaceLoaderData> => {
   const { organizationId, projectId, workspaceId } = params;
   invariant(organizationId, 'Organization ID is required');
-
   invariant(projectId, 'Project ID is required');
   invariant(workspaceId, 'Workspace ID is required');
 
@@ -233,8 +232,7 @@ export const workspaceLoader: LoaderFunction = async ({
   }
 
   const userSession = await models.userSession.getOrCreate();
-
-  if (userSession.id && activeProject.remoteId && !gitRepository) {
+  if (userSession.id && !gitRepository) {
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
