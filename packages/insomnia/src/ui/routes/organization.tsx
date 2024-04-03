@@ -334,17 +334,17 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
       path: `/v1/organizations/${organizationId}/storage-rule`,
       sessionId,
     });
-
+    const storage = ruleResponse?.storage || fallbackStorage;
     return {
       features: response?.features || fallbackFeatures,
       billing: response?.billing || fallbackBilling,
-      storage: ruleResponse?.storage || fallbackStorage,
+      canUseCloudSync: storage === 'cloud_plus_local' || storage === 'cloud_only',
     };
   } catch (err) {
     return {
       features: fallbackFeatures,
       billing: fallbackBilling,
-      storage: fallbackStorage,
+      canUseCloudSync: true,
     };
   }
 };
