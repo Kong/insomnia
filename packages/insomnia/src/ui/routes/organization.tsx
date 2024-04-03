@@ -306,11 +306,13 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
     isActive: true,
   };
 
+  const fallbackStorage = 'cloud_plus_local';
+
   if (isScratchpadOrganizationId(organizationId)) {
     return {
       features: fallbackFeatures,
       billing: fallbackBilling,
-      storage: 'cloud_plus_local',
+      storage: fallbackStorage,
     };
   }
 
@@ -333,18 +335,16 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
       sessionId,
     });
 
-    organization.storage = ruleResponse?.storage || 'cloud_plus_local';
-
     return {
       features: response?.features || fallbackFeatures,
       billing: response?.billing || fallbackBilling,
-      storage: organization.storage,
+      storage: ruleResponse?.storage || fallbackStorage,
     };
   } catch (err) {
     return {
       features: fallbackFeatures,
       billing: fallbackBilling,
-      storage: 'cloud_plus_local',
+      storage: fallbackStorage,
     };
   }
 };
