@@ -81,7 +81,7 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
-import { Billing, type FeatureList, useOrganizationLoaderData } from './organization';
+import { OrganizationFeatureLoaderData, useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
 interface TeamProject {
@@ -547,8 +547,7 @@ const ProjectRoute: FC = () => {
 
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
-  const { features, billing } = useRouteLoaderData(':organizationId') as { features: FeatureList; billing: Billing };
-
+  const { features, billing, storage } = useRouteLoaderData(':organizationId') as OrganizationFeatureLoaderData;
   const [scope, setScope] = useLocalStorage(`${projectId}:project-dashboard-scope`, 'all');
   const [sortOrder, setSortOrder] = useLocalStorage(`${projectId}:project-dashboard-sort-order`, 'modified-desc');
   const [filter, setFilter] = useLocalStorage(`${projectId}:project-dashboard-filter`, '');
@@ -844,7 +843,10 @@ const ProjectRoute: FC = () => {
         },
       },
   ];
-
+  const defaultStorageSelection = storage === 'local_only' ? 'local' : 'remote';
+  const isRemoteProjectInconsistent = isRemoteProject(activeProject) && storage === 'local_only';
+  const isLocalProjectInconsistent = !isRemoteProject(activeProject) && storage === 'cloud_only';
+  const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent;
   return (
     <ErrorBoundary>
       <Fragment>
@@ -971,26 +973,28 @@ const ProjectRoute: FC = () => {
                                     className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                                   />
                                 </TextField>
-                                <RadioGroup name="type" defaultValue="remote" className="flex flex-col gap-2">
+                                <RadioGroup name="type" defaultValue={defaultStorageSelection} className="flex flex-col gap-2">
                                   <Label className="text-sm text-[--hl]">
                                     Project type
                                   </Label>
                                   <div className="flex gap-2">
                                     <Radio
+                                      isDisabled={storage === 'local_only'}
                                       value="remote"
-                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
                                       <div className='flex items-center gap-2'>
                                         <Icon icon="globe" />
-                                        <Heading className="text-lg font-bold">Secure Cloud</Heading>
+                                        <Heading className="text-lg font-bold">Cloud Sync</Heading>
                                       </div>
                                       <p className='pt-2'>
                                         Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
                                       </p>
                                     </Radio>
                                     <Radio
+                                      isDisabled={storage === 'cloud_only'}
                                       value="local"
-                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
                                       <div className="flex items-center gap-2">
                                         <Icon icon="laptop" />
@@ -1006,7 +1010,7 @@ const ProjectRoute: FC = () => {
                                   <div className="flex items-center gap-2 text-sm">
                                     <Icon icon="info-circle" />
                                     <span>
-                                      For both project types you can optionally enable Git Sync
+                                      {isProjectInconsistent && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`} You can optionally enable Git Sync
                                     </span>
                                   </div>
                                   <div className='flex items-center gap-2'>
@@ -1067,12 +1071,12 @@ const ProjectRoute: FC = () => {
                           />
                           <span className="truncate">{item.name}</span>
                           <span className="flex-1" />
-                          <AvatarGroup
+                          {item.presence.length > 0 && <AvatarGroup
                             size="small"
                             maxAvatars={3}
                             items={item.presence}
-                          />
-                          {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} />}
+                          />}
+                          {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} storage={storage} />}
                         </div>
                       </GridListItem>
                     );
@@ -1164,6 +1168,14 @@ const ProjectRoute: FC = () => {
                       Update payment method
                     </a>
                   )}
+                </div>
+              </div>}
+              {isProjectInconsistent && <div className='p-[--padding-md] pb-0'>
+                <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
+                  <p className='text-base'>
+                    <Icon icon="exclamation-triangle" className='mr-2' />
+                    The organization owner mandates that projects must be created and stored {storage.split('_').join(' ')}. However, you can optionally enable Git Sync.
+                  </p>
                 </div>
               </div>}
               <div className="flex max-w-xl justify-between w-full gap-2 p-[--padding-md]">
