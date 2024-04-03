@@ -20,16 +20,17 @@ export const WorkspaceSyncDropdown: FC = () => {
   ) as WorkspaceLoaderData;
 
   const { userSession } = useRootLoaderData();
-  const { features, storage } = useRouteLoaderData(':organizationId') as { features: FeatureList; storage: StorageType };
+  const { features, canUseCloudSync } = useRouteLoaderData(':organizationId') as { features: FeatureList; canUseCloudSync: boolean };
 
   if (!userSession.id) {
     return null;
   }
 
-  const isCloudSyncEnabled = storage === 'cloud_only' || storage === 'cloud_plus_local';
-  const isLocalVaultEnabled = storage === 'local_only' || storage === 'cloud_plus_local';
+  const shouldShowCloudSyncDropdown = isRemoteProject(activeProject)
+    && !activeWorkspaceMeta?.gitRepositoryId
+    && canUseCloudSync;
 
-  if ((isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId && isCloudSyncEnabled) || (isRemoteProject(activeProject) && activeWorkspace.isCloudSynced)) {
+  if (shouldShowCloudSyncDropdown) {
     return (
       <SyncDropdown
         key={activeWorkspace?._id}
@@ -40,8 +41,9 @@ export const WorkspaceSyncDropdown: FC = () => {
     );
   }
 
-  if (features.gitSync.enabled && (activeWorkspaceMeta?.gitRepositoryId || (!isRemoteProject(activeProject) || isLocalVaultEnabled))) {
-    return <GitSyncDropdown isInsomniaSyncEnabled={isRemoteProject(activeProject) && isCloudSyncEnabled} gitRepository={gitRepository} />;
+  const shouldShowGitSyncDropdown = features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId;
+  if (shouldShowGitSyncDropdown) {
+    return <GitSyncDropdown isInsomniaSyncEnabled={isRemoteProject(activeProject)} gitRepository={gitRepository} />;
   }
 
   return null;
