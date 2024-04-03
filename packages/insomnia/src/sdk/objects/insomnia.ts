@@ -4,6 +4,7 @@ import { ClientCertificate } from '../../models/client-certificate';
 import { RequestBodyParameter, RequestHeader } from '../../models/request';
 import { Settings } from '../../models/settings';
 import { toPreRequestAuth } from './auth';
+import { CookieObject } from './cookies';
 import { Environment, Variables } from './environments';
 import { RequestContext } from './interfaces';
 import { unsupportedError } from './properties';
@@ -19,6 +20,8 @@ export class InsomniaObject {
     public baseEnvironment: Environment;
     public variables: Variables;
     public request: ScriptRequest;
+    public cookies: CookieObject;
+
     private clientCertificates: ClientCertificate[];
     private _expect = expect;
     private _test = test;
@@ -40,6 +43,7 @@ export class InsomniaObject {
             request: ScriptRequest;
             settings: Settings;
             clientCertificates: ClientCertificate[];
+            cookies: CookieObject;
         },
         log: (...msgs: any[]) => void,
     ) {
@@ -49,6 +53,7 @@ export class InsomniaObject {
         this.collectionVariables = this.baseEnvironment; // collectionVariables is mapped to baseEnvironment
         this._iterationData = rawObj.iterationData;
         this.variables = rawObj.variables;
+        this.cookies = rawObj.cookies;
 
         this.request = rawObj.request;
         this._settings = rawObj.settings;
@@ -97,6 +102,7 @@ export class InsomniaObject {
             request: this.request,
             settings: this.settings,
             clientCertificates: this.clientCertificates,
+            cookieJar: this.cookies.jar().toInsomniaCookieJar(),
         };
     };
 }
@@ -110,6 +116,7 @@ export function initInsomniaObject(
     const baseEnvironment = new Environment(rawObj.baseEnvironment);
     const iterationData = new Environment(rawObj.iterationData);
     const collectionVariables = new Environment(rawObj.collectionVariables);
+    const cookies = new CookieObject(rawObj.cookieJar);
 
     const variables = new Variables({
         globals,
@@ -213,6 +220,7 @@ export function initInsomniaObject(
             request,
             settings: rawObj.settings,
             clientCertificates: rawObj.clientCertificates,
+            cookies,
         },
         log,
     );

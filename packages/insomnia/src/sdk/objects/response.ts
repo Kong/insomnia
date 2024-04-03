@@ -48,7 +48,6 @@ export class Response extends Property {
         this.body = options.body || '';
         this.code = options.code;
         this.cookies = new CookieList(
-            undefined,
             options.cookie?.map(cookie => new Cookie(cookie)) || [],
         );
         this.headers = new HeaderList(

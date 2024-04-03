@@ -2,6 +2,7 @@ import { Snippet } from 'codemirror';
 import React, { FC, Fragment, useRef } from 'react';
 
 import { Settings } from '../../../models/settings';
+import { CookieObject } from '../../../sdk/objects/cookies';
 import { Environment, Variables } from '../../../sdk/objects/environments';
 import { InsomniaObject } from '../../../sdk/objects/insomnia';
 import { Request as ScriptRequest } from '../../../sdk/objects/request';
@@ -172,6 +173,16 @@ export const PreRequestScriptEditor: FC<Props> = ({
       }),
       settings,
       clientCertificates: [],
+      cookies: new CookieObject({
+        _id: '',
+        type: '',
+        parentId: '',
+        modified: 0,
+        created: 0,
+        isPrivate: false,
+        name: '',
+        cookies: [],
+      }),
     },
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       (_msg: string, _fn: () => void) => { }
