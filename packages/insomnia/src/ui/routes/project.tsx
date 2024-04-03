@@ -1010,8 +1010,7 @@ const ProjectRoute: FC = () => {
                                   <div className="flex items-center gap-2 text-sm">
                                     <Icon icon="info-circle" />
                                     <span>
-                                      {isProjectInconsistent && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`}
-                                      You can optionally enable Git Sync
+                                      {isProjectInconsistent && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`} You can optionally enable Git Sync
                                     </span>
                                   </div>
                                   <div className='flex items-center gap-2'>
@@ -1070,7 +1069,6 @@ const ProjectRoute: FC = () => {
                               isRemoteProject(item) ? 'globe-americas' : 'laptop'
                             }
                           />
-
                           <span className="truncate">{item.name}</span>
                           <span className="flex-1" />
                           {item.presence.length > 0 && <AvatarGroup

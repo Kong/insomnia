@@ -295,8 +295,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
                     <div className="flex items-center gap-2 text-sm">
                       <Icon icon="info-circle" />
                       <span>
-                        {isProjectInconsistent && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`}
-                        You can optionally enable Git Sync
+                        {isProjectInconsistent && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`} You can optionally enable Git Sync
                       </span>
                     </div>
                     <div className='flex items-center gap-2'>

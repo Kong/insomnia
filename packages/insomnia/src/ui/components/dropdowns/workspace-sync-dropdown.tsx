@@ -20,17 +20,14 @@ export const WorkspaceSyncDropdown: FC = () => {
   ) as WorkspaceLoaderData;
 
   const { userSession } = useRootLoaderData();
-  const { features, storage } = useRouteLoaderData(':organizationId') as OrganizationFeatureLoaderData;
+  const { features } = useRouteLoaderData(':organizationId') as OrganizationFeatureLoaderData;
 
   if (!userSession.id) {
     return null;
   }
 
-  const canUseCloudSync = storage !== 'local_only';
-
   const shouldShowCloudSyncDropdown = isRemoteProject(activeProject)
-    && !activeWorkspaceMeta?.gitRepositoryId
-    && canUseCloudSync;
+    && !activeWorkspaceMeta?.gitRepositoryId;
 
   if (shouldShowCloudSyncDropdown) {
     return (
@@ -43,7 +40,7 @@ export const WorkspaceSyncDropdown: FC = () => {
     );
   }
 
-  const shouldShowGitSyncDropdown = features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId;
+  const shouldShowGitSyncDropdown = features.gitSync.enabled && (activeWorkspaceMeta?.gitRepositoryId || !isRemoteProject(activeProject));
   if (shouldShowGitSyncDropdown) {
     return <GitSyncDropdown isInsomniaSyncEnabled={isRemoteProject(activeProject)} gitRepository={gitRepository} />;
   }
