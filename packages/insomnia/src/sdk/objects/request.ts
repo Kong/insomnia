@@ -1,5 +1,5 @@
 import { init as initClientCertificate } from '../../../src/models/client-certificate';
-import { Request as InsomniaRequest } from '../../../src/models/request';
+import { Request as InsomniaRequest, RequestPathParameter } from '../../../src/models/request';
 import { ClientCertificate } from '../../models/client-certificate';
 import { Settings } from '../../models/settings';
 import { AuthOptions, AuthOptionTypes, fromPreRequestAuth, RequestAuth } from './auth';
@@ -9,7 +9,7 @@ import { HeaderDefinition } from './headers';
 import { Header, HeaderList } from './headers';
 import { Property, PropertyBase, PropertyList } from './properties';
 import { ProxyConfig, ProxyConfigOptions } from './proxy-configs';
-import { QueryParam, Url } from './urls';
+import { QueryParam, toUrlObject, Url } from './urls';
 import { Variable, VariableList } from './variables';
 
 export type RequestBodyMode = undefined | 'formdata' | 'urlencoded' | 'raw' | 'file' | 'graphql';
@@ -191,6 +191,7 @@ export interface RequestOptions {
     auth?: AuthOptions;
     proxy?: ProxyConfigOptions;
     certificate?: CertificateOptions;
+    pathParameters?: RequestPathParameter[];
 }
 
 export interface RequestSize {
@@ -201,11 +202,7 @@ export interface RequestSize {
 }
 
 function requestOptionsToClassFields(options: RequestOptions) {
-    if (!options.url || options.url === '') {
-        throw Error('Request URL is not specified');
-    }
-
-    const url = typeof options.url === 'string' ? new Url(options.url) : options.url;
+    const url = toUrlObject(options.url);
     const method = options.method || 'GET';
 
     let headers: HeaderList<Header>;
@@ -230,6 +227,7 @@ function requestOptionsToClassFields(options: RequestOptions) {
     const auth = new RequestAuth(options.auth || { type: 'noauth' });
     const proxy = options.proxy ? new ProxyConfig(options.proxy) : undefined;
     const certificate = options.certificate ? new Certificate(options.certificate) : undefined;
+    const pathParameters = options.pathParameters ? options.pathParameters : new Array<RequestPathParameter>();
 
     return {
         url,
@@ -239,6 +237,7 @@ function requestOptionsToClassFields(options: RequestOptions) {
         auth,
         proxy,
         certificate,
+        pathParameters,
     };
 }
 
@@ -250,6 +249,7 @@ export class Request extends Property {
     auth: RequestAuth;
     proxy?: ProxyConfig;
     certificate?: Certificate;
+    pathParameters: RequestPathParameter[];
 
     constructor(options: RequestOptions) {
         super();
@@ -265,6 +265,7 @@ export class Request extends Property {
         this.auth = transformedOpts.auth;
         this.proxy = transformedOpts.proxy;
         this.certificate = transformedOpts.certificate;
+        this.pathParameters = transformedOpts.pathParameters;
     }
 
     static isRequest(obj: object) {
@@ -419,6 +420,7 @@ export class Request extends Property {
         this.auth = transformedOptions.auth;
         this.proxy = transformedOptions.proxy;
         this.certificate = transformedOptions.certificate;
+        this.pathParameters = transformedOptions.pathParameters;
     }
 
     upsertHeader(header: HeaderDefinition) {
@@ -559,6 +561,11 @@ export function mergeRequests(
         mimeType = originalReq.body.mimeType;
     }
 
+    const queryParameters = updatedReq.url.query.map(
+        queryParam => ({ name: queryParam.key, value: queryParam.value })
+        ,
+        {},
+    );
     const updatedReqProperties: Partial<InsomniaRequest> = {
         // url is encoded during parsing phase. Need decode url In order to recognized variables
         url: decodeURI(typeof updatedReq.url === 'string' ? updatedReq.url : updatedReq.url.toString()),
@@ -581,6 +588,8 @@ export function mergeRequests(
         ),
         authentication: fromPreRequestAuth(updatedReq.auth),
         preRequestScript: '',
+        pathParameters: updatedReq.pathParameters,
+        parameters: queryParameters,
     };
 
     return {

@@ -4,6 +4,7 @@ import { ClientCertificate } from '../../models/client-certificate';
 import { RequestBodyParameter, RequestHeader } from '../../models/request';
 import { Settings } from '../../models/settings';
 import { toPreRequestAuth } from './auth';
+import { CookieObject } from './cookies';
 import { Environment, Variables } from './environments';
 import { RequestContext } from './interfaces';
 import { unsupportedError } from './properties';
@@ -11,6 +12,7 @@ import { Request as ScriptRequest, RequestBodyOptions, RequestOptions } from './
 import { Response as ScriptResponse } from './response';
 import { sendRequest } from './send-request';
 import { test } from './test';
+import { toUrlObject } from './urls';
 
 export class InsomniaObject {
     public environment: Environment;
@@ -18,6 +20,8 @@ export class InsomniaObject {
     public baseEnvironment: Environment;
     public variables: Variables;
     public request: ScriptRequest;
+    public cookies: CookieObject;
+
     private clientCertificates: ClientCertificate[];
     private _expect = expect;
     private _test = test;
@@ -39,6 +43,7 @@ export class InsomniaObject {
             request: ScriptRequest;
             settings: Settings;
             clientCertificates: ClientCertificate[];
+            cookies: CookieObject;
         },
         log: (...msgs: any[]) => void,
     ) {
@@ -48,6 +53,7 @@ export class InsomniaObject {
         this.collectionVariables = this.baseEnvironment; // collectionVariables is mapped to baseEnvironment
         this._iterationData = rawObj.iterationData;
         this.variables = rawObj.variables;
+        this.cookies = rawObj.cookies;
 
         this.request = rawObj.request;
         this._settings = rawObj.settings;
@@ -96,6 +102,7 @@ export class InsomniaObject {
             request: this.request,
             settings: this.settings,
             clientCertificates: this.clientCertificates,
+            cookieJar: this.cookies.jar().toInsomniaCookieJar(),
         };
     };
 }
@@ -109,6 +116,7 @@ export function initInsomniaObject(
     const baseEnvironment = new Environment(rawObj.baseEnvironment);
     const iterationData = new Environment(rawObj.iterationData);
     const collectionVariables = new Environment(rawObj.collectionVariables);
+    const cookies = new CookieObject(rawObj.cookieJar);
 
     const variables = new Variables({
         globals,
@@ -183,8 +191,14 @@ export function initInsomniaObject(
         }
     }
 
+    const reqUrl = toUrlObject(rawObj.request.url);
+    reqUrl.addQueryParams(
+        rawObj.request.parameters
+            .filter(param => !param.disabled)
+            .map(param => ({ key: param.name, value: param.value }))
+    );
     const reqOpt: RequestOptions = {
-        url: rawObj.request.url,
+        url: reqUrl,
         method: rawObj.request.method,
         header: rawObj.request.headers.map(
             (header: RequestHeader) => ({ key: header.name, value: header.value })
@@ -206,6 +220,7 @@ export function initInsomniaObject(
             request,
             settings: rawObj.settings,
             clientCertificates: rawObj.clientCertificates,
+            cookies,
         },
         log,
     );
