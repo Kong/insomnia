@@ -12,6 +12,7 @@ import { Request as ScriptRequest, RequestBodyOptions, RequestOptions } from './
 import { Response as ScriptResponse } from './response';
 import { sendRequest } from './send-request';
 import { test } from './test';
+import { toUrlObject } from './urls';
 
 export class InsomniaObject {
     public environment: Environment;
@@ -190,8 +191,14 @@ export function initInsomniaObject(
         }
     }
 
+    const reqUrl = toUrlObject(rawObj.request.url);
+    reqUrl.addQueryParams(
+        rawObj.request.parameters
+            .filter(param => !param.disabled)
+            .map(param => ({ key: param.name, value: param.value }))
+    );
     const reqOpt: RequestOptions = {
-        url: rawObj.request.url,
+        url: reqUrl,
         method: rawObj.request.method,
         header: rawObj.request.headers.map(
             (header: RequestHeader) => ({ key: header.name, value: header.value })
