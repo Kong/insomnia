@@ -570,3 +570,10 @@ export class UrlMatchPatternList<T extends UrlMatchPattern> extends PropertyList
             .length > 0;
     }
 }
+
+export function toUrlObject(url: string | Url): Url {
+    if (!url) {
+        throw Error('Request URL is not specified');
+    }
+    return typeof url === 'string' ? new Url(url) : url;
+}
