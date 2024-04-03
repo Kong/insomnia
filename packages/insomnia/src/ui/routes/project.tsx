@@ -634,7 +634,6 @@ const ProjectRoute: FC = () => {
           {
             name,
             scope: 'collection',
-            isCloudSyncEnabled,
           },
           {
             action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
@@ -657,7 +656,6 @@ const ProjectRoute: FC = () => {
           {
             name,
             scope: 'design',
-            isCloudSyncEnabled,
           },
           {
             action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
@@ -726,12 +724,6 @@ const ProjectRoute: FC = () => {
   }, [createNewProjectFetcher.data, createNewProjectFetcher.state]);
 
   const isGitSyncEnabled = features.gitSync.enabled;
-
-  const isCloudSyncOnlyEnabled = storage === 'cloud_only';
-  const isLocalVaultOnlyEnabled = storage === 'local_only';
-  const areBothStorageTypesEnabled = storage === 'cloud_plus_local';
-  const isCloudSyncEnabled = isCloudSyncOnlyEnabled || areBothStorageTypesEnabled;
-  const isLocalVaultEnabled = isLocalVaultOnlyEnabled || areBothStorageTypesEnabled;
 
   const showUpgradePlanModal = () => {
     if (!organization || !userSession.accountId) {
@@ -1018,10 +1010,8 @@ const ProjectRoute: FC = () => {
                                   <div className="flex items-center gap-2 text-sm">
                                     <Icon icon="info-circle" />
                                     <span>
-                                      {isCloudSyncEnabled && isLocalVaultEnabled ?
-                                        'For both project types you can optionally enable Git Sync' :
-                                        `The owner of the organization allows only ${isCloudSyncEnabled ? 'Cloud Sync' : 'Local Vault'} project creation. You can optionally enable Git Sync`
-                                      }
+                                      {isProjectInconsistent && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`}
+                                      You can optionally enable Git Sync
                                     </span>
                                   </div>
                                   <div className='flex items-center gap-2'>
