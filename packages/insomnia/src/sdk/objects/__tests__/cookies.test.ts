@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { Cookie } from '../cookies';
+import { Cookie, CookieJar } from '../cookies';
 
 describe('test Cookie object', () => {
     it('test basic operations', () => {
@@ -64,5 +64,82 @@ describe('test Cookie object', () => {
         expect(
             Cookie.unparseSingle(cookie1Opt)
         ).toEqual(expectedCookieString);
+    });
+
+});
+
+describe('test CookieJar', () => {
+    it('basic operations', () => {
+        const cookieOptBase = {
+            key: 'myCookie',
+            value: 'myCookie',
+            expires: '01 Jan 1970 00:00:01 GMT',
+            maxAge: '7',
+            domain: 'domain.com',
+            path: '/',
+            secure: true,
+            httpOnly: true,
+            hostOnly: true,
+            session: true,
+            extensions: [{ key: 'Ext', value: 'ExtValue' }],
+        };
+
+        const jar = new CookieJar(
+            'my jar',
+            [
+                new Cookie({ ...cookieOptBase, key: 'c1', value: 'c1' }),
+                new Cookie({ ...cookieOptBase, key: 'c2', value: 'c2' }),
+            ],
+        );
+
+        jar.set('domain.com', 'c1', { ...cookieOptBase, key: 'c1', value: 'c1Updated' }, (error, cookie) => {
+            expect(error).toBeUndefined();
+            expect(cookie?.toJSON()).toEqual(
+                new Cookie({ ...cookieOptBase, key: 'c1', value: 'c1Updated' }).toJSON()
+            );
+        });
+
+        jar.set('domain2.com', 'c2', { ...cookieOptBase, key: 'c2', value: 'c2' }, (error, cookie) => {
+            expect(error).toBeUndefined();
+            expect(cookie?.toJSON()).toEqual(
+                new Cookie({ ...cookieOptBase, key: 'c2', value: 'c2' }).toJSON()
+            );
+        });
+
+        jar.get('domain.com', 'c1', (err, cookie) => {
+            expect(err).toBeUndefined();
+            expect(
+                cookie?.toJSON(),
+            ).toEqual(
+                new Cookie({ ...cookieOptBase, key: 'c1', value: 'c1Updated' }).toJSON(),
+            );
+        });
+
+        jar.get('domain2.com', 'c2', (err, cookie) => {
+            expect(err).toBeUndefined();
+            expect(
+                cookie?.toJSON(),
+            ).toEqual(
+                new Cookie({ ...cookieOptBase, key: 'c2', value: 'c2' }).toJSON(),
+            );
+        });
+
+        jar.unset('domain.com', 'c1', err => {
+            expect(err).toBeUndefined();
+        });
+
+        jar.get('domain.com', 'c1', (err, cookie) => {
+            expect(err).toBeUndefined();
+            expect(cookie).toBeUndefined();
+        });
+
+        jar.clear('domain2.com', err => {
+            expect(err).toBeUndefined();
+        });
+
+        jar.get('domain2.com', 'c2', (err, cookie) => {
+            expect(err).toBeUndefined();
+            expect(cookie).toBeUndefined();
+        });
     });
 });

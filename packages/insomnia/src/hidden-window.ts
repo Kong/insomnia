@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import * as _ from 'lodash';
 
 import { invariant } from '../src/utils/invariant';
+import { mergeCookieJar } from './sdk/objects/cookies';
 import { initInsomniaObject, InsomniaObject } from './sdk/objects/insomnia';
 import { RequestContext } from './sdk/objects/interfaces';
 import { mergeClientCertificates, mergeRequests, mergeSettings } from './sdk/objects/request';
@@ -83,6 +84,7 @@ const runPreRequestScript = async (
   const updatedRequest = mergeRequests(context.request, mutatedContextObject.request);
   const updatedSettings = mergeSettings(context.settings, mutatedContextObject.request);
   const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
+  const updatedCookieJar = mergeCookieJar(context.cookieJar, mutatedContextObject.cookieJar);
 
   await fs.promises.writeFile(context.timelinePath, log.join('\n'));
 
@@ -96,5 +98,6 @@ const runPreRequestScript = async (
     request: updatedRequest,
     settings: updatedSettings,
     clientCertificates: updatedCertificates,
+    cookieJar: updatedCookieJar,
   };
 };

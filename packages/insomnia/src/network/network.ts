@@ -20,6 +20,7 @@ import type { HeaderResult, ResponsePatch } from '../main/network/libcurl-promis
 import * as models from '../models';
 import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
+import { CookieJar } from '../models/cookie-jar';
 import { Environment } from '../models/environment';
 import type { Request, RequestAuthentication, RequestParameter } from '../models/request';
 import type { Settings } from '../models/settings';
@@ -80,6 +81,7 @@ export const tryToExecutePreRequestScript = async (
   responseId: string,
   baseEnvironment: Environment,
   clientCertificates: ClientCertificate[],
+  cookieJar: CookieJar,
 ) => {
   if (!request.preRequestScript) {
     return {
@@ -111,6 +113,7 @@ export const tryToExecutePreRequestScript = async (
         baseEnvironment: baseEnvironment?.data || {},
         clientCertificates,
         settings,
+        cookieJar,
       },
     });
     const output = await Promise.race([timeoutPromise, preRequestPromise]) as {
@@ -119,6 +122,7 @@ export const tryToExecutePreRequestScript = async (
       baseEnvironment: Record<string, any>;
       settings: Settings;
       clientCertificates: ClientCertificate[];
+      cookieJar: CookieJar;
     };
     console.log('[network] Pre-request script succeeded', output);
 
@@ -144,6 +148,7 @@ export const tryToExecutePreRequestScript = async (
       baseEnvironment,
       settings: output.settings,
       clientCertificates: output.clientCertificates,
+      cookieJar: output.cookieJar,
     };
   } catch (err) {
     await fs.promises.appendFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');

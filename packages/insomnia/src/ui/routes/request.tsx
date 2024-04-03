@@ -374,6 +374,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     responseId,
   } = await fetchRequestData(requestId);
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
   try {
     const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
@@ -384,11 +385,20 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       responseId,
       baseEnvironment,
       clientCertificates,
+      cookieJar,
     );
     if (!mutatedContext?.request) {
       // exiy early if there was a problem with the pre-request script
       // TODO: improve error message?
       return null;
+    } else {
+      // persist updated cookieJar if needed
+      if (mutatedContext.cookieJar) {
+        await models.cookieJar.update(
+          mutatedContext.cookieJar,
+          { cookies: mutatedContext.cookieJar.cookies },
+        );
+      }
     }
 
     const renderedResult = await tryToInterpolateRequest(
