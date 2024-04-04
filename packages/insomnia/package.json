@@ -151,7 +151,7 @@
     "esbuild": "^0.19.0",
     "esbuild-plugin-alias": "0.2.1",
     "esbuild-runner": "^2.2.2",
-    "fuzzysort": "^2.0.4",
+    "fuzzysort": "^1.2.1",
     "graphql": "^16.8.1",
     "gsap": "^3.12.5",
     "highlight.js": "^11.9.0",
