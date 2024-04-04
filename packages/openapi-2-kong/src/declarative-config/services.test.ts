@@ -146,7 +146,7 @@ describe('services', () => {
           parameter_schema: 'path',
         },
       };
-      spec.paths['/cats'].get = {};
+      spec.paths['/cats'].get = { responses: {} };
       // operation req validator plugin
       (spec.paths['/cats'].post as OA3Operation)[xKongPluginRequestValidator] = {
         name: 'request-validator',
@@ -286,8 +286,9 @@ describe('services', () => {
               key_names: ['path'],
             },
           },
-          get: {},
+          get: { responses: {} },
           post: {
+            responses: {},
             [xKongPluginKeyAuth]: {
               name: 'key-auth',
               config: {
@@ -369,8 +370,9 @@ describe('services', () => {
       spec.paths = {
         '/dogs': {
           summary: 'Dog stuff',
-          get: {},
+          get: { responses: {} },
           post: {
+            responses: {},
             security: [
               {
                 'common-aad-scheme': ['Api.Security.Write'],
