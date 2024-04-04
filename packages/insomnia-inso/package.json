@@ -37,11 +37,11 @@
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@types/nedb": "^1.8.16",
-    "@types/node": "^20.11.6",
-    "concurrently": "^8.2.0",
+    "@types/node": "^20.12.4",
+    "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "esbuild": "^0.19.0",
-    "esbuild-node-externals": "^1.12.0",
+    "esbuild-node-externals": "^1.13.0",
     "esbuild-runner": "^2.2.2",
     "execa": "^5.0.0",
     "jest": "^29.7.0",
@@ -53,14 +53,14 @@
     "@stoplight/spectral-ruleset-bundler": "^1.5.2",
     "@stoplight/spectral-rulesets": "^1.18.1",
     "@stoplight/types": "^14.1.1",
-    "axios": "^1.6.3",
+    "axios": "^1.6.8",
     "commander": "^5.1.0",
     "consola": "^2.15.0",
     "cosmiconfig": "^6.0.0",
-    "enquirer": "^2.3.6",
+    "enquirer": "^2.4.1",
     "insomnia-send-request": "../insomnia-send-request",
-    "@seald-io/nedb": "^4.0.3",
+    "@seald-io/nedb": "^4.0.4",
     "string-argv": "^0.3.2",
-    "yaml": "^2.3.1"
+    "yaml": "^1.6.0"
   }
 }

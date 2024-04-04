@@ -181,7 +181,7 @@ interface SpecActionItem {
 const getMethodsFromOpenApiPathItem = (
   pathItem: OpenAPIV3.PathItemObject
 ): string[] => {
-  const OpenApiV3Methods = [
+  const methods = [
     'get',
     'put',
     'post',
@@ -190,9 +190,9 @@ const getMethodsFromOpenApiPathItem = (
     'head',
     'patch',
     'trace',
-  ] satisfies (keyof OpenAPIV3.PathItemObject)[];
-
-  const methods = OpenApiV3Methods.filter(method => pathItem[method]);
+  ].filter(method =>
+    // @ts-expect-error -- shrug
+    pathItem[method]);
 
   return methods;
 };

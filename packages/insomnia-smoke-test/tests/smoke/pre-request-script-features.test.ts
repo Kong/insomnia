@@ -173,8 +173,7 @@ test.describe('pre-request features tests', async () => {
         await bodyEditor.fill('{ "rawBody": {{ _.rawBody }}, "urlencodedBody": {{ _.urlencodedBody }}, "gqlBody": {{ _.gqlBody }}, "fileBody": {{ _.fileBody }}, "formdataBody": {{ _.formdataBody }} }');
 
         // enter script
-        const preRequestScriptTab = page.getByRole('tab', { name: 'Pre-request Script' });
-        await preRequestScriptTab.click();
+        await page.getByTestId('pre-request-script-tab').click();
         const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
         await preRequestScriptEditor.fill(`
         const rawReq = {
@@ -430,8 +429,7 @@ test.describe('unhappy paths', async () => {
             await page.getByRole('menuitem', { name: 'JSON' }).click();
 
             // enter script
-            const preRequestScriptTab = page.getByRole('tab', { name: 'Pre-request Script' });
-            await preRequestScriptTab.click();
+            await page.getByTestId('pre-request-script-tab').click();
             const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
             await preRequestScriptEditor.fill(tc.preReqScript);
 
