@@ -30,7 +30,7 @@
     "build:production": "cross-env NODE_ENV=production esr esbuild.ts",
     "start": "ESBUILD_WATCH=true esr esbuild.ts",
     "prepackage": "npm run build:production",
-    "package": "npx -y bpkg dist/index.js --output binaries/inso --node --external fsevents,swagger2openapi,oas-validator",
+    "package": "npx -y pkg@5.8.1 . --output binaries/inso --targets host",
     "postpackage": "esr src/scripts/verify-pkg.ts",
     "artifacts": "esr src/scripts/artifacts.ts"
   },
