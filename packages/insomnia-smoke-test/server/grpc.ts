@@ -214,7 +214,6 @@ export const startGRPCServer = (port: number) => {
         }
         featureList = JSON.parse(data.toString());
         console.log(`Listening at grpc://localhost:${port} for route_guide.proto`);
-        server.start();
         resolve();
       });
     });

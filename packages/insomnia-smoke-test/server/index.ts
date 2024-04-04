@@ -75,8 +75,7 @@ app.get('/delay/seconds/:duration', (req, res) => {
     res.send(`Delayed by ${delaySec} seconds`);
   }, delaySec * 1000);
 });
-
-app.use('/oidc', oauthRoutes(port));
+oauthRoutes(port).then(router => app.use('/oidc', router));
 
 app.get('/', (_req, res) => {
   res.status(200).send();
