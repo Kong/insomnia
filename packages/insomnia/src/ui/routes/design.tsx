@@ -329,7 +329,9 @@ const Design: FC = () => {
 
     const sourceMap = new YAMLSourceMap();
     const specMap = sourceMap.index(
-      YAML.parseDocument(apiSpec.contents)
+      YAML.parseDocument(apiSpec.contents, {
+        keepCstNodes: true,
+      })
     );
     const itemMappedPosition = sourceMap.lookup(pathSegments, specMap);
     if (itemMappedPosition) {

@@ -35,7 +35,7 @@
     "tough-cookie": "^4.1.3",
     "url-join": "^4.0.1",
     "uuid": "^8.3.2",
-    "yaml": "^2.4.1"
+    "yaml": "^1.6.0"
   },
   "devDependencies": {},
   "scripts": {},

@@ -61,6 +61,6 @@
     "insomnia-send-request": "../insomnia-send-request",
     "@seald-io/nedb": "^4.0.4",
     "string-argv": "^0.3.2",
-    "yaml": "^2.4.1"
+    "yaml": "^1.6.0"
   }
 }
