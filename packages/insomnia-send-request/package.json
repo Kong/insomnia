@@ -16,7 +16,7 @@
     "axios": "^1.6.8",
     "clone": "^2.1.2",
     "color": "^4.2.3",
-    "fuzzysort": "^2.0.4",
+    "fuzzysort": "1.2.1",
     "hawk": "9.0.2",
     "hkdf": "0.0.2",
     "html-entities": "^2.5.2",

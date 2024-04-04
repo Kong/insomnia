@@ -212,7 +212,7 @@ export function fuzzyMatchAll(
   const words = searchString.split(' ').filter(w => w.trim());
   const terms = options.splitSpace ? [...words, searchString] : [searchString];
   let maxScore: number | null = null;
-  const indexes: number[] = [];
+  let indexes: number[] = [];
   let termsMatched = 0;
 
   for (const term of terms) {
@@ -234,6 +234,7 @@ export function fuzzyMatchAll(
         maxScore = result.score;
       }
 
+      indexes = [...indexes, ...result.indexes];
       matchedTerm = true;
     }
 
