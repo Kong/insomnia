@@ -21,7 +21,7 @@ export const MarkdownPreview: FC<Props> = ({ markdown, className, heading }) => 
     let shouldUpdate = true;
     const fn = async () => {
       try {
-        const compiled = markdownToHTML(markdown);
+        const compiled = await markdownToHTML(markdown);
         shouldUpdate && setCompiled(compiled);
         shouldUpdate && setError('');
       } catch (err) {

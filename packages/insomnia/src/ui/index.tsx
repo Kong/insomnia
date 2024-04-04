@@ -19,7 +19,6 @@ import {
   isDevelopment,
 } from '../common/constants';
 import { database } from '../common/database';
-import { initializeLogging } from '../common/log';
 import * as models from '../models';
 import { initNewOAuthSession } from '../network/o-auth-2/get-token';
 import { init as initPlugins } from '../plugins';
@@ -45,7 +44,6 @@ const Design = lazy(() => import('./routes/design'));
 const MockServer = lazy(() => import('./routes/mock-server'));
 
 initializeSentry();
-initializeLogging();
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();

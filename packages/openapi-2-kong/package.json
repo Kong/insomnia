@@ -15,7 +15,7 @@
     "@apidevtools/swagger-parser": "10.1.0",
     "openapi-types": "^12.1.3",
     "slugify": "1.6.6",
-    "url-join": "^4.0.1",
+    "url-join": "^5.0.0",
     "yaml": "^1.6.0"
   },
   "devDependencies": {

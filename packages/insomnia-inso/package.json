@@ -56,7 +56,7 @@
     "axios": "^1.6.8",
     "commander": "^5.1.0",
     "consola": "^2.15.0",
-    "cosmiconfig": "^6.0.0",
+    "cosmiconfig": "^9.0.0",
     "enquirer": "^2.4.1",
     "insomnia-send-request": "../insomnia-send-request",
     "@seald-io/nedb": "^4.0.4",

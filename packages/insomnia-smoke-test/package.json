@@ -21,8 +21,8 @@
     "test:cli": "concurrently --names server,cli --success first --kill-others \"esr server/index.ts\" \"npm run cli\""
   },
   "devDependencies": {
-    "@grpc/grpc-js": "^1.6.7",
-    "@grpc/proto-loader": "^0.7.7",
+    "@grpc/grpc-js": "^1.10.6",
+    "@grpc/proto-loader": "^0.7.12",
     "@jest/globals": "^29.7.0",
     "@playwright/test": "1.42.1",
     "@ravanallc/grpc-server-reflection": "^0.1.6",
@@ -31,18 +31,18 @@
     "@types/oidc-provider": "^8.4.4",
     "@types/uuid": "^9.0.8",
     "@types/ws": "^8.5.10",
-    "concurrently": "^7.0.0",
+    "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "esbuild-runner": "2.2.2",
     "execa": "^5.0.0",
     "express": "^4.19.2",
     "express-basic-auth": "^1.2.1",
     "graphql-http": "^1.22.0",
-    "faker": "^5.1.0",
+    "faker": "^6.6.6",
     "graphql": "^16.8.1",
     "jest": "^29.7.0",
-    "oidc-provider": "^7.10.6",
-    "uuid": "^8.3.2",
+    "oidc-provider": "^8.4.5",
+    "uuid": "^9.0.1",
     "ws": "^8.16.0",
     "xvfb-maybe": "^0.2.1"
   },
@@ -54,7 +54,7 @@
     "test": "tests"
   },
   "dependencies": {
-    "depd": "^1.1.2",
+    "depd": "^2.0.0",
     "http-errors": "^2.0.0",
     "statuses": "^2.0.1",
     "toidentifier": "^1.0.1"
