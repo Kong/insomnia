@@ -262,7 +262,7 @@ export const GraphQLEditor: FC<Props> = ({
   const { editorIndentWithTabs, editorIndentSize } = settings;
   const beautifyRequestBody = async () => {
     const { body } = state;
-    const prettyQuery = (await import('prettier')).format(body.query, {
+    const prettyQuery = await (await import('prettier')).format(body.query, {
       parser: 'graphql',
       useTabs: editorIndentWithTabs,
       tabWidth: editorIndentSize,
