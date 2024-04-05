@@ -1,9 +1,7 @@
 import express, { urlencoded } from 'express';
-import { Configuration, Provider } from 'oidc-provider';
-// @ts-expect-error no typings available for this module
-import { InvalidGrant } from 'oidc-provider/lib/helpers/errors';
+import type Provider from 'oidc-provider';
 
-export const oauthRoutes = (port: number) => {
+export const oauthRoutes = async (port: number) => {
   const clientIDAuthorizationCode = 'authorization_code';
   const clientIDAuthorizationCodePKCE = 'authorization_code_pkce';
   const clientIDImplicit = 'implicit';
@@ -15,7 +13,7 @@ export const oauthRoutes = (port: number) => {
   const clientRedirectUri = `http://127.0.0.1:${port}/callback`;
 
   /* eslint-disable camelcase */
-  const oidcConfig: Configuration = {
+  const oidcConfig = {
     interactions: {
       url: (_, interaction) => {
         return `/oidc/interaction/${interaction.uid}`;
@@ -128,8 +126,8 @@ export const oauthRoutes = (port: number) => {
     },
   };
   /* eslint-enable camelcase */
-
-  const oidc = new Provider(`http://127.0.0.1:${port}`, oidcConfig);
+  const provider = (await import('oidc-provider')).default;
+  const oidc = new provider(`http://127.0.0.1:${port}`, oidcConfig);
 
   allowLocalhostImplicit(oidc);
   registerROPC(oidc);
@@ -273,15 +271,15 @@ function registerROPC(oidc: Provider) {
     const params = ctx.oidc.params;
 
     if (!params) {
-      throw new InvalidGrant('invalid params provided');
+      throw new Error('invalid params provided');
     }
 
     if (!ctx.oidc.client) {
-      throw new InvalidGrant('invalid client provided');
+      throw new Error('invalid client provided');
     }
 
     if (typeof params.username !== 'string' || typeof params.password !== 'string') {
-      throw new InvalidGrant('invalid credentials provided');
+      throw new Error('invalid credentials provided');
     }
 
     const account = await ctx.oidc.provider.Account.findAccount(
@@ -289,7 +287,7 @@ function registerROPC(oidc: Provider) {
       params.username
     );
     if (!account) {
-      throw new InvalidGrant('invalid account');
+      throw new Error('invalid account');
     }
 
     const grant = new ctx.oidc.provider.Grant({
