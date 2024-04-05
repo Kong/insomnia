@@ -24,7 +24,7 @@
     "isomorphic-git": "^1.25.7",
     "jshint": "^2.13.6",
     "jsonlint-mod-fixed": "1.7.7",
-    "jsonpath-plus": "^8.1.0",
+    "jsonpath-plus": "^6.0.1",
     "marked": "^5.1.1",
     "mime-types": "^2.1.35",
     "multiparty": "^4.2.3",
