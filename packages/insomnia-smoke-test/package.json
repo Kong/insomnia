@@ -21,8 +21,8 @@
     "test:cli": "concurrently --names server,cli --success first --kill-others \"esr server/index.ts\" \"npm run cli\""
   },
   "devDependencies": {
-    "@grpc/grpc-js": "^1.6.7",
-    "@grpc/proto-loader": "^0.7.7",
+    "@grpc/grpc-js": "^1.10.6",
+    "@grpc/proto-loader": "^0.7.12",
     "@jest/globals": "^29.7.0",
     "@playwright/test": "1.42.1",
     "@ravanallc/grpc-server-reflection": "^0.1.6",
