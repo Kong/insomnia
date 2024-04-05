@@ -15,12 +15,10 @@
     "@apidevtools/swagger-parser": "10.1.0",
     "openapi-types": "^12.1.3",
     "slugify": "1.6.6",
-    "url-join": "^4.0.1",
     "yaml": "^1.6.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "@types/url-join": "^4.0.3",
     "jest": "^29.7.0",
     "type-fest": "^4.15.0"
   },

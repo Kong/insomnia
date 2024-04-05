@@ -55,7 +55,6 @@
     "axios": "^1.6.8",
     "chai": "^4.3.4",
     "chai-json-schema": "1.5.1",
-    "change-case": "^4.1.2",
     "clone": "^2.1.2",
     "color": "^3.1.2",
     "content-disposition": "^0.5.4",
