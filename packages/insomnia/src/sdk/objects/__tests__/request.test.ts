@@ -1,13 +1,8 @@
-import url from 'node:url';
-
 import { describe, expect, it } from '@jest/globals';
 
 import { Request, RequestBody } from '../request';
-import { setUrlParser } from '../urls';
 
 describe('test request and response objects', () => {
-    setUrlParser(url.URL);
-
     it('test RequestBody methods', () => {
         const reqBody = new RequestBody({
             mode: 'urlencoded',
