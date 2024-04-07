@@ -40,15 +40,13 @@ test('handle hidden browser window getting closed', async ({ app, page }) => {
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-  await page.getByText('Pre-request Scripts').click();
-
-  await page.getByLabel('Request Collection').getByTestId('Long running task').press('Enter');
-  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-
   await page.getByTestId('settings-button').click();
   await page.getByLabel('Request timeout (ms)').fill('1');
   await page.getByRole('button', { name: '' }).click();
-  await page.getByRole('button', { name: 'Send' }).click();
+
+  await page.getByText('Pre-request Scripts').click();
+  await page.getByLabel('Request Collection').getByTestId('Long running task').press('Enter');
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
   await page.getByText('Timeout: Pre-request script took too long').click();
   await page.getByRole('tab', { name: 'Timeline' }).click();
@@ -57,5 +55,6 @@ test('handle hidden browser window getting closed', async ({ app, page }) => {
   const hiddenWindow = windows[1];
   hiddenWindow.close();
   await page.getByRole('button', { name: 'Send' }).click();
-  await page.getByText('Timeout: Hidden browser window is not responding').click();
+  // as the hidden window is restarted, it should not show "Timeout: Hidden browser window is not responding"
+  await page.getByText('Timeout: Pre-request script took too long').click();
 });

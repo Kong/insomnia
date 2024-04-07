@@ -5,7 +5,6 @@ import { useRouteLoaderData } from 'react-router-dom';
 import { useFetcher } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
-import { getCurrentSessionId } from '../../../account/session';
 import { getMockServiceURL, getPreviewModeName, PREVIEW_MODE_FRIENDLY, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
@@ -119,6 +118,7 @@ export const MockResponsePane = () => {
 const HistoryViewWrapperComponentFactory = ({ mockServer, mockRoute }: { mockServer: MockServer; mockRoute: MockRoute }) => {
   const [logs, setLogs] = useState<MockbinLogOutput | null>(null);
   const [logEntryId, setLogEntryId] = useState<number | null>(null);
+  const { userSession } = useRootLoaderData();
 
   const fetchLogs = useCallback(async () => {
     const compoundId = mockRoute.parentId + mockRoute.name;
@@ -128,7 +128,7 @@ const HistoryViewWrapperComponentFactory = ({ mockServer, mockRoute }: { mockSer
         origin: mockbinUrl,
         path: `/bin/log/${compoundId}`,
         method: 'GET',
-        sessionId: getCurrentSessionId(),
+        sessionId: userSession.id,
       });
       if (res?.log) {
         setLogs(res);
@@ -139,7 +139,7 @@ const HistoryViewWrapperComponentFactory = ({ mockServer, mockRoute }: { mockSer
       // network erros will be managed by the upsert trigger, so we can ignore them here
       console.log({ mockbinUrl, e });
     }
-  }, [mockRoute.name, mockRoute.parentId, mockServer.url, mockServer.useInsomniaCloud]);
+  }, [mockRoute.name, mockRoute.parentId, mockServer.url, mockServer.useInsomniaCloud, userSession.id]);
   // refetches logs whenever the path changes, or a response is recieved, or tenseconds elapses or history tab is click
   // chatgpt: answer my called
   useInterval(() => {

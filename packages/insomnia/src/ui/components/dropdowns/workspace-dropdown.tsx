@@ -3,7 +3,6 @@ import React, { FC, ReactNode, useCallback, useState } from 'react';
 import { Button, Dialog, Heading, Menu, MenuItem, MenuTrigger, Modal, ModalOverlay, Popover } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { isLoggedIn } from '../../../account/session';
 import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { exportMockServerToFile } from '../../../common/export';
@@ -18,6 +17,7 @@ import { getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { invariant } from '../../../utils/invariant';
 import { useAIContext } from '../../context/app/ai-context';
+import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Icon } from '../icon';
 import { InsomniaAI } from '../insomnia-ai-icon';
@@ -39,6 +39,7 @@ interface WorkspaceActionItem {
 export const WorkspaceDropdown: FC = () => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   invariant(organizationId, 'Expected organizationId');
+  const { userSession } = useRootLoaderData();
   const {
     activeWorkspace,
     activeProject,
@@ -186,7 +187,7 @@ export const WorkspaceDropdown: FC = () => {
         icon: <Icon icon='code' />,
         action: () => handleGenerateConfig(generator.label),
       } satisfies WorkspaceActionItem)) : [],
-      ...isLoggedIn() && access.enabled && activeWorkspace.scope === 'design' ? [{
+    ...userSession.id && access.enabled && activeWorkspace.scope === 'design' ? [{
         id: 'insomnia-ai/generate-test-suite',
         name: 'Auto-generate Tests For Collection',
         action: generateTests,

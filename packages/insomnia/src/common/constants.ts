@@ -28,21 +28,7 @@ export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () => appConfig.segmentWriteKeys[(isDevelopment() || env.PLAYWRIGHT) ? 'development' : 'production'];
 export const getSentryDsn = () => appConfig.sentryDsn;
 export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
-export type AuthType =
-  | 'none'
-  | 'apikey'
-  | 'oauth2'
-  | 'oauth1'
-  | 'basic'
-  | 'digest'
-  | 'bearer'
-  | 'ntlm'
-  | 'hawk'
-  | 'iam'
-  | 'netrc'
-  | 'asap'
-  | 'sha256'
-  | 'sha1';
+
 export const getBrowserUserAgent = () => encodeURIComponent(
   String(window.navigator.userAgent)
     .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
@@ -115,7 +101,7 @@ export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) =
       }
 
       if (isWindows()) {
-        // Note: Although this unicode character for the Windows doesn't exist, the the Unicode character U+229E ⊞ SQUARED PLUS is very commonly used for this purpose. For example, Wikipedia uses it as a simulation of the windows logo.  Though, Windows itself uses `Windows` or `Win`, so we'll go with `Win` here.
+        // Note: Although this unicode character for the Windows doesn't exist, the Unicode character U+229E ⊞ SQUARED PLUS is very commonly used for this purpose. For example, Wikipedia uses it as a simulation of the windows logo.  Though, Windows itself uses `Windows` or `Win`, so we'll go with `Win` here.
         // see: https://en.wikipedia.org/wiki/Windows_key
         return 'Win';
       }

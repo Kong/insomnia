@@ -1,8 +1,8 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useFetcher, useParams, useRevalidator, useRouteLoaderData } from 'react-router-dom';
 
-import { getCurrentSessionId } from '../../../account/session';
 import { ProjectLoaderData } from '../../routes/project';
+import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 
 const InsomniaEventStreamContext = createContext<{
@@ -75,6 +75,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
       workspaceId: string;
   };
 
+  const { userSession } = useRootLoaderData();
   const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
   const remoteId = projectData?.activeProject.remoteId || workspaceData?.activeProject.remoteId;
@@ -88,7 +89,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   // Update presence when the user switches org, projects, workspaces
   useEffect(() => {
     async function updatePresence() {
-      const sessionId = getCurrentSessionId();
+      const sessionId = userSession.id;
       if (sessionId && remoteId) {
         try {
           const response = await window.main.insomniaFetch<{
@@ -114,10 +115,10 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     }
 
     updatePresence();
-  }, [organizationId, remoteId, workspaceId]);
+  }, [organizationId, remoteId, userSession.id, workspaceId]);
 
   useEffect(() => {
-    const sessionId = getCurrentSessionId();
+    const sessionId = userSession.id;
     if (sessionId && remoteId) {
       try {
         const source = new EventSource(`insomnia-event-source://v1/teams/${sanitizeTeamId(organizationId)}/streams?sessionId=${sessionId}`);
@@ -174,7 +175,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
       }
     }
     return;
-  }, [organizationId, projectId, remoteId, revalidate, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, workspaceId]);
+  }, [organizationId, projectId, remoteId, revalidate, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, userSession.id, workspaceId]);
 
   return (
     <InsomniaEventStreamContext.Provider

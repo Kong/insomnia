@@ -14,12 +14,17 @@ export const VCSInstance = () => {
     process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
   );
   vcs = new VCS(driver, async (conflicts, labels) => {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       showModal(SyncMergeModal, {
         conflicts,
         labels,
-        handleDone: (conflicts?: MergeConflict[]) =>
-          resolve(conflicts || []),
+        handleDone: (conflicts?: MergeConflict[]) => {
+          if (conflicts && conflicts.length) {
+            resolve(conflicts);
+          }
+
+          reject(new Error('User aborted merge'));
+        },
       });
     });
   });

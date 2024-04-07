@@ -20,6 +20,7 @@ import type { HeaderResult, ResponsePatch } from '../main/network/libcurl-promis
 import * as models from '../models';
 import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
+import { CookieJar } from '../models/cookie-jar';
 import { Environment } from '../models/environment';
 import type { Request, RequestAuthentication, RequestParameter } from '../models/request';
 import type { Settings } from '../models/settings';
@@ -79,6 +80,8 @@ export const tryToExecutePreRequestScript = async (
   timelinePath: string,
   responseId: string,
   baseEnvironment: Environment,
+  clientCertificates: ClientCertificate[],
+  cookieJar: CookieJar,
 ) => {
   if (!request.preRequestScript) {
     return {
@@ -108,9 +111,19 @@ export const tryToExecutePreRequestScript = async (
         // this is more deterministic and avoids that script accidently manipulates baseEnvironment instead of environment
         environment: environment._id === baseEnvironment._id ? {} : (environment?.data || {}),
         baseEnvironment: baseEnvironment?.data || {},
+        clientCertificates,
+        settings,
+        cookieJar,
       },
     });
-    const output = await Promise.race([timeoutPromise, preRequestPromise]) as { request: Request; environment: Record<string, any>; baseEnvironment: Record<string, any> };
+    const output = await Promise.race([timeoutPromise, preRequestPromise]) as {
+      request: Request;
+      environment: Record<string, any>;
+      baseEnvironment: Record<string, any>;
+      settings: Settings;
+      clientCertificates: ClientCertificate[];
+      cookieJar: CookieJar;
+    };
     console.log('[network] Pre-request script succeeded', output);
 
     const envPropertyOrder = orderedJSON.parse(
@@ -118,15 +131,14 @@ export const tryToExecutePreRequestScript = async (
       JSON_ORDER_PREFIX,
       JSON_ORDER_SEPARATOR,
     );
-
     environment.data = output.environment;
     environment.dataPropertyOrder = envPropertyOrder.map;
+
     const baseEnvPropertyOrder = orderedJSON.parse(
       JSON.stringify(output.baseEnvironment),
       JSON_ORDER_PREFIX,
       JSON_ORDER_SEPARATOR,
     );
-
     baseEnvironment.data = output.baseEnvironment;
     baseEnvironment.dataPropertyOrder = baseEnvPropertyOrder.map;
 
@@ -134,6 +146,9 @@ export const tryToExecutePreRequestScript = async (
       request: output.request,
       environment,
       baseEnvironment,
+      settings: output.settings,
+      clientCertificates: output.clientCertificates,
+      cookieJar: output.cookieJar,
     };
   } catch (err) {
     await fs.promises.appendFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
@@ -194,8 +209,9 @@ export async function sendCurlAndWriteTimeline(
 ) {
   const requestId = renderedRequest._id;
   const timelineStrings: string[] = [];
+  const authentication = renderedRequest.authentication as RequestAuthentication;
 
-  const { finalUrl, socketPath } = transformUrl(renderedRequest.url, renderedRequest.parameters, renderedRequest.authentication, renderedRequest.settingEncodeUrl);
+  const { finalUrl, socketPath } = transformUrl(renderedRequest.url, renderedRequest.parameters, authentication, renderedRequest.settingEncodeUrl);
   timelineStrings.push(JSON.stringify({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() }) + '\n');
   timelineStrings.push(JSON.stringify({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() }) + '\n');
   timelineStrings.push(JSON.stringify({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() }) + '\n');

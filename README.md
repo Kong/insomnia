@@ -17,7 +17,7 @@ With Insomnia you can:
 And a lot more! The following storage options are supported for your projects, collections, specs and all other files:
 
 - **Local Vault**: for local storage of collections, design specs and every other resource.
-- **Cloud Sync**: for cloud collaboration, end-to-end encrypted (E2EE) and free.
+- **Cloud Sync**: for cloud collaboration, encrypted and free.
 - **Git Sync**: for Git storage of all files using any 3rd party Git repository.
 
 ![Insomnia API Client](https://raw.githubusercontent.com/Kong/insomnia/develop/screenshots/main.png)

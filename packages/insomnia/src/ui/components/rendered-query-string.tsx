@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import React, { FC, useState } from 'react';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';
@@ -11,7 +12,6 @@ import { CopyButton as _CopyButton } from './base/copy-button';
 const Wrapper = styled.div({
   display: 'flex',
   justifyContent: 'space-between',
-  alignItems: 'center',
   overflow: 'auto',
   position: 'relative',
   height: '100%',
@@ -82,7 +82,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
 
   return (
     <Wrapper>
-      <span className={className}>{previewString}</span>
+      <span className={classNames('my-auto', className)}>{previewString}</span>
 
       <CopyButton
         size="small"

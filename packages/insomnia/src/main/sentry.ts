@@ -13,15 +13,15 @@ let enabled = false;
  * Watch setting for changes. This must be called after the DB is initialized.
  */
 export function sentryWatchAnalyticsEnabled() {
-  models.settings.get().then(settings => {
-    enabled = settings.enableAnalytics || session.isLoggedIn();
+  models.settings.get().then(async settings => {
+    enabled = settings.enableAnalytics || await session.isLoggedIn();
   });
 
   db.onChange(async (changes: ChangeBufferEvent[]) => {
     for (const change of changes) {
       const [event, doc] = change;
       if (isSettings(doc) && event === 'update') {
-        enabled = doc.enableAnalytics || session.isLoggedIn();
+        enabled = doc.enableAnalytics || await session.isLoggedIn();
       }
 
       if (event === 'insert' || event === 'update') {

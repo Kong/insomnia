@@ -292,6 +292,7 @@ export const RequestPane: FC<Props> = ({
         </TabItem>
         <TabItem
           key="pre-request-script"
+          data-testid="pre-request-script-tab"
           title={
             <div className='flex items-center gap-2'>
               Pre-request Script{' '}
@@ -310,6 +311,7 @@ export const RequestPane: FC<Props> = ({
               uniquenessKey={uniqueKey}
               defaultValue={activeRequest.preRequestScript || ''}
               onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
+              settings={settings}
             />
           </ErrorBoundary>
         </TabItem>

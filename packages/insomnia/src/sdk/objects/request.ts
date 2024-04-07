@@ -1,12 +1,15 @@
-import { Request as InsomniaRequest } from '../../../src/models/request';
-import { AuthOptions, fromPreRequestAuth, RequestAuth } from './auth';
+import { init as initClientCertificate } from '../../../src/models/client-certificate';
+import { Request as InsomniaRequest, RequestPathParameter } from '../../../src/models/request';
+import { ClientCertificate } from '../../models/client-certificate';
+import { Settings } from '../../models/settings';
+import { AuthOptions, AuthOptionTypes, fromPreRequestAuth, RequestAuth } from './auth';
 import { CertificateOptions } from './certificates';
 import { Certificate } from './certificates';
 import { HeaderDefinition } from './headers';
 import { Header, HeaderList } from './headers';
 import { Property, PropertyBase, PropertyList } from './properties';
 import { ProxyConfig, ProxyConfigOptions } from './proxy-configs';
-import { QueryParam, Url } from './urls';
+import { QueryParam, toUrlObject, Url } from './urls';
 import { Variable, VariableList } from './variables';
 
 export type RequestBodyMode = undefined | 'formdata' | 'urlencoded' | 'raw' | 'file' | 'graphql';
@@ -14,7 +17,7 @@ export type RequestBodyMode = undefined | 'formdata' | 'urlencoded' | 'raw' | 'f
 export interface RequestBodyOptions {
     mode: RequestBodyMode;
     file?: string;
-    formdata?: { key: string; value: string }[];
+    formdata?: { key: string; value: string; type?: string }[];
     graphql?: { query: string; operationName: string; variables: object };
     raw?: string;
     urlencoded?: { key: string; value: string }[];
@@ -24,16 +27,19 @@ export interface RequestBodyOptions {
 export class FormParam extends Property {
     key: string;
     value: string;
+    type?: string;
 
-    constructor(options: { key: string; value: string }) {
+    constructor(options: { key: string; value: string; type?: string }) {
         super();
         this.key = options.key;
         this.value = options.value;
+        this.type = options.type;
     }
 
     static _postman_propertyAllowsMultipleValues() {
         throw Error('unsupported');
     }
+
     static _postman_propertyIndexKey() {
         throw Error('unsupported');
     }
@@ -43,7 +49,7 @@ export class FormParam extends Property {
     // }
 
     toJSON() {
-        return { key: this.key, value: this.value };
+        return { key: this.key, value: this.value, type: this.type };
     }
 
     toString() {
@@ -64,8 +70,7 @@ function getClassFields(opts: RequestBodyOptions) {
             undefined,
             opts.formdata.
                 map(formParamObj => new FormParam({
-                    key: formParamObj.key,
-                    value: formParamObj.value,
+                    ...formParamObj,
                 }))
         ) :
         undefined;
@@ -149,10 +154,9 @@ export class RequestBody extends PropertyBase {
         try {
             switch (this.mode) {
                 case 'formdata':
-                    // TODO: it should return data in "multipart/form-data" format
-                    throw Error('formdata is unsupported yet');
+                    return this.formdata?.map(param => param.toString(), {}).join('&') || '';
                 case 'urlencoded':
-                    return this.urlencoded ? this.urlencoded.map(formData => formData.toString(), {}).join('&') : '';
+                    return this.urlencoded?.map(param => param.toString(), {}).join('&') || '';
                 case 'raw':
                     return this.raw || '';
                 case 'file':
@@ -187,6 +191,7 @@ export interface RequestOptions {
     auth?: AuthOptions;
     proxy?: ProxyConfigOptions;
     certificate?: CertificateOptions;
+    pathParameters?: RequestPathParameter[];
 }
 
 export interface RequestSize {
@@ -197,7 +202,7 @@ export interface RequestSize {
 }
 
 function requestOptionsToClassFields(options: RequestOptions) {
-    const url = typeof options.url === 'string' ? new Url(options.url) : options.url;
+    const url = toUrlObject(options.url);
     const method = options.method || 'GET';
 
     let headers: HeaderList<Header>;
@@ -222,6 +227,7 @@ function requestOptionsToClassFields(options: RequestOptions) {
     const auth = new RequestAuth(options.auth || { type: 'noauth' });
     const proxy = options.proxy ? new ProxyConfig(options.proxy) : undefined;
     const certificate = options.certificate ? new Certificate(options.certificate) : undefined;
+    const pathParameters = options.pathParameters ? options.pathParameters : new Array<RequestPathParameter>();
 
     return {
         url,
@@ -231,6 +237,7 @@ function requestOptionsToClassFields(options: RequestOptions) {
         auth,
         proxy,
         certificate,
+        pathParameters,
     };
 }
 
@@ -242,6 +249,7 @@ export class Request extends Property {
     auth: RequestAuth;
     proxy?: ProxyConfig;
     certificate?: Certificate;
+    pathParameters: RequestPathParameter[];
 
     constructor(options: RequestOptions) {
         super();
@@ -257,6 +265,7 @@ export class Request extends Property {
         this.auth = transformedOpts.auth;
         this.proxy = transformedOpts.proxy;
         this.certificate = transformedOpts.certificate;
+        this.pathParameters = transformedOpts.pathParameters;
     }
 
     static isRequest(obj: object) {
@@ -279,7 +288,7 @@ export class Request extends Property {
         this.url.addQueryParams(params);
     }
 
-    authorizeUsing(authType: string | AuthOptions, options?: VariableList<Variable>) {
+    authorizeUsing(authType: AuthOptionTypes | AuthOptions, options?: VariableList<Variable>) {
         const selectedAuth = typeof authType === 'string' ? authType : authType.type;
         this.auth.use(selectedAuth, options || { type: 'noauth' });
     }
@@ -329,7 +338,7 @@ export class Request extends Property {
         return headersObj;
     }
 
-    removeHeader(toRemove: string | Header, options: { ignoreCase: boolean }) {
+    removeHeader(toRemove: string | Header, options?: { ignoreCase: boolean }) {
         const filteredHeaders = this.headers.filter(
             header => {
                 if (!header.key) {
@@ -337,7 +346,7 @@ export class Request extends Property {
                 }
 
                 if (typeof toRemove === 'string') {
-                    return options.ignoreCase ?
+                    return options != null && options.ignoreCase ?
                         header.key.toLocaleLowerCase() !== toRemove.toLocaleLowerCase() :
                         header.key !== toRemove;
                 } else if (toRemove instanceof Header) {
@@ -345,7 +354,7 @@ export class Request extends Property {
                         return false;
                     }
 
-                    return options.ignoreCase ?
+                    return options != null && options.ignoreCase ?
                         header.key.toLocaleLowerCase() !== toRemove.key.toLocaleLowerCase() :
                         header.key !== toRemove.key;
                 } else {
@@ -411,6 +420,7 @@ export class Request extends Property {
         this.auth = transformedOptions.auth;
         this.proxy = transformedOptions.proxy;
         this.certificate = transformedOptions.certificate;
+        this.pathParameters = transformedOptions.pathParameters;
     }
 
     upsertHeader(header: HeaderDefinition) {
@@ -427,6 +437,93 @@ export class Request extends Property {
         // append new
         this.headers.append(new Header(header));
     }
+}
+
+export function mergeSettings(
+    originalSettings: Settings,
+    updatedReq: Request,
+): Settings {
+    const proxyEnabled = updatedReq.proxy != null
+        && !updatedReq.proxy.disabled
+        && updatedReq.proxy.getProxyUrl() !== '';
+    if (!proxyEnabled) {
+        return originalSettings;
+    }
+
+    const proxyUrl = updatedReq.proxy?.getProxyUrl();
+    if (!proxyUrl) {
+        return originalSettings;
+    }
+
+    // it always override both http and https proxies
+    const httpProxy = proxyUrl;
+    const httpsProxy = proxyUrl;
+
+    return {
+        ...originalSettings,
+        proxyEnabled,
+        httpProxy,
+        httpsProxy,
+    };
+}
+
+export function mergeClientCertificates(
+    originalClientCertificates: ClientCertificate[],
+    updatedReq: Request,
+): ClientCertificate[] {
+    // as Pre-request script request only supports one certificate while Insomnia supports configuring multiple ones
+    // then the mapping rule is:
+    // - if the pre-request script request cert is specified, it replaces all original certs
+    // - if not, it returns original certs
+
+    if (!updatedReq.certificate) {
+        return originalClientCertificates;
+    } else if (
+        updatedReq.certificate.key == null &&
+        updatedReq.certificate.cert == null &&
+        updatedReq.certificate.pfx == null
+    ) {
+        return originalClientCertificates;
+    }
+
+    const baseCertificate = originalClientCertificates && originalClientCertificates.length > 0 ?
+        originalClientCertificates[0] :
+        {
+            ...initClientCertificate(),
+            // TODO: remove baseModelPart when it is not necessary for certs
+            _id: '',
+            type: '',
+            parentId: '',
+            modified: 0,
+            created: 0,
+            isPrivate: false,
+            name: '',
+        };
+
+    if (updatedReq.certificate.pfx != null && updatedReq.certificate.pfx?.src !== '') {
+        return [{
+            ...baseCertificate,
+            key: null,
+            cert: null,
+            passphrase: updatedReq.certificate.passphrase || null,
+            pfx: updatedReq.certificate.pfx?.src,
+        }];
+    } else if (
+        updatedReq.certificate.key != null &&
+        updatedReq.certificate.cert != null &&
+        updatedReq.certificate.key?.src !== '' &&
+        updatedReq.certificate.cert?.src !== ''
+    ) {
+        return [{
+            ...baseCertificate,
+            key: updatedReq.certificate.key?.src,
+            cert: updatedReq.certificate.cert?.src,
+            passphrase: updatedReq.certificate.passphrase || null,
+            pfx: null,
+        }];
+    }
+
+    throw Error('Invalid certificate configuration: "cert+key" and "pfx" can not be set at the same time');
 }
 
 export function mergeRequests(
@@ -460,9 +557,18 @@ export function mergeRequests(
                 throw Error(`unknown body mode: ${updatedReq.body.mode}`);
         }
     }
+    if (originalReq.body.mimeType) {
+        mimeType = originalReq.body.mimeType;
+    }
 
+    const queryParameters = updatedReq.url.query.map(
+        queryParam => ({ name: queryParam.key, value: queryParam.value })
+        ,
+        {},
+    );
     const updatedReqProperties: Partial<InsomniaRequest> = {
-        url: typeof updatedReq.url === 'string' ? updatedReq.url : updatedReq.url.toString(),
+        // url is encoded during parsing phase. Need decode url In order to recognized variables
+        url: decodeURI(typeof updatedReq.url === 'string' ? updatedReq.url : updatedReq.url.toString()),
         method: updatedReq.method,
         body: {
             mimeType: mimeType,
@@ -481,6 +587,9 @@ export function mergeRequests(
             {},
         ),
         authentication: fromPreRequestAuth(updatedReq.auth),
+        preRequestScript: '',
+        pathParameters: updatedReq.pathParameters,
+        parameters: queryParameters,
     };
 
     return {

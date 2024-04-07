@@ -1,8 +1,10 @@
 import type { CurlRequestOptions, CurlRequestOutput } from '../main/network/libcurl-promise';
+import { CookieJar } from '../models/cookie-jar';
 import { Request } from '../models/request';
 import { RequestContext } from '../sdk/objects/interfaces';
 
 const cancelRequestFunctionMap = new Map<string, () => void>();
+
 export async function cancelRequestById(requestId: string) {
   const cancel = cancelRequestFunctionMap.get(requestId);
   if (cancel) {
@@ -32,6 +34,7 @@ export const cancellableRunPreRequestScript = async (options: { script: string; 
       request: Request;
       environment: object;
       baseEnvironment: object;
+      cookieJar: CookieJar;
     };
   } catch (err) {
     if (err.name === 'AbortError') {
@@ -65,7 +68,7 @@ export const cancellableCurlRequest = async (requestOptions: CurlRequestOptions)
   }
 };
 
-const cancellablePromise = ({ signal, fn }: { signal: AbortSignal; fn: Promise<any> }) => {
+export const cancellablePromise = ({ signal, fn }: { signal: AbortSignal; fn: Promise<any> }) => {
   if (signal?.aborted) {
     return Promise.reject(new DOMException('Aborted', 'AbortError'));
   }

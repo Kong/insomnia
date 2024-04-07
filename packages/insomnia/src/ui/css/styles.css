@@ -125,3 +125,19 @@ table.json-diff-viewer {
     word-break: break-all;
   }
 } 
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.9);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.bounce-in {
+  animation: bounceIn 350ms ease-in;
+}

@@ -12,6 +12,7 @@ import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { RequestAuthentication, RequestHeader } from '../../models/request';
 import { Response } from '../../models/response';
+import { Compression, getBodyBuffer } from '../../models/response';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
 import { invariant } from '../../utils/invariant';
@@ -86,6 +87,7 @@ interface OpenCurlRequestOptions {
   workspaceId: string;
   url: string;
   headers: RequestHeader[];
+  authHeader?: { name: string; value: string };
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
   initialPayload?: string;
@@ -141,11 +143,15 @@ const openCurlConnection = async (
       caCert: caCertificate,
       certificates: filteredClientCertificates,
     });
+    // set method
+    curl.setOpt(Curl.option.CUSTOMREQUEST, request.method);
+    // TODO: support all post data content types
+    curl.setOpt(Curl.option.POSTFIELDS, request.body?.text || '');
     debugTimeline.forEach(entry => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(entry) + '\n'));
     CurlConnections.set(options.requestId, curl);
     CurlConnections.get(options.requestId)?.enable(CurlFeature.StreamResponse);
-    // TODO: add authHeader and request body?
-    const headerStrings = parseHeaderStrings({ req: request, finalUrl: options.url });
+    const headerStrings = parseHeaderStrings({ req: request, finalUrl: options.url, authHeader: options.authHeader });
+
     CurlConnections.get(options.requestId)?.setOpt(Curl.option.HTTPHEADER, headerStrings);
     CurlConnections.get(options.requestId)?.on('error', async (error, errorCode) => {
       const errorEvent: CurlErrorEvent = {
@@ -157,11 +163,11 @@ const openCurlConnection = async (
         timestamp: Date.now(),
       };
       console.error('curl - error: ', error, errorCode);
+      CurlConnections.get(options.requestId)?.close();
       deleteRequestMaps(request._id, error.message, errorEvent);
       for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send(readyStateChannel, false);
       }
-      curl.close();
       if (errorCode) {
         const res = await models.response.getById(responseId);
         if (!res) {
@@ -252,8 +258,20 @@ const openCurlConnection = async (
         };
         eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
       }
-      // NOTE: this can only happen if the stream is closed cleanly by the remote server
-      eventLogFileStreams.get(options.requestId)?.end();
+
+      // NOTE: when stream is closed by remote server
+      const closeEvent: CurlCloseEvent = {
+        _id: uuidV4(),
+        requestId: options.requestId,
+        type: 'close',
+        timestamp: Date.now(),
+        statusCode,
+        reason: '',
+        code: 0,
+        wasClean: true,
+      };
+      CurlConnections.get(options.requestId)?.close();
+      deleteRequestMaps(options.requestId, 'Closing connection', closeEvent);
       for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send(readyStateChannel, false);
       }
@@ -353,6 +371,7 @@ export interface CurlBridgeAPI {
     findMany: typeof findMany;
   };
 }
+
 export const registerCurlHandlers = () => {
   ipcMain.handle('curl.open', openCurlConnection);
   ipcMain.on('curl.close', closeCurlConnection);
@@ -360,5 +379,22 @@ export const registerCurlHandlers = () => {
   ipcMain.handle('curl.readyState', (_, options: Parameters<typeof getCurlReadyState>[0]) => getCurlReadyState(options));
   ipcMain.handle('curl.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
 };
+
+ipcMain.handle('readCurlResponse', async (_, options: { bodyPath?: string; bodyCompression?: Compression }) => {
+  const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
+  const bodyBufferOrErrMsg = getBodyBuffer(options, readFailureMsg);
+  // TODO(jackkav): simplify the fail msg and reuse in other getBodyBuffer renderer calls
+
+  if (!bodyBufferOrErrMsg) {
+    return { body: '', error: readFailureMsg };
+  } else if (typeof bodyBufferOrErrMsg === 'string') {
+    if (bodyBufferOrErrMsg === readFailureMsg) {
+      return { body: '', error: readFailureMsg };
+    }
+    return { body: '', error: `unknown error in loading response body: ${bodyBufferOrErrMsg}` };
+  }
+
+  return { body: bodyBufferOrErrMsg.toString('utf8'), error: '' };
+});
 
 electron.app.on('window-all-closed', closeAllCurlConnections);

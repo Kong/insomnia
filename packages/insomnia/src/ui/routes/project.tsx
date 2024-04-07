@@ -39,7 +39,7 @@ import {
 } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
 
-import { getAccountId, getCurrentSessionId, isLoggedIn, logout } from '../../account/session';
+import { logout } from '../../account/session';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   DASHBOARD_SORT_ORDERS,
@@ -51,6 +51,7 @@ import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
+import { userSession } from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { sortProjects } from '../../models/helpers/project';
 import { MockServer } from '../../models/mock-server';
@@ -80,7 +81,8 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
-import { Billing, type FeatureList, useOrganizationLoaderData } from './organization';
+import { OrganizationFeatureLoaderData, useOrganizationLoaderData } from './organization';
+import { useRootLoaderData } from './root';
 
 interface TeamProject {
   id: string;
@@ -88,7 +90,7 @@ interface TeamProject {
 }
 
 async function getAllTeamProjects(organizationId: string) {
-  const sessionId = getCurrentSessionId() || '';
+  const { id: sessionId } = await userSession.getOrCreate();
   console.log('Fetching projects for team', organizationId);
   if (!sessionId) {
     return [];
@@ -220,9 +222,10 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   let teamProjects: TeamProject[] = [];
 
   try {
+    const user = await models.userSession.getOrCreate();
     teamProjects = await getAllTeamProjects(organizationId);
     // ensure we don't sync projects in the wrong place
-    if (teamProjects.length > 0 && isLoggedIn() && !isScratchpadOrganizationId(organizationId)) {
+    if (teamProjects.length > 0 && user.id && !isScratchpadOrganizationId(organizationId)) {
       await syncTeamProjects({
         organizationId,
         teamProjects,
@@ -288,7 +291,6 @@ export interface ProjectLoaderData {
   documentsCount: number;
   collectionsCount: number;
   mockServersCount: number;
-  unsyncedCount: number;
   projectsCount: number;
   activeProject: Project;
   projects: Project[];
@@ -371,6 +373,8 @@ async function getAllLocalFiles({
         modifiedLocally > workspaceMeta?.cachedGitLastCommitTime
     );
 
+    const specVersion = spec?.info?.version ? String(spec?.info?.version) : '';
+
     return {
       id: workspace._id,
       name: workspace.name,
@@ -380,7 +384,7 @@ async function getAllLocalFiles({
       lastModifiedTimestamp: (hasUnsavedChanges && modifiedLocally) || workspaceMeta?.cachedGitLastCommitTime || lastModifiedTimestamp,
       branch: lastActiveBranch || '',
       lastCommit: hasUnsavedChanges && workspaceMeta?.cachedGitLastCommitTime && lastCommitAuthor ? `by ${lastCommitAuthor}` : '',
-      version: spec?.info?.version ? `${spec?.info?.version?.startsWith('v') ? '' : 'v'}${spec?.info?.version}` : '',
+      version: specVersion ? `${specVersion?.startsWith('v') ? '' : 'v'}${specVersion}` : '',
       oasFormat: specFormat ? `${specFormat === 'openapi' ? 'OpenAPI' : 'Swagger'} ${specFormatVersion || ''}` : '',
       mockServer,
       apiSpec,
@@ -448,7 +452,7 @@ export const loader: LoaderFunction = async ({
 }): Promise<ProjectLoaderData> => {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
-  const sessionId = getCurrentSessionId();
+  const { id: sessionId } = await userSession.getOrCreate();
 
   if (!sessionId) {
     await logout();
@@ -516,9 +520,6 @@ export const loader: LoaderFunction = async ({
     mockServersCount: files.filter(
       file => file.scope === 'mock-server'
     ).length,
-    unsyncedCount: files.filter(
-      file => file.scope === 'unsynced'
-    ).length,
   };
 };
 
@@ -532,7 +533,6 @@ const ProjectRoute: FC = () => {
     mockServersCount,
     documentsCount,
     projectsCount,
-    unsyncedCount,
     learningFeature,
   } = useLoaderData() as ProjectLoaderData;
   const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = useLocalStorage('learning-feature-dismissed', '');
@@ -541,21 +541,20 @@ const ProjectRoute: FC = () => {
     projectId: string;
   };
 
+  const { userSession } = useRootLoaderData();
   const pullFileFetcher = useFetcher();
   const loadingBackendProjects = useFetchers().filter(fetcher => fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`).map(f => f.formData?.get('backendProjectId'));
 
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
-  const { features, billing } = useRouteLoaderData(':organizationId') as { features: FeatureList; billing: Billing };
-
-  const accountId = getAccountId();
+  const { features, billing, storage } = useRouteLoaderData(':organizationId') as OrganizationFeatureLoaderData;
   const [scope, setScope] = useLocalStorage(`${projectId}:project-dashboard-scope`, 'all');
   const [sortOrder, setSortOrder] = useLocalStorage(`${projectId}:project-dashboard-sort-order`, 'modified-desc');
   const [filter, setFilter] = useLocalStorage(`${projectId}:project-dashboard-filter`, '');
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
 
   const organization = organizations.find(o => o.id === organizationId);
-  const isUserOwner = organization && accountId && isOwnerOfOrganization({ organization, accountId });
+  const isUserOwner = organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && isPersonalOrganization(organization);
 
   const filteredFiles = files
@@ -584,7 +583,7 @@ const ProjectRoute: FC = () => {
   const filesWithPresence = filteredFiles.map(file => {
     const workspacePresence = presence
       .filter(p => p.project === activeProject.remoteId && p.file === file.id)
-      .filter(p => p.acct !== accountId)
+      .filter(p => p.acct !== userSession.accountId)
       .map(user => {
         return {
           key: user.acct,
@@ -602,7 +601,7 @@ const ProjectRoute: FC = () => {
   const projectsWithPresence = projects.map(project => {
     const projectPresence = presence
       .filter(p => p.project === project.remoteId)
-      .filter(p => p.acct !== accountId)
+      .filter(p => p.acct !== userSession.accountId)
       .map(user => {
         return {
           key: user.acct,
@@ -727,12 +726,12 @@ const ProjectRoute: FC = () => {
   const isGitSyncEnabled = features.gitSync.enabled;
 
   const showUpgradePlanModal = () => {
-    if (!organization || !accountId) {
+    if (!organization || !userSession.accountId) {
       return;
     }
     const isOwner = isOwnerOfOrganization({
       organization,
-      accountId,
+      accountId: userSession.accountId,
     });
 
     isOwner ?
@@ -843,13 +842,11 @@ const ProjectRoute: FC = () => {
           run: createNewMockServer,
         },
       },
-      {
-        id: 'unsynced',
-        label: `Unsynced (${unsyncedCount})`,
-        icon: 'cloud-download',
-      },
   ];
-
+  const defaultStorageSelection = storage === 'local_only' ? 'local' : 'remote';
+  const isRemoteProjectInconsistent = isRemoteProject(activeProject) && storage === 'local_only';
+  const isLocalProjectInconsistent = !isRemoteProject(activeProject) && storage === 'cloud_only';
+  const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent;
   return (
     <ErrorBoundary>
       <Fragment>
@@ -976,27 +973,33 @@ const ProjectRoute: FC = () => {
                                     className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                                   />
                                 </TextField>
-                                <RadioGroup name="type" defaultValue="remote" className="flex flex-col gap-2">
+                                <RadioGroup name="type" defaultValue={defaultStorageSelection} className="flex flex-col gap-2">
                                   <Label className="text-sm text-[--hl]">
                                     Project type
                                   </Label>
                                   <div className="flex gap-2">
                                     <Radio
+                                      isDisabled={storage === 'local_only'}
                                       value="remote"
-                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
-                                      <Icon icon="globe" />
-                                      <Heading className="text-lg font-bold">Secure Cloud</Heading>
+                                      <div className='flex items-center gap-2'>
+                                        <Icon icon="globe" />
+                                        <Heading className="text-lg font-bold">Cloud Sync</Heading>
+                                      </div>
                                       <p className='pt-2'>
-                                        End-to-end encrypted (E2EE) and synced securely to the cloud, ideal for collaboration.
+                                        Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
                                       </p>
                                     </Radio>
                                     <Radio
+                                      isDisabled={storage === 'cloud_only'}
                                       value="local"
-                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
-                                      <Icon icon="laptop" />
-                                      <Heading className="text-lg font-bold">Local Vault</Heading>
+                                      <div className="flex items-center gap-2">
+                                        <Icon icon="laptop" />
+                                        <Heading className="text-lg font-bold">Local Vault</Heading>
+                                      </div>
                                       <p className="pt-2">
                                         Stored locally only with no cloud. Ideal when collaboration is not needed.
                                       </p>
@@ -1007,7 +1010,7 @@ const ProjectRoute: FC = () => {
                                   <div className="flex items-center gap-2 text-sm">
                                     <Icon icon="info-circle" />
                                     <span>
-                                      For both project types you can optionally enable Git Sync
+                                      {isProjectInconsistent && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`} You can optionally enable Git Sync
                                     </span>
                                   </div>
                                   <div className='flex items-center gap-2'>
@@ -1068,12 +1071,12 @@ const ProjectRoute: FC = () => {
                           />
                           <span className="truncate">{item.name}</span>
                           <span className="flex-1" />
-                          <AvatarGroup
+                          {item.presence.length > 0 && <AvatarGroup
                             size="small"
                             maxAvatars={3}
                             items={item.presence}
-                          />
-                          {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} />}
+                          />}
+                          {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} storage={storage} />}
                         </div>
                       </GridListItem>
                     );
@@ -1165,6 +1168,14 @@ const ProjectRoute: FC = () => {
                       Update payment method
                     </a>
                   )}
+                </div>
+              </div>}
+              {isProjectInconsistent && <div className='p-[--padding-md] pb-0'>
+                <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
+                  <p className='text-base'>
+                    <Icon icon="exclamation-triangle" className='mr-2' />
+                    The organization owner mandates that projects must be created and stored {storage.split('_').join(' ')}. However, you can optionally enable Git Sync.
+                  </p>
                 </div>
               </div>}
               <div className="flex max-w-xl justify-between w-full gap-2 p-[--padding-md]">

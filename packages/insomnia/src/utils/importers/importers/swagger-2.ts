@@ -341,7 +341,7 @@ const prepareHeaders = (
 const resolve$ref = (document: OpenAPIV2.Document, $ref: string) => {
   const [, ...parts] = $ref.split('/') as (keyof OpenAPIV2.Document)[];
   return parts.reduce(
-    (accumulator, path) => accumulator[path] as OpenAPIV2.Document,
+    (accumulator, path) => accumulator[path] as unknown as OpenAPIV2.Document,
     document,
   );
 };

@@ -1,9 +1,21 @@
+import { Differ, Viewer } from 'json-diff-kit';
 import React, { forwardRef, useImperativeHandle, useState } from 'react';
-import { Button, Cell, Column, Dialog, Form, Heading, Modal, ModalOverlay, Radio, RadioGroup, Row, Table, TableBody, TableHeader } from 'react-aria-components';
+import { Button, Dialog, Form, GridList, GridListItem, Heading, Modal, ModalOverlay, Radio, RadioGroup } from 'react-aria-components';
 
 import type { MergeConflict } from '../../../sync/types';
 import { SegmentEvent } from '../../analytics';
 import { Icon } from '../icon';
+
+const differ = new Differ({
+  detectCircular: true,
+  maxDepth: Infinity,
+  showModifications: true,
+  arrayDiffMethod: 'lcs',
+});
+
+function getDiff(conflict: MergeConflict) {
+  return differ.diff(conflict.mineBlobContent, conflict.theirsBlobContent);
+}
 
 export interface SyncMergeModalOptions {
   conflicts?: MergeConflict[];
@@ -43,6 +55,8 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
 
   const { conflicts, handleDone } = state;
 
+  const [selectedConflict, setSelectedConflict] = useState<MergeConflict | null>(null);
+
   return (
     <ModalOverlay
       isOpen={state.isOpen}
@@ -52,6 +66,8 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
           isOpen: false,
           labels: { ours: '', theirs: '' },
         });
+
+        !isOpen && handleDone?.();
       }}
       isDismissable
       className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
@@ -63,8 +79,10 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
             isOpen: false,
             labels: { ours: '', theirs: '' },
           });
+
+          !isOpen && handleDone?.();
         }}
-        className="flex flex-col max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]"
+        className="flex flex-col w-[calc(100%-var(--padding-xl))] h-[calc(100%-var(--padding-xl))] rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]"
       >
         <Dialog
           className="outline-none flex-1 h-full flex flex-col overflow-hidden"
@@ -105,102 +123,102 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                   });
                 }}
               >
-                <div className='grid auto-rows-auto gap-2 overflow-y-auto'>
+                <div className='grid [grid-template-columns:300px_1fr] h-full overflow-hidden divide-x divide-solid divide-[--hl-md] gap-2'>
                   {conflicts && conflicts.length > 0 && (
-                    <div className='flex flex-col gap-2 overflow-hidden max-h-96'>
-                      <Heading className='font-semibold flex-shrink-0'>Conflicted Objects</Heading>
-                      <div className='flex-1 overflow-y-auto rounded w-full border border-solid border-[--hl-sm] select-none'>
-                        <Table
-                          selectionMode='multiple'
-                          defaultSelectedKeys="all"
-                          aria-label='Modified objects'
-                          className="border-separate border-spacing-0 w-full"
-                        >
-                          <TableHeader>
-                            <Column isRowHeader className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                              Name
-                            </Column>
-                            <Column isRowHeader className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                              Description
-                            </Column>
-                            <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-right text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                              Resolve
-                            </Column>
-                          </TableHeader>
-                          <TableBody
-                            className="divide divide-[--hl-sm] divide-solid"
-                            items={
-                              conflicts.map(item => ({
-                                ...item,
-                                id: item.key,
-                              }))
+                    <div className='flex flex-col gap-2 overflow-hidden'>
+                      <Button
+                        type="submit"
+                        className="flex h-10 items-center justify-center px-4 gap-2 bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                      >
+                        <Icon icon="code-merge" className="w-5" /> Resolve conflicts
+                      </Button>
+                      <div className='flex-1 overflow-y-auto w-full select-none'>
+                        <GridList
+                          aria-label='Conflicted changes'
+                          selectedKeys={[selectedConflict?.key || '']}
+                          selectionMode='single'
+                          onSelectionChange={keys => {
+                            if (keys !== 'all') {
+                              const selectedKey = keys.values().next().value;
+
+                              setSelectedConflict(conflicts.find(c => c.key === selectedKey) || null);
                             }
-                          >
-                            {item => (
-                              <Row className="group focus:outline-none focus-within:bg-[--hl-xxs] transition-colors">
-                                <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                                  <div className='p-2'>
-                                    {item.name}
-                                  </div>
-                                </Cell>
-                                <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                                  <div className='p-2'>
-                                    {item.message}
-                                  </div>
-                                </Cell>
-                                <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                                  <div className='flex items-center gap-2 justify-end p-2'>
-                                    <RadioGroup
-                                      onChange={value => {
-                                        setState({
-                                          ...state,
-                                          conflicts: conflicts.map(c => c.key !== item.key ? c : { ...c, choose: value || null }),
-                                        });
-                                      }}
-                                      aria-label='Choose version'
-                                      name="type"
-                                      value={item.choose || ''}
-                                      className="flex flex-col gap-2"
-                                    >
-                                      <div className="flex gap-2">
-                                        <Radio
-                                          value={item.mineBlob || ''}
-                                          className="flex items-center gap-2 data-[selected]:border-[--color-surprise] flex-1 data-[selected]:ring-1 data-[selected]:bg-[rgba(var(--color-surprise-rgb),0.3)] data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded px-2 py-1 focus:outline-none transition-colors"
-                                        >
-                                          <Icon icon="laptop" />
-                                          <span>
-                                            Accept ours ({state.labels.ours})
-                                          </span>
-                                        </Radio>
-                                        <Radio
-                                          value={item.theirsBlob || ''}
-                                          className="flex items-center gap-2 data-[selected]:border-[--color-surprise] flex-1 data-[selected]:ring-1 data-[selected]:bg-[rgba(var(--color-surprise-rgb),0.3)] data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded px-2 py-1 focus:outline-none transition-colors"
-                                        >
-                                          <Icon icon="globe" />
-                                          <span>
-                                            Accept theirs ({state.labels.theirs})
-                                          </span>
-                                        </Radio>
-                                      </div>
-                                    </RadioGroup>
-                                  </div>
-                                </Cell>
-                              </Row>
-                            )}
-                          </TableBody>
-                        </Table>
+                          }}
+                          items={conflicts.map(conflict => ({
+                            id: conflict.key,
+                            ...conflict,
+                          }))}
+                        >
+                          {item => (
+                            <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
+                              <span className='truncate'>{item.name}</span>
+                              <RadioGroup
+                                onChange={value => {
+                                  setState({
+                                    ...state,
+                                    conflicts: conflicts.map(c => c.key !== item.key ? c : { ...c, choose: value || null }),
+                                  });
+                                }}
+                                aria-label='Choose version'
+                                name="type"
+                                value={item.choose || ''}
+                                className="flex flex-col gap-2 text-sm"
+                              >
+                                <div className="flex gap-2">
+                                  <Radio
+                                    value={item.mineBlob || ''}
+                                    className="flex items-center gap-2 data-[selected]:text-[--color-font] data-[selected]:border-[--color-surprise] flex-1 data-[selected]:bg-[rgba(var(--color-surprise-rgb),0.3)] data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded px-2 py-1 focus:outline-none transition-colors"
+                                  >
+                                    <Icon icon="laptop" />
+                                    <span>
+                                      Ours
+                                    </span>
+                                  </Radio>
+                                  <Radio
+                                    value={item.theirsBlob || ''}
+                                    className="flex items-center gap-2 data-[selected]:text-[--color-font-surprise] data-[selected]:border-[--color-surprise] flex-1 data-[selected]:bg-[rgba(var(--color-surprise-rgb),0.3)] data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded px-2 py-1 focus:outline-none transition-colors"
+                                  >
+                                    <Icon icon="globe" />
+                                    <span>
+                                      Theirs
+                                    </span>
+                                  </Radio>
+                                </div>
+                              </RadioGroup>
+                            </GridListItem>
+                          )}
+                        </GridList>
                       </div>
                     </div>
                   )}
-                </div>
 
-                <div className="flex flex-shrink-0 flex-1 justify-end gap-2 items-center">
-                  <Button
-                    type="submit"
-                    className="hover:no-underline flex items-center gap-2 bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-                  >
-                    <Icon icon="code-merge" className="w-5" /> Resolve conflicts
-                  </Button>
+                  {selectedConflict ? <div className='p-2 pb-0 flex flex-col gap-2 h-full overflow-y-auto'>
+                    <Heading className='font-bold flex items-center gap-2'>
+                      <Icon icon="code-compare" />
+                      {selectedConflict.name}
+                    </Heading>
+                    <div className='flex w-full items-center gap-2'>
+                      <span className='flex-1 flex items-center gap-2 p-2 bg-[--hl-xs] uppercase font-semibold text-xs text-[--hl]'><Icon icon="laptop" /> {state.labels.ours}</span>
+                      <span className='flex-1 flex items-center gap-2 p-2 bg-[--hl-xs] uppercase font-semibold text-xs text-[--hl]'><Icon icon="globe" /> {state.labels.theirs}</span>
+                    </div>
+                    <div
+                      className='bg-[--hl-xs] rounded-sm p-2 flex-1 overflow-y-auto text-[--color-font]'
+                    >
+                      <Viewer
+                        diff={getDiff(selectedConflict)}
+                        hideUnchangedLines
+                        className='diff-viewer'
+                      />
+                    </div>
+                  </div> : <div className='p-2 h-full flex flex-col gap-4 items-center justify-center'>
+                    <Heading className='font-semibold flex justify-center items-center gap-2 text-4xl text-[--hl-md]'>
+                      <Icon icon="code-compare" />
+                      Diff view
+                    </Heading>
+                    <p className='text-[--hl]'>
+                      Select an item to compare
+                    </p>
+                  </div>}
                 </div>
               </Form>
             </div>

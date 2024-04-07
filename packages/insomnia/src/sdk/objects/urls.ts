@@ -45,6 +45,8 @@ export class QueryParam extends Property {
     // (static) _postman_propertyAllowsMultipleValues :Boolean
     // (static) _postman_propertyIndexKey :String
 
+    static _index = 'key';
+
     static parse(queryStr: string) {
         const params = new UrlSearchParams(queryStr);
         return Array.from(params.entries())
@@ -141,6 +143,12 @@ export class Url extends PropertyBase {
     }
 
     private setFields(def: UrlOptions | string) {
+        if (typeof def === 'string') {
+            def = def.includes('://') ? def : 'http://' + def;
+        } else if (!def.protocol || def.protocol === '') {
+            def.protocol = 'http://';
+        }
+
         const urlObj = typeof def === 'string' ? Url.parse(def) : def;
 
         if (urlObj) {
@@ -359,9 +367,10 @@ export class UrlMatchPattern extends Property {
     // TODO: the url can not start with -
 
     getProtocols(): string[] {
+        // the pattern could be <all_urls>
         const protocolEndPos = this.pattern.indexOf('://');
         if (protocolEndPos < 0) {
-            throw Error('UrlMatchPattern: protocol is not specified');
+            return [];
         }
 
         const protocolPattern = this.pattern.slice(0, protocolEndPos);
@@ -560,4 +569,11 @@ export class UrlMatchPatternList<T extends UrlMatchPattern> extends PropertyList
             .filter(matchPattern => matchPattern.test(urlStr), {})
             .length > 0;
     }
+}
+
+export function toUrlObject(url: string | Url): Url {
+    if (!url) {
+        throw Error('Request URL is not specified');
+    }
+    return typeof url === 'string' ? new Url(url) : url;
 }

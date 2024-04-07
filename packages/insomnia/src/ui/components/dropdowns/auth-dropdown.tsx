@@ -2,11 +2,10 @@ import React, { FC, useCallback } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import {
-  AuthType,
   getAuthTypeName,
   HAWK_ALGORITHM_SHA256,
 } from '../../../common/constants';
-import { RequestAuthentication } from '../../../models/request';
+import type { AuthTypeAPIKey, AuthTypeAwsIam, AuthTypeBasic, AuthTypeNTLM, AuthTypes, RequestAuthentication } from '../../../models/request';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -15,53 +14,42 @@ import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } 
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 
-const defaultTypes: AuthType[] = [
-  'apikey',
-  'basic',
-  'digest',
-  'oauth1',
-  'oauth2',
-  'ntlm',
-  'iam',
-  'bearer',
-  'hawk',
-  'asap',
-  'netrc',
-];
-
-function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): RequestAuthentication {
+function castOneAuthTypeToAnother(type: AuthTypes, oldAuth: RequestAuthentication = { type: 'none' }): RequestAuthentication {
   switch (type) {
     // No Auth
     case 'none':
-      return {};
+      return { type: 'none' };
 
     // API Key Authentication
     case 'apikey':
+      const oldApikey = oldAuth as AuthTypeAPIKey;
       return {
         type,
-        disabled: oldAuth.disabled || false,
-        key: oldAuth.key || '',
-        value: oldAuth.value || '',
-        addTo: oldAuth.addTo || 'header',
+        disabled: oldApikey.disabled || false,
+        key: oldApikey.key || '',
+        value: oldApikey.value || '',
+        addTo: oldApikey.addTo || 'header',
       };
 
     // HTTP Basic Authentication
     case 'basic':
+      const oldBasic = oldAuth as AuthTypeBasic;
       return {
         type,
-        useISO88591: oldAuth.useISO88591 || false,
-        disabled: oldAuth.disabled || false,
-        username: oldAuth.username || '',
-        password: oldAuth.password || '',
+        useISO88591: oldBasic.useISO88591 || false,
+        disabled: oldBasic.disabled || false,
+        username: oldBasic.username || '',
+        password: oldBasic.password || '',
       };
 
     case 'digest':
     case 'ntlm':
+      const oldNtlm = oldAuth as AuthTypeNTLM;
       return {
         type,
-        disabled: oldAuth.disabled || false,
-        username: oldAuth.username || '',
-        password: oldAuth.password || '',
+        disabled: oldNtlm.disabled || false,
+        username: oldNtlm.username || '',
+        password: oldNtlm.password || '',
       };
 
     case 'oauth1':
@@ -89,12 +77,13 @@ function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): Request
 
     // Aws IAM
     case 'iam':
+      const oldIam = oldAuth as AuthTypeAwsIam;
       return {
         type,
-        disabled: oldAuth.disabled || false,
-        accessKeyId: oldAuth.accessKeyId || '',
-        secretAccessKey: oldAuth.secretAccessKey || '',
-        sessionToken: oldAuth.sessionToken || '',
+        disabled: oldIam.disabled || false,
+        accessKeyId: oldIam.accessKeyId || '',
+        secretAccessKey: oldIam.secretAccessKey || '',
+        sessionToken: oldIam.sessionToken || '',
       };
 
     // Hawk
@@ -102,6 +91,8 @@ function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): Request
       return {
         type,
         algorithm: HAWK_ALGORITHM_SHA256,
+        id: '',
+        key: '',
       };
 
     // Atlassian ASAP
@@ -124,28 +115,43 @@ function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): Request
       };
   }
 }
+
+const defaultTypes: AuthTypes[] = [
+  'apikey',
+  'basic',
+  'digest',
+  'oauth1',
+  'oauth2',
+  'ntlm',
+  'iam',
+  'bearer',
+  'hawk',
+  'asap',
+  'netrc',
+];
+
 interface Props {
-  authTypes?: AuthType[];
+  authTypes?: AuthTypes[];
   disabled?: boolean;
 }
 export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = false }) => {
   const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const { requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const patchRequest = useRequestPatcher();
-  const onClick = useCallback(async (type: AuthType) => {
+  const onClick = useCallback(async (type: AuthTypes) => {
     if (!activeRequest || !('authentication' in activeRequest)) {
       return;
     }
 
-    const { authentication } = activeRequest;
+    const authentication = activeRequest.authentication as RequestAuthentication;
 
     if (type === authentication.type) {
       // Type didn't change
       return;
     }
 
-    const newAuthentication = makeNewAuth(type, authentication);
-    const defaultAuthentication = makeNewAuth(authentication.type);
+    const newAuthentication = castOneAuthTypeToAnother(type, authentication);
+    const defaultAuthentication = castOneAuthTypeToAnother(authentication.type);
 
     // Prompt the user if fields will change between new and old
     for (const key of Object.keys(authentication)) {
@@ -153,8 +159,11 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
         continue;
       }
 
+      // @ts-expect-error -- garbage abstraction
       const value = authentication[key];
+      // @ts-expect-error -- garbage abstraction
       const changedSinceDefault = defaultAuthentication[key] !== value;
+      // @ts-expect-error -- garbage abstraction
       const willChange = newAuthentication[key] !== value;
 
       if (changedSinceDefault && willChange) {
@@ -168,16 +177,19 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
     }
     patchRequest(requestId, { authentication: newAuthentication });
   }, [activeRequest, patchRequest, requestId]);
-  const isCurrent = useCallback((type: AuthType) => {
+  const isCurrent = useCallback((type: AuthTypes) => {
     if (!activeRequest || !('authentication' in activeRequest)) {
       return false;
     }
-    return type === (activeRequest.authentication.type || 'none');
+    const authentication = activeRequest.authentication as RequestAuthentication;
+
+    return type === (authentication.type || 'none');
   }, [activeRequest]);
 
   if (!activeRequest) {
     return null;
   }
+  const authentication = activeRequest.authentication as RequestAuthentication;
 
   return (
     <Dropdown
@@ -185,7 +197,7 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
       isDisabled={disabled}
       triggerButton={
         <DropdownButton className="tall !text-[--hl]">
-          {'authentication' in activeRequest ? getAuthTypeName(activeRequest.authentication.type) || 'Auth' : 'Auth'}
+          {'authentication' in activeRequest ? getAuthTypeName(authentication.type) || 'Auth' : 'Auth'}
           <i className="fa fa-caret-down space-left" />
         </DropdownButton>
       }

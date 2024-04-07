@@ -52,7 +52,7 @@ export const Migrate = () => {
                 <h1 className='text-xl font-bold text-center'>Collaboration with Cloud Sync now available</h1>
                 <div className='flex flex-col gap-4'>
                   <p>
-                    Cloud Sync - which used to be a premium feature - is now available on every plan including the Free plan. With Cloud Sync your projects will be automatically synchronized to the cloud in an end-to-end encrypted way (E2EE) and available on every Insomnia client after logging in.
+                    With Cloud Sync your projects will be automatically synchronized to the cloud in an encrypted way and available on every Insomnia client after logging in for ease of use and collaboration.
                   </p>
 
                 </div>
@@ -63,20 +63,25 @@ export const Migrate = () => {
                         value="local"
                         className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                       >
-                        <Icon icon="laptop" />
-                        <Heading className="text-lg font-bold">Keep storing locally in Local Vault</Heading>
+                        <div className='flex items-center gap-2'>
+                          <Icon icon="laptop" />
+                          <Heading className="text-lg font-bold">Store in Local Vault</Heading>
+                        </div>
                         <p className="pt-2">
-                          Stored locally only with no cloud. Ideal when collaboration is not needed.
+                          Stored locally only, with no cloud. Ideal when collaboration is not needed.
                         </p>
                       </Radio>
                       <Radio
                         value="remote"
                         className="data-[selected]:border-[--color-surprise] flex-1 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                       >
+                        <div className='flex items-center gap-2'>
+
                         <Icon icon="globe" />
-                        <Heading className="text-lg font-bold">Enable Cloud Sync in Secure Cloud</Heading>
+                          <Heading className="text-lg font-bold">Enable Cloud Sync</Heading>
+                        </div>
                         <p className='pt-2'>
-                          End-to-end encrypted (E2EE) and synced securely to the cloud, ideal for collaboration.
+                          Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
                         </p>
                       </Radio>
                     </div>

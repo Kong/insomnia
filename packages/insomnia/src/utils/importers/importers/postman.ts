@@ -147,7 +147,7 @@ export class ImportPostman {
 
     let parameters = [] as Parameter[];
 
-    if (typeof request.url === 'object' && request.url.query) {
+    if (typeof request.url === 'object' && request.url?.query) {
       parameters = this.importParameters(request.url?.query);
     }
 
@@ -806,6 +806,7 @@ export const convert: Converter = rawData => {
     }
   } catch (error) {
     // Nothing
+    console.log('Error importing Postman collection', error);
   }
 
   return null;

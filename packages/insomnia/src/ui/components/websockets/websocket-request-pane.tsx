@@ -3,10 +3,10 @@ import { Heading } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
+import { CONTENT_TYPE_JSON } from '../../../common/constants';
 import * as models from '../../../models';
 import { Environment } from '../../../models/environment';
-import { getCombinedPathParametersFromUrl, RequestPathParameter } from '../../../models/request';
+import { AuthTypes, getCombinedPathParametersFromUrl, RequestPathParameter } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
@@ -33,7 +33,7 @@ import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { RenderedQueryString } from '../rendered-query-string';
 import { WebSocketActionBar } from './action-bar';
 
-const supportedAuthTypes: AuthType[] = ['apikey', 'basic', 'bearer'];
+const supportedAuthTypes: AuthTypes[] = ['apikey', 'basic', 'bearer'];
 
 const SendMessageForm = styled.form({
   width: '100%',

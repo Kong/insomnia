@@ -86,7 +86,9 @@ export interface MergeConflict {
   key: DocumentKey;
   message: string;
   mineBlob: BlobId | null;
+  mineBlobContent?: BaseModel | null;
   theirsBlob: BlobId | null;
+  theirsBlobContent?: BaseModel | null;
   choose: BlobId | null;
 }
 

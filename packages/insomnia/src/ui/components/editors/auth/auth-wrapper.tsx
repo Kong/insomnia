@@ -14,6 +14,7 @@ import {
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
 } from '../../../../common/constants';
+import { RequestAuthentication } from '../../../../models/request';
 import { RequestLoaderData } from '../../../routes/request';
 import { ApiKeyAuth } from './api-key-auth';
 import { AsapAuth } from './asap-auth';
@@ -29,8 +30,9 @@ import { OAuth2Auth } from './o-auth-2-auth';
 
 export const AuthWrapper: FC<{ disabled?: boolean }> = ({ disabled = false }) => {
   const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const authentication = activeRequest.authentication as RequestAuthentication;
 
-  const { authentication: { type } } = activeRequest;
+  const { type } = authentication;
 
   let authBody: ReactNode = null;
 

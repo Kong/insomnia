@@ -14,7 +14,7 @@ import { RequestGroup } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
 import { UnitTestSuite } from '../../models/unit-test-suite';
 import { WebSocketRequest } from '../../models/websocket-request';
-import { Workspace } from '../../models/workspace';
+import { scopeToActivity, Workspace } from '../../models/workspace';
 import {
   BackendProject,
   Snapshot,
@@ -161,8 +161,13 @@ export const pullRemoteCollectionAction: ActionFunction = async ({
     remoteProject: project,
   });
 
+  const workspace = await models.workspace.getById(workspaceId);
+
+  invariant(workspace, 'Workspace not found');
+  const activity = scopeToActivity(workspace?.scope);
+
   return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`
+    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${activity}`
   );
 };
 

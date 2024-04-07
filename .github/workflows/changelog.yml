@@ -1,0 +1,34 @@
+name: Update changelog
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        description: Release version (e.g. 2022.1.0 or 2022.1.0-beta.0)
+  push:
+    tags:
+      - core@(\d+\.\d+\.\d+)(?:-(alpha|beta)\.\d+)?
+
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Update CHANGELOG
+        id: changelog
+        uses: requarks/changelog-action@v1
+        with:
+          token: ${{ secrets.RELEASE_GH_TOKEN }}
+          tag: ${{ github.event.inputs.version || github.ref_name }}
+
+      - name: Commit CHANGELOG.md
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          branch: develop
+          commit_message: 'docs: update CHANGELOG.md for ${{ github.event.inputs.version || github.ref_name }} [skip ci]'
+          file_pattern: CHANGELOG.md

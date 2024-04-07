@@ -517,7 +517,7 @@ export async function getRenderedRequestAndContext(
   }
 
   // Remove disabled authentication
-  if (renderedRequest.authentication && renderedRequest.authentication.disabled) {
+  if (renderedRequest.authentication && 'disabled' in renderedRequest.authentication && renderedRequest.authentication.disabled) {
     renderedRequest.authentication = {};
   }
 
