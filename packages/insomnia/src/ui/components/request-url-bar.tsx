@@ -389,9 +389,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           }}
           onCancel={() => setShowEnvVariableMissingModal(false)}
         >
-          <p className="flex items-center gap-2">
+          <p>
             The environment variable
-            <Button className="flex items-center bg-[--color-surprise] text-[--color-font-surprise] px-3 rounded-sm">{missingKey}</Button>
+            <Button className="bg-[--color-surprise] text-[--color-font-surprise] px-3 mx-3 rounded-sm">{missingKey}</Button>
             has been defined but has no value defined on a currently Active Environment
           </p>
         </CommonModal>
