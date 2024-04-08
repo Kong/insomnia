@@ -611,8 +611,7 @@ export function mergeRequests(
     );
 
     const updatedReqProperties: Partial<InsomniaRequest> = {
-        // url is encoded during parsing phase. Need decode url In order to recognized variables
-        url: decodeURI(typeof updatedReq.url === 'string' ? updatedReq.url : updatedReq.url.toString()),
+        url: typeof updatedReq.url === 'string' ? updatedReq.url : updatedReq.url.toString(),
         method: updatedReq.method,
         body: mergeRequestBody(updatedReq.body, originalReq.body),
         headers: updatedReq.headers.map(
