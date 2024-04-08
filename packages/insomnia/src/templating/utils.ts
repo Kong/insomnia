@@ -277,8 +277,11 @@ export function decodeEncoding<T>(value: T) {
   return value;
 }
 
-export function extractVariableKey(text: string): string {
+export function extractVariableKey(text: string = '', line: number, column: number): string {
+  const list = text?.split('\n');
+  const lineText = list?.[line - 1];
+  const errorText = lineText?.slice(column - 1);
   const regexVariable = /{{\s*([^ }]+)\s*[^}]*\s*}}/;
-  const res = text.match(regexVariable);
+  const res = errorText?.match(regexVariable);
   return res?.[1] || '';
 }

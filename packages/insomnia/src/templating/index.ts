@@ -102,7 +102,7 @@ export function render(
         if (hasNunjucksInterpolationSymbols && reason === 'undefined') {
           newError.extraInfo = {
             subType: RenderErrorSubType.EnvironmentVariable,
-            missingKey: extractVariableKey(text),
+            missingKey: extractVariableKey(text, line, column),
           };
         }
         reject(newError);
