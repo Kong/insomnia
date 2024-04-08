@@ -357,7 +357,7 @@ export interface SendActionParams {
   shouldPromptForPathAfterResponse?: boolean;
   ignoreUndefinedEnvVariable?: boolean;
 }
-// TODO ignore Error when click continue(add params field)
+
 export const sendAction: ActionFunction = async ({ request, params }) => {
   const { requestId, workspaceId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
