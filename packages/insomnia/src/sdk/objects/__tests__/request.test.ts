@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { mergeRequestBody, toScriptRequestBody, Request, RequestBody } from '../request';
+import { mergeRequestBody, Request, RequestBody, toScriptRequestBody } from '../request';
 
 describe('test request and response objects', () => {
     it('test RequestBody methods', () => {
