@@ -187,6 +187,7 @@ export function initInsomniaObject(
         auth: toPreRequestAuth(rawObj.request.authentication),
         proxy,
         certificate,
+        pathParameters: rawObj.request.pathParameters,
     };
     const request = new ScriptRequest(reqOpt);
 
