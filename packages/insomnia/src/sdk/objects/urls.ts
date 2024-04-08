@@ -344,7 +344,7 @@ export class Url extends PropertyBase {
             this.query = new PropertyList(
                 QueryParam,
                 undefined,
-                this.query.filter(queryParam => queryParam.key === params, {})
+                this.query.filter(queryParam => queryParam.key !== params, {})
             );
         } else if (params.length > 0) {
             let toBeRemoved: Set<string>;
