@@ -380,18 +380,21 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       </div>
       {showEnvVariableMissingModal && (
         <CommonModal
+          isOpen={showEnvVariableMissingModal}
           title="An environment variable is missing"
-          okText='Continue anyways'
-          onOk={() => sendOrConnect(false, true)}
-          onClose={() => setShowEnvVariableMissingModal(false)}
-          content={
-            <p className="flex items-center gap-2">
-              The environment variable
-              <Button className="flex items-center bg-[--color-surprise] text-[--color-font-surprise] px-3 rounded-sm">{missingKey}</Button>
-              has been defined but has no value defined on a currently Active Environment
-            </p>
-          }
-        />
+          okText='Execute anyways'
+          onOk={() => {
+            setShowEnvVariableMissingModal(false);
+            sendOrConnect(false, true);
+          }}
+          onCancel={() => setShowEnvVariableMissingModal(false)}
+        >
+          <p className="flex items-center gap-2">
+            The environment variable
+            <Button className="flex items-center bg-[--color-surprise] text-[--color-font-surprise] px-3 rounded-sm">{missingKey}</Button>
+            has been defined but has no value defined on a currently Active Environment
+          </p>
+        </CommonModal>
       )}
     </div>
   );
