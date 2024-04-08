@@ -129,7 +129,7 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                           <Icon icon="globe" />
                           <Heading className="text-lg font-bold">Cloud Mock</Heading>
                           <p className='pt-2'>
-                            The mock server runs on Insomnia cloud. ideal for out of the box collaboration.
+                            The mock server runs on Insomnia cloud, ideal for creating API mocks collaboratively.
                           </p>
                         </Radio>
                         <Radio
@@ -137,9 +137,9 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                           className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
                           <Icon icon="laptop" />
-                          <Heading className="text-lg font-bold">Local Mock</Heading>
+                          <Heading className="text-lg font-bold">Self-hosted Mock</Heading>
                           <p className="pt-2">
-                            The mock server runs locally.
+                            The mock servers are self hosted, ideal for private usage and lower latency.
                           </p>
                         </Radio>
                       </div>
@@ -151,7 +151,7 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                       className={`group relative flex-1 flex flex-col gap-2 ${mockServer?.useInsomniaCloud ? 'disabled' : ''}`}
                     >
                       <Label className='text-sm text-[--hl]'>
-                        Local mock server URL
+                        Self-hosted mock server URL
                       </Label>
                       <Input
                         placeholder="http://localhost:8080"
