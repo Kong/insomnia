@@ -609,9 +609,10 @@ export function mergeRequests(
         ,
         {},
     );
+    updatedReq.url.query.clear();
 
     const updatedReqProperties: Partial<InsomniaRequest> = {
-        url: typeof updatedReq.url === 'string' ? updatedReq.url : updatedReq.url.toString(),
+        url: updatedReq.url.toString(),
         method: updatedReq.method,
         body: mergeRequestBody(updatedReq.body, originalReq.body),
         headers: updatedReq.headers.map(
