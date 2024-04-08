@@ -22,6 +22,6 @@ export const shallowClone = async ({ fsClient, gitRepository }: Options) => {
     gitdir: GIT_INTERNAL_DIR,
     singleBranch: true,
     url: gitRepository.uri,
-    depth: 1,
+    // depth: 1,
   });
 };

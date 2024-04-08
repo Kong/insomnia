@@ -437,7 +437,7 @@ export class GitVCS {
         await git.fetch({
           ...this._baseOpts,
           remote: 'origin',
-          depth,
+          // depth,
           singleBranch: true,
           tags: false,
         });
@@ -490,7 +490,7 @@ export class GitVCS {
           await git.fetch({
             ...this._baseOpts,
             remote: 'origin',
-            depth: 1,
+            // depth: 1,
             ref: branch,
             singleBranch: true,
             tags: false,
