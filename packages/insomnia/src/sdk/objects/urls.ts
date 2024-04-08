@@ -16,8 +16,9 @@ export class QueryParam extends Property {
 
     key: string;
     value: string;
+    type?: string;
 
-    constructor(options: { key: string; value: string } | string) {
+    constructor(options: { key: string; value: string; type?: string } | string) {
         super();
 
         if (typeof options === 'string') {
@@ -25,12 +26,14 @@ export class QueryParam extends Property {
                 const optionsObj = JSON.parse(options);
                 this.key = optionsObj.key;
                 this.value = optionsObj.value;
+                this.type = optionsObj.type;
             } catch (e) {
                 throw Error(`invalid QueryParam options ${e}`);
             }
         } else if (typeof options === 'object' && ('key' in options) && ('value' in options)) {
             this.key = options.key;
             this.value = options.value;
+            this.type = options.type;
         } else {
             throw Error('unknown options for new QueryParam');
         }
@@ -88,7 +91,7 @@ export class QueryParam extends Property {
         return params.toString();
     }
 
-    update(param: string | { key: string; value: string }) {
+    update(param: string | { key: string; value: string; type?: string }) {
         if (typeof param === 'string') {
             const paramObj = QueryParam.parseSingle(param);
             this.key = typeof paramObj.key === 'string' ? paramObj.key : '';
@@ -96,6 +99,7 @@ export class QueryParam extends Property {
         } else if ('key' in param && 'value' in param) {
             this.key = param.key;
             this.value = param.value;
+            this.type = param.type;
         } else {
             throw Error('the param for update must be: string | { key: string; value: string }');
         }
