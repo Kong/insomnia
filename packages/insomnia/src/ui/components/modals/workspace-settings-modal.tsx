@@ -117,51 +117,56 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                   </>)}
                 {Boolean(workspace.scope === 'mock-server' && mockServer) && (
                   <>
-                    <RadioGroup onChange={value => mockServer && mockServerPatcher(mockServer._id, { useInsomniaCloud: value === 'remote' })} name="type" defaultValue={mockServer?.useInsomniaCloud ? 'remote' : 'local'} className="flex flex-col gap-2">
+                    <RadioGroup name="mockServerType" defaultValue={mockServer?.useInsomniaCloud ? 'cloud' : 'self-hosted'} onChange={value => mockServer && mockServerPatcher(mockServer._id, { useInsomniaCloud: value === 'cloud' })} className="flex flex-col gap-2">
                       <Label className="text-sm text-[--hl]">
-                        Mock type
+                        Mock server type
                       </Label>
                       <div className="flex gap-2">
                         <Radio
-                          value="remote"
-                          className="data-[selected]:border-[--color-surprise] flex-1 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                          value="cloud"
+                          className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
-                          <Icon icon="globe" />
-                          <Heading className="text-lg font-bold">Cloud Mock</Heading>
+                          <div className='flex items-center gap-2'>
+                            <Icon icon="globe" />
+                            <Heading className="text-lg font-bold">Cloud Mock</Heading>
+                          </div>
                           <p className='pt-2'>
                             The mock server runs on Insomnia cloud, ideal for creating API mocks collaboratively.
                           </p>
                         </Radio>
                         <Radio
-                          value="local"
-                          className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                          value="self-hosted"
+                          className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
-                          <Icon icon="laptop" />
-                          <Heading className="text-lg font-bold">Self-hosted Mock</Heading>
+                          <div className="flex items-center gap-2">
+                            <Icon icon="server" />
+                            <Heading className="text-lg font-bold">Self-hosted Mock</Heading>
+                          </div>
                           <p className="pt-2">
                             The mock servers are self hosted, ideal for private usage and lower latency.
                           </p>
                         </Radio>
                       </div>
                     </RadioGroup>
-                    {!mockServer?.useInsomniaCloud && <TextField
+                    <TextField
                       autoFocus
                       name="name"
                       defaultValue={mockServer?.url || ''}
                       className={`group relative flex-1 flex flex-col gap-2 ${mockServer?.useInsomniaCloud ? 'disabled' : ''}`}
                     >
                       <Label className='text-sm text-[--hl]'>
-                        Self-hosted mock server URL
+                        Mock server URL
                       </Label>
                       <Input
+                        disabled={mockServer?.useInsomniaCloud}
                         placeholder="http://localhost:8080"
                         onChange={e => mockServer && mockServerPatcher(mockServer._id, { url: e.target.value })}
                         className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                       />
                       <Label className='text-sm text-[--hl]'>
-                        You can self-host a mock server. Click here to <Link href="https://github.com/Kong/mockbin" className='underline'>Learn more</Link>
+                        You can self-host a mock server. Click here to <Link href="https://github.com/Kong/mockbin" className='underline'>learn more</Link>
                       </Label>
-                    </TextField>}
+                    </TextField>
                   </>
                 )}
               </div>
@@ -170,7 +175,7 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                   onPress={close}
                   className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
                 >
-                  Done
+                  Update
                 </Button>
               </div>
             </div>

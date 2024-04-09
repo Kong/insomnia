@@ -78,7 +78,7 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                   className="group relative flex-1 flex flex-col gap-2"
                 >
                   <Label className='text-sm text-[--hl]'>
-                    Mock name
+                    Name
                   </Label>
                   <Input
                     placeholder="My mock server"
@@ -107,7 +107,7 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                       className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                     >
                       <div className="flex items-center gap-2">
-                        <Icon icon="laptop" />
+                        <Icon icon="server" />
                         <Heading className="text-lg font-bold">Self-hosted Mock</Heading>
                       </div>
                       <p className="pt-2">
@@ -134,7 +134,7 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                   <div className="flex items-center gap-2 text-sm">
                     <Icon icon="info-circle" />
                     <span>
-                      You can self-host a mock server. Click here to <Link href="https://github.com/Kong/mockbin" className='underline'>Learn more</Link>
+                      You can self-host a mock server. Click here to <Link href="https://github.com/Kong/mockbin" className='underline'>learn more</Link>
                     </span>
                   </div>
                   <div className='flex items-center gap-2'>
