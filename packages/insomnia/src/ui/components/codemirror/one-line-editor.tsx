@@ -109,7 +109,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     codeMirror.current.on('beforeChange', (_: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
       const isPaste = change.text && change.text.length > 1;
       if (isPaste) {
-        if (change.text[0].startsWith('curl')) {
+        const startsWithCurl = change.text[0].startsWith('curl');
+        const isWhitespace = change.text.join('').trim();
+        if (startsWithCurl || !isWhitespace) {
           change.cancel();
           return;
         }

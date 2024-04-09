@@ -205,7 +205,7 @@ export const WorkspaceDropdown: FC = () => {
           data-testid="workspace-context-dropdown"
           className="px-3 py-1 h-7 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm truncate"
         >
-          <span className="truncate">{activeWorkspaceName}</span>
+          <span className="truncate" title={activeWorkspaceName}>{activeWorkspaceName}</span>
           <Icon icon="caret-down" />
         </Button>
         <Popover className="min-w-max">

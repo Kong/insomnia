@@ -286,7 +286,18 @@ export interface Billing {
   isActive: boolean;
 }
 
-export const singleOrgLoader: LoaderFunction = async ({ params }) => {
+export interface StorageRule {
+  storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
+  isOverridden: boolean;
+}
+
+export interface OrganizationFeatureLoaderData {
+  features: FeatureList;
+  billing: Billing;
+  storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
+}
+
+export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<OrganizationFeatureLoaderData> => {
   const { organizationId } = params as { organizationId: string };
   const { id: sessionId } = await userSession.getOrCreate();
   const fallbackFeatures = {
@@ -299,17 +310,20 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
     isActive: true,
   };
 
+  const fallbackStorage = 'cloud_plus_local';
+
   if (isScratchpadOrganizationId(organizationId)) {
     return {
       features: fallbackFeatures,
       billing: fallbackBilling,
+      storage: fallbackStorage,
     };
   }
 
   const organization = organizationsData.organizations.find(o => o.id === organizationId);
 
   if (!organization) {
-    return redirect('/organization');
+    throw redirect('/organization');
   }
 
   try {
@@ -319,14 +333,22 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
       sessionId,
     });
 
+    const ruleResponse = await window.main.insomniaFetch<StorageRule | undefined>({
+      method: 'GET',
+      path: `/v1/organizations/${organizationId}/storage-rule`,
+      sessionId,
+    });
+    const storage = ruleResponse?.storage || fallbackStorage;
     return {
       features: response?.features || fallbackFeatures,
       billing: response?.billing || fallbackBilling,
+      storage,
     };
   } catch (err) {
     return {
       features: fallbackFeatures,
       billing: fallbackBilling,
+      storage: fallbackStorage,
     };
   }
 };

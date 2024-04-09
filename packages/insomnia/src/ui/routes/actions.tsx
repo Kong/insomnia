@@ -11,7 +11,7 @@ import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { getById, update } from '../../models/helpers/request-operations';
-import { isRemoteProject } from '../../models/project';
+import { isDefaultOrganizationProject, isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
@@ -67,6 +67,10 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
       let error = 'An unexpected error occurred while creating the project. Please try again.';
       if (newCloudProject.error === 'FORBIDDEN' || newCloudProject.error === 'NEEDS_TO_UPGRADE') {
         error = newCloudProject.error;
+      }
+
+      if (newCloudProject.error === 'PROJECT_STORAGE_RESTRICTION') {
+        error = 'The owner of the organization allows only Local Vault project creation, please try again.';
       }
 
       return {
@@ -139,19 +143,22 @@ export const updateProjectAction: ActionFunction = async ({
 
     // convert from cloud to local
     if (type === 'local' && project.remoteId) {
-      const response = await window.main.insomniaFetch<void | {
-        error: string;
-        message?: string;
-      }>({
-        path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
-        method: 'DELETE',
-        sessionId,
-      });
+      // If it's the default project it cannot be deleted
+      if (!isDefaultOrganizationProject(project)) {
+        const response = await window.main.insomniaFetch<void | {
+          error: string;
+          message?: string;
+        }>({
+          path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
+          method: 'DELETE',
+          sessionId,
+        });
 
-      if (response && 'error' in response) {
-        return {
-          error: response.error === 'FORBIDDEN' ? 'You do not have permission to change this project.' : 'An unexpected error occurred while deleting the project. Please try again.',
-        };
+        if (response && 'error' in response) {
+          return {
+            error: response.error === 'FORBIDDEN' ? 'You do not have permission to change this project.' : 'An unexpected error occurred while deleting the project. Please try again.',
+          };
+        }
       }
 
       await models.project.update(project, { name, remoteId: null });

@@ -96,7 +96,7 @@ import {
   WebSocketRequestLoaderData,
 } from './request';
 import { useRootLoaderData } from './root';
-import { Child, WorkspaceLoaderData } from './workspace';
+import { WorkspaceLoaderData } from './workspace';
 
 export interface GrpcMessage {
   id: string;
@@ -627,7 +627,7 @@ export const Debug: FC = () => {
   const visibleCollection = collection.filter(item => !item.hidden);
 
   const parentRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer<HTMLDivElement | null, Child>({
+  const virtualizer = useVirtualizer<HTMLDivElement, Element>({
     getScrollElement: () => parentRef.current,
     count: visibleCollection.length,
     estimateSize: React.useCallback(() => 32, []),

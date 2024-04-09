@@ -128,6 +128,7 @@ describe('plugins', () => {
             ...pluginKeyAuth,
             get: {
               ...pluginKeyAuth,
+              responses: {},
             },
           },
         },
@@ -279,6 +280,7 @@ describe('plugins', () => {
         '/path': {
           description: 'path',
           get: {
+            responses: {},
             description: 'get',
           },
         },
@@ -308,7 +310,7 @@ describe('plugins', () => {
       const paths: OA3Paths = {
         '/path': {
           get: pluginDummy as OA3Operation,
-          put: {},
+          put: { responses: {} },
         },
       };
       const result = getPathPlugins(paths, increment, spec);
@@ -329,7 +331,7 @@ describe('plugins', () => {
     it('should handle plugins existing on path and operation', () => {
       const paths: OA3Paths = {
         '/path-0': { ...pluginKeyAuth, get: pluginDummy as OA3Operation },
-        '/path-1': { ...pluginDummy, put: {} },
+        '/path-1': { ...pluginDummy, put: { responses: {} } },
       };
       const result = getPathPlugins(paths, increment, spec);
       expect(result).toHaveLength(2);
@@ -360,8 +362,8 @@ describe('plugins', () => {
 
     it('should return plugins for all operations on path', () => {
       const pathItem: OA3PathItem = {
-        get: {},
-        put: { ...pluginKeyAuth, ...pluginDummy },
+        get: { responses: {} },
+        put: { ...pluginKeyAuth, ...pluginDummy, responses: {} },
         post: pluginDummy as OA3Operation,
       };
       const result = getOperationPlugins(pathItem, increment, spec);
@@ -395,6 +397,7 @@ describe('plugins', () => {
       const api: OpenApi3Spec = { ...spec, components };
       const pathItem: OA3PathItem = {
         'get': {
+          responses: {},
           security: [
             {
               really_basic: [],
@@ -544,7 +547,7 @@ describe('plugins', () => {
           },
         ],
         paths: {
-          '/path': { ...pluginKeyAuth, get: { ...pluginKeyAuth } },
+          '/path': { ...pluginKeyAuth, get: { ...pluginKeyAuth, responses: {} } },
         },
       };
       const plugins = getPlugins(api);
