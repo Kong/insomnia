@@ -45,7 +45,7 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                   const mockServerUrl = formData.get('mockServerUrl') as string;
                   invariant(mockServerType === 'self-hosted' || mockServerType === 'cloud', 'Project type is required');
 
-                  const isEnterprise = true || currentPlan?.type.includes('enterprise');
+                  const isEnterprise = currentPlan?.type.includes('enterprise');
                   if (mockServerType === 'self-hosted' && !isEnterprise) {
                     showModal(AlertModal, {
                       title: 'Upgrade required',

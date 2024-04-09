@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Dialog, Heading, Input, Label, Modal, ModalOverlay, Radio, RadioGroup, TextField } from 'react-aria-components';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher, useRouteLoaderData } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 
 import { database as db } from '../../../common/database';
@@ -9,10 +9,13 @@ import * as models from '../../../models/index';
 import { MockServer } from '../../../models/mock-server';
 import { isRequest } from '../../../models/request';
 import { isScratchpad, Workspace } from '../../../models/workspace';
+import { OrganizationLoaderData } from '../../routes/organization';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
+import { showModal } from '.';
+import { AlertModal } from './alert-modal';
 
 interface Props {
   onClose: () => void;
@@ -23,6 +26,7 @@ interface Props {
 export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props) => {
   const hasDescription = !!workspace.description;
   const isScratchpadWorkspace = isScratchpad(workspace);
+  const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
 
   const activeWorkspaceName = workspace.name;
 
@@ -117,7 +121,22 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                   </>)}
                 {Boolean(workspace.scope === 'mock-server' && mockServer) && (
                   <>
-                    <RadioGroup name="mockServerType" defaultValue={mockServer?.useInsomniaCloud ? 'cloud' : 'self-hosted'} onChange={value => mockServer && mockServerPatcher(mockServer._id, { useInsomniaCloud: value === 'cloud' })} className="flex flex-col gap-2">
+                    <RadioGroup
+                      name="mockServerType"
+                      defaultValue={mockServer?.useInsomniaCloud ? 'cloud' : 'self-hosted'}
+                      onChange={value => {
+                        const isEnterprise = currentPlan?.type.includes('enterprise');
+                        if (!isEnterprise && value === 'self-hosted') {
+                          showModal(AlertModal, {
+                            title: 'Upgrade required',
+                            message: 'Self-hosted Mocks are only supported for Enterprise users.',
+                          });
+                          return;
+                        }
+                        mockServer && mockServerPatcher(mockServer._id, { useInsomniaCloud: value === 'cloud' });
+                      }}
+                      className="flex flex-col gap-2"
+                    >
                       <Label className="text-sm text-[--hl]">
                         Mock server type
                       </Label>
