@@ -1360,7 +1360,7 @@ const ProjectRoute: FC = () => {
                             />
                           )}
                         </div>
-                        <Heading className="pt-4 text-lg font-bold truncate">
+                        <Heading className="pt-4 text-lg font-bold truncate" title={item.name}>
                           {item.name}
                         </Heading>
                         <div className="flex-1 flex flex-col gap-2 justify-end text-sm text-[--hl]">
