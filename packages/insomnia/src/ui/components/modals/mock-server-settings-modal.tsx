@@ -42,9 +42,10 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                   const formData = new FormData(e.currentTarget);
                   const name = formData.get('name') as string;
                   const mockServerType = formData.get('mockServerType') as string;
+                  const mockServerUrl = formData.get('mockServerUrl') as string;
                   invariant(mockServerType === 'self-hosted' || mockServerType === 'cloud', 'Project type is required');
 
-                  const isEnterprise = currentPlan?.type.includes('enterprise');
+                  const isEnterprise = true || currentPlan?.type.includes('enterprise');
                   if (mockServerType === 'self-hosted' && !isEnterprise) {
                     showModal(AlertModal, {
                       title: 'Upgrade required',
@@ -53,11 +54,11 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                     return;
                   }
 
-                  // todo: pass server url
                   fetcher.submit(
                     {
                       name,
                       mockServerType,
+                      mockServerUrl,
                       scope: 'mock-server',
                     },
                     {
@@ -66,16 +67,8 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                     }
                   );
 
-                  // createNewProjectFetcher.submit(e.currentTarget, {
-                  //   action: `/organization/${organizationId}/project/new`,
-                  //   method: 'post',
-                  // });
-                  // if enterprise allow self hosted else show warning
-                  // else create new mock server
                   // todo:
                   // reuse this modal for workspace settings, or perhaps remove the change url behaviour?
-                  // get isEnterprise value from somewhere - currentPlan?.type.includes('enterprise')
-                  // close();
                 }}
               >
                 <TextField
@@ -123,6 +116,20 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                     </Radio>
                   </div>
                 </RadioGroup>
+                <TextField
+                  name="mockServerUrl"
+                  defaultValue={serverType === 'cloud' ? 'https://mocks.insomnia.rest' : 'http://localhost:8080'}
+                  className={`group relative flex-1 flex flex-col gap-2 ${serverType === 'cloud' ? 'disabled' : ''}`}
+                >
+                  <Label className='text-sm text-[--hl]'>
+                    Mock server URL
+                  </Label>
+                  <Input
+                    disabled={serverType === 'cloud'}
+                    placeholder="https://mocks.insomnia.rest"
+                    className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                  />
+                </TextField>
                 <div className="flex justify-between gap-2 items-center">
                   <div className="flex items-center gap-2 text-sm">
                     <Icon icon="info-circle" />
