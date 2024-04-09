@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Button, Dialog, Heading, Input, Label, Link, Modal, ModalOverlay, Radio, RadioGroup, TextField } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { invariant } from '../../../utils/invariant';
+import { OrganizationLoaderData } from '../../routes/organization';
 import { Icon } from '../icon';
 import { showModal } from '.';
 import { AlertModal } from './alert-modal';
@@ -11,6 +12,7 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
   const [serverType, setServerType] = useState<'self-hosted' | 'cloud'>('cloud');
   const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
   const fetcher = useFetcher();
+  const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   return (
     <ModalOverlay
       isOpen
@@ -42,8 +44,7 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                   const mockServerType = formData.get('mockServerType') as string;
                   invariant(mockServerType === 'self-hosted' || mockServerType === 'cloud', 'Project type is required');
 
-                  // todo: get plan
-                  const isEnterprise = false;
+                  const isEnterprise = currentPlan?.type.includes('enterprise');
                   if (mockServerType === 'self-hosted' && !isEnterprise) {
                     showModal(AlertModal, {
                       title: 'Upgrade required',
