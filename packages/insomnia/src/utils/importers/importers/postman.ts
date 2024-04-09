@@ -69,6 +69,24 @@ const mapGrantTypeToInsomniaGrantType = (grantType: string) => {
   return grantType;
 };
 
+export function translateHandlersInScript(scriptContent: string): string {
+  let translated = scriptContent;
+
+  // Replace pm.* with insomnia.*
+  // This is a simple implementation that only replaces the first instance of pm.* in the script
+  let offset = 0;
+  for (let i = 0; i < scriptContent.length - 2; i++) {
+    const isPM = scriptContent.slice(i, i + 3) === 'pm.';
+    const isPrevCharacterAlphaNumeric = i - 1 >= 0 && /[0-9a-zA-Z\_\$]/.test(scriptContent[i - 1]);
+    if (isPM && !isPrevCharacterAlphaNumeric) {
+      translated = translated.slice(0, i + offset) + 'insomnia.' + translated.slice(i + 3 + offset);
+      offset += 6;
+    }
+  }
+
+  return translated;
+}
+
 export class ImportPostman {
   collection;
 
@@ -132,7 +150,7 @@ export class ImportPostman {
       (Array.isArray(scriptOrRows.exec) ? scriptOrRows.exec.join('\n') : scriptOrRows.exec) :
       '';
 
-    return scriptContent;
+    return translateHandlersInScript(scriptContent);
   };
 
   importRequestItem = (
