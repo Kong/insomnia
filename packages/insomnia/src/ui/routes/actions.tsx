@@ -302,6 +302,8 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   });
 
   if (scope === 'mock-server') {
+    const mockServerType = formData.get('mockServerType');
+    invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
     // create a mock server under the workspace with the same name
     await models.mockServer.getOrCreateForParentId(workspace._id, { name });
     return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);

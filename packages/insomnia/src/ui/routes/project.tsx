@@ -77,6 +77,7 @@ import { showAlert, showPrompt } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '../components/modals/import-modal';
+import { MockServerSettingsModal } from '../components/modals/mock-server-settings-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
@@ -618,6 +619,7 @@ const ProjectRoute: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
+  const [isMockServerSettingsModalOpen, setIsMockServerSettingsModalOpen] = useState(false);
 
   const fetcher = useFetcher();
   const navigate = useNavigate();
@@ -667,27 +669,9 @@ const ProjectRoute: FC = () => {
   };
 
   const createNewMockServer = () => {
-    activeProject.remoteId ?
-    showPrompt({
-      title: 'Create New Mock Server',
-      submitName: 'Create',
-      placeholder: 'My Mock Server',
-      defaultValue: 'My Mock Server',
-      selectText: true,
-      onComplete: async (name: string) => {
-        fetcher.submit(
-          {
-            name,
-            scope: 'mock-server',
-          },
-          {
-            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
-            method: 'post',
-          }
-        );
-      },
-    }) :
-      showModal(AlertModal, {
+    activeProject.remoteId
+      ? setIsMockServerSettingsModalOpen(true)
+      : showModal(AlertModal, {
         title: 'Change Project',
         message: 'Mock feature is only supported for Cloud projects.',
     });
@@ -1419,6 +1403,11 @@ const ProjectRoute: FC = () => {
             from={{ type: importModalType }}
             organizationId={organizationId}
             defaultProjectId={activeProject._id}
+          />
+        )}
+        {isMockServerSettingsModalOpen && (
+          <MockServerSettingsModal
+            onClose={() => setIsMockServerSettingsModalOpen(false)}
           />
         )}
       </Fragment>
