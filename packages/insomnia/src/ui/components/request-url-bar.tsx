@@ -20,9 +20,9 @@ import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSe
 import { OneLineEditor, OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
-import { CommonModal } from './modals/common-modal';
 import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
+import { VariableMissingErrorModal } from './modals/variable-missing-error-modal';
 
 const StyledDropdownButton = styled(DropdownButton)({
   '&:hover:not(:disabled)': {
@@ -378,7 +378,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           )}
         </div>
       </div>
-      <CommonModal
+      <VariableMissingErrorModal
         isOpen={showEnvVariableMissingModal}
         title="An environment variable is missing"
         okText='Execute anyways'
@@ -393,7 +393,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           <Button className="bg-[--color-surprise] text-[--color-font-surprise] px-3 mx-3 rounded-sm">{missingKey}</Button>
           has been defined but has no value defined on a currently Active Environment
         </p>
-      </CommonModal>
+      </VariableMissingErrorModal>
     </div>
   );
 });
