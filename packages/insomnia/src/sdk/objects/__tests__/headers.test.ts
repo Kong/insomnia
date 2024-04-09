@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { Header } from '../headers';
+import { Header, HeaderList } from '../headers';
 // import { QueryParam, setUrlParser, Url, UrlMatchPattern } from '../urls';
 
 describe('test Header object', () => {
@@ -16,5 +16,19 @@ describe('test Header object', () => {
         expect(
             Header.parse(Header.unparse(headerObjs))
         ).toEqual(headerObjs);
+    });
+
+    it('HeaderList operations', () => {
+        const headerList = new HeaderList(
+            undefined,
+            [
+                new Header({ key: 'h1', value: 'v1' }),
+                new Header({ key: 'h2', value: 'v2' }),
+            ]
+        );
+
+        const upserted = new Header({ key: 'h1', value: 'v1upserted' });
+        headerList.upsert(upserted);
+        expect(headerList.one('h1')).toEqual(upserted);
     });
 });
