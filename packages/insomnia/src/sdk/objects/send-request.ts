@@ -9,31 +9,37 @@ import type { CookieOptions } from './cookies';
 import { Request, type RequestOptions } from './request';
 import { Response } from './response';
 
-export function sendRequest(
+export async function sendRequest(
     request: string | Request | RequestOptions,
     cb: (error?: string, response?: Response) => void,
-    settings: Settings, // TODO: modify this after introducing settings
-) {
-    // TODO(george): enable cascading cancellation later as current solution just adds complexity
-    const requestOptions = requestToCurlOptions(request, settings);
+    settings: Settings,
+): Promise<Response | undefined> {
+    // returning Promise here makes migration easier by just adding `await` before calling
+    return new Promise<Response | undefined>(resolve => {
+        // TODO(george): enable cascading cancellation later as current solution just adds complexity
+        const requestOptions = requestToCurlOptions(request, settings);
 
-    try {
-        window.bridge.curlRequest(requestOptions)
-            .then(result => {
-                const output = result as CurlRequestOutput;
-                return curlOutputToResponse(output, request);
-            }).then(transformedOutput => {
-                cb(undefined, transformedOutput);
-            }).catch(e => {
-                cb(e, undefined);
-            });
-    } catch (err) {
-        if (err.name === 'AbortError') {
-            cb(`Request was cancelled: ${err.message}`, undefined);
-            return;
+        try {
+            window.bridge.curlRequest(requestOptions)
+                .then(result => {
+                    const output = result as CurlRequestOutput;
+                    return curlOutputToResponse(output, request);
+                }).then(transformedOutput => {
+                    cb(undefined, transformedOutput);
+                    resolve(transformedOutput);
+                }).catch(e => {
+                    cb(e, undefined);
+                    resolve(undefined);
+                });
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                cb(`Request was cancelled: ${err.message}`, undefined);
+            } else {
+                cb(`Something went wrong: ${err.message}`, undefined);
+            }
+            resolve(undefined);
         }
-        cb(`Something went wrong: ${err.message}`, undefined);
-    }
+    });
 };
 
 function requestToCurlOptions(req: string | Request | RequestOptions, settings: Settings) {

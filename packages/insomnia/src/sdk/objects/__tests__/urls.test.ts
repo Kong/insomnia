@@ -50,6 +50,7 @@ describe('test Url object', () => {
             query: [
                 new QueryParam({ key: 'key1', value: 'value1' }),
                 new QueryParam({ key: 'key2', value: 'value2' }),
+                new QueryParam({ key: 'key3', value: 'value3' }),
             ],
             variables: [
                 new Variable({ key: 'varKey', value: 'varValue' }),
@@ -58,14 +59,15 @@ describe('test Url object', () => {
 
         expect(url.getHost()).toEqual('hostvalue.com');
         expect(url.getPath()).toEqual('/pathLevel1/pathLevel2');
-        expect(url.getQueryString()).toEqual('key1=value1&key2=value2');
-        expect(url.getPathWithQuery()).toEqual('/pathLevel1/pathLevel2?key1=value1&key2=value2');
+        expect(url.getQueryString()).toEqual('key1=value1&key2=value2&key3=value3');
+        expect(url.getPathWithQuery()).toEqual('/pathLevel1/pathLevel2?key1=value1&key2=value2&key3=value3');
         expect(url.getRemote(true)).toEqual('hostvalue.com:777');
         expect(url.getRemote(false)).toEqual('hostvalue.com:777'); // TODO: add more cases
 
         url.removeQueryParams([
             new QueryParam({ key: 'key1', value: 'value1' }),
         ]);
+        url.removeQueryParams('key3');
         expect(url.getQueryString()).toEqual('key2=value2');
         expect(url.toString()).toEqual('https://usernameValue:passwordValue@hostvalue.com:777/pathLevel1/pathLevel2?key2=value2#hashValue');
 
