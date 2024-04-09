@@ -1,5 +1,3 @@
-// import url from 'node:url';
-
 import { describe, expect, it } from '@jest/globals';
 
 import { translateHandlersInScript } from '../postman';
