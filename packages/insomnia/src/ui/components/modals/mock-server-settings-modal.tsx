@@ -134,7 +134,7 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                   <div className="flex items-center gap-2 text-sm">
                     <Icon icon="info-circle" />
                     <span>
-                      You can self-host a mock server. Click here to <Link href="https://github.com/Kong/mockbin" className='underline'>learn more</Link>
+                      You can self-host a mock server. Click here to <Link href="https://github.com/Kong/insomnia-mockbin" className='underline'>learn more</Link>
                     </span>
                   </div>
                   <div className='flex items-center gap-2'>

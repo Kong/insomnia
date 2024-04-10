@@ -183,7 +183,7 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                         className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                       />
                       <Label className='text-sm text-[--hl]'>
-                        You can self-host a mock server. Click here to <Link href="https://github.com/Kong/mockbin" className='underline'>learn more</Link>
+                        You can self-host a mock server. Click here to <Link href="https://github.com/Kong/insomnia-mockbin" className='underline'>learn more</Link>
                       </Label>
                     </TextField>
                   </>
