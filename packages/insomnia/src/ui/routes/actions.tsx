@@ -302,9 +302,18 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   });
 
   if (scope === 'mock-server') {
-    // create a mock server under the workspace with the same name
-    await models.mockServer.getOrCreateForParentId(workspace._id, { name });
-    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
+    const mockServerType = formData.get('mockServerType');
+    invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
+    if (mockServerType === 'cloud') {
+      await models.mockServer.getOrCreateForParentId(workspace._id, { name, useInsomniaCloud: true });
+      return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
+    }
+    if (mockServerType === 'self-hosted') {
+      const mockServerUrl = formData.get('mockServerUrl');
+      invariant(typeof mockServerUrl === 'string', 'Mock Server URL is required');
+      await models.mockServer.getOrCreateForParentId(workspace._id, { name, useInsomniaCloud: false, url: mockServerUrl });
+      return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
+    }
   }
 
   if (scope === 'design') {
