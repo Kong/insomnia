@@ -310,7 +310,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
     }
     if (mockServerType === 'self-hosted') {
       const mockServerUrl = formData.get('mockServerUrl');
-      invariant(mockServerUrl !== typeof 'string', 'Mock Server URL is required');
+      invariant(typeof mockServerUrl === 'string', 'Mock Server URL is required');
       await models.mockServer.getOrCreateForParentId(workspace._id, { name, useInsomniaCloud: false, url: mockServerUrl });
       return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
     }
