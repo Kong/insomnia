@@ -178,7 +178,7 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                       </Label>
                       <Input
                         disabled={mockServer?.useInsomniaCloud}
-                        placeholder="http://localhost:8080"
+                        placeholder="https://mock.insomnia.rest"
                         onChange={e => mockServer && mockServerPatcher(mockServer._id, { url: e.target.value })}
                         className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                       />
