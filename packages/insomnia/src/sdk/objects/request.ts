@@ -1,6 +1,7 @@
 import { init as initClientCertificate } from '../../../src/models/client-certificate';
-import { Request as InsomniaRequest, RequestPathParameter } from '../../../src/models/request';
+import { Request as InsomniaRequest, RequestBody as InsomniaRequestBody, RequestPathParameter } from '../..//models/request';
 import { ClientCertificate } from '../../models/client-certificate';
+import { RequestBodyParameter } from '../../models/request';
 import { Settings } from '../../models/settings';
 import { AuthOptions, AuthOptionTypes, fromPreRequestAuth, RequestAuth } from './auth';
 import { CertificateOptions } from './certificates';
@@ -20,7 +21,7 @@ export interface RequestBodyOptions {
     formdata?: { key: string; value: string; type?: string }[];
     graphql?: { query: string; operationName: string; variables: object };
     raw?: string;
-    urlencoded?: { key: string; value: string }[];
+    urlencoded?: { key: string; value: string; type?: string }[];
     options?: object;
 }
 
@@ -91,7 +92,7 @@ function getClassFields(opts: RequestBodyOptions) {
                 QueryParam,
                 undefined,
                 opts.urlencoded
-                    .map(entry => ({ key: entry.key, value: entry.value }))
+                    .map(entry => ({ key: entry.key, value: entry.value, type: entry.type }))
                     .map(kv => new QueryParam(kv)),
             );
         }
@@ -526,13 +527,38 @@ export function mergeClientCertificates(
     throw Error('Invalid certificate configuration: "cert+key" and "pfx" can not be set at the same time');
 }
 
-export function mergeRequests(
-    originalReq: InsomniaRequest,
-    updatedReq: Request
-): InsomniaRequest {
+export function toScriptRequestBody(insomniaReqBody: InsomniaRequestBody): RequestBodyOptions {
+    let reqBodyOpt: RequestBodyOptions = { mode: undefined };
+
+    if (insomniaReqBody.text !== undefined) {
+        reqBodyOpt = {
+            mode: 'raw',
+            raw: insomniaReqBody.text,
+        };
+    } else if (insomniaReqBody.fileName !== undefined && insomniaReqBody.fileName !== '') {
+        reqBodyOpt = {
+            mode: 'file',
+            file: insomniaReqBody.fileName,
+        };
+    } else if (insomniaReqBody.params !== undefined) {
+        reqBodyOpt = {
+            mode: 'urlencoded',
+            urlencoded: insomniaReqBody.params.map(
+                (param: RequestBodyParameter) => ({ key: param.name, value: param.value, type: param.type })
+            ),
+        };
+    }
+
+    return reqBodyOpt;
+}
+
+export function mergeRequestBody(
+    updatedReqBody: RequestBody | undefined,
+    originalReqBody: InsomniaRequestBody
+): InsomniaRequestBody {
     let mimeType = 'application/octet-stream';
-    if (updatedReq.body) {
-        switch (updatedReq.body.mode) {
+    if (updatedReqBody) {
+        switch (updatedReqBody.mode) {
             case undefined:
                 mimeType = 'application/octet-stream';
                 break;
@@ -554,31 +580,34 @@ export function mergeRequests(
                 mimeType = 'application/json';
                 break;
             default:
-                throw Error(`unknown body mode: ${updatedReq.body.mode}`);
+                throw Error(`unknown request body mode: ${updatedReqBody.mode}`);
         }
     }
-    if (originalReq.body.mimeType) {
-        mimeType = originalReq.body.mimeType;
+    if (originalReqBody.mimeType) {
+        mimeType = originalReqBody.mimeType;
     }
 
-    const queryParameters = updatedReq.url.query.map(
-        queryParam => ({ name: queryParam.key, value: queryParam.value })
-        ,
-        {},
-    );
-    const updatedReqProperties: Partial<InsomniaRequest> = {
-        // url is encoded during parsing phase. Need decode url In order to recognized variables
-        url: decodeURI(typeof updatedReq.url === 'string' ? updatedReq.url : updatedReq.url.toString()),
-        method: updatedReq.method,
-        body: {
-            mimeType: mimeType,
-            text: updatedReq.body?.raw,
-            fileName: updatedReq.body?.file,
-            params: updatedReq.body?.urlencoded?.map(
-                (param: { key: string; value: string }) => ({ name: param.key, value: param.value }),
-                {},
+    return {
+        mimeType: mimeType,
+        text: updatedReqBody?.raw,
+        fileName: updatedReqBody?.file,
+        params: updatedReqBody?.urlencoded?.map(
+            (param: { key: string; value: string; type?: string }) => (
+                { name: param.key, value: param.value, type: param.type }
             ),
-        },
+            {},
+        ),
+    };
+}
+
+export function mergeRequests(
+    originalReq: InsomniaRequest,
+    updatedReq: Request
+): InsomniaRequest {
+    const updatedReqProperties: Partial<InsomniaRequest> = {
+        url: updatedReq.url.toString(),
+        method: updatedReq.method,
+        body: mergeRequestBody(updatedReq.body, originalReq.body),
         headers: updatedReq.headers.map(
             (header: Header) => ({
                 name: header.key,
@@ -589,7 +618,7 @@ export function mergeRequests(
         authentication: fromPreRequestAuth(updatedReq.auth),
         preRequestScript: '',
         pathParameters: updatedReq.pathParameters,
-        parameters: queryParameters,
+        parameters: [], // set empty array as parameters will be part of url field
     };
 
     return {

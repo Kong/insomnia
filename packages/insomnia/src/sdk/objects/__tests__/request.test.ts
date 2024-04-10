@@ -1,13 +1,8 @@
-import url from 'node:url';
-
 import { describe, expect, it } from '@jest/globals';
 
-import { Request, RequestBody } from '../request';
-import { setUrlParser } from '../urls';
+import { mergeRequestBody, Request, RequestBody, toScriptRequestBody } from '../request';
 
 describe('test request and response objects', () => {
-    setUrlParser(url.URL);
-
     it('test RequestBody methods', () => {
         const reqBody = new RequestBody({
             mode: 'urlencoded',
@@ -71,5 +66,50 @@ describe('test request and response objects', () => {
 
         const req2 = req.clone();
         expect(req2.toJSON()).toEqual(req.toJSON());
+    });
+
+    it('test Request body transforming', () => {
+        const bodies = [
+            {
+                mimeType: 'text/plain',
+                text: 'rawContent',
+            },
+            {
+                mimeType: 'application/octet-stream',
+                fileName: 'path/to/file',
+            },
+            {
+                mimeType: 'application/x-www-form-urlencoded',
+                params: [
+                    { name: 'k1', value: 'v1' },
+                    { name: 'k2', value: 'v2' },
+                ],
+            },
+            {
+                mimeType: 'application/json',
+                text: `{
+                    query: 'query',
+                    operationName: 'operation',
+                    variables: 'var',
+                }`,
+            },
+            {
+                mimeType: 'image/gif',
+                fileName: '/path/to/image',
+            },
+            {
+                mimeType: 'multipart/form-data',
+                params: [
+                    { name: 'k1', type: 'text', value: 'v1' },
+                    { name: 'k2', type: 'file', value: '/path/to/image' },
+                ],
+            },
+        ];
+
+        bodies.forEach(body => {
+            const originalReqBody = body;
+            const scriptReqBody = new RequestBody(toScriptRequestBody(body));
+            expect(mergeRequestBody(scriptReqBody, originalReqBody)).toEqual(originalReqBody);
+        });
     });
 });

@@ -1,12 +1,7 @@
 import { Property, PropertyBase, PropertyList } from './properties';
 import { Variable, VariableList } from './variables';
 
-// TODO: make it also work with node.js
-let UrlParser = URL;
 let UrlSearchParams = URLSearchParams;
-export function setUrlParser(provider: any) {
-    UrlParser = provider;
-}
 export function setUrlSearchParams(provider: any) {
     UrlSearchParams = provider;
 }
@@ -21,8 +16,9 @@ export class QueryParam extends Property {
 
     key: string;
     value: string;
+    type?: string;
 
-    constructor(options: { key: string; value: string } | string) {
+    constructor(options: { key: string; value: string; type?: string } | string) {
         super();
 
         if (typeof options === 'string') {
@@ -30,12 +26,14 @@ export class QueryParam extends Property {
                 const optionsObj = JSON.parse(options);
                 this.key = optionsObj.key;
                 this.value = optionsObj.value;
+                this.type = optionsObj.type;
             } catch (e) {
                 throw Error(`invalid QueryParam options ${e}`);
             }
         } else if (typeof options === 'object' && ('key' in options) && ('value' in options)) {
             this.key = options.key;
             this.value = options.value;
+            this.type = options.type;
         } else {
             throw Error('unknown options for new QueryParam');
         }
@@ -93,7 +91,7 @@ export class QueryParam extends Property {
         return params.toString();
     }
 
-    update(param: string | { key: string; value: string }) {
+    update(param: string | { key: string; value: string; type?: string }) {
         if (typeof param === 'string') {
             const paramObj = QueryParam.parseSingle(param);
             this.key = typeof paramObj.key === 'string' ? paramObj.key : '';
@@ -101,6 +99,7 @@ export class QueryParam extends Property {
         } else if ('key' in param && 'value' in param) {
             this.key = param.key;
             this.value = param.value;
+            this.type = param.type;
         } else {
             throw Error('the param for update must be: string | { key: string; value: string }');
         }
@@ -145,12 +144,6 @@ export class Url extends PropertyBase {
     }
 
     private setFields(def: UrlOptions | string) {
-        if (typeof def === 'string') {
-            def = def.includes('://') ? def : 'http://' + def;
-        } else if (!def.protocol || def.protocol === '') {
-            def.protocol = 'http://';
-        }
-
         const urlObj = typeof def === 'string' ? Url.parse(def) : def;
 
         if (urlObj) {
@@ -193,30 +186,98 @@ export class Url extends PropertyBase {
     }
 
     static parse(urlStr: string): UrlOptions | undefined {
-        // TODO: enable validation
-        // if (!UrlParser.canParse(urlStr)) {
-        //     console.error(`invalid URL string ${urlStr}`);
-        //     return undefined;
-        // }
+        // the URL API (for web) is not leveraged here because the input string could contain tags for interpolation
+        // which will be encoded, then it would introduce confusion for users in manipulation
 
-        const url = new UrlParser(urlStr);
-        const query = Array.from(url.searchParams.entries())
-            .map(kv => {
-                const kvArray = kv as [string, string];
-                return { key: kvArray[0], value: kvArray[1] };
-            });
+        const endOfProto = urlStr.indexOf('://');
+        const protocol = endOfProto >= 0 ? urlStr.slice(0, endOfProto + 1) : '';
+
+        const potentialStartOfAuth = protocol === '' ? 0 : endOfProto + 3;
+        const endOfAuth = urlStr.indexOf('@', potentialStartOfAuth);
+        let auth = undefined;
+        if (endOfAuth >= 0 && potentialStartOfAuth < endOfAuth) { // e.g., '@insomnia.com' will be ignored
+            const authStr = endOfAuth >= 0 ? urlStr.slice(potentialStartOfAuth, endOfAuth) : '';
+            const authParts = authStr?.split(':');
+            if (authParts.length < 2) {
+                throw Error('new Url(): failed to parse auth in url ${urlStr}');
+            }
+            auth = { username: authParts[0], password: authParts[1] };
+        }
+
+        const startOfHash = urlStr.indexOf('#');
+        const hash = startOfHash >= 0 ? urlStr.slice(startOfHash + 1) : undefined;
+
+        const endOfQuery = startOfHash >= 0 ? startOfHash : urlStr.length;
+        const startOfQuery = urlStr.lastIndexOf('?', endOfQuery);
+        const query = new Array<{ key: string; value: string }>();
+        if (startOfQuery >= 0) {
+            const queryStr = urlStr.slice(startOfQuery + 1, endOfQuery);
+            query.push(
+                ...queryStr
+                    .split('&')
+                    .map(pairStr => {
+                        const queryParts = pairStr.split('=');
+                        const key = queryParts[0];
+                        const value = queryParts.length > 1 ? queryParts[1] : '';
+                        return { key, value };
+                    })
+            );
+        }
+
+        const startOfPathname = urlStr.indexOf('/', endOfProto >= 0 ? endOfProto + 3 : 0);
+        const path = new Array<string>();
+        if (startOfPathname >= 0) {
+            let endOfPathname = urlStr.length;
+            if (startOfQuery >= 0) {
+                endOfPathname = startOfQuery;
+            } else if (startOfHash >= 0) {
+                endOfPathname = startOfHash;
+            }
+            const pathname = urlStr.slice(startOfPathname, endOfPathname);
+            path.push(
+                ...pathname.split('/'),
+            );
+        }
+
+        let potentialStartOfHostname = 0;
+        if (endOfAuth >= 0) {
+            potentialStartOfHostname = endOfAuth + 1;
+        } else if (endOfProto >= 0) {
+            potentialStartOfHostname = endOfProto + 3;
+        }
+        let potentialEndOfHostname = urlStr.length;
+        if (startOfPathname >= 0) {
+            potentialEndOfHostname = startOfPathname;
+        } else if (startOfQuery >= 0) {
+            potentialEndOfHostname = startOfQuery;
+        } else if (startOfHash >= 0) {
+            potentialEndOfHostname = startOfHash;
+        }
+        const host = new Array<string>();
+        let port = undefined;
+        if (potentialStartOfHostname < potentialEndOfHostname) {
+            const hostname = urlStr.slice(potentialStartOfHostname, potentialEndOfHostname);
+            const hostnameParts = hostname.split(':');
+            if (hostnameParts.length === 2) {
+                port = hostnameParts[1];
+            } else if (hostnameParts.length > 2) {
+                throw Error('new Url(): failed to parse hostname in url ${urlStr}');
+            }
+
+            host.push(
+                ...
+                hostnameParts[0].split('.'),
+            );
+        }
 
         return {
-            auth: url.username !== '' ? { // TODO: make it compatible with RequestAuth
-                username: url.username,
-                password: url.password,
-            } : undefined,
-            hash: url.hash,
-            host: url.hostname.split('/'),
-            path: url.pathname.split('/'),
-            port: url.port,
-            protocol: url.protocol, // e.g. https:
+            auth,
+            protocol,
+            host,
+            port,
+            path,
             query,
+            hash,
             variables: [],
         };
     }
@@ -236,7 +297,7 @@ export class Url extends PropertyBase {
     }
 
     getHost() {
-        return this.host.join('.').toLowerCase();
+        return this.host.join('.');
     }
 
     getPath(unresolved?: boolean) {
@@ -259,7 +320,11 @@ export class Url extends PropertyBase {
         const params = new UrlSearchParams();
         this.query.each(param => params.append(param.key, param.value), {});
 
-        return params.toString();
+        const queryParamStrs = this.query.map(pair => {
+            return pair.value ? `${pair.key}=${pair.value}` : pair.key;
+        }, {});
+
+        return queryParamStrs.join('&');
     }
 
     getRemote(forcePort?: boolean) {
@@ -310,20 +375,19 @@ export class Url extends PropertyBase {
     }
 
     toString(forceProtocol?: boolean) {
-        const protocol = forceProtocol ?
-            (this.protocol ? this.protocol : 'https:') :
-            (this.protocol ? this.protocol : '');
+        const protocolStr = forceProtocol ?
+            (this.protocol ? `${this.protocol}//` : 'http://') :
+            (this.protocol ? `${this.protocol}//` : '');
 
-        const parser = new UrlParser(`${protocol}//` + this.getHost());
-        parser.username = this.auth?.username || '';
-        parser.password = this.auth?.password || '';
-        parser.port = this.port || '';
-        parser.pathname = this.getPath();
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        parser.search = this.getQueryString();
-        parser.hash = this.hash || '';
+        const authStr = this.auth ? `${this.auth.username}:${this.auth.password}@` : '';
+        const hostStr = this.getHost();
+        const portStr = this.port ? `:${this.port}` : '';
+        const pathStr = this.getPath();
+        const queryStr = this.getQueryString() ? `?${this.getQueryString()}` : '';
+        const hashStr = this.hash ? `#${this.hash}` : '';
 
-        return parser.toString();
+        return `${protocolStr}${authStr}${hostStr}${portStr}${pathStr}${queryStr}${hashStr}`;
+        // return parser.toString();
     }
 
     update(url: UrlOptions | string) {
@@ -566,9 +630,6 @@ export class UrlMatchPatternList<T extends UrlMatchPattern> extends PropertyList
     static isUrlMatchPatternList(obj: any) {
         return '_kind' in obj && obj._kind === 'UrlMatchPatternList';
     }
-
-    // TODO: unsupported yet
-    // toObject(excludeDisabledopt, nullable, caseSensitiveopt, nullable, multiValueopt, nullable, sanitizeKeysopt) → {Object}
 
     test(urlStr: string) {
         return this

@@ -1,13 +1,9 @@
-import url from 'node:url';
-
 import { describe, expect, it } from '@jest/globals';
 
-import { QueryParam, setUrlParser, Url, UrlMatchPattern } from '../urls';
+import { QueryParam, Url, UrlMatchPattern } from '../urls';
 import { Variable } from '../variables';
 
 describe('test Url object', () => {
-    setUrlParser(url.URL);
-
     it('test QueryParam', () => {
         const queryParam = new QueryParam({
             key: 'uname',
@@ -57,33 +53,34 @@ describe('test Url object', () => {
             ],
         });
 
-        expect(url.getHost()).toEqual('hostvalue.com');
+        expect(url.getHost()).toEqual('hostValue.com');
         expect(url.getPath()).toEqual('/pathLevel1/pathLevel2');
+
         expect(url.getQueryString()).toEqual('key1=value1&key2=value2&key3=value3');
         expect(url.getPathWithQuery()).toEqual('/pathLevel1/pathLevel2?key1=value1&key2=value2&key3=value3');
-        expect(url.getRemote(true)).toEqual('hostvalue.com:777');
-        expect(url.getRemote(false)).toEqual('hostvalue.com:777'); // TODO: add more cases
+        expect(url.getRemote(true)).toEqual('hostValue.com:777');
+        expect(url.getRemote(false)).toEqual('hostValue.com:777'); // TODO: add more cases
 
         url.removeQueryParams([
             new QueryParam({ key: 'key1', value: 'value1' }),
         ]);
         url.removeQueryParams('key3');
         expect(url.getQueryString()).toEqual('key2=value2');
-        expect(url.toString()).toEqual('https://usernameValue:passwordValue@hostvalue.com:777/pathLevel1/pathLevel2?key2=value2#hashValue');
+        expect(url.toString()).toEqual('https://usernameValue:passwordValue@hostValue.com:777/pathLevel1/pathLevel2?key2=value2#hashValue');
 
-        const url2 = new Url('https://usernameValue:passwordValue@hostvalue.com:777/pathLevel1/pathLevel2?key1=value1&key2=value2#hashValue');
-        expect(url2.getHost()).toEqual('hostvalue.com');
+        const url2 = new Url('https://usernameValue:passwordValue@hostValue.com:777/pathLevel1/pathLevel2?key1=value1&key2=value2#hashValue');
+        expect(url2.getHost()).toEqual('hostValue.com');
         expect(url2.getPath()).toEqual('/pathLevel1/pathLevel2');
         expect(url2.getQueryString()).toEqual('key1=value1&key2=value2');
         expect(url2.getPathWithQuery()).toEqual('/pathLevel1/pathLevel2?key1=value1&key2=value2');
-        expect(url2.getRemote(true)).toEqual('hostvalue.com:777');
-        expect(url2.getRemote(false)).toEqual('hostvalue.com:777'); // TODO: add more cases
+        expect(url2.getRemote(true)).toEqual('hostValue.com:777');
+        expect(url2.getRemote(false)).toEqual('hostValue.com:777'); // TODO: add more cases
 
         url2.removeQueryParams([
             new QueryParam({ key: 'key1', value: 'value1' }),
         ]);
         expect(url2.getQueryString()).toEqual('key2=value2');
-        expect(url2.toString()).toEqual('https://usernameValue:passwordValue@hostvalue.com:777/pathLevel1/pathLevel2?key2=value2#hashValue');
+        expect(url2.toString()).toEqual('https://usernameValue:passwordValue@hostValue.com:777/pathLevel1/pathLevel2?key2=value2#hashValue');
     });
 
     it('test Url static methods', () => {
@@ -93,6 +90,72 @@ describe('test Url object', () => {
         const urlObj = new Url(urlOptions || '');
 
         expect(urlObj.toString()).toEqual(urlStr);
+    });
+
+    const urlParsingTests = [
+        {
+            testName: 'interal url',
+            url: 'inso/',
+        },
+        {
+            testName: 'interal url with protocol',
+            url: 'http://inso/',
+        },
+        {
+            testName: 'interal url with auth',
+            url: 'http://name:pwd@inso/',
+        },
+        {
+            testName: 'interal url with auth without protocol',
+            url: 'name:pwd@inso/',
+        },
+        {
+            testName: 'ip address',
+            url: 'http://127.0.0.1/',
+        },
+        {
+            testName: 'localhost',
+            url: 'https://localhost/',
+        },
+        {
+            testName: 'url with query params',
+            url: 'localhost/?k=v',
+        },
+        {
+            testName: 'url with hash',
+            url: 'localhost/#myHash',
+        },
+        {
+            testName: 'url with query params and hash',
+            url: 'localhost/?k=v#myHash',
+        },
+        {
+            testName: 'url with query params and hash',
+            url: 'localhost/?k={{ myValue }}',
+        },
+        {
+            testName: 'url with query params and hash',
+            url: 'localhost/#My{{ hashValue }}',
+        },
+        {
+            testName: 'url with path params',
+            url: 'inso.com/:path1/:path',
+        },
+        {
+            testName: 'url with tags and path params',
+            url: '{{ _.baseUrl }}/:path1/:path',
+        },
+        {
+            testName: 'hybrid of path params and tags',
+            url: '{{ baseUrl }}/:path_{{ _.pathSuffix }}',
+        },
+    ];
+
+    urlParsingTests.forEach(testCase => {
+        it(`parsing url: ${testCase.testName}`, () => {
+            const urlObj = new Url(testCase.url);
+            expect(urlObj.toString()).toEqual(testCase.url);
+        });
     });
 });
 

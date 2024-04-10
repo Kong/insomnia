@@ -1,14 +1,14 @@
 import { expect } from 'chai';
 
 import { ClientCertificate } from '../../models/client-certificate';
-import { RequestBodyParameter, RequestHeader } from '../../models/request';
+import { RequestHeader } from '../../models/request';
 import { Settings } from '../../models/settings';
 import { toPreRequestAuth } from './auth';
 import { CookieObject } from './cookies';
 import { Environment, Variables } from './environments';
 import { RequestContext } from './interfaces';
 import { unsupportedError } from './properties';
-import { Request as ScriptRequest, RequestBodyOptions, RequestOptions } from './request';
+import { Request as ScriptRequest, RequestOptions, toScriptRequestBody } from './request';
 import { Response as ScriptResponse } from './response';
 import { sendRequest } from './send-request';
 import { test } from './test';
@@ -125,26 +125,6 @@ export function initInsomniaObject(
         data: iterationData,
     });
 
-    let reqBodyOpt: RequestBodyOptions = { mode: undefined };
-    if (rawObj.request.body.text != null) {
-        reqBodyOpt = {
-            mode: 'raw',
-            raw: rawObj.request.body.text,
-        };
-    } else if (rawObj.request.body.fileName != null && rawObj.request.body.fileName !== '') {
-        reqBodyOpt = {
-            mode: 'file',
-            file: rawObj.request.body.fileName,
-        };
-    } else if (rawObj.request.body.params != null) {
-        reqBodyOpt = {
-            mode: 'urlencoded',
-            urlencoded: rawObj.request.body.params.map(
-                (param: RequestBodyParameter) => ({ key: param.name, value: param.value })
-            ),
-        };
-    }
-
     const certificate = rawObj.clientCertificates != null && rawObj.clientCertificates.length > 0 ?
         {
             disabled: false,
@@ -203,10 +183,11 @@ export function initInsomniaObject(
         header: rawObj.request.headers.map(
             (header: RequestHeader) => ({ key: header.name, value: header.value })
         ),
-        body: reqBodyOpt,
+        body: toScriptRequestBody(rawObj.request.body),
         auth: toPreRequestAuth(rawObj.request.authentication),
         proxy,
         certificate,
+        pathParameters: rawObj.request.pathParameters,
     };
     const request = new ScriptRequest(reqOpt);
 

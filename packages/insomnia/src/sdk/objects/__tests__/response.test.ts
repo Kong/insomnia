@@ -1,14 +1,9 @@
-import url from 'node:url';
-
 import { describe, expect, it } from '@jest/globals';
 
 import { Request } from '../request';
 import { Response } from '../response';
-import { setUrlParser } from '../urls';
 
 describe('test request and response objects', () => {
-    setUrlParser(url.URL);
-
     it('test Response methods', () => {
         const req = new Request({
             url: 'https://hostname.com/path',
