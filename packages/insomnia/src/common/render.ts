@@ -219,6 +219,7 @@ export async function render<T>(
   blacklistPathRegex: RegExp | null = null,
   errorMode: string = THROW_ON_ERROR,
   name = '',
+  ignoreUndefinedEnvVariable: boolean = false,
 ) {
   // Make a deep copy so no one gets mad :)
   const newObj = clone(obj);
@@ -244,7 +245,7 @@ export async function render<T>(
     } else if (typeof x === 'string') {
       try {
         // @ts-expect-error -- TSCONVERSION
-        x = await templating.render(x, { context, path });
+        x = await templating.render(x, { context, path, ignoreUndefinedEnvVariable });
 
         // If the variable outputs a tag, render it again. This is a common use
         // case for environment variables:
@@ -301,6 +302,7 @@ interface BaseRenderContextOptions {
   baseEnvironment?: Environment;
   purpose?: RenderPurpose;
   extraInfo?: ExtraRenderInfo;
+  ignoreUndefinedEnvVariable?: boolean;
 }
 
 interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
@@ -471,6 +473,7 @@ export async function getRenderedRequestAndContext(
     baseEnvironment,
     extraInfo,
     purpose,
+    ignoreUndefinedEnvVariable,
   }: RenderRequestOptions,
 ): Promise<RequestAndContext> {
   const ancestors = await getRenderContextAncestors(request);
@@ -500,6 +503,9 @@ export async function getRenderedRequestAndContext(
     },
     renderContext,
     request.settingDisableRenderRequestBody ? /^body.*/ : null,
+    THROW_ON_ERROR,
+    '',
+    ignoreUndefinedEnvVariable,
   );
 
   const renderedRequest = renderResult._request;

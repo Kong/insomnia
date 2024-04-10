@@ -44,18 +44,16 @@ test.describe('pre-request features tests', async () => {
             name: 'require / require classes from insomnia-collection module and init them',
             expectedBody: {
                 propJson: {
-                    '_kind': 'Property',
-                    'disabled': false,
-                    'id': 'pid',
-                    'name': 'pname',
+                    disabled: false,
+                    id: 'pid',
+                    name: 'pname',
                 },
                 headerJson: {
-                    '_kind': 'Header',
-                    'key': 'headerKey',
-                    'value': 'headerValue',
-                    'id': '',
-                    'name': '',
-                    'type': '',
+                    key: 'headerKey',
+                    value: 'headerValue',
+                    id: '',
+                    name: '',
+                    type: '',
                 },
             },
         },
@@ -124,6 +122,14 @@ test.describe('pre-request features tests', async () => {
                 stream: true,
                 timers: true,
                 events: true,
+            },
+        },
+        {
+            name: 'get sendRequest response through await or callback',
+            customVerify: (bodyJson: any) => {
+                const requestBody = JSON.parse(bodyJson.data);
+                expect(requestBody.bodyFromAwait.method).toEqual('GET');
+                expect(requestBody.bodyFromCallback.method).toEqual('GET');
             },
         },
     ];

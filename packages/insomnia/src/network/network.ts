@@ -174,6 +174,7 @@ export const tryToInterpolateRequest = async (
   purpose?: RenderPurpose,
   extraInfo?: ExtraRenderInfo,
   baseEnvironment?: Environment,
+  ignoreUndefinedEnvVariable?: boolean,
 ) => {
   try {
     return await getRenderedRequestAndContext({
@@ -182,6 +183,7 @@ export const tryToInterpolateRequest = async (
       baseEnvironment,
       purpose,
       extraInfo,
+      ignoreUndefinedEnvVariable,
     });
   } catch (err) {
     if ('type' in err && err.type === 'render') {

@@ -1,4 +1,5 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { Button } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData, useSearchParams } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
@@ -21,6 +22,7 @@ import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
+import { VariableMissingErrorModal } from './modals/variable-missing-error-modal';
 
 const StyledDropdownButton = styled(DropdownButton)({
   '&:hover:not(:disabled)': {
@@ -51,18 +53,25 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   onPaste,
 }, ref) => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [showEnvVariableMissingModal, setShowEnvVariableMissingModal] = useState(false);
+  const [missingKey, setMissingKey] = useState('');
   if (searchParams.has('error')) {
-    showAlert({
-      title: 'Unexpected Request Failure',
-      message: (
-        <div>
-          <p>The request failed due to an unhandled error:</p>
-          <code className="wide selectable">
-            <pre>{searchParams.get('error')}</pre>
-          </code>
-        </div>
-      ),
-    });
+    if (searchParams.has('envVariableMissing') && searchParams.get('missingKey')) {
+      setShowEnvVariableMissingModal(true);
+      setMissingKey(searchParams.get('missingKey')!);
+    } else {
+      showAlert({
+        title: 'Unexpected Request Failure',
+        message: (
+          <div>
+            <p>The request failed due to an unhandled error:</p>
+            <code className="wide selectable">
+              <pre>{searchParams.get('error')}</pre>
+            </code>
+          </div>
+        ),
+      });
+    }
 
     // clean up params
     searchParams.delete('error');
@@ -118,7 +127,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       });
   }, [fetcher, organizationId, projectId, requestId, workspaceId]);
 
-  const sendOrConnect = useCallback(async (shouldPromptForPathAfterResponse?: boolean) => {
+  const sendOrConnect = useCallback(async (shouldPromptForPathAfterResponse?: boolean, ignoreUndefinedEnvVariable?: boolean) => {
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
       event: SegmentEvent.requestExecute,
@@ -162,7 +171,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     }
 
     try {
-      send({ requestId, shouldPromptForPathAfterResponse });
+      send({ requestId, shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable });
     } catch (err) {
       showAlert({
         title: 'Unexpected Request Failure',
@@ -369,6 +378,22 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           )}
         </div>
       </div>
+      <VariableMissingErrorModal
+        isOpen={showEnvVariableMissingModal}
+        title="An environment variable is missing"
+        okText='Execute anyways'
+        onOk={() => {
+          setShowEnvVariableMissingModal(false);
+          sendOrConnect(false, true);
+        }}
+        onCancel={() => setShowEnvVariableMissingModal(false)}
+      >
+        <p>
+          The environment variable
+          <Button className="bg-[--color-surprise] text-[--color-font-surprise] px-3 mx-3 rounded-sm">{missingKey}</Button>
+          has been defined but has no value defined on a currently Active Environment
+        </p>
+      </VariableMissingErrorModal>
     </div>
   );
 });

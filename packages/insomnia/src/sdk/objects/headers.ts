@@ -35,6 +35,8 @@ export class Header extends Property {
         }
     }
 
+    static _index: string = 'key';
+
     static create(input?: { key: string; value: string } | string, name?: string): Header {
         return new Header(input || { key: '', value: '' }, name);
     }
@@ -111,11 +113,6 @@ export class HeaderList<T extends Header> extends PropertyList<T> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     eachParent(_iterator: any, _context?: object | undefined) {
         throw unsupportedError('eachParent');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    toObject(_excludeDisabled?: boolean, _caseSensitive?: boolean, _multiValue?: boolean, _sanitizeKeys?: boolean) {
-        throw unsupportedError('toObject');
     }
 
     contentSize(): number {
