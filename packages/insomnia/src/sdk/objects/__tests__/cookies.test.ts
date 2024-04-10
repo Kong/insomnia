@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { Cookie, CookieJar } from '../cookies';
+import { Cookie, CookieJar, CookieList } from '../cookies';
 
 describe('test Cookie object', () => {
     it('test basic operations', () => {
@@ -65,7 +65,6 @@ describe('test Cookie object', () => {
             Cookie.unparseSingle(cookie1Opt)
         ).toEqual(expectedCookieString);
     });
-
 });
 
 describe('test CookieJar', () => {
@@ -141,5 +140,18 @@ describe('test CookieJar', () => {
             expect(err).toBeUndefined();
             expect(cookie).toBeUndefined();
         });
+    });
+
+    it('CookieList operations', () => {
+        const cookieList = new CookieList(
+            [
+                new Cookie({ key: 'c1', value: 'v1' }),
+                new Cookie({ key: 'c2', value: 'v2' }),
+            ]
+        );
+
+        const upsertedC1 = new Cookie({ key: 'c1', value: 'v1upserted' });
+        cookieList.upsert(upsertedC1);
+        expect(cookieList.one('c1')).toEqual(upsertedC1);
     });
 });

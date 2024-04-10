@@ -108,6 +108,7 @@ export class QueryParam extends Property {
 }
 
 export interface UrlOptions {
+    id?: string;
     auth?: {
         username: string;
         password: string;
@@ -124,6 +125,7 @@ export interface UrlOptions {
 export class Url extends PropertyBase {
     _kind: string = 'Url';
 
+    id?: string;
     // TODO: should be related to RequestAuth
     // but the implementation seems only supports username + password
     auth?: { username: string; password: string };
@@ -183,6 +185,8 @@ export class Url extends PropertyBase {
             throw Error(`url is invalid: ${def}`); // TODO:
         }
     }
+
+    static _index: string = 'id';
 
     static isUrl(obj: object) {
         return '_kind' in obj && obj._kind === 'Url';
@@ -279,7 +283,7 @@ export class Url extends PropertyBase {
             this.query = new PropertyList(
                 QueryParam,
                 undefined,
-                this.query.filter(queryParam => queryParam.key === params, {})
+                this.query.filter(queryParam => queryParam.key !== params, {})
             );
         } else if (params.length > 0) {
             let toBeRemoved: Set<string>;
@@ -301,7 +305,7 @@ export class Url extends PropertyBase {
                 this.query.filter(queryParam => !toBeRemoved.has(queryParam.key), {})
             );
         } else {
-            console.error('failed to remove query params: unknown params type, only supports QueryParam[], string[] or string');
+            throw Error('failed to remove query params: unknown params type, only supports QueryParam[], string[] or string');
         }
     }
 
@@ -352,6 +356,7 @@ export class UrlMatchPattern extends Property {
     // "http://localhost/*"
     // It doesn't support match patterns for top Level domains (TLD).
 
+    id: string = '';
     private pattern: string;
 
     constructor(pattern: string) {
@@ -360,6 +365,7 @@ export class UrlMatchPattern extends Property {
         this.pattern = pattern;
     }
 
+    static _index = 'id';
     static readonly MATCH_ALL_URLS: string = '<all_urls>';
     static pattern: string | undefined = undefined; // TODO: its usage is unknown
     static readonly PROTOCOL_DELIMITER: string = '+';

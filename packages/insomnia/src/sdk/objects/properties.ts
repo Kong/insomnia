@@ -123,7 +123,9 @@ export class PropertyBase {
         const entriesToExport = Object
             .entries(this)
             .filter((kv: [string, any]) =>
-                typeof kv[1] !== 'function' && typeof kv[1] !== 'undefined'
+                typeof kv[1] !== 'function'
+                && typeof kv[1] !== 'undefined'
+                && kv[0] !== '_kind'
             );
 
         return Object.fromEntries(entriesToExport);
@@ -158,6 +160,8 @@ export class Property extends PropertyBase {
 
     }
 
+    static _index = 'id';
+
     // TODO: unsupported yet
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     static replaceSubstitutions(_str: string, _variables: object): string {
@@ -181,7 +185,7 @@ export class PropertyList<T extends Property> {
     protected list: T[] = [];
 
     constructor(
-        protected _typeClass: {}, // TODO: it is not used before collection is introduced
+        protected typeClass: { _index?: string },
         protected parent: Property | PropertyList<any> | undefined,
         populate: T[],
     ) {
@@ -284,9 +288,18 @@ export class PropertyList<T extends Property> {
     }
 
     indexOf(item: string | T) {
+        const indexFieldName = this.typeClass._index || 'id';
+
         for (let i = 0; i < this.list.length; i++) {
-            if (equal(item, this.list[i])) {
+            const record = this.list[i] as Record<string, any>;
+
+            if (typeof item === 'string' && record[indexFieldName] === item) {
                 return i;
+            } else {
+                const itemRecord = item as Record<string, any>;
+                if (record[indexFieldName] === itemRecord[indexFieldName]) {
+                    return i;
+                }
             }
         }
         return -1;
@@ -320,8 +333,12 @@ export class PropertyList<T extends Property> {
     }
 
     one(id: string) {
+        const indexFieldName = this.typeClass._index || 'id';
+
         for (let i = this.list.length - 1; i >= 0; i--) {
-            if (this.list[i].id === id) {
+
+            const record = this.list[i] as Record<string, any>;
+            if (record[indexFieldName] === id) {
                 return this.list[i];
             }
         }
@@ -365,8 +382,9 @@ export class PropertyList<T extends Property> {
     // TODO: unsupported yet
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     toObject(_excludeDisabled?: boolean, _caseSensitive?: boolean, _multiValue?: boolean, _sanitizeKeys?: boolean) {
-        // unsupported as _postman_propertyIndexKey is not supported
-        throw unsupportedError('toObject');
+        // it just dump all properties of each element without arguments
+        // then user is able to handle them by themself
+        return this.list.map(elem => elem.toJSON());
     }
 
     toString() {

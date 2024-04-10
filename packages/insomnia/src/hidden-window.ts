@@ -65,7 +65,7 @@ const runPreRequestScript = async (
     'eval',
     '_',
     `
-      const $ = insomnia, pm = insomnia;
+      const $ = insomnia;
        ${script};
       return insomnia;`
   );

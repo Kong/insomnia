@@ -8,11 +8,9 @@ describe('test Property objects', () => {
         const pbase = new PropertyBase('my property');
 
         expect(pbase.toJSON()).toEqual({
-            _kind: 'PropertyBase',
             description: 'my property',
         });
         expect(pbase.toObject()).toEqual({
-            _kind: 'PropertyBase',
             description: 'my property',
         });
     });
@@ -26,14 +24,13 @@ describe('test Property objects', () => {
         );
 
         expect(prop.toJSON()).toEqual({
-            _kind: 'Property',
             disabled: false,
             id: 'real_id',
             name: 'real_name',
         });
     });
 
-    it('PropertyList: basic operations', () => {
+    it('PropertyList: basic operations: add, append, count, all, clear', () => {
         const propList = new PropertyList(
             {},
             undefined,
@@ -47,19 +44,16 @@ describe('test Property objects', () => {
         expect(propList.count()).toBe(3);
         expect(propList.all()).toEqual([
             {
-                _kind: 'Property',
                 disabled: false,
                 id: 'id1',
                 name: 'p1',
             },
             {
-                _kind: 'Property',
                 disabled: false,
                 id: 'id2',
                 name: 'p2',
             },
             {
-                _kind: 'Property',
                 disabled: false,
                 id: 'id3',
                 name: 'p3',
@@ -67,6 +61,15 @@ describe('test Property objects', () => {
         ]);
 
         propList.clear();
+    });
+
+    it('PropertyList: basic operations: assimilate, each, filter, find', () => {
+        const propList = new PropertyList<Property>(
+            Property,
+            undefined,
+            [],
+        );
+
         propList.assimilate(
             [
                 new Property('id1', 'p1'),
@@ -96,25 +99,48 @@ describe('test Property objects', () => {
                 {},
             ) != null
         ).toBeTruthy();
+    });
+
+    it('PropertyList: basic operations: one, has, indexOf, insert, insertAfter, prepend, populate, map, reduce', () => {
+        const propList = new PropertyList<Property>(
+            Property,
+            undefined,
+            [
+                new Property('id1', 'p1'),
+                new Property('id2', 'p2'),
+            ],
+        );
 
         expect(propList.one('id1'))
             .toEqual(new Property('id1', 'p1'));
         expect(propList.has(new Property('id1', 'p1')))
             .toBeTruthy();
-        expect(propList.indexOf(new Property('id1', 'p1')) >= 0).toBeTruthy();
+        expect(propList.indexOf(new Property('id1', 'p1')) === 0).toBeTruthy();
         propList.clear();
 
         propList.insert(new Property('id0', 'p0'), 0);
         propList.insertAfter(new Property('id1', 'p1'), 1);
         propList.prepend(new Property('id-1', 'p-1'));
         propList.populate([new Property('id2', 'p2')]);
+    });
+
+    it('PropertyList: basic operations: one, has, indexOf, insert, insertAfter, prepend, populate, map, reduce', () => {
+        const propList = new PropertyList<Property>(
+            Property,
+            undefined,
+            [
+                new Property('id0', 'p0'),
+                new Property('id1', 'p1'),
+                new Property('id2', 'p2'),
+            ],
+        );
+
         expect(
             propList.map(
                 prop => prop.id,
                 {},
             )
         ).toEqual([
-            'id-1',
             'id0',
             'id1',
             'id2',
@@ -125,15 +151,27 @@ describe('test Property objects', () => {
                 '',
                 {},
             ),
-        ).toEqual('id-1id0id1id2');
+        ).toEqual('id0id1id2');
+    });
+
+    it('PropertyList: basic operations: remove, count, repopulate, toString, get, one, idx, upsert', () => {
+        const propList = new PropertyList<Property>(
+            Property,
+            undefined,
+            [
+                new Property('id0', 'p0'),
+                new Property('id1', 'p1'),
+                new Property('id2', 'p2'),
+            ],
+        );
 
         propList.remove(
-            prop => prop.id === 'id-1',
+            prop => prop.id === 'id0',
             {},
         );
         expect(
             propList.count(),
-        ).toEqual(3);
+        ).toEqual(2);
 
         propList.repopulate([
             new Property('id1', 'p1'),
@@ -141,7 +179,20 @@ describe('test Property objects', () => {
         ]);
 
         expect(propList.toString()).toEqual(
-            '[{"_kind":"Property","id":"id1","name":"p1","disabled":false}; {"_kind":"Property","id":"id2","name":"p2","disabled":false}]',
+            '[{"id":"id1","name":"p1","disabled":false}; {"id":"id2","name":"p2","disabled":false}]',
         );
+
+        const expectedP1 = new Property('id1', 'p1');
+        const getP1 = propList.get('id1');
+        const oneP1 = propList.one('id1');
+        expect(getP1).toEqual(expectedP1);
+        expect(oneP1).toEqual(expectedP1);
+
+        const idxP1 = propList.idx(0);
+        expect(idxP1).toEqual(expectedP1);
+
+        const upsertedP2 = new Property('id2', 'upsertedP2');
+        propList.upsert(upsertedP2);
+        expect(propList.one('id2')).toEqual(upsertedP2);
     });
 });
