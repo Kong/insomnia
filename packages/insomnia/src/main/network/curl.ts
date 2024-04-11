@@ -13,10 +13,9 @@ import { Environment } from '../../models/environment';
 import { RequestAuthentication, RequestHeader } from '../../models/request';
 import { Response } from '../../models/response';
 import { Compression, getBodyBuffer } from '../../models/response';
+import { filterClientCertificates } from '../../network/certificate';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
-import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
 import { invariant } from '../../utils/invariant';
-import { setDefaultProtocol } from '../../utils/url/protocol';
 import { createConfiguredCurlInstance } from './libcurl-promise';
 import { parseHeaderStrings } from './parse-header-strings';
 
@@ -135,7 +134,7 @@ const openCurlConnection = async (
     const settings = await models.settings.get();
     const start = performance.now();
     const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
-    const filteredClientCertificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), options.url));
+    const filteredClientCertificates = filterClientCertificates(clientCertificates, options.url, 'https:');
     const { curl, debugTimeline } = createConfiguredCurlInstance({
       req: { ...request, cookieJar: options.cookieJar, cookies: [], suppressUserAgent: options.suppressUserAgent },
       finalUrl: options.url,

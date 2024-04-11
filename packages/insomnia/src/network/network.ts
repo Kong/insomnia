@@ -28,7 +28,6 @@ import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { invariant } from '../utils/invariant';
-import { setDefaultProtocol } from '../utils/url/protocol';
 import {
   buildQueryStringFromParams,
   joinUrlAndQueryString,
@@ -36,8 +35,8 @@ import {
 } from '../utils/url/querystring';
 import { getAuthHeader, getAuthQueryParams } from './authentication';
 import { cancellableCurlRequest, cancellableRunPreRequestScript } from './cancellation';
+import { filterClientCertificates } from './certificate';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
-import { urlMatchesCertHost } from './url-matches-cert-host';
 
 export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
@@ -229,7 +228,7 @@ export async function sendCurlAndWriteTimeline(
     finalUrl,
     socketPath,
     settings,
-    certificates: clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url)),
+    certificates: filterClientCertificates(clientCertificates, renderedRequest.url, 'https:'),
     caCertficatePath: caCert?.disabled === false ? caCert.path : null,
     authHeader,
   };
