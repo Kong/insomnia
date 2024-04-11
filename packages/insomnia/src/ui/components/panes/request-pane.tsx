@@ -297,7 +297,7 @@ export const RequestPane: FC<Props> = ({
             <div className='flex items-center gap-2'>
               Pre-request Script{' '}
               {activeRequest.preRequestScript && (
-                <span className="bubble space-left">
+                <span className="ml-2 p-2 border-solid border border-[--hl-md] rounded-lg">
                   <span className="flex w-2 h-2 bg-green-500 rounded-full" />
                 </span>
               )}
@@ -323,7 +323,7 @@ export const RequestPane: FC<Props> = ({
             <>
               Docs
               {activeRequest.description && (
-                <span className="bubble space-left">
+                <span className="ml-2 p-2 border-solid border border-[--hl-md] rounded-lg">
                   <span className="flex w-2 h-2 bg-green-500 rounded-full" />
                 </span>
               )}
