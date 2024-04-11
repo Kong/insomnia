@@ -38,6 +38,12 @@ describe('urlMatchesCertHost', () => {
       expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(false);
     });
 
+    it('should return true if the request URL and certificate host have different ports and the needCheckPort parameter is false', () => {
+      const requestUrl = 'https://www.example.org:1234/some/resources?query=1';
+      const certificateHost = 'https://www.example.org:123';
+      expect(urlMatchesCertHost(certificateHost, requestUrl, false)).toBe(true);
+    });
+
     it('should return true if the request URL has a port of 443 and the certificate host has no port', () => {
       const requestUrl = 'https://www.example.org:443/some/resources?query=1';
       const certificateHost = 'https://www.example.org';
