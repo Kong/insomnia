@@ -41,7 +41,6 @@
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "esbuild": "^0.20.2",
-    "esbuild-node-externals": "^1.13.0",
     "esbuild-runner": "^2.2.2",
     "execa": "^5.0.0",
     "jest": "^29.7.0",
