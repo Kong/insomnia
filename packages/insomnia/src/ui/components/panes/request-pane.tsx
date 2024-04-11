@@ -296,8 +296,10 @@ export const RequestPane: FC<Props> = ({
           title={
             <div className='flex items-center gap-2'>
               Pre-request Script{' '}
-              {headersCount > 0 && (
-                <span className="p-1 flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">Beta</span>
+              {activeRequest.preRequestScript && (
+                <span className="bubble space-left">
+                  <i className="fa fa--skinny fa-check txt-xxs" />
+                </span>
               )}
             </div>
           }
