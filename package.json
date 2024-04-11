@@ -11,8 +11,8 @@
   },
   "homepage": "https://github.com/kong/insomnia#readme",
   "engines": {
-    "node": ">=18.18.2 <20",
-    "npm": ">=8.19.0"
+    "node": ">=20.9 <22",
+    "npm": ">=10"
   },
   "workspaces": [
     "packages/openapi-2-kong",

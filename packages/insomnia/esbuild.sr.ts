@@ -8,7 +8,7 @@ async function main() {
     outfile: '../insomnia-send-request/dist/index.js',
     bundle: true,
     platform: 'node',
-    target: 'node18',
+    target: 'node20',
     sourcemap: true,
     format: 'cjs',
     tsconfig: 'tsconfig.build.sr.json',
