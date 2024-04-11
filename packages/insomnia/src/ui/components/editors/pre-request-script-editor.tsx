@@ -409,7 +409,7 @@ export const PreRequestScriptEditor: FC<Props> = ({
             />
           </DropdownItem>
         </Dropdown>
-      </div >
-    </Fragment >
+      </div>
+    </Fragment>
   );
 };
