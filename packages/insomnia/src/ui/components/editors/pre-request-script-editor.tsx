@@ -7,7 +7,7 @@ import { Environment, Variables } from '../../../sdk/objects/environments';
 import { InsomniaObject } from '../../../sdk/objects/insomnia';
 import { Request as ScriptRequest } from '../../../sdk/objects/request';
 import { Url } from '../../../sdk/objects/urls';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 
 interface Props {
@@ -59,6 +59,7 @@ const updateRequestAuth =
   },
   'bearer'
 );`;
+const requireAModule = "const atob = require('atob');";
 
 const lintOptions = {
   globals: {
@@ -222,83 +223,101 @@ export const PreRequestScriptEditor: FC<Props> = ({
             </DropdownButton>
           }
         >
-          <DropdownItem textValue='Get an environment variable' arial-label={'Get an environment variable'}>
-            <ItemContent
-              icon="sliders"
-              label='Get an environment variable'
-              onClick={() => addSnippet(getEnvVar)}
-            />
-          </DropdownItem>
-          {/* <DropdownItem textValue='Get a global variable' arial-label={'Get a global variable'}>
+          <DropdownSection
+            aria-label="Get values"
+            title="Get values"
+          >
+
+            <DropdownItem textValue='Get an environment variable' arial-label={'Get an environment variable'}>
+              <ItemContent
+                icon="sliders"
+                label='Get an environment variable'
+                onClick={() => addSnippet(getEnvVar)}
+              />
+            </DropdownItem>
+            {/* <DropdownItem textValue='Get a global variable' arial-label={'Get a global variable'}>
             <ItemContent
               icon="sliders"
               label='Get a global variable'
               onClick={() => addSnippet(getGlbVar)}
             />
           </DropdownItem> */}
-          <DropdownItem textValue='Get a variable' arial-label={'Get a variable'}>
+            <DropdownItem textValue='Get a variable' arial-label={'Get a variable'}>
+              <ItemContent
+                icon="sliders"
+                label='Get a variable'
+                onClick={() => addSnippet(getVar)}
+              />
+            </DropdownItem>
+            <DropdownItem textValue='Get a collection variable' arial-label={'Get a collection variable'}>
+              <ItemContent
+                icon="sliders"
+                label='Get a collection variable'
+                onClick={() => addSnippet(getCollectionVar)}
+              />
+            </DropdownItem>
+          </DropdownSection>
+
+          <DropdownSection
+            aria-label="Set values"
+            title="Set values"
+          >
+            <DropdownItem textValue='Set an environment variable' arial-label={'Set an environment variable'}>
+              <ItemContent
+                icon="circle-plus"
+                label='Set an environment variable'
+                onClick={() => addSnippet(setEnvVar)}
+              />
+            </DropdownItem>
+            {/* <DropdownItem textValue='Set a global variable' arial-label={'Set a global variable'}>
             <ItemContent
-              icon="sliders"
-              label='Get a variable'
-              onClick={() => addSnippet(getVar)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Get a collection variable' arial-label={'Get a collection variable'}>
-            <ItemContent
-              icon="sliders"
-              label='Get a collection variable'
-              onClick={() => addSnippet(getCollectionVar)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Set an environment variable' arial-label={'Set an environment variable'}>
-            <ItemContent
-              icon="plus"
-              label='Set an environment variable'
-              onClick={() => addSnippet(setEnvVar)}
-            />
-          </DropdownItem>
-          {/* <DropdownItem textValue='Set a global variable' arial-label={'Set a global variable'}>
-            <ItemContent
-              icon="plus"
+              icon="circle-plus"
               label='Set a global variable'
               onClick={() => addSnippet(setGlbVar)}
             />
           </DropdownItem> */}
-          <DropdownItem textValue='Set a variable' arial-label={'Set a variable'}>
+            <DropdownItem textValue='Set a variable' arial-label={'Set a variable'}>
+              <ItemContent
+                icon="circle-plus"
+                label='Set a variable'
+                onClick={() => addSnippet(setVar)}
+              />
+            </DropdownItem>
+            <DropdownItem textValue='Set a collection variable' arial-label={'Set a collection variable'}>
+              <ItemContent
+                icon="circle-plus"
+                label='Set a collection variable'
+                onClick={() => addSnippet(setCollectionVar)}
+              />
+            </DropdownItem>
+          </DropdownSection>
+
+          <DropdownSection
+            aria-label="Clear values"
+            title="Clear values"
+          >
+            <DropdownItem textValue='Clear an environment variable' arial-label={'Clear an environment variable'}>
+              <ItemContent
+                icon="circle-minus"
+                label='Clear an environment variable'
+                onClick={() => addSnippet(unsetEnvVar)}
+              />
+            </DropdownItem>
+            {/* <DropdownItem textValue='Clear a global variable' arial-label={'Clear a global variable'}>
             <ItemContent
-              icon="plus"
-              label='Set a variable'
-              onClick={() => addSnippet(setVar)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Set a collection variable' arial-label={'Set a collection variable'}>
-            <ItemContent
-              icon="plus"
-              label='Set a collection variable'
-              onClick={() => addSnippet(setCollectionVar)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Clear an environment variable' arial-label={'Clear an environment variable'}>
-            <ItemContent
-              icon="minus"
-              label='Clear an environment variable'
-              onClick={() => addSnippet(unsetEnvVar)}
-            />
-          </DropdownItem>
-          {/* <DropdownItem textValue='Clear a global variable' arial-label={'Clear a global variable'}>
-            <ItemContent
-              icon="minus"
+              icon="circle-minus"
               label='Clear a global variable'
               onClick={() => addSnippet(unsetGlbVar)}
             />
           </DropdownItem> */}
-          <DropdownItem textValue='Clear a collection variable' arial-label={'Clear a collection variable'}>
-            <ItemContent
-              icon="minus"
-              label='Clear a collection variable'
-              onClick={() => addSnippet(unsetCollectionVar)}
-            />
-          </DropdownItem>
+            <DropdownItem textValue='Clear a collection variable' arial-label={'Clear a collection variable'}>
+              <ItemContent
+                icon="circle-minus"
+                label='Clear a collection variable'
+                onClick={() => addSnippet(unsetCollectionVar)}
+              />
+            </DropdownItem>
+          </DropdownSection>
         </Dropdown>
 
         <Dropdown
@@ -315,35 +334,35 @@ export const PreRequestScriptEditor: FC<Props> = ({
         >
           <DropdownItem textValue='Add query param' arial-label={'Add query param'}>
             <ItemContent
-              icon="p"
+              icon="circle-plus"
               label='Add a query param'
               onClick={() => addSnippet(addQueryParams)}
             />
           </DropdownItem>
           <DropdownItem textValue='Set method' arial-label={'Set method'}>
             <ItemContent
-              icon="m"
+              icon="circle-info"
               label='Set method'
               onClick={() => addSnippet(setMethod)}
             />
           </DropdownItem>
           <DropdownItem textValue='Add a header' arial-label={'Add a header'}>
             <ItemContent
-              icon="h"
+              icon="circle-plus"
               label='Add a header'
               onClick={() => addSnippet(addHeader)}
             />
           </DropdownItem>
           <DropdownItem textValue='Remove header' arial-label={'Remove header'}>
             <ItemContent
-              icon="h"
+              icon="circle-minus"
               label='Remove a header'
               onClick={() => addSnippet(removeHeader)}
             />
           </DropdownItem>
           <DropdownItem textValue='Update body as raw' arial-label={'Update body as raw'}>
             <ItemContent
-              icon="b"
+              icon="circle-info"
               label='Update body as raw'
               onClick={() => addSnippet(updateRequestBody)}
             />
@@ -380,6 +399,13 @@ export const PreRequestScriptEditor: FC<Props> = ({
               icon="print"
               label='Print log'
               onClick={() => addSnippet(logValue)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Require a module' arial-label={'Require a module'}>
+            <ItemContent
+              icon="circle-plus"
+              label='Require a module'
+              onClick={() => addSnippet(requireAModule)}
             />
           </DropdownItem>
         </Dropdown>
