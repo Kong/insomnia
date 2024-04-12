@@ -1,4 +1,4 @@
-import { parse as urlParse } from 'url';
+import { parse as urlParse, URL } from 'url';
 
 import { escapeRegex } from '../common/misc';
 import { setDefaultProtocol } from '../utils/url/protocol';
