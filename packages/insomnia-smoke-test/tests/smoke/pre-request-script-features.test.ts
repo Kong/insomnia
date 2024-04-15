@@ -132,6 +132,29 @@ test.describe('pre-request features tests', async () => {
                 expect(requestBody.bodyFromCallback.method).toEqual('GET');
             },
         },
+        {
+            name: 'require the uuid module',
+            expectedBody: {
+                uuid: '00000000-0000-0000-0000-000000000000',
+            },
+        },
+        {
+            name: 'require external modules and built-in lodash',
+            expectedBody: {
+                atob: true,
+                btoa: true,
+                chai: true,
+                cheerio: true,
+                crypto: true,
+                csv: true,
+                lodash: true,
+                moment: true,
+                tv4: true,
+                uuid: true,
+                xml2js: true,
+                builtInLodash: true,
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {

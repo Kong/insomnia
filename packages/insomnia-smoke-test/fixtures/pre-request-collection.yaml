@@ -839,3 +839,98 @@ resources:
           "bodyFromCallback": {{ _.bodyFromCallback }}
         }
     _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df10
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: require the uuid module
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      const uuid = require('uuid');
+      insomnia.environment.set('uuid', uuid.NIL);
+    body:
+      mimeType: "application/json"
+      text: |-
+        {
+          "uuid": "{{ _.uuid}}"
+        }
+    _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df11
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: require external modules and built-in lodash
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      const atob = require('atob');
+      const btoa = require('btoa');
+      const chai = require('chai');
+      const cheerio = require('cheerio');
+      const crypto = require('crypto-js');
+      const csv = require('csv-parse/lib/sync');
+      const lodash = require('lodash');
+      const moment = require('moment');
+      const tv4 = require('tv4');
+      const uuid = require('uuid');
+      const xml2js = require('xml2js');
+      // set them
+      insomnia.environment.set('atob', atob != null);
+      insomnia.environment.set('btoa', btoa != null);
+      insomnia.environment.set('chai', chai != null);
+      insomnia.environment.set('cheerio', cheerio != null);
+      insomnia.environment.set('crypto', crypto != null);
+      insomnia.environment.set('csv', csv != null);
+      insomnia.environment.set('lodash', lodash != null);
+      insomnia.environment.set('moment', moment != null);
+      insomnia.environment.set('tv4', tv4 != null);
+      insomnia.environment.set('uuid', uuid != null);
+      insomnia.environment.set('xml2js', xml2js != null);
+      insomnia.environment.set('builtInLodash', _ != null);
+    body:
+      mimeType: "application/json"
+      text: |-
+        {
+          "atob": {{ _.atob }},
+          "btoa": {{ _.btoa }},
+          "chai": {{ _.chai }},
+          "cheerio": {{ _.cheerio }},
+          "crypto": {{ _.crypto }},
+          "csv": {{ _.csv }},
+          "lodash": {{ _.lodash }},
+          "moment": {{ _.moment }},
+          "tv4": {{ _.tv4 }},
+          "uuid": {{ _.uuid }},
+          "xml2js": {{ _.xml2js }},
+          "builtInLodash": {{ _.builtInLodash }}
+        }
+    _type: request
