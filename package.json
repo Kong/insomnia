@@ -11,8 +11,8 @@
   },
   "homepage": "https://github.com/kong/insomnia#readme",
   "engines": {
-    "node": ">=18.18.2 <20",
-    "npm": ">=8.19.0"
+    "node": ">=20.9 <22",
+    "npm": ">=10"
   },
   "workspaces": [
     "packages/openapi-2-kong",
@@ -20,7 +20,8 @@
     "packages/insomnia-send-request",
     "packages/insomnia",
     "packages/insomnia-inso",
-    "packages/insomnia-smoke-test"
+    "packages/insomnia-smoke-test",
+    "packages/insomnia-sdk"
   ],
   "scripts": {
     "dev": "npm start --workspace=packages/insomnia",

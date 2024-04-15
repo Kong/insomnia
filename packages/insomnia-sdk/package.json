@@ -1,0 +1,23 @@
+{
+  "private": true,
+  "name": "insomnia-sdk",
+  "version": "0.1.0",
+  "description": "",
+  "main": "src/objects/index.ts",
+  "types": "src/objects/index.ts",
+  "devDependencies": {},
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kong/insomnia.git",
+    "directory": "packages/insomnia-testing"
+  },
+  "author": "Kong <office@konghq.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Kong/insomnia/issues"
+  },
+  "homepage": "https://github.com/Kong/insomnia#readme"
+}

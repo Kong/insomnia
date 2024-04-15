@@ -1,12 +1,8 @@
 import { Snippet } from 'codemirror';
+import { CookieObject, Environment, InsomniaObject, Request as ScriptRequest, Url, Variables } from 'insomnia-sdk';
 import React, { FC, Fragment, useRef } from 'react';
 
 import { Settings } from '../../../models/settings';
-import { CookieObject } from '../../../sdk/objects/cookies';
-import { Environment, Variables } from '../../../sdk/objects/environments';
-import { InsomniaObject } from '../../../sdk/objects/insomnia';
-import { Request as ScriptRequest } from '../../../sdk/objects/request';
-import { Url } from '../../../sdk/objects/urls';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 
