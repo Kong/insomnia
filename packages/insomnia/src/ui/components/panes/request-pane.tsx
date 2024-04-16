@@ -1,6 +1,7 @@
 import React, { FC, Fragment, useState } from 'react';
 import { Button, Heading, ToggleButton } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
@@ -76,6 +77,8 @@ export const RequestPane: FC<Props> = ({
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
     useState(false);
   const patchRequest = useRequestPatcher();
+
+  const [dismissPathParameterTip, setDismissPathParameterTip] = useLocalStorage('dismissPathParameterTip', '');
 
   const handleImportQueryFromUrl = () => {
     let query;
@@ -230,10 +233,16 @@ export const RequestPane: FC<Props> = ({
                     </div>
                   </div>
                 )}
-                {pathParameters.length === 0 && (
+                {pathParameters.length === 0 && !dismissPathParameterTip && (
                   <div className='text-sm text-[--hl] rounded-sm border border-solid border-[--hl-md] p-2 flex items-center gap-2'>
                     <Icon icon='info-circle' />
                     <span>Path parameters are url path segments that start with a colon ':' e.g. ':id' </span>
+                    <Button
+                      className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ml-auto"
+                      onPress={() => setDismissPathParameterTip('true')}
+                    >
+                      <Icon icon='close' />
+                    </Button>
                   </div>
                 )}
               </div>
