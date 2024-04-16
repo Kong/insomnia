@@ -90,7 +90,7 @@ export const Migrate = () => {
                     <Button
                       type="submit"
                       isDisabled={state !== 'idle'}
-                      className={'hover:no-underline font-bold bg-[--color-surprise] text-sm hover:bg-opacity-90 py-2 px-3 text-[--color-font] transition-colors rounded-sm' + (state !== 'idle' ? 'animate-pulse cursor-not-allowed' : '')}
+                      className={'hover:no-underline font-bold bg-[--color-surprise] text-sm hover:bg-opacity-90 py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm' + (state !== 'idle' ? 'animate-pulse cursor-not-allowed' : '')}
                     >
                       Continue
                     </Button>
