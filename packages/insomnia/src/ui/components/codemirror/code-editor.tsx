@@ -2,7 +2,7 @@ import './base-imports';
 
 import classnames from 'classnames';
 import clone from 'clone';
-import CodeMirror, { CodeMirrorLinkClickCallback, EditorChangeCancellable, EditorConfiguration, ShowHintOptions } from 'codemirror';
+import CodeMirror, { CodeMirrorLinkClickCallback, EditorConfiguration, ShowHintOptions } from 'codemirror';
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
@@ -27,7 +27,6 @@ import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
-import { translateHandlersInScript } from '../../../utils/importers/importers/postman';
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
 

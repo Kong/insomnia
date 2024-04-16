@@ -1,6 +1,6 @@
 import { Snippet } from 'codemirror';
 import { CookieObject, Environment, InsomniaObject, Request as ScriptRequest, Url, Variables } from 'insomnia-sdk';
-import React, { FC, Fragment, useCallback, useRef } from 'react';
+import React, { FC, Fragment, useRef } from 'react';
 
 import { translateHandlersInScript } from '../../../../src/utils/importers/importers/postman';
 import { Settings } from '../../../models/settings';
