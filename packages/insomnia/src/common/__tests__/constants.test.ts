@@ -89,7 +89,7 @@ describe('getContentTypeName', () => {
 });
 
 describe('getMockSeviceBinUrl', () => {
-  it('should return true', () => {
+  it('should add subdomain when using insomnia cloud', () => {
     expect(getMockServiceBinURL('xyz', '/my-route', undefined)).toBe('https://xyz.mock.insomnia.rest/my-route');
     expect(getMockServiceBinURL('mock_123', '/my-route', undefined)).toBe('https://mock_123.mock.insomnia.rest/my-route');
     expect(getMockServiceBinURL('mock_123', '/my-route', 'http://localhost:8080')).toBe('http://localhost:8080/bin/mock_123/my-route');
