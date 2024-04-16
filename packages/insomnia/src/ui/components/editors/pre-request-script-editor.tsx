@@ -1,7 +1,8 @@
 import { Snippet } from 'codemirror';
 import { CookieObject, Environment, InsomniaObject, Request as ScriptRequest, Url, Variables } from 'insomnia-sdk';
-import React, { FC, Fragment, useRef } from 'react';
+import React, { FC, Fragment, useCallback, useRef } from 'react';
 
+import { translateHandlersInScript } from '../../../../src/utils/importers/importers/postman';
 import { Settings } from '../../../models/settings';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
@@ -187,6 +188,11 @@ export const PreRequestScriptEditor: FC<Props> = ({
     'insomnia',
   );
 
+  const translateHandlersInEditor = () => {
+    const translated = translateHandlersInScript(editorRef.current?.getValue() || '');
+    editorRef.current?.setValue(translated);
+  };
+
   return (
     <Fragment>
       <div className="h-[calc(100%-var(--line-height-xs))]">
@@ -204,6 +210,7 @@ export const PreRequestScriptEditor: FC<Props> = ({
           lintOptions={lintOptions}
           ref={editorRef}
           getAutocompleteSnippets={() => preRequestScriptSnippets}
+          onPaste={translateHandlersInScript}
         />
       </div>
       <div className="h-[calc(var(--line-height-xs))] border-solid border-t border-[var(--hl-md)] text-[var(--font-size-sm)] p-[var(--padding-xs)]">
@@ -402,6 +409,13 @@ export const PreRequestScriptEditor: FC<Props> = ({
               icon="circle-plus"
               label='Require a module'
               onClick={() => addSnippet(requireAModule)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Migrate the script' arial-label={'Migrate the script'}>
+            <ItemContent
+              icon="file-import"
+              label='Migrate the script'
+              onClick={translateHandlersInEditor}
             />
           </DropdownItem>
         </Dropdown>
