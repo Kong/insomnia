@@ -143,17 +143,6 @@ export const PLUGIN_HUB_BASE = 'https://insomnia.rest/plugins';
 export const NPM_PACKAGE_BASE = 'https://www.npmjs.com/package';
 
 // UI Stuf
-export const MAX_SIDEBAR_REMS = 45;
-export const MIN_SIDEBAR_REMS = 0.75;
-export const COLLAPSE_SIDEBAR_REMS = 3;
-export const SIDEBAR_SKINNY_REMS = 10;
-export const MAX_PANE_WIDTH = 0.99;
-export const MIN_PANE_WIDTH = 0.01;
-export const MAX_PANE_HEIGHT = 0.99;
-export const MIN_PANE_HEIGHT = 0.01;
-export const DEFAULT_PANE_WIDTH = 0.5;
-export const DEFAULT_PANE_HEIGHT = 0.5;
-export const DEFAULT_SIDEBAR_WIDTH = 19;
 export const MIN_INTERFACE_FONT_SIZE = 8;
 export const MAX_INTERFACE_FONT_SIZE = 24;
 export const MIN_EDITOR_FONT_SIZE = 8;
