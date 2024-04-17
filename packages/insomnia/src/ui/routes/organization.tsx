@@ -723,7 +723,6 @@ const OrganizationRoute = () => {
           <div className="relative [grid-area:Statusbar] flex items-center overflow-hidden">
             <TooltipTrigger>
               <ToggleButton
-                data-testid="settings-button"
                 className="w-[50px] flex-shrink-0 px-4 py-1 border-solid border-r border-r-[--hl-md] h-full flex items-center justify-center gap-2 text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
                 onChange={setIsOganizationSidebarOpen}
                 isSelected={isOrganizationSidebarOpen}
