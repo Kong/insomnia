@@ -24,6 +24,7 @@ import {
   SelectValue,
   TextField,
 } from 'react-aria-components';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   ActionFunction,
   LoaderFunction,
@@ -79,7 +80,6 @@ import { GitRepositoryCloneModal } from '../components/modals/git-repository-set
 import { ImportModal } from '../components/modals/import-modal';
 import { MockServerSettingsModal } from '../components/modals/mock-server-settings-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
-import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { OrganizationFeatureLoaderData, useOrganizationLoaderData } from './organization';
@@ -834,9 +834,8 @@ const ProjectRoute: FC = () => {
   return (
     <ErrorBoundary>
       <Fragment>
-        <SidebarLayout
-          className="new-sidebar"
-          renderPageSidebar={
+        <PanelGroup autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
+          <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={20} collapsible>
             <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
               <div className="p-[--padding-sm]">
                 <Select
@@ -1135,8 +1134,9 @@ const ProjectRoute: FC = () => {
                 </div>
               )}
             </div>
-          }
-          renderPaneOne={
+          </Panel>
+          <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
+          <Panel id="pane-one" className='pane-one theme--pane'>
             <div className="w-full h-full flex flex-col overflow-hidden">
               {billing.isActive ? null : <div className='p-[--padding-md] pb-0'>
                 <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
@@ -1389,8 +1389,8 @@ const ProjectRoute: FC = () => {
                 </GridList>
               </div>
             </div>
-          }
-        />
+          </Panel>
+        </PanelGroup>
         {isGitRepositoryCloneModalOpen && (
           <GitRepositoryCloneModal
             onHide={() => setIsGitRepositoryCloneModalOpen(false)}

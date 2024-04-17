@@ -1,7 +1,7 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
+import React, { FC, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -21,6 +21,7 @@ import {
   SelectValue,
   useDragAndDrop,
 } from 'react-aria-components';
+import { ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   LoaderFunction,
   NavLink,
@@ -77,7 +78,6 @@ import { GrpcResponsePane } from '../components/panes/grpc-response-pane';
 import { PlaceholderRequestPane } from '../components/panes/placeholder-request-pane';
 import { RequestPane } from '../components/panes/request-pane';
 import { ResponsePane } from '../components/panes/response-pane';
-import { SidebarLayout } from '../components/sidebar-layout';
 import { getMethodShortHand } from '../components/tags/method-tag';
 import { ConnectionCircle } from '../components/websockets/action-bar';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
@@ -301,7 +301,32 @@ export const Debug: FC = () => {
     [],
   );
 
+  const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
+
+  function toggleSidebar() {
+    const layout = sidebarPanelRef.current?.getLayout();
+
+    if (!layout) {
+      return;
+    }
+
+    if (layout && layout[0] > 0) {
+      layout[0] = 0;
+    } else {
+      layout[0] = 30;
+    }
+
+    sidebarPanelRef.current?.setLayout(layout);
+  }
+
+  useEffect(() => {
+    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
+
+    return unsubscribe;
+  }, []);
+
   useDocBodyKeyboardShortcuts({
+    sidebar_toggle: toggleSidebar,
     request_togglePin: async () => {
       if (requestId) {
         const meta = isGrpcRequestId(requestId)
@@ -635,10 +660,31 @@ export const Debug: FC = () => {
     getItemKey: index => visibleCollection[index].doc._id,
   });
 
+  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
+  useLayoutEffect(() => {
+    if (settings.forceVerticalLayout) {
+      setDirection('vertical');
+      return () => { };
+    } else {
+      // Listen on media query changes
+      const mediaQuery = window.matchMedia('(max-width: 880px)');
+      setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
+
+      const handleChange = (e: MediaQueryListEvent) => {
+        setDirection(e.matches ? 'vertical' : 'horizontal');
+      };
+
+      mediaQuery.addEventListener('change', handleChange);
+
+      return () => {
+        mediaQuery.removeEventListener('change', handleChange);
+      };
+    }
+  }, [settings.forceVerticalLayout, direction]);
+
   return (
-    <SidebarLayout
-      className="new-sidebar"
-      renderPageSidebar={
+    <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
+      <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={20} collapsible>
         <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
             <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
@@ -1160,55 +1206,61 @@ export const Debug: FC = () => {
             />
           )}
         </div>
-      }
-      renderPaneOne={
-        workspaceId ? (
-          <ErrorBoundary showAlert>
-            {isGrpcRequestId(requestId) && grpcState && (
-              <GrpcRequestPane
-                grpcState={grpcState}
-                setGrpcState={setGrpcState}
-                reloadRequests={reloadRequests}
-              />
-            )}
-            {isWebSocketRequestId(requestId) && (
-              <WebSocketRequestPane environment={activeEnvironment} />
-            )}
-            {isRequestId(requestId) && (
-              <RequestPane
-                environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                settings={settings}
-                setLoading={setLoading}
-                onPaste={text => {
-                  setPastedCurl(text);
-                  setPasteCurlModalOpen(true);
-                }}
-              />
-            )}
-            {!requestId && <PlaceholderRequestPane />}
-            {isRequestSettingsModalOpen && activeRequest && (
-              <RequestSettingsModal
-                request={activeRequest}
-                onHide={() => setIsRequestSettingsModalOpen(false)}
-              />
-            )}
-          </ErrorBoundary>
-        ) : null
-      }
-      renderPaneTwo={
-        <ErrorBoundary showAlert>
-          {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
-            <GrpcResponsePane grpcState={grpcState} />
-          )}
-          {isRealtimeRequest && (
-            <RealtimeResponsePane requestId={activeRequest._id} />
-          )}
-          {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
-            <ResponsePane runningRequests={runningRequests} />
-          )}
-        </ErrorBoundary>
-      }
-    />
+      </Panel>
+      <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
+      <Panel>
+        <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
+          <Panel id="pane-one" className='pane-one theme--pane'>
+            {workspaceId ? (
+              <ErrorBoundary showAlert>
+                {isGrpcRequestId(requestId) && grpcState && (
+                  <GrpcRequestPane
+                    grpcState={grpcState}
+                    setGrpcState={setGrpcState}
+                    reloadRequests={reloadRequests}
+                  />
+                )}
+                {isWebSocketRequestId(requestId) && (
+                  <WebSocketRequestPane environment={activeEnvironment} />
+                )}
+                {isRequestId(requestId) && (
+                  <RequestPane
+                    environmentId={activeEnvironment ? activeEnvironment._id : ''}
+                    settings={settings}
+                    setLoading={setLoading}
+                    onPaste={text => {
+                      setPastedCurl(text);
+                      setPasteCurlModalOpen(true);
+                    }}
+                  />
+                )}
+                {!requestId && <PlaceholderRequestPane />}
+                {isRequestSettingsModalOpen && activeRequest && (
+                  <RequestSettingsModal
+                    request={activeRequest}
+                    onHide={() => setIsRequestSettingsModalOpen(false)}
+                  />
+                )}
+              </ErrorBoundary>
+            ) : null}
+          </Panel>
+          <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
+          <Panel id="pane-two" className='pane-two theme--pane'>
+            <ErrorBoundary showAlert>
+              {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
+                <GrpcResponsePane grpcState={grpcState} />
+              )}
+              {isRealtimeRequest && (
+                <RealtimeResponsePane requestId={activeRequest._id} />
+              )}
+              {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
+                <ResponsePane runningRequests={runningRequests} />
+              )}
+            </ErrorBoundary>
+          </Panel>
+        </PanelGroup>
+      </Panel>
+    </PanelGroup>
   );
 };
 

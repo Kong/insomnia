@@ -10,7 +10,9 @@ import React, {
   ReactNode,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import {
@@ -32,6 +34,7 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
+import { ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   LoaderFunction,
   NavLink,
@@ -64,13 +67,13 @@ import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
-import { SidebarLayout } from '../components/sidebar-layout';
 import { formatMethodName } from '../components/tags/method-tag';
 import { useAIContext } from '../context/app/ai-context';
 import {
   useActiveApiSpecSyncVCSVersion,
   useGitVCSVersion,
 } from '../hooks/use-vcs-version';
+import { useRootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 
 interface LoaderData {
@@ -213,7 +216,7 @@ const Design: FC = () => {
     baseEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const setActiveEnvironmentFetcher = useFetcher();
-
+  const { settings } = useRootLoaderData();
   const environmentsList = [baseEnvironment, ...subEnvironments].map(environment => ({
     id: environment._id,
     ...environment,
@@ -353,7 +356,32 @@ const Design: FC = () => {
     );
   };
 
+  const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
+
+  function toggleSidebar() {
+    const layout = sidebarPanelRef.current?.getLayout();
+
+    if (!layout) {
+      return;
+    }
+
+    if (layout && layout[0] > 0) {
+      layout[0] = 0;
+    } else {
+      layout[0] = 30;
+    }
+
+    sidebarPanelRef.current?.setLayout(layout);
+  }
+
+  useEffect(() => {
+    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
+
+    return unsubscribe;
+  }, []);
+
   useDocBodyKeyboardShortcuts({
+    sidebar_toggle: toggleSidebar,
     environment_showEditor: () => setEnvironmentModalOpen(true),
     environment_showSwitchMenu: () => setIsEnvironmentSelectOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
@@ -400,10 +428,31 @@ const Design: FC = () => {
   const syncVersion = useActiveApiSpecSyncVCSVersion();
   const uniquenessKey = `${apiSpec?._id}::${apiSpec?.created}::${gitVersion}::${syncVersion}`;
 
+  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
+  useLayoutEffect(() => {
+    if (settings.forceVerticalLayout) {
+      setDirection('vertical');
+      return () => { };
+    } else {
+      // Listen on media query changes
+      const mediaQuery = window.matchMedia('(max-width: 880px)');
+      setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
+
+      const handleChange = (e: MediaQueryListEvent) => {
+        setDirection(e.matches ? 'vertical' : 'horizontal');
+      };
+
+      mediaQuery.addEventListener('change', handleChange);
+
+      return () => {
+        mediaQuery.removeEventListener('change', handleChange);
+      };
+    }
+  }, [settings.forceVerticalLayout, direction]);
+
   return (
-    <SidebarLayout
-      className='[&_.sidebar]:flex [&_.sidebar]:flex-col [&_.sidebar]:w-full [&_.sidebar]:h-full'
-      renderPageSidebar={
+    <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
+      <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={20} collapsible>
         <div className='flex h-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden'>
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
             <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
@@ -1045,9 +1094,11 @@ const Design: FC = () => {
             <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />
           )}
         </div>
-      }
-      renderPaneTwo={isSpecPaneOpen && <SwaggerUIDiv text={apiSpec.contents} />}
-      renderPaneOne={
+      </Panel>
+      <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
+      <Panel>
+        <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
+          <Panel id="pane-one" className='pane-one theme--pane'>
         <div className="flex flex-col h-full w-full overflow-hidden divide-y divide-solid divide-[--hl-md]">
           <div className="relative overflow-hidden flex-shrink-0 flex flex-1 basis-1/2">
             <CodeEditor
@@ -1182,8 +1233,14 @@ const Design: FC = () => {
             )}
           </div>
         </div>
-      }
-    />
+          </Panel>
+          <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
+          <Panel id="pane-two" className='pane-two theme--pane'>
+            {isSpecPaneOpen && <SwaggerUIDiv text={apiSpec.contents} />}
+          </Panel>
+        </PanelGroup>
+      </Panel>
+    </PanelGroup>
   );
 };
 
