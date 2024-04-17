@@ -1,6 +1,7 @@
 import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
-import { Heading } from 'react-aria-components';
+import { Button, Heading } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
 import { CONTENT_TYPE_JSON } from '../../../common/constants';
@@ -217,6 +218,8 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
 
   const [previewMode, setPreviewMode] = useState(CONTENT_TYPE_JSON);
 
+  const [dismissPathParameterTip, setDismissPathParameterTip] = useLocalStorage('dismissPathParameterTip', '');
+
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
@@ -347,10 +350,16 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                       </div>
                     </div>
                   )}
-                  {pathParameters.length === 0 && (
+                  {pathParameters.length === 0 && !dismissPathParameterTip && (
                     <div className='text-sm text-[--hl] rounded-sm border border-solid border-[--hl-md] p-2 flex items-center gap-2'>
                       <Icon icon='info-circle' />
                       <span>Path parameters are url path segments that start with a colon ':' e.g. ':id' </span>
+                      <Button
+                        className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ml-auto"
+                        onPress={() => setDismissPathParameterTip('true')}
+                      >
+                        <Icon icon='close' />
+                      </Button>
                     </div>
                   )}
                 </div>
