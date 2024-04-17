@@ -1,5 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { FC, Fragment, Suspense, useState } from 'react';
+import React, { FC, Fragment, Suspense, useLayoutEffect, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -17,6 +17,7 @@ import {
   SelectValue,
   useDragAndDrop,
 } from 'react-aria-components';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   LoaderFunction,
   NavLink,
@@ -47,7 +48,7 @@ import { showPrompt } from '../components/modals';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
-import { SidebarLayout } from '../components/sidebar-layout';
+import { useRootLoaderData } from './root';
 import { TestRunStatus } from './test-results';
 import TestSuiteRoute from './test-suite';
 import { WorkspaceLoaderData } from './workspace';
@@ -82,7 +83,7 @@ export const loader: LoaderFunction = async ({
 
 const TestRoute: FC = () => {
   const { unitTestSuites } = useLoaderData() as LoaderData;
-
+  const { settings } = useRootLoaderData();
   const { organizationId, projectId, workspaceId, testSuiteId } =
     useParams() as {
       organizationId: string;
@@ -246,10 +247,30 @@ const TestRoute: FC = () => {
     },
   });
 
+  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
+  useLayoutEffect(() => {
+    if (settings.forceVerticalLayout) {
+      setDirection('vertical');
+      return () => { };
+    } else {
+      // Listen on media query changes
+      const mediaQuery = window.matchMedia('(max-width: 880px)');
+
+      const handleChange = (e: MediaQueryListEvent) => {
+        setDirection(e.matches ? 'vertical' : 'horizontal');
+      };
+
+      mediaQuery.addEventListener('change', handleChange);
+
+      return () => {
+        mediaQuery.removeEventListener('change', handleChange);
+      };
+    }
+  }, [settings.forceVerticalLayout, direction]);
+
   return (
-    <SidebarLayout
-      className='new-sidebar'
-      renderPageSidebar={
+    <PanelGroup autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
+      <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={20} collapsible>
         <ErrorBoundary showAlert>
           <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
@@ -530,8 +551,11 @@ const TestRoute: FC = () => {
             <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />
           )}
         </ErrorBoundary>
-      }
-      renderPaneOne={
+      </Panel>
+      <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
+      <Panel>
+        <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
+          <Panel id="pane-one" className='pane-one theme--pane'>
         <Routes>
           <Route
             path={'test-suite/:testSuiteId/*'}
@@ -548,8 +572,9 @@ const TestRoute: FC = () => {
             }
           />
         </Routes>
-      }
-      renderPaneTwo={
+          </Panel>
+          <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
+          <Panel id="pane-two" className='pane-two theme--pane'>
         <Routes>
           <Route
             path="test-suite/:testSuiteId/test-result/:testResultId"
@@ -579,8 +604,10 @@ const TestRoute: FC = () => {
             }
           />
         </Routes>
-      }
-    />
+          </Panel>
+        </PanelGroup>
+      </Panel>
+    </PanelGroup>
   );
 };
 
