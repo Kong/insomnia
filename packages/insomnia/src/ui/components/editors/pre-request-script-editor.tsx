@@ -188,11 +188,6 @@ export const PreRequestScriptEditor: FC<Props> = ({
     'insomnia',
   );
 
-  const translateHandlersInEditor = () => {
-    const translated = translateHandlersInScript(editorRef.current?.getValue() || '');
-    editorRef.current?.setValue(translated);
-  };
-
   return (
     <Fragment>
       <div className="h-[calc(100%-var(--line-height-xs))]">
@@ -409,13 +404,6 @@ export const PreRequestScriptEditor: FC<Props> = ({
               icon="circle-plus"
               label='Require a module'
               onClick={() => addSnippet(requireAModule)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Migrate the script' arial-label={'Migrate the script'}>
-            <ItemContent
-              icon="file-import"
-              label='Migrate the script'
-              onClick={translateHandlersInEditor}
             />
           </DropdownItem>
         </Dropdown>
