@@ -93,6 +93,7 @@ export interface CodeEditorProps {
   // used only for saving env editor state
   onBlur?: (e: FocusEvent) => void;
   onChange?: (value: string) => void;
+  onPaste?: (value: string) => string;
   onClickLink?: CodeMirrorLinkClickCallback;
   pinToBottom?: boolean;
   placeholder?: string;
@@ -160,6 +161,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   noStyleActiveLine,
   onBlur,
   onChange,
+  onPaste,
   onClickLink,
   pinToBottom,
   placeholder,
@@ -330,6 +332,20 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         const scrollPosition = scrollInfo.height - scrollInfo.clientHeight;
         doc.scrollTo(0, scrollPosition);
       }
+
+      if (onPaste) {
+        if (change.origin === 'paste' && change.update) {
+          const translatedText = onPaste(
+            change.text.join('\n')
+          ).split('\n');
+
+          change.update(
+            change.from,
+            change.to,
+            translatedText,
+          );
+        }
+      }
     });
 
     codeMirror.current.on('change', (doc: CodeMirror.Editor) => {
@@ -465,6 +481,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         setOriginalCode(doc.getValue() || '');
       }
     }, DEBOUNCE_MILLIS);
+
     codeMirror.current?.on('changes', fn);
     return () => codeMirror.current?.off('changes', fn);
   }, [lintOptions, noLint, onChange]);

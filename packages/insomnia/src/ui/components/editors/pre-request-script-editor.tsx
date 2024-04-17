@@ -2,6 +2,7 @@ import { Snippet } from 'codemirror';
 import { CookieObject, Environment, InsomniaObject, Request as ScriptRequest, Url, Variables } from 'insomnia-sdk';
 import React, { FC, Fragment, useRef } from 'react';
 
+import { translateHandlersInScript } from '../../../../src/utils/importers/importers/postman';
 import { Settings } from '../../../models/settings';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
@@ -204,6 +205,7 @@ export const PreRequestScriptEditor: FC<Props> = ({
           lintOptions={lintOptions}
           ref={editorRef}
           getAutocompleteSnippets={() => preRequestScriptSnippets}
+          onPaste={translateHandlersInScript}
         />
       </div>
       <div className="h-[calc(var(--line-height-xs))] border-solid border-t border-[var(--hl-md)] text-[var(--font-size-sm)] p-[var(--padding-xs)]">
