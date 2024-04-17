@@ -255,6 +255,7 @@ const TestRoute: FC = () => {
     } else {
       // Listen on media query changes
       const mediaQuery = window.matchMedia('(max-width: 880px)');
+      setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
 
       const handleChange = (e: MediaQueryListEvent) => {
         setDirection(e.matches ? 'vertical' : 'horizontal');
