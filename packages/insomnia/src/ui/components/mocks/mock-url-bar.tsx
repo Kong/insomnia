@@ -86,8 +86,11 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
         onPress={() => {
           const compoundId = mockRoute.parentId + pathInput;
           showModal(AlertModal, {
-          title: 'Full URL',
+            title: 'Full URL',
             message: mockbinUrl + '/bin/' + compoundId,
+            onConfirm: () => window.clipboard.writeText(mockbinUrl + '/bin/' + compoundId),
+            addCancel: true,
+            okLabel: 'Copy',
           });
         }}
       >
