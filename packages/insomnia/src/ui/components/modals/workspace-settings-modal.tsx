@@ -150,7 +150,7 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                             <Heading className="text-lg font-bold">Cloud Mock</Heading>
                           </div>
                           <p className='pt-2'>
-                            The mock server runs on Insomnia cloud, ideal for creating API mocks collaboratively.
+                            Runs on Insomnia cloud, ideal for collaboration.
                           </p>
                         </Radio>
                         <Radio
@@ -162,11 +162,17 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                             <Heading className="text-lg font-bold">Self-hosted Mock</Heading>
                           </div>
                           <p className="pt-2">
-                            The mock servers are self hosted, ideal for private usage and lower latency.
+                            Runs locally or on your infrastructure, ideal for private usage and lower latency.
                           </p>
                         </Radio>
                       </div>
                     </RadioGroup>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Icon icon="info-circle" />
+                      <span>
+                        To learn more about self hosting. <Link href="https://github.com/Kong/insomnia-mockbin" className='underline'>Click here</Link>
+                      </span>
+                    </div>
                     <TextField
                       autoFocus
                       name="name"
@@ -174,17 +180,14 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                       className={`group relative flex-1 flex flex-col gap-2 ${mockServer?.useInsomniaCloud ? 'disabled' : ''}`}
                     >
                       <Label className='text-sm text-[--hl]'>
-                        Mock server URL
+                        Self-hosted mock server URL
                       </Label>
                       <Input
                         disabled={mockServer?.useInsomniaCloud}
-                        placeholder="https://mock.insomnia.rest"
+                        placeholder={mockServer?.useInsomniaCloud ? '' : 'https://example.com'}
                         onChange={e => mockServer && mockServerPatcher(mockServer._id, { url: e.target.value })}
                         className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                       />
-                      <Label className='text-sm text-[--hl]'>
-                        You can self-host a mock server. Click here to <Link href="https://github.com/Kong/insomnia-mockbin" className='underline'>learn more</Link>
-                      </Label>
                     </TextField>
                   </>
                 )}

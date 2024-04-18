@@ -54,6 +54,25 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                     return;
                   }
 
+                  if (mockServerType === 'self-hosted' && !mockServerUrl) {
+                    showModal(AlertModal, {
+                      title: 'URL required',
+                      message: 'Please enter a self-hosted mock server URL.',
+                    });
+                    return;
+                  }
+                  if (mockServerType === 'self-hosted') {
+                    try {
+                      new URL(mockServerUrl);
+                    } catch (e) {
+                      showModal(AlertModal, {
+                        title: 'Invalid URL',
+                        message: 'Please enter a valid URL.',
+                      });
+                      return;
+                    }
+                  }
+
                   fetcher.submit(
                     {
                       name,
