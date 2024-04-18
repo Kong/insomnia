@@ -19,8 +19,12 @@ import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { TabItem, Tabs } from '../base/tabs';
 import { CodeEditor } from '../codemirror/code-editor';
+import { Pane, PaneHeader } from '../panes/pane';
 import { PlaceholderResponsePane } from '../panes/placeholder-response-pane';
 import { ResponseTimer } from '../response-timer';
+import { SizeTag } from '../tags/size-tag';
+import { StatusTag } from '../tags/status-tag';
+import { TimeTag } from '../tags/time-tag';
 import { getTimeFromNow } from '../time-from-now';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
@@ -69,6 +73,16 @@ export const MockResponsePane = () => {
     );
   }
   return (
+    <Pane type="response">
+      {!activeResponse ? null : (
+        <PaneHeader className="row-spaced">
+          <div aria-atomic="true" aria-live="polite" className="no-wrap scrollable scrollable--no-bars pad-left">
+            <StatusTag statusCode={activeResponse.statusCode} statusMessage={activeResponse.statusMessage} />
+            <TimeTag milliseconds={activeResponse.elapsedTime} />
+            <SizeTag bytesRead={activeResponse.bytesRead} bytesContent={activeResponse.bytesContent} />
+          </div>
+        </PaneHeader>
+      )}
     <Tabs aria-label="Mock response">
       <TabItem
         key="preview"
@@ -112,6 +126,7 @@ export const MockResponsePane = () => {
         <HistoryViewWrapperComponentFactory mockServer={mockServer} mockRoute={mockRoute} />
       </TabItem>
     </Tabs>
+    </Pane>
   );
 };
 
