@@ -13,7 +13,8 @@ import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
-import { showPrompt } from '../modals';
+import { showModal, showPrompt } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 
 export const MockResponseExtractor = () => {
   const {
@@ -61,6 +62,7 @@ export const MockResponseExtractor = () => {
           } catch (e) {
             console.log(e);
           }
+          // Create new mock server and route
           if (!selectedMockServer) {
             showPrompt({
               title: 'Create Mock Route',
@@ -89,6 +91,7 @@ export const MockResponseExtractor = () => {
             });
             return;
           }
+          // Create new mock route
           if (!selectedMockRoute) {
             showPrompt({
               title: 'Create Mock Route',
@@ -97,9 +100,14 @@ export const MockResponseExtractor = () => {
               onComplete: async name => {
                 invariant(activeResponse, 'Active response must be defined');
                 const body = await fs.readFile(activeResponse.bodyPath);
-
-                // setSelectedMockRoute(newRoute._id);
-
+                const hasRouteInServer = mockServerAndRoutes.find(s => s._id === selectedMockServer)?.routes.find(r => r.name === name);
+                if (hasRouteInServer) {
+                  showModal(AlertModal, {
+                    title: 'Error',
+                    message: `Path "${name}" must be unique. Please enter a different name.`,
+                  });
+                  return;
+                };
                 fetcher.submit(
                   JSON.stringify({
                     name: name,
