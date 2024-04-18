@@ -152,7 +152,13 @@ export const MockRouteRoute = () => {
         title: 'Error',
         message: `Path "${pathInput}" must be unique. Please enter a different name.`,
       });
-
+      return;
+    };
+    if (pathInput?.[0] !== '/') {
+      showModal(AlertModal, {
+        title: 'Error',
+        message: 'Path must begin with a /',
+      });
       return;
     };
     const compoundId = mockRoute.parentId + pathInput;
@@ -182,7 +188,13 @@ export const MockRouteRoute = () => {
         title: 'Error',
         message: `Path "${pathInput}" must be unique. Please enter a different name.`,
       });
-
+      return;
+    };
+    if (pathInput[0] !== '/') {
+      showModal(AlertModal, {
+        title: 'Error',
+        message: 'Path must begin with a /',
+      });
       return;
     };
     await upsertMockbinHar(pathInput);

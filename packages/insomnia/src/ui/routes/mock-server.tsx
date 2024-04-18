@@ -78,6 +78,13 @@ const MockServerRoute = () => {
                 });
                 return;
               };
+              if (name[0] !== '/') {
+                showModal(AlertModal, {
+                  title: 'Error',
+                  message: 'Path must begin with a /',
+                });
+                return;
+              };
               name && patchMockRoute(id, { name });
             },
           });
@@ -184,17 +191,40 @@ const MockServerRoute = () => {
           <Button
             className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             onPress={() => {
-              fetcher.submit(
-                {
-                  name: '/',
-                  parentId: mockServerId,
+              showPrompt({
+                title: 'New mock route',
+                defaultValue: '/',
+                submitName: 'Create',
+                placeholder: '/path/to/resource',
+                onComplete: name => {
+                  const hasRouteInServer = mockRoutes.find(m => m.name === name);
+                  if (hasRouteInServer) {
+                    showModal(AlertModal, {
+                      title: 'Error',
+                      message: `Path "${name}" must be unique. Please enter a different name.`,
+                    });
+                    return;
+                  };
+                  if (name[0] !== '/') {
+                    showModal(AlertModal, {
+                      title: 'Error',
+                      message: 'Path must begin with a /',
+                    });
+                    return;
+                  };
+                  fetcher.submit(
+                    {
+                      name,
+                      parentId: mockServerId,
+                    },
+                    {
+                      encType: 'application/json',
+                      method: 'post',
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/new`,
+                    }
+                  );
                 },
-                {
-                  encType: 'application/json',
-                  method: 'post',
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/new`,
-                }
-              );
+              });
             }}
           >
             <Icon icon="plus" />
@@ -262,6 +292,13 @@ const MockServerRoute = () => {
                         showModal(AlertModal, {
                           title: 'Error',
                           message: `Path "${name}" must be unique. Please enter a different name.`,
+                        });
+                        return;
+                      };
+                      if (name[0] !== '/') {
+                        showModal(AlertModal, {
+                          title: 'Error',
+                          message: 'Path must begin with a /',
                         });
                         return;
                       };
