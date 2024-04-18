@@ -33,7 +33,7 @@ export const MockResponseExtractor = () => {
   const [selectedMockRoute, setSelectedMockRoute] = useState('');
   return (
     <div className="px-32 h-full flex flex-col justify-center">
-      <div className="flex place-content-center text-9xl pb-2">
+      <div className="flex place-content-center text-9xl pb-2 text-[--hl-md]">
         <Icon icon="cube" />
       </div>
       <div className="flex place-content-center pb-2">
@@ -181,10 +181,10 @@ export const MockResponseExtractor = () => {
             </label>
           </div>
         </div>
-        <div className="flex">
+        <div className="flex mt-2">
           <Button
             type="submit"
-            className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+            className="mr-2 hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
           >
             {selectedMockRoute ? 'Overwrite' : 'Create'}
           </Button>
@@ -194,7 +194,7 @@ export const MockResponseExtractor = () => {
               const mockWorkspaceId = mockServerAndRoutes.find(s => s._id === selectedMockServer)?.parentId;
               navigate(`/organization/${organizationId}/project/${projectId}/workspace/${mockWorkspaceId}/mock-server/mock-route/${selectedMockRoute}`);
             }}
-            className="mr-2 hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+            className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
           >
             Go to route
           </Button>
