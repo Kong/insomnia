@@ -154,7 +154,7 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                     className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                   />
                 </TextField>
-                <div className="flex justify-between gap-2 items-center">
+                <div className="flex justify-end gap-2 items-center">
                   <div className='flex items-center gap-2'>
                     <Button
                       onPress={close}
