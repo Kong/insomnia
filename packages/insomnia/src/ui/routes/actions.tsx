@@ -1227,7 +1227,7 @@ export const createMockRouteAction: ActionFunction = async ({ request, params })
 
   const patch = await request.json();
   invariant(typeof patch.name === 'string', 'Name is required');
-  // TODO: remove this hack
+  // TODO: remove this hack which enables a mock server to be created alongside a route
   if (patch.mockServerName) {
     const activeWorkspace = await models.workspace.getById(workspaceId);
     invariant(activeWorkspace, 'Active workspace not found');

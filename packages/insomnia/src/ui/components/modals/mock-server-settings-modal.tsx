@@ -54,6 +54,25 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                     return;
                   }
 
+                  if (mockServerType === 'self-hosted' && !mockServerUrl) {
+                    showModal(AlertModal, {
+                      title: 'URL required',
+                      message: 'Please enter a self-hosted mock server URL.',
+                    });
+                    return;
+                  }
+                  if (mockServerType === 'self-hosted') {
+                    try {
+                      new URL(mockServerUrl);
+                    } catch (e) {
+                      showModal(AlertModal, {
+                        title: 'Invalid URL',
+                        message: 'Please enter a valid URL.',
+                      });
+                      return;
+                    }
+                  }
+
                   fetcher.submit(
                     {
                       name,
@@ -99,7 +118,7 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                         <Heading className="text-lg font-bold">Cloud Mock</Heading>
                       </div>
                       <p className='pt-2'>
-                        The mock server runs on Insomnia cloud, ideal for creating API mocks collaboratively.
+                        Runs on Insomnia cloud, ideal for collaboration.
                       </p>
                     </Radio>
                     <Radio
@@ -111,32 +130,31 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                         <Heading className="text-lg font-bold">Self-hosted Mock</Heading>
                       </div>
                       <p className="pt-2">
-                        The mock servers are self hosted, ideal for private usage and lower latency.
+                        Runs locally or on your infrastructure, ideal for private usage and lower latency.
                       </p>
                     </Radio>
                   </div>
                 </RadioGroup>
+                <div className="flex items-center gap-2 text-sm">
+                  <Icon icon="info-circle" />
+                  <span>
+                    To learn more about self hosting. <Link href="https://github.com/Kong/insomnia-mockbin" className='underline'>Click here</Link>
+                  </span>
+                </div>
                 <TextField
                   name="mockServerUrl"
-                  defaultValue={serverType === 'cloud' ? 'https://mocks.insomnia.rest' : 'http://localhost:8080'}
                   className={`group relative flex-1 flex flex-col gap-2 ${serverType === 'cloud' ? 'disabled' : ''}`}
                 >
                   <Label className='text-sm text-[--hl]'>
-                    Mock server URL
+                    Self-hosted mock server URL
                   </Label>
                   <Input
                     disabled={serverType === 'cloud'}
-                    placeholder="https://mocks.insomnia.rest"
+                    placeholder={serverType === 'cloud' ? '' : 'https://example.com'}
                     className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                   />
                 </TextField>
-                <div className="flex justify-between gap-2 items-center">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Icon icon="info-circle" />
-                    <span>
-                      You can self-host a mock server. Click here to <Link href="https://github.com/Kong/insomnia-mockbin" className='underline'>learn more</Link>
-                    </span>
-                  </div>
+                <div className="flex justify-end gap-2 items-center">
                   <div className='flex items-center gap-2'>
                     <Button
                       onPress={close}
