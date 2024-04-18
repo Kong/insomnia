@@ -123,7 +123,7 @@ export const MockRouteRoute = () => {
       });
       if (typeof res === 'object' && 'message' in res && 'error' in res) {
         console.error('error response', res);
-        return `Mock API ${res.error}: ${res.message}`;
+        return `Mock API ${res.error}:\n${res.message}`;
       }
 
       if (typeof res === 'string') {
@@ -133,7 +133,7 @@ export const MockRouteRoute = () => {
       return 'Unexpected response, see console for details';
     } catch (e) {
       console.log(e);
-      return 'Unhandled Mock API error: ' + e.message;
+      return `Unhandled contacting Mock API at ${mockbinUrl}\n${e.message}`;
     }
   };
 
@@ -168,7 +168,6 @@ export const MockRouteRoute = () => {
         title: 'Network error',
         message: (
           <div>
-            <p>The request failed due to a network error made to {mockbinUrl}</p>
             <pre className="pad-top-sm force-wrap selectable">
               <code className="wide">{error}</code>
             </pre>
