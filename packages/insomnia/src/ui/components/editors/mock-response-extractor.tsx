@@ -37,7 +37,7 @@ export const MockResponseExtractor = () => {
         <Icon icon="cube" />
       </div>
       <div className="flex place-content-center pb-2">
-        Export this response to a mock route.
+        Copy this response to a new mock route or overwrite an existing one.
       </div>
       <form
         onSubmit={async e => {
@@ -160,7 +160,7 @@ export const MockResponseExtractor = () => {
             <label>
               Choose Mock Route
               <HelpTooltip position="top" className="space-left">
-                Select from created mock routes to send this request to
+                Select from created mock routes to overwrite with this response
               </HelpTooltip>
               <select
                 value={selectedMockRoute}
@@ -181,7 +181,13 @@ export const MockResponseExtractor = () => {
             </label>
           </div>
         </div>
-        <div className="flex justify-end">
+        <div className="flex">
+          <Button
+            type="submit"
+            className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+          >
+            {selectedMockRoute ? 'Overwrite' : 'Create'}
+          </Button>
           <Button
             isDisabled={!selectedMockServer || !selectedMockRoute}
             onPress={() => {
@@ -190,13 +196,7 @@ export const MockResponseExtractor = () => {
             }}
             className="mr-2 hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
           >
-            Go to mock
-          </Button>
-          <Button
-            type="submit"
-            className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-          >
-            Extract to mock route
+            Go to route
           </Button>
         </div>
       </form>
