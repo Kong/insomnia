@@ -6,9 +6,11 @@ test('can make a mock route', async ({ page }) => {
   await page.getByLabel('New Mock Server').click();
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await page.getByRole('button', { name: 'New Mock Route' }).click();
+  await page.locator('#prompt-input').fill('/123');
+  await page.getByRole('button', { name: 'Create' }).click();
   await page.getByLabel('Project Actions').click();
   await page.getByText('Rename').click();
-  await page.locator('#prompt-input').fill('/123');
+  await page.locator('#prompt-input').fill('/456');
   await page.getByRole('button', { name: 'Rename' }).click();
 
   await page.getByRole('button', { name: 'Test' }).click();
