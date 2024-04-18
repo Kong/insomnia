@@ -195,6 +195,8 @@ export const MockRouteRoute = () => {
     });
   };
   const onBlurTriggerUpsert = () => upsertMockbinHar(mockRoute.name);
+  const headersCount = mockRoute.headers.filter(h => !h.disabled).length;
+
   return (
     <Pane type="request">
       <PaneHeader>
@@ -208,7 +210,7 @@ export const MockRouteRoute = () => {
               aria-label='Change Body Type'
               triggerButton={
                 <DropdownButton>
-                  {mockRoute.mimeType ? 'Response ' + contentTypesMap[mockRoute.mimeType]?.[0] : 'Response Body'}
+                  {mockRoute.mimeType ? 'Mock ' + contentTypesMap[mockRoute.mimeType]?.[0] : 'Response Body'}
                   <i className="fa fa-caret-down space-left" />
                 </DropdownButton>
               }
@@ -243,13 +245,21 @@ export const MockRouteRoute = () => {
                 title="Choose a mock body to return as a response"
               />)}
           </TabItem>
-          <TabItem key="headers" title="Response Headers">
+          <TabItem
+            key="headers"
+            title={<div className='flex items-center gap-2'>
+              Mock Headers{' '}
+              {headersCount > 0 && (
+                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{headersCount}</span>
+              )}
+            </div>}
+          >
             <MockResponseHeadersEditor
               onBlur={onBlurTriggerUpsert}
               bulk={false}
             />
           </TabItem>
-          <TabItem key="status" title="Response Status">
+          <TabItem key="status" title="Mock Status">
             <PanelContainer className="pad">
               <div className="form-row">
                 <div className='form-control form-control--outlined'>
