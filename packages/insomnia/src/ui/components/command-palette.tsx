@@ -45,7 +45,7 @@ export const CommandPalette = () => {
   const accountId = userSession.accountId;
 
   useEffect(() => {
-    if (!projectRouteData && !projectDataLoader.data && projectDataLoader.state === 'idle' && !isScratchpadOrganizationId(organizationId)) {
+    if (projectId && !projectRouteData && !projectDataLoader.data && projectDataLoader.state === 'idle' && !isScratchpadOrganizationId(organizationId)) {
       projectDataLoader.load(`/organization/${organizationId}/project/${projectId}`);
     }
   }, [organizationId, projectRouteData, projectDataLoader, projectId]);
@@ -97,7 +97,7 @@ export const CommandPalette = () => {
     ...file,
     action: () => {
       if (file.scope === 'unsynced') {
-        if (!projectData || !file.remoteId) {
+        if (!projectData || !projectData.activeProject || !file.remoteId) {
           return null;
         }
         pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: projectData?.activeProject.remoteId }, {
@@ -192,7 +192,7 @@ export const CommandPalette = () => {
       textValue: file.name + ' ' + scopeToLabelMap[file.scope],
       loading: Boolean(pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.remoteId),
       presence: presence
-        .filter(p => p.project === projectData?.activeProject.remoteId && p.file === file.id)
+        .filter(p => p.project === projectData?.activeProject?.remoteId && p.file === file.id)
         .filter(p => p.acct !== accountId)
         .map(user => {
           return {
@@ -273,7 +273,7 @@ export const CommandPalette = () => {
       description: <span className='flex items-center gap-1'><span className='px-2 text-[--hl]'>{scopeToLabelMap[file.item.scope]}</span>{file.organizationName}<span>/</span>{file.projectName}</span>,
       textValue: file.name + ' ' + scopeToLabelMap[file.item.scope],
       presence: presence
-        .filter(p => p.project === projectData?.activeProject.remoteId && p.file === file.id)
+        .filter(p => p.project === projectData?.activeProject?.remoteId && p.file === file.id)
         .filter(p => p.acct !== accountId)
         .map(user => {
           return {

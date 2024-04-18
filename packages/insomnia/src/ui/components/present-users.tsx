@@ -13,7 +13,7 @@ export const PresentUsers = () => {
   const { userSession } = useRootLoaderData();
   const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
-  const remoteId = projectData?.activeProject.remoteId || workspaceData?.activeProject.remoteId;
+  const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
   if (!presence || !remoteId) {
     return null;

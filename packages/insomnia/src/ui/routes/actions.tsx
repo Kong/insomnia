@@ -11,7 +11,7 @@ import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { getById, update } from '../../models/helpers/request-operations';
-import { isDefaultOrganizationProject, isRemoteProject } from '../../models/project';
+import { isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
@@ -143,22 +143,19 @@ export const updateProjectAction: ActionFunction = async ({
 
     // convert from cloud to local
     if (type === 'local' && project.remoteId) {
-      // If it's the default project it cannot be deleted
-      if (!isDefaultOrganizationProject(project)) {
-        const response = await window.main.insomniaFetch<void | {
-          error: string;
-          message?: string;
-        }>({
-          path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
-          method: 'DELETE',
-          sessionId,
-        });
+      const response = await window.main.insomniaFetch<void | {
+        error: string;
+        message?: string;
+      }>({
+        path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
+        method: 'DELETE',
+        sessionId,
+      });
 
-        if (response && 'error' in response) {
-          return {
-            error: response.error === 'FORBIDDEN' ? 'You do not have permission to change this project.' : 'An unexpected error occurred while deleting the project. Please try again.',
-          };
-        }
+      if (response && 'error' in response) {
+        return {
+          error: response.error === 'FORBIDDEN' ? 'You do not have permission to change this project.' : 'An unexpected error occurred while deleting the project. Please try again.',
+        };
       }
 
       await models.project.update(project, { name, remoteId: null });
