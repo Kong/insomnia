@@ -272,7 +272,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   };
 
   if (!organizationId || !projectLoaderData?.activeProject) {
-    return <p>There's not an active project. Create a new project to import or export data.</p>;
+    return <p>There is no active project. Create a new project to import or export data.</p>;
   }
 
   return (
