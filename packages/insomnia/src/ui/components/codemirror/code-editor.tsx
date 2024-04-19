@@ -455,7 +455,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         codeMirror.current.foldCode(from, to);
       }
     }
-  }, [defaultValue, dynamicHeight, extraKeys, filter, getAutocompleteConstants, getAutocompleteSnippets, handleGetRenderContext, handleRender, hideGutters, hideLineNumbers, hintOptions, indentSize, indentWithTabs, infoOptions, jumpOptions, maybePrettifyAndSetValue, mode, noLint, noMatchBrackets, noStyleActiveLine, onClickLink, pinToBottom, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.editorLineWrapping, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, uniquenessKey]);
+  }, [defaultValue, dynamicHeight, extraKeys, filter, getAutocompleteConstants, getAutocompleteSnippets, handleGetRenderContext, handleRender, hideGutters, hideLineNumbers, hintOptions, indentSize, indentWithTabs, infoOptions, jumpOptions, maybePrettifyAndSetValue, mode, noLint, noMatchBrackets, noStyleActiveLine, onClickLink, pinToBottom, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.editorLineWrapping, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, uniquenessKey, onPaste]);
 
   const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();
