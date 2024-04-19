@@ -23,6 +23,7 @@ describe('test request and response objects', () => {
 
     it('test Request methods', () => {
         const req = new Request({
+            name: 'myReq',
             url: 'https://hostname.com/path',
             method: 'GET',
             header: [
@@ -43,6 +44,8 @@ describe('test request and response objects', () => {
             proxy: undefined,
             certificate: undefined,
         });
+
+        expect(req.name).toEqual('myReq');
 
         req.addHeader({ key: 'newHeader', value: 'newValue' });
         expect(req.headers.count()).toEqual(3);

@@ -178,6 +178,7 @@ export function initInsomniaObject(
             .map(param => ({ key: param.name, value: param.value }))
     );
     const reqOpt: RequestOptions = {
+        name: rawObj.request.name,
         url: reqUrl,
         method: rawObj.request.method,
         header: rawObj.request.headers.map(
