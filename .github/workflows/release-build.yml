@@ -180,6 +180,7 @@ jobs:
             gh workflow run release-publish.yml -f version=${{ steps.release_version.outputs.version }} --repo ${{ github.repository }}
             ```
 
+            Release notes will be generated automatically based on the commit messages during publish. Remove any unwanted notes manually afterwards.
 
             <details>
             <summary>Conflicts? Merge branch step failed on the publish workflow? Try this...</summary>
