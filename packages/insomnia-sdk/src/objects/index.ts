@@ -5,3 +5,4 @@ export * from './request';
 export * from './environments';
 export * from './urls';
 export * from './cookies';
+export * from './console';
