@@ -4,7 +4,7 @@ import { useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
-import { getMockServiceBinURL, getMockServiceURL, HTTP_METHODS } from '../../../common/constants';
+import { getMockServiceBinURL, HTTP_METHODS } from '../../../common/constants';
 import * as models from '../../../models';
 import { useTimeoutWhen } from '../../hooks/useTimeoutWhen';
 import { MockRouteLoaderData, useMockRoutePatcher } from '../../routes/mock-route';
