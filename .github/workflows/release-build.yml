@@ -167,6 +167,11 @@ jobs:
 
             ## Steps for Publish:
 
+            You can update the changelog.md in this branch, run git log to get the latest changes:
+            ```bash
+            git log --no-merges --oneline --pretty=format:'* %s by @%an' --since="<last release tag>" --until="release/${{ steps.release_version.outputs.version }}"
+            ```
+
             When ready to publish, trigger [Publish](https://github.com/${{ github.repository }}/actions/workflows/release-publish.yml) workflow with these variables:
             - Release version (`version`): `${{ steps.release_version.outputs.version }}`
 
@@ -174,6 +179,8 @@ jobs:
             ```bash
             gh workflow run release-publish.yml -f version=${{ steps.release_version.outputs.version }} --repo ${{ github.repository }}
             ```
+
+            Release notes will be generated automatically based on the commit messages during publish. Remove any unwanted notes manually afterwards.
 
             <details>
             <summary>Conflicts? Merge branch step failed on the publish workflow? Try this...</summary>
