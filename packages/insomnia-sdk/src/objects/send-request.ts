@@ -14,7 +14,6 @@ export async function sendRequest(
     cb: (error?: string, response?: Response) => void,
     settings: Settings,
 ): Promise<Response | undefined> {
-    // returning Promise here makes migration easier by just adding `await` before calling
     return new Promise<Response | undefined>(resolve => {
         // TODO(george): enable cascading cancellation later as current solution just adds complexity
         const requestOptions = requestToCurlOptions(request, settings);

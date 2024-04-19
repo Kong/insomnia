@@ -155,6 +155,24 @@ test.describe('pre-request features tests', async () => {
                 builtInLodash: true,
             },
         },
+        {
+            name: 'not return until all Promise settled',
+            expectedBody: {
+                asyncTaskDone: true,
+            },
+        },
+        {
+            name: 'not return until all setTimeout finished',
+            expectedBody: {
+                asyncTaskDone: true,
+            },
+        },
+        {
+            name: 'not return until all async tasks finished',
+            expectedBody: {
+                asyncTaskDone: true,
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
