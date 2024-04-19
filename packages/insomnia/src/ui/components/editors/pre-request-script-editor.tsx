@@ -1,5 +1,5 @@
 import { Snippet } from 'codemirror';
-import { CookieObject, Environment, InsomniaObject, Request as ScriptRequest, Url, Variables } from 'insomnia-sdk';
+import { CookieObject, Environment, InsomniaObject, Request as ScriptRequest, RequestInfo, Url, Variables } from 'insomnia-sdk';
 import React, { FC, Fragment, useRef } from 'react';
 
 import { translateHandlersInScript } from '../../../../src/utils/importers/importers/postman';
@@ -180,6 +180,13 @@ export const PreRequestScriptEditor: FC<Props> = ({
         isPrivate: false,
         name: '',
         cookies: [],
+      }),
+      requestInfo: new RequestInfo({
+        eventName: 'prerequest',
+        iteration: 1,
+        iterationCount: 1,
+        requestName: '',
+        requestId: '',
       }),
     },
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

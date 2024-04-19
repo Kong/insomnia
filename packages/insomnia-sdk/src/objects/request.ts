@@ -192,6 +192,7 @@ export interface RequestOptions {
     proxy?: ProxyConfigOptions;
     certificate?: CertificateOptions;
     pathParameters?: RequestPathParameter[];
+    name?: string;
 }
 
 export interface RequestSize {
@@ -230,6 +231,7 @@ function requestOptionsToClassFields(options: RequestOptions) {
     const pathParameters = options.pathParameters ? options.pathParameters : new Array<RequestPathParameter>();
 
     return {
+        name: options.name || '',
         url,
         method,
         headers,
@@ -242,6 +244,7 @@ function requestOptionsToClassFields(options: RequestOptions) {
 }
 
 export class Request extends Property {
+    name: string;
     url: Url;
     method: string;
     headers: HeaderList<Header>;
@@ -258,6 +261,7 @@ export class Request extends Property {
 
         const transformedOpts = requestOptionsToClassFields(options);
 
+        this.name = transformedOpts.name;
         this.url = transformedOpts.url;
         this.method = transformedOpts.method;
         this.headers = transformedOpts.headers;
@@ -413,6 +417,7 @@ export class Request extends Property {
     update(options: RequestOptions) {
         const transformedOptions = requestOptionsToClassFields(options);
 
+        this.name = transformedOptions.name;
         this.url = transformedOptions.url;
         this.method = transformedOptions.method;
         this.headers = transformedOptions.headers;
@@ -604,6 +609,7 @@ export function mergeRequests(
     updatedReq: Request
 ): InsomniaRequest {
     const updatedReqProperties: Partial<InsomniaRequest> = {
+        name: updatedReq.name,
         url: updatedReq.url.toString(),
         method: updatedReq.method,
         body: mergeRequestBody(updatedReq.body, originalReq.body),

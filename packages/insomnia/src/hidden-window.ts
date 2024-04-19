@@ -1,9 +1,7 @@
 import * as fs from 'node:fs';
 
 import { initInsomniaObject, InsomniaObject } from 'insomnia-sdk';
-import { RequestContext } from 'insomnia-sdk';
-import { mergeClientCertificates, mergeRequests, mergeSettings } from 'insomnia-sdk';
-import { mergeCookieJar } from 'insomnia-sdk';
+import { Console, mergeClientCertificates, mergeCookieJar, mergeRequests, mergeSettings, RequestContext } from 'insomnia-sdk';
 import * as _ from 'lodash';
 
 import { invariant } from '../src/utils/invariant';
@@ -36,20 +34,9 @@ const runPreRequestScript = async (
   { script, context }: { script: string; context: RequestContext },
 ): Promise<RequestContext> => {
   console.log(script);
+  const scriptConsole = new Console();
 
-  // TODO: we should at least support info, debug, warn, error
-  const log: string[] = [];
-  const consoleInterceptor = {
-    log: (...args: any[]) => log.push(
-      JSON.stringify({
-        value: args.map(a => JSON.stringify(a, null, 2)).join('\n'),
-        name: 'Text',
-        timestamp: Date.now(),
-      }) + '\n',
-    ),
-  };
-
-  const executionContext = initInsomniaObject(context, consoleInterceptor.log);
+  const executionContext = initInsomniaObject(context, scriptConsole.log);
 
   const evalInterceptor = (script: string) => {
     invariant(script && typeof script === 'string', 'eval is called with invalid or empty value');
@@ -73,7 +60,7 @@ const runPreRequestScript = async (
   const mutatedInsomniaObject = await executeScript(
     executionContext,
     window.bridge.requireInterceptor,
-    consoleInterceptor,
+    scriptConsole,
     evalInterceptor,
     _,
   );
@@ -86,7 +73,7 @@ const runPreRequestScript = async (
   const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
   const updatedCookieJar = mergeCookieJar(context.cookieJar, mutatedContextObject.cookieJar);
 
-  await fs.promises.writeFile(context.timelinePath, log.join('\n'));
+  await fs.promises.writeFile(context.timelinePath, scriptConsole.dumpLogs());
 
   console.log('mutatedInsomniaObject', mutatedContextObject);
   console.log('context', context);
