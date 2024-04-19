@@ -565,25 +565,17 @@ const TestSuiteRoute = () => {
         </div>
       )}
       {unitTests.length > 0 && (
-        <ListBox
-          dragAndDropHooks={unitTestsDragAndDrop.dragAndDropHooks}
-          items={unitTests.map(unitTest => ({
-            ...unitTest,
-            id: unitTest._id,
-            key: unitTest._id,
-          }))}
-          className="flex-1 flex flex-col divide-y divide-solid divide-[--hl-md] overflow-y-auto"
-        >
-          {unitTest => (
-            <ListBoxItem className="outline-none">
+        <div className="flex-1 flex flex-col divide-y divide-solid divide-[--hl-md] overflow-y-auto">
+          {unitTests.map(unitTest => (
+            <div key={unitTest._id} className="outline-none">
               <Button slot="drag" className="hidden" />
               <UnitTestItemView
                 unitTest={unitTest}
                 testsRunning={testsRunning}
               />
-            </ListBoxItem>
-          )}
-        </ListBox>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
