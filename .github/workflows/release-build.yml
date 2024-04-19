@@ -167,11 +167,10 @@ jobs:
 
             ## Steps for Publish:
 
-            Run git log to get the latest changes:
+            You can update the changelog.md in this branch, run git log to get the latest changes:
             ```bash
-            git log --no-merges --oneline --pretty=format:'- %s (%h) [%an] <%ad>' --date=format:'%Y-%m-%d' --since="v8.6.1" --until="v9.0.0-beta.4"
+            git log --no-merges --oneline --pretty=format:'* %s by @%an' --since="<last release tag>" --until="release/${{ steps.release_version.outputs.version }}"
             ```
-            Use this to update the changelog.md and push to this branch with [skip ci] in the commit message.
 
             When ready to publish, trigger [Publish](https://github.com/${{ github.repository }}/actions/workflows/release-publish.yml) workflow with these variables:
             - Release version (`version`): `${{ steps.release_version.outputs.version }}`
@@ -181,7 +180,6 @@ jobs:
             gh workflow run release-publish.yml -f version=${{ steps.release_version.outputs.version }} --repo ${{ github.repository }}
             ```
 
-            Once completed and available in https://github.com/Kong/insomnia/releases edit the release notes, with the same change made to changelog.md and hit "Update release".
 
             <details>
             <summary>Conflicts? Merge branch step failed on the publish workflow? Try this...</summary>
