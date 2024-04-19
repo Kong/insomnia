@@ -9,7 +9,7 @@ import { Environment, Variables } from './environments';
 import { RequestContext } from './interfaces';
 import { unsupportedError } from './properties';
 import { Request as ScriptRequest, RequestOptions, toScriptRequestBody } from './request';
-import { RequestInfo, RequestInfoOption } from './request-info';
+import { RequestInfo } from './request-info';
 import { Response as ScriptResponse } from './response';
 import { sendRequest } from './send-request';
 import { test } from './test';
@@ -123,7 +123,7 @@ export function initInsomniaObject(
     const collectionVariables = new Environment(rawObj.collectionVariables);
     const cookies = new CookieObject(rawObj.cookieJar);
     // TODO: update follows when post-request script and iterating are introduced
-    const requestInfo: RequestInfoOption = new RequestInfo({
+    const requestInfo = new RequestInfo({
         eventName: 'prerequest',
         iteration: 1,
         iterationCount: 1,
