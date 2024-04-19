@@ -3,7 +3,7 @@ import './base-imports';
 import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { EditorConfiguration } from 'codemirror';
-import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import { useMount, useUnmount } from 'react-use';
 
 import { DEBOUNCE_MILLIS } from '../../../common/constants';
@@ -12,6 +12,7 @@ import { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
+import { useEditorRefresh } from '../../hooks/use-editor-refresh';
 import { useRootLoaderData } from '../../routes/root';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 export interface OneLineEditorProps {
@@ -50,7 +51,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   } = useRootLoaderData();
   const { handleRender, handleGetRenderContext } = useNunjucks();
 
-  useMount(() => {
+  const initEditor = useCallback(() => {
     if (!textAreaRef.current) {
       return;
     }
@@ -191,12 +192,26 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         settings.showVariableSourceAndValue,
       );
     }
-  });
-  useUnmount(() => {
+  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, type]);
+
+  const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();
     codeMirror.current?.closeHintDropdown();
     codeMirror.current = null;
+  }, []);
+  useMount(() => {
+    initEditor();
   });
+  useUnmount(() => {
+    cleanUpEditor();
+  });
+
+  const reinitialize = useCallback(() => {
+    cleanUpEditor();
+    initEditor();
+  }, [cleanUpEditor, initEditor]);
+
+  useEditorRefresh(reinitialize);
 
   useEffect(() => {
     const fn = misc.debounce((doc: CodeMirror.Editor) => {
