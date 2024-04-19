@@ -536,7 +536,7 @@ export class VCS {
     for (const key of Object.keys(stage)) {
       const entry = stage[key];
 
-      // @ts-expect-error -- TSCONVERSION find out where this is coming from from the Stage union
+      // @ts-expect-error -- TSCONVERSION find out where this is coming from the Stage union
       if (entry.deleted) {
         continue;
       }

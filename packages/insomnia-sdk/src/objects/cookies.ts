@@ -338,7 +338,7 @@ export function mergeCookieJar(
 ): InsomniaCookieJar {
     const cookiesWithId = updatedCookieJar.cookies.map((cookie): InsomniaCookie => {
         if (!cookie.id) {
-            // this follows the genration apporach in the `cookie-list.tsx`
+            // this follows the generation approach in the `cookie-list.tsx`
             cookie.id = uuidv4();
         }
         return cookie as InsomniaCookie;

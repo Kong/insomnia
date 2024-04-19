@@ -106,7 +106,7 @@ export interface OAuth2Param {
     key: string;
     value: string;
     enabled: boolean;
-    send_as: string; // it follows exising naming
+    send_as: string; // it follows existing naming
 }
 
 export interface OAuth2Options {
