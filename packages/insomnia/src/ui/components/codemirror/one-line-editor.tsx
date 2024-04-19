@@ -3,7 +3,7 @@ import './base-imports';
 import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { EditorConfiguration } from 'codemirror';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 
 import { DEBOUNCE_MILLIS } from '../../../common/constants';
@@ -32,25 +32,30 @@ export interface OneLineEditorHandle {
   selectAll: () => void;
   focusEnd: () => void;
 }
-export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>(({
+
+interface InnerEditorProps extends OneLineEditorProps {
+  setCodeMirror: (ins: CodeMirror.EditorFromTextArea) => void;
+}
+
+const EditorInner = ({
   defaultValue,
   getAutocompleteConstants,
   id,
-  onChange,
   onKeyDown,
   placeholder,
   readOnly,
   type,
   onPaste,
   onBlur,
-}, ref) => {
+  setCodeMirror,
+}: InnerEditorProps) => {
+
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
+  const { handleRender, handleGetRenderContext } = useNunjucks();
   const {
     settings,
   } = useRootLoaderData();
-  const { handleRender, handleGetRenderContext } = useNunjucks();
-
   const initEditor = useCallback(() => {
     if (!textAreaRef.current) {
       return;
@@ -107,6 +112,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       },
     };
     codeMirror.current = CodeMirror.fromTextArea(textAreaRef.current, initialOptions);
+    setCodeMirror(codeMirror.current);
     codeMirror.current.on('beforeChange', (_: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
       const isPaste = change.text && change.text.length > 1;
       if (isPaste) {
@@ -192,7 +198,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         settings.showVariableSourceAndValue,
       );
     }
-  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, type]);
+  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, type, setCodeMirror]);
 
   const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();
@@ -206,10 +212,33 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     cleanUpEditor();
   });
 
+  return (
+    <textarea
+      id={id}
+      ref={textAreaRef}
+      style={{ display: 'none' }}
+      readOnly={readOnly}
+      autoComplete="off"
+      defaultValue=""
+    />
+  );
+};
+
+export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>((props, ref) => {
+  const {
+    id,
+    onChange,
+    readOnly,
+    type,
+  } = props;
+
+  const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
+
+  const [editorKey, setEditorKey] = useState(0);
+
   const reinitialize = useCallback(() => {
-    cleanUpEditor();
-    initEditor();
-  }, [cleanUpEditor, initEditor]);
+    setEditorKey(Math.random());
+  }, []);
 
   useEditorRefresh(reinitialize);
 
@@ -253,14 +282,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       }}
     >
       <div className="editor__container input editor--single-line">
-        <textarea
-          id={id}
-          ref={textAreaRef}
-          style={{ display: 'none' }}
-          readOnly={readOnly}
-          autoComplete="off"
-          defaultValue=""
-        />
+        <EditorInner key={editorKey} {...props} setCodeMirror={instance => codeMirror.current = instance} />
       </div>
     </div >
   );

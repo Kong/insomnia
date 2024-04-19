@@ -22,8 +22,6 @@ import { MaskedSetting } from './masked-setting';
 import { NumberSetting } from './number-setting';
 import { TextSetting } from './text-setting';
 
-/**
-
 export const General: FC = () => {
   const {
     settings,
