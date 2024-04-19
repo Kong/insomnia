@@ -934,3 +934,109 @@ resources:
           "builtInLodash": {{ _.builtInLodash }}
         }
     _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df12
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: not return until all Promise settled
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      new Promise(resolve => {
+        setTimeout(() => {
+          insomnia.environment.set("asyncTaskDone", true);
+          resolve();
+        }, 500)
+      });
+    body:
+      mimeType: "application/json"
+      text: |-
+        {
+          "asyncTaskDone": {{ _.asyncTaskDone}}
+        }
+    _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df13
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: not return until all setTimeout finished
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      setTimeout(() => {
+        insomnia.environment.set("asyncTaskDone", true);
+      }, 500)
+    body:
+      mimeType: "application/json"
+      text: |-
+        {
+          "asyncTaskDone": {{ _.asyncTaskDone}}
+        }
+    _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df14
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: not return until all async tasks finished
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      const resp = insomnia.sendRequest(
+        'http://127.0.0.1:4010/echo',
+        (err, resp) => {
+            if (err != null) {
+                throw err;
+            } else {
+              insomnia.environment.set("asyncTaskDone", true);
+            }
+        }
+      );
+    body:
+      mimeType: "application/json"
+      text: |-
+        {
+          "asyncTaskDone": {{ _.asyncTaskDone}}
+        }
+    _type: request

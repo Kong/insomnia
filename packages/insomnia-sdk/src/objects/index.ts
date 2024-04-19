@@ -7,3 +7,4 @@ export * from './urls';
 export * from './cookies';
 export * from './console';
 export * from './request-info';
+export * from './async_objects';

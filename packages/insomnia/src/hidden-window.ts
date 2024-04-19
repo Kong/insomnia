@@ -1,5 +1,3 @@
-import * as fs from 'node:fs';
-
 import { initInsomniaObject, InsomniaObject } from 'insomnia-sdk';
 import { Console, mergeClientCertificates, mergeCookieJar, mergeRequests, mergeSettings, RequestContext } from 'insomnia-sdk';
 import * as _ from 'lodash';
@@ -15,12 +13,12 @@ window.bridge.onmessage(async (data, callback) => {
   console.log('[hidden-browser-window] recieved message', data);
   try {
     const timeout = data.context.timeout || 5000;
-    const timeoutPromise = new Promise(resolve => {
+    const timeoutPromise = new window.bridge.Promise(resolve => {
       setTimeout(() => {
         resolve({ error: 'Timeout: Pre-request script took too long' });
       }, timeout);
     });
-    const result = await Promise.race([timeoutPromise, runPreRequestScript(data)]);
+    const result = await window.bridge.Promise.race([timeoutPromise, runPreRequestScript(data)]);
     callback(result);
   } catch (err) {
     console.error('error', err);
@@ -51,9 +49,17 @@ const runPreRequestScript = async (
     'console',
     'eval',
     '_',
+    'setTimeout',
+    // disable these as they are not supported in web or existing implementation
+    'setImmediate',
+    'queueMicrotask',
+    'process',
     `
       const $ = insomnia;
-       ${script};
+      window.bridge.resetAsyncTasks(); // exclude unnecessary ones
+      ${script};
+      window.bridge.stopMonitorAsyncTasks();  // the next one should not be monitored
+      await window.bridge.asyncTasksAllSettled();
       return insomnia;`
   );
 
@@ -63,6 +69,10 @@ const runPreRequestScript = async (
     scriptConsole,
     evalInterceptor,
     _,
+    proxiedSetTimeout,
+    undefined,
+    undefined,
+    undefined,
   );
   if (mutatedInsomniaObject == null || !(mutatedInsomniaObject instanceof InsomniaObject)) {
     throw Error('insomnia object is invalid or script returns earlier than expected.');
@@ -73,7 +83,7 @@ const runPreRequestScript = async (
   const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
   const updatedCookieJar = mergeCookieJar(context.cookieJar, mutatedContextObject.cookieJar);
 
-  await fs.promises.writeFile(context.timelinePath, scriptConsole.dumpLogs());
+  await window.bridge.writeFile(context.timelinePath, scriptConsole.dumpLogs());
 
   console.log('mutatedInsomniaObject', mutatedContextObject);
   console.log('context', context);
@@ -88,3 +98,27 @@ const runPreRequestScript = async (
     cookieJar: updatedCookieJar,
   };
 };
+
+// proxiedSetTimeout has to be here as callback could be an async task
+function proxiedSetTimeout(
+  callback: () => void,
+  ms?: number | undefined,
+) {
+  let resolveHdl: (value: unknown) => void;
+
+  new Promise(resolve => {
+    resolveHdl = resolve;
+  });
+
+  return setTimeout(
+    () => {
+      try {
+        callback();
+        resolveHdl(null);
+      } catch (e) {
+        throw e;
+      }
+    },
+    ms,
+  );
+}
