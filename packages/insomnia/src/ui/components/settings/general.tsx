@@ -26,14 +26,6 @@ import { TextSetting } from './text-setting';
  * We are attempting to move the app away from needing settings changes to restart the app.
  * For now, this component is a holdover until such a time as we are able to fix the underlying cases. (INS-1245)
  */
-// const RestartTooltip: FC<{ message: string }> = ({ message }) => (
-//   <Fragment>
-//     {message}{' '}
-//     <Tooltip message="Will restart the app" className="space-left">
-//       <i className="fa fa-refresh super-duper-faint" />
-//     </Tooltip>
-//   </Fragment>
-// );
 
 export const General: FC = () => {
   const {
