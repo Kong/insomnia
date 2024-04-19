@@ -3,7 +3,6 @@ import React, { FC, Fragment, useEffect, useState } from 'react';
 import {
   Button,
   Dialog,
-  DialogTrigger,
   GridList,
   GridListItem,
   Heading,
@@ -263,10 +262,12 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   // Check if the org has any projects and redirect to the first one
   const projectId = allOrganizationProjects[0]?._id;
 
+  if (!projectId) {
+    return redirect(`/organization/${organizationId}/project`);
+  }
   invariant(projectId, 'No projects found for this organization.');
 
   return redirect(`/organization/${organizationId}/project/${projectId}`);
-
 };
 
 export interface InsomniaFile {
@@ -293,7 +294,7 @@ export interface ProjectLoaderData {
   collectionsCount: number;
   mockServersCount: number;
   projectsCount: number;
-  activeProject: Project;
+  activeProject?: Project;
   projects: Project[];
   learningFeature: {
     active: boolean;
@@ -455,6 +456,26 @@ export const loader: LoaderFunction = async ({
   invariant(organizationId, 'Organization ID is required');
   const { id: sessionId } = await userSession.getOrCreate();
 
+  if (!projectId) {
+    return {
+      files: [],
+      allFilesCount: 0,
+      documentsCount: 0,
+      collectionsCount: 0,
+      mockServersCount: 0,
+      projectsCount: 0,
+      activeProject: undefined,
+      projects: [],
+      learningFeature: {
+        active: false,
+        title: '',
+        message: '',
+        cta: '',
+        url: '',
+      },
+    };
+  }
+
   if (!sessionId) {
     await logout();
     throw redirect('/auth/login');
@@ -553,7 +574,7 @@ const ProjectRoute: FC = () => {
   const [sortOrder, setSortOrder] = useLocalStorage(`${projectId}:project-dashboard-sort-order`, 'modified-desc');
   const [filter, setFilter] = useLocalStorage(`${projectId}:project-dashboard-filter`, '');
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
-
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const organization = organizations.find(o => o.id === organizationId);
   const isUserOwner = organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && isPersonalOrganization(organization);
@@ -583,7 +604,7 @@ const ProjectRoute: FC = () => {
 
   const filesWithPresence = filteredFiles.map(file => {
     const workspacePresence = presence
-      .filter(p => p.project === activeProject.remoteId && p.file === file.id)
+      .filter(p => p.project === activeProject?.remoteId && p.file === file.id)
       .filter(p => p.acct !== userSession.accountId)
       .map(user => {
         return {
@@ -625,6 +646,7 @@ const ProjectRoute: FC = () => {
   const navigate = useNavigate();
 
   const createNewCollection = () => {
+    activeProject?._id &&
     showPrompt({
       title: 'Create New Request Collection',
       submitName: 'Create',
@@ -647,6 +669,7 @@ const ProjectRoute: FC = () => {
   };
 
   const createNewDocument = () => {
+    activeProject?._id &&
     showPrompt({
       title: 'Create New Design Document',
       submitName: 'Create',
@@ -669,6 +692,7 @@ const ProjectRoute: FC = () => {
   };
 
   const createNewMockServer = () => {
+    activeProject?._id &&
     activeProject.remoteId
       ? setIsMockServerSettingsModalOpen(true)
       : showModal(AlertModal, {
@@ -828,8 +852,8 @@ const ProjectRoute: FC = () => {
       },
   ];
   const defaultStorageSelection = storage === 'local_only' ? 'local' : 'remote';
-  const isRemoteProjectInconsistent = isRemoteProject(activeProject) && storage === 'local_only';
-  const isLocalProjectInconsistent = !isRemoteProject(activeProject) && storage === 'cloud_only';
+  const isRemoteProjectInconsistent = activeProject && isRemoteProject(activeProject) && storage === 'local_only';
+  const isLocalProjectInconsistent = activeProject && !isRemoteProject(activeProject) && storage === 'cloud_only';
   const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent;
   return (
     <ErrorBoundary>
@@ -910,114 +934,13 @@ const ProjectRoute: FC = () => {
                       </Button>
                     </div>
                   </SearchField>
-                  <DialogTrigger>
-                    <Button
-                      aria-label="Create new Project"
-                      className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                    >
-                      <Icon icon="plus-circle" />
-                    </Button>
-                    <ModalOverlay isDismissable className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30">
-                      <Modal className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
-                        <Dialog className="outline-none">
-                          {({ close }) => (
-                            <div className='flex flex-col gap-4'>
-                              <div className='flex gap-2 items-center justify-between'>
-                                <Heading className='text-2xl'>Create a new project</Heading>
-                                <Button
-                                  className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                                  onPress={close}
-                                >
-                                  <Icon icon="x" />
-                                </Button>
-                              </div>
-                              <form
-                                className='flex flex-col gap-4'
-                                onSubmit={e => {
-                                  createNewProjectFetcher.submit(e.currentTarget, {
-                                    action: `/organization/${organizationId}/project/new`,
-                                    method: 'post',
-                                  });
-
-                                  close();
-                                }}
-                              >
-                                <TextField
-                                  autoFocus
-                                  name="name"
-                                  defaultValue="My project"
-                                  className="group relative flex-1 flex flex-col gap-2"
-                                >
-                                  <Label className='text-sm text-[--hl]'>
-                                    Project name
-                                  </Label>
-                                  <Input
-                                    placeholder="My project"
-                                    className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
-                                  />
-                                </TextField>
-                                <RadioGroup name="type" defaultValue={defaultStorageSelection} className="flex flex-col gap-2">
-                                  <Label className="text-sm text-[--hl]">
-                                    Project type
-                                  </Label>
-                                  <div className="flex gap-2">
-                                    <Radio
-                                      isDisabled={storage === 'local_only'}
-                                      value="remote"
-                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
-                                    >
-                                      <div className='flex items-center gap-2'>
-                                        <Icon icon="globe" />
-                                        <Heading className="text-lg font-bold">Cloud Sync</Heading>
-                                      </div>
-                                      <p className='pt-2'>
-                                        Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
-                                      </p>
-                                    </Radio>
-                                    <Radio
-                                      isDisabled={storage === 'cloud_only'}
-                                      value="local"
-                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <Icon icon="laptop" />
-                                        <Heading className="text-lg font-bold">Local Vault</Heading>
-                                      </div>
-                                      <p className="pt-2">
-                                        Stored locally only with no cloud. Ideal when collaboration is not needed.
-                                      </p>
-                                    </Radio>
-                                  </div>
-                                </RadioGroup>
-                                <div className="flex justify-between gap-2 items-center">
-                                  <div className="flex items-center gap-2 text-sm">
-                                    <Icon icon="info-circle" />
-                                    <span>
-                                      {isProjectInconsistent && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`} You can optionally enable Git Sync
-                                    </span>
-                                  </div>
-                                  <div className='flex items-center gap-2'>
-                                    <Button
-                                      onPress={close}
-                                      className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
-                                    >
-                                      Cancel
-                                    </Button>
-                                    <Button
-                                      type="submit"
-                                      className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-                                    >
-                                      Create
-                                    </Button>
-                                  </div>
-                                </div>
-                              </form>
-                            </div>
-                          )}
-                        </Dialog>
-                      </Modal>
-                    </ModalOverlay>
-                  </DialogTrigger>
+                  <Button
+                    aria-label="Create new Project"
+                    onPress={() => setIsNewProjectModalOpen(true)}
+                    className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  >
+                    <Icon icon="plus-circle" />
+                  </Button>
                 </div>
 
                 <GridList
@@ -1025,7 +948,7 @@ const ProjectRoute: FC = () => {
                   items={projectsWithPresence}
                   className="overflow-y-auto flex-1 data-[empty]:py-0 py-[--padding-sm]"
                   disallowEmptySelection
-                  selectedKeys={[activeProject._id]}
+                  selectedKeys={[activeProject?._id || '']}
                   selectionMode="single"
                   onSelectionChange={keys => {
                     if (keys !== 'all') {
@@ -1066,49 +989,51 @@ const ProjectRoute: FC = () => {
                   }}
                 </GridList>
               </div>
-              <GridList
-                aria-label="Scope filter"
-                items={scopeActionList}
-                className="overflow-y-auto flex-shrink-0 flex-1 data-[empty]:py-0 py-[--padding-sm]"
-                disallowEmptySelection
-                selectedKeys={[scope || 'all']}
-                selectionMode="single"
-                onSelectionChange={keys => {
-                  if (keys !== 'all') {
-                    const value = keys.values().next().value;
+              {activeProject && (
+                <GridList
+                  aria-label="Scope filter"
+                  items={scopeActionList}
+                  className="overflow-y-auto flex-shrink-0 flex-1 data-[empty]:py-0 py-[--padding-sm]"
+                  disallowEmptySelection
+                  selectedKeys={[scope || 'all']}
+                  selectionMode="single"
+                  onSelectionChange={keys => {
+                    if (keys !== 'all') {
+                      const value = keys.values().next().value;
 
-                    setScope(value);
-                  }
-                }}
-              >
-                {item => {
-                  return (
-                    <GridListItem textValue={item.label} className="group outline-none select-none">
-                      <div
-                        className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-12 w-full overflow-hidden text-[--hl]"
-                      >
-                        <span className='w-6 h-6 flex items-center justify-center'>
-                          <Icon icon={item.icon} className='w-6' />
-                        </span>
+                      setScope(value);
+                    }
+                  }}
+                >
+                  {item => {
+                    return (
+                      <GridListItem textValue={item.label} className="group outline-none select-none">
+                        <div
+                          className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-12 w-full overflow-hidden text-[--hl]"
+                        >
+                          <span className='w-6 h-6 flex items-center justify-center'>
+                            <Icon icon={item.icon} className='w-6' />
+                          </span>
 
-                        <span className="truncate capitalize">
-                          {item.label}
-                        </span>
-                        <span className="flex-1" />
-                        {item.action && (
-                          <Button
-                            onPress={item.action.run}
-                            aria-label={item.action.label}
-                            className="opacity-80 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                          >
-                            <Icon icon={item.action.icon} />
-                          </Button>
-                        )}
-                      </div>
-                    </GridListItem>
-                  );
-                }}
-              </GridList>
+                          <span className="truncate capitalize">
+                            {item.label}
+                          </span>
+                          <span className="flex-1" />
+                          {item.action && (
+                            <Button
+                              onPress={item.action.run}
+                              aria-label={item.action.label}
+                              className="opacity-80 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                            >
+                              <Icon icon={item.action.icon} />
+                            </Button>
+                          )}
+                        </div>
+                      </GridListItem>
+                    );
+                  }}
+                </GridList>
+              )}
               {!isLearningFeatureDismissed && learningFeature.active && (
                 <div className='flex flex-shrink-0 flex-col gap-2 p-[--padding-sm]'>
                   <div className='flex items-center justify-between gap-2'>
@@ -1137,258 +1062,273 @@ const ProjectRoute: FC = () => {
           </Panel>
           <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
           <Panel id="pane-one" className='pane-one theme--pane'>
-            <div className="w-full h-full flex flex-col overflow-hidden">
-              {billing.isActive ? null : <div className='p-[--padding-md] pb-0'>
-                <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
-                  <p className='text-base'>
-                    <Icon icon="exclamation-triangle" className='mr-2' />
-                    {isUserOwner ? `Your ${isPersonalOrg ? 'personal account' : 'organization'} has unpaid past invoices. Please enter a new payment method to continue using Insomnia.` : 'This organization has unpaid past invoices. Please ask the organization owner to enter a new payment method to continue using Insomnia.'}
-                  </p>
-                  {isUserOwner && (
-                    <a
-                      href={`${getAppWebsiteBaseURL()}/app/subscription/past-due`}
-                      className="px-4 text-[--color-bg] bg-opacity-100 bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                    >
-                      Update payment method
-                    </a>
-                  )}
-                </div>
-              </div>}
-              {isProjectInconsistent && <div className='p-[--padding-md] pb-0'>
-                <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
-                  <p className='text-base'>
-                    <Icon icon="exclamation-triangle" className='mr-2' />
-                    The organization owner mandates that projects must be created and stored {storage.split('_').join(' ')}. However, you can optionally enable Git Sync.
-                  </p>
-                </div>
-              </div>}
-              <div className="flex max-w-xl justify-between w-full gap-2 p-[--padding-md]">
-                <SearchField
-                  aria-label="Files filter"
-                  className="group relative flex-1"
-                  value={filter}
-                  onChange={filter => setFilter(filter)}
-                >
-                  <Input
-                    placeholder="Filter"
-                    className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
-                  />
-                  <div className="flex items-center px-2 absolute right-0 top-0 h-full">
-                    <Button className="flex group-data-[empty]:hidden items-center justify-center aspect-square w-5 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                      <Icon icon="close" />
-                    </Button>
+            {activeProject ? (
+              <div className="w-full h-full flex flex-col overflow-hidden">
+                {billing.isActive ? null : <div className='p-[--padding-md] pb-0'>
+                  <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
+                    <p className='text-base'>
+                      <Icon icon="exclamation-triangle" className='mr-2' />
+                      {isUserOwner ? `Your ${isPersonalOrg ? 'personal account' : 'organization'} has unpaid past invoices. Please enter a new payment method to continue using Insomnia.` : 'This organization has unpaid past invoices. Please ask the organization owner to enter a new payment method to continue using Insomnia.'}
+                    </p>
+                    {isUserOwner && (
+                      <a
+                        href={`${getAppWebsiteBaseURL()}/app/subscription/past-due`}
+                        className="px-4 text-[--color-bg] bg-opacity-100 bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                      >
+                        Update payment method
+                      </a>
+                    )}
                   </div>
-                </SearchField>
-                <Select
-                  aria-label="Sort order"
-                  className="h-full aspect-square"
-                  selectedKey={sortOrder}
-                  onSelectionChange={order => setSortOrder(order as DashboardSortOrder)}
-                >
-                  <Button
-                    aria-label="Select sort order"
-                    className="flex flex-shrink-0 items-center justify-center aspect-square h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                </div>}
+                {isProjectInconsistent && <div className='p-[--padding-md] pb-0'>
+                  <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
+                    <p className='text-base'>
+                      <Icon icon="exclamation-triangle" className='mr-2' />
+                      The organization owner mandates that projects must be created and stored {storage.split('_').join(' ')}. However, you can optionally enable Git Sync.
+                    </p>
+                  </div>
+                </div>}
+                <div className="flex max-w-xl justify-between w-full gap-2 p-[--padding-md]">
+                  <SearchField
+                    aria-label="Files filter"
+                    className="group relative flex-1"
+                    value={filter}
+                    onChange={filter => setFilter(filter)}
                   >
-                    <Icon icon="sort" />
-                  </Button>
-                  <Popover className="min-w-max">
-                    <ListBox
-                      items={DASHBOARD_SORT_ORDERS.map(order => {
-                        return {
-                          id: order,
-                          name: dashboardSortOrderName[order],
-                        };
-                      })}
-                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                    <Input
+                      placeholder="Filter"
+                      className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                    />
+                    <div className="flex items-center px-2 absolute right-0 top-0 h-full">
+                      <Button className="flex group-data-[empty]:hidden items-center justify-center aspect-square w-5 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                        <Icon icon="close" />
+                      </Button>
+                    </div>
+                  </SearchField>
+                  <Select
+                    aria-label="Sort order"
+                    className="h-full aspect-square"
+                    selectedKey={sortOrder}
+                    onSelectionChange={order => setSortOrder(order as DashboardSortOrder)}
+                  >
+                    <Button
+                      aria-label="Select sort order"
+                      className="flex flex-shrink-0 items-center justify-center aspect-square h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                     >
-                      {item => (
-                        <ListBoxItem
-                          id={item.id}
-                          key={item.id}
-                          className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                          aria-label={item.name}
-                          textValue={item.name}
-                          value={item}
-                        >
-                          {({ isSelected }) => (
-                            <Fragment>
-                              <span>{item.name}</span>
-                              {isSelected && (
-                                <Icon
-                                  icon="check"
-                                  className="text-[--color-success] justify-self-end"
-                                />
-                              )}
-                            </Fragment>
-                          )}
-                        </ListBoxItem>
-                      )}
-                    </ListBox>
-                  </Popover>
-                </Select>
+                      <Icon icon="sort" />
+                    </Button>
+                    <Popover className="min-w-max">
+                      <ListBox
+                        items={DASHBOARD_SORT_ORDERS.map(order => {
+                          return {
+                            id: order,
+                            name: dashboardSortOrderName[order],
+                          };
+                        })}
+                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                      >
+                        {item => (
+                          <ListBoxItem
+                            id={item.id}
+                            key={item.id}
+                            className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                            aria-label={item.name}
+                            textValue={item.name}
+                            value={item}
+                          >
+                            {({ isSelected }) => (
+                              <Fragment>
+                                <span>{item.name}</span>
+                                {isSelected && (
+                                  <Icon
+                                    icon="check"
+                                    className="text-[--color-success] justify-self-end"
+                                  />
+                                )}
+                              </Fragment>
+                            )}
+                          </ListBoxItem>
+                        )}
+                      </ListBox>
+                    </Popover>
+                  </Select>
 
-                <MenuTrigger>
-                  <Button
-                    aria-label="Create in project"
-                    className="flex items-center justify-center px-4 gap-2 h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                  >
-                    <Icon icon="plus-circle" /> Create
-                  </Button>
-                  <Popover className="min-w-max">
-                    <Menu
-                      aria-label="Create in project actions"
-                      selectionMode="single"
-                      onAction={key => {
-                        const item = createInProjectActionList.find(
-                          item => item.id === key
-                        );
-                        if (item) {
-                          item.action();
+                  <MenuTrigger>
+                    <Button
+                      aria-label="Create in project"
+                      className="flex items-center justify-center px-4 gap-2 h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    >
+                      <Icon icon="plus-circle" /> Create
+                    </Button>
+                    <Popover className="min-w-max">
+                      <Menu
+                        aria-label="Create in project actions"
+                        selectionMode="single"
+                        onAction={key => {
+                          const item = createInProjectActionList.find(
+                            item => item.id === key
+                          );
+                          if (item) {
+                            item.action();
+                          }
+                        }}
+                        items={createInProjectActionList}
+                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                      >
+                        {item => (
+                          <MenuItem
+                            key={item.id}
+                            id={item.id}
+                            className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                            aria-label={item.name}
+                          >
+                            <Icon icon={item.icon} />
+                            <span>{item.name}</span>
+                          </MenuItem>
+                        )}
+                      </Menu>
+                    </Popover>
+                  </MenuTrigger>
+                </div>
+
+                <div className='flex-1 overflow-y-auto'>
+                  <GridList
+                    aria-label="Files"
+                    className="data-[empty]:flex data-[empty]:justify-center grid [grid-template-columns:repeat(auto-fit,200px)] [grid-template-rows:repeat(auto-fit,200px)] gap-4 p-[--padding-md]"
+                    items={filesWithPresence}
+                    onAction={id => {
+                      // hack to workaround gridlist not have access to workspace scope
+                      const file = files.find(f => f.id === id);
+                      invariant(file, 'File not found');
+                      if (file.scope === 'unsynced') {
+                        if (activeProject?.remoteId && file.remoteId) {
+                          return pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: activeProject.remoteId }, {
+                            method: 'POST',
+                            action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
+                          });
                         }
-                      }}
-                      items={createInProjectActionList}
-                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                    >
-                      {item => (
-                        <MenuItem
-                          key={item.id}
-                          id={item.id}
-                          className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                          aria-label={item.name}
-                        >
-                          <Icon icon={item.icon} />
-                          <span>{item.name}</span>
-                        </MenuItem>
-                      )}
-                    </Menu>
-                  </Popover>
-                </MenuTrigger>
-              </div>
 
-              <div className='flex-1 overflow-y-auto'>
-                <GridList
-                  aria-label="Files"
-                  className="data-[empty]:flex data-[empty]:justify-center grid [grid-template-columns:repeat(auto-fit,200px)] [grid-template-rows:repeat(auto-fit,200px)] gap-4 p-[--padding-md]"
-                  items={filesWithPresence}
-                  onAction={id => {
-                    // hack to workaround gridlist not have access to workspace scope
-                    const file = files.find(f => f.id === id);
-                    invariant(file, 'File not found');
-                    if (file.scope === 'unsynced') {
-                      if (activeProject.remoteId && file.remoteId) {
-                        return pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: activeProject.remoteId }, {
-                          method: 'POST',
-                          action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
-                        });
+                        return;
                       }
 
-                      return;
-                    }
-
-                    const activity = scopeToActivity(file.scope);
-                    navigate(
-                      `/organization/${organizationId}/project/${projectId}/workspace/${id}/${activity}`
-                    );
-                  }}
-                  renderEmptyState={() => {
-                    if (filter) {
-                      return (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <p className="notice subtle">
-                            No documents found for <strong>{filter}</strong>
-                          </p>
-                        </div>
+                      const activity = scopeToActivity(file.scope);
+                      navigate(
+                        `/organization/${organizationId}/project/${projectId}/workspace/${id}/${activity}`
                       );
-                    }
-
-                    return (
-                      <EmptyStatePane
-                        createRequestCollection={createNewCollection}
-                        createDesignDocument={createNewDocument}
-                        createMockServer={createNewMockServer}
-                        importFrom={() => setImportModalType('file')}
-                        cloneFromGit={importFromGit}
-                      />
-                    );
-                  }}
-                >
-                  {item => {
-                    return (
-                      <GridListItem
-                        key={item.id}
-                        id={item.id}
-                        textValue={item.name}
-                        className={`flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-md hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all ${item.loading ? 'animate-pulse' : ''}`}
-                      >
-                        <div className="flex gap-2 h-[20px]">
-                          <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
-                            <div className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
-                              <Icon icon={item.loading ? 'spinner' : scopeToIconMap[item.scope]} className={item.loading ? 'animate-spin' : ''} />
-                            </div>
-                            <span>{item.label}</span>
+                    }}
+                    renderEmptyState={() => {
+                      if (filter) {
+                        return (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <p className="notice subtle">
+                              No documents found for <strong>{filter}</strong>
+                            </p>
                           </div>
-                          <span className="flex-1" />
-                          {item.presence.length > 0 && (
-                            <AvatarGroup
-                              size="small"
-                              maxAvatars={3}
-                              items={item.presence}
-                            />
-                          )}
-                          {item.scope !== 'unsynced' && item.workspace && (
-                            <WorkspaceCardDropdown
-                              workspace={item.workspace}
-                              apiSpec={item.apiSpec}
-                              project={activeProject}
-                              projects={projects}
-                            />
-                          )}
-                        </div>
-                        <Heading className="pt-4 text-lg font-bold truncate" title={item.name}>
-                          {item.name}
-                        </Heading>
-                        <div className="flex-1 flex flex-col gap-2 justify-end text-sm text-[--hl]">
-                          {item.version && (
-                            <div className="flex-1 pt-2">
-                              {item.version}
+                        );
+                      }
+
+                      return (
+                        <EmptyStatePane
+                          createRequestCollection={createNewCollection}
+                          createDesignDocument={createNewDocument}
+                          createMockServer={createNewMockServer}
+                          importFrom={() => setImportModalType('file')}
+                          cloneFromGit={importFromGit}
+                        />
+                      );
+                    }}
+                  >
+                    {item => {
+                      return (
+                        <GridListItem
+                          key={item.id}
+                          id={item.id}
+                          textValue={item.name}
+                          className={`flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-md hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all ${item.loading ? 'animate-pulse' : ''}`}
+                        >
+                          <div className="flex gap-2 h-[20px]">
+                            <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
+                              <div className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
+                                <Icon icon={item.loading ? 'spinner' : scopeToIconMap[item.scope]} className={item.loading ? 'animate-spin' : ''} />
+                              </div>
+                              <span>{item.label}</span>
                             </div>
-                          )}
-                          {item.oasFormat && (
-                            <div className="text-sm flex items-center gap-2">
-                              <Icon icon="file-alt" />
-                              <span>
-                                {item.oasFormat}
-                              </span>
-                            </div>
-                          )}
-                          {item.branch && (
-                            <div className="text-sm flex items-center gap-2">
-                              <Icon icon="code-branch" />
-                              <span className="truncate">
-                                {item.branch}
-                              </span>
-                            </div>
-                          )}
-                          {Boolean(item.lastModifiedTimestamp) && (
-                            <div className="text-sm flex items-center gap-2 truncate">
-                              <Icon icon="clock" />
-                              <TimeFromNow
-                                timestamp={
-                                  item.lastModifiedTimestamp
-                                }
+                            <span className="flex-1" />
+                            {item.presence.length > 0 && (
+                              <AvatarGroup
+                                size="small"
+                                maxAvatars={3}
+                                items={item.presence}
                               />
-                              <span className="truncate">
-                                {item.lastCommit}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </GridListItem>
-                    );
-                  }}
-                </GridList>
+                            )}
+                            {activeProject && item.scope !== 'unsynced' && item.workspace && (
+                              <WorkspaceCardDropdown
+                                workspace={item.workspace}
+                                apiSpec={item.apiSpec}
+                                project={activeProject}
+                                projects={projects}
+                              />
+                            )}
+                          </div>
+                          <Heading className="pt-4 text-lg font-bold truncate" title={item.name}>
+                            {item.name}
+                          </Heading>
+                          <div className="flex-1 flex flex-col gap-2 justify-end text-sm text-[--hl]">
+                            {item.version && (
+                              <div className="flex-1 pt-2">
+                                {item.version}
+                              </div>
+                            )}
+                            {item.oasFormat && (
+                              <div className="text-sm flex items-center gap-2">
+                                <Icon icon="file-alt" />
+                                <span>
+                                  {item.oasFormat}
+                                </span>
+                              </div>
+                            )}
+                            {item.branch && (
+                              <div className="text-sm flex items-center gap-2">
+                                <Icon icon="code-branch" />
+                                <span className="truncate">
+                                  {item.branch}
+                                </span>
+                              </div>
+                            )}
+                            {Boolean(item.lastModifiedTimestamp) && (
+                              <div className="text-sm flex items-center gap-2 truncate">
+                                <Icon icon="clock" />
+                                <TimeFromNow
+                                  timestamp={
+                                    item.lastModifiedTimestamp
+                                  }
+                                />
+                                <span className="truncate">
+                                  {item.lastCommit}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </GridListItem>
+                      );
+                    }}
+                  </GridList>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="w-full h-full flex flex-col gap-2 items-center justify-center overflow-hidden">
+                <p className='text-lg'>
+                  This is an empty Organization. To get started create your first project.
+                </p>
+                <Button
+                  aria-label="Create new Project"
+                  onPress={() => setIsNewProjectModalOpen(true)}
+                  className="flex items-center justify-center px-4 gap-2 py-2 bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                >
+                  <Icon icon="plus-circle" /> Create a new Project
+                </Button>
+              </div>
+            )}
           </Panel>
         </PanelGroup>
         {isGitRepositoryCloneModalOpen && (
@@ -1396,7 +1336,107 @@ const ProjectRoute: FC = () => {
             onHide={() => setIsGitRepositoryCloneModalOpen(false)}
           />
         )}
-        {importModalType && (
+        <ModalOverlay isOpen={isNewProjectModalOpen} onOpenChange={isOpen => setIsNewProjectModalOpen(isOpen)} isDismissable className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30">
+          <Modal className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
+            <Dialog className="outline-none">
+              {({ close }) => (
+                <div className='flex flex-col gap-4'>
+                  <div className='flex gap-2 items-center justify-between'>
+                    <Heading className='text-2xl'>Create a new project</Heading>
+                    <Button
+                      className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                      onPress={close}
+                    >
+                      <Icon icon="x" />
+                    </Button>
+                  </div>
+                  <form
+                    className='flex flex-col gap-4'
+                    onSubmit={e => {
+                      createNewProjectFetcher.submit(e.currentTarget, {
+                        action: `/organization/${organizationId}/project/new`,
+                        method: 'post',
+                      });
+
+                      close();
+                    }}
+                  >
+                    <TextField
+                      autoFocus
+                      name="name"
+                      defaultValue="My project"
+                      className="group relative flex-1 flex flex-col gap-2"
+                    >
+                      <Label className='text-sm text-[--hl]'>
+                        Project name
+                      </Label>
+                      <Input
+                        placeholder="My project"
+                        className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                      />
+                    </TextField>
+                    <RadioGroup name="type" defaultValue={defaultStorageSelection} className="flex flex-col gap-2">
+                      <Label className="text-sm text-[--hl]">
+                        Project type
+                      </Label>
+                      <div className="flex gap-2">
+                        <Radio
+                          isDisabled={storage === 'local_only'}
+                          value="remote"
+                          className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                        >
+                          <div className='flex items-center gap-2'>
+                            <Icon icon="globe" />
+                            <Heading className="text-lg font-bold">Cloud Sync</Heading>
+                          </div>
+                          <p className='pt-2'>
+                            Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
+                          </p>
+                        </Radio>
+                        <Radio
+                          isDisabled={storage === 'cloud_only'}
+                          value="local"
+                          className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Icon icon="laptop" />
+                            <Heading className="text-lg font-bold">Local Vault</Heading>
+                          </div>
+                          <p className="pt-2">
+                            Stored locally only with no cloud. Ideal when collaboration is not needed.
+                          </p>
+                        </Radio>
+                      </div>
+                    </RadioGroup>
+                    <div className="flex justify-between gap-2 items-center">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Icon icon="info-circle" />
+                        <span>
+                          {isProjectInconsistent && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`} You can optionally enable Git Sync
+                        </span>
+                      </div>
+                      <div className='flex items-center gap-2'>
+                        <Button
+                          onPress={close}
+                          className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                        >
+                          Create
+                        </Button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </Dialog>
+          </Modal>
+        </ModalOverlay>
+        {activeProject && importModalType && (
           <ImportModal
             onHide={() => setImportModalType(null)}
             projectName={activeProject.name}

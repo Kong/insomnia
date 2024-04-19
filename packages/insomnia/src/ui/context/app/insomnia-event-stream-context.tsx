@@ -78,7 +78,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   const { userSession } = useRootLoaderData();
   const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
-  const remoteId = projectData?.activeProject.remoteId || workspaceData?.activeProject.remoteId;
+  const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
   const syncOrganizationsFetcher = useFetcher();

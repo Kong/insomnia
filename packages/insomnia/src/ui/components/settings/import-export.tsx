@@ -260,7 +260,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData | undefined;
   const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined) || [];
-  const projectName = projectLoaderData?.activeProject.name ?? getProductName();
+  const projectName = projectLoaderData?.activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -271,8 +271,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     hideSettingsModal();
   };
 
-  if (!organizationId) {
-    return null;
+  if (!organizationId || !projectLoaderData?.activeProject) {
+    return <p>There is no active project. Create a new project to import or export data.</p>;
   }
 
   return (

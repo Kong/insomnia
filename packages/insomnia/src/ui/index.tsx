@@ -232,6 +232,16 @@ async function renderApp() {
                     id: '/project',
                     children: [
                       {
+                        index: true,
+                        loader: async (...args) =>
+                          (await import('./routes/project')).loader(...args),
+                        element: (
+                          <Suspense fallback={<AppLoadingIndicator />}>
+                            <Project />
+                          </Suspense>
+                        ),
+                      },
+                      {
                         path: ':projectId',
                         id: '/project/:projectId',
                         loader: async (...args) =>
