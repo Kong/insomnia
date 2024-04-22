@@ -9,7 +9,7 @@ import { version } from '../../../package.json';
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import { ChangeBufferEvent, database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
-import { RENDER_PURPOSE_SEND } from '../../common/render';
+import { RENDER_PURPOSE_SEND, RenderedRequest } from '../../common/render';
 import { ResponsePatch } from '../../main/network/libcurl-promise';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
@@ -25,7 +25,9 @@ import { RequestVersion } from '../../models/request-version';
 import { Response } from '../../models/response';
 import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
+import { getAuthHeader } from '../../network/authentication';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { RenderErrorSubType } from '../../templating';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
@@ -298,11 +300,14 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
     });
   }
   if (isEventStreamRequest(req)) {
+    const renderedRequest = { ...req, ...rendered } as RenderedRequest;
+    const authHeader = await getAuthHeader(renderedRequest, rendered.url);
     window.main.curl.open({
       requestId,
       workspaceId,
       url: rendered.url,
       headers: rendered.headers,
+      authHeader,
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
       suppressUserAgent: rendered.suppressUserAgent,
@@ -350,7 +355,9 @@ const writeToDownloadPath = (downloadPathAndName: string, responsePatch: Respons
 export interface SendActionParams {
   requestId: string;
   shouldPromptForPathAfterResponse?: boolean;
+  ignoreUndefinedEnvVariable?: boolean;
 }
+
 export const sendAction: ActionFunction = async ({ request, params }) => {
   const { requestId, workspaceId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
@@ -368,14 +375,42 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     timelinePath,
     responseId,
   } = await fetchRequestData(requestId);
+  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+
   try {
-    const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
-    const mutatedRequest = await tryToExecutePreRequestScript(req, environment._id, timelinePath, responseId);
-    if (!mutatedRequest) {
+    const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
+    const mutatedContext = await tryToExecutePreRequestScript(
+      req,
+      environment,
+      timelinePath,
+      responseId,
+      baseEnvironment,
+      clientCertificates,
+      cookieJar,
+    );
+    if (!mutatedContext?.request) {
       // exiy early if there was a problem with the pre-request script
+      // TODO: improve error message?
       return null;
+    } else {
+      // persist updated cookieJar if needed
+      if (mutatedContext.cookieJar) {
+        await models.cookieJar.update(
+          mutatedContext.cookieJar,
+          { cookies: mutatedContext.cookieJar.cookies },
+        );
+      }
     }
-    const renderedResult = await tryToInterpolateRequest(mutatedRequest, environment._id, RENDER_PURPOSE_SEND);
+
+    const renderedResult = await tryToInterpolateRequest(
+      mutatedContext.request,
+      mutatedContext.environment || environment._id,
+      RENDER_PURPOSE_SEND,
+      undefined,
+      mutatedContext.baseEnvironment,
+      ignoreUndefinedEnvVariable,
+    );
     const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
 
     // TODO: remove this temporary hack to support GraphQL variables in the request body properly
@@ -393,9 +428,9 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
 
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
-      clientCertificates,
+      mutatedContext.clientCertificates || clientCertificates,
       caCert,
-      settings,
+      mutatedContext.settings || settings,
       timelinePath,
       responseId
     );
@@ -436,9 +471,14 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     console.log('Failed to send request', e);
     const url = new URL(request.url);
     url.searchParams.set('error', e);
+    if (e?.extraInfo && e?.extraInfo?.subType === RenderErrorSubType.EnvironmentVariable) {
+      url.searchParams.set('envVariableMissing', '1');
+      url.searchParams.set('missingKey', e?.extraInfo?.missingKey);
+    }
     return redirect(`${url.pathname}?${url.searchParams}`);
   }
 };
+
 export const createAndSendToMockbinAction: ActionFunction = async ({ request }) => {
   const patch = await request.json() as Partial<Request>;
   invariant(typeof patch.url === 'string', 'URL is required');

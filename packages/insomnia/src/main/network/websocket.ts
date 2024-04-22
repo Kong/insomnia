@@ -24,10 +24,9 @@ import type { WebSocketResponse } from '../../models/websocket-response';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
+import { filterClientCertificates } from '../../network/certificate';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
-import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
 import { invariant } from '../../utils/invariant';
-import { setDefaultProtocol } from '../../utils/url/protocol';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 
 export interface WebSocketConnection extends WebSocket {
@@ -118,7 +117,6 @@ const openWebSocketConnection = async (
   }
 
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
-  fs.mkdirSync(responsesDir, { recursive: true });
 
   const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
@@ -156,7 +154,7 @@ const openWebSocketConnection = async (
         headers.push(getBasicAuthHeader(username, password, encoding));
       }
       if (options.authentication.type === AUTH_API_KEY) {
-        const { key, value, addTo } = options.authentication;
+        const { key = '', value = '', addTo } = options.authentication;  // Ensure key is not undefined
         if (addTo === HEADER) {
           headers.push({ name: key, value: value });
         } else if (addTo === COOKIE) {
@@ -170,7 +168,7 @@ const openWebSocketConnection = async (
           url = joinUrlAndQueryString(options.url, qs);
         }
       }
-      if (options.authentication.type === AUTH_BEARER) {
+      if (options.authentication.type === AUTH_BEARER && options.authentication.token) {
         const { token, prefix } = options.authentication;
         headers.push(getBearerAuthHeader(token, prefix));
       }
@@ -183,7 +181,7 @@ const openWebSocketConnection = async (
     const start = performance.now();
 
     const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
-    const filteredClientCertificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'wss:'), options.url));
+    const filteredClientCertificates = filterClientCertificates(clientCertificates, options.url, 'wss:');
     const pemCertificates: string[] = [];
     const pemCertificateKeys: KeyObject[] = [];
     const pfxCertificates: PxfObject[] = [];

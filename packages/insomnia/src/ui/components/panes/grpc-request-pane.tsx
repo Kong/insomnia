@@ -104,7 +104,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
       try {
         const request = await getRenderedGrpcRequest({
           request: activeRequest,
-          environmentId,
+          environment: environmentId,
           purpose: RENDER_PURPOSE_SEND,
           skipBody: canClientStream(methodType),
         });
@@ -251,7 +251,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                         onClick={async () => {
                           const requestBody = await getRenderedGrpcRequestMessage({
                             request: activeRequest,
-                            environmentId,
+                            environment: environmentId,
                             purpose: RENDER_PURPOSE_SEND,
                           });
                           const preparedMessage = {

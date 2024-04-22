@@ -18,7 +18,7 @@ export interface BaseWebSocketRequest {
   url: string;
   metaSortKey: number;
   headers: RequestHeader[];
-  authentication: RequestAuthentication;
+  authentication: RequestAuthentication | {};
   parameters: RequestParameter[];
   pathParameters: RequestPathParameter[];
   settingEncodeUrl: boolean;

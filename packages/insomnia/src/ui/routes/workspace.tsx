@@ -1,7 +1,6 @@
 import React from 'react';
 import { LoaderFunction, Outlet } from 'react-router-dom';
 
-import { isLoggedIn } from '../../account/session';
 import { SortOrder } from '../../common/constants';
 import { database } from '../../common/database';
 import { fuzzyMatchAll } from '../../common/misc';
@@ -44,7 +43,7 @@ export interface WorkspaceLoaderData {
   baseEnvironment: Environment;
   subEnvironments: Environment[];
   activeApiSpec: ApiSpec | null;
-  activeMockServer: MockServer | null;
+  activeMockServer?: MockServer | null;
   clientCertificates: ClientCertificate[];
   caCertificate: CaCertificate | null;
   projects: Project[];
@@ -122,7 +121,13 @@ export const workspaceLoader: LoaderFunction = async ({
   const searchParams = new URL(request.url).searchParams;
   const filter = searchParams.get('filter');
   const sortOrder = searchParams.get('sortOrder') as SortOrder;
-  const sortFunction = sortMethodMap[sortOrder] || sortMethodMap['type-manual'];
+  const defaultSort = (a: Request | GrpcRequest | WebSocketRequest | RequestGroup, b: Request | GrpcRequest | WebSocketRequest | RequestGroup) => {
+    if (a.metaSortKey === b.metaSortKey) {
+      return a._id > b._id ? 1 : -1;
+    }
+    return a.metaSortKey < b.metaSortKey ? 1 : -1;
+  };
+  const sortFunction = sortMethodMap[sortOrder] || defaultSort;
 
   // first recursion to get all the folders ids in order to use nedb search by an array
   const flattenFoldersIntoList = async (id: string): Promise<string[]> => {
@@ -145,7 +150,6 @@ export const workspaceLoader: LoaderFunction = async ({
   const grpcRequestMetas = await database.find(models.grpcRequestMeta.type, { parentId: { $in: grpcReqs.map(r => r._id) } });
   const grpcAndRequestMetas = [...requestMetas, ...grpcRequestMetas] as (RequestMeta | GrpcRequestMeta)[];
   const requestGroupMetas = await database.find(models.requestGroupMeta.type, { parentId: { $in: listOfParentIds } }) as RequestGroupMeta[];
-
   // second recursion to build the tree
   const getCollectionTree = async ({
     parentId,
@@ -227,7 +231,8 @@ export const workspaceLoader: LoaderFunction = async ({
     return collection;
   }
 
-  if (isLoggedIn() && !gitRepository) {
+  const userSession = await models.userSession.getOrCreate();
+  if (userSession.id && !gitRepository) {
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);

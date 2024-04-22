@@ -1,7 +1,9 @@
 import clone from 'clone';
 import fs from 'fs';
+import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
 
+import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import {
   generateId,
@@ -18,22 +20,23 @@ import type { HeaderResult, ResponsePatch } from '../main/network/libcurl-promis
 import * as models from '../models';
 import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
+import { CookieJar } from '../models/cookie-jar';
+import { Environment } from '../models/environment';
 import type { Request, RequestAuthentication, RequestParameter } from '../models/request';
 import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { invariant } from '../utils/invariant';
-import { setDefaultProtocol } from '../utils/url/protocol';
 import {
   buildQueryStringFromParams,
   joinUrlAndQueryString,
   smartEncodeUrl,
 } from '../utils/url/querystring';
 import { getAuthHeader, getAuthQueryParams } from './authentication';
-import { cancellableCurlRequest } from './cancellation';
+import { cancellableCurlRequest, cancellableRunPreRequestScript } from './cancellation';
+import { filterClientCertificates } from './certificate';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
-import { urlMatchesCertHost } from './url-matches-cert-host';
 
 export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
@@ -65,28 +68,97 @@ export const fetchRequestData = async (requestId: string) => {
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const caCert = await models.caCertificate.findByParentId(workspaceId);
   const responseId = generateId('res');
-  const responsesDir = pathJoin(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
+  const responsesDir = pathJoin((process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
-export const tryToExecutePreRequestScript = async (request: Request, environmentId: string, timelinePath:string, responseId:string) => {
+export const tryToExecutePreRequestScript = async (
+  request: Request,
+  environment: Environment,
+  timelinePath: string,
+  responseId: string,
+  baseEnvironment: Environment,
+  clientCertificates: ClientCertificate[],
+  cookieJar: CookieJar,
+) => {
   if (!request.preRequestScript) {
-    return request;
+    return {
+      request,
+      environment: undefined,
+      baseEnvironment: undefined,
+    };
   }
+  const settings = await models.settings.get();
+
   try {
-    const output = await window.main.hiddenBrowserWindow.runPreRequestScript({ script: request.preRequestScript, context: { request, timelinePath } });
+    const timeout = settings.timeout || 5000;
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Timeout: Hidden browser window is not responding'));
+        // Add one extra second to ensure the hidden browser window has had a chance to return its timeout
+        // TODO: restart the hidden browser window
+      }, timeout + 1000);
+    });
+    const preRequestPromise = cancellableRunPreRequestScript({
+      script: request.preRequestScript,
+      context: {
+        request,
+        timelinePath,
+        timeout: settings.timeout,
+        // it inputs empty environment data when active environment is the base environment
+        // this is more deterministic and avoids that script accidently manipulates baseEnvironment instead of environment
+        environment: environment._id === baseEnvironment._id ? {} : (environment?.data || {}),
+        environmentName: environment._id === baseEnvironment._id ? '' : (environment?.name || ''),
+        baseEnvironment: baseEnvironment?.data || {},
+        baseEnvironmentName: baseEnvironment?.name || '',
+        clientCertificates,
+        settings,
+        cookieJar,
+      },
+    });
+    const output = await Promise.race([timeoutPromise, preRequestPromise]) as {
+      request: Request;
+      environment: Record<string, any>;
+      baseEnvironment: Record<string, any>;
+      settings: Settings;
+      clientCertificates: ClientCertificate[];
+      cookieJar: CookieJar;
+    };
     console.log('[network] Pre-request script succeeded', output);
-    return output.request;
+
+    const envPropertyOrder = orderedJSON.parse(
+      JSON.stringify(output.environment),
+      JSON_ORDER_PREFIX,
+      JSON_ORDER_SEPARATOR,
+    );
+    environment.data = output.environment;
+    environment.dataPropertyOrder = envPropertyOrder.map;
+
+    const baseEnvPropertyOrder = orderedJSON.parse(
+      JSON.stringify(output.baseEnvironment),
+      JSON_ORDER_PREFIX,
+      JSON_ORDER_SEPARATOR,
+    );
+    baseEnvironment.data = output.baseEnvironment;
+    baseEnvironment.dataPropertyOrder = baseEnvPropertyOrder.map;
+
+    return {
+      request: output.request,
+      environment,
+      baseEnvironment,
+      settings: output.settings,
+      clientCertificates: output.clientCertificates,
+      cookieJar: output.cookieJar,
+    };
   } catch (err) {
     await fs.promises.appendFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
 
     const requestId = request._id;
-    const settings = await models.settings.get();
     const responsePatch = {
       _id: responseId,
       parentId: requestId,
-      environmentId,
+      environemntId: environment._id,
       timelinePath,
       statusMessage: 'Error',
       error: err.message,
@@ -96,13 +168,23 @@ export const tryToExecutePreRequestScript = async (request: Request, environment
     return null;
   }
 };
-export const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
+
+export const tryToInterpolateRequest = async (
+  request: Request,
+  environment: string | Environment,
+  purpose?: RenderPurpose,
+  extraInfo?: ExtraRenderInfo,
+  baseEnvironment?: Environment,
+  ignoreUndefinedEnvVariable?: boolean,
+) => {
   try {
     return await getRenderedRequestAndContext({
       request: request,
-      environmentId,
+      environment,
+      baseEnvironment,
       purpose,
       extraInfo,
+      ignoreUndefinedEnvVariable,
     });
   } catch (err) {
     if ('type' in err && err.type === 'render') {
@@ -111,6 +193,7 @@ export const tryToInterpolateRequest = async (request: Request, environmentId: s
     throw new Error(`Failed to render request: ${request._id}`);
   }
 };
+
 export const tryToTransformRequestWithPlugins = async (renderResult: RequestAndContext) => {
   const { request, context } = renderResult;
   try {
@@ -129,8 +212,9 @@ export async function sendCurlAndWriteTimeline(
 ) {
   const requestId = renderedRequest._id;
   const timelineStrings: string[] = [];
+  const authentication = renderedRequest.authentication as RequestAuthentication;
 
-  const { finalUrl, socketPath } = transformUrl(renderedRequest.url, renderedRequest.parameters, renderedRequest.authentication, renderedRequest.settingEncodeUrl);
+  const { finalUrl, socketPath } = transformUrl(renderedRequest.url, renderedRequest.parameters, authentication, renderedRequest.settingEncodeUrl);
   timelineStrings.push(JSON.stringify({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() }) + '\n');
   timelineStrings.push(JSON.stringify({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() }) + '\n');
   timelineStrings.push(JSON.stringify({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() }) + '\n');
@@ -146,7 +230,7 @@ export async function sendCurlAndWriteTimeline(
     finalUrl,
     socketPath,
     settings,
-    certificates: clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url)),
+    certificates: filterClientCertificates(clientCertificates, renderedRequest.url, 'https:'),
     caCertficatePath: caCert?.disabled === false ? caCert.path : null,
     authHeader,
   };
@@ -337,24 +421,3 @@ async function _applyResponsePluginHooks(
   }
 
 }
-
-// export function storeTimeline(timeline: ResponseTimelineEntry[]): Promise<string> {
-//   const timelineStr = JSON.stringify(timeline, null, '\t');
-//   const timelineHash = uuidv4();
-//   const responsesDir = pathJoin(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'), 'responses');
-
-//   fs.mkdirSync(responsesDir, { recursive: true });
-
-//   const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
-//   if (process.type === 'renderer') {
-//     return window.main.writeFile({ path: timelinePath, content: timelineStr });
-//   }
-//   return new Promise<string>((resolve, reject) => {
-//     fs.writeFile(timelinePath, timelineStr, err => {
-//       if (err != null) {
-//         return reject(err);
-//       }
-//       resolve(timelinePath);
-//     });
-//   });
-// }

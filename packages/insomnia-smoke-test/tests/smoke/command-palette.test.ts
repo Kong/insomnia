@@ -41,6 +41,7 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
   await page.locator('body').press(requestSwitchKeyboardShortcut);
   await page.getByPlaceholder('Search and switch between').press('ArrowUp');
   await page.getByPlaceholder('Search and switch between').press('ArrowUp');
+  await page.getByPlaceholder('Search and switch between').press('ArrowUp');
   await page.getByPlaceholder('Search and switch between').press('Enter');
   await expect(page.getByTestId('workspace-context-dropdown').locator('span')).toContainText('E2E testing specification - swagger 2 1.0.0');
 });

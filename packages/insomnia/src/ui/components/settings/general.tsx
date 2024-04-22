@@ -1,6 +1,5 @@
 import React, { FC, Fragment } from 'react';
 
-import * as session from '../../../account/session';
 import {
   EditorKeyMap,
   isMac,
@@ -17,31 +16,18 @@ import { initNewOAuthSession } from '../../../network/o-auth-2/get-token';
 import { useRootLoaderData } from '../../routes/root';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
-import { Tooltip } from '../tooltip';
 import { BooleanSetting } from './boolean-setting';
 import { EnumSetting } from './enum-setting';
 import { MaskedSetting } from './masked-setting';
 import { NumberSetting } from './number-setting';
 import { TextSetting } from './text-setting';
 
-/**
- * We are attempting to move the app away from needing settings changes to restart the app.
- * For now, this component is a holdover until such a time as we are able to fix the underlying cases. (INS-1245)
- */
-const RestartTooltip: FC<{ message: string }> = ({ message }) => (
-  <Fragment>
-    {message}{' '}
-    <Tooltip message="Will restart the app" className="space-left">
-      <i className="fa fa-refresh super-duper-faint" />
-    </Tooltip>
-  </Fragment>
-);
-
 export const General: FC = () => {
   const {
     settings,
+    userSession,
   } = useRootLoaderData();
-  const isLoggedIn = session.isLoggedIn();
+  const isLoggedIn = Boolean(userSession.id);
 
   return (
     <div className="pad-bottom">
@@ -54,10 +40,10 @@ export const General: FC = () => {
           <BooleanSetting
             label="Use vertical layout"
             setting="forceVerticalLayout"
-            help="If checked, stack request and response panels vertically. Otherwise they will be side-by-side above 1200px."
+            help="If checked, stack request and response panels vertically. Otherwise they will be side-by-side above 880px."
           />
           <BooleanSetting
-            label={<RestartTooltip message="Show variable source and value" />}
+            label="Show variable source and value"
             help="If checked, reveals the environment variable source and value in the template tag. Otherwise, hover over the template tag to see the source and value."
             setting="showVariableSourceAndValue"
           />
@@ -74,7 +60,7 @@ export const General: FC = () => {
             />
           )}
           <BooleanSetting
-            label={<RestartTooltip message="Raw template syntax" />}
+            label="Raw template syntax"
             setting="nunjucksPowerUserMode"
           />
         </div>

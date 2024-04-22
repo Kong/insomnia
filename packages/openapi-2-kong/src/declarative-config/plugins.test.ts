@@ -172,6 +172,7 @@ describe('plugins', () => {
         const generated2 = generateRequestValidatorPlugin({
           plugin,
           operation: {
+            responses: {},
             parameters: [],
           },
           tags,
@@ -198,6 +199,7 @@ describe('plugins', () => {
           style: 'form',
         };
         const operation: OA3Operation = {
+          responses: {},
           parameters: [param],
         };
         const generated = generateRequestValidatorPlugin({ tags, operation });
@@ -218,6 +220,7 @@ describe('plugins', () => {
 
       it('should return default if operation parameter schema not defined on any parameters', async () => {
         const operation: OA3Operation = {
+          responses: {},
           parameters: [
             {
               in: 'query',
@@ -261,6 +264,7 @@ describe('plugins', () => {
           name: 'some_name',
         };
         const operation: OA3Operation = {
+          responses: {},
           parameters: [
             paramWithSchema,
             paramWithoutSchema,
@@ -311,8 +315,9 @@ describe('plugins', () => {
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
         };
-        const op1: OpenAPIV3.OperationObject = {};
+        const op1: OpenAPIV3.OperationObject = { responses: {} };
         const op2: OpenAPIV3.OperationObject = {
+          responses: {},
           requestBody: {
             $ref: '#/components/non-existent',
           },
@@ -330,6 +335,7 @@ describe('plugins', () => {
 
       it('should add non-json media types to allowed content types and not add body schema', async () => {
         const operation: OA3Operation = {
+          responses: {},
           requestBody: {
             content: {
               'application/xml': {},
@@ -365,6 +371,7 @@ describe('plugins', () => {
           },
         };
         const operation: OpenAPIV3.OperationObject = {
+          responses: {},
           requestBody: {
             content: {
               'application/xml': {
@@ -385,7 +392,7 @@ describe('plugins', () => {
       });
 
       it('should default body_schema if no schema is defined or generated', async () => {
-        const generated = generateRequestValidatorPlugin({ tags, operation: {} });
+        const generated = generateRequestValidatorPlugin({ tags, operation: { responses: {} } });
         expect(generated.config).toStrictEqual({
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
@@ -395,6 +402,7 @@ describe('plugins', () => {
     describe('body_schema generateBodyOptions FTI-3278', () => {
       it('should keep to properties[].type unchanged nullable is not set', async () => {
         const generated = generateBodyOptions({
+          responses: {},
           requestBody: {
             content: {
               'application/json': {
@@ -413,6 +421,7 @@ describe('plugins', () => {
       });
       it('should keep to properties[].type unchanged nullable is false', async () => {
         const generated = generateBodyOptions({
+          responses: {},
           requestBody: {
             content: {
               'application/json': {
@@ -432,6 +441,7 @@ describe('plugins', () => {
       });
       it('should append null to properties[].type if nullable is true', async () => {
         const generated = generateBodyOptions({
+          responses: {},
           requestBody: {
             content: {
               'application/json': {

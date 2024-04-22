@@ -49,6 +49,7 @@ test.describe('Environment Editor', async () => {
 
     // Send a request check variables defaulted to base env since new env is empty
     await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
+    // await page.waitForTimeout(60000);
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByRole('tab', { name: 'Timeline' }).click();
     await page.getByText('subenvB0').click();
@@ -73,7 +74,8 @@ test.describe('Environment Editor', async () => {
 
     // Add number variable to request body
     await page.getByRole('tab', { name: 'Plain' }).click();
-    await page.locator('pre').filter({ hasText: '_.exampleObject.anotherNumber' }).click();
+    await page.locator('pre').filter({ hasText: '_.exampleObject.anotherNumber' }).press('Enter');
+
     await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
     await page.getByTestId('CodeEditor').getByRole('textbox').press('Control+ ');
     await page.getByText('_.testNumber').click();

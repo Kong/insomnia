@@ -621,9 +621,9 @@ describe('index', () => {
         ...pluginKeyAuth,
         paths: {
           '/path': {
-            get: {},
-            put: { ...pluginKeyAuth },
-            post: { ...pluginKeyAuth, ...pluginDummy },
+            get: { responses: {} },
+            put: { responses: {}, ...pluginKeyAuth },
+            post: { responses: {}, ...pluginKeyAuth, ...pluginDummy },
           },
         },
       });

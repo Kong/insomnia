@@ -47,12 +47,14 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
     content.query = query;
   }
 
-  if (operationName) {
-    content.operationName = operationName;
+  // The below items are optional; should be set to undefined if present and empty
+  const isString = (value?: string): value is string => typeof value === 'string' || (value as unknown) instanceof String;
+  if (isString(operationName)) {
+    content.operationName = operationName.length ? operationName : undefined;
   }
 
-  if (variables) {
-    content.variables = variables;
+  if (isString(variables)) {
+    content.variables = variables.length ? variables : undefined;
   }
 
   return JSON.stringify(content);
@@ -260,7 +262,7 @@ export const GraphQLEditor: FC<Props> = ({
   const { editorIndentWithTabs, editorIndentSize } = settings;
   const beautifyRequestBody = async () => {
     const { body } = state;
-    const prettyQuery = (await import('prettier')).format(body.query, {
+    const prettyQuery = await (await import('prettier')).format(body.query, {
       parser: 'graphql',
       useTabs: editorIndentWithTabs,
       tabWidth: editorIndentSize,
@@ -284,9 +286,11 @@ export const GraphQLEditor: FC<Props> = ({
     try {
       const content = getGraphQLContent(state.body, undefined, operationName, variablesInput);
       onChange(content);
+
       setState(state => ({
         ...state,
-        body: { ...state.body, variablesInput },
+        // If variables are empty, remove them from the body
+        body: { ...state.body, variables: variablesInput.length ? variablesInput : undefined },
         variablesSyntaxError: '',
       }));
     } catch (err) {
@@ -444,7 +448,6 @@ export const GraphQLEditor: FC<Props> = ({
   if (schema) {
     graphqlOptions = {
       hintOptions: {
-        schema,
         completeSingle: false,
       },
       infoOptions: {

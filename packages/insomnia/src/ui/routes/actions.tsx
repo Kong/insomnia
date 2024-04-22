@@ -3,7 +3,6 @@ import { generate, runTests, type Test } from 'insomnia-testing';
 import path from 'path';
 import { ActionFunction, redirect } from 'react-router-dom';
 
-import * as session from '../../account/session';
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
 import { ACTIVITY_DEBUG, getAIServiceURL } from '../../common/constants';
 import { database } from '../../common/database';
@@ -35,7 +34,8 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
   const projectType = formData.get('type');
   invariant(projectType === 'local' || projectType === 'remote', 'Project type is required');
 
-  const sessionId = session.getCurrentSessionId();
+  const user = await models.userSession.getOrCreate();
+  const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to create a project');
 
   if (projectType === 'local') {
@@ -67,6 +67,10 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
       let error = 'An unexpected error occurred while creating the project. Please try again.';
       if (newCloudProject.error === 'FORBIDDEN' || newCloudProject.error === 'NEEDS_TO_UPGRADE') {
         error = newCloudProject.error;
+      }
+
+      if (newCloudProject.error === 'PROJECT_STORAGE_RESTRICTION') {
+        error = 'The owner of the organization allows only Local Vault project creation, please try again.';
       }
 
       return {
@@ -109,7 +113,8 @@ export const updateProjectAction: ActionFunction = async ({
 
   invariant(project, 'Project not found');
 
-  const sessionId = session.getCurrentSessionId();
+  const user = await models.userSession.getOrCreate();
+  const sessionId = user.id;
 
   try {
     // If its a cloud project, and we are renaming, then patch
@@ -207,7 +212,8 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  const sessionId = session.getCurrentSessionId();
+  const user = await models.userSession.getOrCreate();
+  const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to delete a project');
 
   try {
@@ -293,9 +299,18 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   });
 
   if (scope === 'mock-server') {
-    // create a mock server under the workspace with the same name
-    await models.mockServer.getOrCreateForParentId(workspace._id, { name });
-    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
+    const mockServerType = formData.get('mockServerType');
+    invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
+    if (mockServerType === 'cloud') {
+      await models.mockServer.getOrCreateForParentId(workspace._id, { name, useInsomniaCloud: true });
+      return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
+    }
+    if (mockServerType === 'self-hosted') {
+      const mockServerUrl = formData.get('mockServerUrl');
+      invariant(typeof mockServerUrl === 'string', 'Mock Server URL is required');
+      await models.mockServer.getOrCreateForParentId(workspace._id, { name, useInsomniaCloud: false, url: mockServerUrl });
+      return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
+    }
   }
 
   if (scope === 'design') {
@@ -308,7 +323,9 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
   await database.flushChanges(flushId);
-  if (session.isLoggedIn() && !workspaceMeta.gitRepositoryId) {
+
+  const { id } = await models.userSession.getOrCreate();
+  if (id && !workspaceMeta.gitRepositoryId) {
     const vcs = VCSInstance();
     await initializeLocalBackendProjectAndMarkForSync({
       vcs,
@@ -404,8 +421,9 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
   await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
 
   try {
+    const { id } = await models.userSession.getOrCreate();
     // Mark for sync if logged in and in the expected project
-    if (session.isLoggedIn()) {
+    if (id) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs: vcs.newInstance(),
@@ -832,12 +850,15 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
           throw new Error('Request not found');
         }
 
+        const user = await models.userSession.getOrCreate();
+        const sessionId = user.id;
+
         const methodInfo = resolveComponentSchemaRefs(spec, getMethodInfo(request));
         const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
           method: 'POST',
           origin: getAIServiceURL(),
           path: '/v1/generate-test',
-          sessionId: session.getCurrentSessionId(),
+          sessionId,
           data: {
             teamId: organizationId,
             request: requests.find(r => r._id === test.requestId),
@@ -913,12 +934,14 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
 
   async function generateTests() {
     async function generateTest(test: Partial<UnitTest>) {
+      const user = await models.userSession.getOrCreate();
+      const sessionId = user.id;
       try {
         const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
           method: 'POST',
           origin: getAIServiceURL(),
           path: '/v1/generate-test',
-          sessionId: session.getCurrentSessionId(),
+          sessionId,
           data: {
             teamId: organizationId,
             request: requests.find(r => r._id === test.requestId),
@@ -958,11 +981,13 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
   invariant(typeof organizationId === 'string', 'Organization ID is required');
 
   try {
+    const user = await models.userSession.getOrCreate();
+    const sessionId = user.id;
     const response = await window.main.insomniaFetch<{ enabled: boolean }>({
       method: 'POST',
       origin: getAIServiceURL(),
       path: '/v1/access',
-      sessionId: session.getCurrentSessionId(),
+      sessionId,
       data: {
         teamId: organizationId,
       },
@@ -1199,9 +1224,26 @@ export const createMockRouteAction: ActionFunction = async ({ request, params })
 
   const patch = await request.json();
   invariant(typeof patch.name === 'string', 'Name is required');
-  invariant(typeof patch.parentId === 'string', 'parentId is required');
+  // TODO: remove this hack which enables a mock server to be created alongside a route
+  if (patch.mockServerName) {
+    const activeWorkspace = await models.workspace.getById(workspaceId);
+    invariant(activeWorkspace, 'Active workspace not found');
+    const workspace = await models.workspace.create({
+      name: activeWorkspace.name,
+      scope: 'mock-server',
+      parentId: projectId,
+    });
+    invariant(workspace, 'Workspace not found');
+    // create a mock server under the workspace with the same name
+    const newServer = await models.mockServer.getOrCreateForParentId(workspace._id, { name: activeWorkspace.name });
+    // TODO: filterout the mockServerName from the patch, or use an alternate method to create new workspace and server
+    const mockRoute = await models.mockRoute.create({ ...patch, parentId: newServer._id });
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${newServer.parentId}/mock-server/mock-route/${mockRoute._id}`);
+  }
+  const mockServer = await models.mockServer.getById(patch.parentId);
+  invariant(mockServer, 'Mock server not found');
   const mockRoute = await models.mockRoute.create(patch);
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${mockRoute._id}`);
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${mockServer.parentId}/mock-server/mock-route/${mockRoute._id}`);
 };
 export const updateMockRouteAction: ActionFunction = async ({ request, params }) => {
   const { mockRouteId } = params;

@@ -2,7 +2,10 @@ import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
 import { KeyCombination } from './settings';
 
-const env = process['env'];
+// Vite is filtering out process.env variables that are not prefixed with VITE_.
+const ENV = 'env';
+
+const env = process[ENV];
 
 // App Stuff
 export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
@@ -25,21 +28,7 @@ export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () => appConfig.segmentWriteKeys[(isDevelopment() || env.PLAYWRIGHT) ? 'development' : 'production'];
 export const getSentryDsn = () => appConfig.sentryDsn;
 export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
-export type AuthType =
-  | 'none'
-  | 'apikey'
-  | 'oauth2'
-  | 'oauth1'
-  | 'basic'
-  | 'digest'
-  | 'bearer'
-  | 'ntlm'
-  | 'hawk'
-  | 'iam'
-  | 'netrc'
-  | 'asap'
-  | 'sha256'
-  | 'sha1';
+
 export const getBrowserUserAgent = () => encodeURIComponent(
   String(window.navigator.userAgent)
     .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
@@ -64,7 +53,6 @@ export const getClientString = () => `${getAppEnvironment()}::${getAppPlatform()
 export const changelogUrl = () => appConfig.changelogUrl + '#' + version;
 
 // Global Stuff
-export const DB_PERSIST_INTERVAL = 1000 * 60 * 30; // Compact every once in a while
 export const DEBOUNCE_MILLIS = 100;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 
@@ -82,7 +70,7 @@ export const STATUS_CODE_PLUGIN_ERROR = -222;
 export const LARGE_RESPONSE_MB = 5;
 export const HUGE_RESPONSE_MB = 100;
 export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ\-_.]+[/\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ.\-+=:\][@%^*&!#?;$~'(),]*/;
-export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
+export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 24;
 
 // Available editor key map
 export enum EditorKeyMap {
@@ -114,7 +102,7 @@ export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) =
       }
 
       if (isWindows()) {
-        // Note: Although this unicode character for the Windows doesn't exist, the the Unicode character U+229E ⊞ SQUARED PLUS is very commonly used for this purpose. For example, Wikipedia uses it as a simulation of the windows logo.  Though, Windows itself uses `Windows` or `Win`, so we'll go with `Win` here.
+        // Note: Although this unicode character for the Windows doesn't exist, the Unicode character U+229E ⊞ SQUARED PLUS is very commonly used for this purpose. For example, Wikipedia uses it as a simulation of the windows logo.  Though, Windows itself uses `Windows` or `Win`, so we'll go with `Win` here.
         // see: https://en.wikipedia.org/wiki/Windows_key
         return 'Win';
       }
@@ -155,17 +143,6 @@ export const PLUGIN_HUB_BASE = 'https://insomnia.rest/plugins';
 export const NPM_PACKAGE_BASE = 'https://www.npmjs.com/package';
 
 // UI Stuf
-export const MAX_SIDEBAR_REMS = 45;
-export const MIN_SIDEBAR_REMS = 0.75;
-export const COLLAPSE_SIDEBAR_REMS = 3;
-export const SIDEBAR_SKINNY_REMS = 10;
-export const MAX_PANE_WIDTH = 0.99;
-export const MIN_PANE_WIDTH = 0.01;
-export const MAX_PANE_HEIGHT = 0.99;
-export const MIN_PANE_HEIGHT = 0.01;
-export const DEFAULT_PANE_WIDTH = 0.5;
-export const DEFAULT_PANE_HEIGHT = 0.5;
-export const DEFAULT_SIDEBAR_WIDTH = 19;
 export const MIN_INTERFACE_FONT_SIZE = 8;
 export const MAX_INTERFACE_FONT_SIZE = 24;
 export const MIN_EDITOR_FONT_SIZE = 8;
