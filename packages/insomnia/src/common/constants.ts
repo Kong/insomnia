@@ -375,7 +375,20 @@ export function getPreviewModeName(previewMode: PreviewMode, useLong = false) {
     return '';
   }
 }
+export function getMimeTypeFromContentType(contentType: string) {
+  // Check if the Content-Type header is provided
+  if (!contentType) {
+    return null;
+  }
 
+  // Split the Content-Type header to separate MIME type from parameters
+  const [mimePart] = contentType.split(';');
+
+  // Trim any extra spaces
+  const mimeType = mimePart.trim();
+
+  return mimeType;
+}
 export function getContentTypeName(contentType?: string | null, useLong = false) {
   if (typeof contentType !== 'string') {
     return '';

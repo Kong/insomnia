@@ -7,9 +7,9 @@ import {
   useRouteLoaderData,
 } from 'react-router-dom';
 
-import { getContentTypeName } from '../../../common/constants';
+import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
 import { invariant } from '../../../utils/invariant';
-import { useMockRoutePatcher } from '../../routes/mock-route';
+import { isInMockContentTypeList, useMockRoutePatcher } from '../../routes/mock-route';
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { HelpTooltip } from '../help-tooltip';
@@ -32,13 +32,15 @@ export const MockResponseExtractor = () => {
   const fetcher = useFetcher();
   const [selectedMockServer, setSelectedMockServer] = useState('');
   const [selectedMockRoute, setSelectedMockRoute] = useState('');
+  const maybeMimeType = activeResponse && getMimeTypeFromContentType(activeResponse.contentType);
+  const mimeType = maybeMimeType && isInMockContentTypeList(maybeMimeType) ? maybeMimeType : 'text/plain';
   return (
     <div className="px-32 h-full flex flex-col justify-center">
       <div className="flex place-content-center text-9xl pb-2 text-[--hl-md]">
         <Icon icon="cube" />
       </div>
       <div className="flex place-content-center pb-2">
-        Transform this response to a new mock route or overwrite an existing one.
+        Transform this {getContentTypeName(activeResponse?.contentType) || ''} response to a new mock route or overwrite an existing one.
       </div>
       <form
         onSubmit={async e => {
@@ -50,7 +52,7 @@ export const MockResponseExtractor = () => {
 
               patchMockRoute(selectedMockRoute, {
                 body: body.toString(),
-                mimeType: getContentTypeName(activeResponse.contentType),
+                mimeType,
                 statusCode: activeResponse.statusCode,
                 headers: activeResponse.headers,
               });
@@ -77,7 +79,7 @@ export const MockResponseExtractor = () => {
                   JSON.stringify({
                     name: name,
                     body: body.toString(),
-                    mimeType: getContentTypeName(activeResponse.contentType),
+                    mimeType,
                     statusCode: activeResponse.statusCode,
                     headers: activeResponse.headers,
                     mockServerName: activeWorkspace.name,
@@ -114,7 +116,7 @@ export const MockResponseExtractor = () => {
                     name: name,
                     parentId: selectedMockServer,
                     body: body.toString(),
-                    mimeType: getContentTypeName(activeResponse.contentType),
+                    mimeType,
                     statusCode: activeResponse.statusCode,
                     headers: activeResponse.headers,
                   }),
