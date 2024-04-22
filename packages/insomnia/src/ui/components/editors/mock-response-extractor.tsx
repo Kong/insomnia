@@ -7,8 +7,9 @@ import {
   useRouteLoaderData,
 } from 'react-router-dom';
 
+import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
 import { invariant } from '../../../utils/invariant';
-import { useMockRoutePatcher } from '../../routes/mock-route';
+import { isInMockContentTypeList, useMockRoutePatcher } from '../../routes/mock-route';
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { HelpTooltip } from '../help-tooltip';
@@ -31,13 +32,15 @@ export const MockResponseExtractor = () => {
   const fetcher = useFetcher();
   const [selectedMockServer, setSelectedMockServer] = useState('');
   const [selectedMockRoute, setSelectedMockRoute] = useState('');
+  const maybeMimeType = activeResponse && getMimeTypeFromContentType(activeResponse.contentType);
+  const mimeType = maybeMimeType && isInMockContentTypeList(maybeMimeType) ? maybeMimeType : 'text/plain';
   return (
     <div className="px-32 h-full flex flex-col justify-center">
       <div className="flex place-content-center text-9xl pb-2 text-[--hl-md]">
         <Icon icon="cube" />
       </div>
       <div className="flex place-content-center pb-2">
-        Copy this response to a new mock route or overwrite an existing one.
+        Transform this {getContentTypeName(activeResponse?.contentType) || ''} response to a new mock route or overwrite an existing one.
       </div>
       <form
         onSubmit={async e => {
@@ -49,7 +52,7 @@ export const MockResponseExtractor = () => {
 
               patchMockRoute(selectedMockRoute, {
                 body: body.toString(),
-                mimeType: activeResponse.contentType,
+                mimeType,
                 statusCode: activeResponse.statusCode,
                 headers: activeResponse.headers,
               });
@@ -76,7 +79,7 @@ export const MockResponseExtractor = () => {
                   JSON.stringify({
                     name: name,
                     body: body.toString(),
-                    mimeType: activeResponse.contentType,
+                    mimeType,
                     statusCode: activeResponse.statusCode,
                     headers: activeResponse.headers,
                     mockServerName: activeWorkspace.name,
@@ -113,7 +116,7 @@ export const MockResponseExtractor = () => {
                     name: name,
                     parentId: selectedMockServer,
                     body: body.toString(),
-                    mimeType: activeResponse.contentType,
+                    mimeType,
                     statusCode: activeResponse.statusCode,
                     headers: activeResponse.headers,
                   }),
@@ -141,6 +144,7 @@ export const MockResponseExtractor = () => {
                 onChange={event => {
                   const selected = event.currentTarget.value;
                   setSelectedMockServer(selected);
+                  setSelectedMockRoute('');
                 }}
               >
                 <option value="">-- Create new... --</option>
@@ -184,7 +188,7 @@ export const MockResponseExtractor = () => {
         <div className="flex mt-2">
           <Button
             type="submit"
-            className="mr-2 hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+            className="mr-2 hover:no-underline bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] aria-pressed:bg-opacity-80 focus:ring-[--hl-md] transition-colors rounded-sm"
           >
             {selectedMockRoute ? 'Overwrite' : 'Create'}
           </Button>
@@ -194,9 +198,9 @@ export const MockResponseExtractor = () => {
               const mockWorkspaceId = mockServerAndRoutes.find(s => s._id === selectedMockServer)?.parentId;
               navigate(`/organization/${organizationId}/project/${projectId}/workspace/${mockWorkspaceId}/mock-server/mock-route/${selectedMockRoute}`);
             }}
-            className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+            className="flex items-center justify-center py-2 px-3 gap-2 bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           >
-            Go to route
+            Go to mock
           </Button>
         </div>
       </form>

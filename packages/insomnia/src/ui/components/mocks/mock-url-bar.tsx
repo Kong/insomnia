@@ -4,7 +4,7 @@ import { useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
-import { getMockServiceURL, HTTP_METHODS } from '../../../common/constants';
+import { getMockServiceBinURL, HTTP_METHODS } from '../../../common/constants';
 import * as models from '../../../models';
 import { useTimeoutWhen } from '../../hooks/useTimeoutWhen';
 import { MockRouteLoaderData, useMockRoutePatcher } from '../../routes/mock-route';
@@ -31,7 +31,6 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
   const { hotKeyRegistry } = settings;
   const patchMockRoute = useMockRoutePatcher();
   const [pathInput, setPathInput] = useState<string>(mockRoute.name);
-  const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditorHandle>(null);
@@ -84,11 +83,10 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
       <Button
         className="bg-[--hl-sm] px-3 rounded-sm"
         onPress={() => {
-          const compoundId = mockRoute.parentId + pathInput;
           showModal(AlertModal, {
             title: 'Full URL',
-            message: mockbinUrl + '/bin/' + compoundId,
-            onConfirm: () => window.clipboard.writeText(mockbinUrl + '/bin/' + compoundId),
+            message: getMockServiceBinURL(mockRoute.parentId, pathInput, mockServer.useInsomniaCloud ? undefined : mockServer.url),
+            onConfirm: () => window.clipboard.writeText(getMockServiceBinURL(mockRoute.parentId, pathInput, mockServer.useInsomniaCloud ? undefined : mockServer.url)),
             addCancel: true,
             okLabel: 'Copy',
           });
@@ -105,8 +103,7 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
       <Button
         className="bg-[--hl-sm] px-3 rounded-sm aria-pressed:bg-[--hl-xs] data-[pressed]:bg-[--hl-xs]"
         onPress={() => {
-          const compoundId = mockRoute.parentId + pathInput;
-          window.clipboard.writeText(mockbinUrl + '/bin/' + compoundId);
+          window.clipboard.writeText(getMockServiceBinURL(mockRoute.parentId, pathInput, mockServer.useInsomniaCloud ? undefined : mockServer.url));
         }}
       >
         <Icon icon="copy" />

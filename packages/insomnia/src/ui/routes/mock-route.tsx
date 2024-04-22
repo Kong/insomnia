@@ -2,7 +2,7 @@ import * as Har from 'har-format';
 import React from 'react';
 import { LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TYPE_YAML, contentTypesMap, getMockServiceURL, RESPONSE_CODE_REASONS } from '../../common/constants';
+import { CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TYPE_YAML, contentTypesMap, getMockServiceURL, RESPONSE_CODE_REASONS } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { getResponseCookiesFromHeaders } from '../../common/har';
 import * as models from '../../models';
@@ -58,7 +58,10 @@ const mockContentTypes = [
   CONTENT_TYPE_JSON,
   CONTENT_TYPE_XML,
   CONTENT_TYPE_YAML,
+  CONTENT_TYPE_OTHER,
 ];
+export const isInMockContentTypeList = (contentType: string): boolean => Boolean(contentType && mockContentTypes.includes(contentType));
+
 // mockbin expect a HAR response structure
 export const mockRouteToHar = ({ statusCode, statusText, mimeType, headersArray, body }: { statusCode: number; statusText: string; mimeType: string; headersArray: RequestHeader[]; body: string }): Har.Response => {
   const validHeaders = headersArray.filter(({ name }) => !!name);
@@ -221,7 +224,7 @@ export const MockRouteRoute = () => {
               aria-label='Change Body Type'
               triggerButton={
                 <DropdownButton>
-                  {mockRoute.mimeType ? 'Mock ' + contentTypesMap[mockRoute.mimeType]?.[0] : 'Response Body'}
+                  {mockRoute.mimeType ? 'Mock ' + contentTypesMap[mockRoute.mimeType]?.[0] : 'Mock Body'}
                   <i className="fa fa-caret-down space-left" />
                 </DropdownButton>
               }
