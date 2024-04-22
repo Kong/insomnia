@@ -632,7 +632,7 @@ const OrganizationRoute = () => {
               </Button>
             </div>
           ) : null}
-          {isOrganizationSidebarOpen && <div className={`[grid-area:Navbar] ${isOrganizationSidebarOpen ? '' : 'hidden'}`}>
+          {isOrganizationSidebarOpen && <div className={`[grid-area:Navbar] overflow-hidden ${isOrganizationSidebarOpen ? '' : 'hidden'}`}>
             <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
               {organizations.map(organization => (
                 <TooltipTrigger key={organization.id}>
