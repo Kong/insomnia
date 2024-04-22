@@ -1,9 +1,34 @@
-import { Call, ClientDuplexStream, ClientReadableStream, credentials, makeGenericClientConstructor, Metadata, ServiceError, status, StatusObject } from '@grpc/grpc-js';
+import {
+  FileDescriptorSet as ProtobufEsFileDescriptorSet,
+  MethodIdempotency,
+  MethodKind,
+  proto3,
+} from '@bufbuild/protobuf';
+import { Code, ConnectError, createPromiseClient } from '@connectrpc/connect';
+import { createConnectTransport } from '@connectrpc/connect-node';
+import {
+  Call,
+  ClientDuplexStream,
+  ClientReadableStream,
+  credentials,
+  makeGenericClientConstructor,
+  Metadata,
+  ServiceError,
+  status,
+  StatusObject,
+} from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
-import { AnyDefinition, EnumTypeDefinition, MessageTypeDefinition, PackageDefinition, ServiceDefinition } from '@grpc/proto-loader';
+import {
+  AnyDefinition,
+  EnumTypeDefinition,
+  MessageTypeDefinition,
+  PackageDefinition,
+  ServiceDefinition,
+} from '@grpc/proto-loader';
 import electron, { ipcMain, IpcMainEvent } from 'electron';
 import * as grpcReflection from 'grpc-reflection-js';
 
+import { version } from '../../../package.json';
 import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import * as models from '../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
@@ -13,6 +38,7 @@ import { invariant } from '../../utils/invariant';
 import { mockRequestMethods } from './automock';
 
 const grpcCalls = new Map<string, Call>();
+
 export interface GrpcIpcRequestParams {
   request: RenderedGrpcRequest;
 }
@@ -21,6 +47,7 @@ export interface GrpcIpcMessageParams {
   requestId: string;
   body: RenderedGrpcRequestBody;
 }
+
 export interface gRPCBridgeAPI {
   start: (options: GrpcIpcRequestParams) => void;
   sendMessage: (options: GrpcIpcMessageParams) => void;
@@ -30,6 +57,7 @@ export interface gRPCBridgeAPI {
   loadMethodsFromReflection: typeof loadMethodsFromReflection;
   closeAll: typeof closeAll;
 }
+
 export function registergRPCHandlers() {
   ipcMain.on('grpc.start', start);
   ipcMain.on('grpc.sendMessage', sendMessage);
@@ -39,6 +67,7 @@ export function registergRPCHandlers() {
   ipcMain.handle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
   ipcMain.handle('grpc.loadMethodsFromReflection', (_, requestId) => loadMethodsFromReflection(requestId));
 }
+
 const grpcOptions = {
   keepCase: true,
   longs: String,
@@ -67,6 +96,7 @@ const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
     fullPath: method.path,
   }));
 };
+
 interface MethodDefs {
   path: string;
   requestStream: boolean;
@@ -75,10 +105,109 @@ interface MethodDefs {
   responseDeserialize: (value: Buffer) => any;
   example?: Record<string, any>;
 }
-const getMethodsFromReflection = async (host: string, metadata: GrpcRequestHeader[]): Promise<MethodDefs[]> => {
+
+const getMethodsFromReflectionServer = async (
+  reflectionApi: GrpcRequest['reflectionApi']
+): Promise<MethodDefs[]> => {
+  const { url, module, apiKey } = reflectionApi;
+  const GetFileDescriptorSetRequest = proto3.makeMessageType(
+    'buf.reflect.v1beta1.GetFileDescriptorSetRequest',
+    () => [
+      { no: 1, name: 'module', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+      { no: 2, name: 'version', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+      {
+        no: 3,
+        name: 'symbols',
+        kind: 'scalar',
+        T: 9 /* ScalarType.STRING */,
+        repeated: true,
+      },
+    ]
+  );
+  const GetFileDescriptorSetResponse = proto3.makeMessageType(
+    'buf.reflect.v1beta1.GetFileDescriptorSetResponse',
+    () => [
+      {
+        no: 1,
+        name: 'file_descriptor_set',
+        kind: 'message',
+        T: ProtobufEsFileDescriptorSet,
+      },
+      { no: 2, name: 'version', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    ]
+  );
+  const FileDescriptorSetService = {
+    typeName: 'buf.reflect.v1beta1.FileDescriptorSetService',
+    methods: {
+      getFileDescriptorSet: {
+        name: 'GetFileDescriptorSet',
+        I: GetFileDescriptorSetRequest,
+        O: GetFileDescriptorSetResponse,
+        kind: MethodKind.Unary,
+        idempotency: MethodIdempotency.NoSideEffects,
+      },
+    },
+  } as const;
+  const transport = createConnectTransport({
+    baseUrl: url,
+    httpVersion: '1.1',
+  });
+  const client = createPromiseClient(FileDescriptorSetService, transport);
+  const headers: HeadersInit = {
+    'User-Agent': `insomnia/${version}`,
+    ...(apiKey === '' ? {} : { Authorization: `Bearer ${apiKey}` }),
+  };
+  try {
+    const res = await client.getFileDescriptorSet(
+      {
+        module,
+      },
+      {
+        headers,
+      }
+    );
+    const methodDefs: MethodDefs[] = [];
+    if (res.fileDescriptorSet === undefined) {
+      return [];
+    }
+    const packageDefinition = protoLoader.loadFileDescriptorSetFromBuffer(
+      new Buffer(res.fileDescriptorSet.toBinary())
+    );
+    for (const definition of Object.values(packageDefinition)) {
+      const serviceDefinition = asServiceDefinition(definition);
+      if (serviceDefinition === null) {
+        continue;
+      }
+      const serviceMethods = Object.values(serviceDefinition);
+      methodDefs.push(...serviceMethods);
+    }
+    return methodDefs;
+  } catch (error) {
+    const connectError = ConnectError.from(error);
+    switch (connectError.code) {
+      case Code.Unauthenticated:
+        throw new Error('Invalid reflection server api key');
+      case Code.NotFound:
+        throw new Error(
+          "The reflection server api key doesn't have access to the module or the module does not exists"
+        );
+      default:
+        throw error;
+    }
+  }
+};
+const getMethodsFromReflection = async (
+  host: string,
+  metadata: GrpcRequestHeader[],
+  reflectionApi: GrpcRequest['reflectionApi']
+): Promise<MethodDefs[]> => {
+  if (reflectionApi.enabled) {
+    return getMethodsFromReflectionServer(reflectionApi);
+  }
   try {
     const { url, enableTls } = parseGrpcUrl(host);
-    const client = new grpcReflection.Client(url,
+    const client = new grpcReflection.Client(
+      url,
       enableTls ? credentials.createSsl() : credentials.createInsecure(),
       grpcOptions,
       filterDisabledMetaData(metadata)
@@ -89,15 +218,25 @@ const getMethodsFromReflection = async (host: string, metadata: GrpcRequestHeade
       const fullService = fileContainingSymbol.lookupService(service);
       const mockedRequestMethods = mockRequestMethods(fullService);
       const descriptorMessage = fileContainingSymbol.toDescriptor('proto3');
-      const packageDefinition = protoLoader.loadFileDescriptorSetFromObject(descriptorMessage, {});
+      const packageDefinition = protoLoader.loadFileDescriptorSetFromObject(
+        descriptorMessage,
+        {}
+      );
       const tryToGetMethods = () => {
         try {
           console.log('[grpc] loading service from reflection:', service);
-          const serviceDefinition = asServiceDefinition(packageDefinition[service]);
-          invariant(serviceDefinition, `'${service}' was not a valid ServiceDefinition`);
+          const serviceDefinition = asServiceDefinition(
+            packageDefinition[service]
+          );
+          invariant(
+            serviceDefinition,
+            `'${service}' was not a valid ServiceDefinition`
+          );
           const serviceMethods = Object.values(serviceDefinition);
           return serviceMethods.map(m => {
-            const methodName = Object.keys(mockedRequestMethods).find(name => m.path.endsWith(`/${name}`));
+            const methodName = Object.keys(mockedRequestMethods).find(name =>
+              m.path.endsWith(`/${name}`)
+            );
             if (!methodName) {
               return m;
             }
@@ -119,21 +258,34 @@ const getMethodsFromReflection = async (host: string, metadata: GrpcRequestHeade
     throw error;
   }
 };
-export const loadMethodsFromReflection = async (options: { url: string; metadata: GrpcRequestHeader[] }): Promise<GrpcMethodInfo[]> => {
+export const loadMethodsFromReflection = async (options: {
+  url: string;
+  metadata: GrpcRequestHeader[];
+  reflectionApi: GrpcRequest['reflectionApi'];
+}): Promise<GrpcMethodInfo[]> => {
   invariant(options.url, 'gRPC request url not provided');
-  const methods = await getMethodsFromReflection(options.url, options.metadata);
+  const methods = await getMethodsFromReflection(
+    options.url,
+    options.metadata,
+    options.reflectionApi
+  );
   return methods.map(method => ({
     type: getMethodType(method),
     fullPath: method.path,
     example: method.example,
   }));
 };
+
 export interface GrpcMethodInfo {
   type: GrpcMethodType;
   fullPath: string;
   example?: Record<string, any>;
 }
-export const getMethodType = ({ requestStream, responseStream }: any): GrpcMethodType => {
+
+export const getMethodType = ({
+  requestStream,
+  responseStream,
+}: any): GrpcMethodType => {
   if (requestStream && responseStream) {
     return 'bidi';
   }
@@ -146,16 +298,25 @@ export const getMethodType = ({ requestStream, responseStream }: any): GrpcMetho
   return 'unary';
 };
 
-export const getSelectedMethod = async (request: GrpcRequest): Promise<MethodDefs | undefined> => {
+export const getSelectedMethod = async (
+  request: GrpcRequest
+): Promise<MethodDefs | undefined> => {
   if (request.protoFileId) {
     const protoFile = await models.protoFile.getById(request.protoFileId);
-    invariant(protoFile?.protoText, `No proto file found for gRPC request ${request._id}`);
+    invariant(
+      protoFile?.protoText,
+      `No proto file found for gRPC request ${request._id}`
+    );
     const { filePath, dirs } = await writeProtoFile(protoFile);
     const methods = await loadMethodsFromFilePath(filePath, dirs);
     invariant(methods, 'No methods found');
     return methods.find(c => c.path === request.protoMethodName);
   }
-  const methods = await getMethodsFromReflection(request.url, request.metadata);
+  const methods = await getMethodsFromReflection(
+    request.url,
+    request.metadata,
+    request.reflectionApi
+  );
   invariant(methods, 'No reflection methods found');
   return methods.find(c => c.path === request.protoMethodName);
 };
@@ -336,7 +497,7 @@ const onUnaryResponse = (event: IpcMainEvent, requestId: string) => (err: Servic
   grpcCalls.delete(requestId);
 };
 
-const filterDisabledMetaData = (metadata: GrpcRequestHeader[],): Metadata => {
+const filterDisabledMetaData = (metadata: GrpcRequestHeader[]): Metadata => {
   const grpcMetadata = new Metadata();
   for (const entry of metadata) {
     if (!entry.disabled) {

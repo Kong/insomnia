@@ -1,0 +1,28 @@
+name: SAST
+
+on:
+  pull_request: {}
+  push:
+    branches:
+    - develop
+    - release/*
+  workflow_dispatch: {}
+
+
+jobs:
+  semgrep:
+    timeout-minutes: 5
+    name: Semgrep SAST
+    runs-on: ubuntu-latest
+    permissions:
+      # required for all workflows
+      security-events: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+
+    if: (github.actor != 'dependabot[bot]')
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Kong/public-shared-actions/security-actions/semgrep@bd3d75259607dd015bea3b3313123f53b80e9d7f

@@ -21,6 +21,7 @@ export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disab
   const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const patchRequest = useRequestPatcher();
 
+  // @ts-expect-error -- garbage abstraction
   const selectedValue = authentication.hasOwnProperty(property) ? authentication[property] : options[0].value;
 
   const onChange = useCallback((event: ChangeEvent<HTMLSelectElement>) => {

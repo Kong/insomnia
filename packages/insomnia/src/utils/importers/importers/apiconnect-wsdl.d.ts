@@ -37,7 +37,7 @@ declare module 'apiconnect-wsdl' {
 
   export function getWSDLServices(
     allWSDLs: WSDL[],
-    options?: UNKNOWN_OBJ
+    options?: {}
   ): ServiceData;
 
   export function findWSDLForServiceName(

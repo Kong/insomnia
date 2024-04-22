@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useNavigate, useParams } from 'react-router-dom';
 
+import { isNotNullOrUndefined } from '../../../common/misc';
 import type { RequestGroup } from '../../../models/request-group';
 import { invariant } from '../../../utils/invariant';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
@@ -34,7 +35,7 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
     }
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData;
-  const workspacesForActiveProject = projectLoaderData?.workspaces.map(w => w.workspace) || [];
+  const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined) || [];
   const [state, setState] = useState<State>({
     activeWorkspaceIdToCopyTo: '',
     defaultPreviewMode: !!requestGroup.description,

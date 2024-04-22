@@ -10,7 +10,9 @@ import React, {
   ReactNode,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import {
@@ -32,6 +34,7 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
+import { ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   LoaderFunction,
   NavLink,
@@ -60,15 +63,17 @@ import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { Icon } from '../components/icon';
 import { InsomniaAI } from '../components/insomnia-ai-icon';
+import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { CookiesModal } from '../components/modals/cookies-modal';
+import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
-import { SidebarLayout } from '../components/sidebar-layout';
 import { formatMethodName } from '../components/tags/method-tag';
 import { useAIContext } from '../context/app/ai-context';
 import {
   useActiveApiSpecSyncVCSVersion,
   useGitVCSVersion,
 } from '../hooks/use-vcs-version';
+import { useRootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 
 interface LoaderData {
@@ -179,7 +184,7 @@ interface SpecActionItem {
 const getMethodsFromOpenApiPathItem = (
   pathItem: OpenAPIV3.PathItemObject
 ): string[] => {
-  const OpenApiV3Methods = [
+  const methods = [
     'get',
     'put',
     'post',
@@ -188,9 +193,9 @@ const getMethodsFromOpenApiPathItem = (
     'head',
     'patch',
     'trace',
-  ] satisfies (keyof OpenAPIV3.PathItemObject)[];
-
-  const methods = OpenApiV3Methods.filter(method => pathItem[method]);
+  ].filter(method =>
+    // @ts-expect-error -- shrug
+    pathItem[method]);
 
   return methods;
 };
@@ -205,11 +210,13 @@ const Design: FC = () => {
     activeProject,
     activeEnvironment,
     activeCookieJar,
+    caCertificate,
+    clientCertificates,
     subEnvironments,
     baseEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const setActiveEnvironmentFetcher = useFetcher();
-
+  const { settings } = useRootLoaderData();
   const environmentsList = [baseEnvironment, ...subEnvironments].map(environment => ({
     id: environment._id,
     ...environment,
@@ -217,6 +224,8 @@ const Design: FC = () => {
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
+  const [isEnvironmentSelectOpen, setIsEnvironmentSelectOpen] = useState(false);
+  const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
   const { apiSpec, lintMessages, rulesetPath, parsedSpec } = useLoaderData() as LoaderData;
 
@@ -347,6 +356,37 @@ const Design: FC = () => {
     );
   };
 
+  const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
+
+  function toggleSidebar() {
+    const layout = sidebarPanelRef.current?.getLayout();
+
+    if (!layout) {
+      return;
+    }
+
+    if (layout && layout[0] > 0) {
+      layout[0] = 0;
+    } else {
+      layout[0] = 30;
+    }
+
+    sidebarPanelRef.current?.setLayout(layout);
+  }
+
+  useEffect(() => {
+    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
+
+    return unsubscribe;
+  }, []);
+
+  useDocBodyKeyboardShortcuts({
+    sidebar_toggle: toggleSidebar,
+    environment_showEditor: () => setEnvironmentModalOpen(true),
+    environment_showSwitchMenu: () => setIsEnvironmentSelectOpen(true),
+    showCookiesEditor: () => setIsCookieModalOpen(true),
+  });
+
   const specActionList: SpecActionItem[] = [
     {
       id: 'ai-generate-tests-in-collection',
@@ -388,10 +428,31 @@ const Design: FC = () => {
   const syncVersion = useActiveApiSpecSyncVCSVersion();
   const uniquenessKey = `${apiSpec?._id}::${apiSpec?.created}::${gitVersion}::${syncVersion}`;
 
+  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
+  useLayoutEffect(() => {
+    if (settings.forceVerticalLayout) {
+      setDirection('vertical');
+      return () => { };
+    } else {
+      // Listen on media query changes
+      const mediaQuery = window.matchMedia('(max-width: 880px)');
+      setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
+
+      const handleChange = (e: MediaQueryListEvent) => {
+        setDirection(e.matches ? 'vertical' : 'horizontal');
+      };
+
+      mediaQuery.addEventListener('change', handleChange);
+
+      return () => {
+        mediaQuery.removeEventListener('change', handleChange);
+      };
+    }
+  }, [settings.forceVerticalLayout, direction]);
+
   return (
-    <SidebarLayout
-      className='[&_.sidebar]:flex [&_.sidebar]:flex-col [&_.sidebar]:w-full [&_.sidebar]:h-full'
-      renderPageSidebar={
+    <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
+      <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={20} collapsible>
         <div className='flex h-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden'>
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
             <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
@@ -413,6 +474,8 @@ const Design: FC = () => {
               <Select
                 aria-label="Select an environment"
                 className="overflow-hidden"
+                isOpen={isEnvironmentSelectOpen}
+                onOpenChange={setIsEnvironmentSelectOpen}
                 onSelectionChange={environmentId => {
                   setActiveEnvironmentFetcher.submit(
                     {
@@ -442,7 +505,7 @@ const Design: FC = () => {
                                 borderColor: 'var(--color-font)',
                               }}
                             >
-                              <Icon className='text-xs w-5' icon="refresh" />
+                              <Icon className='text-xs w-5' icon="globe-americas" />
                             </span>
                             <span className='truncate'>
                               {baseEnvironment.name}
@@ -459,7 +522,7 @@ const Design: FC = () => {
                             }}
                           >
                           <Icon
-                            icon={selectedItem.isPrivate ? 'lock' : 'refresh'}
+                            icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
                             style={{
                               color: selectedItem.color ?? 'var(--color-font)',
                             }}
@@ -499,8 +562,8 @@ const Design: FC = () => {
                               }}
                             >
                               <Icon
-                                icon={item.isPrivate ? 'lock' : 'refresh'}
-                                className='text-xs'
+                                icon={item.isPrivate ? 'laptop-code' : 'globe-americas'}
+                                className='text-xs w-5'
                                 style={{
                                   color: item.color ?? 'var(--color-font)',
                                 }}
@@ -536,6 +599,13 @@ const Design: FC = () => {
             >
               <Icon icon="cookie-bite" className='w-5' />
               <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
+            </Button>
+            <Button
+              onPress={() => setCertificatesModalOpen(true)}
+              className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            >
+              <Icon icon="file-contract" className='w-5' />
+              <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates</span>
             </Button>
           </div>
           <div className="flex flex-shrink-0 items-center gap-2 p-[--padding-sm]">
@@ -1020,10 +1090,15 @@ const Design: FC = () => {
           {isCookieModalOpen && (
             <CookiesModal onHide={() => setIsCookieModalOpen(false)} />
           )}
+          {isCertificatesModalOpen && (
+            <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />
+          )}
         </div>
-      }
-      renderPaneTwo={isSpecPaneOpen && <SwaggerUIDiv text={apiSpec.contents} />}
-      renderPaneOne={
+      </Panel>
+      <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
+      <Panel>
+        <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
+          <Panel id="pane-one" className='pane-one theme--pane'>
         <div className="flex flex-col h-full w-full overflow-hidden divide-y divide-solid divide-[--hl-md]">
           <div className="relative overflow-hidden flex-shrink-0 flex flex-1 basis-1/2">
             <CodeEditor
@@ -1158,8 +1233,14 @@ const Design: FC = () => {
             )}
           </div>
         </div>
-      }
-    />
+          </Panel>
+          <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
+          <Panel id="pane-two" className='pane-two theme--pane'>
+            {isSpecPaneOpen && <SwaggerUIDiv text={apiSpec.contents} />}
+          </Panel>
+        </PanelGroup>
+      </Panel>
+    </PanelGroup>
   );
 };
 

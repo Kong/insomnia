@@ -3,6 +3,9 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { gRPCBridgeAPI } from './main/ipc/grpc';
 import { CurlBridgeAPI } from './main/network/curl';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
+import { invariant } from './utils/invariant';
+
+const ports = new Map<'hiddenWindowPort', MessagePort>();
 
 const webSocket: WebSocketBridgeAPI = {
   open: options => ipcRenderer.invoke('webSocket.open', options),
@@ -69,7 +72,32 @@ const main: Window['main'] = {
       create: options => ipcRenderer.invoke('database.caCertificate.create', options),
     },
   },
+  hiddenBrowserWindow: {
+    runPreRequestScript: options => new Promise(async (resolve, reject) => {
+      await ipcRenderer.invoke('open-channel-to-hidden-browser-window');
+
+      const port = ports.get('hiddenWindowPort');
+      invariant(port, 'hiddenWindowPort is undefined');
+
+      port.onmessage = event => {
+        console.log('received result:', event.data);
+        if (event.data.error) {
+          reject(new Error(event.data.error));
+        }
+        resolve(event.data);
+      };
+
+      port.postMessage({ ...options, type: 'runPreRequestScript' });
+    }),
+  },
 };
+
+ipcRenderer.on('hidden-browser-window-response-listener', event => {
+  const [port] = event.ports;
+  ports.set('hiddenWindowPort', port);
+  ipcRenderer.invoke('main-window-script-port-ready');
+});
+
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),
   showSaveDialog: options => ipcRenderer.invoke('showSaveDialog', options),

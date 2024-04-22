@@ -6,7 +6,6 @@ import { JSONPath } from 'jsonpath-plus';
 import os from 'os';
 import { CookieJar } from 'tough-cookie';
 import * as uuid from 'uuid';
-import type { SelectedValue } from 'xpath';
 
 import { Request, RequestParameter } from '../../../models/request';
 import { Response } from '../../../models/response';
@@ -36,6 +35,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           options: [
             { displayName: 'Normal', value: 'normal' },
             { displayName: 'URL', value: 'url' },
+            { displayName: 'Hex', value: 'hex' },
           ],
         },
         {
@@ -44,19 +44,27 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           placeholder: 'My text',
         },
       ],
-      run(_context, action, kind, text) {
+      run(_context, action: 'encode' | 'decode', kind: 'normal' | 'url' | 'hex', text) {
         text = text || '';
         invariant(action === 'encode' || action === 'decode', 'invalid action');
+        invariant(kind === 'normal' || kind === 'url' || kind === 'hex', 'invalid kind');
         if (action === 'encode') {
           if (kind === 'normal') {
             return Buffer.from(text, 'utf8').toString('base64');
-          } else if (kind === 'url') {
+          }
+          if (kind === 'hex') {
+            return Buffer.from(text, 'hex').toString('base64');
+          }
+          if (kind === 'url') {
             return Buffer.from(text, 'utf8')
               .toString('base64')
               .replace(/\+/g, '-')
               .replace(/\//g, '_')
               .replace(/=/g, '');
           }
+        }
+        if (kind === 'hex') {
+          return Buffer.from(text, 'base64').toString('hex');
         }
         return Buffer.from(text, 'base64').toString('utf8');
       },
@@ -709,47 +717,47 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           } else {
             const DOMParser = (await import('xmldom')).DOMParser;
             const dom = new DOMParser().parseFromString(body);
-            let selectedValues: SelectedValue[] = [];
             if (sanitizedFilter === undefined) {
               throw new Error('Must pass an XPath query.');
             }
             try {
-              selectedValues = (await import('xpath')).select(sanitizedFilter, dom);
+              const selectedValues = (await import('xpath')).select(sanitizedFilter, dom);
+
+              let results: { outer: string; inner: string | null }[] = [];
+
+              // Functions return plain strings
+              if (typeof selectedValues === 'string') {
+                results = [{ outer: selectedValues, inner: selectedValues }];
+              }
+
+              results = (selectedValues as Node[])
+                .filter(sv => sv.nodeType === Node.ATTRIBUTE_NODE
+                  || sv.nodeType === Node.ELEMENT_NODE
+                  || sv.nodeType === Node.TEXT_NODE)
+                .map(selectedValue => {
+                  const outer = selectedValue.toString().trim();
+                  if (selectedValue.nodeType === Node.ATTRIBUTE_NODE) {
+                    return { outer, inner: selectedValue.nodeValue };
+                  }
+                  if (selectedValue.nodeType === Node.ELEMENT_NODE) {
+                    return { outer, inner: selectedValue.childNodes.toString() };
+                  }
+                  if (selectedValue.nodeType === Node.TEXT_NODE) {
+                    return { outer, inner: selectedValue.toString().trim() };
+                  }
+                  return { outer, inner: null };
+                });
+
+              if (results.length === 0) {
+                throw new Error(`Returned no results: ${sanitizedFilter}`);
+              } else if (results.length > 1) {
+                throw new Error(`Returned more than one result: ${sanitizedFilter}`);
+              }
+
+              return results[0].inner;
             } catch (err) {
               throw new Error(`Invalid XPath query: ${sanitizedFilter}`);
             }
-            let results: { outer: string; inner: string | null }[] = [];
-
-            // Functions return plain strings
-            if (typeof selectedValues === 'string') {
-              results = [{ outer: selectedValues, inner: selectedValues }];
-            }
-
-            results = (selectedValues as Node[])
-              .filter(sv => sv.nodeType === Node.ATTRIBUTE_NODE
-                || sv.nodeType === Node.ELEMENT_NODE
-                || sv.nodeType === Node.TEXT_NODE)
-              .map(selectedValue => {
-                const outer = selectedValue.toString().trim();
-                if (selectedValue.nodeType === Node.ATTRIBUTE_NODE) {
-                  return { outer, inner: selectedValue.nodeValue };
-                }
-                if (selectedValue.nodeType === Node.ELEMENT_NODE) {
-                  return { outer, inner: selectedValue.childNodes.toString() };
-                }
-                if (selectedValue.nodeType === Node.TEXT_NODE) {
-                  return { outer, inner: selectedValue.toString().trim() };
-                }
-                return { outer, inner: null };
-              });
-
-            if (results.length === 0) {
-              throw new Error(`Returned no results: ${sanitizedFilter}`);
-            } else if (results.length > 1) {
-              throw new Error(`Returned more than one result: ${sanitizedFilter}`);
-            }
-
-            return results[0].inner;
           }
         }
       },

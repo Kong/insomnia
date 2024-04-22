@@ -5,7 +5,7 @@
 import crypto from 'crypto';
 import OAuth1 from 'oauth-1.0a';
 
-import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
+import { AUTH_OAUTH_1, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import type { RequestAuthentication, RequestBody } from '../../models/request';
 import type { OAuth1SignatureMethod } from './constants';
 import {
@@ -46,18 +46,18 @@ function hashFunction(signatureMethod: OAuth1SignatureMethod) {
 export default async function(
   url: string,
   method: string,
-  authentication: RequestAuthentication,
+  authentication: Extract<RequestAuthentication, { type: typeof AUTH_OAUTH_1 }>,
   body: RequestBody | null = null,
 ) {
   const oauth = new OAuth1({
     consumer: {
-      key: authentication.consumerKey,
-      secret: authentication.consumerSecret,
+      key: authentication.consumerKey || '',
+      secret: authentication.consumerSecret || '',
     },
     signature_method: authentication.signatureMethod,
     version: authentication.version,
-    hash_function: hashFunction(authentication.signatureMethod),
-    realm: authentication.realm || null,
+    hash_function: hashFunction(authentication.signatureMethod || 'HMAC-SHA1'),
+    realm: authentication.realm,
   });
   const requestData: OAuth1.RequestOptions = {
     url: url,
@@ -108,8 +108,8 @@ export default async function(
 
   if (authentication.signatureMethod === SIGNATURE_METHOD_RSA_SHA1) {
     token = {
-      key: authentication.tokenKey,
-      secret: authentication.privateKey,
+      key: authentication.tokenKey || '',
+      secret: authentication.privateKey || '',
     };
 
     // We override getSigningKey for RSA-SHA1 because we don't want ddo/oauth-1.0a to percentEncode the token

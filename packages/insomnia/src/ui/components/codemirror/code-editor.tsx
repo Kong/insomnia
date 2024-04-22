@@ -7,7 +7,8 @@ import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
 import { JSONPath } from 'jsonpath-plus';
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
@@ -19,8 +20,9 @@ import { NunjucksParsedTag } from '../../../templating/utils';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
+import { useEditorRefresh } from '../../hooks/use-editor-refresh';
 import { useRootLoaderData } from '../../routes/root';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
+import { Icon } from '../icon';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
@@ -90,8 +92,9 @@ export interface CodeEditorProps {
   noMatchBrackets?: boolean;
   noStyleActiveLine?: boolean;
   // used only for saving env editor state
-  onBlur?: () => void;
+  onBlur?: (e: FocusEvent) => void;
   onChange?: (value: string) => void;
+  onPaste?: (value: string) => string;
   onClickLink?: CodeMirrorLinkClickCallback;
   pinToBottom?: boolean;
   placeholder?: string;
@@ -132,6 +135,8 @@ export interface CodeEditorHandle {
   selectAll: () => void;
   focus: () => void;
   focusEnd: () => void;
+  getCursor: () => CodeMirror.Position | undefined;
+  setCursorLine: (lineNumber: number) => void;
 }
 export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   autoPrettify,
@@ -157,6 +162,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   noStyleActiveLine,
   onBlur,
   onChange,
+  onPaste,
   onClickLink,
   pinToBottom,
   placeholder,
@@ -175,7 +181,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   const indentSize = settings.editorIndentSize;
   const indentWithTabs = shouldIndentWithTabs({ mode, indentWithTabs: settings.editorIndentWithTabs });
   const indentChars = indentWithTabs ? '\t' : new Array((indentSize || TAB_SIZE) + 1).join(' ');
-  const extraKeys = {
+  const extraKeys = useMemo(() => ({
     'Ctrl-Q': (cm: CodeMirror.Editor) => cm.foldCode(cm.getCursor()),
     [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
     // Autocomplete
@@ -189,45 +195,46 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     // Indent with tabs or spaces
     // From https://github.com/codemirror/CodeMirror/issues/988#issuecomment-14921785
     Tab: (cm: CodeMirror.Editor) => cm.somethingSelected() ? cm.indentSelection('add') : cm.replaceSelection(indentChars, 'end'),
-  };
+  }), [indentChars]);
   const { handleRender, handleGetRenderContext } = useGatedNunjucks({ disabled: !enableNunjucks });
-  const prettifyXML = (code: string, filter?: string) => {
-    if (updateFilter && filter) {
-      try {
-        const results = queryXPath(code, filter);
-        code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
-      } catch (err) {
-        // Failed to parse filter (that's ok)
-        code = `<error>${err.message}</error>`;
-      }
-    }
-    try {
-      return vkBeautify.xml(code, indentChars);
-    } catch (error) {
-      // Failed to parse so just return original
-      return code;
-    }
-  };
-  const prettifyJSON = (code: string, filter?: string) => {
-    try {
-      let jsonString = code;
+
+  const maybePrettifyAndSetValue = useCallback((code?: string, forcePrettify?: boolean, filter?: string) => {
+    const prettifyXML = (code: string, filter?: string) => {
       if (updateFilter && filter) {
         try {
-          const codeObj = JSON.parse(code);
-          const results = JSONPath({ json: codeObj, path: filter.trim() });
-          jsonString = JSON.stringify(results);
+          const results = queryXPath(code, filter);
+          code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
         } catch (err) {
-          console.log('[jsonpath] Error: ', err);
-          jsonString = '[]';
+          // Failed to parse filter (that's ok)
+          code = `<error>${err.message}</error>`;
         }
       }
-      return jsonPrettify(jsonString, indentChars, autoPrettify);
-    } catch (error) {
-      // That's Ok, just leave it
-      return code;
-    }
-  };
-  const maybePrettifyAndSetValue = (code?: string, forcePrettify?: boolean, filter?: string) => {
+      try {
+        return vkBeautify.xml(code, indentChars);
+      } catch (error) {
+        // Failed to parse so just return original
+        return code;
+      }
+    };
+    const prettifyJSON = (code: string, filter?: string) => {
+      try {
+        let jsonString = code;
+        if (updateFilter && filter) {
+          try {
+            const codeObj = JSON.parse(code);
+            const results = JSONPath({ json: codeObj, path: filter.trim() });
+            jsonString = JSON.stringify(results);
+          } catch (err) {
+            console.log('[jsonpath] Error: ', err);
+            jsonString = '[]';
+          }
+        }
+        return jsonPrettify(jsonString, indentChars, autoPrettify);
+      } catch (error) {
+        // That's Ok, just leave it
+        return code;
+      }
+    };
     if (typeof code !== 'string') {
       console.warn('Code editor was passed non-string value', code);
       return;
@@ -247,7 +254,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       return;
     }
     codeMirror.current?.setValue(code || '');
-  };
+  }, [autoPrettify, mode, indentChars, updateFilter]);
 
   useDocBodyKeyboardShortcuts({
     beautifyRequestBody: () => {
@@ -257,7 +264,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     },
   });
 
-  useMount(() => {
+  const initEditor = useCallback(() => {
     if (!textAreaRef.current) {
       return;
     }
@@ -326,6 +333,20 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         const scrollInfo = doc.getScrollInfo();
         const scrollPosition = scrollInfo.height - scrollInfo.clientHeight;
         doc.scrollTo(0, scrollPosition);
+      }
+
+      if (onPaste) {
+        if (change.origin === 'paste' && change.update) {
+          const translatedText = onPaste(
+            change.text.join('\n')
+          ).split('\n');
+
+          change.update(
+            change.from,
+            change.to,
+            translatedText,
+          );
+        }
       }
     });
 
@@ -397,10 +418,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         };
       }
     };
-    codeMirror.current.on('blur', () => {
-      persistState();
-      onBlur?.();
-    });
+
     codeMirror.current.on('scroll', persistState);
     codeMirror.current.on('fold', persistState);
     codeMirror.current.on('unfold', persistState);
@@ -437,13 +455,27 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         codeMirror.current.foldCode(from, to);
       }
     }
-  });
-  useUnmount(() => {
-    onBlur?.();
+  }, [defaultValue, dynamicHeight, extraKeys, filter, getAutocompleteConstants, getAutocompleteSnippets, handleGetRenderContext, handleRender, hideGutters, hideLineNumbers, hintOptions, indentSize, indentWithTabs, infoOptions, jumpOptions, maybePrettifyAndSetValue, mode, noLint, noMatchBrackets, noStyleActiveLine, onClickLink, pinToBottom, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.editorLineWrapping, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, uniquenessKey, onPaste]);
+
+  const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();
     codeMirror.current?.closeHintDropdown();
     codeMirror.current = null;
+  }, []);
+
+  useMount(() => {
+    initEditor();
   });
+  useUnmount(() => {
+    cleanUpEditor();
+  });
+
+  const reinitialize = useCallback(() => {
+    cleanUpEditor();
+    initEditor();
+  }, [cleanUpEditor, initEditor]);
+
+  useEditorRefresh(reinitialize);
 
   useEffect(() => {
     const fn = misc.debounce((doc: CodeMirror.Editor) => {
@@ -466,14 +498,15 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         setOriginalCode(doc.getValue() || '');
       }
     }, DEBOUNCE_MILLIS);
+
     codeMirror.current?.on('changes', fn);
     return () => codeMirror.current?.off('changes', fn);
   }, [lintOptions, noLint, onChange]);
 
   useEffect(() => {
-    const handleOnBlur = () => onBlur?.();
+    const handleOnBlur = (_: CodeMirror.Editor, e: FocusEvent) => onBlur?.(e);
     codeMirror.current?.on('blur', handleOnBlur);
-    return () => codeMirror.current?.on('blur', handleOnBlur);
+    return () => codeMirror.current?.off('blur', handleOnBlur);
   }, [onBlur]);
 
   const tryToSetOption = (key: keyof EditorConfiguration, value: any) => {
@@ -506,6 +539,12 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         codeMirror.current.focus();
       }
       codeMirror.current?.getDoc()?.setCursor(codeMirror.current.getDoc().lineCount(), 0);
+    },
+    getCursor: () => {
+      return codeMirror.current?.getCursor();
+    },
+    setCursorLine: (lineNumber: number) => {
+      codeMirror.current?.setCursor(lineNumber);
     },
   }), []);
 
@@ -572,8 +611,8 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                   }
                 }}
               />) : null}
-            {showFilter && filterHistory?.length ?
-              ((
+            {/* {showFilter && filterHistory?.length ?
+              (
                 <Dropdown
                   aria-label='Filter History'
                   key="history"
@@ -586,7 +625,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                 >
                   {filterHistory.reverse().map(filter => (
                     <DropdownItem
-                      key={filter}
+                      key={JSON.stringify(filter)}
                       aria-label={filter}
                     >
                       <ItemContent
@@ -605,7 +644,50 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                     </DropdownItem>
                   ))}
                 </Dropdown>
-              )) : null}
+              ) : null} */}
+
+            {showFilter && filterHistory?.length && (
+              <MenuTrigger>
+                <Button
+                  aria-label="Filter History"
+                  className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                >
+                  <Icon icon="clock" />
+                </Button>
+                <Popover className="min-w-max">
+                  <Menu
+                    aria-label="Filter history menu"
+                    selectionMode="single"
+                    onAction={key => {
+                      const index = Number(key);
+                      const filter = filterHistory[index];
+                      if (inputRef.current) {
+                        inputRef.current.value = filter;
+                      }
+                      if (updateFilter) {
+                        updateFilter(filter);
+                      }
+                      maybePrettifyAndSetValue(originalCode, false, filter);
+                    }}
+                    items={filterHistory.map((filter, index) => ({
+                      id: filter,
+                      name: filter,
+                      key: index,
+                    }))}
+                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                  >
+                    {item => (
+                      <MenuItem
+                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                        aria-label={item.name}
+                      >
+                        <span>{item.name}</span>
+                      </MenuItem>
+                    )}
+                  </Menu>
+                </Popover>
+              </MenuTrigger>
+            )}
             {showFilter ?
               (<button key="help" className="btn btn--compact" onClick={() => showModal(FilterHelpModal, { isJSON: Boolean(mode?.includes('json')) })}>
                 <i className="fa fa-question-circle" />

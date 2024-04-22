@@ -196,7 +196,7 @@ const Login = () => {
                       </Button>
                     </div>
                     <p className='text-sm text-[rgba(var(--color-font-rgb),0.8)]'>
-                      With Insomnia you can choose where to store your projects: locally with Local Vault, in the cloud with Cloud Sync (with E2EE, end-to-end encryption) or in a Git repository (Git Sync). Even with an account, your data is stored based on your settings.
+                      With Insomnia you can choose where to store your projects: locally with Local Vault, in the cloud with Cloud Sync or in a Git repository (Git Sync). Even with an account, your data is stored based on your settings.
                     </p>
                     <p className='text-sm text-[rgba(var(--color-font-rgb),0.8)]'>
                       You can get started with an account which gives you access to the best Insomnia experience (recommended):

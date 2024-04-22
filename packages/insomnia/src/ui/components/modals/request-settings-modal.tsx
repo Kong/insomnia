@@ -2,8 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useNavigate, useParams } from 'react-router-dom';
 
+import { isNotNullOrUndefined } from '../../../common/misc';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
+import { isScratchpadOrganizationId } from '../../../models/organization';
 import { isRequest, Request } from '../../../models/request';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { invariant } from '../../../utils/invariant';
@@ -14,6 +16,7 @@ import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { CodeEditorHandle } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
+import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
 
 export interface RequestSettingsModalOptions {
@@ -31,12 +34,12 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   const workspacesFetcher = useFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized) {
+    if (isIdleAndUninitialized && !isScratchpadOrganizationId(organizationId)) {
       workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}`);
     }
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData;
-  const workspacesForActiveProject = projectLoaderData?.workspaces.map(w => w.workspace) || [];
+  const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined) || [];
   const [state, setState] = useState<State>({
     defaultPreviewMode: !!request?.description,
     activeWorkspaceIdToCopyTo: '',
@@ -70,6 +73,15 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   const { defaultPreviewMode, activeWorkspaceIdToCopyTo } = state;
   const toggleCheckBox = async (event: any) => {
     patchRequest(request._id, { [event.currentTarget.name]: event.currentTarget.checked ? true : false });
+  };
+  const updateReflectonApi = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    invariant(isGrpcRequest(request), 'Must be gRPC request');
+    patchRequest(request._id, {
+      reflectionApi: {
+        ...request.reflectionApi,
+        [event.currentTarget.name]: event.currentTarget.value,
+      },
+    });
   };
   const updateDescription = (description: string) => {
     patchRequest(request._id, { description });
@@ -202,10 +214,84 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                 </div>
               </>)}
             {request && isGrpcRequest(request) && (
-              <p className="faint italic">
-                Are there any gRPC settings you expect to see? Create a{' '}
-                <a href={'https://github.com/Kong/insomnia/issues/new/choose'}>feature request</a>!
-              </p>
+              <>
+                <div className="form-control form-control--thin pad-top-sm">
+                  <label>
+                    Use the Buf Schema Registry API
+                    <a href="https://buf.build/docs/bsr/reflection/overview" className="pad-left-sm">
+                      <Icon icon="external-link" size="sm" />
+                    </a>
+                    <input
+                      type="checkbox"
+                      name="reflectionApi"
+                      checked={request.reflectionApi.enabled}
+                      onChange={event => patchRequest(request._id, {
+                        reflectionApi: {
+                          ...request.reflectionApi,
+                          enabled: event.currentTarget.checked,
+                        },
+                      })}
+                    />̵
+                  </label>
+                </div>
+                <div className="form-row pad-top-sm">
+                  {request.reflectionApi.enabled && (
+                    <>
+                      <div className="form-control form-control--outlined">
+                        <label>
+                          Reflection server URL
+                          <a href="https://buf.build/docs/bsr/api-access" className="pad-left-sm">
+                            <Icon icon="external-link" size="sm" />
+                          </a>
+                          <input
+                            type="text"
+                            name="url"
+                            placeholder="https://buf.build"
+                            defaultValue={request.reflectionApi.url}
+                            onBlur={updateReflectonApi}
+                            disabled={!request.reflectionApi.enabled}
+                          />
+                        </label>
+                      </div>
+                      <div className="form-control form-control--outlined">
+                        <label>
+                          Reflection server API key
+                          <a href="https://buf.build/docs/bsr/authentication#manage-tokens" className="pad-left-sm">
+                            <Icon icon="external-link" size="sm" />
+                          </a>
+                          <input
+                            type="password"
+                            name="apiKey"
+                            defaultValue={request.reflectionApi.apiKey}
+                            onBlur={updateReflectonApi}
+                            disabled={!request.reflectionApi.enabled}
+                          />
+                        </label>
+                      </div>
+                      <div className="form-control form-control--outlined">
+                        <label>
+                          Module
+                          <a href="https://buf.build/docs/bsr/module/manage" className="pad-left-sm">
+                            <Icon icon="external-link" size="sm" />
+                          </a>
+                          <input
+                            type="text"
+                            name="module"
+                            placeholder="buf.build/connectrpc/eliza"
+                            defaultValue={request.reflectionApi.module}
+                            onBlur={updateReflectonApi}
+                            disabled={!request.reflectionApi.enabled}
+                          />
+                        </label>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <p className="faint italic pad-top">
+                  Are there any gRPC settings you expect to see? Create a{' '}
+                  <a href={'https://github.com/Kong/insomnia/issues/new/choose'}>feature request</a>!
+                </p>
+              </>
             )}
             {request && isRequest(request) && (
               <>

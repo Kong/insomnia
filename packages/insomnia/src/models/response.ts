@@ -23,7 +23,7 @@ export interface ResponseHeader {
   value: string;
 }
 
-type Compression = 'zip' | null | '__NEEDS_MIGRATION__' | undefined;
+export type Compression = 'zip' | null | '__NEEDS_MIGRATION__' | undefined;
 
 export interface BaseResponse {
   environmentId: string | null;
@@ -254,7 +254,10 @@ export function getTimeline(response: Response, showBody?: boolean) {
   try {
     const rawBuffer = fs.readFileSync(timelinePath);
     const timelineString = rawBuffer.toString();
-    const timeline = JSON.parse(timelineString) as ResponseTimelineEntry[];
+    const isLegacyTimelineFormat = timelineString.startsWith('[');
+    const timeline = isLegacyTimelineFormat
+      ? JSON.parse(timelineString) as ResponseTimelineEntry[]
+      : timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e));
 
     const body: ResponseTimelineEntry[] = showBody ? [
       {

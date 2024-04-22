@@ -23,7 +23,9 @@ interface Header {
 }
 
 export async function getAuthHeader(renderedRequest: RenderedRequest, url: string) {
-  const { method, authentication, body } = renderedRequest;
+  const { method, body } = renderedRequest;
+  const authentication = renderedRequest.authentication as RequestAuthentication;
+
   const requestId = renderedRequest._id;
 
   if (authentication.disabled) {
@@ -52,7 +54,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     return getBasicAuthHeader(username, password, encoding);
   }
 
-  if (authentication.type === AUTH_BEARER) {
+  if (authentication.type === AUTH_BEARER && authentication.token) {
     const { token, prefix } = authentication;
     return getBearerAuthHeader(token, prefix);
   }
@@ -169,7 +171,7 @@ export function getAuthQueryParams(authentication: RequestAuthentication) {
   return;
 }
 
-export const _buildBearerHeader = (accessToken: string, prefix: string) => {
+export const _buildBearerHeader = (accessToken: string, prefix?: string) => {
   if (!accessToken) {
     return;
   }

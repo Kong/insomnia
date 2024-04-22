@@ -96,8 +96,8 @@ export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]()
 export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequestOutput>(async resolve => {
   try {
     const responsesDir = path.join(getDataDirectory(), 'responses');
-    fs.mkdirSync(responsesDir, { recursive: true });
-
+    // TODO: remove this check, its only used for network.test.ts
+    await fs.promises.mkdir(responsesDir, { recursive: true });
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
 
     const { requestId, req, finalUrl, settings, certificates, caCertficatePath, socketPath, authHeader } = options;
@@ -143,6 +143,11 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       curl.on('error', () => closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath));
     } else if (requestBody !== undefined) {
       curl.setOpt(Curl.option.POSTFIELDS, requestBody);
+    }
+
+    // NOTE: temporary workaround for testing mockbin api
+    if (process.env.PLAYWRIGHT) {
+      req.headers = [...req.headers, { name: 'X-Mockbin-Test', value: 'true' }];
     }
 
     const headerStrings = parseHeaderStrings({ req, requestBody, requestBodyPath, finalUrl, authHeader });

@@ -3,11 +3,11 @@ import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } f
 import { useFetcher, useParams } from 'react-router-dom';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { isLoggedIn } from '../../../account/session';
 import { getProductName } from '../../../common/constants';
 import { exportProjectToFile } from '../../../common/export';
 import { exportAllData } from '../../../common/export-all-data';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import { isNotNullOrUndefined } from '../../../common/misc';
 import { strings } from '../../../common/strings';
 import { isScratchpadOrganizationId, Organization } from '../../../models/organization';
 import { Project } from '../../../models/project';
@@ -250,7 +250,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
 
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
-  const { workspaceCount } = useRootLoaderData();
+  const { workspaceCount, userSession } = useRootLoaderData();
   const workspacesFetcher = useFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
@@ -259,8 +259,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     }
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData | undefined;
-  const workspacesForActiveProject = projectLoaderData?.workspaces.map(w => w.workspace) || [];
-  const projectName = projectLoaderData?.activeProject.name ?? getProductName();
+  const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined) || [];
+  const projectName = projectLoaderData?.activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -271,8 +271,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     hideSettingsModal();
   };
 
-  if (!organizationId) {
-    return null;
+  if (!organizationId || !projectLoaderData?.activeProject) {
+    return <p>There is no active project. Create a new project to import or export data.</p>;
   }
 
   return (
@@ -366,7 +366,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
 
             <Button
               className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-              isDisabled={!isLoggedIn()}
+              isDisabled={!userSession.id}
               onPress={() => window.main.openInBrowser('https://insomnia.rest/create-run-button')}
             >
               <i className="fa fa-file-import" />

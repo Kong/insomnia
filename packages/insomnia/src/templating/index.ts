@@ -1,10 +1,14 @@
-import { type Environment } from 'nunjucks';
+import { Environment } from 'nunjucks';
 import nunjucks from 'nunjucks/browser/nunjucks';
 
 import * as plugins from '../plugins/index';
 import { localTemplateTags } from '../ui/components/templating/local-template-tags';
 import BaseExtension from './base-extension';
-import type { NunjucksParsedTag } from './utils';
+import { extractVariableKey, type NunjucksParsedTag } from './utils';
+
+export enum RenderErrorSubType {
+  EnvironmentVariable = 'environmentVariable'
+}
 
 export class RenderError extends Error {
   // TODO: unsound definite assignment assertions
@@ -18,6 +22,7 @@ export class RenderError extends Error {
 
   type!: string;
   reason!: string;
+  extraInfo?: Record<string, string>;
 }
 
 // Some constants
@@ -49,6 +54,7 @@ export function render(
     context?: Record<string, any>;
     path?: string;
     renderMode?: string;
+    ignoreUndefinedEnvVariable?: boolean;
   } = {},
 ) {
   const hasNunjucksInterpolationSymbols = text.includes('{{') && text.includes('}}');
@@ -67,7 +73,7 @@ export function render(
   return new Promise<string | null>(async (resolve, reject) => {
     // NOTE: this is added as a breadcrumb because renderString sometimes hangs
     const id = setTimeout(() => console.log('Warning: nunjucks failed to respond within 5 seconds'), 5000);
-    const nj = await getNunjucks(renderMode);
+    const nj = await getNunjucks(renderMode, config.ignoreUndefinedEnvVariable);
     nj?.renderString(text, templatingContext, (err: Error | null, result: any) => {
       clearTimeout(id);
       if (err) {
@@ -92,6 +98,13 @@ export function render(
         };
         newError.type = 'render';
         newError.reason = reason;
+        // regard as environment variable missing
+        if (hasNunjucksInterpolationSymbols && reason === 'undefined') {
+          newError.extraInfo = {
+            subType: RenderErrorSubType.EnvironmentVariable,
+            missingKey: extractVariableKey(text, line, column),
+          };
+        }
         reject(newError);
       } else {
         resolve(result);
@@ -130,17 +143,20 @@ export async function getTagDefinitions() {
     }));
 }
 
-async function getNunjucks(renderMode: string): Promise<NunjucksEnvironment> {
-  if (renderMode === RENDER_VARS && nunjucksVariablesOnly) {
-    return nunjucksVariablesOnly;
-  }
-
-  if (renderMode === RENDER_TAGS && nunjucksTagsOnly) {
-    return nunjucksTagsOnly;
-  }
-
-  if (renderMode === RENDER_ALL && nunjucksAll) {
-    return nunjucksAll;
+async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: boolean): Promise<NunjucksEnvironment> {
+  let throwOnUndefined = true;
+  if (ignoreUndefinedEnvVariable) {
+    throwOnUndefined = false;
+  } else {
+    if (renderMode === RENDER_VARS && nunjucksVariablesOnly) {
+      return nunjucksVariablesOnly;
+    }
+    if (renderMode === RENDER_TAGS && nunjucksTagsOnly) {
+      return nunjucksTagsOnly;
+    }
+    if (renderMode === RENDER_ALL && nunjucksAll) {
+      return nunjucksAll;
+    }
   }
 
   // ~~~~~~~~~~~~ //
@@ -149,7 +165,7 @@ async function getNunjucks(renderMode: string): Promise<NunjucksEnvironment> {
   const config = {
     autoescape: false,
     // Don't escape HTML
-    throwOnUndefined: true,
+    throwOnUndefined,
     // Strict mode
     tags: {
       blockStart: '{%',
@@ -194,8 +210,11 @@ async function getNunjucks(renderMode: string): Promise<NunjucksEnvironment> {
   }
 
   // ~~~~~~~~~~~~~~~~~~~~ //
-  // Cache Env and Return //
+  // Cache Env and Return (when ignoreUndefinedEnvVariable is false) //
   // ~~~~~~~~~~~~~~~~~~~~ //
+  if (ignoreUndefinedEnvVariable) {
+    return nunjucksEnvironment;
+  }
   if (renderMode === RENDER_VARS) {
     nunjucksVariablesOnly = nunjucksEnvironment;
   } else if (renderMode === RENDER_TAGS) {

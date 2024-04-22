@@ -11,6 +11,7 @@ import { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { useOrganizationLoaderData } from '../../routes/organization';
 import { SyncDataLoaderData } from '../../routes/remote-collections';
+import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
@@ -31,6 +32,7 @@ const ONE_MINUTE_IN_MS = 1000 * 60;
 export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   const { organizations } = useOrganizationLoaderData();
+  const { userSession } = useRootLoaderData();
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
   const [isSyncHistoryModalOpen, setIsSyncHistoryModalOpen] = useState(false);
@@ -148,7 +150,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
     }
     const isOwner = isOwnerOfOrganization({
       organization: currentOrg,
-      accountId,
+      accountId: userSession.accountId,
     });
 
     isOwner ?
@@ -205,9 +207,9 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
       },
       {
         id: 'revert',
-        name: 'Revert to latest commit',
+        name: 'Discard all changes',
         icon: 'undo',
-        isDisabled: historyCount === 0 || rollbackFetcher.state !== 'idle',
+        isDisabled: historyCount === 0 || rollbackFetcher.state !== 'idle' || !canCreateSnapshot,
         action: () => {
           rollbackFetcher.submit({}, {
             method: 'POST',

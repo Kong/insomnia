@@ -3,7 +3,7 @@ import './base-imports';
 import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { EditorConfiguration } from 'codemirror';
-import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import { useMount, useUnmount } from 'react-use';
 
 import { DEBOUNCE_MILLIS } from '../../../common/constants';
@@ -12,6 +12,7 @@ import { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
+import { useEditorRefresh } from '../../hooks/use-editor-refresh';
 import { useRootLoaderData } from '../../routes/root';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 export interface OneLineEditorProps {
@@ -24,6 +25,7 @@ export interface OneLineEditorProps {
   readOnly?: boolean;
   type?: string;
   onPaste?: (text: string) => void;
+  onBlur?: (e: FocusEvent) => void;
 }
 
 export interface OneLineEditorHandle {
@@ -40,6 +42,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   readOnly,
   type,
   onPaste,
+  onBlur,
 }, ref) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
@@ -48,7 +51,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   } = useRootLoaderData();
   const { handleRender, handleGetRenderContext } = useNunjucks();
 
-  useMount(() => {
+  const initEditor = useCallback(() => {
     if (!textAreaRef.current) {
       return;
     }
@@ -107,7 +110,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     codeMirror.current.on('beforeChange', (_: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
       const isPaste = change.text && change.text.length > 1;
       if (isPaste) {
-        if (change.text[0].startsWith('curl')) {
+        const startsWithCurl = change.text[0].startsWith('curl');
+        const isWhitespace = change.text.join('').trim();
+        if (startsWithCurl || !isWhitespace) {
           change.cancel();
           return;
         }
@@ -120,6 +125,12 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       // TODO: watch out for pasting urls that are curl<something>, e.g. curl.se would be picked up here without the space
       if (onPaste && text && text.startsWith('curl ')) {
         onPaste(text);
+      }
+    });
+
+    codeMirror.current.on('blur', (_, e) => {
+      if (onBlur) {
+        onBlur(e);
       }
     });
 
@@ -181,12 +192,26 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         settings.showVariableSourceAndValue,
       );
     }
-  });
-  useUnmount(() => {
+  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, type]);
+
+  const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();
     codeMirror.current?.closeHintDropdown();
     codeMirror.current = null;
+  }, []);
+  useMount(() => {
+    initEditor();
   });
+  useUnmount(() => {
+    cleanUpEditor();
+  });
+
+  const reinitialize = useCallback(() => {
+    cleanUpEditor();
+    initEditor();
+  }, [cleanUpEditor, initEditor]);
+
+  useEditorRefresh(reinitialize);
 
   useEffect(() => {
     const fn = misc.debounce((doc: CodeMirror.Editor) => {

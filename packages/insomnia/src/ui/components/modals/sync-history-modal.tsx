@@ -2,8 +2,8 @@ import React from 'react';
 import { Button, Cell, Column, Dialog, Heading, Modal, ModalOverlay, Row, Table, TableBody, TableHeader } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
-import * as session from '../../../account/session';
 import type { Snapshot } from '../../../sync/types';
+import { useRootLoaderData } from '../../routes/root';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
@@ -42,14 +42,14 @@ const RestoreButton = ({ snapshot }: { snapshot: Snapshot }) => {
 };
 
 export const SyncHistoryModal = ({ history, onClose }: Props) => {
-
+  const { userSession } = useRootLoaderData();
   const authorName = (snapshot: Snapshot) => {
     let fullName = '';
     if (snapshot.authorAccount) {
       const { firstName, lastName } = snapshot.authorAccount;
       fullName += `${firstName} ${lastName}`;
     }
-    if (snapshot.author === session.getAccountId()) {
+    if (snapshot.author === userSession.accountId) {
       fullName += ' (you)';
     }
 

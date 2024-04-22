@@ -318,3 +318,14 @@ describe('decodeEncoding()', () => {
     expect(utils.decodeEncoding('')).toBe('');
   });
 });
+
+describe('extractVariableKey()', () => {
+  beforeEach(globalBeforeEach);
+
+  it('extract nunjucks variable key', () => {
+    expect(utils.extractVariableKey('{{name}}', 1, 1)).toBe('name');
+    expect(utils.extractVariableKey('aaaaaa{{name}}', 1, 7)).toBe('name');
+    expect(utils.extractVariableKey('{{name}}\n\n{{age}}', 3, 1)).toBe('age');
+    expect(utils.extractVariableKey('', 1, 1)).toBe('');
+  });
+});

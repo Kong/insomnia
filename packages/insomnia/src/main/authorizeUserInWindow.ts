@@ -34,6 +34,10 @@ export function authorizeUserInWindow({
     // Fetch user setting to determine whether to validate SSL certificates during auth
     const {
       validateAuthSSL,
+      proxyEnabled,
+      httpProxy,
+      httpsProxy,
+      noProxy,
     } = await models.settings.get();
 
     // Create a child window
@@ -136,6 +140,17 @@ export function authorizeUserInWindow({
     });
     // Show the window to the user after it loads
     child.on('ready-to-show', child.show.bind(child));
+
+    // Set proxy for browser window
+    if (proxyEnabled) {
+      await child.webContents.session.setProxy({
+        proxyRules:
+          (httpProxy ? `http=${httpProxy};` : '') +
+          (httpsProxy ? `https=${httpsProxy}` : ''),
+        proxyBypassRules: noProxy,
+      });
+      console.log('[oauth2] Proxy loaded');
+    }
 
     try {
       await child.loadURL(url);

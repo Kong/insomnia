@@ -81,9 +81,13 @@ export const ContentTypeDropdown: FC = () => {
       aria-label='Change Body Type'
       triggerButton={
         <DropdownButton>
+          <div className='flex items-center gap-2 !text-[--hl]'>
           {hasMimeType ? getContentTypeName(body.mimeType) : 'Body'}
-          {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
+            {numBodyParams ?
+              <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{numBodyParams}</span>
+              : null}
           <i className="fa fa-caret-down space-left" />
+          </div>
         </DropdownButton>
       }
     >

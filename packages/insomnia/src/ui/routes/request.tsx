@@ -9,7 +9,7 @@ import { version } from '../../../package.json';
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import { ChangeBufferEvent, database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
-import { RENDER_PURPOSE_SEND } from '../../common/render';
+import { RENDER_PURPOSE_SEND, RenderedRequest } from '../../common/render';
 import { ResponsePatch } from '../../main/network/libcurl-promise';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
@@ -17,13 +17,17 @@ import { CookieJar } from '../../models/cookie-jar';
 import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
+import { MockRoute } from '../../models/mock-route';
+import { MockServer } from '../../models/mock-server';
+import { getPathParametersFromUrl, isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { isRequestMeta, RequestMeta } from '../../models/request-meta';
 import { RequestVersion } from '../../models/request-version';
 import { Response } from '../../models/response';
-import { isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
+import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
-import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { getAuthHeader } from '../../network/authentication';
+import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { RenderErrorSubType } from '../../templating';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
@@ -49,12 +53,14 @@ export interface RequestLoaderData {
   activeResponse: Response | null;
   responses: Response[];
   requestVersions: RequestVersion[];
+  mockServerAndRoutes: (MockServer & { routes: MockRoute[] })[];
 }
 
 export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData | WebSocketRequestLoaderData | GrpcRequestLoaderData> => {
   const { organizationId, projectId, requestId, workspaceId } = params;
   invariant(requestId, 'Request ID is required');
   invariant(workspaceId, 'Workspace ID is required');
+  invariant(projectId, 'Project ID is required');
   const activeRequest = await requestOperations.getById(requestId);
   if (!activeRequest) {
     throw redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
@@ -85,12 +91,21 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
     .filter((r: Response | WebSocketResponse) => r.environmentId === activeWorkspaceMeta.activeEnvironmentId);
   const responses = (filterResponsesByEnv ? filteredResponses : allResponses)
     .sort((a: BaseModel, b: BaseModel) => (a.created > b.created ? -1 : 1));
+
+  // Q(gatzjames): load mock servers here or somewhere else?
+  const mockServers = await models.mockServer.findByProjectId(projectId);
+  const mockRoutes = await database.find<MockRoute>(models.mockRoute.type, { parentId: { $in: mockServers.map(s => s._id) } });
+  const mockServerAndRoutes = mockServers.map(mockServer => ({
+    ...mockServer,
+    routes: mockRoutes.filter(route => route.parentId === mockServer._id),
+  }));
   return {
     activeRequest,
     activeRequestMeta,
     activeResponse,
     responses,
     requestVersions: await models.requestVersion.findByParentId(requestId),
+    mockServerAndRoutes,
   } as RequestLoaderData | WebSocketRequestLoaderData;
 };
 
@@ -179,6 +194,23 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
   const req = await requestOperations.getById(requestId);
   invariant(req, 'Request not found');
   const patch = await request.json();
+
+  const isRequestURLChanged = (isRequest(req) || isWebSocketRequest(req)) && patch.url && patch.url !== req.url;
+
+  if (isRequestURLChanged) {
+    const { url } = patch as Request | WebSocketRequest;
+
+    // Check the URL for path parameters and store them in the request
+    const urlPathParameters = getPathParametersFromUrl(url);
+
+    const pathParameters = urlPathParameters.map(name => ({
+      name,
+      value: req.pathParameters?.find(p => p.name === name)?.value || '',
+    }));
+
+    patch.pathParameters = pathParameters;
+  }
+
   // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
   const isMimeTypeChanged = isRequest(req) && patch.body && patch.body.mimeType !== req.body.mimeType;
   if (isMimeTypeChanged) {
@@ -268,11 +300,14 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
     });
   }
   if (isEventStreamRequest(req)) {
+    const renderedRequest = { ...req, ...rendered } as RenderedRequest;
+    const authHeader = await getAuthHeader(renderedRequest, rendered.url);
     window.main.curl.open({
       requestId,
       workspaceId,
       url: rendered.url,
       headers: rendered.headers,
+      authHeader,
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
       suppressUserAgent: rendered.suppressUserAgent,
@@ -316,10 +351,13 @@ const writeToDownloadPath = (downloadPathAndName: string, responsePatch: Respons
   });
 
 };
+
 export interface SendActionParams {
   requestId: string;
   shouldPromptForPathAfterResponse?: boolean;
+  ignoreUndefinedEnvVariable?: boolean;
 }
+
 export const sendAction: ActionFunction = async ({ request, params }) => {
   const { requestId, workspaceId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
@@ -334,10 +372,45 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     clientCertificates,
     caCert,
     activeEnvironmentId,
+    timelinePath,
+    responseId,
   } = await fetchRequestData(requestId);
+  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+
   try {
-    const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
-    const renderedResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
+    const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
+    const mutatedContext = await tryToExecutePreRequestScript(
+      req,
+      environment,
+      timelinePath,
+      responseId,
+      baseEnvironment,
+      clientCertificates,
+      cookieJar,
+    );
+    if (!mutatedContext?.request) {
+      // exiy early if there was a problem with the pre-request script
+      // TODO: improve error message?
+      return null;
+    } else {
+      // persist updated cookieJar if needed
+      if (mutatedContext.cookieJar) {
+        await models.cookieJar.update(
+          mutatedContext.cookieJar,
+          { cookies: mutatedContext.cookieJar.cookies },
+        );
+      }
+    }
+
+    const renderedResult = await tryToInterpolateRequest(
+      mutatedContext.request,
+      mutatedContext.environment || environment._id,
+      RENDER_PURPOSE_SEND,
+      undefined,
+      mutatedContext.baseEnvironment,
+      ignoreUndefinedEnvVariable,
+    );
     const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
 
     // TODO: remove this temporary hack to support GraphQL variables in the request body properly
@@ -355,9 +428,11 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
 
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
-      clientCertificates,
+      mutatedContext.clientCertificates || clientCertificates,
       caCert,
-      settings,
+      mutatedContext.settings || settings,
+      timelinePath,
+      responseId
     );
 
     const requestMeta = await models.requestMeta.getByParentId(requestId);
@@ -393,10 +468,53 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       return writeToDownloadPath(filePath, responsePatch, requestMeta, settings.maxHistoryResponses);
     }
   } catch (e) {
+    console.log('Failed to send request', e);
     const url = new URL(request.url);
     url.searchParams.set('error', e);
+    if (e?.extraInfo && e?.extraInfo?.subType === RenderErrorSubType.EnvironmentVariable) {
+      url.searchParams.set('envVariableMissing', '1');
+      url.searchParams.set('missingKey', e?.extraInfo?.missingKey);
+    }
     return redirect(`${url.pathname}?${url.searchParams}`);
   }
+};
+
+export const createAndSendToMockbinAction: ActionFunction = async ({ request }) => {
+  const patch = await request.json() as Partial<Request>;
+  invariant(typeof patch.url === 'string', 'URL is required');
+  invariant(typeof patch.method === 'string', 'method is required');
+  invariant(typeof patch.parentId === 'string', 'mock route ID is required');
+  const mockRoute = await models.mockRoute.getById(patch.parentId);
+  invariant(mockRoute, 'mock route not found');
+  // Get or create a testing request for this mock route
+  const childRequests = await models.request.findByParentId(mockRoute._id);
+  const testRequest = childRequests[0] || (await models.request.create({ parentId: mockRoute._id, isPrivate: true }));
+  invariant(testRequest, 'mock route is missing a testing request');
+  const req = await models.request.update(testRequest, patch);
+
+  const {
+    environment,
+    settings,
+    clientCertificates,
+    caCert,
+    activeEnvironmentId,
+    timelinePath,
+    responseId,
+  } = await fetchRequestData(req._id);
+
+  const renderResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
+  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+  const res = await sendCurlAndWriteTimeline(
+    renderedRequest,
+    clientCertificates,
+    caCert,
+    settings,
+    timelinePath,
+    responseId,
+  );
+  const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
+  await models.response.create(response);
+  return null;
 };
 export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {
   const { workspaceId, requestId } = params;

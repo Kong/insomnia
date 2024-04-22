@@ -1,5 +1,6 @@
 import type { Merge } from 'type-fest';
 
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../common/constants';
 import { database as db } from '../common/database';
 import { strings } from '../common/strings';
 import type { BaseModel } from './index';
@@ -16,7 +17,7 @@ export interface BaseWorkspace {
   name: string;
   description: string;
   certificates?: any; // deprecated
-  scope: 'design' | 'collection';
+  scope: 'design' | 'collection' | 'mock-server';
 }
 
 export type WorkspaceScope = BaseWorkspace['scope'];
@@ -24,6 +25,7 @@ export type WorkspaceScope = BaseWorkspace['scope'];
 export const WorkspaceScopeKeys = {
   design: 'design',
   collection: 'collection',
+  mockServer: 'mock-server',
 } as const;
 
 export type Workspace = BaseModel & BaseWorkspace;
@@ -38,6 +40,10 @@ export const isDesign = (workspace: Pick<Workspace, 'scope'>) => (
 
 export const isCollection = (workspace: Pick<Workspace, 'scope'>) => (
   workspace.scope === WorkspaceScopeKeys.collection
+);
+
+export const isMockServer = (workspace: Pick<Workspace, 'scope'>) => (
+  workspace.scope === WorkspaceScopeKeys.mockServer
 );
 
 export const init = (): BaseWorkspace => ({
@@ -135,9 +141,12 @@ type MigrationWorkspace = Merge<Workspace, { scope: OldScopeTypes | Workspace['s
  * Ensure workspace scope is set to a valid entry
  */
 function _migrateScope(workspace: MigrationWorkspace) {
-  if (workspace.scope === WorkspaceScopeKeys.design || workspace.scope === WorkspaceScopeKeys.collection) {
+  if (workspace.scope === WorkspaceScopeKeys.design
+    || workspace.scope === WorkspaceScopeKeys.collection
+    || workspace.scope === WorkspaceScopeKeys.mockServer) {
     return workspace as Workspace;
   }
+  // designer and spec => design, unset => collection
   if (workspace.scope === 'designer' || workspace.scope === 'spec') {
     workspace.scope = WorkspaceScopeKeys.design;
   } else {
@@ -157,3 +166,16 @@ export const SCRATCHPAD_WORKSPACE_ID = 'wrk_scratchpad';
 export function isScratchpad(workspace: Workspace) {
   return workspace._id === SCRATCHPAD_WORKSPACE_ID;
 }
+
+export const scopeToActivity = (scope: WorkspaceScope) => {
+  switch (scope) {
+    case WorkspaceScopeKeys.collection:
+      return ACTIVITY_DEBUG;
+    case WorkspaceScopeKeys.design:
+      return ACTIVITY_SPEC;
+    case WorkspaceScopeKeys.mockServer:
+      return 'mock-server';
+    default:
+      return ACTIVITY_DEBUG;
+  }
+};

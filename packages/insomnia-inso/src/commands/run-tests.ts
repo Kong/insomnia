@@ -88,7 +88,7 @@ export async function runInsomniaTests(
     suites.map(suite =>
       createTestSuite(
         suite,
-        db.UnitTest.filter(test => test.parentId === suite._id),
+        db.UnitTest.filter(test => test.parentId === suite._id).sort((a, b) => a.metaSortKey - b.metaSortKey),
       ),
     ),
   );

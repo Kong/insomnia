@@ -6,6 +6,7 @@ import { getAccountId } from '../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { isOwnerOfOrganization } from '../../../models/organization';
 import { type FeatureList, useOrganizationLoaderData } from '../../../ui/routes/organization';
+import { useRootLoaderData } from '../../routes/root';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
@@ -73,13 +74,15 @@ const AlmostSquareButton = styled(Button)({
 interface Props {
   createRequestCollection: () => void;
   createDesignDocument: () => void;
+  createMockServer: () => void;
   importFrom: () => void;
   cloneFromGit: () => void;
 }
 
-export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, importFrom, cloneFromGit }) => {
+export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, createMockServer, importFrom, cloneFromGit }) => {
   const { organizationId } = useParams<{ organizationId: string }>();
   const { organizations } = useOrganizationLoaderData();
+  const { userSession } = useRootLoaderData();
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
   const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
 
@@ -92,7 +95,7 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
     }
     const isOwner = isOwnerOfOrganization({
       organization: currentOrg,
-      accountId,
+      accountId: userSession.accountId,
     });
 
     isOwner ?
@@ -143,6 +146,16 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
               fontSize: 'var(--font-size-xl)',
             }}
           /> New Document
+        </SquareButton>
+        <SquareButton
+          onClick={createMockServer}
+        >
+          <i
+            className='fa fa-server'
+            style={{
+              fontSize: 'var(--font-size-xl)',
+            }}
+          /> New Mock Server
         </SquareButton>
       </div>
       <Divider

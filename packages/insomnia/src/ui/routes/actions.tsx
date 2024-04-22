@@ -3,9 +3,8 @@ import { generate, runTests, type Test } from 'insomnia-testing';
 import path from 'path';
 import { ActionFunction, redirect } from 'react-router-dom';
 
-import * as session from '../../account/session';
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC, getAIServiceURL } from '../../common/constants';
+import { ACTIVITY_DEBUG, getAIServiceURL } from '../../common/constants';
 import { database } from '../../common/database';
 import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
@@ -16,7 +15,8 @@ import { isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
-import { isCollection, Workspace } from '../../models/workspace';
+import { UnitTestSuite } from '../../models/unit-test-suite';
+import { isCollection, scopeToActivity, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
@@ -34,7 +34,8 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
   const projectType = formData.get('type');
   invariant(projectType === 'local' || projectType === 'remote', 'Project type is required');
 
-  const sessionId = session.getCurrentSessionId();
+  const user = await models.userSession.getOrCreate();
+  const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to create a project');
 
   if (projectType === 'local') {
@@ -66,6 +67,10 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
       let error = 'An unexpected error occurred while creating the project. Please try again.';
       if (newCloudProject.error === 'FORBIDDEN' || newCloudProject.error === 'NEEDS_TO_UPGRADE') {
         error = newCloudProject.error;
+      }
+
+      if (newCloudProject.error === 'PROJECT_STORAGE_RESTRICTION') {
+        error = 'The owner of the organization allows only Local Vault project creation, please try again.';
       }
 
       return {
@@ -108,7 +113,8 @@ export const updateProjectAction: ActionFunction = async ({
 
   invariant(project, 'Project not found');
 
-  const sessionId = session.getCurrentSessionId();
+  const user = await models.userSession.getOrCreate();
+  const sessionId = user.id;
 
   try {
     // If its a cloud project, and we are renaming, then patch
@@ -206,7 +212,8 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  const sessionId = session.getCurrentSessionId();
+  const user = await models.userSession.getOrCreate();
+  const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to delete a project');
 
   try {
@@ -279,15 +286,32 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   invariant(typeof name === 'string', 'Name is required');
 
   const scope = formData.get('scope');
-  invariant(scope === 'design' || scope === 'collection', 'Scope is required');
+  invariant(scope === 'design' || scope === 'collection' || scope === 'mock-server', 'Scope is required');
 
   const flushId = await database.bufferChanges();
 
+  const workspaceName = name || (scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
+
   const workspace = await models.workspace.create({
-    name,
+    name: workspaceName,
     scope,
     parentId: projectId,
   });
+
+  if (scope === 'mock-server') {
+    const mockServerType = formData.get('mockServerType');
+    invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
+    if (mockServerType === 'cloud') {
+      await models.mockServer.getOrCreateForParentId(workspace._id, { name, useInsomniaCloud: true });
+      return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
+    }
+    if (mockServerType === 'self-hosted') {
+      const mockServerUrl = formData.get('mockServerUrl');
+      invariant(typeof mockServerUrl === 'string', 'Mock Server URL is required');
+      await models.mockServer.getOrCreateForParentId(workspace._id, { name, useInsomniaCloud: false, url: mockServerUrl });
+      return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
+    }
+  }
 
   if (scope === 'design') {
     await models.apiSpec.getOrCreateForParentId(workspace._id);
@@ -299,7 +323,9 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
   await database.flushChanges(flushId);
-  if (session.isLoggedIn() && !workspaceMeta.gitRepositoryId) {
+
+  const { id } = await models.userSession.getOrCreate();
+  if (id && !workspaceMeta.gitRepositoryId) {
     const vcs = VCSInstance();
     await initializeLocalBackendProjectAndMarkForSync({
       vcs,
@@ -313,10 +339,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
       : SegmentEvent.documentCreate,
   });
 
-  return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${workspace.scope === 'collection' ? ACTIVITY_DEBUG : ACTIVITY_SPEC
-    }`
-  );
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
 };
 
 export const deleteWorkspaceAction: ActionFunction = async ({
@@ -398,8 +421,9 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
   await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
 
   try {
+    const { id } = await models.userSession.getOrCreate();
     // Mark for sync if logged in and in the expected project
-    if (session.isLoggedIn()) {
+    if (id) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs: vcs.newInstance(),
@@ -409,11 +433,8 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
   } catch (e) {
     console.warn('Failed to initialize local backend project', e);
   }
-
-  return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${newWorkspace._id}/${newWorkspace.scope === 'collection' ? ACTIVITY_DEBUG : ACTIVITY_SPEC
-    }`
-  );
+  const activity = scopeToActivity(newWorkspace.scope);
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${newWorkspace._id}/${activity}`);
 };
 
 export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
@@ -431,6 +452,16 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
       fileName: patch.name || workspace.name,
     });
   }
+  if (workspace.scope === 'mock-server') {
+    const mockServer = await models.mockServer.getByParentId(workspaceId);
+    invariant(mockServer, 'No MockServer found for this workspace');
+
+    await models.mockServer.update(mockServer, {
+      name: patch.name || workspace.name,
+    });
+  }
+
+  patch.name = patch.name || workspace.name || (workspace.scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
 
   await models.workspace.update(workspace, patch);
 
@@ -516,9 +547,11 @@ export const runAllTestsAction: ActionFunction = async ({
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   invariant(typeof testSuiteId === 'string', 'Test Suite ID is required');
 
-  const unitTests = await database.find<UnitTest>(models.unitTest.type, {
-    parentId: testSuiteId,
-  });
+  const unitTests = await database.find<UnitTest>(
+    models.unitTest.type,
+    { parentId: testSuiteId },
+    { metaSortKey: 1 }
+  );
   invariant(unitTests, 'No unit tests found');
 
   const tests: Test[] = unitTests
@@ -545,23 +578,21 @@ export const runAllTestsAction: ActionFunction = async ({
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
 };
 
-export const renameTestSuiteAction: ActionFunction = async ({ request, params }) => {
+export const updateTestSuiteAction: ActionFunction = async ({ request, params }) => {
   const { workspaceId, projectId, testSuiteId } = params;
   invariant(typeof testSuiteId === 'string', 'Test Suite ID is required');
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   invariant(typeof projectId === 'string', 'Project ID is required');
 
-  const formData = await request.formData();
-  const name = formData.get('name');
-  invariant(typeof name === 'string', 'Name is required');
+  const data = await request.json() as Partial<UnitTestSuite>;
 
-  const unitTestSuite = await database.getWhere(models.unitTestSuite.type, {
+  const unitTestSuite = await database.getWhere<UnitTestSuite>(models.unitTestSuite.type, {
     _id: testSuiteId,
   });
 
   invariant(unitTestSuite, 'Test Suite not found');
 
-  await models.unitTestSuite.update(unitTestSuite, { name });
+  await models.unitTestSuite.update(unitTestSuite, data);
 
   return null;
 };
@@ -605,24 +636,14 @@ export const deleteTestAction: ActionFunction = async ({ params }) => {
 
 export const updateTestAction: ActionFunction = async ({ request, params }) => {
   const { testId } = params;
-  const formData = await request.formData();
-  invariant(typeof testId === 'string', 'Test ID is required');
-  const code = formData.get('code');
-  invariant(typeof code === 'string', 'Code is required');
-  const name = formData.get('name');
-  invariant(typeof name === 'string', 'Name is required');
-  const requestId = formData.get('requestId');
-
-  if (requestId) {
-    invariant(typeof requestId === 'string', 'Request ID is required');
-  }
+  const data = await request.json() as Partial<UnitTest>;
 
   const unitTest = await database.getWhere<UnitTest>(models.unitTest.type, {
     _id: testId,
   });
   invariant(unitTest, 'Test not found');
 
-  await models.unitTest.update(unitTest, { name, code, requestId: requestId || null });
+  await models.unitTest.update(unitTest, data);
 
   return null;
 };
@@ -829,12 +850,15 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
           throw new Error('Request not found');
         }
 
+        const user = await models.userSession.getOrCreate();
+        const sessionId = user.id;
+
         const methodInfo = resolveComponentSchemaRefs(spec, getMethodInfo(request));
         const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
           method: 'POST',
           origin: getAIServiceURL(),
           path: '/v1/generate-test',
-          sessionId: session.getCurrentSessionId(),
+          sessionId,
           data: {
             teamId: organizationId,
             request: requests.find(r => r._id === test.requestId),
@@ -910,12 +934,14 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
 
   async function generateTests() {
     async function generateTest(test: Partial<UnitTest>) {
+      const user = await models.userSession.getOrCreate();
+      const sessionId = user.id;
       try {
         const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
           method: 'POST',
           origin: getAIServiceURL(),
           path: '/v1/generate-test',
-          sessionId: session.getCurrentSessionId(),
+          sessionId,
           data: {
             teamId: organizationId,
             request: requests.find(r => r._id === test.requestId),
@@ -955,11 +981,13 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
   invariant(typeof organizationId === 'string', 'Organization ID is required');
 
   try {
+    const user = await models.userSession.getOrCreate();
+    const sessionId = user.id;
     const response = await window.main.insomniaFetch<{ enabled: boolean }>({
       method: 'POST',
       origin: getAIServiceURL(),
       path: '/v1/access',
-      sessionId: session.getCurrentSessionId(),
+      sessionId,
       data: {
         teamId: organizationId,
       },
@@ -1123,8 +1151,10 @@ export const deleteCaCertificateAction: ActionFunction = async ({ params }) => {
 
 export const createNewClientCertificateAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
-  await models.clientCertificate.create(patch);
-  return null;
+  const certificate = await models.clientCertificate.create(patch);
+  return {
+    certificate,
+  };
 };
 
 export const updateClientCertificateAction: ActionFunction = async ({ request }) => {
@@ -1186,5 +1216,65 @@ export const reorderCollectionAction: ActionFunction = async ({ request, params 
     await update(item, { parentId, metaSortKey });
   }
 
+  return null;
+};
+
+export const createMockRouteAction: ActionFunction = async ({ request, params }) => {
+  const { organizationId, projectId, workspaceId } = params;
+
+  const patch = await request.json();
+  invariant(typeof patch.name === 'string', 'Name is required');
+  // TODO: remove this hack which enables a mock server to be created alongside a route
+  if (patch.mockServerName) {
+    const activeWorkspace = await models.workspace.getById(workspaceId);
+    invariant(activeWorkspace, 'Active workspace not found');
+    const workspace = await models.workspace.create({
+      name: activeWorkspace.name,
+      scope: 'mock-server',
+      parentId: projectId,
+    });
+    invariant(workspace, 'Workspace not found');
+    // create a mock server under the workspace with the same name
+    const newServer = await models.mockServer.getOrCreateForParentId(workspace._id, { name: activeWorkspace.name });
+    // TODO: filterout the mockServerName from the patch, or use an alternate method to create new workspace and server
+    const mockRoute = await models.mockRoute.create({ ...patch, parentId: newServer._id });
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${newServer.parentId}/mock-server/mock-route/${mockRoute._id}`);
+  }
+  const mockServer = await models.mockServer.getById(patch.parentId);
+  invariant(mockServer, 'Mock server not found');
+  const mockRoute = await models.mockRoute.create(patch);
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${mockServer.parentId}/mock-server/mock-route/${mockRoute._id}`);
+};
+export const updateMockRouteAction: ActionFunction = async ({ request, params }) => {
+  const { mockRouteId } = params;
+  invariant(typeof mockRouteId === 'string', 'Mock route id is required');
+  const patch = await request.json();
+
+  const mockRoute = await models.mockRoute.getById(mockRouteId);
+  invariant(mockRoute, 'Mock route is required');
+
+  await models.mockRoute.update(mockRoute, patch);
+  return null;
+};
+export const deleteMockRouteAction: ActionFunction = async ({ request, params }) => {
+  const { organizationId, projectId, workspaceId, mockRouteId } = params;
+  invariant(typeof mockRouteId === 'string', 'Mock route id is required');
+  const mockRoute = await models.mockRoute.getById(mockRouteId);
+  invariant(mockRoute, 'mockRoute not found');
+  const { isSelected } = await request.json();
+
+  await models.mockRoute.remove(mockRoute);
+  if (isSelected) {
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server`);
+  }
+  return null;
+};
+export const updateMockServerAction: ActionFunction = async ({ request, params }) => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+  const patch = await request.json();
+  const mockServer = await models.mockServer.getByParentId(workspaceId);
+  invariant(mockServer, 'Mock server not found');
+  await models.mockServer.update(mockServer, patch);
   return null;
 };

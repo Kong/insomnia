@@ -6,7 +6,7 @@ import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
 import { isProject, Project } from '../models/project';
-import type { Request } from '../models/request';
+import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
 import { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, Workspace } from '../models/workspace';
@@ -219,6 +219,7 @@ export async function render<T>(
   blacklistPathRegex: RegExp | null = null,
   errorMode: string = THROW_ON_ERROR,
   name = '',
+  ignoreUndefinedEnvVariable: boolean = false,
 ) {
   // Make a deep copy so no one gets mad :)
   const newObj = clone(obj);
@@ -244,7 +245,7 @@ export async function render<T>(
     } else if (typeof x === 'string') {
       try {
         // @ts-expect-error -- TSCONVERSION
-        x = await templating.render(x, { context, path });
+        x = await templating.render(x, { context, path, ignoreUndefinedEnvVariable });
 
         // If the variable outputs a tag, render it again. This is a common use
         // case for environment variables:
@@ -297,9 +298,11 @@ interface RenderRequest<T extends Request | GrpcRequest | WebSocketRequest> {
 }
 
 interface BaseRenderContextOptions {
-  environmentId?: string;
+  environment?: string | Environment;
+  baseEnvironment?: Environment;
   purpose?: RenderPurpose;
   extraInfo?: ExtraRenderInfo;
+  ignoreUndefinedEnvVariable?: boolean;
 }
 
 interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
@@ -308,7 +311,8 @@ interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderR
 export async function getRenderContext(
   {
     request,
-    environmentId,
+    environment,
+    baseEnvironment,
     ancestors: _ancestors,
     purpose,
     extraInfo,
@@ -322,12 +326,17 @@ export async function getRenderContext(
     throw new Error('Failed to render. Could not find workspace');
   }
 
-  const rootEnvironment = await models.environment.getOrCreateForParentId(
+  const rootEnvironment = baseEnvironment || await models.environment.getOrCreateForParentId(
     workspace ? workspace._id : 'n/a',
   );
-  const subEnvironment = await models.environment.getById(environmentId || 'n/a');
-  const keySource: Record<string, string> = {};
+  const subEnvironmentId = environment ?
+    typeof environment === 'string' ? environment : 'n/a' :
+    'n/a';
+  const subEnvironment = environment ?
+    typeof environment === 'string' ? await models.environment.getById(environment) : environment :
+    await models.environment.getById('n/a');
 
+  const keySource: Record<string, string> = {};
   // Function that gets Keys and stores their Source location
   function getKeySource(subObject: string | Record<string, any>, inKey: string, inSource: string) {
     // Add key to map if it's not root
@@ -393,7 +402,7 @@ export async function getRenderContext(
       const p = extraInfo.find(v => v.name === key);
       return p ? p.value : null;
     },
-    getEnvironmentId: () => environmentId,
+    getEnvironmentId: () => subEnvironmentId,
     // It is possible for a project to not exist because this code path can be reached via Inso/insomnia-send-request which has no concept of a project.
     getProjectId: () => project?._id,
   };
@@ -417,11 +426,11 @@ export async function getRenderedGrpcRequest(
     purpose,
     extraInfo,
     request,
-    environmentId,
+    environment,
     skipBody,
   }: RenderGrpcRequestOptions,
 ) {
-  const renderContext = await getRenderContext({ request, environmentId, purpose, extraInfo });
+  const renderContext = await getRenderContext({ request, environment, purpose, extraInfo });
   const description = request.description;
   // Render description separately because it's lower priority
   request.description = '';
@@ -440,13 +449,13 @@ export async function getRenderedGrpcRequest(
 type RenderGrpcRequestMessageOptions = BaseRenderContextOptions & RenderRequest<GrpcRequest>;
 export async function getRenderedGrpcRequestMessage(
   {
-    environmentId,
+    environment,
     request,
     extraInfo,
     purpose,
   }: RenderGrpcRequestMessageOptions,
 ) {
-  const renderContext = await getRenderContext({ request, environmentId, purpose, extraInfo });
+  const renderContext = await getRenderContext({ request, environment, purpose, extraInfo });
   // Render request body
   const renderedBody: RenderedGrpcRequestBody = await render(request.body, renderContext);
   return renderedBody;
@@ -460,16 +469,18 @@ export interface RequestAndContext {
 export async function getRenderedRequestAndContext(
   {
     request,
-    environmentId,
+    environment,
+    baseEnvironment,
     extraInfo,
     purpose,
+    ignoreUndefinedEnvVariable,
   }: RenderRequestOptions,
 ): Promise<RequestAndContext> {
   const ancestors = await getRenderContextAncestors(request);
   const workspace = ancestors.find(isWorkspace);
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
-  const renderContext = await getRenderContext({ request, environmentId, ancestors, purpose, extraInfo });
+  const renderContext = await getRenderContext({ request, environment, ancestors, purpose, extraInfo, baseEnvironment });
 
   // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
   // https://github.com/kong/insomnia/issues/895
@@ -492,7 +503,11 @@ export async function getRenderedRequestAndContext(
     },
     renderContext,
     request.settingDisableRenderRequestBody ? /^body.*/ : null,
+    THROW_ON_ERROR,
+    '',
+    ignoreUndefinedEnvVariable,
   );
+
   const renderedRequest = renderResult._request;
   const renderedCookieJar = renderResult._cookieJar;
   renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
@@ -508,12 +523,30 @@ export async function getRenderedRequestAndContext(
   }
 
   // Remove disabled authentication
-  if (renderedRequest.authentication && renderedRequest.authentication.disabled) {
+  if (renderedRequest.authentication && 'disabled' in renderedRequest.authentication && renderedRequest.authentication.disabled) {
     renderedRequest.authentication = {};
   }
 
   // Default the proto if it doesn't exist
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
+
+  // Render path parameters
+  if (renderedRequest.pathParameters) {
+    // Replace path parameters in URL with their rendered values
+    // Path parameters are path segments that start with a colon, e.g. :id
+    renderedRequest.url = renderedRequest.url.replace(PATH_PARAMETER_REGEX, match => {
+      const paramName = match.replace('\/:', '');
+      const param = renderedRequest.pathParameters?.find(p => p.name === paramName);
+
+      if (param && param.value) {
+        // The parameter value needs to be URL encoded
+        return `/${encodeURIComponent(param.value)}`;
+      }
+
+      return match;
+    });
+  }
+
   return {
     context: renderContext,
     request: {
@@ -523,6 +556,7 @@ export async function getRenderedRequestAndContext(
       isPrivate: false,
       _id: renderedRequest._id,
       authentication: renderedRequest.authentication,
+      pathParameters: renderedRequest.pathParameters,
       body: renderedRequest.body,
       created: renderedRequest.created,
       modified: renderedRequest.modified,
@@ -541,6 +575,7 @@ export async function getRenderedRequestAndContext(
       settingFollowRedirects: renderedRequest.settingFollowRedirects,
       type: renderedRequest.type,
       url: renderedRequest.url,
+      preRequestScript: renderedRequest.preRequestScript,
     },
   };
 }
@@ -576,5 +611,7 @@ export async function getRenderContextAncestors(base?: Request | GrpcRequest | W
     models.requestGroup.type,
     models.workspace.type,
     models.project.type,
+    models.mockRoute.type,
+    models.mockServer.type,
   ]);
 }

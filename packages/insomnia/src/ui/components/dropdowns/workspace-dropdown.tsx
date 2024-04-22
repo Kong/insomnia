@@ -3,9 +3,9 @@ import React, { FC, ReactNode, useCallback, useState } from 'react';
 import { Button, Dialog, Heading, Menu, MenuItem, MenuTrigger, Modal, ModalOverlay, Popover } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { isLoggedIn } from '../../../account/session';
 import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
+import { exportMockServerToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import { isRemoteProject } from '../../../models/project';
@@ -17,9 +17,11 @@ import { getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { invariant } from '../../../utils/invariant';
 import { useAIContext } from '../../context/app/ai-context';
+import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Icon } from '../icon';
 import { InsomniaAI } from '../insomnia-ai-icon';
+import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showError, showPrompt } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { configGenerators, showGenerateConfigModal } from '../modals/generate-config-modal';
@@ -37,13 +39,12 @@ interface WorkspaceActionItem {
 export const WorkspaceDropdown: FC = () => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   invariant(organizationId, 'Expected organizationId');
+  const { userSession } = useRootLoaderData();
   const {
     activeWorkspace,
-    activeWorkspaceMeta,
     activeProject,
     activeApiSpec,
-    clientCertificates,
-    caCertificate,
+    activeMockServer,
     projects,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const activeWorkspaceName = activeWorkspace.name;
@@ -63,6 +64,10 @@ export const WorkspaceDropdown: FC = () => {
     access,
     generateTests,
   } = useAIContext();
+
+  useDocBodyKeyboardShortcuts({
+    workspace_showSettings: () => setIsSettingsModalOpen(true),
+  });
 
   const handlePluginClick = useCallback(async ({ action, plugin, label }: WorkspaceAction, workspace: Workspace) => {
     setLoadingActions({ ...loadingActions, [label]: true });
@@ -160,7 +165,9 @@ export const WorkspaceDropdown: FC = () => {
         id: 'export',
         name: 'Export',
         icon: <Icon icon='file-export' />,
-        action: () => setIsExportModalOpen(true),
+        action: () => activeWorkspace.scope !== 'mock-server'
+          ? setIsExportModalOpen(true)
+          : exportMockServerToFile(activeWorkspace),
       },
       {
         id: 'settings',
@@ -180,7 +187,7 @@ export const WorkspaceDropdown: FC = () => {
         icon: <Icon icon='code' />,
         action: () => handleGenerateConfig(generator.label),
       } satisfies WorkspaceActionItem)) : [],
-      ...isLoggedIn() && access.enabled && activeWorkspace.scope === 'design' ? [{
+    ...userSession.id && access.enabled && activeWorkspace.scope === 'design' ? [{
         id: 'insomnia-ai/generate-test-suite',
         name: 'Auto-generate Tests For Collection',
         action: generateTests,
@@ -198,7 +205,7 @@ export const WorkspaceDropdown: FC = () => {
           data-testid="workspace-context-dropdown"
           className="px-3 py-1 h-7 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm truncate"
         >
-          <span className="truncate">{activeWorkspaceName}</span>
+          <span className="truncate" title={activeWorkspaceName}>{activeWorkspaceName}</span>
           <Icon icon="caret-down" />
         </Button>
         <Popover className="min-w-max">
@@ -257,10 +264,8 @@ export const WorkspaceDropdown: FC = () => {
       {isSettingsModalOpen && (
         <WorkspaceSettingsModal
           workspace={activeWorkspace}
-          workspaceMeta={activeWorkspaceMeta}
-          clientCertificates={clientCertificates}
-          caCertificate={caCertificate}
-          onHide={() => setIsSettingsModalOpen(false)}
+          mockServer={activeMockServer}
+          onClose={() => setIsSettingsModalOpen(false)}
         />
       )}
       {isDeleteRemoteWorkspaceModalOpen && (

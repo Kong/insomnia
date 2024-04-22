@@ -11,6 +11,7 @@ concurrency:
 
 jobs:
   build-and-upload-release-artifacts:
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -27,10 +28,10 @@ jobs:
             csc_key_password_secret: ''
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -118,7 +119,7 @@ jobs:
           docker save insomnia-inso:temp -o ./packages/insomnia-inso/artifacts/inso-docker-image.tar
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-artifacts
@@ -135,7 +136,7 @@ jobs:
             packages/insomnia-inso/artifacts/*
 
       - name: Upload source assets for Sentry
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-sentry
           path: |
@@ -144,6 +145,7 @@ jobs:
             !packages/insomnia/build/yarn-standalone.js
 
   update-pull-request:
+    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     needs: build-and-upload-release-artifacts
     runs-on: ubuntu-latest
     steps:
@@ -159,9 +161,16 @@ jobs:
         uses: kt3k/update-pr-description@v2.0.0
         with:
           pr_body: |
+            **WARNING: Do not merge this PR. This is an automated release PR. It should be released using the "Publish" workflow.**
+
             Download release artifacts [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
             ## Steps for Publish:
+
+            You can update the changelog.md in this branch, run git log to get the latest changes:
+            ```bash
+            git log --no-merges --oneline --pretty=format:'* %s by @%an' --since="<last release tag>" --until="release/${{ steps.release_version.outputs.version }}"
+            ```
 
             When ready to publish, trigger [Publish](https://github.com/${{ github.repository }}/actions/workflows/release-publish.yml) workflow with these variables:
             - Release version (`version`): `${{ steps.release_version.outputs.version }}`
@@ -170,6 +179,8 @@ jobs:
             ```bash
             gh workflow run release-publish.yml -f version=${{ steps.release_version.outputs.version }} --repo ${{ github.repository }}
             ```
+
+            Release notes will be generated automatically based on the commit messages during publish. Remove any unwanted notes manually afterwards.
 
             <details>
             <summary>Conflicts? Merge branch step failed on the publish workflow? Try this...</summary>

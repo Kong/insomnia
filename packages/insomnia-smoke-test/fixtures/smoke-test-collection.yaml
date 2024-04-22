@@ -181,7 +181,8 @@ resources:
     modified: 1636140994432
     created: 1636140994432
     name: Base Environment
-    data: {}
+    data:
+      customValue: "fromEnvManager"
     dataPropertyOrder: null
     color: null
     isPrivate: false
@@ -243,4 +244,36 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     _type: request
-
+  - _id: fld_01de564274824ecaad272330339ea6b2
+    parentId: wrk_5b5ab67830944ffcbec47528366ef403
+    modified: 1668533312225
+    created: 1668533312225
+    name: FolderWithEnv
+    description: ""
+    environment:
+      customValue: "fromFolder"
+    environmentPropertyOrder: null
+    metaSortKey: -1668533312225
+    _type: request_group
+  - _id: req_0769dca686df49358082b2183dfa073d
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1643892278711
+    created: 1643892270079
+    url: http://127.0.0.1:4010/echo
+    name: sends request with pre-request script
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    preRequestScript: "insomnia.environment.set('my-pre-request-header', 'some-value');"
+    metaSortKey: -1643892270079
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request

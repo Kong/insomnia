@@ -6,9 +6,6 @@ interface Props {
   children: ReactNode;
   errorClassName?: string;
   showAlert?: boolean;
-  // Avoid using invalidation with showAlert, otherwise an alert will be shown with every attempted re-render
-  invalidationKey?: string;
-  renderError?: (error: Error) => ReactNode;
 }
 
 interface State {
@@ -23,21 +20,6 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
     error: null,
     info: null,
   };
-
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
-    const { error, info } = this.state;
-    const invalidationKeyChanged = nextProps.invalidationKey !== this.props.invalidationKey;
-    const isErrored = error !== null || info !== null;
-    const shouldResetError = invalidationKeyChanged && isErrored;
-
-    if (shouldResetError) {
-      this.setState({
-        error: null,
-        info: null,
-      });
-    }
-  }
 
   componentDidCatch(
     error: Error,
@@ -61,7 +43,6 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
         showError({
           error,
           title: 'Application Error',
-          // @ts-expect-error -- TSCONVERSION
           message: (
             <p>
               Failed to render {componentName}. Please report the error to <a href="https://github.com/Kong/insomnia/issues">our Github Issues</a>
@@ -75,35 +56,26 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
   }
 
   render() {
-    const { error, info } = this.state;
-    const { errorClassName, children, renderError } = this.props;
-
-    if (error && info) {
-      return renderError ? (
-        renderError(error)
-      ) : (
-        <div className={errorClassName ?? ''}>Render Failure: {error.message}</div>
+    if (this.state.error) {
+      return (
+        <div className={this.props.errorClassName ?? ''}>Render Failure: {this.state.error.message}</div>
       );
     }
 
-    return children;
+    return this.props.children;
   }
 }
 
-export class ErrorBoundary extends PureComponent<Props> {
-  render() {
-    const { children, ...extraProps } = this.props;
+export const ErrorBoundary = (props: Props) => {
+  const { children, ...extraProps } = props;
 
-    if (!children) {
-      return null;
-    }
-
-    // Unwrap multiple children into single children for better error isolation
-    const childArray = Array.isArray(children) ? children : [children];
-    return childArray.map((child, i) => (
-      <SingleErrorBoundary key={i} {...extraProps}>
-        {child}
-      </SingleErrorBoundary>
-    ));
+  if (!children) {
+    return null;
   }
-}
+
+  return (
+    <SingleErrorBoundary {...extraProps}>
+      {children}
+    </SingleErrorBoundary>
+  );
+};
