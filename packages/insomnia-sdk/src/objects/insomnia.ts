@@ -116,11 +116,12 @@ export function initInsomniaObject(
     rawObj: RequestContext,
     log: (...args: any[]) => void,
 ) {
-    const globals = new Environment(rawObj.globals);
-    const environment = new Environment(rawObj.environment);
-    const baseEnvironment = new Environment(rawObj.baseEnvironment);
-    const iterationData = new Environment(rawObj.iterationData);
-    const collectionVariables = new Environment(rawObj.collectionVariables);
+    const globals = new Environment('globals', rawObj.globals);
+    const environment = new Environment(rawObj.environmentName || '', rawObj.environment);
+    const baseEnvironment = new Environment(rawObj.baseEnvironmentName || '', rawObj.baseEnvironment);
+    // TODO: update "iterationData" name when it is supported
+    const iterationData = new Environment('iterationData', rawObj.iterationData);
+    const collectionVariables = new Environment(rawObj.baseEnvironmentName || '', rawObj.collectionVariables);
     const cookies = new CookieObject(rawObj.cookieJar);
     // TODO: update follows when post-request script and iterating are introduced
     const requestInfo = new RequestInfo({

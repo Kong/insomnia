@@ -7,7 +7,9 @@ export interface RequestContext {
     request: Request;
     timelinePath: string;
     environment?: object;
+    environmentName?: string;
     baseEnvironment?: object;
+    baseEnvironmentName?: string;
     collectionVariables?: object;
     globals?: object;
     iterationData?: object;

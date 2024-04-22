@@ -109,7 +109,9 @@ export const tryToExecutePreRequestScript = async (
         // it inputs empty environment data when active environment is the base environment
         // this is more deterministic and avoids that script accidently manipulates baseEnvironment instead of environment
         environment: environment._id === baseEnvironment._id ? {} : (environment?.data || {}),
+        environmentName: environment._id === baseEnvironment._id ? '' : (environment?.name || ''),
         baseEnvironment: baseEnvironment?.data || {},
+        baseEnvironmentName: baseEnvironment?.name || '',
         clientCertificates,
         settings,
         cookieJar,
