@@ -170,7 +170,7 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                     <div className="flex items-center gap-2 text-sm">
                       <Icon icon="info-circle" />
                       <span>
-                        To learn more about self hosting. <Link href="https://github.com/Kong/insomnia-mockbin" className='underline'>Click here</Link>
+                        To learn more about self hosting. <Link href="https://docs.insomnia.rest/insomnia/api-mocking" className='underline'>Click here</Link>
                       </span>
                     </div>
                     <TextField
