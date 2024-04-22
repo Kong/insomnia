@@ -26,6 +26,9 @@ test.describe('pre-request features tests', async () => {
         {
             name: 'environments setting and overriding',
             expectedBody: {
+                environmentName: '',
+                baseEnvironmentName: 'Base Environment',
+                collectionVariablesName: 'Base Environment',
                 fromBaseEnv: 'baseEnv',
                 scriptValue: 'fromEnv',
                 preDefinedValue: 'fromScript',

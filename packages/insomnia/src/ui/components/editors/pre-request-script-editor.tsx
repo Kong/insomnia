@@ -156,15 +156,15 @@ export const PreRequestScriptEditor: FC<Props> = ({
   // TODO(george): Add more to this object to provide improved autocomplete
   const preRequestScriptSnippets = getPreRequestScriptSnippets(
     new InsomniaObject({
-      globals: new Environment({}),
-      iterationData: new Environment({}),
-      environment: new Environment({}),
-      baseEnvironment: new Environment({}),
+      globals: new Environment('globals', {}),
+      iterationData: new Environment('iterationData', {}),
+      environment: new Environment('environment', {}),
+      baseEnvironment: new Environment('baseEnvironment', {}),
       variables: new Variables({
-        globals: new Environment({}),
-        environment: new Environment({}),
-        collection: new Environment({}),
-        data: new Environment({}),
+        globals: new Environment('globals', {}),
+        environment: new Environment('environment', {}),
+        collection: new Environment('collection', {}),
+        data: new Environment('data', {}),
       }),
       request: new ScriptRequest({
         url: new Url('http://placeholder.com'),

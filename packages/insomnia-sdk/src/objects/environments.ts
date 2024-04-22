@@ -1,9 +1,15 @@
 import { getIntepolator } from './interpolator';
 export class Environment {
+    private _name: string;
     private kvs = new Map<string, boolean | number | string>();
 
-    constructor(jsonObject: object | undefined) {
+    constructor(name: string, jsonObject: object | undefined) {
+        this._name = name;
         this.kvs = new Map(Object.entries(jsonObject || {}));
+    }
+
+    get name() {
+        return this._name;
     }
 
     has = (variableName: string) => {
@@ -55,7 +61,7 @@ export class Variables {
         this.collection = args.collection;
         this.environment = args.environment;
         this.data = args.data;
-        this.local = new Environment({});
+        this.local = new Environment('__local', {});
     }
 
     has = (variableName: string) => {

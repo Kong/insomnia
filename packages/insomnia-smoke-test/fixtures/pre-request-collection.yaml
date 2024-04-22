@@ -315,6 +315,10 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     preRequestScript: |-
+      insomnia.environment.set("environmentName", insomnia.environment.name);
+      insomnia.environment.set("baseEnvironmentName", insomnia.baseEnvironment.name);
+      insomnia.environment.set("collectionVariablesName", insomnia.collectionVariables.name);
+      // manipulation
       insomnia.baseEnvironment.set('fromBaseEnv', 'baseEnv');
       insomnia.baseEnvironment.set('scriptValue', 'fromBase');
       insomnia.environment.set('scriptValue', 'fromEnv');
@@ -328,6 +332,9 @@ resources:
       mimeType: "application/json"
       text: |-
         {
+          "environmentName": "{{ _.environmentName }}",
+          "baseEnvironmentName": "{{ _.baseEnvironmentName }}",
+          "collectionVariablesName": "{{ _.collectionVariablesName }}",
           "fromBaseEnv": "{{ _.fromBaseEnv }}",
           "scriptValue": "{{ _.scriptValue }}",
           "preDefinedValue": "{{ _.preDefinedValue }}",
