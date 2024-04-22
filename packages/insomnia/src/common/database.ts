@@ -11,7 +11,6 @@ import { GitRepository } from '../models/git-repository';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
 import type { Workspace } from '../models/workspace';
-import { DB_PERSIST_INTERVAL } from './constants';
 import { generateId } from './misc';
 
 export interface Query {
@@ -333,9 +332,7 @@ export const database = {
           config,
         ),
       );
-      if (!config.inMemoryOnly) {
-        collection.persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
-      }
+
       db[modelType] = collection;
     }
 

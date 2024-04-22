@@ -82,8 +82,6 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
     return requestMeta.updateOrCreateByParentId(requestId, { previewMode });
   };
 
-  // TODO(johnwchadwick): Maybe shouldn't try if it's too large.
-  // TODO(johnwchadwick): Should allow selecting a type instead of assuming JSON.
   let pretty = raw;
   try {
     const parsed = JSON.parse(raw);

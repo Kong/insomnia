@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, ReactNode, useImperativeHandle, useRef, useState } from 'react';
 
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -9,7 +9,7 @@ export interface ErrorModalOptions {
   title?: string;
   error?: Error | null;
   addCancel?: boolean;
-  message?: string;
+  message?: string | ReactNode;
 }
 export interface ErrorModalHandle {
   show: (options: ErrorModalOptions) => void;

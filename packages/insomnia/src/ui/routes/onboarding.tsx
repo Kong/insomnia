@@ -1,91 +1,71 @@
+import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React from 'react';
 import { Link, Route, Routes, useLocation } from 'react-router-dom';
 
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
-import collaborators_rbac from '../images/onboarding/collaborators_rbac.png';
-import insomnia_ai from '../images/onboarding/insomnia_ai.png';
-import introducing_organizations from '../images/onboarding/introducing_organizations.png';
-import new_cloud_dashboard from '../images/onboarding/new_cloud_dashboard.png';
-import real_time_collaboration from '../images/onboarding/real_time_collaboration.png';
-import sharing_projects from '../images/onboarding/sharing_projects.png';
-import social_and_enterprise_sso from '../images/onboarding/social_and_enterprise_sso.png';
-import sse_api_support from '../images/onboarding/sse_api_support.png';
-import unlimited_projects from '../images/onboarding/unlimited_projects.png';
+import auto_pull from '../images/onboarding/auto_pull.png';
+import diff_view from '../images/onboarding/diff_view.png';
+import global_search from '../images/onboarding/global_search.png';
+import mocks from '../images/onboarding/mocks.png';
+import prerequest_scripts from '../images/onboarding/prerequest_scripts.png';
+import storage_options from '../images/onboarding/storage_options.png';
 
 const features = [
   {
-    id: 'sharing_projects',
-    icon: 'code-fork',
-    title: 'Sharing Projects',
+    id: 'prerequest_scripts',
+    icon: 'code',
+    title: 'Pre-request scripting',
     description:
-      'We have entirely reinvented sharing and collaboration in Insomnia. It is now easy and quick to invite as many collaborators as we want to join our projects, collections or design documents.',
-    image: sharing_projects,
+      'Insomnia finally ships with pre-request scripting for more complex flows, including Postman compatibility so it\'s easier to migrate your collections to Insomnia.',
+    image: prerequest_scripts,
   },
   {
-    id: 'real_time_collaboration',
-    icon: 'users',
-    title: 'Real time collaboration',
+    id: 'api_mocking',
+    icon: 'clone',
+    title: 'Native API mocking',
     description:
-      'With the new real time collaboration features, you can be more productive, reduce team coordination and always know in real time who is working with you on the same collections or design documents.',
-    image: real_time_collaboration,
+      'In addition to collections, design documents and tests you can now also create API mocks to accelerate development and simulate APIs.',
+    image: mocks,
   },
   {
-    id: 'introducing_organizations',
-    icon: 'city',
-    title: 'Introducing Organizations',
+    id: 'storage_control',
+    icon: 'database',
+    title: 'Storage control',
     description:
-      'Teams have been replaced with Organizations, you can now create as many as you need and invite people to collaborate with them.',
-    image: introducing_organizations,
+      'With this enterprise capabillity you can mandate that data in an organization is stored only locally, on Git or in the cloud for every collaborator.',
+    image: storage_options,
   },
   {
-    id: 'social_and_enterprise_sso',
-    icon: 'user-circle',
-    title: 'Social and Enterprise SSO',
-    description: `Organizations now support EE SSO via SAML and OIDC, while other accounts can login via social SSO providers like Google or GitHub,
-    in addition to the traditional email login.`,
-    image: social_and_enterprise_sso,
+    id: 'diff_editor',
+    icon: 'file-invoice',
+    title: 'New diff editor',
+    description: 'When synchronizing your data on Git or in the Cloud, it\'s now very easy to understand all the updates before pushing them.',
+    image: diff_view,
   },
   {
-    id: 'sse_api_support',
-    icon: 'plug',
-    title: 'Server Side Events API Support',
+    id: 'global_search',
+    icon: 'search',
+    title: 'Global search',
     description:
-      'Server Side Events APIs are now supported to give you even more ways to debug APIs with Insomnia, in addition to the previously supported REST, GraphQL, gRPC and WebSockets.',
-    image: sse_api_support,
+      'You can now search for documents an collections across one or more organizations from one place, simply by using the new global search.',
+    image: global_search,
   },
   {
-    id: 'insomnia_ai',
-    icon: 'robot',
-    title: 'Insomnia AI',
+    id: 'auto_pull',
+    icon: 'download',
+    title: 'Auto-pulling of files',
     description:
-      'With Insomnia Al you can auto-generate API tests based on an OpenAPI specification that you create. Build more reliable APIs and save on development time.',
-    image: insomnia_ai,
+      'To simplify collaboration in Insomnia, we are introducing auto-pulling of files in the dashboard without having to explicitly pull each file.',
+    image: auto_pull,
   },
-  {
-    id: 'new_cloud_dashboard',
-    icon: 'cloud',
-    title: 'New cloud dashboard',
-    description: 'With an entirely redesigned cloud platform and dashboard at insomnia.rest managing all of your organizations and collaborators is a piece of cake.',
-    image: new_cloud_dashboard,
-  },
-  {
-    id: 'collaborators_rbac',
-    icon: 'user-friends',
-    title: 'Collaborators RBAC',
-    description:
-      'Inviting users to your personal workspace or organization just got more powerful and intuitive with powerful RBAC rules to determine the level of access.',
-    image: collaborators_rbac,
-  },
-  {
-    id: 'unlimited_projects',
-    icon: 'infinity',
-    title: 'Unlimited Projects',
-    description:
-      'We removed all limitations to the Insomnia application, you can now create as many projects as you want, with as many files as you want.',
-    image: unlimited_projects,
-  },
-];
+] satisfies {
+  id: string;
+  icon: IconName;
+  title: string;
+  description: string;
+  image: string;
+}[];
 
 const FeatureWizardView = () => {
   return (
@@ -93,15 +73,15 @@ const FeatureWizardView = () => {
       <Route
         path="/"
         element={
-          <ul className="grid grid-cols-3 gap-2 h-80 justify-center p-4">
+          <ul className="grid grid-cols-3 gap-2 justify-center p-4">
             {features.map(feature => (
               <li key={feature.id}>
                 <Link
-                  className="w-full hover:bg-[--hl-sm] bg-[--hl-xs] transition-colors select-none h-24 border-solid flex flex-col items-center justify-center text-xs border border-[--hl-md] rounded-sm p-4 gap-2 hover:no-underline"
+                  className="w-full hover:bg-[--hl-sm] bg-[--hl-xs] transition-colors select-none h-32 border-solid flex flex-col items-center justify-center border border-[--hl-md] rounded-sm p-4 gap-2 hover:no-underline"
                   to={`/onboarding/${feature.id}`}
                 >
-                  <i className={`fa fa-${feature.icon} text-lg`} />
-                  <span className="text-center">{feature.title}</span>
+                  <i className={`fa fa-${feature.icon} text-xl`} />
+                  <span className="text-center text-sm">{feature.title}</span>
                 </Link>
               </li>
             ))}
@@ -173,20 +153,19 @@ const Onboarding = () => {
   return (
     <div className="relative h-full w-full text-left flex bg-[--color-bg]">
       <TrailLinesContainer>
-        <div className="flex justify-center items-center flex-col h-full w-[600px] min-h-[450px]">
-          <div className="flex flex-col gap-[var(--padding-sm)] items-center justify-center p-[--padding-lg] pt-12 w-full h-full bg-[--hl-xs] rounded-[var(--radius-md)] border-solid border border-[--hl-sm] relative">
+        <div className="flex justify-center items-center flex-col h-full w-[600px] min-h-[465px]">
+          <div className="flex flex-col gap-[var(--padding-sm)] items-center h-[465px] justify-center p-[--padding-lg] pt-12 w-full bg-[--hl-xs] rounded-[var(--radius-md)] border-solid border border-[--hl-sm] relative">
             <InsomniaLogo className="transform translate-x-[-50%] translate-y-[-50%] absolute top-0 left-1/2 w-16 h-16" />
-            <div className="text-[--color-font] flex flex-col gap-6">
+            <div className="text-[--color-font] flex flex-col gap-6 h-full">
               <h1 className="text-xl text-center">
-                🚀 Welcome to Insomnia 8!
+                🚀 Welcome to Insomnia 9!
               </h1>
               <div>
                 <p>
-                  This new version is the biggest one ever! Notable features
-                  are:
+                  We shipped hundreds of improvements including the following notable features:
                 </p>
               </div>
-              <div className="w-full relative min-h-full">
+              <div className="w-full relative flex-1">
                 <FeatureWizardView />
               </div>
               <div className="flex justify-between items-center">
@@ -202,9 +181,9 @@ const Onboarding = () => {
                   <span />
                 )}
                 <Link
-                  className="hover:no-underline bg-[--color-surprise] text-sm hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
-                  to="/onboarding/migrate"
-                  onClick={() => window.localStorage.setItem('hasSeenOnboarding', 'true')}
+                  className="hover:no-underline bg-[--color-surprise] text-sm hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                  to={window.localStorage.getItem('prefers-project-type') ? '/organization' : '/onboarding/migrate'}
+                  onClick={() => window.localStorage.setItem('hasSeenOnboardingV9', 'true')}
                 >
                   Continue
                 </Link>

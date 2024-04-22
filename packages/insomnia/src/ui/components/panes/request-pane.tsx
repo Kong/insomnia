@@ -1,6 +1,7 @@
 import React, { FC, Fragment, useState } from 'react';
 import { Button, Heading, ToggleButton } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
@@ -14,12 +15,12 @@ import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/us
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
-import { CodeEditor } from '../codemirror/code-editor';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
+import { PreRequestScriptEditor } from '../editors/pre-request-script-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
@@ -76,6 +77,8 @@ export const RequestPane: FC<Props> = ({
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
     useState(false);
   const patchRequest = useRequestPatcher();
+
+  const [dismissPathParameterTip, setDismissPathParameterTip] = useLocalStorage('dismissPathParameterTip', '');
 
   const handleImportQueryFromUrl = () => {
     let query;
@@ -230,10 +233,16 @@ export const RequestPane: FC<Props> = ({
                     </div>
                   </div>
                 )}
-                {pathParameters.length === 0 && (
+                {pathParameters.length === 0 && !dismissPathParameterTip && (
                   <div className='text-sm text-[--hl] rounded-sm border border-solid border-[--hl-md] p-2 flex items-center gap-2'>
                     <Icon icon='info-circle' />
                     <span>Path parameters are url path segments that start with a colon ':' e.g. ':id' </span>
+                    <Button
+                      className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ml-auto"
+                      onPress={() => setDismissPathParameterTip('true')}
+                    >
+                      <Icon icon='close' />
+                    </Button>
                   </div>
                 )}
               </div>
@@ -292,21 +301,28 @@ export const RequestPane: FC<Props> = ({
         </TabItem>
         <TabItem
           key="pre-request-script"
-          title={'Pre-request Script'}
+          data-testid="pre-request-script-tab"
+          title={
+            <div className='flex items-center gap-2'>
+              Pre-request Script{' '}
+              {activeRequest.preRequestScript && (
+                <span className="ml-2 p-2 border-solid border border-[--hl-md] rounded-lg">
+                  <span className="flex w-2 h-2 bg-green-500 rounded-full" />
+                </span>
+              )}
+            </div>
+          }
           aria-label={'experimental'}
         >
           <ErrorBoundary
             key={uniqueKey}
             errorClassName="tall wide vertically-align font-error pad text-center"
           >
-            <CodeEditor
-              id="pre-request-script-editor"
-              showPrettifyButton
+            <PreRequestScriptEditor
               uniquenessKey={uniqueKey}
               defaultValue={activeRequest.preRequestScript || ''}
               onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
-              mode='text/javascript'
-              placeholder="..."
+              settings={settings}
             />
           </ErrorBoundary>
         </TabItem>
@@ -316,8 +332,8 @@ export const RequestPane: FC<Props> = ({
             <>
               Docs
               {activeRequest.description && (
-                <span className="bubble space-left">
-                  <i className="fa fa--skinny fa-check txt-xxs" />
+                <span className="ml-2 p-2 border-solid border border-[--hl-md] rounded-lg">
+                  <span className="flex w-2 h-2 bg-green-500 rounded-full" />
                 </span>
               )}
             </>

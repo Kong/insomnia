@@ -20,7 +20,7 @@ import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { WebSocketBridgeAPI } from '../network/websocket';
 import { gRPCBridgeAPI } from './grpc';
 
-export interface MainBridgeAPI {
+export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;
   openInBrowser: (url: string) => void;
   restart: () => void;

@@ -23,7 +23,7 @@ test('can send requests', async ({ app, page }) => {
   await page.getByText('Which format would you like to export as?').click();
   await page.locator('.app').press('Escape');
 
-  await page.getByText('CollectionSmoke testsjust now').click();
+  await page.getByLabel('Smoke tests').click();
 
   await page.getByLabel('Create in collection').click();
   await page.getByRole('menuitemradio', { name: 'From Curl' }).click();
@@ -93,7 +93,7 @@ test('can cancel requests', async ({ app, page }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByText('CollectionSmoke testsjust now').click();
+  await page.getByLabel('Smoke tests').click();
 
   await page.getByLabel('Request Collection').getByTestId('delayed request').press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();

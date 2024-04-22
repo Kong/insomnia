@@ -40,6 +40,7 @@ describe('names', () => {
     compare('Nebulo_9-method-smash', {
       [xKongName]: 'pathItem-smash',
       post: {
+        responses: {},
         [xKongName]: 'method-smash',
         operationId: 'operationId-smash',
       },
@@ -50,6 +51,7 @@ describe('names', () => {
     compare('Nebulo_9-operationId-smash', {
       [xKongName]: 'pathItem-smash',
       post: {
+        responses: {},
         operationId: 'operationId-smash',
       },
     });
@@ -58,13 +60,13 @@ describe('names', () => {
   it("api.paths[path]['x-kong-name'] is third priority", () => {
     compare('Nebulo_9-pathItem-smash-post', {
       [xKongName]: 'pathItem-smash',
-      post: {},
+      post: { responses: {} },
     });
   });
 
   it('purely generated is fourth priority', () => {
     compare('Nebulo_9-planet-smasher-post', {
-      post: {},
+      post: { responses: {} },
     });
   });
 
@@ -75,7 +77,7 @@ describe('names', () => {
         paths: {
           '/': {
             summary: 'smashes planets',
-            get: {},
+            get: { responses: {} },
           },
         },
       },

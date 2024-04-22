@@ -40,6 +40,7 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
         type={isMasked ? 'password' : 'text'}
         onChange={onChange}
         readOnly={disabled}
+        // @ts-expect-error -- garbage abstraction
         defaultValue={authentication[property] || ''}
         getAutocompleteConstants={getAutocompleteConstants}
       />

@@ -193,7 +193,6 @@ export class SvgIcon extends Component<SvgIconProps> {
     [IconEnum.draftingCompass]: [ThemeEnum.default, SvgIcnDraftingCompass],
     [IconEnum.dragGrip]: [ThemeEnum.default, SvgIcnDragGrip],
     [IconEnum.elevator]: [ThemeEnum.default, SvgIcnElevator],
-    [IconEnum.elevator]: [ThemeEnum.default, SvgIcnElevator],
     [IconEnum.ellipsesCircle]: [ThemeEnum.default, SvgIcnEllipsisCircle],
     [IconEnum.ellipsis]: [ThemeEnum.default, SvgIcnEllipsis],
     [IconEnum.empty]: [ThemeEnum.default, SvgIcnEmpty],
