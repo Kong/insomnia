@@ -107,12 +107,6 @@ interface CurrentPlan {
   type: PersonalPlanType;
 };
 
-export const organizationsData: OrganizationLoaderData = {
-  organizations: [],
-  user: undefined,
-  currentPlan: undefined,
-};
-
 function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
   const home = organizations.find(organization => isPersonalOrganization(organization) && isOwnerOfOrganization({
     organization,
@@ -162,10 +156,17 @@ export const indexLoader: LoaderFunction = async () => {
       const { organizations } = organizationsResult;
 
       invariant(accountId, 'Account ID is not defined');
-      organizationsData.organizations = sortOrganizations(accountId, organizations);
-      organizationsData.user = user;
-      organizationsData.currentPlan = currentPlan;
-      const personalOrganization = organizations.filter(isPersonalOrganization)
+
+      localStorage.setItem(`${accountId}:organizations`, JSON.stringify(sortOrganizations(accountId, organizations)));
+      localStorage.setItem(`${accountId}:user`, JSON.stringify(user));
+      localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlan));
+    } catch (error) {
+      console.log('Failed to load Organizations', error);
+    }
+
+    const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+
+    const personalOrganization = organizations.filter(isPersonalOrganization)
         .find(organization =>
           isOwnerOfOrganization({
             organization,
@@ -203,11 +204,6 @@ export const indexLoader: LoaderFunction = async () => {
       if (organizations.length > 0) {
         return redirect(`/organization/${organizations[0].id}`);
       }
-    } catch (error) {
-      console.log('Failed to load Organizations', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Network connectivity issue: Failed to load Organizations. ${errorMessage}`);
-    }
   }
 
   await session.logout();
@@ -242,9 +238,9 @@ export const syncOrganizationsAction: ActionFunction = async () => {
       invariant(user, 'Failed to load user');
       invariant(currentPlan, 'Failed to load current plan');
       invariant(accountId, 'Account ID is not defined');
-      organizationsData.organizations = sortOrganizations(accountId, organizationsResult.organizations);
-      organizationsData.user = user;
-      organizationsData.currentPlan = currentPlan;
+      localStorage.setItem(`${accountId}:organizations`, JSON.stringify(sortOrganizations(accountId, organizationsResult.organizations)));
+      localStorage.setItem(`${accountId}:user`, JSON.stringify(user));
+      localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlan));
     } catch (error) {
       console.log('Failed to load Organizations', error);
     }
@@ -260,9 +256,17 @@ export interface OrganizationLoaderData {
 }
 
 export const loader: LoaderFunction = async () => {
-  const { id } = await userSession.getOrCreate();
+  const { id, accountId } = await userSession.getOrCreate();
   if (id) {
-    return organizationsData;
+    const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+    const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as UserProfileResponse;
+    const currentPlan = JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan;
+
+    return {
+      organizations: sortOrganizations(accountId, organizations),
+      user,
+      currentPlan,
+    };
   } else {
     return {
       organizations: [],
@@ -300,7 +304,7 @@ export interface OrganizationFeatureLoaderData {
 
 export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<OrganizationFeatureLoaderData> => {
   const { organizationId } = params as { organizationId: string };
-  const { id: sessionId } = await userSession.getOrCreate();
+  const { id: sessionId, accountId } = await userSession.getOrCreate();
   const fallbackFeatures = {
     gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
@@ -321,7 +325,8 @@ export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<Organ
     };
   }
 
-  const organization = organizationsData.organizations.find(o => o.id === organizationId);
+  const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+  const organization = organizations.find(o => o.id === organizationId);
 
   if (!organization) {
     throw redirect('/organization');

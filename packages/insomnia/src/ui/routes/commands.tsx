@@ -2,16 +2,15 @@ import { LoaderFunctionArgs } from 'react-router-dom';
 
 import { database } from '../../common/database';
 import { fuzzyMatch } from '../../common/misc';
-import { environment, grpcRequest, project, request, requestGroup, webSocketRequest, workspace } from '../../models';
+import { environment, grpcRequest, project, request, requestGroup, userSession, webSocketRequest, workspace } from '../../models';
 import { Environment } from '../../models/environment';
 import { GrpcRequest } from '../../models/grpc-request';
-import { isScratchpadOrganizationId } from '../../models/organization';
+import { isScratchpadOrganizationId, Organization } from '../../models/organization';
 import { Request } from '../../models/request';
 import { RequestGroup } from '../../models/request-group';
 import { WebSocketRequest } from '../../models/websocket-request';
 import { scopeToActivity, Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
-import { organizationsData } from './organization';
 
 export interface CommandItem<TItem> {
   id: string;
@@ -54,7 +53,9 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderResult> {
     )?.indexes);
   };
 
-  const allOrganizations = organizationsData.organizations;
+  const { accountId } = await userSession.getOrCreate();
+
+  const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
 
   const allOrganizationsIds = isScratchpadOrganizationId(organizationId) ? [organizationId] : allOrganizations.map(org => org.id);
 
