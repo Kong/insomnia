@@ -1,5 +1,6 @@
 import fs from 'fs';
 import React, { FC, useEffect, useRef, useState } from 'react';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -29,15 +30,6 @@ import { EventView } from './event-view';
 
 const PaneHeader = styled(OriginalPaneHeader)({
   '&&': { justifyContent: 'unset' },
-});
-
-const EventLogTableWrapper = styled.div({
-  width: '100%',
-  flex: 1,
-  display: 'flex',
-  flexDirection: 'column',
-  overflow: 'hidden',
-  boxSizing: 'border-box',
 });
 
 const EventViewWrapper = styled.div({
@@ -175,10 +167,10 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
       </PaneHeader>
       <Tabs aria-label="Curl response pane tabs">
         <TabItem key="events" title="Events">
-          <div className='h-full w-full grid grid-rows-[repeat(auto-fit,minmax(0,1fr))]'>
+          <PanelGroup direction='vertical' className='h-full w-full grid grid-rows-[repeat(auto-fit,minmax(0,1fr))]'>
             {response.error ? <ResponseErrorViewer url={response.url} error={response.error} />
               : <>
-                <EventLogTableWrapper>
+                <Panel minSize={10} defaultSize={50} className="w-full flex flex-col overflow-hidden box-border flex-1">
                   <div
                     style={{
                       display: 'flex',
@@ -224,6 +216,7 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
                       <SvgIcon icon='prohibited' />
                     </PaddedButton>
                   </div>
+
                   {Boolean(events?.length) && (
                     <EventLogView
                       events={events}
@@ -231,17 +224,22 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
                       selectionId={selectedEvent?._id}
                     />
                   )}
-                </EventLogTableWrapper>
+                </Panel>
                 {selectedEvent && (
-                  <EventViewWrapper>
-                    <EventView
-                      key={selectedEvent._id}
-                      event={selectedEvent}
-                    />
-                  </EventViewWrapper>
+                  <>
+                    <PanelResizeHandle className={'w-full h-[1px] bg-[--hl-md]'} />
+                    <Panel minSize={10} defaultSize={50}>
+                      <EventViewWrapper>
+                        <EventView
+                          key={selectedEvent._id}
+                          event={selectedEvent}
+                        />
+                      </EventViewWrapper>
+                    </Panel>
+                  </>
                 )}
               </>}
-          </div>
+          </PanelGroup>
         </TabItem>
         <TabItem
           key="headers"
