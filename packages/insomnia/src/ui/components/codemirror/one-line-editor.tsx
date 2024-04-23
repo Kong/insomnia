@@ -223,8 +223,13 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     return () => codeMirror.current?.off('changes', fn);
   }, [onChange]);
 
-  useEffect(() => window.main.on('context-menu-command', (_, { key, tag }) =>
-    id === key && codeMirror.current?.replaceSelection(tag)), [id]);
+  useEffect(() => {
+    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag }) =>
+      id === key && codeMirror.current?.replaceSelection(tag));
+    return () => {
+      unsubscribe();
+    };
+  }, [id]);
 
   useImperativeHandle(ref, () => ({
     selectAll: () => codeMirror.current?.setSelection({ line: 0, ch: 0 }, { line: codeMirror.current.lineCount(), ch: 0 }),

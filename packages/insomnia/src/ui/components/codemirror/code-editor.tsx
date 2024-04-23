@@ -516,8 +516,13 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       console.log('Failed to set CodeMirror option', err.message, { key, value });
     }
   };
-  useEffect(() => window.main.on('context-menu-command', (_, { key, tag }) =>
-    id === key && codeMirror.current?.replaceSelection(tag)), [id]);
+  useEffect(() => {
+    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag }) =>
+      id === key && codeMirror.current?.replaceSelection(tag));
+    return () => {
+      unsubscribe();
+    };
+  }, [id]);
   useEffect(() => tryToSetOption('hintOptions', hintOptions), [hintOptions]);
   useEffect(() => tryToSetOption('info', infoOptions), [infoOptions]);
   useEffect(() => tryToSetOption('jump', jumpOptions), [jumpOptions]);
