@@ -1,5 +1,7 @@
 import fs from 'fs';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
+import { Button, Input, SearchField } from 'react-aria-components';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -14,6 +16,7 @@ import { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/requ
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
+import { Icon } from '../icon';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { PlaceholderResponsePane } from '../panes/placeholder-response-pane';
 import { SvgIcon } from '../svg-icon';
@@ -29,52 +32,6 @@ import { EventView } from './event-view';
 
 const PaneHeader = styled(OriginalPaneHeader)({
   '&&': { justifyContent: 'unset' },
-});
-
-const EventLogTableWrapper = styled.div({
-  width: '100%',
-  flex: 1,
-  overflow: 'hidden',
-  boxSizing: 'border-box',
-});
-
-const EventViewWrapper = styled.div({
-  flex: 1,
-  borderTop: '1px solid var(--hl-md)',
-  height: '100%',
-});
-
-const EventSearchFormControl = styled.div({
-  outline: 'none',
-  width: '100%',
-  boxSizing: 'border-box',
-  position: 'relative',
-  display: 'flex',
-  border: '1px solid var(--hl-md)',
-  borderRadius: 'var(--radius-md)',
-});
-
-const EventSearchInput = styled.input({
-  paddingRight: '2em',
-  padding: 'var(--padding-sm)',
-  backgroundColor: 'var(--hl-xxs)',
-  width: '100%',
-  display: 'block',
-  boxSizing: 'border-box',
-
-  // Remove the default search input cancel button
-  '::-webkit-search-cancel-button': {
-    display: 'none',
-  },
-
-  ':focus': {
-    backgroundColor: 'transparent',
-    borderColor: 'var(--hl-lg)',
-  },
-});
-
-const PaddedButton = styled('button')({
-  padding: 'var(--padding-sm)',
 });
 
 export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
@@ -96,7 +53,6 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
 }) => {
   const [selectedEvent, setSelectedEvent] = useState<CurlEvent | WebSocketEvent | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const [clearEventsBefore, setClearEventsBefore] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [eventType, setEventType] = useState<CurlEvent['type']>();
@@ -173,10 +129,10 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
       </PaneHeader>
       <Tabs aria-label="Curl response pane tabs">
         <TabItem key="events" title="Events">
-          <div className='h-full w-full grid grid-rows-[repeat(auto-fit,minmax(0,1fr))]'>
+          <PanelGroup direction='vertical' className='h-full w-full grid grid-rows-[repeat(auto-fit,minmax(0,1fr))]'>
             {response.error ? <ResponseErrorViewer url={response.url} error={response.error} />
               : <>
-                <EventLogTableWrapper>
+                <Panel minSize={10} defaultSize={50} className="w-full flex flex-col overflow-hidden box-border flex-1">
                   <div
                     style={{
                       display: 'flex',
@@ -193,35 +149,36 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
                       <option value="error">Error</option>
                     </select>
 
-                    <EventSearchFormControl>
-                      <EventSearchInput
-                        ref={searchInputRef}
-                        type="search"
+                    <SearchField
+                      aria-label="Events filter"
+                      className="group relative flex-1 w-full"
+                      defaultValue={searchQuery}
+                      onChange={query => {
+                        setSearchQuery(query);
+                      }}
+                    >
+                      <Input
                         placeholder="Search"
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.currentTarget.value)}
+                        className="py-1 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                       />
-                      {searchQuery && (
-                        <PaddedButton
-                          className="form-control__right"
-                          onClick={() => {
-                            setSearchQuery('');
-                            searchInputRef.current?.focus();
-                          }}
-                        >
-                          <i className="fa fa-times-circle" />
-                        </PaddedButton>
-                      )}
-                    </EventSearchFormControl>
-                    <PaddedButton
-                      onClick={() => {
+                      <div className="flex items-center px-2 absolute right-0 top-0 h-full">
+                        <Button className="flex group-data-[empty]:hidden items-center justify-center aspect-square w-5 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                          <Icon icon="close" />
+                        </Button>
+                      </div>
+                    </SearchField>
+                    <Button
+                      aria-label="Create in collection"
+                      className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                      onPress={() => {
                         const lastEvent = events[0];
                         setClearEventsBefore(lastEvent.timestamp);
                       }}
                     >
                       <SvgIcon icon='prohibited' />
-                    </PaddedButton>
+                    </Button>
                   </div>
+
                   {Boolean(events?.length) && (
                     <EventLogView
                       events={events}
@@ -229,17 +186,22 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
                       selectionId={selectedEvent?._id}
                     />
                   )}
-                </EventLogTableWrapper>
+                </Panel>
                 {selectedEvent && (
-                  <EventViewWrapper>
-                    <EventView
-                      key={selectedEvent._id}
-                      event={selectedEvent}
-                    />
-                  </EventViewWrapper>
+                  <>
+                    <PanelResizeHandle className={'w-full h-[1px] bg-[--hl-md]'} />
+                    <Panel minSize={10} defaultSize={50}>
+                      <div className="flex-1 border-t border-[var(--hl-md)] h-full">
+                        <EventView
+                          key={selectedEvent._id}
+                          event={selectedEvent}
+                        />
+                      </div>
+                    </Panel>
+                  </>
                 )}
               </>}
-          </div>
+          </PanelGroup>
         </TabItem>
         <TabItem
           key="headers"
