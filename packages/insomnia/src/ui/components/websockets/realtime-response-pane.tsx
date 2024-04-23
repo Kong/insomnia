@@ -101,6 +101,14 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
+      try {
+        await fs.promises.stat(response.timelinePath);
+      } catch (err) {
+        if (err.code === 'ENOENT') {
+          return setTimeline([]);
+        }
+      }
+
       const rawBuffer = await fs.promises.readFile(response.timelinePath);
       const timelineString = rawBuffer.toString();
       const timelineParsed = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e));
