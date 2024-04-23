@@ -3,10 +3,10 @@ import React, { FC, useCallback } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE, PreviewMode } from '../../../common/constants';
+import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';
 import { WebSocketEvent, WebSocketMessageEvent } from '../../../main/network/websocket';
-import { requestMeta } from '../../../models';
+import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { RequestLoaderData } from '../../routes/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { showError } from '../modals';
@@ -78,9 +78,7 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
     window.clipboard.writeText(raw);
   }, [raw]);
 
-  const setPreviewMode = async (previewMode: PreviewMode) => {
-    return requestMeta.updateOrCreateByParentId(requestId, { previewMode });
-  };
+  const patchRequestMeta = useRequestMetaPatcher();
 
   let pretty = raw;
   try {
@@ -98,7 +96,7 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
           download={handleDownloadResponseBody}
           copyToClipboard={handleCopyResponseToClipboard}
           previewMode={previewMode}
-          setPreviewMode={setPreviewMode}
+          setPreviewMode={previewMode => patchRequestMeta(requestId, { previewMode })}
         />
       </PreviewPaneButtons>
       <PreviewPaneContents>
