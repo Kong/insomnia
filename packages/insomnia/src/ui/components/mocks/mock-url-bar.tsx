@@ -153,7 +153,7 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
               label="Generate Client Code"
               onClick={async () => {
                 const request = await models.request.getByParentId(mockRoute._id);
-                request && showModal(GenerateCodeModal, { request });
+                request && showModal(GenerateCodeModal, { request: { ...request, url: getMockServiceBinURL(mockRoute.parentId, pathInput, mockServer.useInsomniaCloud ? undefined : mockServer.url) } });
               }}
             />
           </DropdownItem>
