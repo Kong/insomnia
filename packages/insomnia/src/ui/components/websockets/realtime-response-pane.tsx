@@ -34,6 +34,8 @@ const PaneHeader = styled(OriginalPaneHeader)({
 const EventLogTableWrapper = styled.div({
   width: '100%',
   flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
   overflow: 'hidden',
   boxSizing: 'border-box',
 });
