@@ -591,17 +591,24 @@ export function mergeRequestBody(
         mimeType = originalReqBody.mimeType;
     }
 
-    return {
-        mimeType: mimeType,
-        text: updatedReqBody?.raw,
-        fileName: updatedReqBody?.file,
-        params: updatedReqBody?.urlencoded?.map(
-            (param: { key: string; value: string; type?: string }) => (
-                { name: param.key, value: param.value, type: param.type }
+    try {
+        const textContent = updatedReqBody?.raw ? updatedReqBody?.raw :
+            updatedReqBody?.graphql ? JSON.stringify(updatedReqBody?.graphql) : '';
+
+        return {
+            mimeType: mimeType,
+            text: textContent,
+            fileName: updatedReqBody?.file,
+            params: updatedReqBody?.urlencoded?.map(
+                (param: { key: string; value: string; type?: string }) => (
+                    { name: param.key, value: param.value, type: param.type }
+                ),
+                {},
             ),
-            {},
-        ),
-    };
+        };
+    } catch (e) {
+        throw Error(`failed to update body: ${e}`)
+    }
 }
 
 export function mergeRequests(

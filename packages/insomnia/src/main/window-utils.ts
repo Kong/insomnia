@@ -59,6 +59,8 @@ export async function createHiddenBrowserWindow() {
   ipcMain.on('set-hidden-window-busy-status', (_, busyStatus) => {
     hiddenWindowIsBusy = busyStatus;
   });
+  // this avoids registering handler multiple times and output an error
+  ipcMain.removeHandler('open-channel-to-hidden-browser-window');
   // when the main window runs a script
   // if the hidden window is down, start it
   ipcMain.handle('open-channel-to-hidden-browser-window', async event => {
