@@ -79,8 +79,9 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
     <>
       <div className='w-full flex-1 overflow-hidden border border-solid border-[--hl-sm] select-none overflow-y-auto max-h-96'>
         <Table
-          selectionMode='multiple'
+          selectionMode='single'
           selectedKeys={selectionId ? [selectionId] : []}
+          selectionBehavior='replace'
           onSelectionChange={keys => {
             if (keys !== 'all') {
               const key = keys.values().next().value;
