@@ -401,6 +401,27 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
           { cookies: mutatedContext.cookieJar.cookies },
         );
       }
+      // when base environment is activated, `mutatedContext.environment` points to it
+      const isActiveEnvironmentBase = mutatedContext.environment?._id === baseEnvironment._id;
+      const hasEnvironmentAndIsNotBase = mutatedContext.environment && !isActiveEnvironmentBase;
+      if (hasEnvironmentAndIsNotBase) {
+        await models.environment.update(
+          environment,
+          {
+            data: mutatedContext.environment.data,
+            dataPropertyOrder: mutatedContext.environment.dataPropertyOrder,
+          }
+        );
+      }
+      if (mutatedContext.baseEnvironment) {
+        await models.environment.update(
+          baseEnvironment,
+          {
+            data: mutatedContext.baseEnvironment.data,
+            dataPropertyOrder: mutatedContext.baseEnvironment.dataPropertyOrder,
+          }
+        );
+      }
     }
 
     const renderedResult = await tryToInterpolateRequest(
