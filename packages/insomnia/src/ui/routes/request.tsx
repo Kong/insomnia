@@ -404,7 +404,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       // when base environment is activated, `mutatedContext.environment` points to it
       const isActiveEnvironmentBase = mutatedContext.environment._id === baseEnvironment._id;
       const hasEnvironmentAndIsNotBase = mutatedContext.environment && !isActiveEnvironmentBase;
-      if (hasEnvAndIsUserCreated) {
+      if (hasEnvironmentAndIsNotBase) {
         await models.environment.update(
           environment,
           {
