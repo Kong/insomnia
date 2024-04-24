@@ -408,6 +408,30 @@ test.describe('pre-request features tests', async () => {
         await expect(responsePane).toContainText('✓ happy tests'); // original proxy
         await expect(responsePane).toContainText('✕ unhappy tests: AssertionError: expected 199 to deeply equal 200'); // updated proxy
     });
+
+    test('environment and baseEnvironment can be persisted', async ({ page }) => {
+        const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
+        await page.getByLabel('Request Collection').getByTestId('persist environment').press('Enter');
+
+        // send
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+        // verify response
+        await page.waitForSelector('[data-testid="response-status-tag"]:visible');
+        await expect(statusTag).toContainText('200 OK');
+
+        // verify persisted environment
+        await page.getByLabel('Manage Environments').click();
+        const responseBody = page.getByRole('dialog').getByTestId('CodeEditor').locator('.CodeMirror-line');
+        const rows = await responseBody.allInnerTexts();
+        const bodyJson = JSON.parse(rows.join(' '));
+
+        expect(bodyJson).toEqual({
+            // no environment is selected so the environment value is not persisted
+            '__fromScript1': 'baseEnvironment',
+            '__fromScript2': 'collection',
+        });
+    });
 });
 
 test.describe('unhappy paths', async () => {
