@@ -197,6 +197,7 @@ describe('app.export.*', () => {
           parameters: [],
           pathParameters: [],
           preRequestScript: '',
+          postRequestScript: '',
           parentId: 'wrk_1',
           settingDisableRenderRequestBody: false,
           settingEncodeUrl: true,

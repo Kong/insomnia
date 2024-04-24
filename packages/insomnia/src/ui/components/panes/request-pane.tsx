@@ -19,9 +19,9 @@ import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
-import { PreRequestScriptEditor } from '../editors/pre-request-script-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
+import { RequestScriptEditor } from '../editors/request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
 import { MarkdownPreview } from '../markdown-preview';
@@ -289,10 +289,37 @@ export const RequestPane: FC<Props> = ({
             key={uniqueKey}
             errorClassName="tall wide vertically-align font-error pad text-center"
           >
-            <PreRequestScriptEditor
+            <RequestScriptEditor
               uniquenessKey={uniqueKey}
               defaultValue={activeRequest.preRequestScript || ''}
               onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
+              settings={settings}
+            />
+          </ErrorBoundary>
+        </TabItem>
+        <TabItem
+          key="post-request-script"
+          data-testid="post-request-script-tab"
+          title={
+            <div className='flex items-center gap-2'>
+              Post-request Script{' '}
+              {activeRequest.postRequestScript && (
+                <span className="ml-2 p-2 border-solid border border-[--hl-md] rounded-lg">
+                  <span className="flex w-2 h-2 bg-green-500 rounded-full" />
+                </span>
+              )}
+            </div>
+          }
+          aria-label={'experimental'}
+        >
+          <ErrorBoundary
+            key={uniqueKey}
+            errorClassName="tall wide vertically-align font-error pad text-center"
+          >
+            <RequestScriptEditor
+              uniquenessKey={uniqueKey}
+              defaultValue={activeRequest.postRequestScript || ''}
+              onChange={postRequestScript => patchRequest(requestId, { postRequestScript })}
               settings={settings}
             />
           </ErrorBoundary>
