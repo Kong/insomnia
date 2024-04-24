@@ -4,6 +4,7 @@ import { Breadcrumb, Breadcrumbs, Button, GridList, GridListItem, Menu, MenuTrig
 import { ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { LoaderFunction, NavLink, Route, Routes, useFetcher, useLoaderData, useNavigate, useParams } from 'react-router-dom';
 
+import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import * as models from '../../models';
 import { MockRoute } from '../../models/mock-route';
 import { invariant } from '../../utils/invariant';
@@ -132,7 +133,7 @@ const MockServerRoute = () => {
     if (layout && layout[0] > 0) {
       layout[0] = 0;
     } else {
-      layout[0] = 30;
+      layout[0] = DEFAULT_SIDEBAR_SIZE;
     }
 
     sidebarPanelRef.current?.setLayout(layout);

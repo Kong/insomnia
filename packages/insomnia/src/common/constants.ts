@@ -157,6 +157,7 @@ export const MIN_INTERFACE_FONT_SIZE = 8;
 export const MAX_INTERFACE_FONT_SIZE = 24;
 export const MIN_EDITOR_FONT_SIZE = 8;
 export const MAX_EDITOR_FONT_SIZE = 24;
+export const DEFAULT_SIDEBAR_SIZE = 25;
 
 // Activities
 export type GlobalActivity =

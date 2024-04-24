@@ -48,7 +48,7 @@ import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
 
 import { parseApiSpec } from '../../common/api-specs';
-import { ACTIVITY_SPEC } from '../../common/constants';
+import { ACTIVITY_SPEC, DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { debounce } from '../../common/misc';
 import { ApiSpec } from '../../models/api-spec';
 import { Environment } from '../../models/environment';
@@ -368,7 +368,7 @@ const Design: FC = () => {
     if (layout && layout[0] > 0) {
       layout[0] = 0;
     } else {
-      layout[0] = 30;
+      layout[0] = DEFAULT_SIDEBAR_SIZE;
     }
 
     sidebarPanelRef.current?.setLayout(layout);
