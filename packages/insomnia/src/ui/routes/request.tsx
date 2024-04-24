@@ -401,7 +401,11 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
           { cookies: mutatedContext.cookieJar.cookies },
         );
       }
-      if (mutatedContext.environment) {
+      if (mutatedContext.environment &&
+        // when no environment is activated, `mutatedContext.environment` points to the base environment
+        // so if no environment is activated, it will not persist effects
+        // or it requires to create a new environment on the fly and activate it, which seems not reasonable
+        mutatedContext.environment._id !== environment._id) {
         await models.environment.update(
           environment,
           {
