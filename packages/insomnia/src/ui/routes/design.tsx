@@ -452,7 +452,7 @@ const Design: FC = () => {
 
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
-      <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={20} collapsible>
+      <Panel id="sidebar" className='sidebar theme--sidebar' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
         <div className='flex h-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden'>
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
             <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
