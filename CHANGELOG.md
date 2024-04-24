@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## What's Changed
 
 - (feat/SEC-1010): Add SAST scanning using semgrep by @saisatishkarra in <https://github.com/Kong/insomnia/pull/7015>
-
 - feat: mock resources by @jackkav in <https://github.com/Kong/insomnia/pull/6760>
 - feat: mock second pass by @jackkav in <https://github.com/Kong/insomnia/pull/7022>
 - Bump/jest-29 by @jackkav in <https://github.com/Kong/insomnia/pull/7027>
