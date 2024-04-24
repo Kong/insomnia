@@ -374,7 +374,7 @@ const MockServerRoute = () => {
           <EmptyStatePane
             icon={<SvgIcon icon="bug" />}
             documentationLinks={[]}
-            title="Select or create a route to configured response here"
+            title="Create a route to configure mock response here"
           />
         }
       />
@@ -397,7 +397,7 @@ const MockServerRoute = () => {
           <EmptyStatePane
             icon={<SvgIcon icon="bug" />}
             documentationLinks={[]}
-            title="Select or create a route to see activity here"
+            title="Create a route to see mock server activity here"
           />
         }
       />
