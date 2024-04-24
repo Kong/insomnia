@@ -45,6 +45,7 @@ import {
   DASHBOARD_SORT_ORDERS,
   DashboardSortOrder,
   dashboardSortOrderName,
+  DEFAULT_SIDEBAR_SIZE,
   getAppWebsiteBaseURL,
 } from '../../common/constants';
 import { database } from '../../common/database';
@@ -859,7 +860,7 @@ const ProjectRoute: FC = () => {
     <ErrorBoundary>
       <Fragment>
         <PanelGroup autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
-          <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={20} collapsible>
+          <Panel id="sidebar" className='sidebar theme--sidebar' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
             <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
               <div className="p-[--padding-sm]">
                 <Select

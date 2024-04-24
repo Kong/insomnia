@@ -4,6 +4,7 @@ import { Breadcrumb, Breadcrumbs, Button, GridList, GridListItem, Menu, MenuTrig
 import { ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { LoaderFunction, NavLink, Route, Routes, useFetcher, useLoaderData, useNavigate, useParams } from 'react-router-dom';
 
+import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import * as models from '../../models';
 import { MockRoute } from '../../models/mock-route';
 import { invariant } from '../../utils/invariant';
@@ -132,7 +133,7 @@ const MockServerRoute = () => {
     if (layout && layout[0] > 0) {
       layout[0] = 0;
     } else {
-      layout[0] = 30;
+      layout[0] = DEFAULT_SIDEBAR_SIZE;
     }
 
     sidebarPanelRef.current?.setLayout(layout);
@@ -172,7 +173,7 @@ const MockServerRoute = () => {
 
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
-      <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={20} collapsible>
+      <Panel id="sidebar" className='sidebar theme--sidebar' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
       <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
         <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
           <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 font-bold w-full'>

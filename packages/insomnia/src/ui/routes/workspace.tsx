@@ -123,9 +123,9 @@ export const workspaceLoader: LoaderFunction = async ({
   const sortOrder = searchParams.get('sortOrder') as SortOrder;
   const defaultSort = (a: Request | GrpcRequest | WebSocketRequest | RequestGroup, b: Request | GrpcRequest | WebSocketRequest | RequestGroup) => {
     if (a.metaSortKey === b.metaSortKey) {
-      return a._id > b._id ? 1 : -1;
+      return a._id > b._id ? -1 : 1;
     }
-    return a.metaSortKey < b.metaSortKey ? 1 : -1;
+    return a.metaSortKey < b.metaSortKey ? -1 : 1;
   };
   const sortFunction = sortMethodMap[sortOrder] || defaultSort;
 
