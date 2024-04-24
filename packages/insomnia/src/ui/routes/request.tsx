@@ -401,6 +401,24 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
           { cookies: mutatedContext.cookieJar.cookies },
         );
       }
+      if (mutatedContext.environment) {
+        await models.environment.update(
+          environment,
+          {
+            data: mutatedContext.environment.data,
+            dataPropertyOrder: mutatedContext.environment.dataPropertyOrder,
+          }
+        );
+      }
+      if (mutatedContext.baseEnvironment) {
+        await models.environment.update(
+          baseEnvironment,
+          {
+            data: mutatedContext.baseEnvironment.data,
+            dataPropertyOrder: mutatedContext.baseEnvironment.dataPropertyOrder,
+          }
+        );
+      }
     }
 
     const renderedResult = await tryToInterpolateRequest(
