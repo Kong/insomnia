@@ -130,7 +130,7 @@ function sortOrganizations(accountId: string, organizations: Organization[]): Or
 export const indexLoader: LoaderFunction = async () => {
   const { id: sessionId, accountId } = await userSession.getOrCreate();
   if (sessionId) {
-    // fetch or load from localStorage if failed
+    // offline strategy: fetch or load from localStorage if thrown error, logout if expired
     try {
       const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | { error: string } | void>({
         method: 'GET',
@@ -221,7 +221,6 @@ export const syncOrganizationsAction: ActionFunction = async () => {
 
   if (sessionId) {
     try {
-
       const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
         method: 'GET',
         path: '/v1/organizations',
@@ -337,7 +336,6 @@ export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<Organ
   if (!organization) {
     throw redirect('/organization');
   }
-  console.log('singleOrgLoader:Fetching organization features', new Date().toISOString());
   try {
     const response = await window.main.insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
       method: 'GET',
