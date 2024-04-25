@@ -202,16 +202,18 @@ async function renderApp() {
               {
                 path: ':organizationId',
                 id: ':organizationId',
-                shouldRevalidate: shouldOrganizationsRevalidate,
-                loader: async (...args) =>
-                  (
-                    await import('./routes/organization')
-                  ).singleOrgLoader(...args),
                 children: [
                   {
                     index: true,
                     loader: async (...args) =>
                       (await import('./routes/project')).indexLoader(...args),
+                  },
+                  {
+                    path: 'permissions',
+                    loader: async (...args) =>
+                      (
+                        await import('./routes/organization')
+                      ).organizationPermissionsLoader(...args),
                   },
                   {
                     path: 'sync-projects',
