@@ -34,7 +34,6 @@ import {
   useLoaderData,
   useNavigate,
   useParams,
-  useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
@@ -51,6 +50,7 @@ import {
 import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
+import { insomniaFetch } from '../../main/insomniaFetch';
 import * as models from '../../models';
 import { userSession } from '../../models';
 import { ApiSpec } from '../../models/api-spec';
@@ -97,7 +97,7 @@ async function getAllTeamProjects(organizationId: string) {
     return [];
   }
 
-  const response = await window.main.insomniaFetch<{
+  const response = await insomniaFetch<{
     data: {
       id: string;
       name: string;
@@ -251,7 +251,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
       if (existingProject) {
         console.log('Redirecting to last visited project', existingProject._id);
-        return redirect(`/organization/${match?.params.organizationId}/project/${existingProject._id}`);
+        throw redirect(`/organization/${match?.params.organizationId}/project/${existingProject._id}`);
       }
     }
   }
@@ -264,11 +264,11 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   const projectId = allOrganizationProjects[0]?._id;
 
   if (!projectId) {
-    return redirect(`/organization/${organizationId}/project`);
+    throw redirect(`/organization/${organizationId}/project`);
   }
   invariant(projectId, 'No projects found for this organization.');
 
-  return redirect(`/organization/${organizationId}/project/${projectId}`);
+  throw redirect(`/organization/${organizationId}/project/${projectId}`);
 };
 
 export interface InsomniaFile {
@@ -510,7 +510,7 @@ export const loader: LoaderFunction = async ({
 
   if (!window.localStorage.getItem('learning-feature-dismissed')) {
     try {
-      learningFeature = await window.main.insomniaFetch<{
+      learningFeature = await insomniaFetch<{
         active: boolean;
         title: string;
         message: string;
@@ -570,7 +570,26 @@ const ProjectRoute: FC = () => {
 
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
-  const { features, billing, storage } = useRouteLoaderData(':organizationId') as OrganizationFeatureLoaderData;
+  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>();
+
+  useEffect(() => {
+    const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
+    if (isIdleAndUninitialized) {
+      permissionsFetcher.load(`/organization/${organizationId}/permissions`);
+    }
+  }, [organizationId, permissionsFetcher]);
+
+  const { features, billing, storage } = permissionsFetcher.data || {
+    features: {
+      gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
+      orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
+    },
+    billing: {
+      isActive: true,
+    },
+    storage: 'cloud_plus_local',
+  };
+
   const [scope, setScope] = useLocalStorage(`${projectId}:project-dashboard-scope`, 'all');
   const [sortOrder, setSortOrder] = useLocalStorage(`${projectId}:project-dashboard-sort-order`, 'modified-desc');
   const [filter, setFilter] = useLocalStorage(`${projectId}:project-dashboard-filter`, '');

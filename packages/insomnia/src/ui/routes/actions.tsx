@@ -9,6 +9,7 @@ import { database } from '../../common/database';
 import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
+import { insomniaFetch } from '../../main/insomniaFetch';
 import * as models from '../../models';
 import { getById, update } from '../../models/helpers/request-operations';
 import { isRemoteProject } from '../../models/project';
@@ -48,7 +49,7 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
   }
 
   try {
-    const newCloudProject = await window.main.insomniaFetch<{
+    const newCloudProject = await insomniaFetch<{
       id: string;
       name: string;
     } | {
@@ -119,7 +120,7 @@ export const updateProjectAction: ActionFunction = async ({
   try {
     // If its a cloud project, and we are renaming, then patch
     if (sessionId && project.remoteId && type === 'remote' && name !== project.name) {
-      const response = await window.main.insomniaFetch<void | {
+      const response = await insomniaFetch<void | {
         error: string;
         message?: string;
       }>({
@@ -143,7 +144,7 @@ export const updateProjectAction: ActionFunction = async ({
 
     // convert from cloud to local
     if (type === 'local' && project.remoteId) {
-      const response = await window.main.insomniaFetch<void | {
+      const response = await insomniaFetch<void | {
         error: string;
         message?: string;
       }>({
@@ -163,7 +164,7 @@ export const updateProjectAction: ActionFunction = async ({
     }
     // convert from local to cloud
     if (type === 'remote' && !project.remoteId) {
-      const newCloudProject = await window.main.insomniaFetch<{
+      const newCloudProject = await insomniaFetch<{
         id: string;
         name: string;
       } | {
@@ -218,7 +219,7 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
 
   try {
     if (project.remoteId) {
-      const response = await window.main.insomniaFetch<void | {
+      const response = await insomniaFetch<void | {
         error: string;
         message?: string;
       }>({
@@ -854,7 +855,7 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
         const sessionId = user.id;
 
         const methodInfo = resolveComponentSchemaRefs(spec, getMethodInfo(request));
-        const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
+        const response = await insomniaFetch<{ test: { requestId: string } }>({
           method: 'POST',
           origin: getAIServiceURL(),
           path: '/v1/generate-test',
@@ -937,7 +938,7 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
       const user = await models.userSession.getOrCreate();
       const sessionId = user.id;
       try {
-        const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
+        const response = await insomniaFetch<{ test: { requestId: string } }>({
           method: 'POST',
           origin: getAIServiceURL(),
           path: '/v1/generate-test',
@@ -983,7 +984,7 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
   try {
     const user = await models.userSession.getOrCreate();
     const sessionId = user.id;
-    const response = await window.main.insomniaFetch<{ enabled: boolean }>({
+    const response = await insomniaFetch<{ enabled: boolean }>({
       method: 'POST',
       origin: getAIServiceURL(),
       path: '/v1/access',

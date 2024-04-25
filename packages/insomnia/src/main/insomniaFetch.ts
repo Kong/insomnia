@@ -1,6 +1,6 @@
-import { BrowserWindow, net } from 'electron';
+// import { BrowserWindow } from 'electron';
 
-import { getApiBaseURL, getClientString } from '../common/constants';
+import { getClientString } from '../common/constants';
 import { delay } from '../common/misc';
 
 interface FetchConfig {
@@ -24,7 +24,7 @@ interface FetchConfig {
 
 const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): Promise<Response> => {
   try {
-    const response = await net.fetch(url, init);
+    const response = await fetch(url, init);
     if (response.status === 502 && retries < 5) {
       retries++;
       await delay(retries * 1000);
@@ -58,14 +58,14 @@ export async function insomniaFetch<T = void>({ method, path, data, sessionId, o
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
 
-  const apiURL = getApiBaseURL();
-  const response = await exponentialBackOff(`${origin || apiURL}${path}`, config);
-  const uri = response.headers.get('x-insomnia-command');
-  if (uri) {
-    for (const window of BrowserWindow.getAllWindows()) {
-      window.webContents.send('shell:open', uri);
-    }
-  }
+  const apiURL = 'insomnia-api://';
+  const response = await exponentialBackOff(`${origin || apiURL}${path.slice(1)}`, config);
+  // const uri = response.headers.get('x-insomnia-command');
+  // if (uri) {
+  //   for (const window of BrowserWindow.getAllWindows()) {
+  //     window.webContents.send('shell:open', uri);
+  //   }
+  // }
   const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
   return isJson ? response.json() : response.text();
 }

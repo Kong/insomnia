@@ -29,6 +29,7 @@ import { useLocalStorage } from 'react-use';
 import * as session from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { database } from '../../common/database';
+import { insomniaFetch } from '../../main/insomniaFetch';
 import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
@@ -131,19 +132,19 @@ export const indexLoader: LoaderFunction = async () => {
   const { id: sessionId, accountId } = await userSession.getOrCreate();
   if (sessionId) {
     try {
-      const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
+      const organizationsResult = await insomniaFetch<OrganizationsResponse | void>({
         method: 'GET',
         path: '/v1/organizations',
         sessionId,
       });
 
-      const user = await window.main.insomniaFetch<UserProfileResponse | void>({
+      const user = await insomniaFetch<UserProfileResponse | void>({
         method: 'GET',
         path: '/v1/user/profile',
         sessionId,
       });
 
-      const currentPlan = await window.main.insomniaFetch<CurrentPlan | void>({
+      const currentPlan = await insomniaFetch<CurrentPlan | void>({
         method: 'GET',
         path: '/v1/billing/current-plan',
         sessionId,
@@ -216,19 +217,19 @@ export const syncOrganizationsAction: ActionFunction = async () => {
   if (sessionId) {
     try {
 
-      const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
+      const organizationsResult = await insomniaFetch<OrganizationsResponse | void>({
         method: 'GET',
         path: '/v1/organizations',
         sessionId,
       });
 
-      const user = await window.main.insomniaFetch<UserProfileResponse | void>({
+      const user = await insomniaFetch<UserProfileResponse | void>({
         method: 'GET',
         path: '/v1/user/profile',
         sessionId,
       });
 
-      const currentPlan = await window.main.insomniaFetch<CurrentPlan | void>({
+      const currentPlan = await insomniaFetch<CurrentPlan | void>({
         method: 'GET',
         path: '/v1/billing/current-plan',
         sessionId,
@@ -255,7 +256,9 @@ export interface OrganizationLoaderData {
   currentPlan?: CurrentPlan;
 }
 
-export const loader: LoaderFunction = async () => {
+export const loader: LoaderFunction = async ({ request, params }) => {
+  console.log('Organization loader', request.url, params);
+
   const { id, accountId } = await userSession.getOrCreate();
   if (id) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
@@ -302,7 +305,7 @@ export interface OrganizationFeatureLoaderData {
   storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
 }
 
-export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<OrganizationFeatureLoaderData> => {
+export const organizationPermissionsLoader: LoaderFunction = async ({ params }): Promise<OrganizationFeatureLoaderData> => {
   const { organizationId } = params as { organizationId: string };
   const { id: sessionId, accountId } = await userSession.getOrCreate();
   const fallbackFeatures = {
@@ -333,13 +336,13 @@ export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<Organ
   }
 
   try {
-    const response = await window.main.insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
+    const response = await insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
       method: 'GET',
       path: `/v1/organizations/${organizationId}/features`,
       sessionId,
     });
 
-    const ruleResponse = await window.main.insomniaFetch<StorageRule | undefined>({
+    const ruleResponse = await insomniaFetch<StorageRule | undefined>({
       method: 'GET',
       path: `/v1/organizations/${organizationId}/storage-rule`,
       sessionId,
