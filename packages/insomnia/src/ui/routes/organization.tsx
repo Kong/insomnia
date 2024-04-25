@@ -130,13 +130,18 @@ function sortOrganizations(accountId: string, organizations: Organization[]): Or
 export const indexLoader: LoaderFunction = async () => {
   const { id: sessionId, accountId } = await userSession.getOrCreate();
   if (sessionId) {
+    // fetch or load from localStorage if failed
     try {
-      const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
+      const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | { error: string } | void>({
         method: 'GET',
         path: '/v1/organizations',
         sessionId,
       });
-
+      const hasSessionExpired = organizationsResult && 'error' in organizationsResult && organizationsResult.error === 'UNAUTHORIZED';
+      if (hasSessionExpired) {
+        await session.logout();
+        return redirect('/auth/login');
+      }
       const user = await window.main.insomniaFetch<UserProfileResponse | void>({
         method: 'GET',
         path: '/v1/user/profile',
@@ -149,7 +154,7 @@ export const indexLoader: LoaderFunction = async () => {
         sessionId,
       });
 
-      invariant(organizationsResult && organizationsResult.organizations, 'Failed to load organizations');
+      invariant(organizationsResult && 'organizations' in organizationsResult && organizationsResult.organizations, 'Failed to load organizations');
       invariant(user && user.id, 'Failed to load user');
       invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
 
@@ -165,45 +170,46 @@ export const indexLoader: LoaderFunction = async () => {
     }
 
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+    invariant(organizations, 'Failed to fetch organizations');
 
     const personalOrganization = organizations.filter(isPersonalOrganization)
-        .find(organization =>
-          isOwnerOfOrganization({
-            organization,
-            accountId,
-          }));
-      invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
-      if (await shouldMigrateProjectUnderOrganization()) {
-        await migrateProjectsIntoOrganization({
-          personalOrganization,
+      .find(organization =>
+        isOwnerOfOrganization({
+          organization,
+          accountId,
+        }));
+    invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
+    if (await shouldMigrateProjectUnderOrganization()) {
+      await migrateProjectsIntoOrganization({
+        personalOrganization,
+      });
+
+      const preferredProjectType = localStorage.getItem('prefers-project-type');
+      if (preferredProjectType === 'remote') {
+        const localProjects = await database.find<Project>('Project', {
+          parentId: personalOrganization.id,
+          remoteId: null,
         });
 
-        const preferredProjectType = localStorage.getItem('prefers-project-type');
-        if (preferredProjectType === 'remote') {
-          const localProjects = await database.find<Project>('Project', {
-            parentId: personalOrganization.id,
-            remoteId: null,
+        // If any of those fail projects will still be under the organization as local projects
+        for (const project of localProjects) {
+          updateLocalProjectToRemote({
+            project,
+            organizationId: personalOrganization.id,
+            sessionId,
+            vcs: VCSInstance(),
           });
-
-          // If any of those fail projects will still be under the organization as local projects
-          for (const project of localProjects) {
-            updateLocalProjectToRemote({
-              project,
-              organizationId: personalOrganization.id,
-              sessionId,
-              vcs: VCSInstance(),
-            });
-          }
         }
       }
+    }
+    console.log('index: Redirecting');
+    if (personalOrganization) {
+      return redirect(`/organization/${personalOrganization.id}`);
+    }
 
-      if (personalOrganization) {
-        return redirect(`/organization/${personalOrganization.id}`);
-      }
-
-      if (organizations.length > 0) {
-        return redirect(`/organization/${organizations[0].id}`);
-      }
+    if (organizations.length > 0) {
+      return redirect(`/organization/${organizations[0].id}`);
+    }
   }
 
   await session.logout();
@@ -331,7 +337,7 @@ export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<Organ
   if (!organization) {
     throw redirect('/organization');
   }
-
+  console.log('singleOrgLoader:Fetching organization features', new Date().toISOString());
   try {
     const response = await window.main.insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
       method: 'GET',
