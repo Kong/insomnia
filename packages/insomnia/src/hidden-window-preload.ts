@@ -15,6 +15,19 @@ import xml2js from 'xml2js';
 
 import type { Compression } from './models/response';
 
+const externalModules = new Map<string, object>([
+  ['ajv', ajv],
+  ['chai', chai],
+  ['cheerio', cheerio],
+  ['crypto-js', cryptojs],
+  ['csv-parse/lib/sync', csvParseSync],
+  ['lodash', lodash],
+  ['moment', moment],
+  ['tv4', tv4],
+  ['uuid', uuid],
+  ['xml2js', xml2js],
+]);
+
 export interface HiddenBrowserWindowToMainBridgeAPI {
   requireInterceptor: (module: string) => any;
   onmessage: (listener: (data: any, callback: (result: any) => void) => void) => void;
@@ -85,34 +98,11 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
         'xml2js',
       ].includes(moduleName)
     ) {
-      if (moduleName === 'csv-parse/lib/sync') {
-        return require('csv-parse/sync');
+      const externalModule = externalModules.get(moduleName);
+      if (!externalModule) {
+        throw Error(`no module is found for "${moduleName}"`);
       }
-
-      switch (moduleName) {
-        case 'ajv':
-          return ajv;
-        case 'chai':
-          return chai;
-        case 'cheerio':
-          return cheerio;
-        case 'crypto-js':
-          return cryptojs;
-        case 'csv-parse/lib/sync':
-          return csvParseSync;
-        case 'lodash':
-          return lodash;
-        case 'moment':
-          return moment;
-        case 'tv4':
-          return tv4;
-        case 'uuid':
-          return uuid;
-        case 'xml2js':
-          return xml2js;
-        default:
-          throw Error(`no module is found for "${moduleName}"`);
-      }
+      return externalModule;
     } else if (moduleName === 'insomnia-collection' || moduleName === 'postman-collection') {
       return CollectionModule;
     }
