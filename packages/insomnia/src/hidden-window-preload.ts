@@ -1,7 +1,17 @@
 import * as fs from 'node:fs';
 
+import ajv from 'ajv';
+import chai from 'chai';
+import * as cheerio from 'cheerio';
+import cryptojs from 'crypto-js';
+import * as csvParseSync from 'csv-parse/sync';
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { asyncTasksAllSettled, Collection as CollectionModule, OriginalPromise, ProxiedPromise, RequestContext, resetAsyncTasks, stopMonitorAsyncTasks } from 'insomnia-sdk';
+import lodash from 'lodash';
+import moment from 'moment';
+import tv4 from 'tv4';
+import * as uuid from 'uuid';
+import xml2js from 'xml2js';
 
 import type { Compression } from './models/response';
 
@@ -78,7 +88,31 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
       if (moduleName === 'csv-parse/lib/sync') {
         return require('csv-parse/sync');
       }
-      return require(moduleName);
+
+      switch (moduleName) {
+        case 'ajv':
+          return ajv;
+        case 'chai':
+          return chai;
+        case 'cheerio':
+          return cheerio;
+        case 'crypto-js':
+          return cryptojs;
+        case 'csv-parse/lib/sync':
+          return csvParseSync;
+        case 'lodash':
+          return lodash;
+        case 'moment':
+          return moment;
+        case 'tv4':
+          return tv4;
+        case 'uuid':
+          return uuid;
+        case 'xml2js':
+          return xml2js;
+        default:
+          throw Error(`no module is found for "${moduleName}"`);
+      }
     } else if (moduleName === 'insomnia-collection' || moduleName === 'postman-collection') {
       return CollectionModule;
     }
