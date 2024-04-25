@@ -42,7 +42,6 @@ export interface RendererToMainBridgeAPI {
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   axiosRequest: typeof axiosRequest;
-  insomniaFetch: typeof insomniaFetch;
   showContextMenu: (options: { key: string }) => void;
   database: {
     caCertificate: {

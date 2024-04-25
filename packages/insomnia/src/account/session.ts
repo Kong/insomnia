@@ -1,5 +1,6 @@
 import * as srp from 'srp-js';
 
+import { insomniaFetch } from '../main/insomniaFetch';
 import { userSession } from '../models';
 import * as crypt from './crypt';
 
@@ -106,7 +107,7 @@ export async function changePasswordWithToken(rawNewPassphrase: string, confirma
   const symmetricKey = JSON.stringify(_getSymmetricKey());
   const newEncSymmetricKeyJSON = crypt.encryptAES(newSecret, symmetricKey);
   const newEncSymmetricKey = JSON.stringify(newEncSymmetricKeyJSON);
-  await window.main.insomniaFetch({
+  await insomniaFetch({
     method: 'POST',
     path: '/auth/change-password',
     data: {
@@ -121,7 +122,7 @@ export async function changePasswordWithToken(rawNewPassphrase: string, confirma
 }
 
 export async function sendPasswordChangeCode() {
-  window.main.insomniaFetch({
+  insomniaFetch({
     method: 'POST',
     path: '/auth/send-password-code',
     sessionId: await getCurrentSessionId(),
@@ -191,7 +192,7 @@ export async function logout() {
   const sessionId = await getCurrentSessionId();
   if (sessionId) {
     try {
-      window.main.insomniaFetch({
+      insomniaFetch({
         method: 'POST',
         path: '/auth/logout',
         sessionId,
@@ -245,7 +246,7 @@ async function _getSymmetricKey() {
 }
 
 async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse> {
-  const response = await window.main.insomniaFetch<WhoamiResponse | string>({
+  const response = await insomniaFetch<WhoamiResponse | string>({
     method: 'GET',
     path: '/auth/whoami',
     sessionId: sessionId || await getCurrentSessionId(),
@@ -260,7 +261,7 @@ async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse>
 }
 
 async function _getAuthSalts(email: string) {
-  const response = await window.main.insomniaFetch<{ saltKey: string; saltAuth: string }>({
+  const response = await insomniaFetch<{ saltKey: string; saltAuth: string }>({
     method: 'POST',
     path: '/auth/login-s',
     data: { email },

@@ -9,6 +9,7 @@ import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
 import { generateId } from '../../common/misc';
 import { strings } from '../../common/strings';
+import { insomniaFetch } from '../../main/insomniaFetch';
 import { BaseModel } from '../../models';
 import Store from '../store';
 import type { BaseDriver } from '../store/drivers/base';
@@ -814,7 +815,7 @@ export class VCS {
   ): Promise<Record<string, any>> {
     const { sessionId } = await this._assertSession();
 
-    const { data, errors } = await window.main.insomniaFetch<{ data: {}; errors: [{ message: string }] }>({
+    const { data, errors } = await insomniaFetch<{ data: {}; errors: [{ message: string }] }>({
       method: 'POST',
       path: '/graphql?' + name,
       data: { query, variables },

@@ -50,6 +50,7 @@ import {
 import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
+import { insomniaFetch } from '../../main/insomniaFetch';
 import * as models from '../../models';
 import { userSession } from '../../models';
 import { ApiSpec } from '../../models/api-spec';
@@ -96,7 +97,7 @@ async function getAllTeamProjects(organizationId: string) {
     return [];
   }
 
-  const response = await window.main.insomniaFetch<{
+  const response = await insomniaFetch<{
     data: {
       id: string;
       name: string;
@@ -509,7 +510,7 @@ export const loader: LoaderFunction = async ({
 
   if (!window.localStorage.getItem('learning-feature-dismissed')) {
     try {
-      learningFeature = await window.main.insomniaFetch<{
+      learningFeature = await insomniaFetch<{
         active: boolean;
         title: string;
         message: string;

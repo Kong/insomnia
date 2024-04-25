@@ -5,6 +5,7 @@ import { LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TYPE_YAML, contentTypesMap, getMockServiceURL, RESPONSE_CODE_REASONS } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { getResponseCookiesFromHeaders } from '../../common/har';
+import { insomniaFetch } from '../../main/insomniaFetch';
 import * as models from '../../models';
 import { MockRoute } from '../../models/mock-route';
 import { MockServer } from '../../models/mock-server';
@@ -107,7 +108,7 @@ export const MockRouteRoute = () => {
 
   const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
     try {
-      const res = await window.main.insomniaFetch<string | {
+      const res = await insomniaFetch<string | {
         error: string;
         message: string;
       }>({
