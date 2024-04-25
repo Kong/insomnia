@@ -44,6 +44,7 @@ const main: Window['main'] = {
   loginStateChange: () => ipcRenderer.send('loginStateChange'),
   restart: () => ipcRenderer.send('restart'),
   openInBrowser: options => ipcRenderer.send('openInBrowser', options),
+  openDeepLink: options => ipcRenderer.send('openDeepLink', options),
   halfSecondAfterAppStart: () => ipcRenderer.send('halfSecondAfterAppStart'),
   manualUpdateCheck: () => ipcRenderer.send('manualUpdateCheck'),
   backup: () => ipcRenderer.invoke('backup'),

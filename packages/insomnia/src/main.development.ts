@@ -181,8 +181,7 @@ const _launchApp = async () => {
         window.webContents.send('shell:open', lastArg);
       });
       window = windowUtils.createWindowsAndReturnMain();
-
-      app.on('open-url', (_event, url) => {
+      const openDeepLinkUrl = (url: string) => {
         console.log('[main] Open Deep Link URL', url);
         window = windowUtils.createWindowsAndReturnMain();
         if (window) {
@@ -194,6 +193,12 @@ const _launchApp = async () => {
           window = windowUtils.createWindowsAndReturnMain();
         }
         window.webContents.send('shell:open', url);
+      };
+      app.on('open-url', (_event, url) => {
+        openDeepLinkUrl(url);
+      });
+      ipcMain.on('open-deep-link', (_event, url) => {
+        openDeepLinkUrl(url);
       });
     }
   } else {

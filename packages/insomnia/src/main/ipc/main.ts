@@ -25,6 +25,7 @@ export interface RendererToMainBridgeAPI {
   openInBrowser: (url: string) => void;
   restart: () => void;
   halfSecondAfterAppStart: () => void;
+  openDeepLink: (url: string) => void;
   manualUpdateCheck: () => void;
   backup: () => Promise<void>;
   restoreBackup: (version: string) => Promise<void>;

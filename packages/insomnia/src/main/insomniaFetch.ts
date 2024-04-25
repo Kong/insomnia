@@ -1,4 +1,3 @@
-// import { BrowserWindow } from 'electron';
 
 import { getClientString } from '../common/constants';
 import { delay } from '../common/misc';
@@ -60,12 +59,10 @@ export async function insomniaFetch<T = void>({ method, path, data, sessionId, o
 
   const apiURL = 'insomnia-api://';
   const response = await exponentialBackOff(`${origin || apiURL}${path.slice(1)}`, config);
-  // const uri = response.headers.get('x-insomnia-command');
-  // if (uri) {
-  //   for (const window of BrowserWindow.getAllWindows()) {
-  //     window.webContents.send('shell:open', uri);
-  //   }
-  // }
+  const uri = response.headers.get('x-insomnia-command');
+  if (uri) {
+    window.main.openDeepLink(uri);
+  }
   const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
   return isJson ? response.json() : response.text();
 }
