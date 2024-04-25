@@ -202,7 +202,6 @@ export const indexLoader: LoaderFunction = async () => {
         }
       }
     }
-    console.log('index: Redirecting');
     if (personalOrganization) {
       return redirect(`/organization/${personalOrganization.id}`);
     }
