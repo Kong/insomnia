@@ -32,7 +32,6 @@ import Login from './routes/auth.login';
 import { ErrorRoute } from './routes/error';
 import Onboarding from './routes/onboarding';
 import { Migrate } from './routes/onboarding.migrate';
-import { shouldOrganizationsRevalidate } from './routes/organization';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
 

@@ -17,7 +17,6 @@ import {
   NavLink,
   Outlet,
   redirect,
-  ShouldRevalidateFunction,
   useFetcher,
   useLoaderData,
   useNavigate,
