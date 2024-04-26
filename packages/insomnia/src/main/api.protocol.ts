@@ -19,7 +19,7 @@ export async function registerInsomniaStreamProtocol() {
     return;
   }
 
-  protocol.handle(insomniaStreamScheme, async function (request) {
+  protocol.handle(insomniaStreamScheme, async request => {
     const apiURL = getApiBaseURL();
     const url = new URL(`${apiURL}/${request.url.replace(`${insomniaStreamScheme}://`, '')}`);
     const sessionId = new URLSearchParams(url.search).get('sessionId');
@@ -37,17 +37,13 @@ export async function registerInsomniaAPIProtocol() {
     privileges: { secure: true, standard: true, supportFetchAPI: true },
   }]);
 
-  console.log('REGISTERING INSOMNIA API PROTOCOL');
-
   await app.whenReady();
 
   if (protocol.isProtocolHandled(insomniaAPIScheme)) {
     return;
   }
 
-  console.log('REGISTERING HANDLE FOR INSOMNIA API PROTOCOL');
-  protocol.handle(insomniaAPIScheme, async function (request) {
-    console.log('PROTOCOL HANDLED');
+  protocol.handle(insomniaAPIScheme, async request => {
     const apiURL = getApiBaseURL();
     const url = new URL(`${apiURL}/${request.url.replace(`${insomniaAPIScheme}://`, '')}`);
 
