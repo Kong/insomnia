@@ -44,9 +44,9 @@ export async function registerInsomniaAPIProtocol() {
   }
 
   protocol.handle(insomniaAPIScheme, async request => {
-    const apiURL = getApiBaseURL();
-    const url = new URL(`${apiURL}/${request.url.replace(`${insomniaAPIScheme}://`, '')}`);
-
+    const origin = request.headers.get('X-Origin') || getApiBaseURL();
+    const url = new URL(request.url.replace(`${insomniaAPIScheme}://insomnia/`, ''), origin);
+    console.log('Fetching', url.toString());
     return net.fetch(url.toString(), request);
   });
 }

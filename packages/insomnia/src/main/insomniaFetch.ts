@@ -1,5 +1,5 @@
 
-import { getClientString } from '../common/constants';
+import { getApiBaseURL, getClientString } from '../common/constants';
 import { delay } from '../common/misc';
 
 interface FetchConfig {
@@ -46,6 +46,7 @@ export async function insomniaFetch<T = void>({ method, path, data, sessionId, o
     method,
     headers: {
       'X-Insomnia-Client': getClientString(),
+      'X-Origin': origin || getApiBaseURL(),
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
       ...(data ? { 'Content-Type': 'application/json' } : {}),
       ...(organizationId ? { 'X-Insomnia-Org-Id': organizationId } : {}),
@@ -56,12 +57,13 @@ export async function insomniaFetch<T = void>({ method, path, data, sessionId, o
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
-  const apiURL = 'insomnia-api://';
-  const response = await exponentialBackOff(`${origin || apiURL}${path.slice(1)}`, config);
+  console.log(`Path ${path}`);
+  const response = await exponentialBackOff('insomnia-api://insomnia/' + path, config);
   const uri = response.headers.get('x-insomnia-command');
   if (uri) {
     window.main.openDeepLink(uri);
   }
   const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
+  // TODO: adding logout or sending a logout deeplink if request returns error UNAUTHORIZED
   return isJson ? response.json() : response.text();
 }
