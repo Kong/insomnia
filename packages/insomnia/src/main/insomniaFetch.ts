@@ -41,7 +41,35 @@ const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): 
   }
 };
 
+// Adds headers, retries and opens deep links returned from the api
 export async function insomniaFetch<T = void>({ method, path, data, sessionId, organizationId, origin }: FetchConfig): Promise<T> {
+  const config: RequestInit = {
+    method,
+    headers: {
+      'X-Insomnia-Client': getClientString(),
+      'X-Origin': origin || getApiBaseURL(),
+      ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
+      ...(data ? { 'Content-Type': 'application/json' } : {}),
+      ...(organizationId ? { 'X-Insomnia-Org-Id': organizationId } : {}),
+      ...(process.env.PLAYWRIGHT ? { 'X-Mockbin-Test': 'true' } : {}),
+    },
+    ...(data ? { body: JSON.stringify(data) } : {}),
+  };
+  if (sessionId === undefined) {
+    throw new Error(`No session ID provided to ${method}:${path}`);
+  }
+  console.log(`Path ${path}`);
+  const response = await exponentialBackOff('insomnia-api://insomnia/' + path, config);
+  const uri = response.headers.get('x-insomnia-command');
+  if (uri) {
+    window.main.openDeepLink(uri);
+  }
+  const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
+  // TODO: adding logout or sending a logout deeplink if request returns error UNAUTHORIZED
+  return isJson ? response.json() : response.text();
+}
+
+export async function insomniaMainFetch<T = void>({ method, path, data, sessionId, organizationId, origin }: FetchConfig): Promise<T> {
   const config: RequestInit = {
     method,
     headers: {

@@ -5,20 +5,22 @@ import electron from 'electron';
 
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
-import { getUpdatesBaseURL } from '../common/constants';
+import { getClientString, getUpdatesBaseURL } from '../common/constants';
 import * as models from '../models';
-import { insomniaFetch } from './insomniaFetch';
 
 export async function backupIfNewerVersionAvailable() {
   try {
     const settings = await models.settings.get();
     console.log('[main] Checking for newer version than ', version);
-    const response = await insomniaFetch<{ url: string }>({
+    const response = await electron.net.request({
       method: 'GET',
       origin: getUpdatesBaseURL(),
       path: `/builds/check/mac?v=${version}&app=${appConfig.appId}&channel=${settings.updateChannel}`,
-      sessionId: null,
+      headers: {
+        'X-Insomnia-Client': getClientString(),
+      },
     });
+
     if (response) {
       console.log('[main] Found newer version', response);
       backup();

@@ -12,7 +12,6 @@ import * as models from '../../models';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
-import { insomniaFetch } from '../insomniaFetch';
 import installPlugin from '../install-plugin';
 import { axiosRequest } from '../network/axios-request';
 import { CurlBridgeAPI } from '../network/curl';
@@ -52,9 +51,6 @@ export interface RendererToMainBridgeAPI {
   hiddenBrowserWindow: HiddenBrowserWindowBridgeAPI;
 }
 export function registerMainHandlers() {
-  ipcMain.handle('insomniaFetch', async (_, options: Parameters<typeof insomniaFetch>[0]) => {
-    return insomniaFetch(options);
-  });
   ipcMain.handle('axiosRequest', async (_, options: Parameters<typeof axiosRequest>[0]) => {
     return axiosRequest(options);
   });
