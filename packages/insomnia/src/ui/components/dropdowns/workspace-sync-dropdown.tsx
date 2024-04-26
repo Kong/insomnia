@@ -21,7 +21,7 @@ export const WorkspaceSyncDropdown: FC = () => {
 
   const { userSession } = useRootLoaderData();
   const { organizationId } = useParams() as { organizationId: string };
-  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>();
+  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
 
   useEffect(() => {
     const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;

@@ -569,10 +569,10 @@ const ProjectRoute: FC = () => {
 
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
-  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>();
+  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
 
   useEffect(() => {
-    const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
+    const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data && !isScratchpadOrganizationId(organizationId);
     if (isIdleAndUninitialized) {
       permissionsFetcher.load(`/organization/${organizationId}/permissions`);
     }

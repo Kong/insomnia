@@ -84,11 +84,12 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
   const { organizations } = useOrganizationLoaderData();
   const { userSession } = useRootLoaderData();
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
-  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>();
+  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
 
   useEffect(() => {
     const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
     if (isIdleAndUninitialized) {
+      console.log('refetching1');
       permissionsFetcher.load(`/organization/${organizationId}/permissions`);
     }
   }, [organizationId, permissionsFetcher]);
