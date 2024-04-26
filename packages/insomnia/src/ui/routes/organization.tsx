@@ -136,7 +136,7 @@ export const indexLoader: LoaderFunction = async () => {
         path: '/v1/organizations',
         sessionId,
       });
-
+      console.log('organizationsResult', organizationsResult);
       const user = await insomniaFetch<UserProfileResponse | void>({
         method: 'GET',
         path: '/v1/user/profile',
@@ -165,6 +165,7 @@ export const indexLoader: LoaderFunction = async () => {
     }
 
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+    invariant(organizations, 'Failed to fetch organizations.');
 
     const personalOrganization = organizations.filter(isPersonalOrganization)
         .find(organization =>
