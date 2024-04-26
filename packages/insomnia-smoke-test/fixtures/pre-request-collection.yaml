@@ -1077,3 +1077,40 @@ resources:
       text: |-
         {}
     _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df16
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: use external modules
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      const ajv = require("ajv")
+      const chai = require('chai');
+      const lodash = require('lodash');
+      const tv4 = require('tv4');
+      const uuid = require('uuid');
+      const xml2js = require('xml2js');
+      const csv = require('csv-parse/lib/sync');
+      const cheerio = require('cheerio');
+      const crypto = require('crypto-js');
+      const moment = require('moment');
+    body:
+      mimeType: "application/json"
+      text: |-
+        {}
+    _type: request

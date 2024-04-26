@@ -300,11 +300,11 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
               <div className="p-4">
                 <div className="text-xs max-h-32 flex flex-col overflow-y-auto min-h-[2em] bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm]">
                   <label className="label--small no-pad-top">Url Preview</label>
-                <ErrorBoundary
-                  key={uniqueKey}
-                  errorClassName="tall wide vertically-align font-error pad text-center"
-                >
-                  <RenderedQueryString request={activeRequest} />
+                  <ErrorBoundary
+                    key={uniqueKey}
+                    errorClassName="tall wide vertically-align font-error pad text-center"
+                  >
+                    <RenderedQueryString request={activeRequest} />
                   </ErrorBoundary>
                 </div>
               </div>
@@ -313,18 +313,18 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                   <div className='flex items-center w-full p-4 h-4 justify-between'>
                     <Heading className='text-xs font-bold uppercase text-[--hl]'>Query parameters</Heading>
                   </div>
-              <ErrorBoundary
-                key={uniqueKey}
-                errorClassName="tall wide vertically-align font-error pad text-center"
-              >
-                <RequestParametersEditor
-                  bulk={useBulkParametersEditor}
-                  disabled={disabled}
-                />
-              </ErrorBoundary>
-            </div>
+                  <ErrorBoundary
+                    key={uniqueKey}
+                    errorClassName="tall wide vertically-align font-error pad text-center"
+                  >
+                    <RequestParametersEditor
+                      bulk={useBulkParametersEditor}
+                      disabled={disabled}
+                    />
+                  </ErrorBoundary>
+                </div>
                 <div className='flex-1 flex flex-col gap-4 p-4 overflow-y-auto'>
-              <Heading className='text-xs font-bold uppercase text-[--hl]'>Path parameters</Heading>
+                  <Heading className='text-xs font-bold uppercase text-[--hl]'>Path parameters</Heading>
                   {pathParameters.length > 0 && (
                     <div className="pr-[72.73px] w-full">
                       <div className='grid gap-x-[20.8px] grid-cols-2 flex-shrink-0 w-full rounded-sm overflow-hidden'>
