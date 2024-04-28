@@ -74,6 +74,7 @@ export const fetchRequestData = async (requestId: string) => {
 };
 
 export const tryToExecutePreRequestScript = async (
+  isPreRequest: boolean,
   request: Request,
   environment: Environment,
   timelinePath: string,
@@ -81,6 +82,7 @@ export const tryToExecutePreRequestScript = async (
   baseEnvironment: Environment,
   clientCertificates: ClientCertificate[],
   cookieJar: CookieJar,
+  response?: Awaited<ReturnType<typeof sendCurlAndWriteTimeline>>,
 ) => {
   if (!request.preRequestScript) {
     return {
@@ -101,7 +103,7 @@ export const tryToExecutePreRequestScript = async (
       }, timeout + 1000);
     });
     const preRequestPromise = cancellableRunPreRequestScript({
-      script: request.preRequestScript,
+      script: isPreRequest ? request.preRequestScript : request.postRequestScript,
       context: {
         request,
         timelinePath,
@@ -115,6 +117,7 @@ export const tryToExecutePreRequestScript = async (
         clientCertificates,
         settings,
         cookieJar,
+        response,
       },
     });
     const output = await Promise.race([timeoutPromise, preRequestPromise]) as {
@@ -152,7 +155,10 @@ export const tryToExecutePreRequestScript = async (
       cookieJar: output.cookieJar,
     };
   } catch (err) {
-    await fs.promises.appendFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
+    await fs.promises.appendFile(
+      timelinePath,
+      JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n',
+    );
 
     const requestId = request._id;
     const responsePatch = {
@@ -282,6 +288,7 @@ export async function sendCurlAndWriteTimeline(
     ...patch,
   };
 }
+
 export const responseTransform = async (patch: ResponsePatch, environmentId: string | null, renderedRequest: RenderedRequest, context: Record<string, any>) => {
   const response: ResponsePatch = {
     ...patch,

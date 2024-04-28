@@ -1,4 +1,6 @@
 import { RESPONSE_CODE_REASONS } from 'insomnia/src/common/constants';
+import { Compression, ResponseHeader } from 'insomnia/src/models/response';
+import { sendCurlAndWriteTimeline } from 'insomnia/src/network/network';
 
 import { Cookie, CookieOptions } from './cookies';
 import { CookieList } from './cookies';
@@ -183,3 +185,71 @@ export class Response extends Property {
         return this.body.toString();
     }
 }
+
+export async function toScriptResponse(
+    originalRequest: Request,
+    partialInsoResponse: Awaited<ReturnType<typeof sendCurlAndWriteTimeline>>,
+): Promise<Response | undefined> {
+    if (partialInsoResponse.error) {
+        // response basically doesn't contain anything
+        return undefined;
+    }
+
+    // TODO: improve the type from sendCurlAndWriteTimeline a bit
+    // so that typing in downstream logic could be improved
+    const partialResponse = partialInsoResponse as {
+        headers: ResponseHeader[];
+        bodyPath: string;
+        bodyCompression: Compression;
+        statusCode: number;
+        elapsedTime: number;
+        statusMessage: string;
+    };
+
+    const headers = partialResponse.headers.map(
+        insoHeader => ({
+            key: insoHeader.name,
+            value: insoHeader.value,
+        }),
+        {},
+    );
+
+    const insoCookieOptions = partialResponse.headers
+        .filter(
+            header => {
+                return header.name.toLowerCase() === 'set-cookie';
+            },
+            {},
+        ).map(
+            setCookieHeader => Cookie.parse(setCookieHeader.value)
+        );
+
+    // TODO: handle default path
+    let responseBody = '';
+    if (partialResponse.bodyPath) {
+        const readResponseResult = await window.bridge.readCurlResponse({
+            bodyPath: partialResponse.bodyPath,
+            bodyCompression: partialResponse.bodyCompression,
+        });
+
+        if (readResponseResult.error) {
+            throw Error(`Failed to read body: ${readResponseResult.error}`);
+        } else {
+            responseBody = readResponseResult.body;
+        }
+    }
+
+    const responseOption = {
+        code: partialResponse.statusCode,
+        // reason is not provided
+        header: headers,
+        cookie: insoCookieOptions,
+        body: responseBody,
+        // stream is duplicated with body
+        responseTime: partialResponse.elapsedTime,
+        status: partialResponse.statusMessage,
+        originalRequest,
+    };
+
+    return new Response(responseOption);
+};
