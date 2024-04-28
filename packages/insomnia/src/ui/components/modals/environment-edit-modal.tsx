@@ -41,8 +41,26 @@ export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, Modal
     object: requestGroup ? requestGroup.environment : {},
     propertyOrder: requestGroup && requestGroup.environmentPropertyOrder,
   };
+
+  const saveChanges = () => {
+    setState({ requestGroup });
+    if (environmentEditorRef.current?.isValid()) {
+      try {
+        const data = environmentEditorRef.current?.getValue();
+        if (state.requestGroup && data) {
+          models.requestGroup.update(state.requestGroup, {
+            environment: data.object,
+            environmentPropertyOrder: data.propertyOrder,
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to update environment', err);
+      }
+    }
+
+  };
   return (
-    <Modal ref={modalRef} tall {...props}>
+    <Modal ref={modalRef} tall {...props} onHide={saveChanges} >
       <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
       <ModalBody noScroll className="pad-top-sm">
         <EnvironmentEditor

@@ -96,7 +96,7 @@ import {
   WebSocketRequestLoaderData,
 } from './request';
 import { useRootLoaderData } from './root';
-import { WorkspaceLoaderData } from './workspace';
+import { Child, WorkspaceLoaderData } from './workspace';
 
 export interface GrpcMessage {
   id: string;
@@ -211,9 +211,32 @@ export const Debug: FC = () => {
             { requestId: doc._id, ...INITIAL_GRPC_REQUEST_STATE },
           ]);
         }
+
+        if (doc.type === 'RequestGroup' && doc._id.startsWith('fld_')) {
+          const existingIndex = collection.findIndex(_ => _.doc._id === doc._id);
+          if (existingIndex > -1) {
+            // Collection exists, modify current
+            (collection[existingIndex].doc as RequestGroup).environment = (doc as RequestGroup).environment;
+          } else {
+            // New cenvironment override created, add to list
+            const newChild: Child = {
+              doc: doc as RequestGroup,
+              collapsed: false,
+              hidden: false,
+              pinned: false,
+              level: 0,
+              ancestors: [
+                doc.parentId,
+              ],
+              children: [],
+            };
+
+            collection.push(newChild);
+          }
+        }
       }
     });
-  }, []);
+  }, [collection]);
 
   const { settings } = useRootLoaderData();
   const [runningRequests, setRunningRequests] = useState<
