@@ -34,7 +34,7 @@ const runPreRequestScript = async (
   console.log(script);
   const scriptConsole = new Console();
 
-  const executionContext = initInsomniaObject(context, scriptConsole.log);
+  const executionContext = await initInsomniaObject(context, scriptConsole.log);
 
   const evalInterceptor = (script: string) => {
     invariant(script && typeof script === 'string', 'eval is called with invalid or empty value');

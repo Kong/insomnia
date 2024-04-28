@@ -381,6 +381,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   try {
     const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
     const mutatedContext = await tryToExecutePreRequestScript(
+      true,
       req,
       environment,
       timelinePath,
@@ -461,12 +462,60 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderedResult.context);
     const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
     const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
+
+    const postMutatedContext = await tryToExecutePreRequestScript(
+      false,
+      req,
+      environment,
+      timelinePath,
+      responseId,
+      baseEnvironment,
+      clientCertificates,
+      cookieJar,
+      response,
+    );
+    if (!postMutatedContext?.request) {
+      // exiy early if there was a problem with the pre-request script
+      // TODO: improve error message?
+      return null;
+    } else {
+      // persist updated cookieJar if needed
+      if (postMutatedContext.cookieJar) {
+        await models.cookieJar.update(
+          postMutatedContext.cookieJar,
+          { cookies: postMutatedContext.cookieJar.cookies },
+        );
+      }
+      // when base environment is activated, `postMutatedContext.environment` points to it
+      const isActiveEnvironmentBase = postMutatedContext.environment?._id === baseEnvironment._id;
+      const hasEnvironmentAndIsNotBase = postMutatedContext.environment && !isActiveEnvironmentBase;
+      if (hasEnvironmentAndIsNotBase) {
+        await models.environment.update(
+          environment,
+          {
+            data: postMutatedContext.environment.data,
+            dataPropertyOrder: postMutatedContext.environment.dataPropertyOrder,
+          }
+        );
+      }
+      if (postMutatedContext.baseEnvironment) {
+        await models.environment.update(
+          baseEnvironment,
+          {
+            data: postMutatedContext.baseEnvironment.data,
+            dataPropertyOrder: postMutatedContext.baseEnvironment.dataPropertyOrder,
+          }
+        );
+      }
+    }
+
     if (!shouldWriteToFile) {
       const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
       await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
       // setLoading(false);
       return null;
     }
+
     if (requestMeta.downloadPath) {
       const header = getContentDispositionHeader(responsePatch.headers || []);
       const name = header
