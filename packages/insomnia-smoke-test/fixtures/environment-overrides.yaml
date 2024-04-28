@@ -1,0 +1,107 @@
+_type: export
+__export_format: 4
+__export_date: 2024-04-28T02:01:29.930Z
+__export_source: insomnia.desktop.app:v9.0.0
+resources:
+  - _id: req_445302d6a15b4486aa703938ca682129
+    parentId: fld_73ddc00d7ffe4424a7682e74fd1687a5
+    modified: 1714268969518
+    created: 1714268969518
+    url: ""
+    name: New Request
+    description: ""
+    method: GET
+    body: {}
+    preRequestScript: ""
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/9.0.0
+    authentication: {}
+    metaSortKey: -1714268969518
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: fld_73ddc00d7ffe4424a7682e74fd1687a5
+    parentId: wrk_7042f1d23c6045c0af7c931331246be7
+    modified: 1714268838706
+    created: 1714268820327
+    name: Test Folder
+    description: ""
+    environment:
+      insomnia: kong
+    environmentPropertyOrder:
+      "&":
+        - insomnia
+    metaSortKey: -1714268820327
+    _type: request_group
+  - _id: wrk_7042f1d23c6045c0af7c931331246be7
+    parentId: null
+    modified: 1714269681090
+    created: 1714081773122
+    name: Test Environment Modal
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: req_52e6e293c3b248bd91b236db14bf7b75
+    parentId: fld_ed4dfe1b7c334841974104529db2540f
+    modified: 1714268978925
+    created: 1714268978925
+    url: ""
+    name: New Request
+    description: ""
+    method: GET
+    body: {}
+    preRequestScript: ""
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/9.0.0
+    authentication: {}
+    metaSortKey: -1714268978925
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: fld_ed4dfe1b7c334841974104529db2540f
+    parentId: wrk_7042f1d23c6045c0af7c931331246be7
+    modified: 1714268988093
+    created: 1714081789377
+    name: Test Nunjucks Folder
+    description: ""
+    environment:
+      sample_config: "{% base64 'encode', 'normal', 'hey' %}"
+    environmentPropertyOrder:
+      "&":
+        - sample_config
+    metaSortKey: -1714081789377
+    _type: request_group
+  - _id: env_e31d6d6c83da85667dbb29f3ff5ff2f4d46a762c
+    parentId: wrk_7042f1d23c6045c0af7c931331246be7
+    modified: 1714269066831
+    created: 1714081773123
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: {}
+    color: null
+    isPrivate: false
+    metaSortKey: 1714081773123
+    _type: environment
+  - _id: jar_e31d6d6c83da85667dbb29f3ff5ff2f4d46a762c
+    parentId: wrk_7042f1d23c6045c0af7c931331246be7
+    modified: 1714081773124
+    created: 1714081773124
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
