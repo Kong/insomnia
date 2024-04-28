@@ -96,7 +96,7 @@ import {
   WebSocketRequestLoaderData,
 } from './request';
 import { useRootLoaderData } from './root';
-import { Child, WorkspaceLoaderData } from './workspace';
+import { Child, Collection, WorkspaceLoaderData } from './workspace';
 
 export interface GrpcMessage {
   id: string;
@@ -198,9 +198,23 @@ export const Debug: FC = () => {
   const [isEnvironmentSelectOpen, setIsEnvironmentSelectOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
+  const [collectionState, setCollectionState] = useState<Collection>([...collection]);
+
   const patchRequest = useRequestPatcher();
   const patchGroup = useRequestGroupPatcher();
   const patchRequestMeta = useRequestMetaPatcher();
+
+  const visibleCollection = collectionState.filter(item => !item.hidden);
+
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer<HTMLDivElement, Element>({
+    getScrollElement: () => parentRef.current,
+    count: visibleCollection.length,
+    estimateSize: React.useCallback(() => 32, []),
+    overscan: 30,
+    getItemKey: index => visibleCollection[index].doc._id,
+  });
+
   useEffect(() => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
@@ -212,13 +226,13 @@ export const Debug: FC = () => {
           ]);
         }
 
-        if (doc.type === 'RequestGroup' && doc._id.startsWith('fld_')) {
-          const existingIndex = collection.findIndex(_ => _.doc._id === doc._id);
-          if (existingIndex > -1) {
-            // Collection exists, modify current
-            (collection[existingIndex].doc as RequestGroup).environment = (doc as RequestGroup).environment;
-          } else {
-            // New cenvironment override created, add to list
+        if (isRequestGroup(doc) && doc._id.startsWith('fld_')) {
+
+          if (event === 'insert') {
+            if (collectionState.findIndex(_ => _.doc._id === doc._id) > -1) {
+              // duplicate insert event detected, continue with no changes
+              return;
+            }
             const newChild: Child = {
               doc: doc as RequestGroup,
               collapsed: false,
@@ -231,12 +245,27 @@ export const Debug: FC = () => {
               children: [],
             };
 
-            collection.push(newChild);
+            setCollectionState(prevcollection => [...prevcollection, newChild]);
           }
+          if (event === 'update') {
+            const existingIndex = collectionState.findIndex(_ => _.doc._id === doc._id);
+            if (existingIndex === -1) {
+              // insert event not processed yet or failed to process
+              console.warn('[debug-route] unable to update collection, not found');
+              return;
+            }
+            setCollectionState(prevCollection => {
+              prevCollection[existingIndex].doc = (doc as RequestGroup);
+              return prevCollection;
+            });
+          }
+
+          // measure ensures virtualizer gets collection updates
+          virtualizer.measure();
         }
       }
     });
-  }, [collection]);
+  }, [collectionState, virtualizer]);
 
   const { settings } = useRootLoaderData();
   const [runningRequests, setRunningRequests] = useState<
@@ -481,8 +510,8 @@ export const Debug: FC = () => {
       const id = event.keys.values().next().value.toString();
       const targetId = event.target.key.toString();
 
-      const dropItem = collection.find(r => r.doc._id === id);
-      const targetItem = collection.find(r => r.doc._id === targetId);
+      const dropItem = collectionState.find(r => r.doc._id === id);
+      const targetItem = collectionState.find(r => r.doc._id === targetId);
 
       if (!dropItem || !targetItem) {
         return;
@@ -501,7 +530,7 @@ export const Debug: FC = () => {
         // there is no item before we move the item to the beginning
         // If there are children find the first child key and use a lower one
         // otherwise use whatever
-        const children = collection.filter(r => r.doc.parentId === targetId);
+        const children = collectionState.filter(r => r.doc.parentId === targetId);
 
         if (children.length > 0) {
           const firstChild = children[0];
@@ -518,7 +547,7 @@ export const Debug: FC = () => {
         }
       } else {
         // Everything is going to be moving the item besides the other items
-        const targetSiblingsCollections = collection.filter(r => r.doc.parentId === targetItem.doc.parentId);
+        const targetSiblingsCollections = collectionState.filter(r => r.doc.parentId === targetItem.doc.parentId);
         const targetIndexInSiblingsCollection = targetSiblingsCollections.findIndex(r => r.doc._id === targetId);
         if (event.target.dropPosition === 'after') {
           const beforeItem = targetItem;
@@ -672,17 +701,6 @@ export const Debug: FC = () => {
     ...environment,
   }));
 
-  const visibleCollection = collection.filter(item => !item.hidden);
-
-  const parentRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer<HTMLDivElement, Element>({
-    getScrollElement: () => parentRef.current,
-    count: visibleCollection.length,
-    estimateSize: React.useCallback(() => 32, []),
-    overscan: 30,
-    getItemKey: index => visibleCollection[index].doc._id,
-  });
-
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
   useLayoutEffect(() => {
     if (settings.forceVerticalLayout) {
@@ -776,13 +794,13 @@ export const Debug: FC = () => {
                               borderColor: selectedItem.color ?? 'var(--color-font)',
                             }}
                           >
-                          <Icon
-                            icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
-                            style={{
-                              color: selectedItem.color ?? 'var(--color-font)',
-                            }}
-                            className='text-xs w-5'
-                          />
+                            <Icon
+                              icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
+                              style={{
+                                color: selectedItem.color ?? 'var(--color-font)',
+                              }}
+                              className='text-xs w-5'
+                            />
                           </span>
                           {selectedItem.name}
                         </Fragment>
@@ -977,7 +995,7 @@ export const Debug: FC = () => {
 
             <GridList
               className="overflow-y-auto border-b border-t data-[empty]:py-0 py-[--padding-sm] data-[empty]:border-none border-solid border-[--hl-sm]"
-              items={collection.filter(item => item.pinned)}
+              items={collectionState.filter(item => item.pinned)}
               aria-label="Pinned Requests"
               disallowEmptySelection
               selectedKeys={[requestId]}
@@ -1088,7 +1106,7 @@ export const Debug: FC = () => {
                   if (keys !== 'all') {
                     const value = keys.values().next().value;
 
-                    const item = collection.find(
+                    const item = collectionState.find(
                       item => item.doc._id === value
                     );
                     if (item && isRequestGroup(item.doc)) {
