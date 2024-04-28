@@ -67,22 +67,6 @@ export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, Modal
           ref={environmentEditorRef}
           key={requestGroup ? requestGroup._id : 'n/a'}
           environmentInfo={environmentInfo}
-          onBlur={() => {
-            setState({ requestGroup });
-            if (environmentEditorRef.current?.isValid()) {
-              try {
-                const data = environmentEditorRef.current?.getValue();
-                if (state.requestGroup && data) {
-                  models.requestGroup.update(state.requestGroup, {
-                    environment: data.object,
-                    environmentPropertyOrder: data.propertyOrder,
-                  });
-                }
-              } catch (err) {
-                console.warn('Failed to update environment', err);
-              }
-            }
-          }}
         />
       </ModalBody>
       <ModalFooter>
