@@ -121,13 +121,7 @@ export const workspaceLoader: LoaderFunction = async ({
   const searchParams = new URL(request.url).searchParams;
   const filter = searchParams.get('filter');
   const sortOrder = searchParams.get('sortOrder') as SortOrder;
-  const defaultSort = (a: Request | GrpcRequest | WebSocketRequest | RequestGroup, b: Request | GrpcRequest | WebSocketRequest | RequestGroup) => {
-    if (a.metaSortKey === b.metaSortKey) {
-      return a._id > b._id ? -1 : 1;
-    }
-    return a.metaSortKey < b.metaSortKey ? -1 : 1;
-  };
-  const sortFunction = sortMethodMap[sortOrder] || defaultSort;
+  const sortFunction = sortMethodMap[sortOrder] || sortMethodMap['type-manual'];
 
   // first recursion to get all the folders ids in order to use nedb search by an array
   const flattenFoldersIntoList = async (id: string): Promise<string[]> => {
