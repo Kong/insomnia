@@ -90,17 +90,6 @@ const whoami = {
 };
 
 export default (app: Application) => {
-  app.post('/graphql', json(), (_req, res) => {
-    res.status(200).send({
-      data: {
-        viewer: {
-          name: 'InsomniaUser',
-          email: 'sleepyhead@email.com',
-        },
-      },
-    });
-  });
-
   // User
   app.get('/v1/user/profile', (_req, res) => {
     console.log('GET *');
