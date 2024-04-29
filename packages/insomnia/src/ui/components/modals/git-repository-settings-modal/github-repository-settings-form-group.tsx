@@ -1,4 +1,3 @@
-import { AxiosResponse } from 'axios';
 import type { GraphQLError } from 'graphql';
 import React, { MouseEvent, useEffect, useState } from 'react';
 import { useInterval, useLocalStorage } from 'react-use';
@@ -71,10 +70,10 @@ async function fetchGraphQL<QueryResult>(input: FetchGraphQLInput) {
       'Content-Type': 'application/json',
       ...headers,
     },
-    data: {
+    body: JSON.stringify({
       query,
       variables,
-    },
+    }),
   });
 
   return response.data;

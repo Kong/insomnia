@@ -9,11 +9,11 @@ interface FetchConfig {
   url: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   headers?: Record<string, string>;
-  data?: BodyInit;
+  body?: BodyInit;
   responseType?: 'arraybuffer' | 'blob' | 'document' | 'json' | 'text' | 'stream';
 }
 
-export async function externalFetch<T = void>({ url, method, headers, data, responseType }: FetchConfig): Promise<{
+export async function externalFetch<T = void>({ url, method, headers, body, responseType }: FetchConfig): Promise<{
   data: T;
   status: number;
   statusText: string;
@@ -60,13 +60,16 @@ export async function externalFetch<T = void>({ url, method, headers, data, resp
   // extract proxy settings from axios-request.test.ts into proxy config.ts?
   // TODO prepend external-api:// to the url
   // finalConfig.url = 'external-api://insomnia/' + path
-  console.log('external', url, 'external-api://insomnia/');
-  const response = await fetch(url, {
+  const parsedUrl = new URL(url);
+  const preprendedUrl = 'external-api://insomnia/' + parsedUrl.host + parsedUrl.pathname;
+  console.log('external', body, headers);
+
+  const response = await fetch(preprendedUrl, {
     method,
     headers,
-    body: data,
-  }
-  );
+    body,
+  });
+
   if (responseType === 'arraybuffer') {
     const arrayBuffer = await response.arrayBuffer();
     return {
@@ -76,8 +79,10 @@ export async function externalFetch<T = void>({ url, method, headers, data, resp
       headers: response.headers,
     };
   }
+  const json = await response.json();
+  console.log('response', response, json);
   return {
-    data: await response.json(),
+    data: json,
     status: response.status,
     statusText: response.statusText,
     headers: response.headers,

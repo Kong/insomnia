@@ -10,7 +10,7 @@ import { changelogUrl, getAppVersion, getProductName, isDevelopment, isMac } fro
 import { database } from './common/database';
 import log, { initializeLogging } from './common/log';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
-import { registerInsomniaAPIProtocol, registerInsomniaStreamProtocol } from './main/api.protocol';
+import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
@@ -28,8 +28,8 @@ import type { ToastNotification } from './ui/components/toast';
 
 initializeSentry();
 
-registerInsomniaStreamProtocol();
-registerInsomniaAPIProtocol();
+registerInsomniaProtocols();
+
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
   process.exit(0);
