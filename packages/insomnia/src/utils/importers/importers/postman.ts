@@ -827,7 +827,6 @@ export const convert: Converter = rawData => {
     }
   } catch (error) {
     // Nothing
-    console.log('Error importing Postman collection', error);
   }
 
   return null;
