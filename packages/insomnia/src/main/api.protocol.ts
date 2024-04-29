@@ -45,7 +45,30 @@ export async function registerInsomniaAPIProtocol() {
 
   protocol.handle(insomniaAPIScheme, async request => {
     const origin = request.headers.get('X-Origin') || getApiBaseURL();
-    const path = request.url.replace(`${insomniaAPIScheme}://insomnia/`, '');
+    const path = request.url.replace(`${insomniaAPIScheme}://insomnia`, '');
+    const url = new URL(path, origin);
+    console.log('Fetching', url.toString());
+    return net.fetch(url.toString(), request);
+  });
+}
+
+const externalScheme = 'external-api';
+
+export async function registerExternalProtocol() {
+  protocol.registerSchemesAsPrivileged([{
+    scheme: externalScheme,
+    privileges: { secure: true, standard: true, supportFetchAPI: true },
+  }]);
+
+  await app.whenReady();
+
+  if (protocol.isProtocolHandled(externalScheme)) {
+    return;
+  }
+
+  protocol.handle(externalScheme, async request => {
+    const origin = request.headers.get('X-Origin') || getApiBaseURL();
+    const path = request.url.replace(`${externalScheme}://insomnia`, '');
     const url = new URL(path, origin);
     console.log('Fetching', url.toString());
     return net.fetch(url.toString(), request);

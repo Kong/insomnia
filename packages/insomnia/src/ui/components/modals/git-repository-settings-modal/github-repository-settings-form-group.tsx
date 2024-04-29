@@ -11,6 +11,7 @@ import {
   GITHUB_GRAPHQL_API_URL,
   signOut,
 } from '../../../../sync/git/github-oauth-provider';
+import { externalFetch } from '../../../externalFetch';
 import { Button } from '../../themed-button';
 import { showAlert, showError } from '..';
 
@@ -64,7 +65,7 @@ interface FetchGraphQLInput {
 async function fetchGraphQL<QueryResult>(input: FetchGraphQLInput) {
   const { headers, query, variables, url } = input;
   const response: AxiosResponse<{ data: QueryResult; errors: GraphQLError[] }> =
-    await window.main.axiosRequest({
+    await externalFetch({
       url,
       method: 'POST',
       headers: {

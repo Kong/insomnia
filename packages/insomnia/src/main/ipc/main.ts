@@ -4,7 +4,7 @@ import { Spectral } from '@stoplight/spectral-core';
 // @ts-expect-error - This is a bundled file not sure why it's not found
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
 import { oas } from '@stoplight/spectral-rulesets';
-import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, IpcRendererEvent, net, shell } from 'electron';
 import fs from 'fs';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
@@ -51,9 +51,6 @@ export interface RendererToMainBridgeAPI {
   hiddenBrowserWindow: HiddenBrowserWindowBridgeAPI;
 }
 export function registerMainHandlers() {
-  ipcMain.handle('axiosRequest', async (_, options: Parameters<typeof axiosRequest>[0]) => {
-    return axiosRequest(options);
-  });
   ipcMain.handle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
     return models.caCertificate.create(options);
   });
@@ -125,7 +122,7 @@ export function registerMainHandlers() {
         const ruleset = await bundleAndLoadRuleset(rulesetPath, {
           fs,
           fetch: (url: string) => {
-            return axiosRequest({ url, method: 'GET' });
+            return net.request({ url, method: 'GET' });
           },
         });
 

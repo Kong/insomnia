@@ -67,6 +67,8 @@ export const test = baseTest.extend<{
     invariant(testInfo.config.webServer?.url, 'Requires web server config');
     const webServerUrl = testInfo.config.webServer.url;
 
+    // webServerUrl points at a stub local version of insomnia api
+    // mock server uses real staging api, so can fail if staging is down
     const options: EnvOptions = {
       INSOMNIA_DATA_PATH: dataPath,
       INSOMNIA_API_URL: webServerUrl,
