@@ -137,6 +137,7 @@ export interface CodeEditorHandle {
   focusEnd: () => void;
   getCursor: () => CodeMirror.Position | undefined;
   setCursorLine: (lineNumber: number) => void;
+  tryToSetOption: (key: keyof EditorConfiguration, value: any) => void;
 }
 export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
   autoPrettify,
@@ -552,6 +553,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     setCursorLine: (lineNumber: number) => {
       codeMirror.current?.setCursor(lineNumber);
     },
+    tryToSetOption,
   }), []);
 
   const showFilter = readOnly && (mode?.includes('json') || mode?.includes('xml'));

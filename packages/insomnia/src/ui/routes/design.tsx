@@ -4,7 +4,6 @@ import { stat } from 'fs/promises';
 import { OpenAPIV3 } from 'openapi-types';
 import path from 'path';
 import React, {
-  createRef,
   FC,
   Fragment,
   ReactNode,
@@ -207,7 +206,7 @@ const Design: FC = () => {
 
   const { apiSpec, rulesetPath, parsedSpec } = useLoaderData() as LoaderData;
 
-  const editor = createRef<CodeEditorHandle>();
+  const editor = useRef<CodeEditorHandle>();
   const { generating, generateTestsFromSpec, access } = useAIContext();
   const updateApiSpecFetcher = useFetcher();
   const generateRequestCollectionFetcher = useFetcher();
@@ -228,6 +227,12 @@ const Design: FC = () => {
   const lintWarnings = lintMessages.filter(
     message => message.type === 'warning'
   );
+
+  const lintOptions = useMemo(() => {
+    return {
+      delay: 1000,
+    };
+  }, []);
 
   useEffect(() => {
     CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
@@ -250,10 +255,17 @@ const Design: FC = () => {
           line: range.start.line,
         };
       });
-      setLintMessages(lintResult);
+      setLintMessages?.(lintResult);
       return lintResult;
     });
-  }, [rulesetPath]);
+    // when first time into document editor, the lint helper register later than codemirror init, we need to trigger lint through execute setOption
+    editor.current?.tryToSetOption('lint', { ...lintOptions });
+
+    return () => {
+      // delete the helper to avoid it run multiple times when user enter the page next time
+      CodeMirror.registerHelper('lint', 'openapi', undefined);
+    };
+  }, [rulesetPath, lintOptions]);
 
   const onCodeEditorChange = useMemo(() => {
     const handler = async (contents: string) => {
@@ -270,12 +282,6 @@ const Design: FC = () => {
 
     return debounce(handler, 500);
   }, [organizationId, projectId, updateApiSpecFetcher, workspaceId]);
-
-  const lintOptions = useMemo(() => {
-    return {
-      delay: 1000,
-    };
-  }, []);
 
   const handleScrollToSelection = useCallback(
     (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
