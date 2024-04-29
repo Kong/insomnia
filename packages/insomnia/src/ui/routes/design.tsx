@@ -206,7 +206,7 @@ const Design: FC = () => {
 
   const { apiSpec, rulesetPath, parsedSpec } = useLoaderData() as LoaderData;
 
-  const editor = useRef<CodeEditorHandle>();
+  const editor = useRef<CodeEditorHandle>(null);
   const { generating, generateTestsFromSpec, access } = useAIContext();
   const updateApiSpecFetcher = useFetcher();
   const generateRequestCollectionFetcher = useFetcher();
