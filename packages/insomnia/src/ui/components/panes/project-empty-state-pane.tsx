@@ -1,11 +1,11 @@
-import React, { FC } from 'react';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import React, { FC, useEffect } from 'react';
+import { useFetcher, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getAccountId } from '../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { isOwnerOfOrganization } from '../../../models/organization';
-import { type FeatureList, useOrganizationLoaderData } from '../../../ui/routes/organization';
+import { OrganizationFeatureLoaderData, useOrganizationLoaderData } from '../../../ui/routes/organization';
 import { useRootLoaderData } from '../../routes/root';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
@@ -84,8 +84,20 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
   const { organizations } = useOrganizationLoaderData();
   const { userSession } = useRootLoaderData();
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
-  const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
+  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
 
+  useEffect(() => {
+    const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
+    if (isIdleAndUninitialized) {
+      permissionsFetcher.load(`/organization/${organizationId}/permissions`);
+    }
+  }, [organizationId, permissionsFetcher]);
+
+  const { features } = permissionsFetcher.data || {
+    features: {
+      gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
+    },
+  };
   const isGitSyncEnabled = features.gitSync.enabled;
   const accountId = getAccountId();
 

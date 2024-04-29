@@ -17,7 +17,6 @@ import {
   NavLink,
   Outlet,
   redirect,
-  ShouldRevalidateFunction,
   useFetcher,
   useLoaderData,
   useNavigate,
@@ -302,7 +301,7 @@ export interface OrganizationFeatureLoaderData {
   storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
 }
 
-export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<OrganizationFeatureLoaderData> => {
+export const organizationPermissionsLoader: LoaderFunction = async ({ params }): Promise<OrganizationFeatureLoaderData> => {
   const { organizationId } = params as { organizationId: string };
   const { id: sessionId, accountId } = await userSession.getOrCreate();
   const fallbackFeatures = {
@@ -361,15 +360,6 @@ export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<Organ
 
 export const useOrganizationLoaderData = () => {
   return useRouteLoaderData('/organization') as OrganizationLoaderData;
-};
-
-export const shouldOrganizationsRevalidate: ShouldRevalidateFunction = ({
-  currentParams,
-  nextParams,
-}) => {
-  const isSwitchingBetweenOrganizations = currentParams.organizationId !== nextParams.organizationId;
-
-  return isSwitchingBetweenOrganizations;
 };
 
 const UpgradeButton = ({

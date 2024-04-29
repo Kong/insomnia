@@ -34,7 +34,6 @@ import {
   useLoaderData,
   useNavigate,
   useParams,
-  useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
@@ -570,7 +569,25 @@ const ProjectRoute: FC = () => {
 
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
-  const { features, billing, storage } = useRouteLoaderData(':organizationId') as OrganizationFeatureLoaderData;
+  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
+
+  useEffect(() => {
+    const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data && !isScratchpadOrganizationId(organizationId);
+    if (isIdleAndUninitialized) {
+      permissionsFetcher.load(`/organization/${organizationId}/permissions`);
+    }
+  }, [organizationId, permissionsFetcher]);
+
+  const { features, billing, storage } = permissionsFetcher.data || {
+    features: {
+      gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
+      orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
+    },
+    billing: {
+      isActive: true,
+    },
+    storage: 'cloud_plus_local',
+  };
   const [scope, setScope] = useLocalStorage(`${projectId}:project-dashboard-scope`, 'all');
   const [sortOrder, setSortOrder] = useLocalStorage(`${projectId}:project-dashboard-sort-order`, 'modified-desc');
   const [filter, setFilter] = useLocalStorage(`${projectId}:project-dashboard-filter`, '');
