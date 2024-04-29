@@ -45,6 +45,7 @@ export async function registerInsomniaAPIProtocol() {
 
   protocol.handle(insomniaAPIScheme, async request => {
     const origin = request.headers.get('X-Origin') || getApiBaseURL();
+
     const path = request.url.replace(`${insomniaAPIScheme}://insomnia`, '');
     const url = new URL(path, origin);
     console.log('Fetching', url.toString());
