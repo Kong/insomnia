@@ -405,8 +405,8 @@ test.describe('pre-request features tests', async () => {
         // verify
         await page.getByRole('tab', { name: 'Timeline' }).click();
 
-        await expect(responsePane).toContainText('✓ happy tests'); // original proxy
-        await expect(responsePane).toContainText('✕ unhappy tests: AssertionError: expected 199 to deeply equal 200'); // updated proxy
+        await expect(responsePane).toContainText('✓ happy tests');
+        await expect(responsePane).toContainText('✕ unhappy tests: AssertionError: expected 199 to deeply equal 200');
     });
 
     test('environment and baseEnvironment can be persisted', async ({ page }) => {
