@@ -21,7 +21,7 @@ test.describe('test grpc requests', async () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByText('CollectionPreRelease gRPCjust now').click();
+    await page.getByLabel('PreRelease gRPC').click();
 
     // choose request
     await page.getByLabel('Request Collection').getByTestId('UnaryWithOutProtoFile').press('Enter');
@@ -30,7 +30,7 @@ test.describe('test grpc requests', async () => {
 
     // choose method
     await page.getByRole('button', { name: 'Select Method' }).click();
-    await page.getByRole('menuitem', { name: 'RouteGuide/GetFeature' }).click();
+    await page.getByLabel('/RouteGuide/GetFeature', { exact: true }).click();
 
     // start
     await page.getByRole('button', { name: 'Send' }).click();
@@ -49,25 +49,16 @@ test.describe('test grpc requests', async () => {
       has: page.locator('.CodeMirror-activeline'),
     });
 
-  await page.getByRole('menuitemradio', { name: 'Import' }).click();
-  await page.locator('[data-test-id="import-from-clipboard"]').click();
-  await page.getByRole('button', { name: 'Scan' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('PreRelease gRPC').click();
+    await page.getByRole('button', { name: 'Create in project' }).click();
 
-  // await page.getByRole('button', { name: 'Create in project' }).click();
-
+    // import collection
     const text = await loadFixture('grpc.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-
-  await page.getByRole('button', { name: 'Select Method' }).click();
-  await page.getByRole('option', { name: 'RouteGuide/GetFeature' }).click();
-
-    // await page.getByRole('menuitemradio', { name: 'Import' }).click();
-    // await page.locator('[data-test-id="import-from-clipboard"]').click();
-    // await page.getByRole('button', { name: 'Scan' }).click();
-    // await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    // await page.getByText('CollectionPreRelease gRPCjust now').click();
+    await page.getByRole('menuitemradio', { name: 'Import' }).click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+    await page.getByLabel('PreRelease gRPC').click();
 
     // choose request
     await page.getByLabel('Request Collection').getByTestId('UnaryWithOutProtoFile').press('Enter');
@@ -76,7 +67,7 @@ test.describe('test grpc requests', async () => {
 
     // choose method
     await page.getByRole('button', { name: 'Select Method' }).click();
-    await page.getByRole('menuitem', { name: 'RouteGuide/RecordRoute' }).click();
+    await page.getByLabel('/RouteGuide/RecordRoute', { exact: true }).click();
 
     // start
     await page.getByRole('button', { name: 'Send' }).click();
@@ -95,9 +86,9 @@ test.describe('test grpc requests', async () => {
 
     await page.getByRole('button', { name: 'Create in project' }).click();
 
+    // import collection
     const text = await loadFixture('grpc.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-
     await page.getByRole('menuitemradio', { name: 'Import' }).click();
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
@@ -111,7 +102,7 @@ test.describe('test grpc requests', async () => {
 
     // choose method
     await page.getByRole('button', { name: 'Select Method' }).click();
-    await page.getByRole('menuitem', { name: 'RouteGuide/RouteChat' }).click();
+    await page.getByLabel('/RouteGuide/RouteChat', { exact: true }).click();
 
     // start
     await page.getByRole('button', { name: 'Start' }).click();
