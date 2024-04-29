@@ -50,7 +50,6 @@ import {
 import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
-import { insomniaFetch } from '../../main/insomniaFetch';
 import * as models from '../../models';
 import { userSession } from '../../models';
 import { ApiSpec } from '../../models/api-spec';
@@ -68,6 +67,7 @@ import { WorkspaceMeta } from '../../models/workspace-meta';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { showModal } from '../../ui/components/modals';
 import { AskModal } from '../../ui/components/modals/ask-modal';
+import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { AvatarGroup } from '../components/avatar';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';

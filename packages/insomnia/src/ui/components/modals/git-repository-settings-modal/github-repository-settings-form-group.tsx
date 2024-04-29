@@ -64,19 +64,18 @@ interface FetchGraphQLInput {
 
 async function fetchGraphQL<QueryResult>(input: FetchGraphQLInput) {
   const { headers, query, variables, url } = input;
-  const response: AxiosResponse<{ data: QueryResult; errors: GraphQLError[] }> =
-    await externalFetch({
-      url,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers,
-      },
-      data: {
-        query,
-        variables,
-      },
-    });
+  const response = await externalFetch<{ data: QueryResult; errors: GraphQLError[] }>({
+    url,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...headers,
+    },
+    data: {
+      query,
+      variables,
+    },
+  });
 
   return response.data;
 }

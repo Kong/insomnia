@@ -159,7 +159,7 @@ const GitLabRepositoryForm = ({
 
   useEffect(() => {
     if (token && !user) {
-      externalFetch({
+      externalFetch<GitLabUserResult>({
         method: 'GET',
         url: `${getGitLabOauthApiURL()}/api/v4/user`,
         headers: {

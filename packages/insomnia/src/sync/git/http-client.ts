@@ -8,13 +8,13 @@ export const httpClient = {
     }
     // hosted-git-info was adding git+ to the beginning of the url which isn't supported by axios after 0.27.0
     const withoutGitPlus = config.url.replace(/^git\+/, '');
-    const response = await externalFetch({
+    console.log('git request', withoutGitPlus);
+    const response = await externalFetch<ArrayBuffer>({
       url: withoutGitPlus,
       method: config.method,
       headers: config.headers,
       data: config.body,
       responseType: 'arraybuffer',
-      maxRedirects: 10,
     });
     return {
       url: config.url,

@@ -9,7 +9,7 @@ import { database } from '../../common/database';
 import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
-import { insomniaFetch } from '../../main/insomniaFetch';
+import { insomniaFetch } from '../../ui/insomniaFetch';
 import * as models from '../../models';
 import { getById, update } from '../../models/helpers/request-operations';
 import { isRemoteProject } from '../../models/project';

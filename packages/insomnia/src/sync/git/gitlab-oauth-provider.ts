@@ -25,7 +25,7 @@ const getGitLabConfig = async () => {
 
   const apiURL = getApiBaseURL();
   // Otherwise fetch the config for the GitLab API
-  return externalFetch({
+  return externalFetch<{ applicationId: string; redirectUri: string }>({
     url: apiURL + '/v1/oauth/gitlab/config',
     method: 'GET',
   }).then(({ data }) => {
@@ -113,16 +113,16 @@ export async function exchangeCodeForGitLabToken(input: {
     code_verifier: verifier,
   }).toString();
 
-  return externalFetch({
+  return externalFetch<{ access_token: string; refresh_token: string }>({
     url: url.toString(),
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-  }).then(result => {
+  }).then(({ data }) => {
     statesCache.delete(state);
 
-    setAccessToken(result.data.access_token, result.data.refresh_token);
+    setAccessToken(data.access_token, data.refresh_token);
   });
 }
 
@@ -141,16 +141,16 @@ export async function refreshToken() {
     client_id: clientId,
   }).toString();
 
-  return externalFetch({
+  return externalFetch<{ access_token: string; refresh_token: string }>({
     url: url.toString(),
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-  }).then(result => {
-    setAccessToken(result.data.access_token, result.data.refresh_token);
+  }).then(({ data }) => {
+    setAccessToken(data.access_token, data.refresh_token);
 
-    return result.data.access_token;
+    return data.access_token;
   });
 }
 

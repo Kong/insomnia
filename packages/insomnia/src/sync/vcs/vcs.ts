@@ -9,7 +9,7 @@ import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
 import { generateId } from '../../common/misc';
 import { strings } from '../../common/strings';
-import { insomniaFetch } from '../../main/insomniaFetch';
+import { insomniaFetch } from '../../ui/insomniaFetch';
 import { BaseModel } from '../../models';
 import Store from '../store';
 import type { BaseDriver } from '../store/drivers/base';

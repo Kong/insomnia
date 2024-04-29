@@ -1,7 +1,7 @@
 import { v4 } from 'uuid';
 
 import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL } from '../../common/constants';
-
+import { externalFetch } from '../../ui/externalFetch';
 export const GITHUB_TOKEN_STORAGE_KEY = 'github-oauth-token';
 export const GITHUB_GRAPHQL_API_URL = getGitHubGraphQLApiURL();
 
@@ -44,7 +44,7 @@ export async function exchangeCodeForToken({
 
   const apiURL = getApiBaseURL();
 
-  return window.main.axiosRequest({
+  return externalFetch<{ access_token: string }>({
     url: apiURL + '/v1/oauth/github',
     method: 'POST',
     headers: {
@@ -53,9 +53,9 @@ export async function exchangeCodeForToken({
     data: {
       code,
     },
-  }).then(result => {
+  }).then(({ data }) => {
     statesCache.delete(state);
-    setAccessToken(result.data.access_token);
+    setAccessToken(data.access_token);
   });
 }
 

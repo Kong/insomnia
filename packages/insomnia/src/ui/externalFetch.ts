@@ -1,30 +1,42 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-import * as https from 'https';
-import { parse as urlParse } from 'url';
+// import * as https from 'https';
+// import { parse as urlParse } from 'url';
+// import * as models from '../../models';
+// import { isUrlMatchedInNoProxyRule } from '../../network/is-url-matched-in-no-proxy-rule';
+// import { setDefaultProtocol } from '../../utils/url/protocol';
+// import { isDevelopment } from '../common/constants';
 
-import { isDevelopment } from '../../common/constants';
-import * as models from '../../models';
-import { isUrlMatchedInNoProxyRule } from '../../network/is-url-matched-in-no-proxy-rule';
-import { setDefaultProtocol } from '../../utils/url/protocol';
-export const externalFetch = async (config: AxiosRequestConfig): Promise<AxiosResponse> => {
-  const settings = await models.settings.get();
-  const isHttps = config.url?.indexOf('https:') === 0;
-  let proxyUrl: string | null = null;
+interface FetchConfig {
+  url: string;
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  headers?: Record<string, string>;
+  data?: BodyInit;
+  responseType?: 'arraybuffer' | 'blob' | 'document' | 'json' | 'text' | 'stream';
+}
 
-  if (isHttps && settings.httpsProxy) {
-    proxyUrl = settings.httpsProxy;
-  } else if (settings.httpProxy) {
-    proxyUrl = settings.httpProxy;
-  }
+export async function externalFetch<T = void>({ url, method, headers, data, responseType }: FetchConfig): Promise<{
+  data: T;
+  status: number;
+  statusText: string;
+  headers: Record<string, string> | undefined;
+}> {
+  // const settings = await models.settings.get();
+  // const isHttps = config.url?.indexOf('https:') === 0;
+  // let proxyUrl: string | null = null;
 
-  const finalConfig: AxiosRequestConfig = {
-    ...config,
-    httpsAgent: new https.Agent({
-      rejectUnauthorized: settings.validateSSL,
-    }),
-    // ignore HTTP_PROXY, HTTPS_PROXY, NO_PROXY environment variables
-    proxy: false,
-  };
+  // if (isHttps && settings.httpsProxy) {
+  //   proxyUrl = settings.httpsProxy;
+  // } else if (settings.httpProxy) {
+  //   proxyUrl = settings.httpProxy;
+  // }
+
+  // const finalConfig: AxiosRequestConfig = {
+  //   ...config,
+  //   httpsAgent: new https.Agent({
+  //     rejectUnauthorized: settings.validateSSL,
+  //   }),
+  //   // ignore HTTP_PROXY, HTTPS_PROXY, NO_PROXY environment variables
+  //   proxy: false,
+  // };
   // hack for http-client
   // const isArrayBuffer = Array.isArray(config.data) && config.responseType === 'arraybuffer';
   // if (isArrayBuffer) {
@@ -48,33 +60,55 @@ export const externalFetch = async (config: AxiosRequestConfig): Promise<AxiosRe
   // extract proxy settings from axios-request.test.ts into proxy config.ts?
   // TODO prepend external-api:// to the url
   // finalConfig.url = 'external-api://insomnia/' + path
-  const response = await fetch(finalConfig);
-
-  if (isDevelopment()) {
-    console.log('[axios] Response', {
+  console.log('external', url, 'external-api://insomnia/');
+  const response = await fetch(url, {
+    method,
+    headers,
+    body: data,
+  }
+  );
+  if (responseType === 'arraybuffer') {
+    const arrayBuffer = await response.arrayBuffer();
+    return {
+      data: arrayBuffer,
       status: response.status,
       statusText: response.statusText,
       headers: response.headers,
-      data: !!response.data,
-      config: {
-        method: response.config.method,
-        url: response.config.url,
-        proxy: response.config.proxy,
-        headers: response.config.headers,
-      },
-    });
+    };
   }
-
   return {
+    data: await response.json(),
     status: response.status,
     statusText: response.statusText,
     headers: response.headers,
-    data: response.data,
-    config: {
-      method: response.config.method,
-      url: response.config.url,
-      proxy: response.config.proxy,
-      headers: response.config.headers,
-    },
   };
-};
+}
+
+// if (isDevelopment()) {
+//   console.log('Response', {
+//     status: response.status,
+//     statusText: response.statusText,
+//     headers: response.headers,
+//     data: !!response.data,
+//     config: {
+//       method: response.config.method,
+//       url: response.config.url,
+//       proxy: response.config.proxy,
+//       headers: response.config.headers,
+//     },
+//   });
+// }
+
+// return {
+//   status: response.status,
+//   statusText: response.statusText,
+//   headers: response.headers,
+//   data: response.data,
+//   config: {
+//     method: response.config.method,
+//     url: response.config.url,
+//     proxy: response.config.proxy,
+//     headers: response.config.headers,
+//   },
+// };
+// };

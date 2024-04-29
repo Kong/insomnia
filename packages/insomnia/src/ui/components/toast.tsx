@@ -10,7 +10,7 @@ import {
   getProductName,
   updatesSupported,
 } from '../../common/constants';
-import { insomniaFetch } from '../../main/insomniaFetch';
+import { insomniaFetch } from '../../ui/insomniaFetch';
 import * as models from '../../models/index';
 import imgSrcCore from '../images/insomnia-logo.svg';
 import { useRootLoaderData } from '../routes/root';

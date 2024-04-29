@@ -7,7 +7,7 @@ import { useInterval } from 'react-use';
 
 import { getMockServiceURL, getPreviewModeName, PREVIEW_MODE_FRIENDLY, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
-import { insomniaFetch } from '../../../main/insomniaFetch';
+import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models';
 import { MockRoute } from '../../../models/mock-route';
