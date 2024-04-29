@@ -89,7 +89,6 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
   useEffect(() => {
     const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
     if (isIdleAndUninitialized) {
-      console.log('refetching1');
       permissionsFetcher.load(`/organization/${organizationId}/permissions`);
     }
   }, [organizationId, permissionsFetcher]);
