@@ -12,7 +12,6 @@ import * as models from '../../models';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
-import { insomniaFetch } from '../insomniaFetch';
 import installPlugin from '../install-plugin';
 import { axiosRequest } from '../network/axios-request';
 import { CurlBridgeAPI } from '../network/curl';
@@ -25,6 +24,7 @@ export interface RendererToMainBridgeAPI {
   openInBrowser: (url: string) => void;
   restart: () => void;
   halfSecondAfterAppStart: () => void;
+  openDeepLink: (url: string) => void;
   manualUpdateCheck: () => void;
   backup: () => Promise<void>;
   restoreBackup: (version: string) => Promise<void>;
@@ -42,7 +42,6 @@ export interface RendererToMainBridgeAPI {
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   axiosRequest: typeof axiosRequest;
-  insomniaFetch: typeof insomniaFetch;
   showContextMenu: (options: { key: string }) => void;
   database: {
     caCertificate: {
@@ -52,9 +51,6 @@ export interface RendererToMainBridgeAPI {
   hiddenBrowserWindow: HiddenBrowserWindowBridgeAPI;
 }
 export function registerMainHandlers() {
-  ipcMain.handle('insomniaFetch', async (_, options: Parameters<typeof insomniaFetch>[0]) => {
-    return insomniaFetch(options);
-  });
   ipcMain.handle('axiosRequest', async (_, options: Parameters<typeof axiosRequest>[0]) => {
     return axiosRequest(options);
   });

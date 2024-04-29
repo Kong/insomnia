@@ -1,4 +1,4 @@
-import { LoaderFunctionArgs } from 'react-router-dom';
+import { LoaderFunction } from 'react-router-dom';
 
 import { database } from '../../common/database';
 import { fuzzyMatch } from '../../common/misc';
@@ -34,7 +34,7 @@ export interface LoaderResult {
   };
 }
 
-export async function loader(args: LoaderFunctionArgs): Promise<LoaderResult> {
+export const loader: LoaderFunction = async args => {
   const searchParams = new URL(args.request.url).searchParams;
   const organizationId = searchParams.get('organizationId');
   invariant(organizationId, 'organizationId is required');

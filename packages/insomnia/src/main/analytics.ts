@@ -1,15 +1,16 @@
 import { Analytics } from '@segment/analytics-node';
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, net } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
+  getApiBaseURL,
   getAppPlatform,
   getAppVersion,
+  getClientString,
   getProductName,
   getSegmentWriteKey,
 } from '../common/constants';
 import * as models from '../models/index';
-import { insomniaFetch } from './insomniaFetch';
 
 const analytics = new Analytics({ writeKey: getSegmentWriteKey() });
 
@@ -108,12 +109,14 @@ export async function trackPageView(name: string) {
       });
 
       if (sessionId) {
-        insomniaFetch({
+        net.request({
+          origin: getApiBaseURL(),
           method: 'POST',
           path: '/v1/telemetry/',
-          sessionId,
-        }).catch((error: unknown) => {
-          console.warn('[analytics] Unexpected error while sending telemetry', error);
+          headers: {
+            'X-Session-Id': sessionId,
+            'X-Insomnia-Client': getClientString(),
+          },
         });
       }
     } catch (error: unknown) {

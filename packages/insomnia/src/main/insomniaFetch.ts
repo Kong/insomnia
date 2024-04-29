@@ -1,6 +1,5 @@
-import { BrowserWindow, net } from 'electron';
 
-import { getApiBaseURL, getClientString } from '../common/constants';
+import { getApiBaseURL, getClientString, PLAYWRIGHT } from '../common/constants';
 import { delay } from '../common/misc';
 
 interface FetchConfig {
@@ -24,7 +23,7 @@ interface FetchConfig {
 
 const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): Promise<Response> => {
   try {
-    const response = await net.fetch(url, init);
+    const response = await fetch(url, init);
     if (response.status === 502 && retries < 5) {
       retries++;
       await delay(retries * 1000);
@@ -42,30 +41,29 @@ const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): 
   }
 };
 
+// Adds headers, retries and opens deep links returned from the api
 export async function insomniaFetch<T = void>({ method, path, data, sessionId, organizationId, origin }: FetchConfig): Promise<T> {
   const config: RequestInit = {
     method,
     headers: {
       'X-Insomnia-Client': getClientString(),
+      'X-Origin': origin || getApiBaseURL(),
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
       ...(data ? { 'Content-Type': 'application/json' } : {}),
       ...(organizationId ? { 'X-Insomnia-Org-Id': organizationId } : {}),
-      ...(process.env.PLAYWRIGHT ? { 'X-Mockbin-Test': 'true' } : {}),
+      ...(PLAYWRIGHT ? { 'X-Mockbin-Test': 'true' } : {}),
     },
     ...(data ? { body: JSON.stringify(data) } : {}),
   };
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
-
-  const apiURL = getApiBaseURL();
-  const response = await exponentialBackOff(`${origin || apiURL}${path}`, config);
+  const response = await exponentialBackOff('insomnia-api://insomnia/' + path, config);
   const uri = response.headers.get('x-insomnia-command');
   if (uri) {
-    for (const window of BrowserWindow.getAllWindows()) {
-      window.webContents.send('shell:open', uri);
-    }
+    window.main.openDeepLink(uri);
   }
   const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
+  // TODO: adding logout or sending a logout deeplink if request returns error UNAUTHORIZED
   return isJson ? response.json() : response.text();
 }

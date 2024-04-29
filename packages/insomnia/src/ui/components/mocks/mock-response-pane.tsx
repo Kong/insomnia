@@ -7,6 +7,7 @@ import { useInterval } from 'react-use';
 
 import { getMockServiceURL, getPreviewModeName, PREVIEW_MODE_FRIENDLY, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
+import { insomniaFetch } from '../../../main/insomniaFetch';
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models';
 import { MockRoute } from '../../../models/mock-route';
@@ -139,7 +140,7 @@ const HistoryViewWrapperComponentFactory = ({ mockServer, mockRoute }: { mockSer
     const compoundId = mockRoute.parentId + mockRoute.name;
     const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
     try {
-      const res = await window.main.insomniaFetch<MockbinLogOutput>({
+      const res = await insomniaFetch<MockbinLogOutput>({
         origin: mockbinUrl,
         path: `/bin/log/${compoundId}`,
         method: 'GET',

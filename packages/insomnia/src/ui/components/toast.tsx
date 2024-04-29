@@ -10,6 +10,7 @@ import {
   getProductName,
   updatesSupported,
 } from '../../common/constants';
+import { insomniaFetch } from '../../main/insomniaFetch';
 import * as models from '../../models/index';
 import imgSrcCore from '../images/insomnia-logo.svg';
 import { useRootLoaderData } from '../routes/root';
@@ -105,7 +106,7 @@ export const Toast: FC = () => {
         updatesNotSupported: !updatesSupported(),
         version: getAppVersion(),
       };
-      const notificationOrEmpty = await window.main.insomniaFetch<ToastNotification>({
+      const notificationOrEmpty = await insomniaFetch<ToastNotification>({
         method: 'POST',
         path: '/notification',
         data,
