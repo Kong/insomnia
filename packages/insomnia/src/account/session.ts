@@ -1,5 +1,4 @@
-import * as srp from 'srp-js';
-
+import { insomniaFetch } from '../main/insomniaFetch';
 import { userSession } from '../models';
 import * as crypt from './crypt';
 
@@ -78,56 +77,6 @@ export async function absorbKey(sessionId: string, key: string) {
   window.main.loginStateChange();
 }
 
-export async function changePasswordWithToken(rawNewPassphrase: string, confirmationCode: string) {
-  // Sanitize inputs
-  const newPassphrase = _sanitizePassphrase(rawNewPassphrase);
-
-  const newEmail = await getEmail(); // Use the same one
-
-  if (!newEmail) {
-    throw new Error('Session e-mail unexpectedly not set');
-  }
-
-  // Fetch some things
-  const { saltEnc, encSymmetricKey } = await _whoami();
-  const { saltKey, saltAuth } = await _getAuthSalts(newEmail);
-  // Generate some secrets for the user based on password
-  const newSecret = await crypt.deriveKey(newPassphrase, newEmail, saltEnc);
-  const newAuthSecret = await crypt.deriveKey(newPassphrase, newEmail, saltKey);
-  const newVerifier = srp
-    .computeVerifier(
-      _getSrpParams(),
-      Buffer.from(saltAuth, 'hex'),
-      Buffer.from(newEmail || '', 'utf8'),
-      Buffer.from(newAuthSecret, 'hex'),
-    )
-    .toString('hex');
-  // Re-encrypt existing keys with new secret
-  const symmetricKey = JSON.stringify(_getSymmetricKey());
-  const newEncSymmetricKeyJSON = crypt.encryptAES(newSecret, symmetricKey);
-  const newEncSymmetricKey = JSON.stringify(newEncSymmetricKeyJSON);
-  await window.main.insomniaFetch({
-    method: 'POST',
-    path: '/auth/change-password',
-    data: {
-      code: confirmationCode,
-      newEmail: newEmail,
-      encSymmetricKey: encSymmetricKey,
-      newVerifier,
-      newEncSymmetricKey,
-    },
-    sessionId: await getCurrentSessionId(),
-  });
-}
-
-export async function sendPasswordChangeCode() {
-  window.main.insomniaFetch({
-    method: 'POST',
-    path: '/auth/send-password-code',
-    sessionId: await getCurrentSessionId(),
-  });
-}
-
 export async function getPublicKey() {
   return (await getUserSession())?.publicKey;
 }
@@ -172,15 +121,6 @@ export async function getAccountId() {
   return (await getUserSession())?.accountId;
 }
 
-export async function getEmail() {
-  return (await getUserSession())?.email;
-}
-
-export async function getFullName() {
-  const { firstName, lastName } = await getUserSession() || {};
-  return `${firstName} ${lastName}`.trim();
-}
-
 /** Check if we (think) we have a session */
 export async function isLoggedIn() {
   return Boolean(await getCurrentSessionId());
@@ -191,7 +131,7 @@ export async function logout() {
   const sessionId = await getCurrentSessionId();
   if (sessionId) {
     try {
-      window.main.insomniaFetch({
+      insomniaFetch({
         method: 'POST',
         path: '/auth/logout',
         sessionId,
@@ -240,12 +180,9 @@ export async function setSessionData(
 // ~~~~~~~~~~~~~~~~ //
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
-async function _getSymmetricKey() {
-  return (await getUserSession())?.symmetricKey;
-}
 
 async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse> {
-  const response = await window.main.insomniaFetch<WhoamiResponse | string>({
+  const response = await insomniaFetch<WhoamiResponse | string>({
     method: 'GET',
     path: '/auth/whoami',
     sessionId: sessionId || await getCurrentSessionId(),
@@ -256,17 +193,6 @@ async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse>
   if (response && !response?.encSymmetricKey) {
     throw new Error('Unexpected response: ' + JSON.stringify(response));
   }
-  return response;
-}
-
-async function _getAuthSalts(email: string) {
-  const response = await window.main.insomniaFetch<{ saltKey: string; saltAuth: string }>({
-    method: 'POST',
-    path: '/auth/login-s',
-    data: { email },
-    sessionId: await getCurrentSessionId(),
-  });
-
   return response;
 }
 
@@ -289,14 +215,6 @@ async function _unsetSessionData() {
     publicKey: {} as JsonWebKey,
     encPrivateKey: {} as crypt.AESMessage,
   });
-}
-
-function _getSrpParams() {
-  return srp.params[2048];
-}
-
-function _sanitizePassphrase(passphrase: string) {
-  return passphrase.trim().normalize('NFKD');
 }
 
 export async function migrateFromLocalStorage() {

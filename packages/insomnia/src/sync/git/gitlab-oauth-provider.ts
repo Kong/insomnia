@@ -1,17 +1,11 @@
 import { createHash, randomBytes } from 'crypto';
 import { v4 as uuid } from 'uuid';
 
-import { getApiBaseURL } from '../../common/constants';
-
-// Vite is filtering out process.env variables that are not prefixed with VITE_.
-const ENV = 'env';
-
-const env = process[ENV];
+import { getApiBaseURL, INSOMNIA_GITLAB_API_URL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI } from '../../common/constants';
 
 // Warning: As this is a global fetch we need to handle errors, retries and caching
 // GitLab API config
 const getGitLabConfig = async () => {
-  const { INSOMNIA_GITLAB_REDIRECT_URI, INSOMNIA_GITLAB_CLIENT_ID } = env;
 
   // Validate and use the environment variables if provided
   if (
@@ -41,8 +35,7 @@ const getGitLabConfig = async () => {
   });
 };
 
-export const getGitLabOauthApiURL = () =>
-  env.INSOMNIA_GITLAB_API_URL || 'https://gitlab.com';
+export const getGitLabOauthApiURL = () => INSOMNIA_GITLAB_API_URL || 'https://gitlab.com';
 const GITLAB_TOKEN_STORAGE_KEY = 'gitlab-oauth-token';
 const GITLAB_REFRESH_TOKEN_STORAGE_KEY = 'gitlab-oauth-refresh-token';
 

@@ -1,6 +1,5 @@
 import HKDF from 'hkdf';
 import forge from 'node-forge';
-import srp from 'srp-js';
 
 const DEFAULT_BYTE_LENGTH = 32;
 const DEFAULT_PBKDF2_ITERATIONS = 1e5; // 100,000
@@ -204,23 +203,6 @@ export function decryptAESToBuffer(jwkOrKey: string | JsonWebKey, encryptedResul
   } else {
     throw new Error('Failed to decrypt data');
   }
-}
-
-/**
- * Generate a random key
- *
- * @returns {Promise}
- */
-export function srpGenKey() {
-  return new Promise((resolve, reject) => {
-    srp.genKey((err, secret1Buffer) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(secret1Buffer.toString('hex'));
-      }
-    });
-  });
 }
 
 /**

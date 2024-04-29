@@ -10,6 +10,22 @@ import {
   randomDataPath,
 } from './paths';
 
+// Throw an error if the condition fails
+// > Not providing an inline default argument for message as the result is smaller
+export function invariant(
+  condition: any,
+  // Can provide a string, or a function that returns a string for cases where
+  // the message takes a fair amount of effort to compute
+  message?: string | (() => string),
+): asserts condition {
+  if (condition) {
+    return;
+  }
+  // Condition not passed
+
+  throw new Error(typeof message === 'function' ? message() : message);
+}
+
 interface EnvOptions {
   INSOMNIA_DATA_PATH: string;
   INSOMNIA_API_URL: string;
@@ -48,11 +64,12 @@ export const test = baseTest.extend<{
   };
 }>({
   app: async ({ playwright, trace, dataPath, userConfig }, use, testInfo) => {
-    const webServerUrl = testInfo.config.webServer?.url;
+    invariant(testInfo.config.webServer?.url, 'Requires web server config');
+    const webServerUrl = testInfo.config.webServer.url;
 
     const options: EnvOptions = {
       INSOMNIA_DATA_PATH: dataPath,
-      INSOMNIA_API_URL: webServerUrl + '/api',
+      INSOMNIA_API_URL: webServerUrl,
       INSOMNIA_APP_WEBSITE_URL: webServerUrl + '/website',
       INSOMNIA_AI_URL: webServerUrl + '/ai',
       INSOMNIA_GITHUB_API_URL: webServerUrl + '/github-api/graphql',

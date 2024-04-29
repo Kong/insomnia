@@ -10,7 +10,7 @@ import { changelogUrl, getAppVersion, getProductName, isDevelopment, isMac } fro
 import { database } from './common/database';
 import log, { initializeLogging } from './common/log';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
-import { registerInsomniaStreamProtocol } from './main/api.protocol';
+import { registerInsomniaAPIProtocol, registerInsomniaStreamProtocol } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
@@ -29,6 +29,7 @@ import type { ToastNotification } from './ui/components/toast';
 initializeSentry();
 
 registerInsomniaStreamProtocol();
+registerInsomniaAPIProtocol();
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
   process.exit(0);
@@ -180,8 +181,7 @@ const _launchApp = async () => {
         window.webContents.send('shell:open', lastArg);
       });
       window = windowUtils.createWindowsAndReturnMain();
-
-      app.on('open-url', (_event, url) => {
+      const openDeepLinkUrl = (url: string) => {
         console.log('[main] Open Deep Link URL', url);
         window = windowUtils.createWindowsAndReturnMain();
         if (window) {
@@ -193,6 +193,12 @@ const _launchApp = async () => {
           window = windowUtils.createWindowsAndReturnMain();
         }
         window.webContents.send('shell:open', url);
+      };
+      app.on('open-url', (_event, url) => {
+        openDeepLinkUrl(url);
+      });
+      ipcMain.on('open-deep-link', (_event, url) => {
+        openDeepLinkUrl(url);
       });
     }
   } else {

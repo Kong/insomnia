@@ -12,7 +12,7 @@ export default (app: Application) => {
     });
   });
 
-  app.post('/api/v1/oauth/github', (_req, res) => {
+  app.post('/v1/oauth/github', (_req, res) => {
     res.status(200).send({
       'access_token': '123456789',
     });

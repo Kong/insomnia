@@ -90,51 +90,40 @@ const whoami = {
 };
 
 export default (app: Application) => {
-  app.post('/api/graphql', json(), (_req, res) => {
-    res.status(200).send({
-      data: {
-        viewer: {
-          name: 'InsomniaUser',
-          email: 'sleepyhead@email.com',
-        },
-      },
-    });
-  });
-
   // User
-  app.get('/api/v1/user/profile', (_req, res) => {
+  app.get('/v1/user/profile', (_req, res) => {
     console.log('GET *');
     res.status(200).send(user);
   });
 
-  app.get('/api/auth/whoami', (_req, res) => {
+  app.get('/auth/whoami', (_req, res) => {
     res.status(200).send(whoami);
   });
 
   // Billing
-  app.get('/api/v1/billing/current-plan', json(), (_req, res) => {
+  app.get('/v1/billing/current-plan', json(), (_req, res) => {
     res.status(200).send(currentPlan);
   });
 
   // Organizations
-  app.get('/api/v1/organizations', (_req, res) => {
+  app.get('/v1/organizations', (_req, res) => {
     res.status(200).send({
       organizations: organizations,
     });
   });
 
-  app.get('/api/v1/organizations/:orgId/features', (_req, res) => {
+  app.get('/v1/organizations/:orgId/features', (_req, res) => {
     res.status(200).send(organizationFeatures);
   });
 
   // Projects
-  app.get('/api/v1/organizations/:orgId/team-projects', (_req, res) => {
+  app.get('/v1/organizations/:orgId/team-projects', (_req, res) => {
     res.status(200).send({
       data: projectsByOrgId.get(_req.params.orgId),
     });
   });
 
-  app.delete('/api/v1/organizations/:orgId/team-projects/:projectId', json(), (_req, res) => {
+  app.delete('/v1/organizations/:orgId/team-projects/:projectId', json(), (_req, res) => {
     const projects = projectsByOrgId.get(_req.params.orgId)?.filter(project => project.id !== _req.params.projectId);
     if (!projects) {
       res.status(500).send();
@@ -144,7 +133,7 @@ export default (app: Application) => {
     res.status(200).send();
   });
 
-  app.patch('/api/v1/organizations/:orgId/team-projects/:projectId', json(), (_req, res) => {
+  app.patch('/v1/organizations/:orgId/team-projects/:projectId', json(), (_req, res) => {
     const updatedProjects = projectsByOrgId.get(_req.params.orgId)?.map(project => {
       if (project.id === _req.params.projectId) {
         return {
@@ -159,7 +148,7 @@ export default (app: Application) => {
     res.status(200).send();
   });
 
-  app.post('/api/v1/organizations/:organizationId/team-projects', json(), (_req, res) => {
+  app.post('/v1/organizations/:organizationId/team-projects', json(), (_req, res) => {
     const { organizationId } = _req.params;
 
     if (organizationId === 'personal') {
