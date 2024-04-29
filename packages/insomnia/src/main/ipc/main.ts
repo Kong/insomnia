@@ -1,9 +1,4 @@
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
-import type { RulesetDefinition } from '@stoplight/spectral-core';
-import { Spectral } from '@stoplight/spectral-core';
-// @ts-expect-error - This is a bundled file not sure why it's not found
-import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
-import { oas } from '@stoplight/spectral-rulesets';
 import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
@@ -18,6 +13,7 @@ import { axiosRequest } from '../network/axios-request';
 import { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { WebSocketBridgeAPI } from '../network/websocket';
+import { workerThreadPool } from '../worker/pool';
 import { gRPCBridgeAPI } from './grpc';
 
 export interface RendererToMainBridgeAPI {
@@ -122,28 +118,9 @@ export function registerMainHandlers() {
     contents: string;
     rulesetPath?: string;
   }) => {
-    const spectral = new Spectral();
-
-    if (rulesetPath) {
-      try {
-        const ruleset = await bundleAndLoadRuleset(rulesetPath, {
-          fs,
-          fetch: (url: string) => {
-            return axiosRequest({ url, method: 'GET' });
-          },
-        });
-
-        spectral.setRuleset(ruleset);
-      } catch (err) {
-        console.log('Error while parsing ruleset:', err);
-        spectral.setRuleset(oas as RulesetDefinition);
-      }
-    } else {
-      spectral.setRuleset(oas as RulesetDefinition);
-    }
-
-    const diagnostics = await spectral.run(contents);
-
+    const worker = await workerThreadPool.proxy();
+    const diagnostics = await worker.spectralRun({ contents, rulesetPath });
+    workerThreadPool.terminate();
     return diagnostics;
   });
 }

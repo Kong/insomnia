@@ -74,10 +74,31 @@ export default async function build(options: Options) {
     ],
   });
 
+  const worker = esbuild.build({
+    entryPoints: ['./src/main/worker/index.ts'],
+    outfile: path.join(outdir, 'main.worker.js'),
+    bundle: true,
+    platform: 'node',
+    sourcemap: true,
+    format: 'cjs',
+    define: env,
+    // external: ['electron'],
+    loader: {
+      '.node': 'copy',
+    },
+    external: [
+      'electron',
+      '@getinsomnia/node-libcurl',
+      ...Object.keys(pkg.dependencies),
+      ...Object.keys(builtinModules),
+    ],
+  });
+
   return Promise.all([
     main,
     preload,
     hiddenBrowserWindowPreload,
+    worker,
   ]);
 }
 
