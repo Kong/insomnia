@@ -1,5 +1,5 @@
 
-import { getApiBaseURL, getClientString } from '../common/constants';
+import { getApiBaseURL, getClientString, PLAYWRIGHT } from '../common/constants';
 import { delay } from '../common/misc';
 
 interface FetchConfig {
@@ -51,7 +51,7 @@ export async function insomniaFetch<T = void>({ method, path, data, sessionId, o
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
       ...(data ? { 'Content-Type': 'application/json' } : {}),
       ...(organizationId ? { 'X-Insomnia-Org-Id': organizationId } : {}),
-      ...(process.env.PLAYWRIGHT ? { 'X-Mockbin-Test': 'true' } : {}),
+      ...(PLAYWRIGHT ? { 'X-Mockbin-Test': 'true' } : {}),
     },
     ...(data ? { body: JSON.stringify(data) } : {}),
   };
