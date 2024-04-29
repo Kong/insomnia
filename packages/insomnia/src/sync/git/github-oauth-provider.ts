@@ -1,7 +1,7 @@
 import { v4 } from 'uuid';
 
-import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL } from '../../common/constants';
-import { externalFetch } from '../../ui/externalFetch';
+import { getAppWebsiteBaseURL, getGitHubGraphQLApiURL } from '../../common/constants';
+import { insomniaFetch } from '../../ui/insomniaFetch';
 export const GITHUB_TOKEN_STORAGE_KEY = 'github-oauth-token';
 export const GITHUB_GRAPHQL_API_URL = getGitHubGraphQLApiURL();
 
@@ -42,18 +42,14 @@ export async function exchangeCodeForToken({
     );
   }
 
-  const apiURL = getApiBaseURL();
-
-  return externalFetch<{ access_token: string }>({
-    url: apiURL + '/v1/oauth/github',
+  return insomniaFetch<{ access_token: string }>({
+    path: '/v1/oauth/github',
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     data: {
       code,
     },
-  }).then(({ data }) => {
+    sessionId: '',
+  }).then(data => {
     statesCache.delete(state);
     setAccessToken(data.access_token);
   });
