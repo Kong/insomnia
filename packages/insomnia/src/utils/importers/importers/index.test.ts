@@ -1,7 +1,7 @@
 /*
 * @jest-environment node
 */
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it, jest } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 
@@ -9,8 +9,10 @@ import { convert } from '../convert';
 
 const fixturesPath = path.join(__dirname, './fixtures');
 const fixtures = fs.readdirSync(fixturesPath);
-
 describe('Fixtures', () => {
+  afterEach(() => {
+    jest.restoreAllMocks(); // Resets all mocks
+  });
   describe.each(fixtures)('Import %s', name => {
     const dir = path.join(fixturesPath, `./${name}`);
     const inputs = fs
@@ -25,6 +27,8 @@ describe('Fixtures', () => {
       }
 
       it(input, async () => {
+        jest.spyOn(Date, 'now').mockImplementation(() => 1622117984000);
+
         expect.assertions(3);
 
         expect(typeof input).toBe('string');

@@ -188,7 +188,6 @@ export class ImportPostman {
       body: this.importBody(request.body, headers.find(({ key }) => key === 'Content-Type')?.value),
       authentication,
       preRequestScript,
-      metaSortKey: requestCount,
     };
   };
 
@@ -820,11 +819,14 @@ export const convert: Converter = rawData => {
       collection.info.schema === POSTMAN_SCHEMA_V2_0 ||
       collection.info.schema === POSTMAN_SCHEMA_V2_1
     ) {
-      return new ImportPostman(collection).importCollection();
+      const list = new ImportPostman(collection).importCollection();
+      // make import order play nice with existing pattern of descending negavitve numbers (technically ascending) eg. -3, -2, -1
+      const now = Date.now();
+      const ordered = list.map((item, index) => ({ ...item, metaSortKey: -1 * (now - index) }));
+      return ordered;
     }
   } catch (error) {
     // Nothing
-    console.log('Error importing Postman collection', error);
   }
 
   return null;
