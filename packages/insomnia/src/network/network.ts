@@ -73,8 +73,8 @@ export const fetchRequestData = async (requestId: string) => {
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
-export const tryToExecutePreRequestScript = async (
-  isPreRequest: boolean,
+export const tryToExecuteScript = async (
+  script: string,
   request: Request,
   environment: Environment,
   timelinePath: string,
@@ -84,13 +84,14 @@ export const tryToExecutePreRequestScript = async (
   cookieJar: CookieJar,
   response?: Awaited<ReturnType<typeof sendCurlAndWriteTimeline>>,
 ) => {
-  if (!request.preRequestScript) {
+  if (!script) {
     return {
       request,
       environment: undefined,
       baseEnvironment: undefined,
     };
   }
+
   const settings = await models.settings.get();
 
   try {
@@ -103,7 +104,7 @@ export const tryToExecutePreRequestScript = async (
       }, timeout + 1000);
     });
     const preRequestPromise = cancellableRunPreRequestScript({
-      script: isPreRequest ? request.preRequestScript : request.postRequestScript,
+      script,
       context: {
         request,
         timelinePath,
@@ -175,6 +176,50 @@ export const tryToExecutePreRequestScript = async (
   }
 };
 
+export async function tryToExecutePreRequestScript(
+  request: Request,
+  environment: Environment,
+  timelinePath: string,
+  responseId: string,
+  baseEnvironment: Environment,
+  clientCertificates: ClientCertificate[],
+  cookieJar: CookieJar,
+) {
+  return tryToExecuteScript(
+    request.preRequestScript,
+    request,
+    environment,
+    timelinePath,
+    responseId,
+    baseEnvironment,
+    clientCertificates,
+    cookieJar,
+  );
+};
+
+export async function tryToExecutePostRequestScript(
+  request: Request,
+  environment: Environment,
+  timelinePath: string,
+  responseId: string,
+  baseEnvironment: Environment,
+  clientCertificates: ClientCertificate[],
+  cookieJar: CookieJar,
+  response: sendCurlAndWriteTimelineResponse,
+) {
+  return tryToExecuteScript(
+    request.postRequestScript,
+    request,
+    environment,
+    timelinePath,
+    responseId,
+    baseEnvironment,
+    clientCertificates,
+    cookieJar,
+    response,
+  );
+}
+
 export const tryToInterpolateRequest = async (
   request: Request,
   environment: string | Environment,
@@ -208,6 +253,26 @@ export const tryToTransformRequestWithPlugins = async (renderResult: RequestAndC
     throw new Error(`Failed to transform request with plugins: ${request._id}`);
   }
 };
+
+export interface sendCurlAndWriteTimelineError {
+  _id: string;
+  parentId: string;
+  timelinePath: string;
+  statusMessage: string;
+  // additional
+  url: string;
+  error: string;
+  elapsedTime: number;
+  bytesRead: number;
+}
+
+export interface sendCurlAndWriteTimelineResponse extends ResponsePatch {
+  _id: string;
+  parentId: string;
+  timelinePath: string;
+  statusMessage: string;
+}
+
 export async function sendCurlAndWriteTimeline(
   renderedRequest: RenderedRequest,
   clientCertificates: ClientCertificate[],
@@ -215,7 +280,7 @@ export async function sendCurlAndWriteTimeline(
   settings: Settings,
   timelinePath: string,
   responseId: string,
-) {
+): Promise<sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse> {
   const requestId = renderedRequest._id;
   const timelineStrings: string[] = [];
   const authentication = renderedRequest.authentication as RequestAuthentication;

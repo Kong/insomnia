@@ -27,7 +27,7 @@ import { Response } from '../../models/response';
 import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
-import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecutePostRequestScript, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import { RenderErrorSubType } from '../../templating';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
@@ -382,7 +382,6 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   try {
     const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
     const mutatedContext = await tryToExecutePreRequestScript(
-      true,
       req,
       environment,
       timelinePath,
@@ -437,8 +436,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
     const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
 
-    const postMutatedContext = await tryToExecutePreRequestScript(
-      false,
+    const postMutatedContext = await tryToExecutePostRequestScript(
       req,
       environment,
       timelinePath,

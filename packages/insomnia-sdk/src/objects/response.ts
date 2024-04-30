@@ -1,6 +1,6 @@
 import { RESPONSE_CODE_REASONS } from 'insomnia/src/common/constants';
 import { Compression, ResponseHeader } from 'insomnia/src/models/response';
-import { sendCurlAndWriteTimeline } from 'insomnia/src/network/network';
+import { type sendCurlAndWriteTimelineResponse, sendCurlAndWriteTimelineError } from 'insomnia/src/network/network';
 
 import { Cookie, CookieOptions } from './cookies';
 import { CookieList } from './cookies';
@@ -188,43 +188,36 @@ export class Response extends Property {
 
 export async function toScriptResponse(
     originalRequest: Request,
-    partialInsoResponse: Awaited<ReturnType<typeof sendCurlAndWriteTimeline>>,
+    partialInsoResponse: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError,
 ): Promise<Response | undefined> {
-    if (partialInsoResponse.error) {
-        // response basically doesn't contain anything
+    if ('error' in partialInsoResponse) {
+    // it is sendCurlAndWriteTimelineError and basically doesn't contain anything useful
         return undefined;
     }
+    const partialResponse = partialInsoResponse as sendCurlAndWriteTimelineResponse;
 
-    // TODO: improve the type from sendCurlAndWriteTimeline a bit
-    // so that typing in downstream logic could be improved
-    const partialResponse = partialInsoResponse as {
-        headers: ResponseHeader[];
-        bodyPath: string;
-        bodyCompression: Compression;
-        statusCode: number;
-        elapsedTime: number;
-        statusMessage: string;
-    };
-
-    const headers = partialResponse.headers.map(
-        insoHeader => ({
-            key: insoHeader.name,
-            value: insoHeader.value,
-        }),
-        {},
-    );
-
-    const insoCookieOptions = partialResponse.headers
-        .filter(
-            header => {
-                return header.name.toLowerCase() === 'set-cookie';
-            },
+    const headers = partialResponse.headers ?
+        partialResponse.headers.map(
+            insoHeader => ({
+                key: insoHeader.name,
+                value: insoHeader.value,
+            }),
             {},
-        ).map(
-            setCookieHeader => Cookie.parse(setCookieHeader.value)
-        );
+        )
+        : [];
 
-    // TODO: handle default path
+    const insoCookieOptions = partialResponse.headers ?
+        partialResponse.headers
+            .filter(
+                header => {
+                    return header.name.toLowerCase() === 'set-cookie';
+                },
+                {},
+            ).map(
+                setCookieHeader => Cookie.parse(setCookieHeader.value)
+        )
+        : [];
+
     let responseBody = '';
     if (partialResponse.bodyPath) {
         const readResponseResult = await window.bridge.readCurlResponse({
@@ -240,7 +233,7 @@ export async function toScriptResponse(
     }
 
     const responseOption = {
-        code: partialResponse.statusCode,
+        code: partialResponse.statusCode || 0,
         // reason is not provided
         header: headers,
         cookie: insoCookieOptions,
