@@ -1,5 +1,5 @@
 import { database } from '../../common/database';
-import { insomniaFetch } from '../../main/insomniaFetch';
+import { insomniaFetch } from '../../ui/insomniaFetch';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
 import { VCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';

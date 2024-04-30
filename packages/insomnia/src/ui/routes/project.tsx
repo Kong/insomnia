@@ -50,7 +50,7 @@ import {
 import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
-import { insomniaFetch } from '../../main/insomniaFetch';
+import { insomniaFetch } from '../../ui/insomniaFetch';
 import * as models from '../../models';
 import { userSession } from '../../models';
 import { ApiSpec } from '../../models/api-spec';

@@ -28,7 +28,7 @@ import { useLocalStorage } from 'react-use';
 import * as session from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { database } from '../../common/database';
-import { insomniaFetch } from '../../main/insomniaFetch';
+import { insomniaFetch } from '../../ui/insomniaFetch';
 import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
