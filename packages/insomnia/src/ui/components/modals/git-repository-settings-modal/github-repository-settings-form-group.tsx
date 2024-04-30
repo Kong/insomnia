@@ -3,7 +3,6 @@ import React, { MouseEvent, useEffect, useState } from 'react';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
-import { insomniaFetch } from '../../../../main/insomniaFetch';
 import { GitRepository } from '../../../../models/git-repository';
 import {
   exchangeCodeForToken,
@@ -11,6 +10,7 @@ import {
   GITHUB_GRAPHQL_API_URL,
   signOut,
 } from '../../../../sync/git/github-oauth-provider';
+import { insomniaFetch } from '../../../insomniaFetch';
 import { Button } from '../../themed-button';
 import { showAlert, showError } from '..';
 

@@ -1,9 +1,7 @@
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
-import { insomniaFetch } from '../../../../main/insomniaFetch';
 import { GitRepository } from '../../../../models/git-repository';
 import {
   exchangeCodeForGitLabToken,
@@ -159,25 +157,27 @@ const GitLabRepositoryForm = ({
 
   useEffect(() => {
     if (token && !user) {
-      insomniaFetch<GitLabUserResult>({
+      fetch('insomnia-api://insomnia/api/v4/user', {
         method: 'GET',
-        path: '/api/v4/user',
-        origin: getGitLabOauthApiURL(),
-        sessionId: '',
-        headers: {
+        headers: new Headers({
           Authorization: `Bearer ${token}`,
-        },
-      }).then(data => {
-        setUser(data);
-      })
-        .catch((error: unknown) => {
-          if (axios.isAxiosError(error) && error.response?.status === 401) {
+          'X-Origin': getGitLabOauthApiURL(),
+        }),
+      }).then(async response => {
+        if (!response.ok) {
+          if (response.status === 401) {
             refreshToken();
           } else {
-            const errorMessage = (error instanceof Error) ? error.message : 'Something went wrong when trying to fetch info from GitLab.';
+            const errorMessage = await response.text() || 'Something went wrong when trying to fetch info from GitLab.';
             setError(errorMessage);
-            console.log(`[gitlab oauth]: ${error}`);
+            console.log(`[gitlab oauth]: ${errorMessage}`);
           }
+        }
+
+        return response.json();
+      })
+        .then(data => {
+          setUser(data);
         });
     }
   }, [token, onSubmit, setUser, user]);
