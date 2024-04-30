@@ -71,26 +71,27 @@ export const GitHubStarsButton = () => {
   const shouldShowCount = !Boolean(error);
 
   return (
-    <div className="flex select-none rounded-lg divide-x divide-[--hl-md] divide-solid border border-solid border-[--hl-md]">
-      <Link onPress={starClick}>
-        <a
-          href="https://github.com/Kong/insomnia"
-          className="px-4 py-1 rounded-l-lg last-of-type:rounded-r-lg outline-none flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-        >
-          <Icon icon={['fab', 'github']} />
-          Star
-        </a>
-      </Link>
-      {shouldShowCount && (
-        <Link onPress={counterClick}>
-          <a
-            href="https://github.com/Kong/insomnia/stargazers"
-            className="px-4 py-1 rounded-r-lg outline-none flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-          >
-            {starCount.toLocaleString()}
-          </a>
-        </Link>
-      )}
-    </div>
+    <></>
+    // <div className="flex select-none rounded-lg divide-x divide-[--hl-md] divide-solid border border-solid border-[--hl-md]">
+    //   <Link onPress={starClick}>
+    //     <a
+    //       href="https://github.com/Kong/insomnia"
+    //       className="px-4 py-1 rounded-l-lg last-of-type:rounded-r-lg outline-none flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+    //     >
+    //       <Icon icon={['fab', 'github']} />
+    //       Star
+    //     </a>
+    //   </Link>
+    //   {shouldShowCount && (
+    //     <Link onPress={counterClick}>
+    //       <a
+    //         href="https://github.com/Kong/insomnia/stargazers"
+    //         className="px-4 py-1 rounded-r-lg outline-none flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+    //       >
+    //         {starCount.toLocaleString()}
+    //       </a>
+    //     </Link>
+    //   )}
+    // </div>
   );
 };

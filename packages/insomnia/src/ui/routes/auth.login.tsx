@@ -73,7 +73,7 @@ const Login = () => {
       <p className='text-[--color-font] text-sm'>
         Discover Local, Cloud or Git storage for your projects.
       </p>
-      <Button
+      {/* <Button
         aria-label='Continue with Google'
         onPress={() => {
           login('google');
@@ -129,7 +129,7 @@ const Login = () => {
         <span className='flex-1 items'>
           Continue with SSO
         </span>
-      </Button>
+      </Button> */}
 
       <p className='text-[rgba(var(--color-font-rgb),0.8)] text-xs text-center'>
         By signing up or using Insomnia, you agree to the{' '}
@@ -151,7 +151,7 @@ const Login = () => {
         .
       </p>
 
-      <div className='flex gap-[--padding-md] justify-between'>
+      <div className='flex gap-[--padding-md] justify-center'>
         <Button
           onPress={() => {
             window.main.trackSegmentEvent({
@@ -169,7 +169,7 @@ const Login = () => {
             Use the local Scratch Pad
           </span>
         </Button>
-        <DialogTrigger>
+        {/* <DialogTrigger>
           <Button
             aria-label='Export data and more'
             className='flex transition-colors justify-center text-[rgba(var(--color-font-rgb),0.8)] text-sm gap-[--padding-xs] hover:text-[--color-font] focus:text-[--color-font]'
@@ -279,7 +279,7 @@ const Login = () => {
               </Dialog>
             </Modal>
           </ModalOverlay>
-        </DialogTrigger>
+        </DialogTrigger> */}
       </div>
     </div>
   );

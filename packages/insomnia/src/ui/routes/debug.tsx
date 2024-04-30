@@ -824,7 +824,7 @@ export const Debug: FC = () => {
                 <Icon icon="gear" />
               </Button>
             </div>
-            <Button
+            {/* <Button
               onPress={() => setIsCookieModalOpen(true)}
               className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             >
@@ -837,7 +837,7 @@ export const Debug: FC = () => {
             >
               <Icon icon="file-contract" className='w-5' />
               <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates</span>
-            </Button>
+            </Button> */}
           </div>
 
           <div className="flex flex-col flex-1 overflow-hidden">

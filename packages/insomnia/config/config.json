@@ -1,8 +1,8 @@
 {
-  "name": "insomnia",
+  "name": "Arabi Postman",
   "appId": "com.insomnia.app",
   "userDataFolder": "Insomnia",
-  "productName": "Insomnia",
+  "productName": "Arabi Postman",
   "synopsis": "The Collaborative API Client and Design Tool",
   "icon": "https://github.com/kong/insomnia/blob/develop/packages/insomnia/src/icons/icon.ico?raw=true",
   "changelogUrl": "https://insomnia.rest/changelog",

@@ -581,18 +581,18 @@ const OrganizationRoute = () => {
                 </Fragment>
               ) : (
                 <Fragment>
-                  <NavLink
+                  {/* <NavLink
                     to="/auth/login"
                     className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   >
                     Login
-                  </NavLink>
-                  <NavLink
+                  </NavLink> */}
+                  {/* <NavLink
                     className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)] focus:bg-[rgba(var(--color-surprise-rgb),0.9)] bg-[--color-surprise] font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                     to="/auth/login"
                   >
                     Sign Up
-                  </NavLink>
+                  </NavLink> */}
                 </Fragment>
               )}
             </div>
@@ -850,7 +850,7 @@ const OrganizationRoute = () => {
                   </Tooltip>
                 </TooltipTrigger>
                 <span className='w-[1px] h-full bg-[--hl-sm]' />
-                <Link>
+                {/* <Link>
                   <a
                     className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
                     href="https://konghq.com/"
@@ -859,7 +859,7 @@ const OrganizationRoute = () => {
                     <Icon className="text-[--color-surprise-font]" icon="heart" /> by
                     Kong
                   </a>
-                </Link>
+                </Link> */}
               </div>
             </div>
           </div>
