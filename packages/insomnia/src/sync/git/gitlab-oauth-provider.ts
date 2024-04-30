@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'crypto';
 import { v4 as uuid } from 'uuid';
 
 import { INSOMNIA_GITLAB_API_URL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI } from '../../common/constants';
+import { externalFetch } from '../../ui/externalFetch';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 
 // Warning: As this is a global fetch we need to handle errors, retries and caching
@@ -112,16 +113,16 @@ export async function exchangeCodeForGitLabToken(input: {
     code_verifier: verifier,
   }).toString();
 
-  return window.main.axiosRequest({
+  return externalFetch<{ access_token: string; refresh_token: string }>({
     url: url.toString(),
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-  }).then(result => {
+  }).then(({ data }) => {
     statesCache.delete(state);
 
-    setAccessToken(result.data.access_token, result.data.refresh_token);
+    setAccessToken(data.access_token, data.refresh_token);
   });
 }
 
@@ -140,16 +141,16 @@ export async function refreshToken() {
     client_id: clientId,
   }).toString();
 
-  return window.main.axiosRequest({
+  return externalFetch<{ access_token: string; refresh_token: string }>({
     url: url.toString(),
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-  }).then(result => {
-    setAccessToken(result.data.access_token, result.data.refresh_token);
+  }).then(({ data }) => {
+    setAccessToken(data.access_token, data.refresh_token);
 
-    return result.data.access_token;
+    return data.access_token;
   });
 }
 

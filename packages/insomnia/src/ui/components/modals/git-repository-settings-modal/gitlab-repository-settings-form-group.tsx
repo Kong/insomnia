@@ -11,6 +11,7 @@ import {
   refreshToken,
   signOut,
 } from '../../../../sync/git/gitlab-oauth-provider';
+import { externalFetch } from '../../../externalFetch';
 import { Button } from '../../themed-button';
 import { showAlert, showError } from '..';
 
@@ -158,7 +159,7 @@ const GitLabRepositoryForm = ({
 
   useEffect(() => {
     if (token && !user) {
-      window.main.axiosRequest({
+      externalFetch<GitLabUserResult>({
         method: 'GET',
         url: `${getGitLabOauthApiURL()}/api/v4/user`,
         headers: {

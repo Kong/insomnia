@@ -1,3 +1,5 @@
+import { externalFetch } from '../../ui/externalFetch';
+
 /** This is a client for isomorphic-git {@link https://isomorphic-git.org/docs/en/http} */
 export const httpClient = {
   request: async (config: any) => {
@@ -6,13 +8,13 @@ export const httpClient = {
     }
     // hosted-git-info was adding git+ to the beginning of the url which isn't supported by axios after 0.27.0
     const withoutGitPlus = config.url.replace(/^git\+/, '');
-    const response = await window.main.axiosRequest({
+    console.log('git request', withoutGitPlus, config.body);
+    const response = await externalFetch<ArrayBuffer>({
       url: withoutGitPlus,
       method: config.method,
       headers: config.headers,
-      data: config.body,
+      body: JSON.stringify(config.body),
       responseType: 'arraybuffer',
-      maxRedirects: 10,
     });
     return {
       url: config.url,

@@ -12,6 +12,7 @@ import { HtmlElementWrapper } from '../../ui/components/html-element-wrapper';
 import { showAlert, showModal, showPrompt } from '../../ui/components/modals';
 import { PromptModalOptions } from '../../ui/components/modals/prompt-modal';
 import { WrapperModal } from '../../ui/components/modals/wrapper-modal';
+import { externalFetch } from '../../ui/externalFetch';
 
 interface DialogOptions {
   onHide?: () => void;
@@ -211,7 +212,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
       },
     },
     __private: {
-      axios: process.type === 'renderer' ? window.main.axiosRequest : () => { },
+      axios: process.type === 'renderer' ? externalFetch : () => { },
       // Provide modules that can be used in the renderer process
       async loadRendererModules() {
         if (typeof globalThis.document === 'undefined') {

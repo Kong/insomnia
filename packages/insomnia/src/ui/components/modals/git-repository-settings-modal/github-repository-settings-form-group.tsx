@@ -1,4 +1,3 @@
-import { AxiosResponse } from 'axios';
 import type { GraphQLError } from 'graphql';
 import React, { MouseEvent, useEffect, useState } from 'react';
 import { useInterval, useLocalStorage } from 'react-use';
@@ -11,6 +10,7 @@ import {
   GITHUB_GRAPHQL_API_URL,
   signOut,
 } from '../../../../sync/git/github-oauth-provider';
+import { externalFetch } from '../../../externalFetch';
 import { Button } from '../../themed-button';
 import { showAlert, showError } from '..';
 
@@ -63,19 +63,18 @@ interface FetchGraphQLInput {
 
 async function fetchGraphQL<QueryResult>(input: FetchGraphQLInput) {
   const { headers, query, variables, url } = input;
-  const response: AxiosResponse<{ data: QueryResult; errors: GraphQLError[] }> =
-    await window.main.axiosRequest({
-      url,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers,
-      },
-      data: {
-        query,
-        variables,
-      },
-    });
+  const response = await externalFetch<{ data: QueryResult; errors: GraphQLError[] }>({
+    url,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...headers,
+    },
+    body: JSON.stringify({
+      query,
+      variables,
+    }),
+  });
 
   return response.data;
 }
