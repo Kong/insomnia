@@ -305,7 +305,7 @@ export interface ProjectLoaderData {
     url: string;
   };
 }
-
+let hasFetchedLearningFeature = false;
 async function getAllLocalFiles({
   projectId,
 }: {
@@ -508,7 +508,8 @@ export const loader: LoaderFunction = async ({
     url: '',
   };
 
-  if (!window.localStorage.getItem('learning-feature-dismissed')) {
+  if (!window.localStorage.getItem('learning-feature-dismissed') && !hasFetchedLearningFeature) {
+    hasFetchedLearningFeature = true;
     try {
       learningFeature = await insomniaFetch<{
         active: boolean;
