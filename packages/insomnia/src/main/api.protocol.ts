@@ -1,6 +1,8 @@
 import { app, net, protocol } from 'electron';
 
 import { getApiBaseURL } from '../common/constants';
+import { settings } from '../models';
+import { setDefaultProtocol } from '../utils/url/protocol';
 export interface RegisterProtocolOptions {
   scheme: string;
 }
@@ -35,10 +37,33 @@ export async function registerInsomniaProtocols() {
   }
   if (!protocol.isProtocolHandled(insomniaAPIScheme)) {
     protocol.handle(insomniaAPIScheme, async request => {
-      const origin = request.headers.get('X-Origin') || getApiBaseURL();
+      let origin = request.headers.get('X-Origin') || getApiBaseURL();
+
+      const { proxyEnabled, httpProxy, httpsProxy, noProxy } = await settings.get();
+
+      const isHostnameExcludedFromProxy = noProxy.includes(new URL(origin).hostname);
+
+      if (proxyEnabled && !isHostnameExcludedFromProxy) {
+        const proxyUrl = origin.startsWith('https:') ? httpsProxy : httpProxy;
+
+        const parsedURL = new URL(setDefaultProtocol(proxyUrl));
+
+        origin = parsedURL.origin;
+      }
+
       const path = request.url.replace(`${insomniaAPIScheme}://insomnia/`, '');
+
       const url = new URL(path, origin);
-      console.log('Fetching', { incomingURL: request.url, path, origin, url });
+
+      console.log('Fetching', {
+        incomingURL: request.url,
+        path,
+        origin,
+        url,
+        proxyEnabled,
+        httpProxy,
+        httpsProxy,
+      });
 
       return net.fetch(url.toString(), request);
     });
