@@ -63,7 +63,7 @@ export const KeyValueEditor: FC<Props> = ({
   // smelly
   const pairsWithIds = pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') }));
 
-  const readOnlyPairs = [
+  const readOnlyWebsocketPairs = [
     { name: 'Connection', value: 'Upgrade' },
     { name: 'Upgrade', value: 'websocket' },
     { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>' },
@@ -71,6 +71,11 @@ export const KeyValueEditor: FC<Props> = ({
     { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits' },
   ].map(pair => ({ ...pair, id: generateId('pair') }));
 
+  const readOnlyHttpPairs = [
+    { name: 'Accept', value: '*/*' },
+    { name: 'Host', value: '<calculated at runtime>' },
+  ].map(pair => ({ ...pair, id: generateId('pair') }));
+  const readOnlyPairs = isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs;
   const [showDescription, setShowDescription] = React.useState(false);
 
   return (
@@ -124,7 +129,7 @@ export const KeyValueEditor: FC<Props> = ({
             addPair={() => { }}
           />
         )}
-        {isWebSocketRequest ? readOnlyPairs.map(pair => (
+        {readOnlyPairs.map(pair => (
           <li key={pair.id} className="key-value-editor__row-wrapper">
             <div className="key-value-editor__row">
               <div className="form-control form-control--underlined form-control--wide">
@@ -145,7 +150,7 @@ export const KeyValueEditor: FC<Props> = ({
               <button><i className="fa fa-empty" /></button>
             </div>
           </li>
-        )) : null}
+        ))}
         {pairsWithIds.map(pair => (
           <Row
             key={pair.id}
