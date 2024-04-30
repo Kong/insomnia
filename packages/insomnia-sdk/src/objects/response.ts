@@ -1,6 +1,5 @@
 import { RESPONSE_CODE_REASONS } from 'insomnia/src/common/constants';
-import { Compression, ResponseHeader } from 'insomnia/src/models/response';
-import { type sendCurlAndWriteTimelineResponse, sendCurlAndWriteTimelineError } from 'insomnia/src/network/network';
+import { sendCurlAndWriteTimelineError, type sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
 
 import { Cookie, CookieOptions } from './cookies';
 import { CookieList } from './cookies';
