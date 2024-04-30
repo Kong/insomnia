@@ -25,6 +25,22 @@ import {
 } from '../sorting';
 
 describe('Sorting methods', () => {
+  it('defaults to ascending metaSortKey aka descending but flipped (* -1)', () => {
+    const unsorted = [
+      { _id: '', metaSortKey: -990 },
+      { _id: '', metaSortKey: -800 },
+      { _id: '', metaSortKey: -799 },
+      { _id: '', metaSortKey: -1000 },
+      { _id: '', metaSortKey: -999 }];
+    const sorted = unsorted.sort(sortMethodMap['type-manual']);
+    expect(sorted).toEqual([
+      { _id: '', metaSortKey: -1000 },
+      { _id: '', metaSortKey: -999 },
+      { _id: '', metaSortKey: -990 },
+      { _id: '', metaSortKey: -800 },
+      { _id: '', metaSortKey: -799 },
+    ]);
+  });
   it('sorts by name', () => {
     const ascendingNameSort = sortMethodMap[SORT_NAME_ASC];
     expect(
