@@ -20,6 +20,7 @@ export async function externalFetch<T = void>({ url, method, headers, body, resp
   headers: Record<string, string> | undefined;
 }> {
   // const settings = await models.settings.get();
+
   // const isHttps = config.url?.indexOf('https:') === 0;
   // let proxyUrl: string | null = null;
 
@@ -28,6 +29,8 @@ export async function externalFetch<T = void>({ url, method, headers, body, resp
   // } else if (settings.httpProxy) {
   //   proxyUrl = settings.httpProxy;
   // }
+  // const session = window.webContents.session;
+  // await session.setProxy({ proxyRules: proxyUrl });
 
   // const finalConfig: AxiosRequestConfig = {
   //   ...config,

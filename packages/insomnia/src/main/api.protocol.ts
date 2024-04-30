@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { app, net, protocol } from 'electron';
 
 import { getApiBaseURL } from '../common/constants';
@@ -47,8 +48,16 @@ export async function registerInsomniaProtocols() {
     protocol.handle(externalScheme, async request => {
       const path = request.url.replace(`${externalScheme}://insomnia/`, 'https://');
       const url = new URL(path);
+      const reqHeaders: Record<string, string> = {};
+      Object.keys(request.headers).forEach(key => {
+        reqHeaders[key] = String(request.headers.get(key));
+      });
       console.log('Fetching external', url.toString());
-      return net.fetch(url.toString(), request);
+      return axios(url.toString(), {
+        method: request.method,
+        headers: reqHeaders,
+        data: request.body,
+      });
     });
   }
 
