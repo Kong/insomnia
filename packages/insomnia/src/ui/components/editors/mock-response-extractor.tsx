@@ -75,13 +75,16 @@ export const MockResponseExtractor = () => {
                 invariant(activeResponse, 'Active response must be defined');
                 const body = await fs.readFile(activeResponse.bodyPath);
                 // TODO: consider setting selected mock server here rather than redirecting
+                const headersWithoutContentLength = Object.fromEntries(
+                  Object.entries(activeResponse.headers).filter(([key]) => key.toLowerCase() !== 'content-length')
+                );
                 fetcher.submit(
                   JSON.stringify({
                     name: name,
                     body: body.toString(),
                     mimeType,
                     statusCode: activeResponse.statusCode,
-                    headers: activeResponse.headers,
+                    headers: headersWithoutContentLength,
                     mockServerName: activeWorkspace.name,
                   }),
                   {
@@ -111,6 +114,9 @@ export const MockResponseExtractor = () => {
                   });
                   return;
                 };
+                const headersWithoutContentLength = Object.fromEntries(
+                  Object.entries(activeResponse.headers).filter(([key]) => key.toLowerCase() !== 'content-length')
+                );
                 fetcher.submit(
                   JSON.stringify({
                     name: name,
@@ -118,7 +124,7 @@ export const MockResponseExtractor = () => {
                     body: body.toString(),
                     mimeType,
                     statusCode: activeResponse.statusCode,
-                    headers: activeResponse.headers,
+                    headers: headersWithoutContentLength,
                   }),
                   {
                     encType: 'application/json',
