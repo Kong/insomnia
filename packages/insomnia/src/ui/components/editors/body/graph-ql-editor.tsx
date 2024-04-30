@@ -1,6 +1,7 @@
 import { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
-import { GraphQLInfoOptions } from 'codemirror-graphql/info';
-import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
+import type { GraphQLHintOptions } from 'codemirror-graphql/hint';
+import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
+import type { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import type { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
 import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, Kind, NonNullTypeNode, OperationDefinitionNode, parse, typeFromAST } from 'graphql';
@@ -430,7 +431,7 @@ export const GraphQLEditor: FC<Props> = ({
   }
 
   let graphqlOptions: {
-    hintOptions: ShowHintOptions;
+    hintOptions: GraphQLHintOptions & ShowHintOptions;
     infoOptions: GraphQLInfoOptions;
     jumpOptions: ModifiedGraphQLJumpOptions;
     lintOptions: LintOptions;
@@ -449,6 +450,7 @@ export const GraphQLEditor: FC<Props> = ({
     graphqlOptions = {
       hintOptions: {
         completeSingle: false,
+        schema,
       },
       infoOptions: {
         schema,
