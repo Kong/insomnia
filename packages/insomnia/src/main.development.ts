@@ -197,7 +197,7 @@ const _launchApp = async () => {
       app.on('open-url', (_event, url) => {
         openDeepLinkUrl(url);
       });
-      ipcMain.on('open-deep-link', (_event, url) => {
+      ipcMain.on('openDeepLink', (_event, url) => {
         openDeepLinkUrl(url);
       });
     }
