@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
+import { insomniaFetch } from '../../../../main/insomniaFetch';
 import { GitRepository } from '../../../../models/git-repository';
 import {
   exchangeCodeForGitLabToken,
@@ -11,7 +12,6 @@ import {
   refreshToken,
   signOut,
 } from '../../../../sync/git/gitlab-oauth-provider';
-import { externalFetch } from '../../../externalFetch';
 import { Button } from '../../themed-button';
 import { showAlert, showError } from '..';
 
@@ -159,13 +159,15 @@ const GitLabRepositoryForm = ({
 
   useEffect(() => {
     if (token && !user) {
-      externalFetch<GitLabUserResult>({
+      insomniaFetch<GitLabUserResult>({
         method: 'GET',
-        url: `${getGitLabOauthApiURL()}/api/v4/user`,
+        path: '/api/v4/user',
+        origin: getGitLabOauthApiURL(),
+        sessionId: '',
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }).then(({ data }) => {
+      }).then(data => {
         setUser(data);
       })
         .catch((error: unknown) => {
@@ -199,8 +201,7 @@ const GitLabRepositoryForm = ({
             oauth2format: 'gitlab',
           },
         });
-      }
-      }
+      }}
     >
       {token && (
         <div className="form-control form-control--outlined">

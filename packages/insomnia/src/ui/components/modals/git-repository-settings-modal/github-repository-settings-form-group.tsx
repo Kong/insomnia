@@ -3,6 +3,7 @@ import React, { MouseEvent, useEffect, useState } from 'react';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
+import { insomniaFetch } from '../../../../main/insomniaFetch';
 import { GitRepository } from '../../../../models/git-repository';
 import {
   exchangeCodeForToken,
@@ -10,7 +11,6 @@ import {
   GITHUB_GRAPHQL_API_URL,
   signOut,
 } from '../../../../sync/git/github-oauth-provider';
-import { externalFetch } from '../../../externalFetch';
 import { Button } from '../../themed-button';
 import { showAlert, showError } from '..';
 
@@ -53,31 +53,6 @@ export const GitHubRepositorySetupFormGroup = (props: Props) => {
     />
   );
 };
-
-interface FetchGraphQLInput {
-  query: string;
-  variables?: Record<string, any>;
-  headers: Record<string, any>;
-  url: string;
-}
-
-async function fetchGraphQL<QueryResult>(input: FetchGraphQLInput) {
-  const { headers, query, variables, url } = input;
-  const response = await externalFetch<{ data: QueryResult; errors: GraphQLError[] }>({
-    url,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
-    body: JSON.stringify({
-      query,
-      variables,
-    }),
-  });
-
-  return response.data;
-}
 
 const GitHubUserInfoQuery = `
   query getUserInfo {
@@ -209,14 +184,19 @@ const GitHubRepositoryForm = ({
     let isMounted = true;
 
     if (token && !user) {
-      fetchGraphQL<GitHubUserInfoQueryResult>({
-        query: GitHubUserInfoQuery,
+      const parsedURL = new URL(GITHUB_GRAPHQL_API_URL);
+      insomniaFetch<{ data: GitHubUserInfoQueryResult; errors: GraphQLError[] }>({
+        path: parsedURL.pathname + parsedURL.search,
+        method: 'POST',
+        origin: parsedURL.origin,
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        url: GITHUB_GRAPHQL_API_URL,
-      })
-        .then(({ data, errors }) => {
+        sessionId: '',
+        data: {
+          query: GitHubUserInfoQuery,
+        },
+      }).then(({ data, errors }) => {
           if (isMounted) {
             if (errors) {
               setError(

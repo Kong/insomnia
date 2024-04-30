@@ -64,7 +64,7 @@ export async function externalFetch<T = void>({ url, method, headers, body, resp
   // TODO prepend external-api:// to the url
   // finalConfig.url = 'external-api://insomnia/' + path
   const parsedUrl = new URL(url);
-  const preprendedUrl = 'external-api://insomnia/' + parsedUrl.host + parsedUrl.pathname;
+  const preprendedUrl = 'insomnia-api://insomnia/' + parsedUrl.host + parsedUrl.pathname;
   console.log('external', body, headers);
 
   const response = await fetch(preprendedUrl, {

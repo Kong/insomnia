@@ -2,13 +2,11 @@ import { createHash, randomBytes } from 'crypto';
 import { v4 as uuid } from 'uuid';
 
 import { INSOMNIA_GITLAB_API_URL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI } from '../../common/constants';
-import { externalFetch } from '../../ui/externalFetch';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 
 // Warning: As this is a global fetch we need to handle errors, retries and caching
 // GitLab API config
 const getGitLabConfig = async () => {
-
   // Validate and use the environment variables if provided
   if (
     (INSOMNIA_GITLAB_REDIRECT_URI && !INSOMNIA_GITLAB_CLIENT_ID) ||
@@ -113,13 +111,12 @@ export async function exchangeCodeForGitLabToken(input: {
     code_verifier: verifier,
   }).toString();
 
-  return externalFetch<{ access_token: string; refresh_token: string }>({
-    url: url.toString(),
+  return insomniaFetch<{ access_token: string; refresh_token: string }>({
+    path: url.pathname + url.search,
+    origin: getGitLabOauthApiURL(),
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).then(({ data }) => {
+    sessionId: '',
+  }).then(data => {
     statesCache.delete(state);
 
     setAccessToken(data.access_token, data.refresh_token);
@@ -141,13 +138,12 @@ export async function refreshToken() {
     client_id: clientId,
   }).toString();
 
-  return externalFetch<{ access_token: string; refresh_token: string }>({
-    url: url.toString(),
+  return insomniaFetch<{ access_token: string; refresh_token: string }>({
+    path: url.pathname + url.search,
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).then(({ data }) => {
+    origin: getGitLabOauthApiURL(),
+    sessionId: '',
+  }).then(data => {
     setAccessToken(data.access_token, data.refresh_token);
 
     return data.access_token;
