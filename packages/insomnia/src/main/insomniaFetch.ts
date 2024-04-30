@@ -58,7 +58,7 @@ export async function insomniaFetch<T = void>({ method, path, data, sessionId, o
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
-  const response = await exponentialBackOff('insomnia-api://insomnia/' + path, config);
+  const response = await exponentialBackOff('insomnia-api://insomnia' + path, config);
   const uri = response.headers.get('x-insomnia-command');
   if (uri) {
     window.main.openDeepLink(uri);
