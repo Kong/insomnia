@@ -30,7 +30,6 @@ export interface WhoamiResponse {
 export interface SessionData {
   accountId: string;
   id: string;
-  sessionExpiry: Date | null;
   email: string;
   firstName: string;
   lastName: string;
@@ -48,7 +47,6 @@ export function onLoginLogout(loginCallback: LoginCallback) {
 export async function absorbKey(sessionId: string, key: string) {
   // Get and store some extra info (salts and keys)
   const {
-    sessionExpiry,
     publicKey,
     encPrivateKey,
     encSymmetricKey,
@@ -59,12 +57,9 @@ export async function absorbKey(sessionId: string, key: string) {
   } = await _whoami(sessionId);
   const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(encSymmetricKey));
 
-  const sessionExpiryDate = new Date(Date.now() + (sessionExpiry * 1000));
-
   // Store the information for later
   await setSessionData(
     sessionId,
-    sessionExpiryDate,
     accountId,
     firstName,
     lastName,
@@ -99,22 +94,8 @@ export async function getPrivateKey() {
 }
 
 export async function getCurrentSessionId() {
-  const { id, sessionExpiry } = await userSession.getOrCreate();
-  try {
-    if (typeof sessionExpiry !== 'string' || !sessionExpiry) {
-      return '';
-    }
-
-    const isExpired = new Date(sessionExpiry).getTime() < Date.now();
-    if (isExpired) {
-      console.log('Session has expired', sessionExpiry);
-      return '';
-    }
-    return id;
-  } catch (e) {
-    console.log('Error in expiry logic', e);
-    return '';
-  }
+  const { id } = await userSession.getOrCreate();
+  return id;
 }
 
 export async function getAccountId() {
@@ -150,7 +131,6 @@ export async function logout() {
 /** Set data for the new session and store it encrypted with the sessionId */
 export async function setSessionData(
   id: string,
-  sessionExpiry: Date,
   accountId: string,
   firstName: string,
   lastName: string,
@@ -161,7 +141,6 @@ export async function setSessionData(
 ) {
   const sessionData: SessionData = {
     id,
-    sessionExpiry,
     accountId,
     symmetricKey,
     publicKey,
@@ -206,7 +185,6 @@ async function _unsetSessionData() {
   await userSession.getOrCreate();
   await userSession.update(await userSession.getOrCreate(), {
     id: '',
-    sessionExpiry: null,
     accountId: '',
     email: '',
     firstName: '',

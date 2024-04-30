@@ -102,7 +102,6 @@ async function renderApp() {
       const session = JSON.parse(insomniaSession) as SessionData;
       await setSessionData(
         session.id,
-        session.sessionExpiry || new Date(),
         session.accountId,
         session.firstName,
         session.lastName,
