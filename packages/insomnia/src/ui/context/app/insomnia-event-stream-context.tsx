@@ -1,7 +1,7 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useFetcher, useParams, useRevalidator, useRouteLoaderData } from 'react-router-dom';
 
-import { insomniaFetch } from '../../../main/insomniaFetch';
+import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { ProjectLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';

@@ -7,13 +7,13 @@ import { useInterval } from 'react-use';
 
 import { getMockServiceURL, getPreviewModeName, PREVIEW_MODE_FRIENDLY, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
-import { insomniaFetch } from '../../../main/insomniaFetch';
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models';
 import { MockRoute } from '../../../models/mock-route';
 import { MockServer } from '../../../models/mock-server';
 import { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
+import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { MockRouteLoaderData } from '../../routes/mock-route';
 import { useRootLoaderData } from '../../routes/root';

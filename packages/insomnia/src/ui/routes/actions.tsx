@@ -9,7 +9,6 @@ import { database } from '../../common/database';
 import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
-import { insomniaFetch } from '../../main/insomniaFetch';
 import * as models from '../../models';
 import { getById, update } from '../../models/helpers/request-operations';
 import { isRemoteProject } from '../../models/project';
@@ -22,6 +21,7 @@ import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
+import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 

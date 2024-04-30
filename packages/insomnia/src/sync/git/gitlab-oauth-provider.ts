@@ -1,7 +1,8 @@
 import { createHash, randomBytes } from 'crypto';
 import { v4 as uuid } from 'uuid';
 
-import { getApiBaseURL, INSOMNIA_GITLAB_API_URL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI } from '../../common/constants';
+import { INSOMNIA_GITLAB_API_URL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI } from '../../common/constants';
+import { insomniaFetch } from '../../ui/insomniaFetch';
 
 // Warning: As this is a global fetch we need to handle errors, retries and caching
 // GitLab API config
@@ -22,12 +23,11 @@ const getGitLabConfig = async () => {
     };
   }
 
-  const apiURL = getApiBaseURL();
-  // Otherwise fetch the config for the GitLab API
-  return window.main.axiosRequest({
-    url: apiURL + '/v1/oauth/gitlab/config',
+  return insomniaFetch<{ applicationId: string; redirectUri: string }>({
+    path: '/v1/oauth/gitlab/config',
     method: 'GET',
-  }).then(({ data }) => {
+    sessionId: '',
+  }).then(data => {
     return {
       clientId: data.applicationId,
       redirectUri: data.redirectUri,

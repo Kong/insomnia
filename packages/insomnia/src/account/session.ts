@@ -1,5 +1,5 @@
-import { insomniaFetch } from '../main/insomniaFetch';
 import { userSession } from '../models';
+import { insomniaFetch } from '../ui/insomniaFetch';
 import * as crypt from './crypt';
 
 type LoginCallback = (isLoggedIn: boolean) => void;
