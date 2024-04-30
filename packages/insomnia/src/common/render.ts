@@ -330,7 +330,7 @@ export async function getRenderContext(
     workspace ? workspace._id : 'n/a',
   );
   const subEnvironmentId = environment ?
-    typeof environment === 'string' ? environment : 'n/a' :
+    typeof environment === 'string' ? environment : environment._id :
     'n/a';
   const subEnvironment = environment ?
     typeof environment === 'string' ? await models.environment.getById(environment) : environment :
