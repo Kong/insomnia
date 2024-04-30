@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [core@9.1.0] - 2024-04-30
+
+## What's Changed
+
+- fix(sidebar): improve default size and reset default order by @gatzjames in <https://github.com/Kong/insomnia/pull/7309>
+- fix(sdk): some of external modules are missing - INS-3784 by @ihexxa in <https://github.com/Kong/insomnia/pull/7315>
+- Fix: non blocking fetch on navigate by @jackkav in <https://github.com/Kong/insomnia/pull/7321>
+- fix pm import order by @jackkav in <https://github.com/Kong/insomnia/pull/7332>
+- expose internal requests in network tab by @jackkav in <https://github.com/Kong/insomnia/pull/7319>
+- show read only headers by @jackkav in <https://github.com/Kong/insomnia/pull/7337>
+- add clear sort order test by @jackkav in <https://github.com/Kong/insomnia/pull/7336>
+- remove app-side session expiry by @jackkav in <https://github.com/Kong/insomnia/pull/7340>
+- fix: subEnvironment's id should be real id instead of n/a - INS-3802 by @ihexxa in <https://github.com/Kong/insomnia/pull/7339>
+- Fix/filter out content length by @jackkav in <https://github.com/Kong/insomnia/pull/7341>
+- fix(graphql-autocomplete): Add schema to hintOptions by @gatzjames in <https://github.com/Kong/insomnia/pull/7342>
+- Refactor/move insomnia fetch by @jackkav in <https://github.com/Kong/insomnia/pull/7344>
+
 ## [core@9.0.0] - 2024-04-24
 
 ## What's Changed
