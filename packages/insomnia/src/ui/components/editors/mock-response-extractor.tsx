@@ -8,6 +8,7 @@ import {
 } from 'react-router-dom';
 
 import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
+import { ResponseHeader } from '../../../models/response';
 import { invariant } from '../../../utils/invariant';
 import { isInMockContentTypeList, useMockRoutePatcher } from '../../routes/mock-route';
 import { RequestLoaderData } from '../../routes/request';
@@ -74,14 +75,15 @@ export const MockResponseExtractor = () => {
               onComplete: async name => {
                 invariant(activeResponse, 'Active response must be defined');
                 const body = await fs.readFile(activeResponse.bodyPath);
-                // TODO: consider setting selected mock server here rather than redirecting
+                // auth mechanism is too sensitive to allow content length checks
+                const headersWithoutContentLength: ResponseHeader[] = activeResponse.headers.filter(h => h.name.toLowerCase() !== 'content-length');
                 fetcher.submit(
                   JSON.stringify({
                     name: name,
                     body: body.toString(),
                     mimeType,
                     statusCode: activeResponse.statusCode,
-                    headers: activeResponse.headers,
+                    headers: headersWithoutContentLength,
                     mockServerName: activeWorkspace.name,
                   }),
                   {
@@ -111,6 +113,8 @@ export const MockResponseExtractor = () => {
                   });
                   return;
                 };
+                // auth mechanism is too sensitive to allow content length checks
+                const headersWithoutContentLength: ResponseHeader[] = activeResponse.headers.filter(h => h.name.toLowerCase() !== 'content-length');
                 fetcher.submit(
                   JSON.stringify({
                     name: name,
@@ -118,7 +122,7 @@ export const MockResponseExtractor = () => {
                     body: body.toString(),
                     mimeType,
                     statusCode: activeResponse.statusCode,
-                    headers: activeResponse.headers,
+                    headers: headersWithoutContentLength,
                   }),
                   {
                     encType: 'application/json',
