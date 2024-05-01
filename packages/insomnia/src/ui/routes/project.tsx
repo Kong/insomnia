@@ -305,7 +305,6 @@ export interface ProjectLoaderData {
     url: string;
   };
 }
-
 async function getAllLocalFiles({
   projectId,
 }: {
@@ -456,7 +455,13 @@ export const loader: LoaderFunction = async ({
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   const { id: sessionId } = await userSession.getOrCreate();
-
+  const fallbackLearningFeature = {
+    active: false,
+    title: '',
+    message: '',
+    cta: '',
+    url: '',
+  };
   if (!projectId) {
     return {
       files: [],
@@ -467,13 +472,7 @@ export const loader: LoaderFunction = async ({
       projectsCount: 0,
       activeProject: undefined,
       projects: [],
-      learningFeature: {
-        active: false,
-        title: '',
-        message: '',
-        cta: '',
-        url: '',
-      },
+      learningFeature: fallbackLearningFeature,
     };
   }
 
@@ -500,15 +499,14 @@ export const loader: LoaderFunction = async ({
     p.name?.toLowerCase().includes(projectName.toLowerCase())
   );
 
-  let learningFeature = {
-    active: false,
-    title: '',
-    message: '',
-    cta: '',
-    url: '',
-  };
-
-  if (!window.localStorage.getItem('learning-feature-dismissed')) {
+  let learningFeature = fallbackLearningFeature;
+  const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
+  const lastFetched = lastFetchedString ? parseInt(lastFetchedString, 10) : 0;
+  const oneDay = 86400000;
+  const hasOneDayPassedSinceLastFetch = (Date.now() - lastFetched) > oneDay;
+  const wasDismissed = window.localStorage.getItem('learning-feature-dismissed');
+  const wasNotDismissedAndOneDayHasPassed = !wasDismissed && hasOneDayPassedSinceLastFetch;
+  if (wasNotDismissedAndOneDayHasPassed) {
     try {
       learningFeature = await insomniaFetch<{
         active: boolean;
@@ -522,6 +520,7 @@ export const loader: LoaderFunction = async ({
         origin: 'https://storage.googleapis.com',
         sessionId: '',
       });
+      window.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
     } catch (err) {
       console.log('Could not fetch learning feature data.');
     }
