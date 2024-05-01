@@ -31,7 +31,6 @@ interface Props {
   handleGetAutocompleteNameConstants?: AutocompleteHandler;
   handleGetAutocompleteValueConstants?: AutocompleteHandler;
   isDisabled?: boolean;
-  isWebSocketRequest?: boolean;
   namePlaceholder?: string;
   onChange: (c: {
     name: string;
@@ -42,6 +41,7 @@ interface Props {
   pairs: Pair[];
   valuePlaceholder?: string;
   onBlur?: (e: FocusEvent) => void;
+  readOnlyPairs?: Pair[];
 }
 
 export const KeyValueEditor: FC<Props> = ({
@@ -52,30 +52,17 @@ export const KeyValueEditor: FC<Props> = ({
   handleGetAutocompleteNameConstants,
   handleGetAutocompleteValueConstants,
   isDisabled,
-  isWebSocketRequest,
   namePlaceholder,
   onChange,
   pairs,
   valuePlaceholder,
   onBlur,
+  readOnlyPairs,
 }) => {
   // We should make the pair.id property required and pass them in from the parent
   // smelly
   const pairsWithIds = pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') }));
 
-  const readOnlyWebsocketPairs = [
-    { name: 'Connection', value: 'Upgrade' },
-    { name: 'Upgrade', value: 'websocket' },
-    { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>' },
-    { name: 'Sec-WebSocket-Version', value: '13' },
-    { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits' },
-  ].map(pair => ({ ...pair, id: generateId('pair') }));
-
-  const readOnlyHttpPairs = [
-    { name: 'Accept', value: '*/*' },
-    { name: 'Host', value: '<calculated at runtime>' },
-  ].map(pair => ({ ...pair, id: generateId('pair') }));
-  const readOnlyPairs = isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs;
   const [showDescription, setShowDescription] = React.useState(false);
 
   return (
@@ -129,7 +116,7 @@ export const KeyValueEditor: FC<Props> = ({
             addPair={() => { }}
           />
         )}
-        {readOnlyPairs.map(pair => (
+        {(readOnlyPairs || []).map(pair => (
           <li key={pair.id} className="key-value-editor__row-wrapper">
             <div className="key-value-editor__row">
               <div className="form-control form-control--underlined form-control--wide">
