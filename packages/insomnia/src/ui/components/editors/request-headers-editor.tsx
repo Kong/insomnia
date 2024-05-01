@@ -2,6 +2,7 @@ import React, { FC, useCallback } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
+import { generateId } from '../../../common/misc';
 import type { RequestHeader } from '../../../models/request';
 import { isWebSocketRequest } from '../../../models/websocket-request';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -76,7 +77,17 @@ export const RequestHeadersEditor: FC<Props> = ({
       </div>
     );
   }
-
+  const readOnlyWebsocketPairs = [
+    { name: 'Connection', value: 'Upgrade' },
+    { name: 'Upgrade', value: 'websocket' },
+    { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>' },
+    { name: 'Sec-WebSocket-Version', value: '13' },
+    { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits' },
+  ].map(pair => ({ ...pair, id: generateId('pair') }));
+  const readOnlyHttpPairs = [
+    { name: 'Accept', value: '*/*' },
+    { name: 'Host', value: '<calculated at runtime>' },
+  ].map(pair => ({ ...pair, id: generateId('pair') }));
   return (
     <KeyValueEditor
       namePlaceholder="header"
@@ -87,7 +98,7 @@ export const RequestHeadersEditor: FC<Props> = ({
       handleGetAutocompleteValueConstants={getCommonHeaderValues}
       onChange={onChangeHeaders}
       isDisabled={isDisabled}
-      isWebSocketRequest={isWebSocketRequest(activeRequest)}
+      readOnlyPairs={isWebSocketRequest(activeRequest) ? readOnlyWebsocketPairs : readOnlyHttpPairs}
     />
   );
 };
