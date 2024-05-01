@@ -10,13 +10,14 @@ import { changelogUrl, getAppVersion, getProductName, isDevelopment, isMac } fro
 import { database } from './common/database';
 import log, { initializeLogging } from './common/log';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
-import { registerInsomniaAPIProtocol, registerInsomniaStreamProtocol } from './main/api.protocol';
+import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
 import { registerCurlHandlers } from './main/network/curl';
 import { registerWebSocketHandlers } from './main/network/websocket';
+import { watchProxySettings } from './main/proxy';
 import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
@@ -28,8 +29,8 @@ import type { ToastNotification } from './ui/components/toast';
 
 initializeSentry();
 
-registerInsomniaStreamProtocol();
-registerInsomniaAPIProtocol();
+registerInsomniaProtocols();
+
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
   process.exit(0);
@@ -91,6 +92,7 @@ app.on('ready', async () => {
   await database.init(models.types());
   await _createModelInstances();
   sentryWatchAnalyticsEnabled();
+  watchProxySettings();
   windowUtils.init();
   await _launchApp();
 

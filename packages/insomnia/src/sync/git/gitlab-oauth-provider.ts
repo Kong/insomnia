@@ -7,7 +7,6 @@ import { insomniaFetch } from '../../ui/insomniaFetch';
 // Warning: As this is a global fetch we need to handle errors, retries and caching
 // GitLab API config
 const getGitLabConfig = async () => {
-
   // Validate and use the environment variables if provided
   if (
     (INSOMNIA_GITLAB_REDIRECT_URI && !INSOMNIA_GITLAB_CLIENT_ID) ||
@@ -112,16 +111,15 @@ export async function exchangeCodeForGitLabToken(input: {
     code_verifier: verifier,
   }).toString();
 
-  return window.main.axiosRequest({
-    url: url.toString(),
+  return insomniaFetch<{ access_token: string; refresh_token: string }>({
+    path: url.pathname + url.search,
+    origin: getGitLabOauthApiURL(),
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).then(result => {
+    sessionId: '',
+  }).then(data => {
     statesCache.delete(state);
 
-    setAccessToken(result.data.access_token, result.data.refresh_token);
+    setAccessToken(data.access_token, data.refresh_token);
   });
 }
 
@@ -140,16 +138,15 @@ export async function refreshToken() {
     client_id: clientId,
   }).toString();
 
-  return window.main.axiosRequest({
-    url: url.toString(),
+  return insomniaFetch<{ access_token: string; refresh_token: string }>({
+    path: url.pathname + url.search,
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).then(result => {
-    setAccessToken(result.data.access_token, result.data.refresh_token);
+    origin: getGitLabOauthApiURL(),
+    sessionId: '',
+  }).then(data => {
+    setAccessToken(data.access_token, data.refresh_token);
 
-    return result.data.access_token;
+    return data.access_token;
   });
 }
 

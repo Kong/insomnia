@@ -12,17 +12,14 @@ export async function backupIfNewerVersionAvailable() {
   try {
     const settings = await models.settings.get();
     console.log('[main] Checking for newer version than ', version);
-    const response = await electron.net.request({
+    const response = await electron.net.fetch(`${getUpdatesBaseURL()}/builds/check/mac?v=${version}&app=${appConfig.appId}&channel=${settings.updateChannel}`, {
       method: 'GET',
-      origin: getUpdatesBaseURL(),
-      path: `/builds/check/mac?v=${version}&app=${appConfig.appId}&channel=${settings.updateChannel}`,
-      headers: {
+      headers: new Headers({
         'X-Insomnia-Client': getClientString(),
-      },
+      }),
     });
-
     if (response) {
-      console.log('[main] Found newer version', response);
+      console.log('[main] Found newer version');
       backup();
       return;
     }

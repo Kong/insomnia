@@ -1,4 +1,3 @@
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
@@ -158,23 +157,25 @@ const GitLabRepositoryForm = ({
 
   useEffect(() => {
     if (token && !user) {
-      window.main.axiosRequest({
-        method: 'GET',
-        url: `${getGitLabOauthApiURL()}/api/v4/user`,
-        headers: {
+      fetch(`${getGitLabOauthApiURL()}/api/v4/user`, {
+        headers: new Headers({
           Authorization: `Bearer ${token}`,
-        },
-      }).then(({ data }) => {
-        setUser(data);
-      })
-        .catch((error: unknown) => {
-          if (axios.isAxiosError(error) && error.response?.status === 401) {
+        }),
+      }).then(async response => {
+        if (!response.ok) {
+          if (response.status === 401) {
             refreshToken();
           } else {
-            const errorMessage = (error instanceof Error) ? error.message : 'Something went wrong when trying to fetch info from GitLab.';
+            const errorMessage = await response.text() || 'Something went wrong when trying to fetch info from GitLab.';
             setError(errorMessage);
-            console.log(`[gitlab oauth]: ${error}`);
+            console.log(`[gitlab oauth]: ${errorMessage}`);
           }
+        }
+
+        return response.json();
+      })
+        .then(data => {
+          setUser(data);
         });
     }
   }, [token, onSubmit, setUser, user]);
@@ -198,8 +199,7 @@ const GitLabRepositoryForm = ({
             oauth2format: 'gitlab',
           },
         });
-      }
-      }
+      }}
     >
       {token && (
         <div className="form-control form-control--outlined">

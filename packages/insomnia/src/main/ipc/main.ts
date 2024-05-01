@@ -4,7 +4,7 @@ import { Spectral } from '@stoplight/spectral-core';
 // @ts-expect-error - This is a bundled file not sure why it's not found
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
 import { oas } from '@stoplight/spectral-rulesets';
-import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, IpcRendererEvent, net, shell } from 'electron';
 import fs from 'fs';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
@@ -13,7 +13,6 @@ import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
 import installPlugin from '../install-plugin';
-import { axiosRequest } from '../network/axios-request';
 import { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { WebSocketBridgeAPI } from '../network/websocket';
@@ -41,7 +40,6 @@ export interface RendererToMainBridgeAPI {
   curl: CurlBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
-  axiosRequest: typeof axiosRequest;
   showContextMenu: (options: { key: string }) => void;
   database: {
     caCertificate: {
@@ -51,9 +49,6 @@ export interface RendererToMainBridgeAPI {
   hiddenBrowserWindow: HiddenBrowserWindowBridgeAPI;
 }
 export function registerMainHandlers() {
-  ipcMain.handle('axiosRequest', async (_, options: Parameters<typeof axiosRequest>[0]) => {
-    return axiosRequest(options);
-  });
   ipcMain.handle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
     return models.caCertificate.create(options);
   });
@@ -124,9 +119,7 @@ export function registerMainHandlers() {
       try {
         const ruleset = await bundleAndLoadRuleset(rulesetPath, {
           fs,
-          fetch: (url: string) => {
-            return axiosRequest({ url, method: 'GET' });
-          },
+          fetch: net.fetch,
         });
 
         spectral.setRuleset(ruleset);

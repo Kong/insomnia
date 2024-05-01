@@ -65,7 +65,6 @@ const main: Window['main'] = {
   curl,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
-  axiosRequest: options => ipcRenderer.invoke('axiosRequest', options),
   showContextMenu: options => ipcRenderer.send('show-context-menu', options),
   database: {
     caCertificate: {

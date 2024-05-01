@@ -10,6 +10,7 @@ interface FetchConfig {
   data?: unknown;
   retries?: number;
   origin?: string;
+  headers?: Record<string, string>;
 }
 // internal request (insomniaFetch)
 // should validate ssl certs on our server
@@ -42,10 +43,11 @@ const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): 
 };
 
 // Adds headers, retries and opens deep links returned from the api
-export async function insomniaFetch<T = void>({ method, path, data, sessionId, organizationId, origin }: FetchConfig): Promise<T> {
+export async function insomniaFetch<T = void>({ method, path, data, sessionId, organizationId, origin, headers }: FetchConfig): Promise<T> {
   const config: RequestInit = {
     method,
     headers: {
+      ...headers,
       'X-Insomnia-Client': getClientString(),
       'X-Origin': origin || getApiBaseURL(),
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
@@ -58,7 +60,7 @@ export async function insomniaFetch<T = void>({ method, path, data, sessionId, o
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
-  const response = await exponentialBackOff('insomnia-api://insomnia' + path, config);
+  const response = await exponentialBackOff((origin || getApiBaseURL()) + path, config);
   const uri = response.headers.get('x-insomnia-command');
   if (uri) {
     window.main.openDeepLink(uri);

@@ -1,53 +1,46 @@
 import { app, net, protocol } from 'electron';
 
 import { getApiBaseURL } from '../common/constants';
+
 export interface RegisterProtocolOptions {
   scheme: string;
 }
 
 const insomniaStreamScheme = 'insomnia-event-source';
+const httpsScheme = 'https';
+const httpScheme = 'http';
 
-export async function registerInsomniaStreamProtocol() {
+export async function registerInsomniaProtocols() {
   protocol.registerSchemesAsPrivileged([{
     scheme: insomniaStreamScheme,
     privileges: { secure: true, standard: true, supportFetchAPI: true },
+  }, {
+    scheme: httpsScheme,
+      privileges: { secure: true, standard: true, supportFetchAPI: true },
+    }, {
+    scheme: httpScheme,
+      privileges: { secure: true, standard: true, supportFetchAPI: true },
   }]);
 
   await app.whenReady();
 
-  if (protocol.isProtocolHandled(insomniaStreamScheme)) {
-    return;
+  if (!protocol.isProtocolHandled(insomniaStreamScheme)) {
+    protocol.handle(insomniaStreamScheme, async request => {
+      const apiURL = getApiBaseURL();
+      const url = new URL(`${apiURL}/${request.url.replace(`${insomniaStreamScheme}://`, '')}`);
+      const sessionId = new URLSearchParams(url.search).get('sessionId');
+      request.headers.append('X-Session-Id', sessionId || '');
+      return net.fetch(url.toString(), request);
+    });
   }
-
-  protocol.handle(insomniaStreamScheme, async request => {
-    const apiURL = getApiBaseURL();
-    const url = new URL(`${apiURL}/${request.url.replace(`${insomniaStreamScheme}://`, '')}`);
-    const sessionId = new URLSearchParams(url.search).get('sessionId');
-    request.headers.append('X-Session-Id', sessionId || '');
-
-    return net.fetch(url.toString(), request);
-  });
-}
-
-const insomniaAPIScheme = 'insomnia-api';
-
-export async function registerInsomniaAPIProtocol() {
-  protocol.registerSchemesAsPrivileged([{
-    scheme: insomniaAPIScheme,
-    privileges: { secure: true, standard: true, supportFetchAPI: true },
-  }]);
-
-  await app.whenReady();
-
-  if (protocol.isProtocolHandled(insomniaAPIScheme)) {
-    return;
+  if (!protocol.isProtocolHandled(httpsScheme)) {
+    protocol.handle(httpsScheme, async request => {
+      return net.fetch(request, { bypassCustomProtocolHandlers: true });
+    });
   }
-
-  protocol.handle(insomniaAPIScheme, async request => {
-    const origin = request.headers.get('X-Origin') || getApiBaseURL();
-    const path = request.url.replace(`${insomniaAPIScheme}://insomnia`, '');
-    const url = new URL(path, origin);
-    console.log('Fetching', url.toString());
-    return net.fetch(url.toString(), request);
-  });
+  if (!protocol.isProtocolHandled(httpScheme)) {
+    protocol.handle(httpScheme, async request => {
+      return net.fetch(request, { bypassCustomProtocolHandlers: true });
+    });
+  }
 }

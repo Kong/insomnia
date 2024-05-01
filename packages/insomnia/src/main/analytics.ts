@@ -109,14 +109,12 @@ export async function trackPageView(name: string) {
       });
 
       if (sessionId) {
-        net.request({
-          origin: getApiBaseURL(),
+        net.fetch(getApiBaseURL() + '/v1/telemetry/', {
           method: 'POST',
-          path: '/v1/telemetry/',
-          headers: {
+          headers: new Headers({
             'X-Session-Id': sessionId,
             'X-Insomnia-Client': getClientString(),
-          },
+          }),
         });
       }
     } catch (error: unknown) {
