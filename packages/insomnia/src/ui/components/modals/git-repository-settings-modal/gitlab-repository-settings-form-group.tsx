@@ -157,11 +157,9 @@ const GitLabRepositoryForm = ({
 
   useEffect(() => {
     if (token && !user) {
-      fetch('insomnia-api://insomnia/api/v4/user', {
-        method: 'GET',
+      fetch(`${getGitLabOauthApiURL()}/api/v4/user`, {
         headers: new Headers({
           Authorization: `Bearer ${token}`,
-          'X-Origin': getGitLabOauthApiURL(),
         }),
       }).then(async response => {
         if (!response.ok) {

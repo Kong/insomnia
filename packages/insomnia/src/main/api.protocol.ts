@@ -7,18 +7,18 @@ export interface RegisterProtocolOptions {
 }
 
 const insomniaStreamScheme = 'insomnia-event-source';
-const insomniaAPIScheme = 'insomnia-api';
-const externalScheme = 'external-api';
+const httpsScheme = 'https';
+const httpScheme = 'http';
 
 export async function registerInsomniaProtocols() {
   protocol.registerSchemesAsPrivileged([{
     scheme: insomniaStreamScheme,
     privileges: { secure: true, standard: true, supportFetchAPI: true },
   }, {
-      scheme: insomniaAPIScheme,
+    scheme: httpsScheme,
       privileges: { secure: true, standard: true, supportFetchAPI: true },
     }, {
-      scheme: externalScheme,
+    scheme: httpScheme,
       privileges: { secure: true, standard: true, supportFetchAPI: true },
   }]);
 
@@ -33,13 +33,14 @@ export async function registerInsomniaProtocols() {
       return net.fetch(url.toString(), request);
     });
   }
-  if (!protocol.isProtocolHandled(insomniaAPIScheme)) {
-    protocol.handle(insomniaAPIScheme, async request => {
-      const origin = request.headers.get('X-Origin') || getApiBaseURL();
-      const path = request.url.replace(`${insomniaAPIScheme}://insomnia/`, '');
-      const url = new URL(path, origin);
-      console.log('Fetching', url.toString());
-      return net.fetch(url.toString(), request);
+  if (!protocol.isProtocolHandled(httpsScheme)) {
+    protocol.handle(httpsScheme, async request => {
+      return net.fetch(request, { bypassCustomProtocolHandlers: true });
+    });
+  }
+  if (!protocol.isProtocolHandled(httpScheme)) {
+    protocol.handle(httpScheme, async request => {
+      return net.fetch(request, { bypassCustomProtocolHandlers: true });
     });
   }
 }
