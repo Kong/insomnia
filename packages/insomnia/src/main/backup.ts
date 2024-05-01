@@ -18,9 +18,8 @@ export async function backupIfNewerVersionAvailable() {
         'X-Insomnia-Client': getClientString(),
       }),
     });
-    console.log('[main] /builds/check/mac', response);
     if (response) {
-      console.log('[main] Found newer version', response);
+      console.log('[main] Found newer version');
       backup();
       return;
     }
