@@ -119,9 +119,7 @@ export function registerMainHandlers() {
       try {
         const ruleset = await bundleAndLoadRuleset(rulesetPath, {
           fs,
-          fetch: (url: string) => {
-            return net.request({ url, method: 'GET' });
-          },
+          fetch: net.fetch,
         });
 
         spectral.setRuleset(ruleset);
