@@ -33,7 +33,7 @@ export const isWebSocketRequest = (model: Pick<BaseModel, 'type'>): model is Web
   model.type === type
 );
 
-export const isWebSocketRequestId = (id: string | null) => (
+export const isWebSocketRequestId = (id?: string | null) => (
   id?.startsWith(`${prefix}_`)
 );
 

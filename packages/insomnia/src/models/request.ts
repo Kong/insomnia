@@ -273,7 +273,7 @@ export const isRequest = (model: Pick<BaseModel, 'type'>): model is Request => (
   model.type === type
 );
 
-export const isRequestId = (id: string | null) => (
+export const isRequestId = (id?: string | null) => (
   id?.startsWith(`${prefix}_`)
 );
 

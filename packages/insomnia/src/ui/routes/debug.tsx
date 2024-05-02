@@ -48,7 +48,7 @@ import {
   isRequestId,
   Request,
 } from '../../models/request';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
+import { isRequestGroup, isRequestGroupId, RequestGroup } from '../../models/request-group';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import {
   isWebSocketRequest,
@@ -76,6 +76,7 @@ import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-e
 import { GrpcRequestPane } from '../components/panes/grpc-request-pane';
 import { GrpcResponsePane } from '../components/panes/grpc-response-pane';
 import { PlaceholderRequestPane } from '../components/panes/placeholder-request-pane';
+import { RequestGroupPane } from '../components/panes/request-group-pane';
 import { RequestPane } from '../components/panes/request-pane';
 import { ResponsePane } from '../components/panes/response-pane';
 import { getMethodShortHand } from '../components/tags/method-tag';
@@ -123,7 +124,7 @@ const INITIAL_GRPC_REQUEST_STATE = {
   methods: [],
 };
 export const loader: LoaderFunction = async ({ params }) => {
-  if (!params.requestId) {
+  if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
     invariant(workspaceId, 'Workspace ID is required');
     invariant(projectId, 'Project ID is required');
@@ -179,12 +180,14 @@ export const Debug: FC = () => {
   const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
   const [pastedCurl, setPastedCurl] = useState('');
 
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as {
+  const { organizationId, projectId, workspaceId, requestId, requestGroupId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
-    requestId: string;
+    requestId?: string;
+    requestGroupId?: string;
   };
+  console.log('debug', { requestId, requestGroupId });
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(
     grpcRequests.map(r => ({
       requestId: r._id,
@@ -1020,6 +1023,7 @@ export const Debug: FC = () => {
                         onSingleClick={() => {
                           if (item && isRequestGroup(item.doc)) {
                             groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
+                            navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}?${searchParams.toString()}`);
                           } else {
                             navigate(
                               `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}?${searchParams.toString()}`
@@ -1072,6 +1076,8 @@ export const Debug: FC = () => {
                     );
                     if (item && isRequestGroup(item.doc)) {
                       groupMetaPatcher(value, { collapsed: !item.collapsed });
+                      navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}?${searchParams.toString()}`);
+
                     } else {
                       navigate(
                         `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`
@@ -1142,6 +1148,8 @@ export const Debug: FC = () => {
                           onSingleClick={() => {
                             if (item && isRequestGroup(item.doc)) {
                               groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
+                              navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}?${searchParams.toString()}`);
+
                             } else {
                               navigate(
                                 `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}?${searchParams.toString()}`
@@ -1215,6 +1223,9 @@ export const Debug: FC = () => {
           <Panel id="pane-one" className='pane-one theme--pane'>
             {workspaceId ? (
               <ErrorBoundary showAlert>
+                {isRequestGroupId(requestGroupId) && (
+                  <RequestGroupPane />
+                )}
                 {isGrpcRequestId(requestId) && grpcState && (
                   <GrpcRequestPane
                     grpcState={grpcState}
@@ -1236,7 +1247,7 @@ export const Debug: FC = () => {
                     }}
                   />
                 )}
-                {!requestId && <PlaceholderRequestPane />}
+                {Boolean(!requestId && !requestGroupId) && <PlaceholderRequestPane />}
                 {isRequestSettingsModalOpen && activeRequest && (
                   <RequestSettingsModal
                     request={activeRequest}
