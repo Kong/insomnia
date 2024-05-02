@@ -1,10 +1,46 @@
-import type { MenuItemConstructorOptions, OpenDialogOptions, SaveDialogOptions } from 'electron';
+import type { IpcMainEvent, IpcMainInvokeEvent, MenuItemConstructorOptions, OpenDialogOptions, SaveDialogOptions } from 'electron';
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'electron';
 
 import { fnOrString } from '../../common/misc';
 import type { NunjucksParsedTagArg } from '../../templating/utils';
 import { localTemplateTags } from '../../ui/components/templating/local-template-tags';
 import { invariant } from '../../utils/invariant';
+
+export type HandleChannels = 'webSocket.event.findMany' | 'webSocket.readyState';
+export const ipcMainHandle = (
+  channel: HandleChannels,
+  listener: (
+    event: IpcMainInvokeEvent,
+    ...args: any[]
+  ) => Promise<void> | any
+) => ipcMain.handle(channel, listener);
+export type OnChannels = 'show-context-menu'
+  | 'setMenuBarVisibility'
+  | 'showOpenDialog'
+  | 'showSaveDialog'
+  | 'showItemInFolder'
+  | 'readText'
+  | 'writeText'
+  | 'clear'
+  | 'getPath'
+  | 'getAppPath'
+  | 'set-hidden-window-busy-status'
+  | 'manualUpdateCheck';
+export const ipcMainOn = (
+  channel: OnChannels,
+  listener: (
+    event: IpcMainEvent,
+    ...args: any[]
+  ) => Promise<void> | any
+) => ipcMain.on(channel, listener);
+export type OnceChannels = 'halfSecondAfterAppStart';
+export const ipcMainOnce = (
+  channel: OnceChannels,
+  listener: (
+    event: IpcMainEvent,
+    ...args: any[]
+  ) => Promise<void> | any
+) => ipcMain.once(channel, listener);
 
 const getTemplateValue = (arg: NunjucksParsedTagArg) => {
   if (arg.defaultValue === undefined) {
@@ -16,7 +52,7 @@ const getTemplateValue = (arg: NunjucksParsedTagArg) => {
   return arg.defaultValue;
 };
 export function registerElectronHandlers() {
-  ipcMain.on('show-context-menu', (event, options) => {
+  ipcMainOn('show-context-menu', (event, options) => {
     try {
       const template: MenuItemConstructorOptions[] = [
         {
@@ -67,7 +103,7 @@ export function registerElectronHandlers() {
       console.error(e);
     }
   });
-  ipcMain.on('setMenuBarVisibility', (_, visible: boolean) => {
+  ipcMainOn('setMenuBarVisibility', (_, visible: boolean) => {
     BrowserWindow.getAllWindows()
       .forEach(window => {
         // the `setMenuBarVisibility` signature uses `visible` semantics
@@ -87,27 +123,27 @@ export function registerElectronHandlers() {
     return { filePath, canceled };
   });
 
-  ipcMain.on('showItemInFolder', (_, name: string) => {
+  ipcMainOn('showItemInFolder', (_, name: string) => {
     shell.showItemInFolder(name);
   });
 
-  ipcMain.on('readText', event => {
+  ipcMainOn('readText', event => {
     event.returnValue = clipboard.readText();
   });
 
-  ipcMain.on('writeText', (_, text: string) => {
+  ipcMainOn('writeText', (_, text: string) => {
     clipboard.writeText(text);
   });
 
-  ipcMain.on('clear', () => {
+  ipcMainOn('clear', () => {
     clipboard.clear();
   });
 
-  ipcMain.on('getPath', (event, name: Parameters<typeof Electron.app['getPath']>[0]) => {
+  ipcMainOn('getPath', (event, name: Parameters<typeof Electron.app['getPath']>[0]) => {
     event.returnValue = app.getPath(name);
   });
 
-  ipcMain.on('getAppPath', event => {
+  ipcMainOn('getAppPath', event => {
     event.returnValue = app.getAppPath();
   });
 }

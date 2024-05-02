@@ -29,6 +29,7 @@ import {
 import { docsBase } from '../common/documentation';
 import * as log from '../common/log';
 import { invariant } from '../utils/invariant';
+import { ipcMainOn } from './ipc/electron';
 import LocalStorage from './local-storage';
 
 const DEFAULT_WIDTH = 1280;
@@ -56,7 +57,7 @@ export async function createHiddenBrowserWindow() {
   invariant(mainWindow, 'MainWindow is not defined, please restart the app.');
 
   console.log('[main] Registering the hidden window restarting handler');
-  ipcMain.on('set-hidden-window-busy-status', (_, busyStatus) => {
+  ipcMainOn('set-hidden-window-busy-status', (_, busyStatus) => {
     hiddenWindowIsBusy = busyStatus;
   });
   // this avoids registering handler multiple times and output an error

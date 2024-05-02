@@ -1,4 +1,4 @@
-import { autoUpdater, BrowserWindow, dialog, ipcMain } from 'electron';
+import { autoUpdater, BrowserWindow, dialog } from 'electron';
 
 import {
   CHECK_FOR_UPDATES_INTERVAL,
@@ -10,6 +10,7 @@ import {
 import { delay } from '../common/misc';
 import * as models from '../models/index';
 import { invariant } from '../utils/invariant';
+import { ipcMainOn } from './ipc/electron';
 const isUpdateSupported = () => {
   if (process.platform === 'linux') {
     console.log('[updater] Not supported on this platform', process.platform);
@@ -94,7 +95,7 @@ export const init = async () => {
     }, CHECK_FOR_UPDATES_INTERVAL);
 
     // on check now button pushed
-    ipcMain.on('manualUpdateCheck', async () => {
+    ipcMainOn('manualUpdateCheck', async () => {
       console.log('[updater] Manual update check');
       const settings = await models.settings.get();
       const updateUrl = isUpdateSupported() && getUpdateUrl(settings.updateChannel);
