@@ -2087,6 +2087,9 @@ html {
 .graphql-explorer__defs li {
   margin-bottom: var(--padding-md);
 }
+.graphql-explorer__defs .tooltip {
+  margin-left: var(--padding-sm);
+}
 .graphql-explorer a {
   font-weight: normal !important;
 }
