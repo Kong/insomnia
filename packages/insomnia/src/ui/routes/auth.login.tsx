@@ -68,7 +68,10 @@ const Login = () => {
       className='flex flex-col gap-[--padding-md]'
     >
       <p className='text-center text-[--color-font] text-2xl py-[--padding-md]'>
-        Welcome to Insomnia
+        Welcome to Arabi Postman
+      </p>
+      <p className='text-[--color-font] text-sm'>
+       Glad you're here! Let Arabi Postman revolutionize the way you work with APIs.
       </p>
       <p className='text-[--color-font] text-sm'>
         Discover Local, Cloud or Git storage for your projects.
@@ -131,7 +134,7 @@ const Login = () => {
         </span>
       </Button> */}
 
-      <p className='text-[rgba(var(--color-font-rgb),0.8)] text-xs text-center'>
+      {/* <p className='text-[rgba(var(--color-font-rgb),0.8)] text-xs text-center'>
         By signing up or using Insomnia, you agree to the{' '}
         <a
           className='font-bold outline-none transition-colors hover:text-[--color-font] focus:text-[--color-font]'
@@ -149,7 +152,7 @@ const Login = () => {
           privacy policy
         </a>
         .
-      </p>
+      </p> */}
 
       <div className='flex gap-[--padding-md] justify-center'>
         <Button
