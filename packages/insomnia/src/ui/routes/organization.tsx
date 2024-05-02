@@ -136,7 +136,6 @@ export const indexLoader: LoaderFunction = async () => {
         path: '/v1/organizations',
         sessionId,
       });
-      console.log('organizationsResult', organizationsResult);
       const user = await insomniaFetch<UserProfileResponse | void>({
         method: 'GET',
         path: '/v1/user/profile',

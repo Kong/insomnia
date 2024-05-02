@@ -12,15 +12,6 @@ interface FetchConfig {
   origin?: string;
   headers?: Record<string, string>;
 }
-// internal request (insomniaFetch)
-// should validate ssl certs on our server
-// should only go to insomnia API
-// should be able to listen for specific messages in headers
-// should be able to retry on 502
-
-// external request (axiosRequest)
-// should respect settings for proxy and ssl validation
-// should be for all third party APIs, github, gitlab, isometric-git
 
 const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): Promise<Response> => {
   try {
@@ -66,6 +57,5 @@ export async function insomniaFetch<T = void>({ method, path, data, sessionId, o
     window.main.openDeepLink(uri);
   }
   const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
-  // TODO: adding logout or sending a logout deeplink if request returns error UNAUTHORIZED
   return isJson ? response.json() : response.text();
 }
