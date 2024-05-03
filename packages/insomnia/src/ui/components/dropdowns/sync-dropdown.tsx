@@ -27,7 +27,7 @@ interface Props {
   gitSyncEnabled: boolean;
 }
 
-const ONE_MINUTE_IN_MS = 1000 * 60;
+const TEN_MINUTES_IN_MS = 10 * 1000 * 60;
 
 export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
@@ -45,7 +45,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
   const checkoutFetcher = useFetcher();
   const syncDataLoaderFetcher = useFetcher<SyncDataLoaderData>();
   const syncDataActionFetcher = useFetcher();
-
+  console.log('render sync-dropdown');
   useEffect(() => {
     if (syncDataLoaderFetcher.state === 'idle' && !syncDataLoaderFetcher.data) {
       syncDataLoaderFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`);
@@ -57,7 +57,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
       method: 'POST',
       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
     });
-  }, ONE_MINUTE_IN_MS);
+  }, TEN_MINUTES_IN_MS);
 
   const error = checkoutFetcher.data?.error || pullFetcher.data?.error || pushFetcher.data?.error || rollbackFetcher.data?.error;
 

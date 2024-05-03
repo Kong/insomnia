@@ -64,6 +64,7 @@ import {
 } from '../../models/project';
 import { isDesign, scopeToActivity, Workspace, WorkspaceScope } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
+import { BackendProject } from '../../sync/types';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { showModal } from '../../ui/components/modals';
 import { AskModal } from '../../ui/components/modals/ask-modal';
@@ -397,6 +398,8 @@ async function getAllLocalFiles({
   return files;
 }
 
+const remoteBackendProjectsCache: Record<string, BackendProject[]> = {};
+
 async function getAllRemoteFiles({
   projectId,
   organizationId,
@@ -411,11 +414,14 @@ async function getAllRemoteFiles({
     const remoteId = project.remoteId;
     invariant(remoteId, 'Project is not a remote project');
     const vcs = VCSInstance();
-
     const allPulledBackendProjectsForRemoteId = (await vcs.localBackendProjects()).filter(p => p.id === remoteId);
     // Remote backend projects are fetched from the backend since they are not stored locally
-    const allFetchedRemoteBackendProjectsForRemoteId = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
-
+    // const allFetchedRemoteBackendProjectsForRemoteId = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
+    console.log('this is running: getAllRemoteFiles', { fromcache: !!remoteBackendProjectsCache[projectId] });
+    if (!remoteBackendProjectsCache[projectId]) {
+      remoteBackendProjectsCache[projectId] = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
+    }
+    const allFetchedRemoteBackendProjectsForRemoteId = remoteBackendProjectsCache[projectId];
     // Get all workspaces that are connected to backend projects and under the current project
     const workspacesWithBackendProjects = await database.find<Workspace>(models.workspace.type, {
       _id: {

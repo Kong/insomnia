@@ -135,6 +135,8 @@ export const pullRemoteCollectionAction: ActionFunction = async ({
   invariant(typeof remoteId === 'string', 'Remote Id is required');
 
   const vcs = VCSInstance();
+  console.log('this is running: pullRemoteCollectionAction');
+
   const remoteBackendProjects = await vcs.remoteBackendProjects({
     teamId: organizationId,
     teamProjectId: remoteId,
@@ -193,6 +195,8 @@ export const remoteLoader: LoaderFunction = async ({
     const allPulledBackendProjectsForRemoteId = (
       await vcs.localBackendProjects()
     ).filter(p => p.id === remoteId);
+    console.log('this is running: remoteLoader');
+
     // Remote backend projects are fetched from the backend since they are not stored locally
     const allFetchedRemoteBackendProjectsForRemoteId =
       await vcs.remoteBackendProjects({
@@ -272,7 +276,7 @@ export const syncDataAction: ActionFunction = async ({ params }) => {
     // Cache remote branches
     remoteBranchesCache[workspaceId] = remoteBranches;
     remoteCompareCache[workspaceId] = compare;
-    remoteBackendProjectsCache[workspaceId] = remoteBackendProjects;
+    remoteBackendProjectsCache[projectId] = remoteBackendProjects;
 
     return {
       remoteBranches,
@@ -322,8 +326,9 @@ export const syncDataLoader: LoaderFunction = async ({
     const status = await vcs.status(syncItems);
     const compare =
       remoteCompareCache[workspaceId] || (await vcs.compareRemoteBranch());
+    console.log('this is running: syncDataLoader', { fromcache: !!remoteBackendProjectsCache[projectId], workspaceId, projectId });
     const remoteBackendProjects =
-      remoteBackendProjectsCache[workspaceId] ||
+      remoteBackendProjectsCache[projectId] ||
       (await vcs.remoteBackendProjects({
         teamId: project.parentId,
         teamProjectId: project.remoteId,
@@ -331,7 +336,7 @@ export const syncDataLoader: LoaderFunction = async ({
 
     remoteBranchesCache[workspaceId] = remoteBranches;
     remoteCompareCache[workspaceId] = compare;
-    remoteBackendProjectsCache[workspaceId] = remoteBackendProjects;
+    remoteBackendProjectsCache[projectId] = remoteBackendProjects;
 
     return {
       syncItems,

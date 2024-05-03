@@ -140,7 +140,29 @@ export class VCS {
   }
 
   async remoteBackendProjects({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
-    return this._queryBackendProjects(teamId, teamProjectId);
+    console.log('this is running: actual fetch of remote projects');
+    const { projects } = await this._runGraphQL(
+      `
+        query ($teamId: ID, $teamProjectId: ID) {
+          projects(teamId: $teamId, teamProjectId: $teamProjectId) {
+            id
+            name
+            rootDocumentId
+            teams {
+              id
+              name
+            }
+          }
+        }
+      `,
+      {
+        teamId,
+        teamProjectId,
+      },
+      'projects',
+    );
+
+    return (projects as BackendProjectWithTeams[]).map(normalizeBackendProjectTeam);
   }
 
   async remoteBackendProjectsInAnyTeam() {
@@ -1107,31 +1129,6 @@ export class VCS {
       'projectKey',
     );
     return projectKey.encSymmetricKey as string;
-  }
-
-  async _queryBackendProjects(teamId: string, teamProjectId: string) {
-    const { projects } = await this._runGraphQL(
-      `
-        query ($teamId: ID, $teamProjectId: ID) {
-          projects(teamId: $teamId, teamProjectId: $teamProjectId) {
-            id
-            name
-            rootDocumentId
-            teams {
-              id
-              name
-            }
-          }
-        }
-      `,
-      {
-        teamId,
-        teamProjectId,
-      },
-      'projects',
-    );
-
-    return (projects as BackendProjectWithTeams[]).map(normalizeBackendProjectTeam);
   }
 
   async _queryProject(): Promise<BackendProject | null> {
