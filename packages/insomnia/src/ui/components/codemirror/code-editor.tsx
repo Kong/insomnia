@@ -7,7 +7,7 @@ import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
 import { JSONPath } from 'jsonpath-plus';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
@@ -20,7 +20,6 @@ import { NunjucksParsedTag } from '../../../templating/utils';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
-import { useEditorRefresh } from '../../hooks/use-editor-refresh';
 import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -181,7 +180,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   const indentSize = settings.editorIndentSize;
   const indentWithTabs = shouldIndentWithTabs({ mode, indentWithTabs: settings.editorIndentWithTabs });
   const indentChars = indentWithTabs ? '\t' : new Array((indentSize || TAB_SIZE) + 1).join(' ');
-  const extraKeys = useMemo(() => ({
+  const extraKeys = {
     'Ctrl-Q': (cm: CodeMirror.Editor) => cm.foldCode(cm.getCursor()),
     [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
     // Autocomplete
@@ -195,46 +194,45 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     // Indent with tabs or spaces
     // From https://github.com/codemirror/CodeMirror/issues/988#issuecomment-14921785
     Tab: (cm: CodeMirror.Editor) => cm.somethingSelected() ? cm.indentSelection('add') : cm.replaceSelection(indentChars, 'end'),
-  }), [indentChars]);
+  };
   const { handleRender, handleGetRenderContext } = useGatedNunjucks({ disabled: !enableNunjucks });
-
-  const maybePrettifyAndSetValue = useCallback((code?: string, forcePrettify?: boolean, filter?: string) => {
-    const prettifyXML = (code: string, filter?: string) => {
+  const prettifyXML = (code: string, filter?: string) => {
+    if (updateFilter && filter) {
+      try {
+        const results = queryXPath(code, filter);
+        code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
+      } catch (err) {
+        // Failed to parse filter (that's ok)
+        code = `<error>${err.message}</error>`;
+      }
+    }
+    try {
+      return vkBeautify.xml(code, indentChars);
+    } catch (error) {
+      // Failed to parse so just return original
+      return code;
+    }
+  };
+  const prettifyJSON = (code: string, filter?: string) => {
+    try {
+      let jsonString = code;
       if (updateFilter && filter) {
         try {
-          const results = queryXPath(code, filter);
-          code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
+          const codeObj = JSON.parse(code);
+          const results = JSONPath({ json: codeObj, path: filter.trim() });
+          jsonString = JSON.stringify(results);
         } catch (err) {
-          // Failed to parse filter (that's ok)
-          code = `<error>${err.message}</error>`;
+          console.log('[jsonpath] Error: ', err);
+          jsonString = '[]';
         }
       }
-      try {
-        return vkBeautify.xml(code, indentChars);
-      } catch (error) {
-        // Failed to parse so just return original
-        return code;
-      }
-    };
-    const prettifyJSON = (code: string, filter?: string) => {
-      try {
-        let jsonString = code;
-        if (updateFilter && filter) {
-          try {
-            const codeObj = JSON.parse(code);
-            const results = JSONPath({ json: codeObj, path: filter.trim() });
-            jsonString = JSON.stringify(results);
-          } catch (err) {
-            console.log('[jsonpath] Error: ', err);
-            jsonString = '[]';
-          }
-        }
-        return jsonPrettify(jsonString, indentChars, autoPrettify);
-      } catch (error) {
-        // That's Ok, just leave it
-        return code;
-      }
-    };
+      return jsonPrettify(jsonString, indentChars, autoPrettify);
+    } catch (error) {
+      // That's Ok, just leave it
+      return code;
+    }
+  };
+  const maybePrettifyAndSetValue = (code?: string, forcePrettify?: boolean, filter?: string) => {
     if (typeof code !== 'string') {
       console.warn('Code editor was passed non-string value', code);
       return;
@@ -254,7 +252,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       return;
     }
     codeMirror.current?.setValue(code || '');
-  }, [autoPrettify, mode, indentChars, updateFilter]);
+  };
 
   useDocBodyKeyboardShortcuts({
     beautifyRequestBody: () => {
@@ -264,7 +262,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     },
   });
 
-  const initEditor = useCallback(() => {
+  useMount(() => {
     if (!textAreaRef.current) {
       return;
     }
@@ -455,27 +453,12 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         codeMirror.current.foldCode(from, to);
       }
     }
-  }, [defaultValue, dynamicHeight, extraKeys, filter, getAutocompleteConstants, getAutocompleteSnippets, handleGetRenderContext, handleRender, hideGutters, hideLineNumbers, hintOptions, indentSize, indentWithTabs, infoOptions, jumpOptions, maybePrettifyAndSetValue, mode, noLint, noMatchBrackets, noStyleActiveLine, onClickLink, pinToBottom, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.editorLineWrapping, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, uniquenessKey, onPaste]);
-
-  const cleanUpEditor = useCallback(() => {
+  });
+  useUnmount(() => {
     codeMirror.current?.toTextArea();
     codeMirror.current?.closeHintDropdown();
     codeMirror.current = null;
-  }, []);
-
-  useMount(() => {
-    initEditor();
   });
-  useUnmount(() => {
-    cleanUpEditor();
-  });
-
-  const reinitialize = useCallback(() => {
-    cleanUpEditor();
-    initEditor();
-  }, [cleanUpEditor, initEditor]);
-
-  useEditorRefresh(reinitialize);
 
   useEffect(() => {
     const fn = misc.debounce((doc: CodeMirror.Editor) => {
