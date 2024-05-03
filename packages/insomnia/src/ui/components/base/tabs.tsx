@@ -15,7 +15,7 @@ const StyledTab = styled.div<StyledTabProps>(({ isNested, isSelected }) => ({
   justifyContent: 'center',
   whiteSpace: 'nowrap',
   position: 'relative',
-  padding: '0 var(--padding-md)',
+  padding: !isNested && isSelected ? '0 var(--padding-md)' : '0 calc(var(--padding-md) + 1px)',
   color: 'var(--hl)',
   height: isNested ? 'var(--line-height-md)' : 'var(--line-height-sm)',
   border: isNested ? 'none' : '1px solid transparent',
@@ -49,6 +49,7 @@ const StyledTab = styled.div<StyledTabProps>(({ isNested, isSelected }) => ({
 
   '&:first-child': {
     borderLeft: '0 !important',
+    paddingLeft: 'calc(var(--padding-md) + 1px) !important',
   },
 
   '&:focus-visible': {
