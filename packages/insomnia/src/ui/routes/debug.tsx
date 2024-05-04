@@ -40,12 +40,14 @@ import {
   useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
+import { useLocalStorage } from 'react-use';
 
-import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '../../common/constants';
+import { type CollectionSortOrder, collectionSortOrderName, DEFAULT_SIDEBAR_SIZE, getProductName, SORT_NAME_ASC, SORT_ORDERS } from '../../common/constants';
 import { type ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId, isNotNullOrUndefined } from '../../common/misc';
 import { LandingPage } from '../../common/sentry';
 import type { PlatformKeyCombinations } from '../../common/settings';
+import { sortMethodMap } from '../../common/sorting';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
 import type { Environment } from '../../models/environment';
@@ -448,7 +450,7 @@ export const Debug: FC = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const sortOrder = searchParams.get('sortOrder') as SortOrder || 'type-manual';
+  const [sortOrder, setSortOrder] = useLocalStorage(`${projectId}:collection-sort-order`, SORT_NAME_ASC);
   const { hotKeyRegistry } = settings;
 
   const createRequest = ({ requestType, parentId, req }: { requestType: CreateRequestType; parentId: string; req?: Partial<Request> }) =>
@@ -684,7 +686,7 @@ export const Debug: FC = () => {
 
   const toggleExpandAllFetcher = useFetcher();
 
-  const visibleCollection = collection.filter(item => !item.hidden);
+  const visibleCollection = collection.filter(item => !item.hidden).sort((a, b) => sortMethodMap[sortOrder as CollectionSortOrder](a.doc, b.doc));;
 
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer<HTMLDivElement, Element>({
@@ -816,12 +818,7 @@ export const Debug: FC = () => {
                 aria-label="Sort order"
                 className="h-full aspect-square"
                 selectedKey={sortOrder}
-                onSelectionChange={order =>
-                  setSearchParams({
-                    ...Object.fromEntries(searchParams.entries()),
-                    sortOrder: order.toString(),
-                  })
-                }
+                onSelectionChange={order => setSortOrder(order as CollectionSortOrder)}
               >
                 <Button
                   aria-label="Select sort order"
@@ -834,7 +831,7 @@ export const Debug: FC = () => {
                     items={SORT_ORDERS.map(order => {
                       return {
                         id: order,
-                        name: sortOrderName[order],
+                        name: collectionSortOrderName[order],
                       };
                     })}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
