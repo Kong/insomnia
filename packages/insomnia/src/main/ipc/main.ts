@@ -1,10 +1,6 @@
-import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
-import type { RulesetDefinition } from '@stoplight/spectral-core';
-import { Spectral } from '@stoplight/spectral-core';
-// @ts-expect-error - This is a bundled file not sure why it's not found
+import type { Ruleset } from '@stoplight/spectral-core';
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
-import { oas } from '@stoplight/spectral-rulesets';
-import { app, BrowserWindow, IpcRendererEvent, net, shell } from 'electron';
+import { app, BrowserWindow, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
@@ -32,6 +28,7 @@ export interface RendererToMainBridgeAPI {
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
+  loadSpectralRuleset: (options: { rulesetPath: string }) => Promise<Ruleset>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
@@ -75,6 +72,15 @@ export function registerMainHandlers() {
     } catch (err) {
       throw new Error(err);
     }
+  });
+
+  ipcMainHandle('loadSpectralRuleset', async (_, options: { rulesetPath: string }) => {
+    const ruleset = await bundleAndLoadRuleset(options.rulesetPath, {
+      fs,
+      fetch,
+    });
+
+    return ruleset;
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {

@@ -27,6 +27,7 @@ export type HandleChannels =
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
+  | 'loadSpectralRuleset'
   | 'writeFile';
 
 export const ipcMainHandle = (

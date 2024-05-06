@@ -55,6 +55,7 @@ const main: Window['main'] = {
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
+  loadSpectralRuleset: options => ipcRenderer.invoke('loadSpectralRuleset', options),
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);

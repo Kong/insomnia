@@ -1,4 +1,4 @@
-import type { IRuleResult } from '@stoplight/spectral-core';
+import type { IRuleResult, Ruleset } from '@stoplight/spectral-core';
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
 import { stat } from 'fs/promises';
@@ -237,16 +237,28 @@ const Design: FC = () => {
 
   useEffect(() => {
     CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
+      // @TODO: Conisderations and things we need to verify/test:
+      // - Should we spawn a new worker on every lint command or use a shared worker?
+      // - Does this function handle race conditions? e.g. if a lint finishes late does it replace another lint that ran with latest contents?
+      // - Proper error handling from the worker and here. Perhaps the worker returns a result type like Result = Diagnostics | Error and we handle it here
+      // - Don't reload the spectral ruleset on every lint command. Instead the ruleset should be re-calculated when the underlying file changes due to e.g. git pull or the filename changes
       const worker = new Worker(new URL('../worker/spectral.ts', import.meta.url), {
         type: 'module',
       });
-      // const worker = new MyWorker();
 
-      const func = () => {
+      const func = async () => {
+        let ruleset: Ruleset;
+
+        try {
+          ruleset = await window.main.loadSpectralRuleset({ rulesetPath });
+        } catch (e) {
+          console.error('Failed to load spectral ruleset', e);
+        }
+
         return new Promise<ISpectralDiagnostic[]>(resolve => {
           worker.postMessage({
             contents,
-            rulesetPath,
+            ruleset,
           });
 
           worker.onmessage = e => {
