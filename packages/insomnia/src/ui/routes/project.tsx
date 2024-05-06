@@ -34,7 +34,6 @@ import {
   useLoaderData,
   useNavigate,
   useParams,
-  useSearchParams,
 } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
 
@@ -448,9 +447,20 @@ async function getAllRemoteFiles({
   return [];
 }
 
+export const projectIdLoader: LoaderFunction = async ({ params }) => {
+  const { projectId } = params;
+  invariant(projectId, 'Project ID is required');
+
+  const project = await models.project.getById(projectId);
+  invariant(project, `Project was not found ${projectId}`);
+
+  return {
+    activeProject: project,
+  };
+};
+
 export const loader: LoaderFunction = async ({
   params,
-  request,
 }): Promise<ProjectLoaderData> => {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
@@ -480,9 +490,8 @@ export const loader: LoaderFunction = async ({
     await logout();
     throw redirect('/auth/login');
   }
-  const search = new URL(request.url).searchParams;
+
   invariant(projectId, 'projectId parameter is required');
-  const projectName = search.get('projectName') || '';
 
   const project = await models.project.getById(projectId);
   invariant(project, `Project was not found ${projectId}`);
@@ -495,9 +504,7 @@ export const loader: LoaderFunction = async ({
     parentId: organizationId,
   }) || [];
 
-  const projects = sortProjects(organizationProjects).filter(p =>
-    p.name?.toLowerCase().includes(projectName.toLowerCase())
-  );
+  const projects = sortProjects(organizationProjects);
 
   let learningFeature = fallbackLearningFeature;
   const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
@@ -590,6 +597,7 @@ const ProjectRoute: FC = () => {
   };
   const [scope, setScope] = useLocalStorage(`${projectId}:project-dashboard-scope`, 'all');
   const [sortOrder, setSortOrder] = useLocalStorage(`${projectId}:project-dashboard-sort-order`, 'modified-desc');
+  const [projectNameFilter = '', setProjectNameFilter] = useLocalStorage(`${projectId}:project-name-filter`, '');
   const [filter, setFilter] = useLocalStorage(`${projectId}:project-dashboard-filter`, '');
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
@@ -638,7 +646,9 @@ const ProjectRoute: FC = () => {
     };
   });
 
-  const projectsWithPresence = projects.map(project => {
+  const projectsWithPresence = projects.filter(p =>
+    p.name?.toLowerCase().includes(projectNameFilter.toLowerCase())
+  ).map(project => {
     const projectPresence = presence
       .filter(p => p.project === project.remoteId)
       .filter(p => p.acct !== userSession.accountId)
@@ -655,7 +665,6 @@ const ProjectRoute: FC = () => {
     };
   });
 
-  const [searchParams, setSearchParams] = useSearchParams();
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
   const [isMockServerSettingsModalOpen, setIsMockServerSettingsModalOpen] = useState(false);
@@ -934,13 +943,8 @@ const ProjectRoute: FC = () => {
                   <SearchField
                     aria-label="Projects filter"
                     className="group relative flex-1"
-                    defaultValue={searchParams.get('filter')?.toString() ?? ''}
-                    onChange={projectName => {
-                      setSearchParams({
-                        ...Object.fromEntries(searchParams.entries()),
-                        projectName,
-                      });
-                    }}
+                    defaultValue={projectNameFilter ?? ''}
+                    onChange={setProjectNameFilter}
                   >
                     <Input
                       placeholder="Filter"
@@ -973,7 +977,6 @@ const ProjectRoute: FC = () => {
                       const value = keys.values().next().value;
                       navigate({
                         pathname: `/organization/${organizationId}/project/${value}`,
-                        search: searchParams.toString(),
                       });
                     }
                   }}
