@@ -111,7 +111,42 @@ export class VCS {
   }
 
   async switchAndCreateBackendProjectIfNotExist(rootDocumentId: string, name: string) {
-    const project = await this._getOrCreateBackendProjectByRootDocument(rootDocumentId, name);
+    invariant(rootDocumentId, 'rootDocumentId should be defined');
+    // First, try finding the project
+    const backendProjects = await this.localBackendProjects();
+    let matchedBackendProjects = backendProjects.filter(p => p.rootDocumentId === rootDocumentId);
+
+    // If there is more than one project for root, try pruning unused ones by branch activity
+    if (matchedBackendProjects.length > 1) {
+      for (const p of matchedBackendProjects) {
+        const branches = await this._getBranches(p.id);
+
+        if (!branches.find(b => b.snapshots.length > 0)) {
+          await this._store.removeItem(paths.project(p.id));
+          matchedBackendProjects = matchedBackendProjects.filter(({ id }) => id !== p.id);
+          console.log(`[sync] Remove inactive project for root ${rootDocumentId}`);
+        }
+      }
+    }
+
+    // If there are still too many, error out
+    if (matchedBackendProjects.length > 1) {
+      console.log('[sync] Multiple backend projects matched for root', {
+        backendProjects,
+        matchedBackendProjects,
+        rootDocumentId,
+      });
+      throw new Error('More than one backend project matched query');
+    }
+
+    let project = matchedBackendProjects[0];
+    // If we still don't have a project, create one
+    if (!matchedBackendProjects[0]) {
+      const id = generateId('prj');
+      project = { id, name, rootDocumentId };
+      await this._store.setItem(paths.project(project.id), project);
+      console.log(`[sync] Created backend project ${project.id}`);
+    }
     await this.setBackendProject(project);
   }
 
@@ -230,12 +265,8 @@ export class VCS {
       }
     }
     // store blobs
-    const promises = [];
-    for (const id of Object.keys(blobsToStore)) {
-      const buff = Buffer.from(blobsToStore[id], 'utf8');
-      promises.push(this._storeBlob(id, buff));
-    }
-    await Promise.all(promises);
+    const blobIds = Object.keys(blobsToStore);
+    await Promise.all(blobIds.map(id => this._store.setItem(paths.blob(this._backendProjectId(), id), Buffer.from(blobsToStore[id], 'utf8'))));
     console.log(`[sync] Staged ${stageEntries.map(e => e.name).join(', ')}`);
     this._stageByBackendProjectId[this._backendProjectId()] = stage;
     return stage;
@@ -301,7 +332,8 @@ export class VCS {
   }
 
   async removeBranch(branchName: string) {
-    const branchToDelete = await this._assertBranch(branchName);
+    const branchToDelete = await this._getBranch(branchName);
+    invariant(branchToDelete, `Branch does not exist with name ${branchName}`);
     const currentBranch = await this._getCurrentBranch();
 
     if (branchToDelete.name === 'master') {
@@ -562,10 +594,25 @@ export class VCS {
   }
 
   async _getOrCreateRemoteBackendProject({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
-    const localProject = await this._getBackendProject();
+    invariant(this._backendProject?.id, 'Backend project not set');
+    const localProject: BackendProject = await this._store.getItem(paths.project(this._backendProject.id));
     invariant(localProject, 'Backend project not set: ' + this._backendProjectId());
-    let remoteProject = await this._queryProject();
-
+    const { project } = await this._runGraphQL<{ project: BackendProject | null }>(
+      `
+        query ($id: ID!) {
+          project(id: $id) {
+            id
+            name
+            rootDocumentId
+          }
+        }
+      `,
+      {
+        id: this._backendProjectId(),
+      },
+      'project',
+    );
+    let remoteProject = project;
     if (!remoteProject) {
       remoteProject = await this._createRemoteProject({ ...localProject, teamId, teamProjectId });
     }
@@ -575,12 +622,35 @@ export class VCS {
   }
 
   async _createRemoteProject({ rootDocumentId, name, teamId, teamProjectId }: BackendProject & { teamId: string; teamProjectId: string }) {
-    if (!teamId) {
-      throw new Error('teamId should be defined');
-    }
+    invariant(teamId, 'teamId should be defined');
+    console.log('[sync] Fetching team member keys', { teamId });
 
-    const teamKeys = await this._queryTeamMemberKeys(teamId);
-    return this._queryCreateProject(rootDocumentId, name, teamId, teamProjectId, teamKeys.memberKeys);
+    const { teamMemberKeys } = await this._runGraphQL<{
+      teamMemberKeys: {
+        memberKeys: {
+          accountId: string;
+          publicKey: string;
+          autoLinked: boolean;
+        }[];
+      };
+    }>(
+      `
+        query ($teamId: ID!) {
+          teamMemberKeys(teamId: $teamId) {
+            memberKeys {
+              accountId
+              publicKey
+              autoLinked
+            }
+          }
+        }
+      `,
+      {
+        teamId,
+      },
+      'teamMemberKeys',
+    );
+    return this._queryCreateProject(rootDocumentId, name, teamId, teamProjectId, teamMemberKeys.memberKeys);
   }
 
   async push({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
@@ -730,9 +800,11 @@ export class VCS {
     snapshotMessage?: string,
     useOtherBranchHistory?: boolean,
   ) {
-    const branchOther = await this._assertBranch(otherBranchName);
+    const branchOther = await this._getBranch(otherBranchName);
+    invariant(branchOther, `Branch does not exist with name ${otherBranchName}`);
     const latestSnapshotOther: Snapshot | null = await this._getLatestSnapshot(branchOther.name);
-    const branchTrunk = await this._assertBranch(trunkBranchName);
+    const branchTrunk = await this._getBranch(trunkBranchName);
+    invariant(branchTrunk, `Branch does not exist with name ${trunkBranchName}`);
     const rootSnapshotId = getRootSnapshot(branchTrunk, branchOther);
     const rootSnapshot: Snapshot | null = await this._getSnapshot(rootSnapshotId || 'n/a');
     const latestSnapshotTrunk: Snapshot | null = await this._getLatestSnapshot(branchTrunk.name);
@@ -848,8 +920,8 @@ export class VCS {
     variables: Record<string, any>,
     name: string,
   ): Promise<T> {
-    const { sessionId } = await this._assertSession();
-
+    const { id: sessionId } = await session.getUserSession();
+    invariant(sessionId, 'Session ID not set');
     const { data, errors } = await insomniaFetch<{ data: T; errors: [{ message: string }] }>({
       method: 'POST',
       path: '/graphql?' + name,
@@ -938,7 +1010,7 @@ export class VCS {
   }
 
   async _queryPushSnapshots(allSnapshots: Snapshot[]) {
-    const { accountId } = await this._assertSession();
+    const { accountId } = await session.getUserSession();
 
     for (const snapshots of chunkArray(allSnapshots, 20)) {
       // This bit of logic fills in any missing author IDs from times where
@@ -1064,11 +1136,8 @@ export class VCS {
 
     for (let i = 0; i < allIds.length; i++) {
       const id = allIds[i];
-      const content = await this._getBlobRaw(id);
-
-      if (content === null) {
-        throw new Error(`Failed to get blob id=${id}`);
-      }
+      const content = await this._store.getItemRaw(paths.blob(this._backendProjectId(), id));
+      invariant(content, `Failed to get blob id=${id}`);
 
       const encryptedResult = crypt.encryptAESBuffer(symmetricKey, content);
       batch.push({
@@ -1088,83 +1157,6 @@ export class VCS {
     }
 
     console.log(`[sync] Finished uploading ${count}/${allIds.length} blobs`);
-  }
-
-  async _queryBackendProjectKey() {
-    const { projectKey } = await this._runGraphQL<{ projectKey: { encSymmetricKey: string } }>(
-      `
-        query ($projectId: ID!) {
-          projectKey(projectId: $projectId) {
-            encSymmetricKey
-          }
-        }
-      `,
-      {
-        projectId: this._backendProjectId(),
-      },
-      'projectKey',
-    );
-    return projectKey.encSymmetricKey;
-  }
-
-  async _queryProject(): Promise<BackendProject | null> {
-    const { project } = await this._runGraphQL<{ project: BackendProject | null }>(
-      `
-        query ($id: ID!) {
-          project(id: $id) {
-            id
-            name
-            rootDocumentId
-          }
-        }
-      `,
-      {
-        id: this._backendProjectId(),
-      },
-      'project',
-    );
-    return project;
-  }
-
-  async _queryTeamMemberKeys(
-    teamId: string,
-  ): Promise<{
-    memberKeys: {
-      accountId: string;
-      publicKey: string;
-      autoLinked: boolean;
-    }[];
-  }> {
-    console.log('[sync] Fetching team member keys', {
-      teamId,
-    });
-
-    const { teamMemberKeys } = await this._runGraphQL<{
-      teamMemberKeys: {
-        memberKeys: {
-          accountId: string;
-          publicKey: string;
-          autoLinked: boolean;
-        }[];
-      };
-    }>(
-      `
-        query ($teamId: ID!) {
-          teamMemberKeys(teamId: $teamId) {
-            memberKeys {
-              accountId
-              publicKey
-              autoLinked
-            }
-          }
-        }
-      `,
-      {
-        teamId: teamId,
-      },
-      'teamMemberKeys',
-    );
-    return teamMemberKeys;
   }
 
   async _queryCreateProject(
@@ -1236,20 +1228,22 @@ export class VCS {
     return projectCreate;
   }
 
-  async _getBackendProject(): Promise<BackendProject | null> {
-    const projectId = this._backendProject ? this._backendProject.id : 'n/a';
-    return this._store.getItem(paths.project(projectId));
-  }
-
-  async _getBackendProjectById(id: string): Promise<BackendProject | null> {
-    return this._store.getItem(paths.project(id));
-  }
-
   async _getBackendProjectSymmetricKey() {
-    const { privateKey } = await this._assertSession();
-
-    const encSymmetricKey = await this._queryBackendProjectKey();
-    const symmetricKeyStr = crypt.decryptRSAWithJWK(privateKey, encSymmetricKey);
+    const privateKey = await session.getPrivateKey();
+    const { projectKey } = await this._runGraphQL<{ projectKey: { encSymmetricKey: string } }>(
+      `
+        query ($projectId: ID!) {
+          projectKey(projectId: $projectId) {
+            encSymmetricKey
+          }
+        }
+      `,
+      {
+        projectId: this._backendProjectId(),
+      },
+      'projectKey',
+    );
+    const symmetricKeyStr = crypt.decryptRSAWithJWK(privateKey, projectKey.encSymmetricKey);
     return JSON.parse(symmetricKeyStr);
   }
 
@@ -1263,127 +1257,39 @@ export class VCS {
     return this._getOrCreateBranch(head.branch);
   }
 
-  async _assertSession() {
-    const { accountId, id, publicKey } = await session.getUserSession();
-    const privateKey = await session.getPrivateKey();
-    invariant(id, 'Session ID not set');
-
-    return {
-      accountId,
-      sessionId: id,
-      privateKey,
-      publicKey,
-    };
-  }
-
-  async _assertBranch(branchName: string) {
-    const branch = await this._getBranch(branchName);
-    invariant(branch, `Branch does not exist with name ${branchName}`);
-    return branch;
-  }
-
   _backendProjectId() {
     invariant(this._backendProject, 'Backend project not set');
     return this._backendProject.id;
   }
 
   async _getBranch(name: string, backendProjectId?: string): Promise<Branch | null> {
-    const pId = backendProjectId || this._backendProjectId();
-
-    const p = paths.branch(pId, name);
-    return this._store.getItem(p);
+    return this._store.getItem(paths.branch(backendProjectId || this._backendProjectId(), name));
   }
 
   async _getBranches(backendProjectId?: string) {
     const branches: Branch[] = [];
-
-    const pId = backendProjectId || this._backendProjectId();
-
-    for (const p of await this._store.keys(paths.branches(pId))) {
+    for (const p of await this._store.keys(paths.branches(backendProjectId || this._backendProjectId()))) {
       const b = await this._store.getItem(p);
-
-      if (b === null) {
-        // Should never happen
-        throw new Error(`Failed to get branch path=${p}`);
-      }
-
+      invariant(b, `Failed to get branch path=${p}`);
       branches.push(b);
     }
-
     return branches;
   }
 
   async _getOrCreateBranch(name: string): Promise<Branch> {
-    if (!name) {
-      throw new Error('No branch name specified for get-or-create operation');
-    }
-
+    invariant(name, 'No branch name specified for get-or-create operation');
     const branch = await this._getBranch(name);
-
-    if (branch === null) {
-      await this._storeBranch({
-        name,
-        created: new Date(),
-        modified: new Date(),
-        snapshots: [],
-      });
-      return this._getOrCreateBranch(name);
+    if (branch) {
+      return branch;
     }
-
-    return branch;
-  }
-
-  async _getBackendProjectByRootDocument(rootDocumentId: string) {
-    if (!rootDocumentId) {
-      throw new Error('No root document ID supplied for backend project');
-    }
-
-    // First, try finding the project
-    const backendProjects = await this.localBackendProjects();
-    let matchedBackendProjects = backendProjects.filter(p => p.rootDocumentId === rootDocumentId);
-
-    // If there is more than one project for root, try pruning unused ones by branch activity
-    if (matchedBackendProjects.length > 1) {
-      for (const p of matchedBackendProjects) {
-        const branches = await this._getBranches(p.id);
-
-        if (!branches.find(b => b.snapshots.length > 0)) {
-          await this._store.removeItem(paths.project(p.id));
-          matchedBackendProjects = matchedBackendProjects.filter(({ id }) => id !== p.id);
-          console.log(`[sync] Remove inactive project for root ${rootDocumentId}`);
-        }
-      }
-    }
-
-    // If there are still too many, error out
-    if (matchedBackendProjects.length > 1) {
-      console.log('[sync] Multiple backend projects matched for root', {
-        backendProjects,
-        matchedBackendProjects,
-        rootDocumentId,
-      });
-      throw new Error('More than one backend project matched query');
-    }
-
-    return matchedBackendProjects[0] || null;
-  }
-
-  async _getOrCreateBackendProjectByRootDocument(rootDocumentId: string, name: string) {
-    let project: BackendProject | null = await this._getBackendProjectByRootDocument(rootDocumentId);
-
-    // If we still don't have a project, create one
-    if (!project) {
-      const id = generateId('prj');
-      project = {
-        id,
-        name,
-        rootDocumentId,
-      };
-      await this._store.setItem(paths.project(project.id), project);
-      console.log(`[sync] Created backend project ${project.id}`);
-    }
-
-    return project;
+    const newBranch = {
+      name,
+      created: new Date(),
+      modified: new Date(),
+      snapshots: [],
+    };
+    await this._storeBranch(newBranch);
+    return newBranch;
   }
 
   async localBackendProjects() {
@@ -1393,14 +1299,14 @@ export class VCS {
 
     for (const key of keys) {
       const id = path.basename(key);
-      const p: BackendProject | null = await this._getBackendProjectById(id);
+      const backendProj: BackendProject | null = await this._store.getItem(paths.project(id));
 
-      if (p === null) {
+      if (backendProj === null) {
         // Folder exists but project meta file is gone
         continue;
       }
 
-      backendProjects.push(p);
+      backendProjects.push(backendProj);
     }
 
     return backendProjects;
@@ -1408,25 +1314,18 @@ export class VCS {
 
   async _assertSnapshot(id: string) {
     const snapshot: Snapshot = await this._store.getItem(paths.snapshot(this._backendProjectId(), id));
-
     if (snapshot && typeof snapshot.created === 'string') {
       snapshot.created = new Date(snapshot.created);
     }
-
-    if (!snapshot) {
-      throw new Error(`Failed to find commit id=${id}`);
-    }
-
+    invariant(snapshot, `Failed to find commit id=${id}`);
     return snapshot;
   }
 
   async _getSnapshot(id: string) {
     const snapshot: Snapshot = await this._store.getItem(paths.snapshot(this._backendProjectId(), id));
-
     if (snapshot && typeof snapshot.created === 'string') {
       snapshot.created = new Date(snapshot.created);
     }
-
     return snapshot;
   }
 
@@ -1454,14 +1353,6 @@ export class VCS {
 
   async _getBlobs(ids: string[]) {
     return Promise.all(ids.map(id => this._store.getItem(paths.blob(this._backendProjectId(), id))));
-  }
-
-  async _storeBlob(id: string, content: Record<string, any> | null) {
-    return this._store.setItem(paths.blob(this._backendProjectId(), id), content);
-  }
-
-  async _getBlobRaw(id: string) {
-    return this._store.getItemRaw(paths.blob(this._backendProjectId(), id));
   }
 
   async _hasBlob(id: string) {
