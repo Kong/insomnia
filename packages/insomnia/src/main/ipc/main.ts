@@ -28,7 +28,6 @@ export interface RendererToMainBridgeAPI {
   manualUpdateCheck: () => void;
   backup: () => Promise<void>;
   restoreBackup: (version: string) => Promise<void>;
-  spectralRun: (options: { contents: string; rulesetPath: string }) => Promise<ISpectralDiagnostic[]>;
   authorizeUserInWindow: typeof authorizeUserInWindow;
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
@@ -108,32 +107,5 @@ export function registerMainHandlers() {
       // eslint-disable-next-line no-restricted-properties
       shell.openExternal(href);
     }
-  });
-
-  ipcMainHandle('spectralRun', async (_, { contents, rulesetPath }: {
-    contents: string;
-    rulesetPath?: string;
-  }) => {
-    const spectral = new Spectral();
-
-    if (rulesetPath) {
-      try {
-        const ruleset = await bundleAndLoadRuleset(rulesetPath, {
-          fs,
-          fetch: net.fetch,
-        });
-
-        spectral.setRuleset(ruleset);
-      } catch (err) {
-        console.log('Error while parsing ruleset:', err);
-        spectral.setRuleset(oas as RulesetDefinition);
-      }
-    } else {
-      spectral.setRuleset(oas as RulesetDefinition);
-    }
-
-    const diagnostics = await spectral.run(contents);
-
-    return diagnostics;
   });
 }

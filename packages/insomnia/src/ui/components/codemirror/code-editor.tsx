@@ -7,7 +7,7 @@ import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
 import { JSONPath } from 'jsonpath-plus';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
@@ -137,8 +137,9 @@ export interface CodeEditorHandle {
   focusEnd: () => void;
   getCursor: () => CodeMirror.Position | undefined;
   setCursorLine: (lineNumber: number) => void;
+  tryToSetOption: (key: keyof EditorConfiguration, value: any) => void;
 }
-export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
+export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
   autoPrettify,
   className,
   defaultValue,
@@ -526,6 +527,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   useEffect(() => tryToSetOption('hintOptions', hintOptions), [hintOptions]);
   useEffect(() => tryToSetOption('info', infoOptions), [infoOptions]);
   useEffect(() => tryToSetOption('jump', jumpOptions), [jumpOptions]);
+  // This line will trigger codeMirror lint
   useEffect(() => tryToSetOption('lint', lintOptions), [lintOptions]);
   useEffect(() => tryToSetOption('mode', !handleRender ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) }), [handleRender, mode]);
 
@@ -551,6 +553,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     setCursorLine: (lineNumber: number) => {
       codeMirror.current?.setCursor(lineNumber);
     },
+    tryToSetOption,
   }), []);
 
   const showFilter = readOnly && (mode?.includes('json') || mode?.includes('xml'));
@@ -715,5 +718,5 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
     </div >
   );
-});
+}));
 CodeEditor.displayName = 'CodeEditor';
