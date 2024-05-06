@@ -144,7 +144,7 @@ export class VCS {
   }
 
   async remoteBackendProjectsInAnyTeam() {
-    const { projects } = await this._runGraphQL(
+    const { projects } = await this._runGraphQL<{ projects: BackendProjectWithTeams[] }>(
       `
         query ($teamId: ID, $teamProjectId: ID) {
           projects(teamId: $teamId, teamProjectId: $teamProjectId) {
@@ -165,7 +165,7 @@ export class VCS {
       'projects',
     );
 
-    return (projects as BackendProjectWithTeams[]).map(normalizeBackendProjectTeam);
+    return projects.map(normalizeBackendProjectTeam);
   }
 
   async blobFromLastSnapshot(key: string) {
@@ -808,14 +808,14 @@ export class VCS {
     return snapshot;
   }
 
-  async _runGraphQL(
+  async _runGraphQL<T>(
     query: string,
     variables: Record<string, any>,
     name: string,
-  ): Promise<Record<string, any>> {
+  ): Promise<T> {
     const { sessionId } = await this._assertSession();
 
-    const { data, errors } = await insomniaFetch<{ data: {}; errors: [{ message: string }] }>({
+    const { data, errors } = await insomniaFetch<{ data: T; errors: [{ message: string }] }>({
       method: 'POST',
       path: '/graphql?' + name,
       data: { query, variables },
@@ -831,7 +831,7 @@ export class VCS {
   }
 
   async _queryBlobsMissing(ids: string[]): Promise<string[]> {
-    const { blobsMissing } = await this._runGraphQL(
+    const { blobsMissing } = await this._runGraphQL<{ blobsMissing: { missing: string[] } }>(
       `
           query ($projectId: ID!, $ids: [ID!]!) {
             blobsMissing(project: $projectId, ids: $ids) {
@@ -849,7 +849,7 @@ export class VCS {
   }
 
   async _queryBranches(): Promise<Branch[]> {
-    const { branches } = await this._runGraphQL(
+    const { branches } = await this._runGraphQL<{ branches: Branch[] | null }>(
       `
       query ($projectId: ID!) {
         branches(project: $projectId) {
@@ -883,7 +883,7 @@ export class VCS {
   }
 
   async _queryBranch(branchName: string): Promise<Branch | null> {
-    const { branch } = await this._runGraphQL(
+    const { branch } = await this._runGraphQL<{ branch: Branch | null }>(
       `
       query ($projectId: ID!, $branch: String!) {
         branch(project: $projectId, name: $branch) {
@@ -906,7 +906,7 @@ export class VCS {
     let allSnapshots: Snapshot[] = [];
 
     for (const ids of chunkArray(allIds, 20)) {
-      const { snapshots } = await this._runGraphQL(
+      const { snapshots } = await this._runGraphQL<{ snapshots: Snapshot[] }>(
         `
         query ($ids: [ID!]!, $projectId: ID!) {
           snapshots(ids: $ids, project: $projectId) {
@@ -953,7 +953,7 @@ export class VCS {
       }
 
       const branch = await this._getCurrentBranch();
-      const { snapshotsCreate } = await this._runGraphQL(
+      const { snapshotsCreate } = await this._runGraphQL<{ snapshotsCreate: Snapshot[] }>(
         `
         mutation ($projectId: ID!, $snapshots: [SnapshotInput!]!, $branchName: String!) {
           snapshotsCreate(project: $projectId, snapshots: $snapshots, branch: $branchName) {
@@ -1002,7 +1002,7 @@ export class VCS {
     const result: Record<string, Buffer> = {};
 
     for (const ids of chunkArray(allIds, 50)) {
-      const { blobs } = await this._runGraphQL(
+      const { blobs } = await this._runGraphQL<{ blobs: { id: string; content: string }[] }>(
         `
       query ($ids: [ID!]!, $projectId: ID!) {
         blobs(ids: $ids, project: $projectId) {
@@ -1039,7 +1039,7 @@ export class VCS {
         id: i.id,
         content: i.content,
       }));
-      const { blobsCreate } = await this._runGraphQL(
+      const { blobsCreate } = await this._runGraphQL<{ blobsCreate: { count: number } }>(
         `
           mutation ($projectId: ID!, $blobs: [BlobInput!]!) {
             blobsCreate(project: $projectId, blobs: $blobs) {
@@ -1093,7 +1093,7 @@ export class VCS {
   }
 
   async _queryBackendProjectKey() {
-    const { projectKey } = await this._runGraphQL(
+    const { projectKey } = await this._runGraphQL<{ projectKey: { encSymmetricKey: string } }>(
       `
         query ($projectId: ID!) {
           projectKey(projectId: $projectId) {
@@ -1106,11 +1106,11 @@ export class VCS {
       },
       'projectKey',
     );
-    return projectKey.encSymmetricKey as string;
+    return projectKey.encSymmetricKey;
   }
 
   async _queryBackendProjects(teamId: string, teamProjectId: string) {
-    const { projects } = await this._runGraphQL(
+    const { projects } = await this._runGraphQL<{ projects: BackendProjectWithTeams[] }>(
       `
         query ($teamId: ID, $teamProjectId: ID) {
           projects(teamId: $teamId, teamProjectId: $teamProjectId) {
@@ -1131,11 +1131,11 @@ export class VCS {
       'projects',
     );
 
-    return (projects as BackendProjectWithTeams[]).map(normalizeBackendProjectTeam);
+    return projects.map(normalizeBackendProjectTeam);
   }
 
   async _queryProject(): Promise<BackendProject | null> {
-    const { project } = await this._runGraphQL(
+    const { project } = await this._runGraphQL<{ project: BackendProject | null }>(
       `
         query ($id: ID!) {
           project(id: $id) {
@@ -1154,7 +1154,7 @@ export class VCS {
   }
 
   async _queryBackendProjectTeams(): Promise<Team[]> {
-    const { project } = await this._runGraphQL(
+    const { project } = await this._runGraphQL<{ project: BackendProjectWithTeams | null }>(
       `
       query ($id: ID!) {
         project(id: $id) {
@@ -1191,7 +1191,15 @@ export class VCS {
       teamId,
     });
 
-    const { teamMemberKeys } = await this._runGraphQL(
+    const { teamMemberKeys } = await this._runGraphQL<{
+      teamMemberKeys: {
+        memberKeys: {
+          accountId: string;
+          publicKey: string;
+          autoLinked: boolean;
+        }[];
+      };
+    }>(
       `
         query ($teamId: ID!) {
           teamMemberKeys(teamId: $teamId) {
@@ -1241,7 +1249,7 @@ export class VCS {
       });
     }
 
-    const { projectCreate } = await this._runGraphQL(
+    const { projectCreate } = await this._runGraphQL<{ projectCreate: BackendProject }>(
       `
         mutation (
           $name: String!,
@@ -1277,7 +1285,7 @@ export class VCS {
     );
 
     console.log(`[sync] Created remote project ${projectCreate.id} (${projectCreate.name})`);
-    return projectCreate as BackendProject;
+    return projectCreate;
   }
 
   async _getBackendProject(): Promise<BackendProject | null> {
