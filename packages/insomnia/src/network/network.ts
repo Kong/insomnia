@@ -82,7 +82,7 @@ export const tryToExecuteScript = async (
   baseEnvironment: Environment,
   clientCertificates: ClientCertificate[],
   cookieJar: CookieJar,
-  response?: Awaited<ReturnType<typeof sendCurlAndWriteTimeline>>,
+  response?: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse,
 ) => {
   if (!script) {
     return {
@@ -205,7 +205,7 @@ export async function tryToExecutePostRequestScript(
   baseEnvironment: Environment,
   clientCertificates: ClientCertificate[],
   cookieJar: CookieJar,
-  response: sendCurlAndWriteTimelineResponse,
+  response: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError,
 ) {
   return tryToExecuteScript(
     request.postRequestScript,
