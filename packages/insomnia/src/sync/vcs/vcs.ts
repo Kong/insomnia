@@ -100,8 +100,18 @@ export class VCS {
 
   async archiveProject() {
     const backendProjectId = this._backendProjectId();
-
-    await this._queryProjectArchive(backendProjectId);
+    await this._runGraphQL(
+      `
+        mutation ($id: ID!) {
+          projectArchive(id: $id)
+        }
+      `,
+      {
+        id: backendProjectId,
+      },
+      'projectArchive',
+    );
+    console.log(`[sync] Archived remote project ${backendProjectId}`);
     await this._store.removeItem(paths.project(backendProjectId));
     this._backendProject = null;
   }
@@ -650,7 +660,62 @@ export class VCS {
       },
       'teamMemberKeys',
     );
-    return this._queryCreateProject(rootDocumentId, name, teamId, teamProjectId, teamMemberKeys.memberKeys);
+    // Generate symmetric key for ResourceGroup
+    const teamPublicKeys = teamMemberKeys.memberKeys;
+    const symmetricKey = await crypt.generateAES256Key();
+    const symmetricKeyStr = JSON.stringify(symmetricKey);
+
+    const teamKeys: { accountId: string; encSymmetricKey: string; autoLinked: boolean }[] = [];
+
+    invariant(teamId, 'teamId should be defined');
+    invariant(teamPublicKeys.length, 'teamPublicKeys should be defined');
+
+    // Encrypt the symmetric key with the public keys of all the team members, ourselves included
+    for (const { accountId, publicKey, autoLinked } of teamPublicKeys) {
+      teamKeys.push({
+        autoLinked,
+        accountId,
+        encSymmetricKey: crypt.encryptRSAWithJWK(JSON.parse(publicKey), symmetricKeyStr),
+      });
+    }
+
+    const { projectCreate } = await this._runGraphQL<{ projectCreate: BackendProject }>(
+      `
+         mutation (
+           $name: String!,
+           $id: ID!,
+           $rootDocumentId: ID!,
+           $teamId: ID,
+           $teamProjectId: ID,
+           $teamKeys: [ProjectCreateKeyInput!],
+         ) {
+           projectCreate(
+             name: $name,
+             id: $id,
+             rootDocumentId: $rootDocumentId,
+             teamId: $teamId,
+             teamKeys: $teamKeys,
+             teamProjectId: $teamProjectId
+           ) {
+             id
+             name
+             rootDocumentId
+           }
+         }
+       `,
+      {
+        name,
+        id: this._backendProjectId(),
+        rootDocumentId,
+        teamId,
+        teamKeys,
+        teamProjectId,
+      },
+      'createProject',
+    );
+
+    console.log(`[sync] Created remote project ${projectCreate.id} (${projectCreate.name})`);
+    return projectCreate;
   }
 
   async push({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
@@ -679,9 +744,12 @@ export class VCS {
     const snapshots: Snapshot[] = [];
 
     for (const id of snapshotIdsToPush) {
-      const snapshot = await this._assertSnapshot(id);
+      const snapshot: Snapshot = await this._store.getItem(paths.snapshot(this._backendProjectId(), id));
+      if (snapshot && typeof snapshot.created === 'string') {
+        snapshot.created = new Date(snapshot.created);
+      }
+      invariant(snapshot, `Failed to find commit id=${id}`);
       snapshots.push(snapshot);
-
       for (const entry of snapshot.state) {
         allBlobIds.add(entry.blob);
       }
@@ -709,26 +777,18 @@ export class VCS {
 
   async customFetch(localBranchName: string, remoteBranchName: string) {
     const remoteBranch: Branch | null = await this._queryBranch(remoteBranchName);
-
-    if (!remoteBranch) {
-      throw new Error(`The remote branch "${remoteBranchName}" does not exist`);
-    }
-
+    invariant(remoteBranch, `Branch does not exist with name ${remoteBranchName}`);
     // Fetch snapshots and blobs from remote branch
     const snapshotsToFetch: string[] = [];
-
     for (const snapshotId of remoteBranch.snapshots) {
       const localSnapshot = await this._getSnapshot(snapshotId);
-
       if (!localSnapshot) {
         snapshotsToFetch.push(snapshotId);
       }
     }
-
     // Find blobs to fetch
     const blobsToFetch = new Set<string>();
     let allSnapshots: Snapshot[] = [];
-
     // fetch all snapshots
     for (const ids of chunkArray(snapshotsToFetch, 20)) {
       const { snapshots } = await this._runGraphQL<{ snapshots: Snapshot[] }>(
@@ -763,26 +823,43 @@ export class VCS {
     }
     for (const snapshot of allSnapshots) {
       for (const { blob } of snapshot.state) {
-        const hasBlob = await this._hasBlob(blob);
-
-        if (hasBlob) {
-          continue;
+        const hasBlob = await this._store.hasItem(paths.blob(this._backendProjectId(), blob));
+        if (!hasBlob) {
+          blobsToFetch.add(blob);
         }
-
-        blobsToFetch.add(blob);
       }
     }
 
     // Fetch and store the blobs
-    const ids = Array.from(blobsToFetch);
-    const blobs = await this._queryBlobs(ids);
-    // Store the blobs
-    const promises = [];
-    for (const id of Object.keys(blobs)) {
-      const p = paths.blob(this._backendProjectId(), id);
-      promises.push(this._store.setItemRaw(p, blobs[id]));
+    const fetchIds = Array.from(blobsToFetch);
+    const symmetricKey = await this._getBackendProjectSymmetricKey();
+    const decryptedBlobs: Record<string, Buffer> = {};
+
+    for (const ids of chunkArray(fetchIds, 50)) {
+      const { blobs } = await this._runGraphQL<{ blobs: { id: string; content: string }[] }>(
+        `
+      query ($ids: [ID!]!, $projectId: ID!) {
+        blobs(ids: $ids, project: $projectId) {
+          id
+          content
+        }
+      }`,
+        {
+          ids,
+          projectId: this._backendProjectId(),
+        },
+        'blobs',
+      );
+
+      for (const blob of blobs) {
+        const encryptedResult = JSON.parse(blob.content);
+        decryptedBlobs[blob.id] = crypt.decryptAESToBuffer(symmetricKey, encryptedResult);
+      }
     }
-    await Promise.all(promises);
+
+    // Store the blobs
+    const blobIds = Object.keys(decryptedBlobs);
+    await Promise.all(blobIds.map(id => this._store.setItemRaw(paths.blob(this._backendProjectId(), id), decryptedBlobs[id])));
     // Store the snapshots
     await Promise.all(allSnapshots.map(snapshot => this._store.setItem(paths.snapshot(this._backendProjectId(), snapshot.id), snapshot)));
     // Create the new branch and save it
@@ -1067,35 +1144,6 @@ export class VCS {
     }
   }
 
-  async _queryBlobs(allIds: string[]) {
-    const symmetricKey = await this._getBackendProjectSymmetricKey();
-    const result: Record<string, Buffer> = {};
-
-    for (const ids of chunkArray(allIds, 50)) {
-      const { blobs } = await this._runGraphQL<{ blobs: { id: string; content: string }[] }>(
-        `
-      query ($ids: [ID!]!, $projectId: ID!) {
-        blobs(ids: $ids, project: $projectId) {
-          id
-          content
-        }
-      }`,
-        {
-          ids,
-          projectId: this._backendProjectId(),
-        },
-        'blobs',
-      );
-
-      for (const blob of blobs) {
-        const encryptedResult = JSON.parse(blob.content);
-        result[blob.id] = crypt.decryptAESToBuffer(symmetricKey, encryptedResult);
-      }
-    }
-
-    return result;
-  }
-
   async _queryPushBlobs(allIds: string[]) {
     const symmetricKey = await this._getBackendProjectSymmetricKey();
 
@@ -1296,29 +1344,14 @@ export class VCS {
     const backendProjects: BackendProject[] = [];
     const basePath = paths.projects();
     const keys = await this._store.keys(basePath, false);
-
     for (const key of keys) {
       const id = path.basename(key);
       const backendProj: BackendProject | null = await this._store.getItem(paths.project(id));
-
-      if (backendProj === null) {
-        // Folder exists but project meta file is gone
-        continue;
+      if (backendProj) {
+        backendProjects.push(backendProj);
       }
-
-      backendProjects.push(backendProj);
     }
-
     return backendProjects;
-  }
-
-  async _assertSnapshot(id: string) {
-    const snapshot: Snapshot = await this._store.getItem(paths.snapshot(this._backendProjectId(), id));
-    if (snapshot && typeof snapshot.created === 'string') {
-      snapshot.created = new Date(snapshot.created);
-    }
-    invariant(snapshot, `Failed to find commit id=${id}`);
-    return snapshot;
   }
 
   async _getSnapshot(id: string) {
@@ -1353,25 +1386,6 @@ export class VCS {
 
   async _getBlobs(ids: string[]) {
     return Promise.all(ids.map(id => this._store.getItem(paths.blob(this._backendProjectId(), id))));
-  }
-
-  async _hasBlob(id: string) {
-    return this._store.hasItem(paths.blob(this._backendProjectId(), id));
-  }
-
-  async _queryProjectArchive(projectId: string) {
-    await this._runGraphQL(
-      `
-        mutation ($id: ID!) {
-          projectArchive(id: $id)
-        }
-      `,
-      {
-        id: projectId,
-      },
-      'projectArchive',
-    );
-    console.log(`[sync] Archived remote project ${projectId}`);
   }
 }
 
