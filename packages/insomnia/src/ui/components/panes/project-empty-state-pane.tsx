@@ -1,11 +1,11 @@
-import React, { FC, useEffect } from 'react';
-import { useFetcher, useParams } from 'react-router-dom';
+import React, { FC } from 'react';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getAccountId } from '../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { isOwnerOfOrganization } from '../../../models/organization';
-import { OrganizationFeatureLoaderData, useOrganizationLoaderData } from '../../../ui/routes/organization';
+import { useOrganizationLoaderData } from '../../../ui/routes/organization';
 import { useRootLoaderData } from '../../routes/root';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
@@ -77,28 +77,15 @@ interface Props {
   createMockServer: () => void;
   importFrom: () => void;
   cloneFromGit: () => void;
+  isGitSyncEnabled: boolean;
 }
 
-export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, createMockServer, importFrom, cloneFromGit }) => {
+export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, createMockServer, importFrom, cloneFromGit, isGitSyncEnabled }) => {
   const { organizationId } = useParams<{ organizationId: string }>();
   const { organizations } = useOrganizationLoaderData();
   const { userSession } = useRootLoaderData();
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
-  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
 
-  useEffect(() => {
-    const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
-    if (isIdleAndUninitialized) {
-      permissionsFetcher.load(`/organization/${organizationId}/permissions`);
-    }
-  }, [organizationId, permissionsFetcher]);
-
-  const { features } = permissionsFetcher.data || {
-    features: {
-      gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
-    },
-  };
-  const isGitSyncEnabled = features.gitSync.enabled;
   const accountId = getAccountId();
 
   const showUpgradePlanModal = () => {

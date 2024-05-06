@@ -212,6 +212,7 @@ async function renderApp() {
                       (
                         await import('./routes/organization')
                       ).organizationPermissionsLoader(...args),
+                    shouldRevalidate: data => data.currentParams.organizationId !== data.nextParams.organizationId,
                   },
                   {
                     path: 'sync-projects',

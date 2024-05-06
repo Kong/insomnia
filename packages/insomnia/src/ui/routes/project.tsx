@@ -1252,6 +1252,7 @@ const ProjectRoute: FC = () => {
                           createMockServer={createNewMockServer}
                           importFrom={() => setImportModalType('file')}
                           cloneFromGit={importFromGit}
+                          isGitSyncEnabled={isGitSyncEnabled}
                         />
                       );
                     }}
