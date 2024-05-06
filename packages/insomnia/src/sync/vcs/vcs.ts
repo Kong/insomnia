@@ -8,7 +8,6 @@ import path from 'path';
 import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
 import { generateId } from '../../common/misc';
-import { strings } from '../../common/strings';
 import { BaseModel } from '../../models';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import Store from '../store';
@@ -25,7 +24,6 @@ import type {
   Stage,
   StageEntry,
   StatusCandidate,
-  Team,
 } from '../types';
 import { BackendProjectWithTeams, normalizeBackendProjectTeam } from './normalize-backend-project-team';
 import * as paths from './paths';
@@ -91,16 +89,12 @@ export class VCS {
     return this._backendProject !== null;
   }
 
-  async hasBackendProjectForRootDocument(rootDocumentId: string) {
-    return Boolean(await this._getBackendProjectByRootDocument(rootDocumentId));
-  }
-
   async removeBackendProjectsForRoot(rootDocumentId: string) {
     const all = await this._allBackendProjects();
     const toRemove = all.filter(p => p.rootDocumentId === rootDocumentId);
 
     for (const backendProject of toRemove) {
-      await this._removeProject(backendProject);
+      await this._store.removeItem(paths.project(backendProject.id));
     }
   }
 
@@ -116,23 +110,9 @@ export class VCS {
     this._backendProject = null;
   }
 
-  async switchProject(rootDocumentId: string) {
-    const backendProject = await this._getBackendProjectByRootDocument(rootDocumentId);
-
-    if (backendProject !== null) {
-      await this.setBackendProject(backendProject);
-    } else {
-      this._backendProject = null;
-    }
-  }
-
   async switchAndCreateBackendProjectIfNotExist(rootDocumentId: string, name: string) {
     const project = await this._getOrCreateBackendProjectByRootDocument(rootDocumentId, name);
     await this.setBackendProject(project);
-  }
-
-  async backendProjectTeams() {
-    return this._queryBackendProjectTeams();
   }
 
   async localBackendProjects() {
@@ -141,31 +121,6 @@ export class VCS {
 
   async remoteBackendProjects({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
     return this._queryBackendProjects(teamId, teamProjectId);
-  }
-
-  async remoteBackendProjectsInAnyTeam() {
-    const { projects } = await this._runGraphQL<{ projects: BackendProjectWithTeams[] }>(
-      `
-        query ($teamId: ID, $teamProjectId: ID) {
-          projects(teamId: $teamId, teamProjectId: $teamProjectId) {
-            id
-            name
-            rootDocumentId
-            teams {
-              id
-              name
-            }
-          }
-        }
-      `,
-      {
-        teamId: '',
-        teamProjectId: '',
-      },
-      'projects',
-    );
-
-    return projects.map(normalizeBackendProjectTeam);
   }
 
   async blobFromLastSnapshot(key: string) {
@@ -266,8 +221,13 @@ export class VCS {
         blobsToStore[entry.blobId] = entry.blobContent;
       }
     }
-
-    await this._storeBlobs(blobsToStore);
+    // store blobs
+    const promises = [];
+    for (const id of Object.keys(blobsToStore)) {
+      const buff = Buffer.from(blobsToStore[id], 'utf8');
+      promises.push(this._storeBlob(id, buff));
+    }
+    await Promise.all(promises);
     console.log(`[sync] Staged ${stageEntries.map(e => e.name).join(', ')}`);
     this._stageByBackendProjectId[this._backendProjectId()] = stage;
     return stage;
@@ -344,7 +304,7 @@ export class VCS {
       throw new Error('Cannot delete currently-active branch');
     }
 
-    await this._removeBranch(branchToDelete);
+    await this._store.removeItem(paths.branch(this._backendProjectId(), branchToDelete.name));
     console.log(`[sync] Deleted local branch ${branchName}`);
   }
 
@@ -364,9 +324,8 @@ export class VCS {
       throw new Error('Please commit current changes before switching branches');
     }
 
-    await this._storeHead({
-      branch: branchNext.name,
-    });
+    // store head
+    await this._store.setItem(paths.head(this._backendProjectId()), { branch: branchNext.name });
     const dirtyMap = generateCandidateMap(dirty);
     const delta = stateDelta(latestStateCurrent, latestStateNext);
     // Filter out things that should stay dirty
@@ -574,7 +533,7 @@ export class VCS {
       true,
     );
     // Remove tmp branch
-    await this._removeBranch(tmpBranchForRemote);
+    await this._store.removeItem(paths.branch(this._backendProjectId(), tmpBranchForRemote.name));
     console.log(`[sync] Pulled branch ${localBranch.name}`);
     return delta;
   }
@@ -677,7 +636,13 @@ export class VCS {
     // Fetch and store the blobs
     const ids = Array.from(blobsToFetch);
     const blobs = await this._queryBlobs(ids);
-    await this._storeBlobsBuffer(blobs);
+    // Store the blobs
+    const promises = [];
+    for (const id of Object.keys(blobs)) {
+      const p = paths.blob(this._backendProjectId(), id);
+      promises.push(this._store.setItemRaw(p, blobs[id]));
+    }
+    await Promise.all(promises);
     // Store the snapshots
     await this._storeSnapshots(snapshots);
     // Create the new branch and save it
@@ -1153,31 +1118,6 @@ export class VCS {
     return project;
   }
 
-  async _queryBackendProjectTeams(): Promise<Team[]> {
-    const { project } = await this._runGraphQL<{ project: BackendProjectWithTeams | null }>(
-      `
-      query ($id: ID!) {
-        project(id: $id) {
-          teams {
-            id
-            name
-          }
-        }
-      }
-    `,
-      {
-        id: this._backendProjectId(),
-      },
-      'project.teams',
-    );
-
-    if (!project) {
-      throw new Error(`Please push the ${strings.collection.singular.toLowerCase()} to be able to share it`);
-    }
-
-    return project.teams;
-  }
-
   async _queryTeamMemberKeys(
     teamId: string,
   ): Promise<{
@@ -1323,15 +1263,21 @@ export class VCS {
     const head = await this._store.getItem(paths.head(this._backendProjectId()));
 
     if (head === null) {
-      await this._storeHead({ branch: 'master' });
-      return this._getHead();
+      await this._store.setItem(paths.head(this._backendProjectId()), { branch: 'master' });
+      return head;
     }
 
     return head;
   }
 
   async _getCurrentBranch() {
-    const head = await this._getHead();
+    let head = await this._store.getItem(paths.head(this._backendProjectId()));
+
+    if (head === null) {
+      await this._store.setItem(paths.head(this._backendProjectId()), { branch: 'master' });
+      head = await this._store.getItem(paths.head(this._backendProjectId()));
+    }
+
     return this._getOrCreateBranch(head.branch);
   }
 
@@ -1429,7 +1375,7 @@ export class VCS {
         const branches = await this._getBranches(p.id);
 
         if (!branches.find(b => b.snapshots.length > 0)) {
-          await this._removeProject(p);
+          await this._store.removeItem(paths.project(p.id));
           matchedBackendProjects = matchedBackendProjects.filter(({ id }) => id !== p.id);
           console.log(`[sync] Remove inactive project for root ${rootDocumentId}`);
         }
@@ -1546,15 +1492,6 @@ export class VCS {
     return this._store.setItem(paths.branch(this._backendProjectId(), branch.name.toLowerCase()), branch);
   }
 
-  async _removeBranch(branch: Branch) {
-    return this._store.removeItem(paths.branch(this._backendProjectId(), branch.name));
-  }
-
-  async _removeProject(project: BackendProject) {
-    console.log(`[sync] Remove local project ${project.id}`);
-    return this._store.removeItem(paths.project(project.id));
-  }
-
   async _storeHead(head: Head) {
     await this._store.setItem(paths.head(this._backendProjectId()), head);
   }
@@ -1565,7 +1502,7 @@ export class VCS {
   }
 
   async _getBlobs(ids: string[]) {
-    const promises: Promise<Record<string, any> | null>[] = [];
+    const promises = [];
 
     for (const id of ids) {
       promises.push(this._getBlob(id));
@@ -1576,28 +1513,6 @@ export class VCS {
 
   async _storeBlob(id: string, content: Record<string, any> | null) {
     return this._store.setItem(paths.blob(this._backendProjectId(), id), content);
-  }
-
-  async _storeBlobs(map: Record<string, string>) {
-    const promises: Promise<any>[] = [];
-
-    for (const id of Object.keys(map)) {
-      const buff = Buffer.from(map[id], 'utf8');
-      promises.push(this._storeBlob(id, buff));
-    }
-
-    await Promise.all(promises);
-  }
-
-  async _storeBlobsBuffer(map: Record<string, Buffer>) {
-    const promises: Promise<any>[] = [];
-
-    for (const id of Object.keys(map)) {
-      const p = paths.blob(this._backendProjectId(), id);
-      promises.push(this._store.setItemRaw(p, map[id]));
-    }
-
-    await Promise.all(promises);
   }
 
   async _getBlobRaw(id: string) {

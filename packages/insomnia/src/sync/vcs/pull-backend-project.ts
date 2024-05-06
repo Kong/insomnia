@@ -3,6 +3,7 @@ import { database } from '../../common/database';
 import * as models from '../../models';
 import { RemoteProject } from '../../models/project';
 import { isWorkspace, Workspace } from '../../models/workspace';
+import { invariant } from '../../utils/invariant';
 import { BackendProjectWithTeam } from './normalize-backend-project-team';
 import { interceptAccessError } from './util';
 import { VCS } from './vcs';
@@ -47,8 +48,16 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
 
     const flushId = await database.bufferChanges();
 
-    // @ts-expect-error -- TSCONVERSION
-    for (const doc of (await vcs.allDocuments()) || []) {
+    const branch = await vcs._getCurrentBranch();
+    const snapshot = await vcs._getLatestSnapshot(branch.name);
+    invariant(snapshot, 'Failed to get latest commit for all documents');
+
+    const allDocuments = await vcs._getBlobs(snapshot.state.map(s => s.blob));
+
+    for (const doc of (allDocuments || [])) {
+      if (!doc) {
+        continue;
+      }
       if (isWorkspace(doc)) {
         doc.parentId = remoteProject._id;
         workspaceId = doc._id;

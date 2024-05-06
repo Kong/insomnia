@@ -948,32 +948,4 @@ describe('VCS', () => {
       expect(await v.getHistory(3)).toStrictEqual([s1, s2]);
     });
   });
-
-  describe('hasBackendProjectForRootDocument', () => {
-    let vcs: VCS;
-    let backendProject: BackendProject;
-
-    beforeEach(async () => {
-      backendProject = projectBuilder.reset().build();
-
-      const driver = new MemoryDriver();
-      vcs = new VCS(driver);
-
-      driver.setItem(paths.projects(), Buffer.from(JSON.stringify([backendProject])));
-      driver.setItem(paths.projectBase(backendProject.id), Buffer.from(''));
-      driver.setItem(paths.project(backendProject.id), Buffer.from(JSON.stringify(backendProject)));
-    });
-
-    it('should return true if has project', async () => {
-      const hasProject = await vcs.hasBackendProjectForRootDocument(backendProject.rootDocumentId);
-
-      expect(hasProject).toBe(true);
-    });
-
-    it('should return false if has no project', async () => {
-      const hasProject = await vcs.hasBackendProjectForRootDocument('some other id');
-
-      expect(hasProject).toBe(false);
-    });
-  });
 });
