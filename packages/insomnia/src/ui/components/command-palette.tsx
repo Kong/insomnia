@@ -13,7 +13,7 @@ import { isWebSocketRequest } from '../../models/websocket-request';
 import { scopeToActivity } from '../../models/workspace';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { LoaderResult } from '../routes/commands';
-import { ProjectLoaderData, scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../routes/project';
+import { ProjectIdLoaderData, scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../routes/project';
 import { RootLoaderData } from '../routes/root';
 import { AvatarGroup } from './avatar';
 import { Icon } from './icon';
@@ -199,7 +199,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const setActiveEnvironmentFetcher = useFetcher();
   const navigate = useNavigate();
 
-  const projectDataLoader = useFetcher<ProjectLoaderData>();
+  const projectDataLoader = useFetcher<ProjectIdLoaderData>();
   const accountId = userSession.accountId;
 
   useEffect(() => {

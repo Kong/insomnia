@@ -288,6 +288,10 @@ export interface InsomniaFile {
 }
 
 export interface ProjectLoaderData {
+  activeProject?: Project;
+}
+
+export interface ProjectIdLoaderData {
   files: InsomniaFile[];
   allFilesCount: number;
   documentsCount: number;
@@ -304,6 +308,7 @@ export interface ProjectLoaderData {
     url: string;
   };
 }
+
 async function getAllLocalFiles({
   projectId,
 }: {
@@ -461,7 +466,7 @@ export const projectIdLoader: LoaderFunction = async ({ params }) => {
 
 export const loader: LoaderFunction = async ({
   params,
-}): Promise<ProjectLoaderData> => {
+}): Promise<ProjectIdLoaderData> => {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   const { id: sessionId } = await userSession.getOrCreate();
@@ -563,7 +568,7 @@ const ProjectRoute: FC = () => {
     documentsCount,
     projectsCount,
     learningFeature,
-  } = useLoaderData() as ProjectLoaderData;
+  } = useLoaderData() as ProjectIdLoaderData;
   const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = useLocalStorage('learning-feature-dismissed', '');
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
