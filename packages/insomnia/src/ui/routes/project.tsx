@@ -90,19 +90,14 @@ interface TeamProject {
   name: string;
 }
 
-async function getAllTeamProjects(organizationId: string) {
+async function fetchAllTeamProjects(organizationId: string) {
   const { id: sessionId } = await userSession.getOrCreate();
-  console.log('Fetching projects for team', organizationId);
+  console.log('Fetching projects for organization', organizationId);
   if (!sessionId) {
     return [];
   }
 
-  const response = await insomniaFetch<{
-    data: {
-      id: string;
-      name: string;
-    }[];
-  }>({
+  const response = await insomniaFetch<{ data: { id: string; name: string }[] }>({
     path: `/v1/organizations/${organizationId}/team-projects`,
     method: 'GET',
     sessionId,
@@ -139,7 +134,7 @@ export const scopeToTextColorMap: Record<string, string> = {
   unsynced: 'text-[--color-font]',
 };
 
-async function syncTeamProjects({
+async function writeTeamProjectsToNeDB({
   organizationId,
   teamProjects,
 }: {
@@ -202,73 +197,46 @@ export const syncProjectsAction: ActionFunction = async ({ params }) => {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
 
-  const teamProjects = await getAllTeamProjects(organizationId);
-  await syncTeamProjects({
-    organizationId,
-    teamProjects,
-  });
+  const teamProjects = await fetchAllTeamProjects(organizationId);
+  await writeTeamProjectsToNeDB({ organizationId, teamProjects });
 
   return null;
 };
 
 export const indexLoader: LoaderFunction = async ({ params }) => {
+  // 1. fetch team-projects and sync them
+  // 2. check localStorage for last visited projectId
+  // 3. check nedb for default project
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
-
-  // When org icon is clicked this ensures we remember the last visited page
-  const prevOrganizationLocation = localStorage.getItem(
-    `locationHistoryEntry:${organizationId}`
-  );
-
-  let teamProjects: TeamProject[] = [];
-
   try {
     const user = await models.userSession.getOrCreate();
-    teamProjects = await getAllTeamProjects(organizationId);
-    // ensure we don't sync projects in the wrong place
-    if (teamProjects.length > 0 && user.id && !isScratchpadOrganizationId(organizationId)) {
-      await syncTeamProjects({
-        organizationId,
-        teamProjects,
-      });
+    const teamProjects = await fetchAllTeamProjects(organizationId);
+    const hasTeamProjectsAndIsLoggedInAndNotScratchPad = teamProjects.length > 0 && user.id && !isScratchpadOrganizationId(organizationId);
+    if (hasTeamProjectsAndIsLoggedInAndNotScratchPad) {
+      await writeTeamProjectsToNeDB({ organizationId, teamProjects });
     }
   } catch (err) {
     console.log('Could not fetch remote projects.');
   }
 
-  // Check if the last visited project exists and redirect to it
+  const prevOrganizationLocation = localStorage.getItem(`locationHistoryEntry:${organizationId}`);
   if (prevOrganizationLocation) {
-    const match = matchPath(
-      {
-        path: '/organization/:organizationId/project/:projectId',
-        end: false,
-      },
-      prevOrganizationLocation
-    );
-
+    const match = matchPath({ path: '/organization/:organizationId/project/:projectId', end: false }, prevOrganizationLocation);
     if (match && match.params.organizationId && match.params.projectId) {
       const existingProject = await models.project.getById(match.params.projectId);
-
       if (existingProject) {
-        console.log('Redirecting to last visited project', existingProject._id);
         return redirect(`/organization/${match?.params.organizationId}/project/${existingProject._id}`);
       }
     }
   }
 
-  const allOrganizationProjects = await database.find<Project>(models.project.type, {
-    parentId: organizationId,
-  }) || [];
-
-  // Check if the org has any projects and redirect to the first one
-  const projectId = allOrganizationProjects[0]?._id;
-
-  if (!projectId) {
+  const defaultProject = await database.getWhere<Project>(models.project.type, { parentId: organizationId });
+  if (!defaultProject) {
     return redirect(`/organization/${organizationId}/project`);
   }
-  invariant(projectId, 'No projects found for this organization.');
-
-  return redirect(`/organization/${organizationId}/project/${projectId}`);
+  invariant(defaultProject, 'No default projects found for this organization.');
+  return redirect(`/organization/${organizationId}/project/${defaultProject._id}`);
 };
 
 export interface InsomniaFile {
