@@ -247,7 +247,6 @@ async function renderApp() {
                         id: '/project/:projectId',
                         loader: async (...args) =>
                           (await import('./routes/project')).loader(...args),
-                        shouldRevalidate: data => data.currentParams.projectId !== data.nextParams.projectId,
                         element: (
                           <Suspense fallback={<AppLoadingIndicator />}>
                             <Project />
