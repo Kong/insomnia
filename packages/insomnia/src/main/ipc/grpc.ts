@@ -25,7 +25,7 @@ import {
   PackageDefinition,
   ServiceDefinition,
 } from '@grpc/proto-loader';
-import electron, { ipcMain, IpcMainEvent } from 'electron';
+import electron, { IpcMainEvent } from 'electron';
 import * as grpcReflection from 'grpc-reflection-js';
 
 import { version } from '../../../package.json';

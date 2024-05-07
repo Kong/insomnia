@@ -1,4 +1,4 @@
-import electron, { app, ipcMain, session } from 'electron';
+import electron, { app, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';

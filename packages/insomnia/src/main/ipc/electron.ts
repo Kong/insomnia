@@ -6,7 +6,29 @@ import type { NunjucksParsedTagArg } from '../../templating/utils';
 import { localTemplateTags } from '../../ui/components/templating/local-template-tags';
 import { invariant } from '../../utils/invariant';
 
-export type HandleChannels = 'webSocket.event.findMany' | 'webSocket.readyState';
+export type HandleChannels =
+  'authorizeUserInWindow'
+  | 'backup'
+  | 'curl.event.findMany'
+  | 'curl.open'
+  | 'curl.readyState'
+  | 'curlRequest'
+  | 'database.caCertificate.create'
+  | 'grpc.loadMethods'
+  | 'grpc.loadMethodsFromReflection'
+  | 'installPlugin'
+  | 'open-channel-to-hidden-browser-window'
+  | 'readCurlResponse'
+  | 'restoreBackup'
+  | 'showOpenDialog'
+  | 'showSaveDialog'
+  | 'spectralRun'
+  | 'webSocket.event.findMany'
+  | 'webSocket.event.send'
+  | 'webSocket.open'
+  | 'webSocket.readyState'
+  | 'writeFile';
+
 export const ipcMainHandle = (
   channel: HandleChannels,
   listener: (
@@ -14,20 +36,54 @@ export const ipcMainHandle = (
     ...args: any[]
   ) => Promise<void> | any
 ) => ipcMain.handle(channel, listener);
-export type OnChannels = 'show-context-menu'
+export type MainOnChannels =
+  'cancelCurlRequest'
+  | 'clear'
+  | 'curl.close'
+  | 'curl.closeAll'
+  | 'getAppPath'
+  | 'getPath'
+  | 'grpc.cancel'
+  | 'grpc.closeAll'
+  | 'grpc.commit'
+  | 'grpc.sendMessage'
+  | 'grpc.start'
+  | 'loginStateChange'
+  | 'manualUpdateCheck'
+  | 'openDeepLink'
+  | 'openInBrowser'
+  | 'readText'
+  | 'restart'
+  | 'set-hidden-window-busy-status'
   | 'setMenuBarVisibility'
+  | 'show-context-menu'
+  | 'showItemInFolder'
   | 'showOpenDialog'
   | 'showSaveDialog'
-  | 'showItemInFolder'
-  | 'readText'
-  | 'writeText'
-  | 'clear'
-  | 'getPath'
-  | 'getAppPath'
-  | 'set-hidden-window-busy-status'
-  | 'manualUpdateCheck';
+  | 'trackPageView'
+  | 'trackSegmentEvent'
+  | 'webSocket.close'
+  | 'webSocket.closeAll'
+  | 'writeText';
+export type RendererOnChannels =
+  'clear-all-models'
+  | 'clear-model'
+  | 'context-menu-command'
+  | 'grpc.data'
+  | 'grpc.end'
+  | 'grpc.error'
+  | 'grpc.start'
+  | 'grpc.status'
+  | 'loggedIn'
+  | 'reload-plugins'
+  | 'shell:open'
+  | 'show-notification'
+  | 'toggle-preferences-shortcuts'
+  | 'toggle-preferences'
+  | 'toggle-sidebar'
+  | 'updaterStatus';
 export const ipcMainOn = (
-  channel: OnChannels,
+  channel: MainOnChannels,
   listener: (
     event: IpcMainEvent,
     ...args: any[]
@@ -113,12 +169,12 @@ export function registerElectronHandlers() {
         window.setAutoHideMenuBar(hide);
       });
   });
-  ipcMain.handle('showOpenDialog', async (_, options: OpenDialogOptions) => {
+  ipcMainHandle('showOpenDialog', async (_, options: OpenDialogOptions) => {
     const { filePaths, canceled } = await dialog.showOpenDialog(options);
     return { filePaths, canceled };
   });
 
-  ipcMain.handle('showSaveDialog', async (_, options: SaveDialogOptions) => {
+  ipcMainHandle('showSaveDialog', async (_, options: SaveDialogOptions) => {
     const { filePath, canceled } = await dialog.showSaveDialog(options);
     return { filePath, canceled };
   });

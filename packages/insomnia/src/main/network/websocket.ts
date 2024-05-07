@@ -1,4 +1,4 @@
-import electron, { BrowserWindow, ipcMain } from 'electron';
+import electron, { BrowserWindow } from 'electron';
 import fs from 'fs';
 import { IncomingMessage } from 'http';
 import path from 'path';

@@ -4,7 +4,7 @@ import { Spectral } from '@stoplight/spectral-core';
 // @ts-expect-error - This is a bundled file not sure why it's not found
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
 import { oas } from '@stoplight/spectral-rulesets';
-import { app, BrowserWindow, ipcMain, IpcRendererEvent, net, shell } from 'electron';
+import { app, BrowserWindow, IpcRendererEvent, net, shell } from 'electron';
 import fs from 'fs';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
@@ -16,7 +16,7 @@ import installPlugin from '../install-plugin';
 import { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { WebSocketBridgeAPI } from '../network/websocket';
-import { ipcMainHandle, ipcMainOn } from './electron';
+import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import { gRPCBridgeAPI } from './grpc';
 
 export interface RendererToMainBridgeAPI {
@@ -35,7 +35,7 @@ export interface RendererToMainBridgeAPI {
   writeFile: (options: { path: string; content: string }) => Promise<string>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
-  on: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
+  on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
   webSocket: WebSocketBridgeAPI;
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;

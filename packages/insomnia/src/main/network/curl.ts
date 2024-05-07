@@ -1,7 +1,7 @@
 import { Readable } from 'node:stream';
 
 import { Curl, CurlFeature, CurlInfoDebug, HeaderInfo } from '@getinsomnia/node-libcurl';
-import electron, { BrowserWindow, ipcMain } from 'electron';
+import electron, { BrowserWindow } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidV4 } from 'uuid';
@@ -380,7 +380,7 @@ export const registerCurlHandlers = () => {
   ipcMainHandle('curl.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
 };
 
-ipcMain.handle('readCurlResponse', async (_, options: { bodyPath?: string; bodyCompression?: Compression }) => {
+ipcMainHandle('readCurlResponse', async (_, options: { bodyPath?: string; bodyCompression?: Compression }) => {
   const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
   const bodyBufferOrErrMsg = getBodyBuffer(options, readFailureMsg);
   // TODO(jackkav): simplify the fail msg and reuse in other getBodyBuffer renderer calls
