@@ -1,4 +1,4 @@
-import electron, { app, ipcMain, session } from 'electron';
+import electron, { app, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
@@ -12,7 +12,7 @@ import log, { initializeLogging } from './common/log';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
-import { registerElectronHandlers } from './main/ipc/electron';
+import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
 import { registerCurlHandlers } from './main/network/curl';
@@ -151,7 +151,7 @@ const _launchApp = async () => {
   await _trackStats();
   let window: BrowserWindow;
   // Handle URLs sent via command line args
-  ipcMain.once('halfSecondAfterAppStart', () => {
+  ipcMainOnce('halfSecondAfterAppStart', () => {
     console.log('[main] Window ready, handling command line arguments', process.argv);
     const args = process.argv.slice(1).filter(a => a !== '.');
     console.log('[main] Check args and create windows', args);
@@ -199,7 +199,7 @@ const _launchApp = async () => {
       app.on('open-url', (_event, url) => {
         openDeepLinkUrl(url);
       });
-      ipcMain.on('openDeepLink', (_event, url) => {
+      ipcMainOn('openDeepLink', (_event, url) => {
         openDeepLinkUrl(url);
       });
     }
@@ -272,7 +272,7 @@ async function _trackStats() {
     executedRequests: stats.executedRequests,
   });
 
-  ipcMain.once('halfSecondAfterAppStart', async () => {
+  ipcMainOnce('halfSecondAfterAppStart', async () => {
     backupIfNewerVersionAvailable();
     const { currentVersion, launches, lastVersion } = stats;
 

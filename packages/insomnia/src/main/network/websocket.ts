@@ -1,4 +1,4 @@
-import electron, { BrowserWindow, ipcMain } from 'electron';
+import electron, { BrowserWindow } from 'electron';
 import fs from 'fs';
 import { IncomingMessage } from 'http';
 import path from 'path';
@@ -28,6 +28,7 @@ import { filterClientCertificates } from '../../network/certificate';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { invariant } from '../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
+import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 
 export interface WebSocketConnection extends WebSocket {
   _id: string;
@@ -493,12 +494,12 @@ export interface WebSocketBridgeAPI {
   };
 }
 export const registerWebSocketHandlers = () => {
-  ipcMain.handle('webSocket.open', openWebSocketConnection);
-  ipcMain.handle('webSocket.event.send', (_, options: Parameters<typeof sendWebSocketEvent>[0]) => sendWebSocketEvent(options));
-  ipcMain.on('webSocket.close', (_, options: Parameters<typeof closeWebSocketConnection>[0]) => closeWebSocketConnection(options));
-  ipcMain.on('webSocket.closeAll', closeAllWebSocketConnections);
-  ipcMain.handle('webSocket.readyState', (_, options: Parameters<typeof getWebSocketReadyState>[0]) => getWebSocketReadyState(options));
-  ipcMain.handle('webSocket.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
+  ipcMainHandle('webSocket.open', openWebSocketConnection);
+  ipcMainHandle('webSocket.event.send', (_, options: Parameters<typeof sendWebSocketEvent>[0]) => sendWebSocketEvent(options));
+  ipcMainOn('webSocket.close', (_, options: Parameters<typeof closeWebSocketConnection>[0]) => closeWebSocketConnection(options));
+  ipcMainOn('webSocket.closeAll', closeAllWebSocketConnections);
+  ipcMainHandle('webSocket.readyState', (_, options: Parameters<typeof getWebSocketReadyState>[0]) => getWebSocketReadyState(options));
+  ipcMainHandle('webSocket.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
 };
 
 electron.app.on('window-all-closed', closeAllWebSocketConnections);

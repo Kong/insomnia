@@ -1,7 +1,7 @@
 import { Readable } from 'node:stream';
 
 import { Curl, CurlFeature, CurlInfoDebug, HeaderInfo } from '@getinsomnia/node-libcurl';
-import electron, { BrowserWindow, ipcMain } from 'electron';
+import electron, { BrowserWindow } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidV4 } from 'uuid';
@@ -16,6 +16,7 @@ import { Compression, getBodyBuffer } from '../../models/response';
 import { filterClientCertificates } from '../../network/certificate';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { invariant } from '../../utils/invariant';
+import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { createConfiguredCurlInstance } from './libcurl-promise';
 import { parseHeaderStrings } from './parse-header-strings';
 
@@ -372,14 +373,14 @@ export interface CurlBridgeAPI {
 }
 
 export const registerCurlHandlers = () => {
-  ipcMain.handle('curl.open', openCurlConnection);
-  ipcMain.on('curl.close', closeCurlConnection);
-  ipcMain.on('curl.closeAll', closeAllCurlConnections);
-  ipcMain.handle('curl.readyState', (_, options: Parameters<typeof getCurlReadyState>[0]) => getCurlReadyState(options));
-  ipcMain.handle('curl.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
+  ipcMainHandle('curl.open', openCurlConnection);
+  ipcMainOn('curl.close', closeCurlConnection);
+  ipcMainOn('curl.closeAll', closeAllCurlConnections);
+  ipcMainHandle('curl.readyState', (_, options: Parameters<typeof getCurlReadyState>[0]) => getCurlReadyState(options));
+  ipcMainHandle('curl.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
 };
 
-ipcMain.handle('readCurlResponse', async (_, options: { bodyPath?: string; bodyCompression?: Compression }) => {
+ipcMainHandle('readCurlResponse', async (_, options: { bodyPath?: string; bodyCompression?: Compression }) => {
   const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
   const bodyBufferOrErrMsg = getBodyBuffer(options, readFailureMsg);
   // TODO(jackkav): simplify the fail msg and reuse in other getBodyBuffer renderer calls
