@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
-import { ProjectLoaderData } from '../routes/project';
+import { ProjectIdLoaderData } from '../routes/project';
 import { useRootLoaderData } from '../routes/root';
 import { WorkspaceLoaderData } from '../routes/workspace';
 import { AvatarGroup } from './avatar';
@@ -11,7 +11,7 @@ export const PresentUsers = () => {
   const { presence } = useInsomniaEventStreamContext();
   const { workspaceId } = useParams() as { workspaceId: string };
   const { userSession } = useRootLoaderData();
-  const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
+  const projectData = useRouteLoaderData('/project/:projectId') as ProjectIdLoaderData | null;
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
   const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 

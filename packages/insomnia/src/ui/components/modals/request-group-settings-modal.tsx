@@ -6,7 +6,7 @@ import { isNotNullOrUndefined } from '../../../common/misc';
 import type { RequestGroup } from '../../../models/request-group';
 import { invariant } from '../../../utils/invariant';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
-import { ProjectLoaderData } from '../../routes/project';
+import { ListWorkspacesLoaderData } from '../../routes/project';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -27,15 +27,15 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
   const modalRef = useRef<ModalHandle>(null);
   const editorRef = useRef<CodeEditorHandle>(null);
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
-  const workspacesFetcher = useFetcher();
+  const workspacesFetcher = useFetcher<ListWorkspacesLoaderData>();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
     if (isIdleAndUninitialized) {
-      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}`);
+      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}/list-workspaces`);
     }
   }, [organizationId, projectId, workspacesFetcher]);
-  const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData;
-  const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined) || [];
+  const projectLoaderData = workspacesFetcher?.data;
+  const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined).filter(w => w.scope !== 'mock-server') || [];
   const [state, setState] = useState<State>({
     activeWorkspaceIdToCopyTo: '',
     defaultPreviewMode: !!requestGroup.description,

@@ -22,6 +22,42 @@ import { getMethodShortHand } from './tags/method-tag';
 
 export const CommandPalette = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { settings } = useRouteLoaderData('root') as RootLoaderData;
+
+  useDocBodyKeyboardShortcuts({
+    request_quickSwitch: () => {
+      setIsOpen(true);
+    },
+  });
+
+  const requestSwitchKeyCombination = getPlatformKeyCombinations(settings.hotKeyRegistry.request_quickSwitch)[0];
+
+  return (
+    <DialogTrigger
+      onOpenChange={setIsOpen}
+      isOpen={isOpen}
+    >
+      <Button data-testid='quick-search' className="px-4 py-1 h-[30.5px] flex-shrink-0 flex items-center justify-center gap-2 bg-[--hl-xs] aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] ring-inset ring-transparent ring-1 focus:ring-[--hl-md] transition-all text-sm">
+        <Icon icon="search" />
+        Search..
+        {requestSwitchKeyCombination && <Keyboard className='space-x-0.5 items-center font-sans font-normal text-center text-sm shadow-sm bg-[--hl-xs] text-[--hl] rounded-md py-0.5 px-2 inline-block'>
+          {constructKeyCombinationDisplay(requestSwitchKeyCombination, false)}
+        </Keyboard>}
+      </Button>
+      <ModalOverlay isDismissable className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex pt-20 justify-center bg-black/30">
+        <Modal className="max-w-3xl h-max w-full rounded-md flex flex-col overflow-hidden border border-solid border-[--hl-sm] max-h-[80vh] bg-[--color-bg] text-[--color-font]">
+          <Dialog className="outline-none h-max overflow-hidden flex flex-col">
+            {({ close }) => (
+              <CommandPaletteCombobox close={close} />
+            )}
+          </Dialog>
+        </Modal>
+      </ModalOverlay>
+    </DialogTrigger>
+  );
+};
+
+const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const {
     organizationId,
     projectId,
@@ -34,8 +70,7 @@ export const CommandPalette = () => {
     requestId: string;
     };
 
-  const projectRouteData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | undefined;
-  const { settings, userSession } = useRouteLoaderData('root') as RootLoaderData;
+  const { userSession } = useRouteLoaderData('root') as RootLoaderData;
   const { presence } = useInsomniaEventStreamContext();
   const pullFileFetcher = useFetcher();
   const setActiveEnvironmentFetcher = useFetcher();
@@ -45,29 +80,25 @@ export const CommandPalette = () => {
   const accountId = userSession.accountId;
 
   useEffect(() => {
-    if (projectId && !projectRouteData && !projectDataLoader.data && projectDataLoader.state === 'idle' && !isScratchpadOrganizationId(organizationId)) {
-      projectDataLoader.load(`/organization/${organizationId}/project/${projectId}`);
+    if (projectId && !projectDataLoader.data && projectDataLoader.state === 'idle' && !isScratchpadOrganizationId(organizationId)) {
+      projectDataLoader.load(`/organization/${organizationId}/project/${projectId}?index`);
     }
-  }, [organizationId, projectRouteData, projectDataLoader, projectId]);
+  }, [organizationId, projectDataLoader, projectId]);
 
   const commandsLoader = useFetcher<LoaderResult>();
 
-  const projectData = projectRouteData || projectDataLoader.data;
+  const projectData = projectDataLoader.data;
 
-  useDocBodyKeyboardShortcuts({
-    request_quickSwitch: () => {
-      setIsOpen(true);
+  useEffect(() => {
+    if (!commandsLoader.data && commandsLoader.state === 'idle') {
       const searchParams = new URLSearchParams();
-
       searchParams.set('organizationId', organizationId);
       searchParams.set('workspaceId', workspaceId);
       searchParams.set('projectId', projectId);
 
       commandsLoader.load(`/commands?${searchParams.toString()}`);
-    },
-  });
-
-  const requestSwitchKeyCombination = getPlatformKeyCombinations(settings.hotKeyRegistry.request_quickSwitch)[0];
+    }
+  }, [commandsLoader, organizationId, projectId, workspaceId]);
 
   const comboboxSections: {
     id: string;
@@ -93,7 +124,7 @@ export const CommandPalette = () => {
     },
   })) || [];
 
-  const currentFiles = projectData?.files.map(file => ({
+  const currentFiles = projectData?.files?.map(file => ({
     ...file,
     action: () => {
       if (file.scope === 'unsynced') {
@@ -126,6 +157,8 @@ export const CommandPalette = () => {
           action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
         }
       );
+
+      return true;
     },
   })) || [];
 
@@ -288,165 +321,147 @@ export const CommandPalette = () => {
   const prevPullFetcherState = useRef(pullFileFetcher.state);
   useEffect(() => {
     if (pullFileFetcher.state === 'idle' && prevPullFetcherState.current !== 'idle') {
-      setIsOpen(false);
+      close();
     }
 
     prevPullFetcherState.current = pullFileFetcher.state;
-  }, [pullFileFetcher.state]);
+  }, [close, pullFileFetcher.state]);
+
+  // Close the dialog when the environment is set
+  // If we close the dialog when fetcher.submit() is done then the dialog will close before the environment is set
+  // The update env will run but the loaders on the page will not be revalidated. https://github.com/remix-run/remix/discussions/9020
+  const prevEnvFetcherState = useRef(setActiveEnvironmentFetcher.state);
+  useEffect(() => {
+    if (setActiveEnvironmentFetcher.state === 'idle' && prevEnvFetcherState.current !== 'idle') {
+      close();
+    }
+
+    prevEnvFetcherState.current = setActiveEnvironmentFetcher.state;
+  }, [close, setActiveEnvironmentFetcher.state]);
 
   return (
-    <DialogTrigger
-      onOpenChange={isOpen => {
-        setIsOpen(isOpen);
-        if (isOpen) {
-          const searchParams = new URLSearchParams();
-          searchParams.set('organizationId', organizationId);
-          searchParams.set('workspaceId', workspaceId);
-          searchParams.set('projectId', projectId);
+    <ComboBox
+      aria-label='Quick switcher'
+      className='flex flex-col divide-y divide-solid divide-[--hl-sm] overflow-hidden'
+      isDisabled={pullFileFetcher.state !== 'idle'}
+      autoFocus
+      allowsCustomValue={false}
+      menuTrigger='focus'
+      shouldFocusWrap
+      onInputChange={filter => {
+        const searchParams = new URLSearchParams();
 
-          commandsLoader.load(`/commands?${searchParams.toString()}`);
+        searchParams.set('organizationId', organizationId);
+        searchParams.set('projectId', projectId);
+        searchParams.set('workspaceId', workspaceId);
+        searchParams.set('filter', filter);
+
+        commandsLoader.load(`/commands?${searchParams.toString()}`);
+      }}
+      defaultFilter={(textValue, filter) => {
+        return Boolean(fuzzyMatch(
+          filter,
+          textValue,
+          { splitSpace: false, loose: true }
+        )?.indexes);
+      }}
+      onSelectionChange={itemId => {
+        if (!itemId) {
+          return;
+        }
+
+        const item = [
+          ...currentRequests,
+          ...currentFiles,
+          ...currentEnvironments,
+          ...otherRequests,
+          ...otherFiles,
+        ].find(item => item.id === itemId);
+
+        const result = item?.action();
+
+        if (!result) {
+          close();
         }
       }}
-      isOpen={isOpen}
     >
-      <Button data-testid='quick-search' className="px-4 py-1 h-[30.5px] flex-shrink-0 flex items-center justify-center gap-2 bg-[--hl-xs] aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] ring-inset ring-transparent ring-1 focus:ring-[--hl-md] transition-all text-sm">
-        <Icon icon="search" />
-        Search..
-        {requestSwitchKeyCombination && <Keyboard className='space-x-0.5 items-center font-sans font-normal text-center text-sm shadow-sm bg-[--hl-xs] text-[--hl] rounded-md py-0.5 px-2 inline-block'>
-          {constructKeyCombinationDisplay(requestSwitchKeyCombination, false)}
-        </Keyboard>}
-      </Button>
-      <ModalOverlay isDismissable className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex pt-20 justify-center bg-black/30">
-        <Modal className="max-w-3xl h-max w-full rounded-md flex flex-col overflow-hidden border border-solid border-[--hl-sm] max-h-[80vh] bg-[--color-bg] text-[--color-font]">
-        <Dialog className="outline-none h-max overflow-hidden flex flex-col">
-          {({ close }) => (
-            <ComboBox
-              aria-label='Quick switcher'
-              className='flex flex-col divide-y divide-solid divide-[--hl-sm] overflow-hidden'
-              isDisabled={pullFileFetcher.state !== 'idle'}
-              autoFocus
-              allowsCustomValue={false}
-              menuTrigger='focus'
-              shouldFocusWrap
-              onInputChange={filter => {
-                const searchParams = new URLSearchParams();
-
-                searchParams.set('organizationId', organizationId);
-                searchParams.set('projectId', projectId);
-                searchParams.set('workspaceId', workspaceId);
-                searchParams.set('filter', filter);
-
-                commandsLoader.load(`/commands?${searchParams.toString()}`);
-              }}
-              defaultFilter={(textValue, filter) => {
-                return Boolean(fuzzyMatch(
-                  filter,
-                  textValue,
-                  { splitSpace: false, loose: true }
-                )?.indexes);
-              }}
-              onSelectionChange={itemId => {
-                if (!itemId) {
-                  return;
-                }
-
-                const item = [
-                  ...currentRequests,
-                  ...currentFiles,
-                  ...currentEnvironments,
-                  ...otherRequests,
-                  ...otherFiles,
-                ].find(item => item.id === itemId);
-
-                const result = item?.action();
-
-                if (!result) {
-                  close();
-                }
-              }}
-            >
-              <Label
-                aria-label="Filter"
-                className="group relative flex items-center gap-2 p-2 flex-1"
-              >
-                <Icon icon="search" className="text-[--color-font] pl-2" />
-                <Input
-                  placeholder="Search and switch between requests, collections and documents"
-                  className="py-1 w-full pl-2 pr-7 bg-[--color-bg] text-[--color-font]"
-                />
-              </Label>
-                {pullFileFetcher.state === 'idle' && (
-                  <ListBox
-                    className="outline-none relative overflow-y-auto flex-1"
-                    items={comboboxSections}
-                  >
-                    {section => (
-                      <Section className='flex-1 flex flex-col'>
-                        <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
-                        <Collection items={section.children}>
-                          {item => (
-                            <ListBoxItem textValue={item.textValue} className="group outline-none select-none">
-                              <div
-                                className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-data-[focused]:bg-[--hl-sm] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
-                              >
-                                {item.icon}
-                                <Text className="flex-shrink-0 px-1 truncate" slot="label">{item.name}</Text>
-                                {item.presence.length > 0 && (
-                                  <span className='w-[70px]'>
-                                    <AvatarGroup
-                                      size="small"
-                                      maxAvatars={3}
-                                      items={item.presence}
-                                    />
-                                  </span>
-                                )}
-                                <Text className="flex-1 px-1 truncate text-sm text-[--hl-md]" slot="description">{item.description}</Text>
-                              </div>
-                            </ListBoxItem>
-                          )}
-                        </Collection>
-                      </Section>
-                    )}
-                  </ListBox>
+      <Label
+        aria-label="Filter"
+        className="group relative flex items-center gap-2 p-2 flex-1"
+      >
+        <Icon icon="search" className="text-[--color-font] pl-2" />
+        <Input
+          placeholder="Search and switch between requests, collections and documents"
+          className="py-1 w-full pl-2 pr-7 bg-[--color-bg] text-[--color-font]"
+        />
+      </Label>
+      {pullFileFetcher.state === 'idle' && (
+        <ListBox
+          className="outline-none relative overflow-y-auto flex-1"
+          items={comboboxSections}
+        >
+          {section => (
+            <Section className='flex-1 flex flex-col'>
+              <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
+              <Collection items={section.children}>
+                {item => (
+                  <ListBoxItem textValue={item.textValue} className="group outline-none select-none">
+                    <div
+                      className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-data-[focused]:bg-[--hl-sm] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
+                    >
+                      {item.icon}
+                      <Text className="flex-shrink-0 px-1 truncate" slot="label">{item.name}</Text>
+                      {item.presence.length > 0 && (
+                        <span className='w-[70px]'>
+                          <AvatarGroup
+                            size="small"
+                            maxAvatars={3}
+                            items={item.presence}
+                          />
+                        </span>
+                      )}
+                      <Text className="flex-1 px-1 truncate text-sm text-[--hl-md]" slot="description">{item.description}</Text>
+                    </div>
+                  </ListBoxItem>
                 )}
-                {pullFileFetcher.state !== 'idle' && (
-                  <div
-                    className="flex-1 overflow-y-auto outline-none flex flex-col data-[empty]:hidden"
-                  >
-                    {comboboxSections.map(section => (
-                      <div className='flex-1 flex flex-col' key={section.id}>
-                        <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
-                        <div>
-                          {section.children.map(item => (
-                            <div key={item.id} className="group cursor-not-allowed outline-none select-none">
-                              <div
-                                className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
-                              >
-                                {item.icon}
-                                <span className="flex-1 px-1 truncate">{item.name}</span>
-                                <span className="flex-1 px-1 truncate">{item.description}</span>
-                                <span className='w-[70px]'>
-                                  {item.presence.length > 0 && (
-                                    <AvatarGroup
-                                      size="small"
-                                      maxAvatars={3}
-                                      items={item.presence}
-                                    />
-                                  )}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-            </ComboBox>
+              </Collection>
+            </Section>
           )}
-        </Dialog>
-      </Modal>
-    </ModalOverlay>
-    </DialogTrigger>
+        </ListBox>
+      )}
+      {pullFileFetcher.state !== 'idle' && (
+        <div
+          className="flex-1 overflow-y-auto outline-none flex flex-col data-[empty]:hidden"
+        >
+          {comboboxSections.map(section => (
+            <div className='flex-1 flex flex-col' key={section.id}>
+              <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
+              <div>
+                {section.children.map(item => (
+                  <div key={item.id} className="group cursor-not-allowed outline-none select-none">
+                    <div
+                      className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
+                    >
+                      {item.icon}
+                      <span className="flex-1 px-1 truncate">{item.name}</span>
+                      <span className="flex-1 px-1 truncate">{item.description}</span>
+                      <span className='w-[70px]'>
+                        {item.presence.length > 0 && (
+                          <AvatarGroup
+                            size="small"
+                            maxAvatars={3}
+                            items={item.presence}
+                          />
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </ComboBox>
   );
 };

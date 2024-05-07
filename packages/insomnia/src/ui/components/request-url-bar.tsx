@@ -101,7 +101,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
   const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
   const fetcher = useFetcher();
-  // TODO: unpick this loading hack
+  // TODO: unpick this loading hack. This could be simplified if submit provides a way to update state when it finishes. https://github.com/remix-run/remix/discussions/9020
   useEffect(() => {
     if (fetcher.state !== 'idle') {
       setLoading(true);

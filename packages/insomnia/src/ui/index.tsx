@@ -246,13 +246,25 @@ async function renderApp() {
                         path: ':projectId',
                         id: '/project/:projectId',
                         loader: async (...args) =>
-                          (await import('./routes/project')).loader(...args),
-                        element: (
-                          <Suspense fallback={<AppLoadingIndicator />}>
-                            <Project />
-                          </Suspense>
-                        ),
+                          (await import('./routes/project')).projectIdLoader(...args),
                         children: [
+                          {
+                            index: true,
+                            loader: async (...args) =>
+                              (await import('./routes/project')).loader(...args),
+                            element: (
+                              <Suspense fallback={<AppLoadingIndicator />}>
+                                <Project />
+                              </Suspense>
+                            ),
+                          },
+                          {
+                            path: 'list-workspaces',
+                            loader: async (...args) =>
+                              (
+                                await import('./routes/project')
+                              ).listWorkspacesLoader(...args),
+                          },
                           {
                             path: 'delete',
                             action: async (...args) =>
