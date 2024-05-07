@@ -281,6 +281,8 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
         }
       );
+
+      return true;
     },
   })) || [];
 
@@ -449,7 +451,14 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     prevPullFetcherState.current = pullFileFetcher.state;
   }, [close, pullFileFetcher.state]);
 
-  console.log(projectDataLoader);
+  const prevEnvFetcherState = useRef(setActiveEnvironmentFetcher.state);
+  useEffect(() => {
+    if (setActiveEnvironmentFetcher.state === 'idle' && prevEnvFetcherState.current !== 'idle') {
+      close();
+    }
+
+    prevEnvFetcherState.current = setActiveEnvironmentFetcher.state;
+  }, [close, setActiveEnvironmentFetcher.state]);
 
   return (
     <ComboBox
