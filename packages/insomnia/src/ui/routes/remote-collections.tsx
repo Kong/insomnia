@@ -154,7 +154,7 @@ export const pullRemoteCollectionAction: ActionFunction = async ({
   const newVCS = vcs.newInstance();
   // Remove all backend projects for workspace first
   await newVCS.removeBackendProjectsForRoot(backendProject.rootDocumentId);
-
+  await newVCS.setBackendProject(backendProject);
   const { workspaceId } = await pullBackendProject({
     vcs: newVCS,
     backendProject,

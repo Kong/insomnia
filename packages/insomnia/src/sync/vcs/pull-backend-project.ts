@@ -15,8 +15,7 @@ interface Options {
 }
 
 export const pullBackendProject = async ({ vcs, backendProject, remoteProject }: Options) => {
-  // Set backend project, checkout master, and pull
-  await vcs.setBackendProject(backendProject);
+  // checkout master, and pull
   await vcs.checkout([], DEFAULT_BRANCH_NAME);
   const remoteBranches = await interceptAccessError({
     action: 'pull',

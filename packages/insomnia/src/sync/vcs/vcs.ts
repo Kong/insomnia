@@ -43,10 +43,6 @@ const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
 
 type ConflictHandler = (conflicts: MergeConflict[], labels: { ours: string; theirs: string }) => Promise<MergeConflict[]>;
 
-function pathshead(projectId: string) {
-  return `/projects/${projectId}/head.json`;
-}
-
 function pathsproject(projectId: string) {
   return `/projects/${projectId}/meta.json`;
 }
@@ -66,6 +62,12 @@ function pathsbranches(projectId: string) {
 function pathsbranch(projectId: string, branchName: string) {
   return `/projects/${projectId}/branches/${branchName}.json`;
 }
+
+// opportunities
+// extract backend Project id mutability
+// extract brnach name validation
+// extract conflict control flow
+// remove driver and conflict handler and then class
 
 // breaks one array into multiple arrays of size chunkSize
 export function chunkArray<T>(arr: T[], chunkSize: number) {
@@ -429,7 +431,7 @@ export class VCS {
     }
 
     // store head
-    await this._store.setItem(pathshead(this._backendProjectId()), { branch: branchNext.name });
+    await this._store.setItem(`/projects/${this._backendProjectId()}/head.json`, { branch: branchNext.name });
     const dirtyMap = generateCandidateMap(dirty);
     const delta = stateDelta(latestStateCurrent, latestStateNext);
     // Filter out things that should stay dirty
@@ -1194,9 +1196,9 @@ export class VCS {
 
   async _getCurrentBranch() {
     const fallbackBranch = 'master';
-    const head = await this._store.getItem(pathshead(this._backendProjectId()));
+    const head = await this._store.getItem(`/projects/${this._backendProjectId()}/head.json`);
     if (head === null) {
-      await this._store.setItem(pathshead(this._backendProjectId()), { branch: fallbackBranch });
+      await this._store.setItem(`/projects/${this._backendProjectId()}/head.json`, { branch: fallbackBranch });
       return this._getOrCreateBranch(fallbackBranch);
     }
     return this._getOrCreateBranch(head.branch);
@@ -1229,8 +1231,7 @@ export class VCS {
 
   async localBackendProjects() {
     const backendProjects: BackendProject[] = [];
-    const basePath = pathsprojects();
-    const keys = await this._store.keys(basePath, false);
+    const keys = await this._store.keys('/projects/', false);
     for (const key of keys) {
       const id = path.basename(key);
       const backendProj: BackendProject | null = await this._store.getItem(pathsproject(id));
