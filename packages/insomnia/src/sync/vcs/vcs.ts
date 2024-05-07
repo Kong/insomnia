@@ -87,14 +87,6 @@ export class VCS {
     return `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`;
   }
 
-  pathssnapshot(snapshotId: string) {
-    return `/projects/${this._backendProjectId()}/snapshots/${snapshotId}.json`;
-  }
-
-  pathsbranches() {
-    return `/projects/${this._backendProjectId()}/branches/`;
-  }
-
   async setBackendProject(backendProject: BackendProject) {
     this._backendProject = backendProject;
     console.log(`[sync] Activated project ${backendProject.id}`);
@@ -146,7 +138,7 @@ export class VCS {
     // If there is more than one project for root, try pruning unused ones by branch activity
     if (matchedBackendProjects.length > 1) {
       for (const backendProject of matchedBackendProjects) {
-        const branchPaths = await this._store.keys(pathsbranches(backendProject.id));
+        const branchPaths = await this._store.keys(`/projects/${backendProject.id}/branches/`);
         const branches = await Promise.all(branchPaths.map(async branchPath => {
           const branch: Branch = await this._store.getItem(branchPath);
           invariant(branch, `Failed to get branch path=${branchPath}`);
@@ -298,7 +290,7 @@ export class VCS {
     }
     // store blobs
     const blobIds = Object.keys(blobsToStore);
-    await Promise.all(blobIds.map(id => this._store.setItem(pathsblob(this._backendProjectId(), id), Buffer.from(blobsToStore[id], 'utf8'))));
+    await Promise.all(blobIds.map(blobId => this._store.setItem(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`, Buffer.from(blobsToStore[blobId], 'utf8'))));
     console.log(`[sync] Staged ${stageEntries.map(e => e.name).join(', ')}`);
     this._stageByBackendProjectId[this._backendProjectId()] = stage;
     return stage;
@@ -534,7 +526,7 @@ export class VCS {
   }
 
   async getBranchNames(): Promise<string[]> {
-    const branchPaths = await this._store.keys(pathsbranches(this._backendProjectId()));
+    const branchPaths = await this._store.keys(`/projects/${this._backendProjectId()}/branches/`);
     const branches = await Promise.all(branchPaths.map(async branchPath => {
       const branch: Branch = await this._store.getItem(branchPath);
       invariant(branch, `Failed to get branch path=${branchPath}`);
@@ -755,7 +747,7 @@ export class VCS {
     const allSnapshots: Snapshot[] = [];
 
     for (const id of snapshotIdsToPush) {
-      const snapshot: Snapshot = await this._store.getItem(pathssnapshot(this._backendProjectId(), id));
+      const snapshot: Snapshot = await this._store.getItem(`/projects/${this._backendProjectId()}/snapshots/${id}.json`);
       if (snapshot && typeof snapshot.created === 'string') {
         snapshot.created = new Date(snapshot.created);
       }
@@ -834,7 +826,7 @@ export class VCS {
         'snapshotsPush',
       );
       // Store them in case something has changed
-      await Promise.all(snapshotsCreate.map(snapshot => this._store.setItem(pathssnapshot(this._backendProjectId(), snapshot.id), snapshot)));
+      await Promise.all(snapshotsCreate.map(snapshot => this._store.setItem(`/projects/${this._backendProjectId()}/snapshots/${snapshot.id}.json`, snapshot)));
 
       console.log('[sync] Pushed commits', snapshotsCreate.map((s: any) => s.id).join(', '));
     }
@@ -903,7 +895,7 @@ export class VCS {
     }
     for (const snapshot of allSnapshots) {
       for (const { blob } of snapshot.state) {
-        const hasBlob = await this._store.hasItem(pathsblob(this._backendProjectId(), blob));
+        const hasBlob = await this._store.hasItem(`/projects/${this._backendProjectId()}/blobs/${blob.slice(0, 2)}/${blob.slice(2)}`);
         if (!hasBlob) {
           blobsToFetch.add(blob);
         }
@@ -954,9 +946,9 @@ export class VCS {
 
     // Store the blobs
     const blobIds = Object.keys(decryptedBlobs);
-    await Promise.all(blobIds.map(id => this._store.setItemRaw(pathsblob(this._backendProjectId(), id), decryptedBlobs[id])));
+    await Promise.all(blobIds.map(blobId => this._store.setItemRaw(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`, decryptedBlobs[blobId])));
     // Store the snapshots
-    await Promise.all(allSnapshots.map(snapshot => this._store.setItem(pathssnapshot(this._backendProjectId(), snapshot.id), snapshot)));
+    await Promise.all(allSnapshots.map(snapshot => this._store.setItem(`/projects/${this._backendProjectId()}/snapshots/${snapshot.id}.json`, snapshot)));
     // Create the new branch and save it
     const branch = clone(remoteBranch);
     branch.created = branch.modified = new Date();
@@ -1080,7 +1072,7 @@ export class VCS {
       created: new Date(),
       description: '',
     };
-    await this._store.setItem(pathssnapshot(this._backendProjectId(), snapshot.id), snapshot);
+    await this._store.setItem(`/projects/${this._backendProjectId()}/snapshots/${snapshot.id}.json`, snapshot);
     console.log(`[sync] Created commit '${name}' on ${branch.name}`);
     return snapshot;
   }
@@ -1161,13 +1153,13 @@ export class VCS {
     const maxBatchCount = 200;
 
     for (let i = 0; i < allIds.length; i++) {
-      const id = allIds[i];
-      const content = await this._store.getItemRaw(pathsblob(this._backendProjectId(), id));
-      invariant(content, `Failed to get blob id=${id}`);
+      const blobId = allIds[i];
+      const content = await this._store.getItemRaw(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`);
+      invariant(content, `Failed to get blob id=${blobId}`);
 
       const encryptedResult = crypt.encryptAESBuffer(symmetricKey, content);
       batch.push({
-        id,
+        id: blobId,
         content: JSON.stringify(encryptedResult, null, 2),
       });
       batchSizeBytes += content.length;
@@ -1234,7 +1226,7 @@ export class VCS {
   }
 
   async _getSnapshot(id: string) {
-    const snapshot: Snapshot = await this._store.getItem(pathssnapshot(this._backendProjectId(), id));
+    const snapshot: Snapshot = await this._store.getItem(`/projects/${this._backendProjectId()}/snapshots/${id}.json`);
     if (snapshot && typeof snapshot.created === 'string') {
       snapshot.created = new Date(snapshot.created);
     }
@@ -1259,12 +1251,12 @@ export class VCS {
     return this._store.setItem(`/projects/${this._backendProjectId()}/branches/${branch.name.toLowerCase()}.json`, branch);
   }
 
-  _getBlob(id: string) {
-    return this._store.getItem(pathsblob(this._backendProjectId(), id)) as Promise<BaseModel | null>;
+  _getBlob(blobId: string) {
+    return this._store.getItem(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`) as Promise<BaseModel | null>;
   }
 
   async _getBlobs(ids: string[]) {
-    return Promise.all(ids.map(id => this._store.getItem(pathsblob(this._backendProjectId(), id))));
+    return Promise.all(ids.map(blobId => this._store.getItem(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`)));
   }
 }
 
