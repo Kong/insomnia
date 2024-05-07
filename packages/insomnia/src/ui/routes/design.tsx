@@ -43,6 +43,7 @@ import {
   useParams,
   useRouteLoaderData,
 } from 'react-router-dom';
+import { useUnmount } from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
@@ -235,8 +236,12 @@ const Design: FC = () => {
     };
   }, []);
 
-  useEffect(() => {
+  // use this ref to handle codemirror lint race conditions, only the id matching the latest will be updated
+  const lintIdRef = useRef(0);
+
+  const registerCodeMirrorLint = (ruleset?: Ruleset) => {
     CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
+      console.log('run lint');
       // @TODO: Conisderations and things we need to verify/test:
       // - Should we spawn a new worker on every lint command or use a shared worker?
       // - Does this function handle race conditions? e.g. if a lint finishes late does it replace another lint that ran with latest contents?
@@ -245,55 +250,79 @@ const Design: FC = () => {
       const worker = new Worker(new URL('../worker/spectral.ts', import.meta.url), {
         type: 'module',
       });
+      const currentLintId = ++lintIdRef.current;
+      lintIdRef.current = currentLintId;
+      // const worker = new SharedWorker(new URL('../worker/spectral.ts', import.meta.url), {
+      //   type: 'module',
+      // });
 
       const func = async () => {
-        let ruleset: Ruleset;
 
-        try {
-          ruleset = await window.main.loadSpectralRuleset({ rulesetPath });
-        } catch (e) {
-          console.error('Failed to load spectral ruleset', e);
-        }
+        return new Promise<ISpectralDiagnostic[]>((resolve, reject) => {
 
-        return new Promise<ISpectralDiagnostic[]>(resolve => {
+          worker.onmessage = e => {
+            if (currentLintId === lintIdRef.current) {
+              resolve(e.data);
+            } else {
+              reject();
+            }
+          };
+
+          // worker.onerror = e => {
+          //   console.log('worker error', e);
+          // }
           worker.postMessage({
             contents,
             ruleset,
           });
 
-          worker.onmessage = e => {
-            resolve(e.data);
-          };
         });
       };
 
-      const diagnostics = await func();
+      try {
+        const diagnostics = await func();
 
-      const lintResult = diagnostics.map(({ severity, code, message, range }) => {
-        return {
-          from: CodeMirror.Pos(
-            range.start.line,
-            range.start.character
-          ),
-          to: CodeMirror.Pos(range.end.line, range.end.character),
-          message: `${code} ${message}`,
-          severity: ['error', 'warning'][severity] ?? 'info',
-          type: (['error', 'warning'][severity] ?? 'info') as LintMessage['type'],
-          range,
-          line: range.start.line,
-        };
-      });
-      setLintMessages?.(lintResult);
-      return lintResult;
+        const lintResult = diagnostics.map(({ severity, code, message, range }) => {
+          return {
+            from: CodeMirror.Pos(
+              range.start.line,
+              range.start.character
+            ),
+            to: CodeMirror.Pos(range.end.line, range.end.character),
+            message: `${code} ${message}`,
+            severity: ['error', 'warning'][severity] ?? 'info',
+            type: (['error', 'warning'][severity] ?? 'info') as LintMessage['type'],
+            range,
+            line: range.start.line,
+          };
+        });
+        setLintMessages?.(lintResult);
+        return lintResult;
+      } catch (e) { };
     });
+  };
+
+  const loadRuleset = useCallback(async () => {
+    let ruleset: Ruleset | undefined;
+
+    try {
+      ruleset = rulesetPath ? await window.main.loadSpectralRuleset({ rulesetPath }) : undefined;
+    } catch (e) {
+      console.error('Failed to load spectral ruleset', e);
+    }
+    registerCodeMirrorLint(ruleset);
     // when first time into document editor, the lint helper register later than codemirror init, we need to trigger lint through execute setOption
     editor.current?.tryToSetOption('lint', { ...lintOptions });
-
-    return () => {
-      // delete the helper to avoid it run multiple times when user enter the page next time
-      CodeMirror.registerHelper('lint', 'openapi', undefined);
-    };
   }, [rulesetPath, lintOptions]);
+
+  useEffect(() => {
+    loadRuleset();
+  }, [rulesetPath, loadRuleset]);
+
+  useUnmount(() => {
+    // delete the helper to avoid it run multiple times when user enter the page next time
+    CodeMirror.registerHelper('lint', 'openapi', undefined);
+  });
 
   const onCodeEditorChange = useMemo(() => {
     const handler = async (contents: string) => {

@@ -7,17 +7,26 @@ interface SpectralRunParams {
   ruleset?: Ruleset;
 }
 
+// onconnect = event => {
+//   const port = event.ports[0];
+
+//   port.onmessage = e => {
+//     port.postMessage('1');
+//     // new Spectral();
+//     port.postMessage('2');
+//   };
+// };
+
 const spectralRun = async ({ contents, ruleset }: SpectralRunParams) => {
   try {
     const spectral = new Spectral();
-
     spectral.setRuleset(ruleset || oas as RulesetDefinition);
 
     const diagnostics = await spectral.run(contents);
 
     postMessage(diagnostics);
   } catch (err) {
-    postMessage(err);
+    postMessage([]);
   }
 };
 
