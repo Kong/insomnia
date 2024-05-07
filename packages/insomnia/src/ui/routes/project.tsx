@@ -627,10 +627,10 @@ const ProjectRoute: FC = () => {
     },
     storage: 'cloud_plus_local',
   };
-  const [scope, setScope] = useLocalStorage(`${projectId}:project-dashboard-scope`, 'all');
-  const [sortOrder, setSortOrder] = useLocalStorage(`${projectId}:project-dashboard-sort-order`, 'modified-desc');
-  const [projectNameFilter = '', setProjectNameFilter] = useLocalStorage(`${projectId}:project-name-filter`, '');
-  const [filter, setFilter] = useLocalStorage(`${projectId}:project-dashboard-filter`, '');
+  const [projectListFilter, setProjectListFilter] = useLocalStorage(`${organizationId}:project-list-filter`, '');
+  const [workspaceListFilter, setWorkspaceListFilter] = useLocalStorage(`${projectId}:workspace-list-filter`, '');
+  const [workspaceListScope, setWorkspaceListScope] = useLocalStorage(`${projectId}:workspace-list-scope`, 'all');
+  const [workspaceListSortOrder, setWorkspaceListSortOrder] = useLocalStorage(`${projectId}:workspace-list-sort-order`, 'modified-desc');
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const organization = organizations.find(o => o.id === organizationId);
@@ -638,12 +638,12 @@ const ProjectRoute: FC = () => {
   const isPersonalOrg = organization && isPersonalOrganization(organization);
 
   const filteredFiles = files
-    .filter(w => (scope !== 'all' ? w.scope === scope : true))
+    .filter(w => (workspaceListScope !== 'all' ? w.scope === workspaceListScope : true))
     .filter(workspace =>
-      filter
+      workspaceListFilter
         ? Boolean(
           fuzzyMatchAll(
-            filter,
+            workspaceListFilter,
             // Use the filter string to match against these properties
             [
               workspace.name,
@@ -658,7 +658,7 @@ const ProjectRoute: FC = () => {
         )
         : true
     )
-    .sort((a, b) => sortMethodMap[sortOrder as DashboardSortOrder](a, b));
+    .sort((a, b) => sortMethodMap[workspaceListSortOrder as DashboardSortOrder](a, b));
 
   const filesWithPresence = filteredFiles.map(file => {
     const workspacePresence = presence
@@ -679,7 +679,7 @@ const ProjectRoute: FC = () => {
   });
 
   const projectsWithPresence = projects.filter(p =>
-    p.name?.toLowerCase().includes(projectNameFilter.toLowerCase())
+    projectListFilter ? p.name?.toLowerCase().includes(projectListFilter.toLowerCase()) : true
   ).map(project => {
     const projectPresence = presence
       .filter(p => p.project === project.remoteId)
@@ -975,8 +975,8 @@ const ProjectRoute: FC = () => {
                   <SearchField
                     aria-label="Projects filter"
                     className="group relative flex-1"
-                    defaultValue={projectNameFilter ?? ''}
-                    onChange={setProjectNameFilter}
+                    value={projectListFilter}
+                    onChange={setProjectListFilter}
                   >
                     <Input
                       placeholder="Filter"
@@ -1048,13 +1048,13 @@ const ProjectRoute: FC = () => {
                   items={scopeActionList}
                   className="overflow-y-auto flex-shrink-0 flex-1 data-[empty]:py-0 py-[--padding-sm]"
                   disallowEmptySelection
-                  selectedKeys={[scope || 'all']}
+                  selectedKeys={[workspaceListScope || 'all']}
                   selectionMode="single"
                   onSelectionChange={keys => {
                     if (keys !== 'all') {
                       const value = keys.values().next().value;
 
-                      setScope(value);
+                      setWorkspaceListScope(value);
                     }
                   }}
                 >
@@ -1145,8 +1145,8 @@ const ProjectRoute: FC = () => {
                   <SearchField
                     aria-label="Files filter"
                     className="group relative flex-1"
-                    value={filter}
-                    onChange={filter => setFilter(filter)}
+                    value={workspaceListFilter}
+                    onChange={filter => setWorkspaceListFilter(filter)}
                   >
                     <Input
                       placeholder="Filter"
@@ -1161,8 +1161,8 @@ const ProjectRoute: FC = () => {
                   <Select
                     aria-label="Sort order"
                     className="h-full aspect-square"
-                    selectedKey={sortOrder}
-                    onSelectionChange={order => setSortOrder(order as DashboardSortOrder)}
+                    selectedKey={workspaceListSortOrder}
+                    onSelectionChange={order => setWorkspaceListSortOrder(order as DashboardSortOrder)}
                   >
                     <Button
                       aria-label="Select sort order"
@@ -1270,11 +1270,11 @@ const ProjectRoute: FC = () => {
                       );
                     }}
                     renderEmptyState={() => {
-                      if (filter) {
+                      if (workspaceListFilter) {
                         return (
                           <div className="w-full h-full flex items-center justify-center">
                             <p className="notice subtle">
-                              No documents found for <strong>{filter}</strong>
+                              No documents found for <strong>{workspaceListFilter}</strong>
                             </p>
                           </div>
                         );
