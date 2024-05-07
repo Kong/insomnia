@@ -71,5 +71,11 @@
     "tslib": "2.0.1",
     "type-fest": "^4.15.0",
     "typescript": "^5.4.4"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@mui/material": "^5.15.16",
+    "axios": "^1.6.8"
   }
 }
