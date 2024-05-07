@@ -3,16 +3,12 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
-import { projectSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
-import { BackendProject } from '../../types';
-import * as paths from '../paths';
 import { describeChanges } from '../util';
 import { VCS } from '../vcs';
 
 const baseModelBuilder = createBuilder(baseModelSchema);
 const workspaceModelBuilder = createBuilder(workspaceModelSchema);
-const projectBuilder = createBuilder(projectSchema);
 
 function newDoc(id) {
   return baseModelBuilder.reset()._id(id).build();
