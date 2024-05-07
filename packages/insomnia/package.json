@@ -44,7 +44,7 @@
     "@grpc/proto-loader": "^0.7.12",
     "@jest/globals": "^29.7.0",
     "@seald-io/nedb": "^4.0.4",
-    "@segment/analytics-node": "2.1.0",
+    "@segment/analytics-node": "1.0.0",
     "@sentry/electron": "^3.0.7",
     "@stoplight/spectral-core": "^1.18.3",
     "@stoplight/spectral-formats": "^1.6.0",
