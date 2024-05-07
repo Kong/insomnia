@@ -287,11 +287,11 @@ export interface InsomniaFile {
   apiSpec?: ApiSpec;
 }
 
-export interface ProjectLoaderData {
+export interface ProjectIdLoaderData {
   activeProject?: Project;
 }
 
-export interface ProjectIdLoaderData {
+export interface ProjectLoaderData {
   files: InsomniaFile[];
   allFilesCount: number;
   documentsCount: number;
@@ -454,21 +454,32 @@ async function getAllRemoteFiles({
 
 export interface ListWorkspacesLoaderData {
   files: InsomniaFile[];
+  activeProject?: Project;
+  projects: Project[];
 }
 
-export const listWorkspacesLoader: LoaderFunction = async ({ params }) => {
+export const listWorkspacesLoader: LoaderFunction = async ({ params }): Promise<ListWorkspacesLoaderData> => {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
 
+  const project = await models.project.getById(projectId);
+  invariant(project, `Project was not found ${projectId}`);
+  const organizationProjects = await database.find<Project>(models.project.type, {
+    parentId: organizationId,
+  }) || [];
+
+  const projects = sortProjects(organizationProjects);
   const files = await getAllLocalFiles({ projectId });
 
   return {
     files,
+    activeProject: project,
+    projects,
   };
 };
 
-export const projectIdLoader: LoaderFunction = async ({ params }) => {
+export const projectIdLoader: LoaderFunction = async ({ params }): Promise<ProjectIdLoaderData> => {
   const { projectId } = params;
   invariant(projectId, 'Project ID is required');
 
@@ -482,7 +493,7 @@ export const projectIdLoader: LoaderFunction = async ({ params }) => {
 
 export const loader: LoaderFunction = async ({
   params,
-}): Promise<ProjectIdLoaderData> => {
+}): Promise<ProjectLoaderData> => {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   const { id: sessionId } = await userSession.getOrCreate();
@@ -584,7 +595,7 @@ const ProjectRoute: FC = () => {
     documentsCount,
     projectsCount,
     learningFeature,
-  } = useLoaderData() as ProjectIdLoaderData;
+  } = useLoaderData() as ProjectLoaderData;
   const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = useLocalStorage('learning-feature-dismissed', '');
   const { organizationId, projectId } = useParams() as {
     organizationId: string;

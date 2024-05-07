@@ -2,7 +2,7 @@ import React, { createContext, FC, PropsWithChildren, useContext, useEffect, use
 import { useFetcher, useParams, useRevalidator, useRouteLoaderData } from 'react-router-dom';
 
 import { insomniaFetch } from '../../../ui/insomniaFetch';
-import { ProjectLoaderData } from '../../routes/project';
+import { ProjectIdLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 
@@ -77,7 +77,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   };
 
   const { userSession } = useRootLoaderData();
-  const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
+  const projectData = useRouteLoaderData('/project/:projectId') as ProjectIdLoaderData | null;
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
   const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
