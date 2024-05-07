@@ -129,7 +129,12 @@ export class VCS {
     // If there is more than one project for root, try pruning unused ones by branch activity
     if (matchedBackendProjects.length > 1) {
       for (const p of matchedBackendProjects) {
-        const branches = await this._getBranches(p.id);
+        const branchPaths = await this._store.keys(paths.branches(p.id));
+        const branches = await Promise.all(branchPaths.map(async branchPath => {
+          const branch: Branch = await this._store.getItem(branchPath);
+          invariant(branch, `Failed to get branch path=${branchPath}`);
+          return branch;
+        }));
 
         if (!branches.find(b => b.snapshots.length > 0)) {
           await this._store.removeItem(paths.project(p.id));
@@ -306,8 +311,23 @@ export class VCS {
 
   async compareRemoteBranch() {
     const localBranch = await this._getCurrentBranch();
-    const remoteBranch = await this._queryBranch(localBranch.name);
-    return compareBranches(localBranch, remoteBranch);
+    const { branch } = await this._runGraphQL<{ branch: Branch | null }>(
+      `
+      query ($projectId: ID!, $branch: String!) {
+        branch(project: $projectId, name: $branch) {
+          created
+          modified
+          name
+          snapshots
+        }
+      }`,
+      {
+        projectId: this._backendProjectId(),
+        branch: localBranch.name,
+      },
+      'branch',
+    );
+    return compareBranches(localBranch, branch);
   }
 
   async fork(newBranchName: string) {
@@ -317,8 +337,8 @@ export class VCS {
     if (errMsg) {
       throw new Error(errMsg);
     }
-
-    if (await this._getBranch(newBranchName)) {
+    const existingBranch = await this._store.getItem(paths.branch(this._backendProjectId(), newBranchName));
+    if (existingBranch) {
       throw new Error('Branch already exists by name ' + newBranchName);
     }
 
@@ -337,24 +357,35 @@ export class VCS {
       throw new Error('Cannot delete master branch');
     }
 
-    await this._queryRemoveBranch(branchName);
+    await this._runGraphQL(
+      `
+      mutation ($projectId: ID!, $branch: String!) {
+        branchRemove(project: $projectId, name: $branch)
+      }`,
+      {
+        projectId: this._backendProjectId(),
+        branch: branchName,
+      },
+      'removeBranch',
+    );
     console.log(`[sync] Deleted remote branch ${branchName}`);
   }
 
   async removeBranch(branchName: string) {
-    const branchToDelete = await this._getBranch(branchName);
-    invariant(branchToDelete, `Branch does not exist with name ${branchName}`);
+    const existingBranch = await this._store.getItem(paths.branch(this._backendProjectId(), branchName));
+
+    invariant(existingBranch, `Branch does not exist with name ${branchName}`);
     const currentBranch = await this._getCurrentBranch();
 
-    if (branchToDelete.name === 'master') {
+    if (existingBranch.name === 'master') {
       throw new Error('Cannot delete master branch');
     }
 
-    if (branchToDelete.name === currentBranch.name) {
+    if (existingBranch.name === currentBranch.name) {
       throw new Error('Cannot delete currently-active branch');
     }
 
-    await this._store.removeItem(paths.branch(this._backendProjectId(), branchToDelete.name));
+    await this._store.removeItem(paths.branch(this._backendProjectId(), existingBranch.name));
     console.log(`[sync] Deleted local branch ${branchName}`);
   }
 
@@ -466,33 +497,17 @@ export class VCS {
     };
   }
 
-  async getHistoryCount(branchName?: string) {
-    const branch = branchName ? await this._getBranch(branchName) : await this._getCurrentBranch();
-    return branch?.snapshots.length || 0;
-  }
-
   async getHistory(count = 0) {
     const branch = await this._getCurrentBranch();
     const snapshots: Snapshot[] = [];
     const total = branch.snapshots.length;
     const slice = count <= 0 || count > total ? 0 : total - count;
-
     for (const id of branch.snapshots.slice(slice)) {
       const snapshot = await this._getSnapshot(id);
-
-      if (snapshot === null) {
-        throw new Error(`Failed to get commit id=${id}`);
-      }
-
+      invariant(snapshot, `Failed to get commit id=${id}`);
       snapshots.push(snapshot);
     }
-
     return snapshots;
-  }
-
-  async getBranch() {
-    const branch = await this._getCurrentBranch();
-    return branch.name;
   }
 
   async getRemoteBranches(): Promise<string[]> {
@@ -515,8 +530,13 @@ export class VCS {
     return (branches || []).map(b => b.name);
   }
 
-  async getBranches(): Promise<string[]> {
-    const branches = await this._getBranches();
+  async getBranchNames(): Promise<string[]> {
+    const branchPaths = await this._store.keys(paths.branches(this._backendProjectId()));
+    const branches = await Promise.all(branchPaths.map(async branchPath => {
+      const branch: Branch = await this._store.getItem(branchPath);
+      invariant(branch, `Failed to get branch path=${branchPath}`);
+      return branch;
+    }));
     return branches.map(b => b.name);
   }
 
@@ -622,16 +642,11 @@ export class VCS {
       },
       'project',
     );
-    let remoteProject = project;
-    if (!remoteProject) {
-      remoteProject = await this._createRemoteProject({ ...localProject, teamId, teamProjectId });
+    if (project) {
+      await this._store.setItem(paths.project(this._backendProjectId()), project);
+      return project;
     }
 
-    await this._store.setItem(paths.project(remoteProject.id), remoteProject);
-    return remoteProject;
-  }
-
-  async _createRemoteProject({ rootDocumentId, name, teamId, teamProjectId }: BackendProject & { teamId: string; teamProjectId: string }) {
     invariant(teamId, 'teamId should be defined');
     console.log('[sync] Fetching team member keys', { teamId });
 
@@ -704,9 +719,9 @@ export class VCS {
          }
        `,
       {
-        name,
+        name: localProject.name,
         id: this._backendProjectId(),
-        rootDocumentId,
+        rootDocumentId: localProject.rootDocumentId,
         teamId,
         teamKeys,
         teamProjectId,
@@ -715,6 +730,7 @@ export class VCS {
     );
 
     console.log(`[sync] Created remote project ${projectCreate.id} (${projectCreate.name})`);
+    await this._store.setItem(paths.project(projectCreate.id), projectCreate);
     return projectCreate;
   }
 
@@ -723,7 +739,22 @@ export class VCS {
     const branch = await this._getCurrentBranch();
     // Check branch history to make sure there are no conflicts
     let lastMatchingIndex = 0;
-    const remoteBranch: Branch | null = await this._queryBranch(branch.name);
+    const { branch: remoteBranch } = await this._runGraphQL<{ branch: Branch | null }>(
+      `
+      query ($projectId: ID!, $branch: String!) {
+        branch(project: $projectId, name: $branch) {
+          created
+          modified
+          name
+          snapshots
+        }
+      }`,
+      {
+        projectId: this._backendProjectId(),
+        branch: branch.name,
+      },
+      'branch',
+    );
     const remoteBranchSnapshots = remoteBranch ? remoteBranch.snapshots : [];
 
     for (; lastMatchingIndex < remoteBranchSnapshots.length; lastMatchingIndex++) {
@@ -776,7 +807,22 @@ export class VCS {
   }
 
   async customFetch(localBranchName: string, remoteBranchName: string) {
-    const remoteBranch: Branch | null = await this._queryBranch(remoteBranchName);
+    const { branch: remoteBranch } = await this._runGraphQL<{ branch: Branch | null }>(
+      `
+      query ($projectId: ID!, $branch: String!) {
+        branch(project: $projectId, name: $branch) {
+          created
+          modified
+          name
+          snapshots
+        }
+      }`,
+      {
+        projectId: this._backendProjectId(),
+        branch: remoteBranchName,
+      },
+      'branch',
+    );
     invariant(remoteBranch, `Branch does not exist with name ${remoteBranchName}`);
     // Fetch snapshots and blobs from remote branch
     const snapshotsToFetch: string[] = [];
@@ -1012,40 +1058,6 @@ export class VCS {
     }
 
     return data;
-  }
-
-  async _queryRemoveBranch(branchName: string) {
-    await this._runGraphQL(
-      `
-      mutation ($projectId: ID!, $branch: String!) {
-        branchRemove(project: $projectId, name: $branch)
-      }`,
-      {
-        projectId: this._backendProjectId(),
-        branch: branchName,
-      },
-      'removeBranch',
-    );
-  }
-
-  async _queryBranch(branchName: string): Promise<Branch | null> {
-    const { branch } = await this._runGraphQL<{ branch: Branch | null }>(
-      `
-      query ($projectId: ID!, $branch: String!) {
-        branch(project: $projectId, name: $branch) {
-          created
-          modified
-          name
-          snapshots
-        }
-      }`,
-      {
-        projectId: this._backendProjectId(),
-        branch: branchName,
-      },
-      'branch',
-    );
-    return branch;
   }
 
   async _querySnapshots(allIds: string[]) {
@@ -1312,16 +1324,6 @@ export class VCS {
 
   async _getBranch(name: string, backendProjectId?: string): Promise<Branch | null> {
     return this._store.getItem(paths.branch(backendProjectId || this._backendProjectId(), name));
-  }
-
-  async _getBranches(backendProjectId?: string) {
-    const branches: Branch[] = [];
-    for (const p of await this._store.keys(paths.branches(backendProjectId || this._backendProjectId()))) {
-      const b = await this._store.getItem(p);
-      invariant(b, `Failed to get branch path=${p}`);
-      branches.push(b);
-    }
-    return branches;
   }
 
   async _getOrCreateBranch(name: string): Promise<Branch> {

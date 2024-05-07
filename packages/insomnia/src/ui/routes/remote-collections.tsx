@@ -310,15 +310,15 @@ export const syncDataLoader: LoaderFunction = async ({
     invariant(project.remoteId, 'Project is not remote');
     const vcs = VCSInstance();
     const { syncItems } = await getSyncItems({ workspaceId });
-    const localBranches = (await vcs.getBranches()).sort();
+    const localBranches = (await vcs.getBranchNames()).sort();
     const remoteBranches = (
       remoteBranchesCache[workspaceId] || (await vcs.getRemoteBranches())
     ).sort();
-    const currentBranch = await vcs.getBranch();
+    const currentBranch = await vcs._getCurrentBranch();
     const history = (await vcs.getHistory()).sort((a, b) =>
       b.created > a.created ? 1 : -1
     );
-    const historyCount = await vcs.getHistoryCount();
+    const historyCount = currentBranch.snapshots.length;
     const status = await vcs.status(syncItems);
     const compare =
       remoteCompareCache[workspaceId] || (await vcs.compareRemoteBranch());
@@ -337,7 +337,7 @@ export const syncDataLoader: LoaderFunction = async ({
       syncItems,
       localBranches,
       remoteBranches,
-      currentBranch,
+      currentBranch: currentBranch.name,
       history,
       historyCount,
       status,
@@ -525,7 +525,7 @@ export const fetchRemoteBranchAction: ActionFunction = async ({
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
   const vcs = VCSInstance();
-  const currentBranch = await vcs.getBranch();
+  const currentBranch = await vcs._getCurrentBranch();
 
   try {
     invariant(project.remoteId, 'Project is not remote');
@@ -546,7 +546,7 @@ export const fetchRemoteBranchAction: ActionFunction = async ({
       })),
     });
   } catch (err) {
-    await vcs.checkout([], currentBranch);
+    await vcs.checkout([], currentBranch.name);
     const errorMessage =
       err instanceof Error
         ? err.message
