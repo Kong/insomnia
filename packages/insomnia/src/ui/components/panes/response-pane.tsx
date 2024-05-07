@@ -231,6 +231,7 @@ export const ResponsePane: FC<Props> = ({
       <ErrorBoundary errorClassName="font-error pad text-center">
         {runningRequests[activeRequest._id] && <ResponseTimer
           handleCancel={() => cancelRequestById(activeRequest._id)}
+          activeRequestId={activeRequest._id}
         />}
       </ErrorBoundary>
     </Pane>

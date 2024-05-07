@@ -2911,6 +2911,9 @@ input.editable {
 .response-pane .overlay i.fa {
   font-size: 4rem;
 }
+.response-pane .overlay .timer-list i.fa {
+  font-size: 1.2rem;
+}
 .response-pane .response-pane__notify {
   display: flex;
   flex-direction: column;

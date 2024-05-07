@@ -57,7 +57,6 @@ export const getClientString = () => `${getAppEnvironment()}::${getAppPlatform()
 
 // Global Stuff
 export const DEBOUNCE_MILLIS = 100;
-export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 
 /**
  * A number in milliseconds representing the time required to setup and teardown a request.
