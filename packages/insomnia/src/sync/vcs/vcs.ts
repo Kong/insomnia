@@ -26,7 +26,6 @@ import type {
   StatusCandidate,
 } from '../types';
 import { BackendProjectWithTeams, normalizeBackendProjectTeam } from './normalize-backend-project-team';
-import * as paths from './paths';
 import {
   compareBranches,
   generateCandidateMap,
@@ -43,6 +42,30 @@ import {
 const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
 
 type ConflictHandler = (conflicts: MergeConflict[], labels: { ours: string; theirs: string }) => Promise<MergeConflict[]>;
+
+function pathshead(projectId: string) {
+  return `/projects/${projectId}/head.json`;
+}
+
+function pathsproject(projectId: string) {
+  return `/projects/${projectId}/meta.json`;
+}
+
+function pathsblob(projectId: string, blobId: string) {
+  return `/projects/${projectId}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`;
+}
+
+function pathssnapshot(projectId: string, snapshotId: string) {
+  return `/projects/${projectId}/snapshots/${snapshotId}.json`;
+}
+
+function pathsbranches(projectId: string) {
+  return `/projects/${projectId}/branches/`;
+}
+
+function pathsbranch(projectId: string, branchName: string) {
+  return `/projects/${projectId}/branches/${branchName}.json`;
+}
 
 // breaks one array into multiple arrays of size chunkSize
 export function chunkArray<T>(arr: T[], chunkSize: number) {
@@ -82,7 +105,7 @@ export class VCS {
     this._backendProject = backendProject;
     console.log(`[sync] Activated project ${backendProject.id}`);
     // Store it because it might not be yet
-    await this._store.setItem(paths.project(backendProject.id), backendProject);
+    await this._store.setItem(pathsproject(backendProject.id), backendProject);
   }
 
   hasBackendProject() {
@@ -94,7 +117,7 @@ export class VCS {
     const toRemove = all.filter(p => p.rootDocumentId === rootDocumentId);
 
     for (const backendProject of toRemove) {
-      await this._store.removeItem(paths.project(backendProject.id));
+      await this._store.removeItem(pathsproject(backendProject.id));
     }
   }
 
@@ -112,7 +135,7 @@ export class VCS {
       'projectArchive',
     );
     console.log(`[sync] Archived remote project ${backendProjectId}`);
-    await this._store.removeItem(paths.project(backendProjectId));
+    await this._store.removeItem(pathsproject(backendProjectId));
     this._backendProject = null;
   }
 
@@ -129,7 +152,7 @@ export class VCS {
     // If there is more than one project for root, try pruning unused ones by branch activity
     if (matchedBackendProjects.length > 1) {
       for (const p of matchedBackendProjects) {
-        const branchPaths = await this._store.keys(paths.branches(p.id));
+        const branchPaths = await this._store.keys(pathsbranches(p.id));
         const branches = await Promise.all(branchPaths.map(async branchPath => {
           const branch: Branch = await this._store.getItem(branchPath);
           invariant(branch, `Failed to get branch path=${branchPath}`);
@@ -137,7 +160,7 @@ export class VCS {
         }));
 
         if (!branches.find(b => b.snapshots.length > 0)) {
-          await this._store.removeItem(paths.project(p.id));
+          await this._store.removeItem(pathsproject(p.id));
           matchedBackendProjects = matchedBackendProjects.filter(({ id }) => id !== p.id);
           console.log(`[sync] Remove inactive project for root ${rootDocumentId}`);
         }
@@ -159,7 +182,7 @@ export class VCS {
     if (!matchedBackendProjects[0]) {
       const id = generateId('prj');
       project = { id, name, rootDocumentId };
-      await this._store.setItem(paths.project(project.id), project);
+      await this._store.setItem(pathsproject(project.id), project);
       console.log(`[sync] Created backend project ${project.id}`);
     }
     await this.setBackendProject(project);
@@ -281,7 +304,7 @@ export class VCS {
     }
     // store blobs
     const blobIds = Object.keys(blobsToStore);
-    await Promise.all(blobIds.map(id => this._store.setItem(paths.blob(this._backendProjectId(), id), Buffer.from(blobsToStore[id], 'utf8'))));
+    await Promise.all(blobIds.map(id => this._store.setItem(pathsblob(this._backendProjectId(), id), Buffer.from(blobsToStore[id], 'utf8'))));
     console.log(`[sync] Staged ${stageEntries.map(e => e.name).join(', ')}`);
     this._stageByBackendProjectId[this._backendProjectId()] = stage;
     return stage;
@@ -337,7 +360,7 @@ export class VCS {
     if (errMsg) {
       throw new Error(errMsg);
     }
-    const existingBranch = await this._store.getItem(paths.branch(this._backendProjectId(), newBranchName));
+    const existingBranch = await this._store.getItem(pathsbranch(this._backendProjectId(), newBranchName));
     if (existingBranch) {
       throw new Error('Branch already exists by name ' + newBranchName);
     }
@@ -372,7 +395,7 @@ export class VCS {
   }
 
   async removeBranch(branchName: string) {
-    const existingBranch = await this._store.getItem(paths.branch(this._backendProjectId(), branchName));
+    const existingBranch = await this._store.getItem(pathsbranch(this._backendProjectId(), branchName));
 
     invariant(existingBranch, `Branch does not exist with name ${branchName}`);
     const currentBranch = await this._getCurrentBranch();
@@ -385,7 +408,7 @@ export class VCS {
       throw new Error('Cannot delete currently-active branch');
     }
 
-    await this._store.removeItem(paths.branch(this._backendProjectId(), existingBranch.name));
+    await this._store.removeItem(pathsbranch(this._backendProjectId(), existingBranch.name));
     console.log(`[sync] Deleted local branch ${branchName}`);
   }
 
@@ -406,7 +429,7 @@ export class VCS {
     }
 
     // store head
-    await this._store.setItem(paths.head(this._backendProjectId()), { branch: branchNext.name });
+    await this._store.setItem(pathshead(this._backendProjectId()), { branch: branchNext.name });
     const dirtyMap = generateCandidateMap(dirty);
     const delta = stateDelta(latestStateCurrent, latestStateNext);
     // Filter out things that should stay dirty
@@ -517,7 +540,7 @@ export class VCS {
   }
 
   async getBranchNames(): Promise<string[]> {
-    const branchPaths = await this._store.keys(paths.branches(this._backendProjectId()));
+    const branchPaths = await this._store.keys(pathsbranches(this._backendProjectId()));
     const branches = await Promise.all(branchPaths.map(async branchPath => {
       const branch: Branch = await this._store.getItem(branchPath);
       invariant(branch, `Failed to get branch path=${branchPath}`);
@@ -587,14 +610,14 @@ export class VCS {
       true,
     );
     // Remove tmp branch
-    await this._store.removeItem(paths.branch(this._backendProjectId(), tmpBranchForRemote.name));
+    await this._store.removeItem(pathsbranch(this._backendProjectId(), tmpBranchForRemote.name));
     console.log(`[sync] Pulled branch ${localBranch.name}`);
     return delta;
   }
 
   async _getOrCreateRemoteBackendProject({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
     invariant(this._backendProject?.id, 'Backend project not set');
-    const localProject: BackendProject = await this._store.getItem(paths.project(this._backendProject.id));
+    const localProject: BackendProject = await this._store.getItem(pathsproject(this._backendProject.id));
     invariant(localProject, 'Backend project not set: ' + this._backendProjectId());
     const { project } = await this._runGraphQL<{ project: BackendProject | null }>(
       `
@@ -612,7 +635,7 @@ export class VCS {
       'project',
     );
     if (project) {
-      await this._store.setItem(paths.project(this._backendProjectId()), project);
+      await this._store.setItem(pathsproject(this._backendProjectId()), project);
       return project;
     }
 
@@ -699,7 +722,7 @@ export class VCS {
     );
 
     console.log(`[sync] Created remote project ${projectCreate.id} (${projectCreate.name})`);
-    await this._store.setItem(paths.project(projectCreate.id), projectCreate);
+    await this._store.setItem(pathsproject(projectCreate.id), projectCreate);
     return projectCreate;
   }
 
@@ -739,7 +762,7 @@ export class VCS {
     const allSnapshots: Snapshot[] = [];
 
     for (const id of snapshotIdsToPush) {
-      const snapshot: Snapshot = await this._store.getItem(paths.snapshot(this._backendProjectId(), id));
+      const snapshot: Snapshot = await this._store.getItem(pathssnapshot(this._backendProjectId(), id));
       if (snapshot && typeof snapshot.created === 'string') {
         snapshot.created = new Date(snapshot.created);
       }
@@ -818,7 +841,7 @@ export class VCS {
         'snapshotsPush',
       );
       // Store them in case something has changed
-      await Promise.all(snapshotsCreate.map(snapshot => this._store.setItem(paths.snapshot(this._backendProjectId(), snapshot.id), snapshot)));
+      await Promise.all(snapshotsCreate.map(snapshot => this._store.setItem(pathssnapshot(this._backendProjectId(), snapshot.id), snapshot)));
 
       console.log('[sync] Pushed commits', snapshotsCreate.map((s: any) => s.id).join(', '));
     }
@@ -887,7 +910,7 @@ export class VCS {
     }
     for (const snapshot of allSnapshots) {
       for (const { blob } of snapshot.state) {
-        const hasBlob = await this._store.hasItem(paths.blob(this._backendProjectId(), blob));
+        const hasBlob = await this._store.hasItem(pathsblob(this._backendProjectId(), blob));
         if (!hasBlob) {
           blobsToFetch.add(blob);
         }
@@ -938,9 +961,9 @@ export class VCS {
 
     // Store the blobs
     const blobIds = Object.keys(decryptedBlobs);
-    await Promise.all(blobIds.map(id => this._store.setItemRaw(paths.blob(this._backendProjectId(), id), decryptedBlobs[id])));
+    await Promise.all(blobIds.map(id => this._store.setItemRaw(pathsblob(this._backendProjectId(), id), decryptedBlobs[id])));
     // Store the snapshots
-    await Promise.all(allSnapshots.map(snapshot => this._store.setItem(paths.snapshot(this._backendProjectId(), snapshot.id), snapshot)));
+    await Promise.all(allSnapshots.map(snapshot => this._store.setItem(pathssnapshot(this._backendProjectId(), snapshot.id), snapshot)));
     // Create the new branch and save it
     const branch = clone(remoteBranch);
     branch.created = branch.modified = new Date();
@@ -1064,7 +1087,7 @@ export class VCS {
       created: new Date(),
       description: '',
     };
-    await this._store.setItem(paths.snapshot(this._backendProjectId(), snapshot.id), snapshot);
+    await this._store.setItem(pathssnapshot(this._backendProjectId(), snapshot.id), snapshot);
     console.log(`[sync] Created commit '${name}' on ${branch.name}`);
     return snapshot;
   }
@@ -1146,7 +1169,7 @@ export class VCS {
 
     for (let i = 0; i < allIds.length; i++) {
       const id = allIds[i];
-      const content = await this._store.getItemRaw(paths.blob(this._backendProjectId(), id));
+      const content = await this._store.getItemRaw(pathsblob(this._backendProjectId(), id));
       invariant(content, `Failed to get blob id=${id}`);
 
       const encryptedResult = crypt.encryptAESBuffer(symmetricKey, content);
@@ -1171,9 +1194,9 @@ export class VCS {
 
   async _getCurrentBranch() {
     const fallbackBranch = 'master';
-    const head = await this._store.getItem(paths.head(this._backendProjectId()));
+    const head = await this._store.getItem(pathshead(this._backendProjectId()));
     if (head === null) {
-      await this._store.setItem(paths.head(this._backendProjectId()), { branch: fallbackBranch });
+      await this._store.setItem(pathshead(this._backendProjectId()), { branch: fallbackBranch });
       return this._getOrCreateBranch(fallbackBranch);
     }
     return this._getOrCreateBranch(head.branch);
@@ -1185,7 +1208,7 @@ export class VCS {
   }
 
   async _getBranch(name: string, backendProjectId?: string): Promise<Branch | null> {
-    return this._store.getItem(paths.branch(backendProjectId || this._backendProjectId(), name));
+    return this._store.getItem(pathsbranch(backendProjectId || this._backendProjectId(), name));
   }
 
   async _getOrCreateBranch(name: string): Promise<Branch> {
@@ -1206,11 +1229,11 @@ export class VCS {
 
   async localBackendProjects() {
     const backendProjects: BackendProject[] = [];
-    const basePath = paths.projects();
+    const basePath = pathsprojects();
     const keys = await this._store.keys(basePath, false);
     for (const key of keys) {
       const id = path.basename(key);
-      const backendProj: BackendProject | null = await this._store.getItem(paths.project(id));
+      const backendProj: BackendProject | null = await this._store.getItem(pathsproject(id));
       if (backendProj) {
         backendProjects.push(backendProj);
       }
@@ -1219,7 +1242,7 @@ export class VCS {
   }
 
   async _getSnapshot(id: string) {
-    const snapshot: Snapshot = await this._store.getItem(paths.snapshot(this._backendProjectId(), id));
+    const snapshot: Snapshot = await this._store.getItem(pathssnapshot(this._backendProjectId(), id));
     if (snapshot && typeof snapshot.created === 'string') {
       snapshot.created = new Date(snapshot.created);
     }
@@ -1241,15 +1264,15 @@ export class VCS {
     }
 
     branch.modified = new Date();
-    return this._store.setItem(paths.branch(this._backendProjectId(), branch.name.toLowerCase()), branch);
+    return this._store.setItem(pathsbranch(this._backendProjectId(), branch.name.toLowerCase()), branch);
   }
 
   _getBlob(id: string) {
-    return this._store.getItem(paths.blob(this._backendProjectId(), id)) as Promise<BaseModel | null>;
+    return this._store.getItem(pathsblob(this._backendProjectId(), id)) as Promise<BaseModel | null>;
   }
 
   async _getBlobs(ids: string[]) {
-    return Promise.all(ids.map(id => this._store.getItem(paths.blob(this._backendProjectId(), id))));
+    return Promise.all(ids.map(id => this._store.getItem(pathsblob(this._backendProjectId(), id))));
   }
 }
 
