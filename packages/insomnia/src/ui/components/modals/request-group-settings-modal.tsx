@@ -35,7 +35,7 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
     }
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data;
-  const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined) || [];
+  const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined).filter(w => w.scope !== 'mock-server') || [];
   const [state, setState] = useState<State>({
     activeWorkspaceIdToCopyTo: '',
     defaultPreviewMode: !!requestGroup.description,
