@@ -427,7 +427,7 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
     if (id) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
-        vcs: vcs.newInstance(),
+        vcs,
         workspace: newWorkspace,
       });
     }

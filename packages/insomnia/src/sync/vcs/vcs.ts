@@ -77,16 +77,6 @@ export class VCS {
     this._backendProject = null;
   }
 
-  newInstance(): VCS {
-    const newVCS: VCS = Object.assign({}, this) as any;
-    Object.setPrototypeOf(newVCS, VCS.prototype);
-    return newVCS;
-  }
-
-  pathsblob(blobId: string) {
-    return `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`;
-  }
-
   async setBackendProject(backendProject: BackendProject) {
     this._backendProject = backendProject;
     console.log(`[sync] Activated project ${backendProject.id}`);

@@ -151,7 +151,7 @@ export const pullRemoteCollectionAction: ActionFunction = async ({
   invariant(project?.remoteId, 'Project is not a remote project');
 
   // Clone old VCS so we don't mess anything up while working on other backend projects
-  const newVCS = vcs.newInstance();
+  const newVCS = VCSInstance();
   // Remove all backend projects for workspace first
   await newVCS.removeBackendProjectsForRoot(backendProject.rootDocumentId);
   await newVCS.setBackendProject(backendProject);
