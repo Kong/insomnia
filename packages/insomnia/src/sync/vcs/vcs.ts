@@ -452,21 +452,13 @@ export class VCS {
   async rollbackToLatest(candidates: StatusCandidate[]) {
     const branch = await this._getCurrentBranch();
     const latestSnapshot = await this._getLatestSnapshot(branch.name);
-
-    if (!latestSnapshot) {
-      throw new Error('No commits to rollback to');
-    }
-
+    invariant(latestSnapshot, 'No commits to rollback to');
     return this.rollback(latestSnapshot.id, candidates);
   }
 
   async rollback(snapshotId: string, candidates: StatusCandidate[]) {
     const rollbackSnapshot: Snapshot | null = await this._getSnapshot(snapshotId);
-
-    if (rollbackSnapshot === null) {
-      throw new Error(`Failed to find commit by id ${snapshotId}`);
-    }
-
+    invariant(rollbackSnapshot, `Failed to find commit by id ${snapshotId}`);
     const currentState: SnapshotState = candidates.map(candidate => ({
       key: candidate.key,
       blob: hashDocument(candidate.document).hash,
@@ -475,17 +467,11 @@ export class VCS {
 
     const delta = stateDelta(currentState, rollbackSnapshot.state);
     // We need to treat removals of candidates differently because they may not yet have been stored as blobs.
-    const remove: StatusCandidate[] = [];
+    const remove = [];
 
     for (const entry of delta.remove) {
       const candidate = candidates.find(candidate => candidate.key === entry.key);
-
-      if (!candidate) {
-        // Should never happen
-        throw new Error('Failed to find removal in candidates');
-      }
-
-      // @ts-expect-error -- TSCONVERSION not sure what this is actually supposed to be
+      invariant(candidate, `Failed to find candidate by key ${entry.key}`);
       remove.push(candidate.document);
     }
 
@@ -552,50 +538,33 @@ export class VCS {
 
   async takeSnapshot(name: string) {
     const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
-
     // Ensure there is something on the stage
-    if (Object.keys(stage).length === 0) {
-      throw new Error('No changes to commit. Please stage your changes first.');
-    }
-
+    invariant(Object.keys(stage).length, 'No changes to commit. Please stage your changes first.');
     const branch: Branch = await this._getCurrentBranch();
     const parent: Snapshot | null = await this._getLatestSnapshot(branch.name);
-
-    if (!name) {
-      throw new Error('Commit must have a message');
-    }
-
+    invariant(name, 'Commit must have a message');
     const newState: SnapshotState = [];
-
     // Add everything from the old state
     for (const entry of parent ? parent.state : []) {
       // Don't add anything that's in the stage (this covers deleted things too :])
-      if (stage[entry.key]) {
-        continue;
+      if (!stage[entry.key]) {
+        newState.push(entry);
       }
-
-      newState.push(entry);
     }
-
     // Add the rest of the staged items
     for (const key of Object.keys(stage)) {
       const entry = stage[key];
-
       // @ts-expect-error -- TSCONVERSION find out where this is coming from the Stage union
-      if (entry.deleted) {
-        continue;
+      if (!entry.deleted) {
+        const { name, blobId: blob } = entry;
+        newState.push({
+          key,
+          name,
+          blob,
+        });
       }
-
-      const { name, blobId: blob } = entry;
-      newState.push({
-        key,
-        name,
-        blob,
-      });
     }
-
     const snapshot = await this._createSnapshotFromState(branch, newState, name);
-
     // Clear the staged changes
     for (const key of Object.keys(stage)) {
       delete stage[key];
@@ -762,17 +731,12 @@ export class VCS {
         throw new Error('Remote history conflict. Please pull latest changes and try again');
       }
     }
-
     // Get the remaining snapshots to push
     const snapshotIdsToPush = branch.snapshots.slice(lastMatchingIndex);
-
-    if (snapshotIdsToPush.length === 0) {
-      throw new Error('Already up to date');
-    }
-
+    invariant(snapshotIdsToPush.length, 'No snapshots to push');
     // Gather a list of snapshot state entries to push
     const allBlobIds = new Set<string>();
-    const snapshots: Snapshot[] = [];
+    const allSnapshots: Snapshot[] = [];
 
     for (const id of snapshotIdsToPush) {
       const snapshot: Snapshot = await this._store.getItem(paths.snapshot(this._backendProjectId(), id));
@@ -780,7 +744,7 @@ export class VCS {
         snapshot.created = new Date(snapshot.created);
       }
       invariant(snapshot, `Failed to find commit id=${id}`);
-      snapshots.push(snapshot);
+      allSnapshots.push(snapshot);
       for (const entry of snapshot.state) {
         allBlobIds.add(entry.blob);
       }
@@ -803,7 +767,61 @@ export class VCS {
     );
     const missingIds = blobsMissing.missing;
     await this._queryPushBlobs(missingIds);
-    await this._queryPushSnapshots(snapshots);
+    const { accountId } = await session.getUserSession();
+
+    for (const snapshots of chunkArray(allSnapshots, 20)) {
+      // This bit of logic fills in any missing author IDs from times where
+      // the user created snapshots while not logged in
+      for (const snapshot of snapshots) {
+        if (snapshot.author === '') {
+          snapshot.author = accountId || '';
+        }
+      }
+
+      const branch = await this._getCurrentBranch();
+      const { snapshotsCreate } = await this._runGraphQL<{ snapshotsCreate: Snapshot[] }>(
+        `
+        mutation ($projectId: ID!, $snapshots: [SnapshotInput!]!, $branchName: String!) {
+          snapshotsCreate(project: $projectId, snapshots: $snapshots, branch: $branchName) {
+            id
+            parent
+            created
+            author
+            authorAccount {
+              firstName
+              lastName
+              email
+            }
+            name
+            description
+            state {
+              blob
+              key
+              name
+            }
+          }
+        }
+      `,
+        {
+          branchName: branch.name,
+          projectId: this._backendProjectId(),
+          snapshots: snapshots.map(s => ({
+            created: s.created,
+            name: s.name,
+            description: s.description,
+            parent: s.parent,
+            id: s.id,
+            author: s.author,
+            state: s.state,
+          })),
+        },
+        'snapshotsPush',
+      );
+      // Store them in case something has changed
+      await Promise.all(snapshotsCreate.map(snapshot => this._store.setItem(paths.snapshot(this._backendProjectId(), snapshot.id), snapshot)));
+
+      console.log('[sync] Pushed commits', snapshotsCreate.map((s: any) => s.id).join(', '));
+    }
   }
 
   async customFetch(localBranchName: string, remoteBranchName: string) {
@@ -878,7 +896,22 @@ export class VCS {
 
     // Fetch and store the blobs
     const fetchIds = Array.from(blobsToFetch);
-    const symmetricKey = await this._getBackendProjectSymmetricKey();
+    const privateKey = await session.getPrivateKey();
+    const { projectKey } = await this._runGraphQL<{ projectKey: { encSymmetricKey: string } }>(
+      `
+        query ($projectId: ID!) {
+          projectKey(projectId: $projectId) {
+            encSymmetricKey
+          }
+        }
+      `,
+      {
+        projectId: this._backendProjectId(),
+      },
+      'projectKey',
+    );
+    const symmetricKeyStr = crypt.decryptRSAWithJWK(privateKey, projectKey.encSymmetricKey);
+    const symmetricKey = JSON.parse(symmetricKeyStr);
     const decryptedBlobs: Record<string, Buffer> = {};
 
     for (const ids of chunkArray(fetchIds, 50)) {
@@ -1015,10 +1048,12 @@ export class VCS {
     const parentId = branch.snapshots.length
       ? branch.snapshots[branch.snapshots.length - 1]
       : EMPTY_HASH;
-
     // Create the snapshot
     const id = _generateSnapshotID(parentId, this._backendProjectId(), state);
-
+    // Update the branch history
+    branch.modified = new Date();
+    branch.snapshots.push(id);
+    await this._storeBranch(branch);
     const snapshot: Snapshot = {
       id,
       name,
@@ -1029,10 +1064,6 @@ export class VCS {
       created: new Date(),
       description: '',
     };
-    // Update the branch history
-    branch.modified = new Date();
-    branch.snapshots.push(snapshot.id);
-    await this._storeBranch(branch);
     await this._store.setItem(paths.snapshot(this._backendProjectId(), snapshot.id), snapshot);
     console.log(`[sync] Created commit '${name}' on ${branch.name}`);
     return snapshot;
@@ -1060,104 +1091,23 @@ export class VCS {
     return data;
   }
 
-  async _querySnapshots(allIds: string[]) {
-    let allSnapshots: Snapshot[] = [];
-
-    for (const ids of chunkArray(allIds, 20)) {
-      const { snapshots } = await this._runGraphQL<{ snapshots: Snapshot[] }>(
-        `
-        query ($ids: [ID!]!, $projectId: ID!) {
-          snapshots(ids: $ids, project: $projectId) {
-            id
-            parent
-            created
-            author
-            authorAccount {
-              firstName
-              lastName
-              email
-            }
-            name
-            description
-            state {
-              blob
-              key
-              name
-            }
-          }
-        }`,
-        {
-          ids,
-          projectId: this._backendProjectId(),
-        },
-        'snapshots',
-      );
-      allSnapshots = [...allSnapshots, ...snapshots];
-    }
-
-    return allSnapshots;
-  }
-
-  async _queryPushSnapshots(allSnapshots: Snapshot[]) {
-    const { accountId } = await session.getUserSession();
-
-    for (const snapshots of chunkArray(allSnapshots, 20)) {
-      // This bit of logic fills in any missing author IDs from times where
-      // the user created snapshots while not logged in
-      for (const snapshot of snapshots) {
-        if (snapshot.author === '') {
-          snapshot.author = accountId || '';
-        }
-      }
-
-      const branch = await this._getCurrentBranch();
-      const { snapshotsCreate } = await this._runGraphQL<{ snapshotsCreate: Snapshot[] }>(
-        `
-        mutation ($projectId: ID!, $snapshots: [SnapshotInput!]!, $branchName: String!) {
-          snapshotsCreate(project: $projectId, snapshots: $snapshots, branch: $branchName) {
-            id
-            parent
-            created
-            author
-            authorAccount {
-              firstName
-              lastName
-              email
-            }
-            name
-            description
-            state {
-              blob
-              key
-              name
-            }
+  async _queryPushBlobs(allIds: string[]) {
+    const privateKey = await session.getPrivateKey();
+    const { projectKey } = await this._runGraphQL<{ projectKey: { encSymmetricKey: string } }>(
+      `
+        query ($projectId: ID!) {
+          projectKey(projectId: $projectId) {
+            encSymmetricKey
           }
         }
       `,
-        {
-          branchName: branch.name,
-          projectId: this._backendProjectId(),
-          snapshots: snapshots.map(s => ({
-            created: s.created,
-            name: s.name,
-            description: s.description,
-            parent: s.parent,
-            id: s.id,
-            author: s.author,
-            state: s.state,
-          })),
-        },
-        'snapshotsPush',
-      );
-      // Store them in case something has changed
-      await Promise.all(snapshotsCreate.map(snapshot => this._store.setItem(paths.snapshot(this._backendProjectId(), snapshot.id), snapshot)));
-
-      console.log('[sync] Pushed commits', snapshotsCreate.map((s: any) => s.id).join(', '));
-    }
-  }
-
-  async _queryPushBlobs(allIds: string[]) {
-    const symmetricKey = await this._getBackendProjectSymmetricKey();
+      {
+        projectId: this._backendProjectId(),
+      },
+      'projectKey',
+    );
+    const symmetricKeyStr = crypt.decryptRSAWithJWK(privateKey, projectKey.encSymmetricKey);
+    const symmetricKey = JSON.parse(symmetricKeyStr);
 
     const next = async (
       items: {
@@ -1217,94 +1167,6 @@ export class VCS {
     }
 
     console.log(`[sync] Finished uploading ${count}/${allIds.length} blobs`);
-  }
-
-  async _queryCreateProject(
-    workspaceId: string,
-    workspaceName: string,
-    teamId: string,
-    teamProjectId: string,
-    teamPublicKeys?: {
-      accountId: string;
-      publicKey: string;
-      autoLinked: boolean;
-    }[],
-  ) {
-    // Generate symmetric key for ResourceGroup
-    const symmetricKey = await crypt.generateAES256Key();
-    const symmetricKeyStr = JSON.stringify(symmetricKey);
-
-    const teamKeys: { accountId: string; encSymmetricKey: string; autoLinked: boolean }[] = [];
-
-    if (!teamId || !teamPublicKeys?.length) {
-      throw new Error('teamId and teamPublicKeys must not be null or empty!');
-    }
-
-    // Encrypt the symmetric key with the public keys of all the team members, ourselves included
-    for (const { accountId, publicKey, autoLinked } of teamPublicKeys) {
-      teamKeys.push({
-        autoLinked,
-        accountId,
-        encSymmetricKey: crypt.encryptRSAWithJWK(JSON.parse(publicKey), symmetricKeyStr),
-      });
-    }
-
-    const { projectCreate } = await this._runGraphQL<{ projectCreate: BackendProject }>(
-      `
-        mutation (
-          $name: String!,
-          $id: ID!,
-          $rootDocumentId: ID!,
-          $teamId: ID,
-          $teamProjectId: ID,
-          $teamKeys: [ProjectCreateKeyInput!],
-        ) {
-          projectCreate(
-            name: $name,
-            id: $id,
-            rootDocumentId: $rootDocumentId,
-            teamId: $teamId,
-            teamKeys: $teamKeys,
-            teamProjectId: $teamProjectId
-          ) {
-            id
-            name
-            rootDocumentId
-          }
-        }
-      `,
-      {
-        name: workspaceName,
-        id: this._backendProjectId(),
-        rootDocumentId: workspaceId,
-        teamId: teamId,
-        teamKeys: teamKeys,
-        teamProjectId,
-      },
-      'createProject',
-    );
-
-    console.log(`[sync] Created remote project ${projectCreate.id} (${projectCreate.name})`);
-    return projectCreate;
-  }
-
-  async _getBackendProjectSymmetricKey() {
-    const privateKey = await session.getPrivateKey();
-    const { projectKey } = await this._runGraphQL<{ projectKey: { encSymmetricKey: string } }>(
-      `
-        query ($projectId: ID!) {
-          projectKey(projectId: $projectId) {
-            encSymmetricKey
-          }
-        }
-      `,
-      {
-        projectId: this._backendProjectId(),
-      },
-      'projectKey',
-    );
-    const symmetricKeyStr = crypt.decryptRSAWithJWK(privateKey, projectKey.encSymmetricKey);
-    return JSON.parse(symmetricKeyStr);
   }
 
   async _getCurrentBranch() {
