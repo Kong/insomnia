@@ -17,7 +17,6 @@ import path from 'path';
 import { pathToFileURL } from 'url';
 
 import {
-  changelogUrl,
   getAppBuildDate,
   getAppVersion,
   getProductName,
@@ -279,8 +278,7 @@ export function createWindow(): ElectronBrowserWindow {
             return;
           }
 
-          const href = changelogUrl();
-          const { protocol } = new URL(href);
+          const { protocol } = new URL('https://github.com/Kong/insomnia/releases');
           if (protocol === 'http:' || protocol === 'https:') {
             // eslint-disable-next-line no-restricted-properties
             shell.openExternal(href);

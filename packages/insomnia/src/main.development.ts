@@ -6,7 +6,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 import { userDataFolder } from '../config/config.json';
-import { changelogUrl, getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
+import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
 import log, { initializeLogging } from './common/log';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
@@ -284,7 +284,7 @@ async function _trackStats() {
     console.log('[main] App update detected', currentVersion, lastVersion);
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
-      url: changelogUrl(),
+      url: 'https://github.com/Kong/insomnia/releases',
       cta: "See What's New",
       message: `Updated to ${currentVersion}`,
     };
