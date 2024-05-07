@@ -13,7 +13,7 @@ import { isWebSocketRequest } from '../../models/websocket-request';
 import { scopeToActivity } from '../../models/workspace';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { LoaderResult } from '../routes/commands';
-import { ProjectIdLoaderData, scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../routes/project';
+import { ProjectLoaderData, scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../routes/project';
 import { RootLoaderData } from '../routes/root';
 import { AvatarGroup } from './avatar';
 import { Icon } from './icon';
@@ -49,129 +49,6 @@ export const CommandPalette = () => {
           <Dialog className="outline-none h-max overflow-hidden flex flex-col">
             {({ close }) => (
               <CommandPaletteCombobox close={close} />
-              // <ComboBox
-              //   aria-label='Quick switcher'
-              //   className='flex flex-col divide-y divide-solid divide-[--hl-sm] overflow-hidden'
-              //   isDisabled={pullFileFetcher.state !== 'idle'}
-              //   autoFocus
-              //   allowsCustomValue={false}
-              //   menuTrigger='focus'
-              //   shouldFocusWrap
-              //   onInputChange={filter => {
-              //     const searchParams = new URLSearchParams();
-
-              //     searchParams.set('organizationId', organizationId);
-              //     searchParams.set('projectId', projectId);
-              //     searchParams.set('workspaceId', workspaceId);
-              //     searchParams.set('filter', filter);
-
-              //     commandsLoader.load(`/commands?${searchParams.toString()}`);
-              //   }}
-              //   defaultFilter={(textValue, filter) => {
-              //     return Boolean(fuzzyMatch(
-              //       filter,
-              //       textValue,
-              //       { splitSpace: false, loose: true }
-              //     )?.indexes);
-              //   }}
-              //   onSelectionChange={itemId => {
-              //     if (!itemId) {
-              //       return;
-              //     }
-
-              //     const item = [
-              //       ...currentRequests,
-              //       ...currentFiles,
-              //       ...currentEnvironments,
-              //       ...otherRequests,
-              //       ...otherFiles,
-              //     ].find(item => item.id === itemId);
-
-              //     const result = item?.action();
-
-              //     if (!result) {
-              //       close();
-              //     }
-              //   }}
-              // >
-              //   <Label
-              //     aria-label="Filter"
-              //     className="group relative flex items-center gap-2 p-2 flex-1"
-              //   >
-              //     <Icon icon="search" className="text-[--color-font] pl-2" />
-              //     <Input
-              //       placeholder="Search and switch between requests, collections and documents"
-              //       className="py-1 w-full pl-2 pr-7 bg-[--color-bg] text-[--color-font]"
-              //     />
-              //   </Label>
-              //     {pullFileFetcher.state === 'idle' && (
-              //       <ListBox
-              //         className="outline-none relative overflow-y-auto flex-1"
-              //         items={comboboxSections}
-              //       >
-              //         {section => (
-              //           <Section className='flex-1 flex flex-col'>
-              //             <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
-              //             <Collection items={section.children}>
-              //               {item => (
-              //                 <ListBoxItem textValue={item.textValue} className="group outline-none select-none">
-              //                   <div
-              //                     className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-data-[focused]:bg-[--hl-sm] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
-              //                   >
-              //                     {item.icon}
-              //                     <Text className="flex-shrink-0 px-1 truncate" slot="label">{item.name}</Text>
-              //                     {item.presence.length > 0 && (
-              //                       <span className='w-[70px]'>
-              //                         <AvatarGroup
-              //                           size="small"
-              //                           maxAvatars={3}
-              //                           items={item.presence}
-              //                         />
-              //                       </span>
-              //                     )}
-              //                     <Text className="flex-1 px-1 truncate text-sm text-[--hl-md]" slot="description">{item.description}</Text>
-              //                   </div>
-              //                 </ListBoxItem>
-              //               )}
-              //             </Collection>
-              //           </Section>
-              //         )}
-              //       </ListBox>
-              //     )}
-              //     {pullFileFetcher.state !== 'idle' && (
-              //       <div
-              //         className="flex-1 overflow-y-auto outline-none flex flex-col data-[empty]:hidden"
-              //       >
-              //         {comboboxSections.map(section => (
-              //           <div className='flex-1 flex flex-col' key={section.id}>
-              //             <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
-              //             <div>
-              //               {section.children.map(item => (
-              //                 <div key={item.id} className="group cursor-not-allowed outline-none select-none">
-              //                   <div
-              //                     className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
-              //                   >
-              //                     {item.icon}
-              //                     <span className="flex-1 px-1 truncate">{item.name}</span>
-              //                     <span className="flex-1 px-1 truncate">{item.description}</span>
-              //                     <span className='w-[70px]'>
-              //                       {item.presence.length > 0 && (
-              //                         <AvatarGroup
-              //                           size="small"
-              //                           maxAvatars={3}
-              //                           items={item.presence}
-              //                         />
-              //                       )}
-              //                     </span>
-              //                   </div>
-              //                 </div>
-              //               ))}
-              //             </div>
-              //           </div>
-              //         ))}
-              //       </div>
-              //     )}
-              // </ComboBox>
             )}
           </Dialog>
         </Modal>
@@ -199,12 +76,11 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const setActiveEnvironmentFetcher = useFetcher();
   const navigate = useNavigate();
 
-  const projectDataLoader = useFetcher<ProjectIdLoaderData>();
+  const projectDataLoader = useFetcher<ProjectLoaderData>();
   const accountId = userSession.accountId;
 
   useEffect(() => {
     if (projectId && !projectDataLoader.data && projectDataLoader.state === 'idle' && !isScratchpadOrganizationId(organizationId)) {
-      console.log('loading project data');
       projectDataLoader.load(`/organization/${organizationId}/project/${projectId}?index`);
     }
   }, [organizationId, projectDataLoader, projectId]);
@@ -451,6 +327,9 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     prevPullFetcherState.current = pullFileFetcher.state;
   }, [close, pullFileFetcher.state]);
 
+  // Close the dialog when the environment is set
+  // If we close the dialog when fetcher.submit() is done then the dialog will close before the environment is set
+  // The update env will run but the loaders on the page will not be revalidated. https://github.com/remix-run/remix/discussions/9020
   const prevEnvFetcherState = useRef(setActiveEnvironmentFetcher.state);
   useEffect(() => {
     if (setActiveEnvironmentFetcher.state === 'idle' && prevEnvFetcherState.current !== 'idle') {
