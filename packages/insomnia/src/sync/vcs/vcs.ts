@@ -43,26 +43,6 @@ const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
 
 type ConflictHandler = (conflicts: MergeConflict[], labels: { ours: string; theirs: string }) => Promise<MergeConflict[]>;
 
-function pathsproject(projectId: string) {
-  return `/projects/${projectId}/meta.json`;
-}
-
-function pathsblob(projectId: string, blobId: string) {
-  return `/projects/${projectId}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`;
-}
-
-function pathssnapshot(projectId: string, snapshotId: string) {
-  return `/projects/${projectId}/snapshots/${snapshotId}.json`;
-}
-
-function pathsbranches(projectId: string) {
-  return `/projects/${projectId}/branches/`;
-}
-
-function pathsbranch(projectId: string, branchName: string) {
-  return `/projects/${projectId}/branches/${branchName}.json`;
-}
-
 // opportunities
 // extract backend Project id mutability
 // extract brnach name validation
@@ -103,11 +83,23 @@ export class VCS {
     return newVCS;
   }
 
+  pathsblob(blobId: string) {
+    return `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`;
+  }
+
+  pathssnapshot(snapshotId: string) {
+    return `/projects/${this._backendProjectId()}/snapshots/${snapshotId}.json`;
+  }
+
+  pathsbranches() {
+    return `/projects/${this._backendProjectId()}/branches/`;
+  }
+
   async setBackendProject(backendProject: BackendProject) {
     this._backendProject = backendProject;
     console.log(`[sync] Activated project ${backendProject.id}`);
     // Store it because it might not be yet
-    await this._store.setItem(pathsproject(backendProject.id), backendProject);
+    await this._store.setItem(`/projects/${backendProject.id}/meta.json`, backendProject);
   }
 
   hasBackendProject() {
@@ -119,7 +111,7 @@ export class VCS {
     const toRemove = all.filter(p => p.rootDocumentId === rootDocumentId);
 
     for (const backendProject of toRemove) {
-      await this._store.removeItem(pathsproject(backendProject.id));
+      await this._store.removeItem(`/projects/${backendProject.id}/meta.json`);
     }
   }
 
@@ -137,7 +129,7 @@ export class VCS {
       'projectArchive',
     );
     console.log(`[sync] Archived remote project ${backendProjectId}`);
-    await this._store.removeItem(pathsproject(backendProjectId));
+    await this._store.removeItem(`/projects/${backendProjectId}/meta.json`);
     this._backendProject = null;
   }
 
@@ -153,8 +145,8 @@ export class VCS {
 
     // If there is more than one project for root, try pruning unused ones by branch activity
     if (matchedBackendProjects.length > 1) {
-      for (const p of matchedBackendProjects) {
-        const branchPaths = await this._store.keys(pathsbranches(p.id));
+      for (const backendProject of matchedBackendProjects) {
+        const branchPaths = await this._store.keys(pathsbranches(backendProject.id));
         const branches = await Promise.all(branchPaths.map(async branchPath => {
           const branch: Branch = await this._store.getItem(branchPath);
           invariant(branch, `Failed to get branch path=${branchPath}`);
@@ -162,8 +154,8 @@ export class VCS {
         }));
 
         if (!branches.find(b => b.snapshots.length > 0)) {
-          await this._store.removeItem(pathsproject(p.id));
-          matchedBackendProjects = matchedBackendProjects.filter(({ id }) => id !== p.id);
+          await this._store.removeItem(`/projects/${backendProject.id}/meta.json`);
+          matchedBackendProjects = matchedBackendProjects.filter(({ id }) => id !== backendProject.id);
           console.log(`[sync] Remove inactive project for root ${rootDocumentId}`);
         }
       }
@@ -184,7 +176,7 @@ export class VCS {
     if (!matchedBackendProjects[0]) {
       const id = generateId('prj');
       project = { id, name, rootDocumentId };
-      await this._store.setItem(pathsproject(project.id), project);
+      await this._store.setItem(`/projects/${id}/meta.json`, project);
       console.log(`[sync] Created backend project ${project.id}`);
     }
     await this.setBackendProject(project);
@@ -362,7 +354,7 @@ export class VCS {
     if (errMsg) {
       throw new Error(errMsg);
     }
-    const existingBranch = await this._store.getItem(pathsbranch(this._backendProjectId(), newBranchName));
+    const existingBranch = await this._store.getItem(`/projects/${this._backendProjectId()}/branches/${newBranchName}.json`);
     if (existingBranch) {
       throw new Error('Branch already exists by name ' + newBranchName);
     }
@@ -397,7 +389,7 @@ export class VCS {
   }
 
   async removeBranch(branchName: string) {
-    const existingBranch = await this._store.getItem(pathsbranch(this._backendProjectId(), branchName));
+    const existingBranch = await this._store.getItem(`/projects/${this._backendProjectId()}/branches/${branchName}.json`);
 
     invariant(existingBranch, `Branch does not exist with name ${branchName}`);
     const currentBranch = await this._getCurrentBranch();
@@ -410,7 +402,7 @@ export class VCS {
       throw new Error('Cannot delete currently-active branch');
     }
 
-    await this._store.removeItem(pathsbranch(this._backendProjectId(), existingBranch.name));
+    await this._store.removeItem(`/projects/${this._backendProjectId()}/branches/${existingBranch.name}.json`);
     console.log(`[sync] Deleted local branch ${branchName}`);
   }
 
@@ -612,14 +604,13 @@ export class VCS {
       true,
     );
     // Remove tmp branch
-    await this._store.removeItem(pathsbranch(this._backendProjectId(), tmpBranchForRemote.name));
+    await this._store.removeItem(`/projects/${this._backendProjectId()}/branches/${tmpBranchForRemote.name}.json`);
     console.log(`[sync] Pulled branch ${localBranch.name}`);
     return delta;
   }
 
   async _getOrCreateRemoteBackendProject({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
-    invariant(this._backendProject?.id, 'Backend project not set');
-    const localProject: BackendProject = await this._store.getItem(pathsproject(this._backendProject.id));
+    const localProject: BackendProject = await this._store.getItem(`/projects/${this._backendProjectId()}/meta.json`);
     invariant(localProject, 'Backend project not set: ' + this._backendProjectId());
     const { project } = await this._runGraphQL<{ project: BackendProject | null }>(
       `
@@ -637,7 +628,7 @@ export class VCS {
       'project',
     );
     if (project) {
-      await this._store.setItem(pathsproject(this._backendProjectId()), project);
+      await this._store.setItem(`/projects/${this._backendProjectId()}/meta.json`, project);
       return project;
     }
 
@@ -724,7 +715,7 @@ export class VCS {
     );
 
     console.log(`[sync] Created remote project ${projectCreate.id} (${projectCreate.name})`);
-    await this._store.setItem(pathsproject(projectCreate.id), projectCreate);
+    await this._store.setItem(`/projects/${projectCreate.id}/meta.json`, projectCreate);
     return projectCreate;
   }
 
@@ -1209,8 +1200,8 @@ export class VCS {
     return this._backendProject.id;
   }
 
-  async _getBranch(name: string, backendProjectId?: string): Promise<Branch | null> {
-    return this._store.getItem(pathsbranch(backendProjectId || this._backendProjectId(), name));
+  async _getBranch(name: string): Promise<Branch | null> {
+    return this._store.getItem(`/projects/${this._backendProjectId()}/branches/${name}.json`);
   }
 
   async _getOrCreateBranch(name: string): Promise<Branch> {
@@ -1234,7 +1225,7 @@ export class VCS {
     const keys = await this._store.keys('/projects/', false);
     for (const key of keys) {
       const id = path.basename(key);
-      const backendProj: BackendProject | null = await this._store.getItem(pathsproject(id));
+      const backendProj: BackendProject | null = await this._store.getItem(`/projects/${id}/meta.json`);
       if (backendProj) {
         backendProjects.push(backendProj);
       }
@@ -1265,7 +1256,7 @@ export class VCS {
     }
 
     branch.modified = new Date();
-    return this._store.setItem(pathsbranch(this._backendProjectId(), branch.name.toLowerCase()), branch);
+    return this._store.setItem(`/projects/${this._backendProjectId()}/branches/${branch.name.toLowerCase()}.json`, branch);
   }
 
   _getBlob(id: string) {
