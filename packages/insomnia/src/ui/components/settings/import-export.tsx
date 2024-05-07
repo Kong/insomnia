@@ -14,7 +14,7 @@ import { Project } from '../../../models/project';
 import { isScratchpad, Workspace } from '../../../models/workspace';
 import { SegmentEvent } from '../../analytics';
 import { useOrganizationLoaderData } from '../../routes/organization';
-import { ProjectLoaderData } from '../../routes/project';
+import { ProjectIdLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
 import { UntrackedProjectsLoaderData } from '../../routes/untracked-projects';
 import { WorkspaceLoaderData } from '../../routes/workspace';
@@ -255,10 +255,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
     if (isIdleAndUninitialized && organizationId && !isScratchpadOrganizationId(organizationId)) {
-      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}`);
+      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}?index`);
     }
   }, [organizationId, projectId, workspacesFetcher]);
-  const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData | undefined;
+  const projectLoaderData = workspacesFetcher?.data as ProjectIdLoaderData | undefined;
   const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined) || [];
   const projectName = projectLoaderData?.activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];

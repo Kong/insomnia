@@ -452,6 +452,22 @@ async function getAllRemoteFiles({
   return [];
 }
 
+export interface ListWorkspacesLoaderData {
+  files: InsomniaFile[];
+}
+
+export const listWorkspacesLoader: LoaderFunction = async ({ params }) => {
+  const { organizationId, projectId } = params;
+  invariant(organizationId, 'Organization ID is required');
+  invariant(projectId, 'Project ID is required');
+
+  const files = await getAllLocalFiles({ projectId });
+
+  return {
+    files,
+  };
+};
+
 export const projectIdLoader: LoaderFunction = async ({ params }) => {
   const { projectId } = params;
   invariant(projectId, 'Project ID is required');

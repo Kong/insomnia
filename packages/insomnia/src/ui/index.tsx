@@ -259,6 +259,13 @@ async function renderApp() {
                             ),
                           },
                           {
+                            path: 'list-workspaces',
+                            loader: async (...args) =>
+                              (
+                                await import('./routes/project')
+                              ).listWorkspacesLoader(...args),
+                          },
+                          {
                             path: 'delete',
                             action: async (...args) =>
                               (
