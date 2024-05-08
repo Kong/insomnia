@@ -55,5 +55,17 @@ export default defineConfig(({ mode }) => {
       }),
       react(),
     ],
+    worker: {
+      plugins: [
+        electronNodeRequire({
+          modules: [
+            'electron',
+            ...Object.keys(pkg.dependencies),
+            ...builtinModules.filter(m => m !== 'buffer'),
+            ...builtinModules.map(m => `node:${m}`),
+          ],
+        }),
+      ],
+    },
   };
 });
