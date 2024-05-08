@@ -2,17 +2,18 @@ import React, { DOMAttributes, FunctionComponent, useEffect, useState } from 're
 
 import { REQUEST_SETUP_TEARDOWN_COMPENSATION } from '../../common/constants';
 import { TimingRecord, watchRequestTiming } from '../../network/request-timing';
-import { invariant } from '../../utils/invariant';
 
 interface Props {
   handleCancel: DOMAttributes<HTMLButtonElement>['onClick'];
-  activeRequestId?: string;
+  activeRequestId: string;
 }
 
 export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRequestId }) => {
   const [milliseconds, setMilliseconds] = useState(0);
   const [timingCount, setTimingCount] = useState(0);
   const [timingRecords, setTimingRecords] = useState(new Array<TimingRecord>());
+
+  const executionId = activeRequestId;
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -29,11 +30,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
     };
   }, []);
 
-  const executionId = activeRequestId;
-
   useEffect(() => {
-    invariant(executionId, 'activeRequestId is undefined');
-
     const cb = (records: TimingRecord[]) => {
       if (records && records.length !== timingCount) {
         setMilliseconds(0);

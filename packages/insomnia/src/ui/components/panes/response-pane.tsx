@@ -31,9 +31,11 @@ import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
   runningRequests: Record<string, boolean>;
+  activeRequestId: string;
 }
 export const ResponsePane: FC<Props> = ({
   runningRequests,
+  activeRequestId,
 }) => {
   const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const filterHistory = activeRequestMeta.responseFilterHistory || [];
@@ -130,6 +132,7 @@ export const ResponsePane: FC<Props> = ({
       <PlaceholderResponsePane>
         {runningRequests[activeRequest._id] && <ResponseTimer
           handleCancel={() => cancelRequestById(activeRequest._id)}
+          activeRequestId={activeRequestId}
         />}
       </PlaceholderResponsePane>
     );
@@ -231,7 +234,7 @@ export const ResponsePane: FC<Props> = ({
       <ErrorBoundary errorClassName="font-error pad text-center">
         {runningRequests[activeRequest._id] && <ResponseTimer
           handleCancel={() => cancelRequestById(activeRequest._id)}
-          activeRequestId={activeRequest._id}
+          activeRequestId={activeRequestId}
         />}
       </ErrorBoundary>
     </Pane>

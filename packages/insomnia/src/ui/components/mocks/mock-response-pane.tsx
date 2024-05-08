@@ -69,6 +69,7 @@ export const MockResponsePane = () => {
       <PlaceholderResponsePane>
         {<ResponseTimer
           handleCancel={() => activeResponse && cancelRequestById(activeResponse.parentId)}
+          activeRequestId={mockRoute._id}
         />}
       </PlaceholderResponsePane>
     );
