@@ -5,28 +5,22 @@ import { oas } from '@stoplight/spectral-rulesets';
 interface SpectralRunParams {
   contents: string;
   ruleset?: Ruleset;
+  currentLintId: number;
 }
 
-// onconnect = event => {
-//   const port = event.ports[0];
-
-//   port.onmessage = e => {
-//     port.postMessage('1');
-//     // new Spectral();
-//     port.postMessage('2');
-//   };
-// };
-
-const spectralRun = async ({ contents, ruleset }: SpectralRunParams) => {
+const spectralRun = async ({ contents, ruleset, currentLintId }: SpectralRunParams) => {
   try {
     const spectral = new Spectral();
     spectral.setRuleset(ruleset || oas as RulesetDefinition);
 
     const diagnostics = await spectral.run(contents);
 
-    postMessage(diagnostics);
+    postMessage({
+      id: currentLintId,
+      diagnostics,
+    });
   } catch (err) {
-    postMessage([]);
+    postMessage(err);
   }
 };
 

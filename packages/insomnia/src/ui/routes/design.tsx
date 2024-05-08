@@ -237,45 +237,40 @@ const Design: FC = () => {
   }, []);
 
   // use this ref to handle codemirror lint race conditions, only the id matching the latest will be updated
-  const lintIdRef = useRef(0);
+  const latestLintIdRef = useRef(0);
+
+  const workerRef = useRef<Worker>();
+  if (!workerRef.current) {
+    workerRef.current = new Worker(new URL('../worker/spectral.ts', import.meta.url), {
+      type: 'module',
+    });
+  }
 
   const registerCodeMirrorLint = (ruleset?: Ruleset) => {
     CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
-      console.log('run lint');
-      // @TODO: Conisderations and things we need to verify/test:
-      // - Should we spawn a new worker on every lint command or use a shared worker?
-      // - Does this function handle race conditions? e.g. if a lint finishes late does it replace another lint that ran with latest contents?
-      // - Proper error handling from the worker and here. Perhaps the worker returns a result type like Result = Diagnostics | Error and we handle it here
-      // - Don't reload the spectral ruleset on every lint command. Instead the ruleset should be re-calculated when the underlying file changes due to e.g. git pull or the filename changes
-      const worker = new Worker(new URL('../worker/spectral.ts', import.meta.url), {
-        type: 'module',
-      });
-      const currentLintId = ++lintIdRef.current;
-      lintIdRef.current = currentLintId;
-      // const worker = new SharedWorker(new URL('../worker/spectral.ts', import.meta.url), {
-      //   type: 'module',
-      // });
-
+      console.log('runlint');
+      const currentLintId = ++latestLintIdRef.current;
+      latestLintIdRef.current = currentLintId;
       const func = async () => {
-
         return new Promise<ISpectralDiagnostic[]>((resolve, reject) => {
+          if (workerRef.current) {
+            workerRef.current.onmessage = e => {
+              const { id, diagnostics } = e.data;
+              if (currentLintId === id && diagnostics) {
+                resolve(diagnostics);
+              } else {
+                reject(e.data);
+              }
+            };
 
-          worker.onmessage = e => {
-            if (currentLintId === lintIdRef.current) {
-              resolve(e.data);
-            } else {
-              reject();
-            }
-          };
-
-          // worker.onerror = e => {
-          //   console.log('worker error', e);
-          // }
-          worker.postMessage({
-            contents,
-            ruleset,
-          });
-
+            workerRef.current?.postMessage({
+              contents,
+              ruleset,
+              currentLintId,
+            });
+          } else {
+            reject();
+          }
         });
       };
 
@@ -298,7 +293,10 @@ const Design: FC = () => {
         });
         setLintMessages?.(lintResult);
         return lintResult;
-      } catch (e) { };
+      } catch (e) {
+        // return a rejected promise so that codemirror do nothing
+        return Promise.reject(e);
+      };
     });
   };
 
@@ -322,6 +320,7 @@ const Design: FC = () => {
   useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
     CodeMirror.registerHelper('lint', 'openapi', undefined);
+    workerRef.current?.terminate();
   });
 
   const onCodeEditorChange = useMemo(() => {

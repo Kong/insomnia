@@ -1,4 +1,5 @@
 import type { Ruleset } from '@stoplight/spectral-core';
+// @ts-expect-error - need to modify moduleResolution option in tsconfig
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
 import { app, BrowserWindow, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
