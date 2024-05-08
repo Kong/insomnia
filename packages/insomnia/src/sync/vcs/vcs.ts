@@ -25,7 +25,7 @@ import type {
   StageEntry,
   StatusCandidate,
 } from '../types';
-import { BackendProjectWithTeams, normalizeBackendProjectTeam } from './normalize-backend-project-team';
+import { BackendProjectWithTeams } from './normalize-backend-project-team';
 import {
   compareBranches,
   generateCandidateMap,
@@ -186,7 +186,13 @@ export class VCS {
       'projects',
     );
 
-    return projects.map(normalizeBackendProjectTeam);
+    return projects.map(backend => ({
+      id: backend.id,
+      name: backend.name,
+      rootDocumentId: backend.rootDocumentId,
+      // A backend project is guaranteed to exist on exactly one team
+      team: backend.teams[0],
+    }));
   }
 
   async status(candidates: StatusCandidate[]) {
@@ -494,14 +500,11 @@ export class VCS {
   }
 
   async getRemoteBranches(): Promise<string[]> {
-    const { branches } = await this._runGraphQL<{ branches: Branch[] | null }>(
+    const { branches } = await this._runGraphQL<{ branches: { name: string }[] | null }>(
       `
       query ($projectId: ID!) {
         branches(project: $projectId) {
-          created
-          modified
           name
-          snapshots
         }
       }`,
       {
