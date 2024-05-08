@@ -185,10 +185,11 @@ export class Response extends Property {
     }
 }
 
-export async function toScriptResponse(
+export function toScriptResponse(
     originalRequest: Request,
     partialInsoResponse: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError,
-): Promise<Response | undefined> {
+    responseBody: string,
+): Response | undefined {
     if ('error' in partialInsoResponse) {
     // it is sendCurlAndWriteTimelineError and basically doesn't contain anything useful
         return undefined;
@@ -217,23 +218,9 @@ export async function toScriptResponse(
         )
         : [];
 
-    let responseBody = '';
-    if (partialResponse.bodyPath) {
-        const readResponseResult = await window.bridge.readCurlResponse({
-            bodyPath: partialResponse.bodyPath,
-            bodyCompression: partialResponse.bodyCompression,
-        });
-
-        if (readResponseResult.error) {
-            throw Error(`Failed to read body: ${readResponseResult.error}`);
-        } else {
-            responseBody = readResponseResult.body;
-        }
-    }
-
     const responseOption = {
         code: partialResponse.statusCode || 0,
-        // reason is not provided
+        reason: partialResponse.statusMessage,
         header: headers,
         cookie: insoCookieOptions,
         body: responseBody,
@@ -245,3 +232,22 @@ export async function toScriptResponse(
 
     return new Response(responseOption);
 };
+
+export async function readBodyByFromPath(response: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError | undefined) {
+    // it allows to execute scripts (e.g., for testing) but body contains nothing
+    if (!response || 'error' in response) {
+        return '';
+    } else if (!response.bodyPath) {
+        return '';
+    }
+
+    const readResponseResult = await window.bridge.readCurlResponse({
+        bodyPath: response.bodyPath,
+        bodyCompression: response.bodyCompression,
+    });
+
+    if (readResponseResult.error) {
+        throw Error(`Failed to read body: ${readResponseResult.error}`);
+    }
+    return readResponseResult.body;
+}
