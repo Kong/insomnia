@@ -178,6 +178,10 @@ const getMethodsFromOpenApiPathItem = (
   return methods;
 };
 
+const lintOptions = {
+  delay: 1000,
+};
+
 const Design: FC = () => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
@@ -230,12 +234,6 @@ const Design: FC = () => {
     message => message.type === 'warning'
   );
 
-  const lintOptions = useMemo(() => {
-    return {
-      delay: 1000,
-    };
-  }, []);
-
   // use this ref to handle codemirror lint race conditions, only the id matching the latest will be updated
   const latestLintIdRef = useRef(0);
 
@@ -248,14 +246,18 @@ const Design: FC = () => {
 
   const registerCodeMirrorLint = (ruleset?: Ruleset) => {
     CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
-      const currentLintId = ++latestLintIdRef.current;
+      const currentLintId = latestLintIdRef.current + 1;
       latestLintIdRef.current = currentLintId;
-      const func = async () => {
+
+      const runDiagnostics = async ({ taskId }: { taskId: number }) => {
         return new Promise<ISpectralDiagnostic[]>((resolve, reject) => {
           if (workerRef.current) {
             workerRef.current.onmessage = e => {
               const { id, diagnostics } = e.data;
-              if (currentLintId === id && diagnostics) {
+
+              const isLatestLintId = latestLintIdRef.current === id;
+
+              if (isLatestLintId && diagnostics) {
                 resolve(diagnostics);
               } else {
                 reject(e.data);
@@ -265,7 +267,7 @@ const Design: FC = () => {
             workerRef.current?.postMessage({
               contents,
               ruleset,
-              currentLintId,
+              taskId,
             });
           } else {
             reject();
@@ -274,7 +276,7 @@ const Design: FC = () => {
       };
 
       try {
-        const diagnostics = await func();
+        const diagnostics = await runDiagnostics({ taskId: currentLintId });
 
         const lintResult = diagnostics.map(({ severity, code, message, range }) => {
           return {
@@ -310,7 +312,7 @@ const Design: FC = () => {
     registerCodeMirrorLint(ruleset);
     // when first time into document editor, the lint helper register later than codemirror init, we need to trigger lint through execute setOption
     editor.current?.tryToSetOption('lint', { ...lintOptions });
-  }, [rulesetPath, lintOptions]);
+  }, [rulesetPath]);
 
   useEffect(() => {
     loadRuleset();
