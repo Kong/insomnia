@@ -425,7 +425,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     addRequestTimingRecord(
       requestId,
       {
-        stepName: 'Sending request end to end',
+        stepName: 'Preparing and sending request',
         isDone: false,
         startedAt: Date.now(),
         endedAt: 0,

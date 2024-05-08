@@ -1,5 +1,7 @@
+type StepName = 'Executing pre-request script' | 'Rendering request' | 'Preparing and sending request';
+
 export interface TimingRecord {
-    stepName: string;
+    stepName: StepName;
     isDone: boolean;
     startedAt: number;
     endedAt: number;
