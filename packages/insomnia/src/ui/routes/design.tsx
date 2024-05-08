@@ -248,7 +248,6 @@ const Design: FC = () => {
 
   const registerCodeMirrorLint = (ruleset?: Ruleset) => {
     CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
-      console.log('runlint');
       const currentLintId = ++latestLintIdRef.current;
       latestLintIdRef.current = currentLintId;
       const func = async () => {
