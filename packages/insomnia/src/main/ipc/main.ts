@@ -79,10 +79,19 @@ export function registerMainHandlers() {
   });
 
   ipcMainHandle('loadSpectralRuleset', async (_, options: { rulesetPath: string }) => {
-    const ruleset = await bundleAndLoadRuleset(options.rulesetPath, {
-      fs,
-      fetch: net.fetch,
-    });
+    let ruleset = oas as RulesetDefinition;
+
+    if (options.rulesetPath) {
+      try {
+        ruleset = await bundleAndLoadRuleset(options.rulesetPath, {
+          fs,
+          fetch: net.fetch,
+        });
+
+      } catch (err) {
+        console.log('Error while parsing ruleset:', err);
+      }
+    }
 
     return ruleset;
   });

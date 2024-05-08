@@ -1,17 +1,16 @@
-import type { Ruleset, RulesetDefinition } from '@stoplight/spectral-core';
+import type { Ruleset } from '@stoplight/spectral-core';
 import { Spectral } from '@stoplight/spectral-core';
-import { oas } from '@stoplight/spectral-rulesets';
 
 interface SpectralRunParams {
   contents: string;
-  ruleset?: Ruleset;
+  ruleset: Ruleset;
   currentLintId: number;
 }
 
 const spectralRun = async ({ contents, ruleset, currentLintId }: SpectralRunParams) => {
   try {
     const spectral = new Spectral();
-    spectral.setRuleset(ruleset || oas as RulesetDefinition);
+    spectral.setRuleset(ruleset);
 
     const diagnostics = await spectral.run(contents);
 
