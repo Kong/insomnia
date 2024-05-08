@@ -88,6 +88,7 @@
     "@stoplight/spectral-rulesets": "^1.18.1",
     "@stoplight/spectral-ruleset-bundler": "1.5.2",
     "@develohpanda/fluent-builder": "^2.1.2",
+    "@faker-js/faker": "8.4.1",
     "@fortawesome/fontawesome-svg-core": "^6.5.2",
     "@fortawesome/free-brands-svg-icons": "^6.5.2",
     "@fortawesome/free-regular-svg-icons": "^6.5.2",
