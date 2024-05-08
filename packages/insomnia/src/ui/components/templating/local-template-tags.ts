@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import crypto from 'crypto';
 import { format } from 'date-fns';
 import fs from 'fs';
@@ -13,8 +14,56 @@ import { TemplateTag } from '../../../plugins';
 import { PluginTemplateTag } from '../../../templating/extensions';
 import { invariant } from '../../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
-
+function getSupportedFakerMethods(): string[] {
+  // https://github.com/faker-js/faker/blob/aedd7b8bb0e6074f69659a79df1e6b75900f5894/test/all_functional.spec.ts#L4
+  const IGNORED_MODULES = [
+    'locales',
+    'locale',
+    'localeFallback',
+    'definitions',
+    'fake',
+    'helpers',
+    'mersenne',
+    '_randomizer',
+  ];
+  const methods = Object.entries(faker)
+    .filter(([key, val]) => !IGNORED_MODULES.includes(key))
+    .map(([module]) => {
+      return Object.entries((faker as any)[module])
+        .filter(([, value]) => typeof value === 'function')
+        .map(([key]) => `${module}.${key}`);
+    })
+    .flat(10)
+    .sort();
+  return methods;
+}
+// const fakerModules = [...new Set(getSupportedFakerMethods().map(str => str.split('.')[0]))];
+// const fakerFunctions = (module: string) => getSupportedFakerMethods().filter(str => str.startsWith(module + '.')).map(str => str.split('.')[1]);
+// console.log(fakerModules);
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
+  {
+    templateTag: {
+      name: 'faker',
+      displayName: 'Faker',
+      description: 'generate random outputs',
+      args: [
+        {
+          displayName: 'Module',
+          type: 'enum',
+          options: getSupportedFakerMethods().map(key => ({ displayName: key, value: key })),
+        },
+        // {
+        //   displayName: 'Function',
+        //   type: 'enum',
+        //   options: args => fakerFunctions(args[0].value).map(key => ({ displayName: key, value: key })),
+        // },
+      ],
+      run(_context, keys: string) {
+        const [module, fn] = keys.split('.');
+        return faker?.[module]?.[fn]?.();
+      },
+    },
+  },
   {
     templateTag: {
       name: 'base64',
