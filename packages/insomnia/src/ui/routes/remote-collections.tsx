@@ -239,7 +239,7 @@ interface SyncData {
   currentBranch: string;
   history: Snapshot[];
   historyCount: number;
-  status: Status;
+  status: Status | null;
   syncItems: StatusCandidate[];
   compare: {
     ahead: number;
@@ -657,7 +657,7 @@ export const stageChangesAction: ActionFunction = async ({
   // Staging needs to happen since it creates blobs for the files
   const itemsToStage = keys
     .map(key => {
-      if (typeof key === 'string') {
+      if (status && typeof key === 'string') {
         const item = status.unstaged[key];
         return item;
       }
@@ -686,7 +686,7 @@ export const unstageChangesAction: ActionFunction = async ({
   // Staging needs to happen since it creates blobs for the files
   const itemsToUnstage = keys
     .map(key => {
-      if (typeof key === 'string') {
+      if (status && typeof key === 'string') {
         const item = status.stage[key];
         return item;
       }

@@ -193,6 +193,9 @@ export class VCS {
     const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
     const branch = await this._getCurrentBranch();
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
+    if (!snapshot) {
+      return null;
+    }
     const state = snapshot ? snapshot.state : [];
     const unstaged: Record<DocumentKey, StageEntry> = {};
 
@@ -205,11 +208,6 @@ export class VCS {
         if ('deleted' in entry) {
           let previousBlobContent = null;
           try {
-            const branch = await this._getCurrentBranch();
-            const snapshot = await this._getLatestSnapshot(branch.name);
-            if (!snapshot) {
-              return null;
-            }
             const entry = snapshot.state.find(e => e.key === key);
             if (!entry) {
               return null;
