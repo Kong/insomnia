@@ -1,7 +1,9 @@
-import type { Ruleset } from '@stoplight/spectral-core';
+import type { ISpectralDiagnostic, Ruleset, RulesetDefinition } from '@stoplight/spectral-core';
+import { Spectral } from '@stoplight/spectral-core';
 // @ts-expect-error - need to modify moduleResolution option in tsconfig
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
-import { app, BrowserWindow, IpcRendererEvent, shell } from 'electron';
+import { oas } from '@stoplight/spectral-rulesets';
+import { app, BrowserWindow, IpcRendererEvent, net, shell } from 'electron';
 import fs from 'fs';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
@@ -29,6 +31,7 @@ export interface RendererToMainBridgeAPI {
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
+  spectralRun: (options: { contents: string; rulesetPath: string }) => Promise<ISpectralDiagnostic[]>;
   loadSpectralRuleset: (options: { rulesetPath: string }) => Promise<Ruleset>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
@@ -78,7 +81,7 @@ export function registerMainHandlers() {
   ipcMainHandle('loadSpectralRuleset', async (_, options: { rulesetPath: string }) => {
     const ruleset = await bundleAndLoadRuleset(options.rulesetPath, {
       fs,
-      fetch,
+      fetch: net.fetch,
     });
 
     return ruleset;
@@ -114,5 +117,32 @@ export function registerMainHandlers() {
       // eslint-disable-next-line no-restricted-properties
       shell.openExternal(href);
     }
+  });
+
+  ipcMainHandle('spectralRun', async (_, { contents, rulesetPath }: {
+    contents: string;
+    rulesetPath?: string;
+  }) => {
+    const spectral = new Spectral();
+
+    if (rulesetPath) {
+      try {
+        const ruleset = await bundleAndLoadRuleset(rulesetPath, {
+          fs,
+          fetch: net.fetch,
+        });
+
+        spectral.setRuleset(ruleset);
+      } catch (err) {
+        console.log('Error while parsing ruleset:', err);
+        spectral.setRuleset(oas as RulesetDefinition);
+      }
+    } else {
+      spectral.setRuleset(oas as RulesetDefinition);
+    }
+
+    const diagnostics = await spectral.run(contents);
+
+    return diagnostics;
   });
 }
