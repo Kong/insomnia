@@ -16,7 +16,7 @@ test.describe('post-request features tests', async () => {
         await page.getByRole('button', { name: 'Scan' }).click();
         await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-        await page.getByLabel('Pre-request Scripts').click();
+        await page.getByLabel('Post-request Scripts').click();
     });
 
     test('insomnia.test and insomnia.expect can work together', async ({ page }) => {

@@ -7,7 +7,7 @@ resources:
     parentId: null
     modified: 1707808692801
     created: 1707808692801
-    name: Pre-request Scripts
+    name: Post-request Scripts
     description: ""
     scope: collection
     _type: workspace
@@ -19,7 +19,7 @@ resources:
     name: tests with expect and test
     description: ""
     method: POST
-    preRequestScript: |-
+    postRequestScript: |-
       insomnia.test('happy tests', () => {
         insomnia.expect(200).to.eql(200);
         insomnia.expect('uname').to.be.a('string');
@@ -66,7 +66,7 @@ resources:
     name: persist environments
     description: ""
     method: POST
-    preRequestScript: |-
+    postRequestScript: |-
       insomnia.environment.set('__fromPostScript', 'environment');
       insomnia.baseEnvironment.set('__fromPostScript1', 'baseEnvironment');
       insomnia.collectionVariables.set('__fromPostScript2', 'collection');
