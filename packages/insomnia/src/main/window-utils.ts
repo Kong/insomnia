@@ -17,7 +17,6 @@ import path from 'path';
 import { pathToFileURL } from 'url';
 
 import {
-  changelogUrl,
   getAppBuildDate,
   getAppVersion,
   getProductName,
@@ -264,28 +263,14 @@ export function createWindow(): ElectronBrowserWindow {
     submenu: [
       {
         label: `${MNEMONIC_SYM}Preferences`,
-        click: function(_menuItem, window) {
-          if (!window || !window.webContents) {
-            return;
-          }
-
-          window.webContents.send('toggle-preferences');
+        click: (_menuItem, window) => {
+          window?.webContents?.send('toggle-preferences');
         },
       },
       {
         label: `${MNEMONIC_SYM}Changelog`,
-        click: function(_menuItem, window) {
-          if (!window || !window.webContents) {
-            return;
-          }
-
-          const href = changelogUrl();
-          const { protocol } = new URL(href);
-          if (protocol === 'http:' || protocol === 'https:') {
-            // eslint-disable-next-line no-restricted-properties
-            shell.openExternal(href);
-          }
-        },
+        // eslint-disable-next-line no-restricted-properties
+        click: () => shell.openExternal('https://github.com/Kong/insomnia/releases'),
       },
       {
         type: 'separator',
@@ -591,7 +576,7 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `Take ${MNEMONIC_SYM}Screenshot`,
-        click: function() {
+        click: () => {
           // @ts-expect-error -- TSCONVERSION not accounted for in the electron types to provide a function
           mainBrowserWindow.capturePage(image => {
             const buffer = image.toPNG();
@@ -602,13 +587,13 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `${MNEMONIC_SYM}Clear a model`,
-        click: function(_menuItem, window) {
+        click: (_menuItem, window) => {
           window?.webContents?.send('clear-model');
         },
       },
       {
         label: `Clear ${MNEMONIC_SYM}all models`,
-        click: function(_menuItem, window) {
+        click: (_menuItem, window) => {
           window?.webContents?.send('clear-all-models');
         },
       },

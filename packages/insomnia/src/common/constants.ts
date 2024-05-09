@@ -54,7 +54,6 @@ export function updatesSupported() {
 }
 
 export const getClientString = () => `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
-export const changelogUrl = () => appConfig.changelogUrl + '#' + version;
 
 // Global Stuff
 export const DEBOUNCE_MILLIS = 100;
