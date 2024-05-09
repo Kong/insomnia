@@ -58,6 +58,24 @@ const updateRequestAuth =
 );`;
 const requireAModule = "const atob = require('atob');";
 
+const getStatusCode = 'const statusCode = insomnia.response.code;';
+const getStatusMsg = 'const status = insomnia.response.status;';
+const getRespTime = 'const responseTime = insomnia.response.responseTime;';
+const getJsonBody = 'const jsonBody = insomnia.response.json();';
+const getTextBody = 'const textBody = insomnia.response.text();';
+const findHeader =
+  `const header = insomnia.response.headers.find(
+    header => header.key === 'Content-Type',
+    {},
+);`;
+const getCookies =
+  `const { Cookie } = require('insomnia-collection');
+const cookieHeaders = insomnia.response.headers.filter(
+    header => header.key === 'Set-Cookie',
+    {},
+);
+const cookies = cookieHeaders.map(cookieHeader => Cookie.parse(cookieHeader.value));`;
+
 const lintOptions = {
   globals: {
     // https://jshint.com/docs/options/
@@ -380,6 +398,70 @@ export const RequestScriptEditor: FC<Props> = ({
             />
           </DropdownItem>
         </Dropdown>
+
+        <Dropdown
+          aria-label='Response Handling'
+          placement='top left'
+          triggerButton={
+            <DropdownButton>
+              <ItemContent
+                icon="code"
+                label='Response Handling'
+              />
+            </DropdownButton>
+          }
+        >
+          <DropdownItem textValue='Get status code' arial-label={'Get status code'}>
+            <ItemContent
+              icon="circle-info"
+              label='Get status code'
+              onClick={() => addSnippet(getStatusCode)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Get status message' arial-label={'Get status message'}>
+            <ItemContent
+              icon="circle-info"
+              label='Get status message'
+              onClick={() => addSnippet(getStatusMsg)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Get response time' arial-label={'Get response time'}>
+            <ItemContent
+              icon="circle-info"
+              label='Get response time'
+              onClick={() => addSnippet(getRespTime)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Get body as JSON' arial-label={'Get body as JSON'}>
+            <ItemContent
+              icon="circle-info"
+              label='Get body as JSON'
+              onClick={() => addSnippet(getJsonBody)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Get body as text' arial-label={'Get body as text'}>
+            <ItemContent
+              icon="circle-info"
+              label='Get body as text'
+              onClick={() => addSnippet(getTextBody)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Find a header by name' arial-label={'Find a header by name'}>
+            <ItemContent
+              icon="circle-info"
+              label='Find a header by name'
+              onClick={() => addSnippet(findHeader)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Get cookies' arial-label={'Get cookies'}>
+            <ItemContent
+              icon="circle-info"
+              label='Get cookies'
+              onClick={() => addSnippet(getCookies)}
+            />
+          </DropdownItem>
+        </Dropdown>
+
         <Dropdown
           aria-label='Misc'
           placement='top left'
