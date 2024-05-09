@@ -1,9 +1,4 @@
-import type { ISpectralDiagnostic, Ruleset, RulesetDefinition } from '@stoplight/spectral-core';
-import { Spectral } from '@stoplight/spectral-core';
-// @ts-expect-error - need to modify moduleResolution option in tsconfig
-import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
-import { oas } from '@stoplight/spectral-rulesets';
-import { app, BrowserWindow, IpcRendererEvent, net, shell } from 'electron';
+import { app, BrowserWindow, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
@@ -31,8 +26,6 @@ export interface RendererToMainBridgeAPI {
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
-  spectralRun: (options: { contents: string; rulesetPath: string }) => Promise<ISpectralDiagnostic[]>;
-  loadSpectralRuleset: (options: { rulesetPath: string }) => Promise<Ruleset>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
@@ -78,24 +71,6 @@ export function registerMainHandlers() {
     }
   });
 
-  ipcMainHandle('loadSpectralRuleset', async (_, options: { rulesetPath: string }) => {
-    let ruleset = oas as RulesetDefinition;
-
-    if (options.rulesetPath) {
-      try {
-        ruleset = await bundleAndLoadRuleset(options.rulesetPath, {
-          fs,
-          fetch: net.fetch,
-        });
-
-      } catch (err) {
-        console.log('Error while parsing ruleset:', err);
-      }
-    }
-
-    return ruleset;
-  });
-
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {
     return curlRequest(options);
   });
@@ -126,32 +101,5 @@ export function registerMainHandlers() {
       // eslint-disable-next-line no-restricted-properties
       shell.openExternal(href);
     }
-  });
-
-  ipcMainHandle('spectralRun', async (_, { contents, rulesetPath }: {
-    contents: string;
-    rulesetPath?: string;
-  }) => {
-    const spectral = new Spectral();
-
-    if (rulesetPath) {
-      try {
-        const ruleset = await bundleAndLoadRuleset(rulesetPath, {
-          fs,
-          fetch: net.fetch,
-        });
-
-        spectral.setRuleset(ruleset);
-      } catch (err) {
-        console.log('Error while parsing ruleset:', err);
-        spectral.setRuleset(oas as RulesetDefinition);
-      }
-    } else {
-      spectral.setRuleset(oas as RulesetDefinition);
-    }
-
-    const diagnostics = await spectral.run(contents);
-
-    return diagnostics;
   });
 }

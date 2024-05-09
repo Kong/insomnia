@@ -1,4 +1,4 @@
-import type { IRuleResult, ISpectralDiagnostic } from '@stoplight/spectral-core';
+import { type IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
 import { stat } from 'fs/promises';
 import { OpenAPIV3 } from 'openapi-types';
@@ -73,6 +73,7 @@ import {
   useActiveApiSpecSyncVCSVersion,
   useGitVCSVersion,
 } from '../hooks/use-vcs-version';
+import { SpectralRunner } from '../worker/spetral-run';
 import { useRootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 
@@ -233,48 +234,19 @@ const Design: FC = () => {
     message => message.type === 'warning'
   );
 
-  // use this ref to handle codemirror lint race conditions, only the id matching the latest will be updated
-  const latestLintIdRef = useRef(0);
-
-  const workerRef = useRef<Worker>();
-  if (!workerRef.current) {
-    workerRef.current = new Worker(new URL('../worker/spectral.ts', import.meta.url), {
-      type: 'module',
-    });
-  }
+  const runnerRef = useRef<SpectralRunner>();
 
   const registerCodeMirrorLint = (rulesetPath: string) => {
     CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
-      const currentLintId = latestLintIdRef.current + 1;
-      latestLintIdRef.current = currentLintId;
+      let runner = runnerRef.current;
 
-      const runDiagnostics = async ({ taskId }: { taskId: number }) => {
-        return new Promise<ISpectralDiagnostic[]>((resolve, reject) => {
-          if (workerRef.current) {
-            workerRef.current.onmessage = e => {
-              const { id, diagnostics } = e.data;
-
-              const isLatestLintId = latestLintIdRef.current === id;
-              if (isLatestLintId && diagnostics) {
-                resolve(diagnostics);
-              } else {
-                reject(e.data);
-              }
-            };
-
-            workerRef.current?.postMessage({
-              contents,
-              rulesetPath,
-              taskId,
-            });
-          } else {
-            reject();
-          }
-        });
-      };
+      if (!runner) {
+        runner = new SpectralRunner();
+        runnerRef.current = runner;
+      }
 
       try {
-        const diagnostics = await runDiagnostics({ taskId: currentLintId });
+        const diagnostics = await runner.runDiagnostics({ contents, rulesetPath });
 
         const lintResult = diagnostics.map(({ severity, code, message, range }) => {
           return {
@@ -308,7 +280,7 @@ const Design: FC = () => {
   useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
     CodeMirror.registerHelper('lint', 'openapi', undefined);
-    workerRef.current?.terminate();
+    runnerRef.current?.terminate();
   });
 
   const onCodeEditorChange = useMemo(() => {

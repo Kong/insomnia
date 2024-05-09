@@ -56,7 +56,7 @@ export default defineConfig(({ mode }) => {
       react(),
     ],
     worker: {
-      plugins: [
+      plugins: () => [
         electronNodeRequire({
           modules: [
             'electron',

@@ -22,12 +22,10 @@ export type HandleChannels =
   | 'restoreBackup'
   | 'showOpenDialog'
   | 'showSaveDialog'
-  | 'spectralRun'
   | 'webSocket.event.findMany'
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
-  | 'loadSpectralRuleset'
   | 'writeFile';
 
 export const ipcMainHandle = (

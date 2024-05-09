@@ -73,11 +73,6 @@ export default async function build(options: Options) {
       ...Object.keys(pkg.dependencies),
       ...Object.keys(builtinModules),
     ],
-    loader: {
-      '.node': 'file',
-    },
-    // https://github.com/evanw/esbuild/issues/1619
-    mainFields: ['module', 'main'],
   });
 
   return Promise.all([

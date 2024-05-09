@@ -1,9 +1,9 @@
 import type { RulesetDefinition } from '@stoplight/spectral-core';
 import { Spectral } from '@stoplight/spectral-core';
-// @ts-expect-error - need to modify moduleResolution option in tsconfig
+// @ts-expect-error - tsconfig needs to be updated to separate main/renderer code
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
 import { oas } from '@stoplight/spectral-rulesets';
-import fs from 'fs';
+import fs from 'fs/promises';
 
 interface SpectralRunParams {
   contents: string;
@@ -11,7 +11,19 @@ interface SpectralRunParams {
   taskId: number;
 }
 
-const loadRuleset = async (rulesetPath: string) => {
+const cachedRuleset: {
+  path: string;
+  ruleset: RulesetDefinition;
+} = {
+  path: '',
+  ruleset: oas as RulesetDefinition,
+};
+
+const loadRuleset = async (rulesetPath: string,) => {
+  if (cachedRuleset.path === rulesetPath) {
+    return cachedRuleset.ruleset;
+  }
+
   let ruleset = oas as RulesetDefinition;
 
   if (rulesetPath) {
@@ -21,6 +33,8 @@ const loadRuleset = async (rulesetPath: string) => {
         fetch,
       });
 
+      cachedRuleset.path = rulesetPath;
+      cachedRuleset.ruleset = ruleset;
     } catch (err) {
       console.log('Error while parsing ruleset:', err);
     }
