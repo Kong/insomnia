@@ -1,5 +1,4 @@
-import type { IRuleResult, Ruleset } from '@stoplight/spectral-core';
-import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
+import type { IRuleResult, ISpectralDiagnostic } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
 import { stat } from 'fs/promises';
 import { OpenAPIV3 } from 'openapi-types';
@@ -244,7 +243,7 @@ const Design: FC = () => {
     });
   }
 
-  const registerCodeMirrorLint = (ruleset?: Ruleset) => {
+  const registerCodeMirrorLint = (rulesetPath: string) => {
     CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
       const currentLintId = latestLintIdRef.current + 1;
       latestLintIdRef.current = currentLintId;
@@ -256,7 +255,6 @@ const Design: FC = () => {
               const { id, diagnostics } = e.data;
 
               const isLatestLintId = latestLintIdRef.current === id;
-
               if (isLatestLintId && diagnostics) {
                 resolve(diagnostics);
               } else {
@@ -266,7 +264,7 @@ const Design: FC = () => {
 
             workerRef.current?.postMessage({
               contents,
-              ruleset,
+              rulesetPath,
               taskId,
             });
           } else {
@@ -301,22 +299,11 @@ const Design: FC = () => {
     });
   };
 
-  const loadRuleset = useCallback(async () => {
-    let ruleset: Ruleset | undefined;
-
-    try {
-      ruleset = rulesetPath ? await window.main.loadSpectralRuleset({ rulesetPath }) : undefined;
-    } catch (e) {
-      console.error('Failed to load spectral ruleset', e);
-    }
-    registerCodeMirrorLint(ruleset);
+  useEffect(() => {
+    registerCodeMirrorLint(rulesetPath);
     // when first time into document editor, the lint helper register later than codemirror init, we need to trigger lint through execute setOption
     editor.current?.tryToSetOption('lint', { ...lintOptions });
   }, [rulesetPath]);
-
-  useEffect(() => {
-    loadRuleset();
-  }, [rulesetPath, loadRuleset]);
 
   useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
