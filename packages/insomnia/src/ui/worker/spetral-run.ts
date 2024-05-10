@@ -16,15 +16,14 @@ export class SpectralRunner {
   }
 
   public async runDiagnostics({ contents, rulesetPath }: { contents: string; rulesetPath: string }) {
-    this.taskId = this.taskId++;
-    return new Promise<ISpectralDiagnostic[]>((resolve, reject) => {
+    this.taskId = ++this.taskId;
+    return new Promise<ISpectralDiagnostic[]>(resolve => {
       this.worker.onmessage = e => {
         const { id, diagnostics } = e.data;
 
+        // onmessage callback will be called several times in one promise, and promise can be resolved or rejected only once, so we cant reject it here
         if (id === this.taskId && diagnostics) {
           resolve(diagnostics);
-        } else {
-          reject(e.data);
         }
       };
 

@@ -234,20 +234,19 @@ const Design: FC = () => {
     message => message.type === 'warning'
   );
 
-  const runnerRef = useRef<SpectralRunner>();
+  const spectralRunnerRef = useRef<SpectralRunner>();
 
   const registerCodeMirrorLint = (rulesetPath: string) => {
     CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
-      let runner = runnerRef.current;
+      let runner = spectralRunnerRef.current;
 
       if (!runner) {
         runner = new SpectralRunner();
-        runnerRef.current = runner;
+        spectralRunnerRef.current = runner;
       }
 
       try {
         const diagnostics = await runner.runDiagnostics({ contents, rulesetPath });
-
         const lintResult = diagnostics.map(({ severity, code, message, range }) => {
           return {
             from: CodeMirror.Pos(
@@ -280,7 +279,7 @@ const Design: FC = () => {
   useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
     CodeMirror.registerHelper('lint', 'openapi', undefined);
-    runnerRef.current?.terminate();
+    spectralRunnerRef.current?.terminate();
   });
 
   const onCodeEditorChange = useMemo(() => {
