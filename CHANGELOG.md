@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [core@9.1.1] - 2024-05-07
+
+## What's Changed
+
+- unify all app requests behind a common api convention by @jackkav in <https://github.com/Kong/insomnia/pull/7338>
+- reduce reload noise coming from learning feature by @jackkav in <https://github.com/Kong/insomnia/pull/7346>
+- remove read only pairs from all kvp editors by @jackkav in <https://github.com/Kong/insomnia/pull/7351>
+- network-cleanup by @jackkav in <https://github.com/Kong/insomnia/pull/7355>
+- fix: should not refetch as much [INS-3817] by @jackkav in <https://github.com/Kong/insomnia/pull/7377>
+- fix(project-data): Move remote file fetching outside the main path by @gatzjames in <https://github.com/Kong/insomnia/pull/7378>
+
+**Full Changelog**: <https://github.com/Kong/insomnia/compare/core@9.1.0...core@9.1.1>
+
 ## [core@9.1.0] - 2024-04-30
 
 ## What's Changed
