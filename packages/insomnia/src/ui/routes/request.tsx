@@ -523,29 +523,57 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
   invariant(testRequest, 'mock route is missing a testing request');
   const req = await models.request.update(testRequest, patch);
 
-  const {
-    environment,
-    settings,
-    clientCertificates,
-    caCert,
-    activeEnvironmentId,
-    timelinePath,
-    responseId,
-  } = await fetchRequestData(req._id);
+  try {
+    const {
+      environment,
+      settings,
+      clientCertificates,
+      caCert,
+      activeEnvironmentId,
+      timelinePath,
+      responseId,
+    } = await fetchRequestData(req._id);
 
-  const renderResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
-  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-  const res = await sendCurlAndWriteTimeline(
-    renderedRequest,
-    clientCertificates,
-    caCert,
-    settings,
-    timelinePath,
-    responseId,
-  );
-  const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
-  await models.response.create(response);
-  return null;
+    addRequestTimingRecord(
+      mockRoute._id,
+      {
+        stepName: 'Rendering request',
+        isDone: false,
+        startedAt: Date.now(),
+        endedAt: 0,
+      },
+    );
+
+    const renderResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
+    const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+
+    addRequestTimingRecord(
+      mockRoute._id,
+      {
+        stepName: 'Preparing and sending request',
+        isDone: false,
+        startedAt: Date.now(),
+        endedAt: 0,
+      },
+    );
+
+    const res = await sendCurlAndWriteTimeline(
+      renderedRequest,
+      clientCertificates,
+      caCert,
+      settings,
+      timelinePath,
+      responseId,
+    );
+
+    endRequestTiming(mockRoute._id, Date.now());
+
+    const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
+    await models.response.create(response);
+    return null;
+  } finally {
+    deleteRequestTiming(mockRoute._id);
+  }
 };
 export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {
   const { workspaceId, requestId } = params;
