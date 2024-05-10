@@ -15,7 +15,7 @@ import { PluginTemplateTag } from '../../../templating/extensions';
 import { invariant } from '../../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
 
-const random = {
+export const random = {
   'guid': () => faker.string.uuid(),
   'timestamp': () => faker.date.anytime().getTime().toString(),
   'isoTimestamp': () => faker.date.anytime().toISOString(),
