@@ -686,8 +686,8 @@ export const Debug: FC = () => {
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={10} collapsible>
         <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
-          <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
-            <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
+          <div className="flex flex-col items-start">
+            <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 border-solid border-[--hl-md] border-b p-[--padding-sm] font-bold w-full'>
               <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                 <NavLink
                   data-testid="project"
@@ -702,142 +702,144 @@ export const Debug: FC = () => {
                 <WorkspaceDropdown />
               </Breadcrumb>
             </Breadcrumbs>
-            <div className="flex w-full items-center gap-2 justify-between">
-              <Select
-                aria-label="Select an environment"
-                className="overflow-hidden"
-                onOpenChange={setIsEnvironmentSelectOpen}
-                isOpen={isEnvironmentSelectOpen}
-                onSelectionChange={environmentId => {
-                  setActiveEnvironmentFetcher.submit(
-                    {
-                      environmentId,
-                    },
-                    {
-                      method: 'POST',
-                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
-                    }
-                  );
-                }}
-                selectedKey={activeEnvironment._id}
-              >
-                <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden w-full">
-                  <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
-                    {({ isPlaceholder, selectedItem }) => {
-                      if (
-                        isPlaceholder ||
-                        (selectedItem &&
-                          selectedItem._id === baseEnvironment._id) ||
-                        !selectedItem
-                      ) {
+            <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
+              <div className="flex w-full items-center gap-2 justify-between">
+                <Select
+                  aria-label="Select an environment"
+                  className="overflow-hidden"
+                  onOpenChange={setIsEnvironmentSelectOpen}
+                  isOpen={isEnvironmentSelectOpen}
+                  onSelectionChange={environmentId => {
+                    setActiveEnvironmentFetcher.submit(
+                      {
+                        environmentId,
+                      },
+                      {
+                        method: 'POST',
+                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
+                      }
+                    );
+                  }}
+                  selectedKey={activeEnvironment._id}
+                >
+                  <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden w-full">
+                    <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
+                      {({ isPlaceholder, selectedItem }) => {
+                        if (
+                          isPlaceholder ||
+                          (selectedItem &&
+                            selectedItem._id === baseEnvironment._id) ||
+                          !selectedItem
+                        ) {
+                          return (
+                            <Fragment>
+                              <span
+                                style={{
+                                  borderColor: 'var(--color-font)',
+                                }}
+                              >
+                                <Icon className='text-xs w-5' icon="globe-americas" />
+                              </span>
+                              <span className='truncate'>
+                                {baseEnvironment.name}
+                              </span>
+                            </Fragment>
+                          );
+                        }
+
                         return (
                           <Fragment>
                             <span
                               style={{
-                                borderColor: 'var(--color-font)',
+                                borderColor: selectedItem.color ?? 'var(--color-font)',
                               }}
                             >
-                              <Icon className='text-xs w-5' icon="globe-americas" />
+                              <Icon
+                                icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
+                                style={{
+                                  color: selectedItem.color ?? 'var(--color-font)',
+                                }}
+                                className='text-xs w-5'
+                              />
                             </span>
-                            <span className='truncate'>
-                              {baseEnvironment.name}
-                            </span>
+                            {selectedItem.name}
                           </Fragment>
                         );
-                      }
-
-                      return (
-                        <Fragment>
-                          <span
-                            style={{
-                              borderColor: selectedItem.color ?? 'var(--color-font)',
-                            }}
-                          >
-                          <Icon
-                            icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
-                            style={{
-                              color: selectedItem.color ?? 'var(--color-font)',
-                            }}
-                            className='text-xs w-5'
-                          />
-                          </span>
-                          {selectedItem.name}
-                        </Fragment>
-                      );
-                    }}
-                  </SelectValue>
-                  <Icon icon="caret-down" />
-                </Button>
-                <Popover className="min-w-max">
-                  <ListBox
-                    key={activeEnvironment._id}
-                    items={environmentsList}
-                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                  >
-                    {item => (
-                      <ListBoxItem
-                        id={item._id}
-                        key={item._id}
-                        className={
-                          `flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item._id === baseEnvironment._id ? '' : 'pl-8'}`
-                        }
-                        aria-label={item.name}
-                        textValue={item.name}
-                        value={item}
-                      >
-                        {({ isSelected }) => (
-                          <Fragment>
-                            <span
-                              style={{
-                                borderColor: item.color ?? 'var(--color-font)',
-                              }}
-                            >
-                              <Icon
-                                icon={item.isPrivate ? 'laptop-code' : 'globe-americas'}
-                                className='text-xs w-5'
+                      }}
+                    </SelectValue>
+                    <Icon icon="caret-down" />
+                  </Button>
+                  <Popover className="min-w-max">
+                    <ListBox
+                      key={activeEnvironment._id}
+                      items={environmentsList}
+                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                    >
+                      {item => (
+                        <ListBoxItem
+                          id={item._id}
+                          key={item._id}
+                          className={
+                            `flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item._id === baseEnvironment._id ? '' : 'pl-8'}`
+                          }
+                          aria-label={item.name}
+                          textValue={item.name}
+                          value={item}
+                        >
+                          {({ isSelected }) => (
+                            <Fragment>
+                              <span
                                 style={{
-                                  color: item.color ?? 'var(--color-font)',
+                                  borderColor: item.color ?? 'var(--color-font)',
                                 }}
-                              />
-                            </span>
-                            <span className='flex-1 truncate'>
-                              {item.name}
-                            </span>
-                            {isSelected && (
-                              <Icon
-                                icon="check"
-                                className="text-[--color-success] justify-self-end"
-                              />
-                            )}
-                          </Fragment>
-                        )}
-                      </ListBoxItem>
-                    )}
-                  </ListBox>
-                </Popover>
-              </Select>
+                              >
+                                <Icon
+                                  icon={item.isPrivate ? 'laptop-code' : 'globe-americas'}
+                                  className='text-xs w-5'
+                                  style={{
+                                    color: item.color ?? 'var(--color-font)',
+                                  }}
+                                />
+                              </span>
+                              <span className='flex-1 truncate'>
+                                {item.name}
+                              </span>
+                              {isSelected && (
+                                <Icon
+                                  icon="check"
+                                  className="text-[--color-success] justify-self-end"
+                                />
+                              )}
+                            </Fragment>
+                          )}
+                        </ListBoxItem>
+                      )}
+                    </ListBox>
+                  </Popover>
+                </Select>
+                <Button
+                  aria-label='Manage Environments'
+                  onPress={() => setEnvironmentModalOpen(true)}
+                  className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                >
+                  <Icon icon="gear" />
+                </Button>
+              </div>
               <Button
-                aria-label='Manage Environments'
-                onPress={() => setEnvironmentModalOpen(true)}
-                className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                onPress={() => setIsCookieModalOpen(true)}
+                className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
               >
-                <Icon icon="gear" />
+                <Icon icon="cookie-bite" className='w-5 flex-shrink-0' />
+                <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
+              </Button>
+              <Button
+                onPress={() => setCertificatesModalOpen(true)}
+                className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              >
+                <Icon icon="file-contract" className='w-5 flex-shrink-0' />
+                <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates</span>
               </Button>
             </div>
-            <Button
-              onPress={() => setIsCookieModalOpen(true)}
-              className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-            >
-              <Icon icon="cookie-bite" className='w-5' />
-              <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
-            </Button>
-            <Button
-              onPress={() => setCertificatesModalOpen(true)}
-              className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-            >
-              <Icon icon="file-contract" className='w-5' />
-              <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates</span>
-            </Button>
           </div>
 
           <div className="flex flex-col flex-1 overflow-hidden">
