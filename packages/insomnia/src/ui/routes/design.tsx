@@ -474,9 +474,9 @@ const Design: FC = () => {
             <div className="flex w-full items-center gap-2 justify-between">
               <Select
                 aria-label="Select an environment"
-                  className="overflow-hidden"
+                className="overflow-hidden"
                 onOpenChange={setIsEnvironmentSelectOpen}
-                  isOpen={isEnvironmentSelectOpen}
+                isOpen={isEnvironmentSelectOpen}
                 onSelectionChange={environmentId => {
                   setActiveEnvironmentFetcher.submit(
                     {
