@@ -1,4 +1,4 @@
-import { fakerFunctions } from '../../../ui/components/templating/local-template-tags';
+import { fakerFunctions } from '../../../ui/components/templating/faker-functions';
 import { Converter, ImportRequest, Parameter } from '../entities';
 import {
   Auth as V200Auth,
