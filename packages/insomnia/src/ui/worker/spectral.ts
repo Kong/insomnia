@@ -1,4 +1,4 @@
-import type { RulesetDefinition } from '@stoplight/spectral-core';
+import type { ISpectralDiagnostic, RulesetDefinition } from '@stoplight/spectral-core';
 import { Spectral } from '@stoplight/spectral-core';
 // @ts-expect-error - tsconfig needs to be updated to separate main/renderer code
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
@@ -9,6 +9,11 @@ interface SpectralRunParams {
   contents: string;
   rulesetPath: string;
   taskId: number;
+}
+
+export interface SpectralResponse {
+  id: number;
+  diagnostics: ISpectralDiagnostic[];
 }
 
 const cachedRuleset: {

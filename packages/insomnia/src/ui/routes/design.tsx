@@ -73,7 +73,7 @@ import {
   useActiveApiSpecSyncVCSVersion,
   useGitVCSVersion,
 } from '../hooks/use-vcs-version';
-import { SpectralRunner } from '../worker/spetral-run';
+import { SpectralRunner } from '../worker/spectral-run';
 import { useRootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 
