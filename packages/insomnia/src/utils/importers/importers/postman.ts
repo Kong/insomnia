@@ -314,6 +314,8 @@ export class ImportPostman {
 
         if (type === 'file') {
           item.fileName = src as string;
+        } else if (typeof value === 'string') {
+          item.value = transformPostmanToNunjucksString(value);
         } else {
           item.value = value as string;
         }
