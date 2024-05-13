@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { ImportPostman } from './postman';
+import { ImportPostman, transformPostmanToInsomniaString } from './postman';
 import { HttpsSchemaGetpostmanComJsonCollectionV210, Request1 } from './postman-2.1.types';
 
 describe('postman', () => {
@@ -31,6 +31,15 @@ describe('postman', () => {
       },
     ],
   })) as HttpsSchemaGetpostmanComJsonCollectionV210;
+
+  describe('transformPostmanToInsomniaString', () => {
+    it('should transform a postman request string to an insomnia request string', () => {
+      const input = '{{$guid}}abc{{$randomStreetAddress}}def{{$guid}}';
+      const output = '{% random \'guid\' %}abc{% random \'randomStreetAddress\' %}def{% random \'guid\' %}';
+      expect(transformPostmanToInsomniaString(input)).toEqual(output);
+      expect(transformPostmanToInsomniaString()).toEqual('');
+    });
+  });
 
   describe('headers', () => {
     describe('properties', () => {
