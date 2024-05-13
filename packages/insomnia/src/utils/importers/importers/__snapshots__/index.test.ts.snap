@@ -4967,7 +4967,7 @@ exports[`Fixtures Import postman faker-vars-v2_1-input.json 1`] = `
       "description": "",
       "headers": [
         {
-          "description": "{{$guid}}",
+          "description": "",
           "name": "{% random 'guid' %}",
           "value": "{% random 'guid' %}",
         },

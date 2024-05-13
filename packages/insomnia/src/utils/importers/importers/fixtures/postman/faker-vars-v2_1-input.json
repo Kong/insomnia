@@ -39,7 +39,7 @@
 					{
 						"key": "{{$guid}}",
 						"value": "{{$guid}}",
-						"description": "{{$guid}}",
+						"description": "",
 						"type": "text"
 					}
 				],
