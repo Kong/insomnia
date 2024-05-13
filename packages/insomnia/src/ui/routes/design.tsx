@@ -113,9 +113,7 @@ export const loader: LoaderFunction = async ({
 
   try {
     parsedSpec = YAML.parse(apiSpec.contents) as OpenAPIV3.Document;
-  } catch (error) {
-    console.log('Error parsing spec', error);
-  }
+  } catch { }
 
   return {
     apiSpec,
