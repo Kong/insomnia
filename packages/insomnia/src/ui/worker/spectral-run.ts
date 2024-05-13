@@ -19,12 +19,13 @@ export class SpectralRunner {
 
   public async runDiagnostics({ contents, rulesetPath }: { contents: string; rulesetPath: string }) {
     this.taskId = ++this.taskId;
-    return new Promise<ISpectralDiagnostic[]>((resolve, reject) => {
+    return new Promise<ISpectralDiagnostic[]>(resolve => {
       this.worker.onmessage = (e: MessageEvent<SpectralResponse>) => {
         const { id, diagnostics } = e.data;
 
         // onmessage callback will be called several times in one promise,
         // and promise can be resolved or rejected only once, so we cant reject it here
+        // NOTE: we will depend on the garbage collection to clean up the unresolved promises
         const hasResultForThisTask = id === this.taskId && diagnostics;
         if (hasResultForThisTask) {
           resolve(diagnostics);
@@ -35,7 +36,6 @@ export class SpectralRunner {
         } else {
           console.error('Error while running diagnostics:', e.data);
         }
-        reject();
       };
 
       this.worker.postMessage({
