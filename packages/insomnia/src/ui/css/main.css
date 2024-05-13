@@ -1279,7 +1279,6 @@ html {
   --modal-width-skinny: calc(var(--font-size) * 30);
   /* Other */
   --drag-width: calc(var(--font-size) * 0.5);
-  --height-nav: var(--line-height-sm);
 }
 .txt-xxs {
   font-size: var(--font-size-xxs) !important;
@@ -2031,7 +2030,7 @@ html {
   overflow: hidden;
   border-bottom: 1px solid var(--hl-md);
   box-sizing: border-box;
-  height: var(--height-nav);
+  height: var(--line-height-sm);
   line-height: var(--line-height-md);
   color: var(--color-font);
   display: flex;
@@ -2594,7 +2593,7 @@ input.editable {
 }
 .pane {
   display: grid;
-  grid-template-rows: var(--height-nav) minmax(0, 1fr);
+  grid-template-rows: var(--line-height-sm) minmax(0, 1fr);
   grid-template-columns: 100%;
 }
 .pane .pane__header {
@@ -3007,7 +3006,7 @@ input.editable {
   color: var(--hl);
   padding-left: var(--padding-xs);
   padding-right: var(--padding-xs);
-  height: var(--height-nav);
+  height: var(--line-height-sm);
   overflow: auto;
 }
 .sidebar .sidebar__menu--insomnia-HACK {
@@ -3389,7 +3388,7 @@ input.editable {
 }
 .urlbar > .dropdown > button,
 .urlbar > .dropdown > button > i.fa {
-  line-height: var(--height-nav);
+  line-height: var(--line-height-sm);
 }
 .urlbar .urlbar__send-btn {
   padding-right: var(--padding-md);

@@ -475,7 +475,7 @@ const TestSuiteRoute = () => {
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden divide-solid divide-y divide-[--hl-md]">
-      <div className="flex flex-shrink-0 gap-2 p-[--padding-md]">
+      <div className="flex h-[--line-height-sm] flex-shrink-0 gap-2 items-center px-[--padding-md]">
         <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full truncate flex-1">
           <EditableInput
             className='w-full px-1'
@@ -513,7 +513,7 @@ const TestSuiteRoute = () => {
         </Button>
         <Button
           aria-label="Run all tests"
-          className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className={`px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm ${testsRunning ? 'animate-pulse' : ''}`}
           onPress={() => {
             runAllTestsFetcher.submit(
               {},
@@ -524,7 +524,7 @@ const TestSuiteRoute = () => {
             );
           }}
         >
-          {testsRunning ? 'Running... ' : 'Run tests'}
+          Run tests
           <i className="fa fa-play space-left" />
         </Button>
       </div>

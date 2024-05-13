@@ -589,7 +589,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       </div>
       {
         showFilter || showPrettify ? (
-          <div key={uniquenessKey} className="editor__toolbar">
+          <div key={uniquenessKey} className="flex flex-row items-center border-solid border-t border-[--hl-md] h-[--line-height-sm] text-[--font-size-sm]">
             {showFilter ?
               (<input
                 ref={inputRef}
@@ -694,22 +694,22 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
               </MenuTrigger>
             )}
             {showFilter ?
-              (<button key="help" className="btn btn--compact" onClick={() => showModal(FilterHelpModal, { isJSON: Boolean(mode?.includes('json')) })}>
+              (<Button key="help" className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all" onPress={() => showModal(FilterHelpModal, { isJSON: Boolean(mode?.includes('json')) })}>
                 <i className="fa fa-question-circle" />
-              </button>) : null}
+              </Button>) : null}
             {showPrettify ?
-              (<button
+              (<Button
                 key="prettify"
-                className="btn btn--compact"
-                title="Auto-format request body whitespace"
-                onClick={() => {
+                className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                aria-label="Auto-format request body whitespace"
+                onPress={() => {
                   if (mode?.includes('json') || mode?.includes('xml')) {
                     maybePrettifyAndSetValue(codeMirror.current?.getValue(), true);
                   }
                 }}
               >
                 Beautify {mode?.includes('json') ? 'JSON' : mode?.includes('xml') ? 'XML' : ''}
-              </button>) : null}
+              </Button>) : null}
           </div>
         ) : null
       }

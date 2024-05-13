@@ -454,8 +454,8 @@ const Design: FC = () => {
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel id="sidebar" className='sidebar theme--sidebar' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
         <div className='flex h-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden'>
-          <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
-            <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
+          <div className="flex flex-col items-start">
+            <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 border-solid border-[--hl-md] border-b p-[--padding-sm] font-bold w-full'>
               <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                 <NavLink
                   data-testid="project"
@@ -470,12 +470,13 @@ const Design: FC = () => {
                 <WorkspaceDropdown />
               </Breadcrumb>
             </Breadcrumbs>
+            <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
             <div className="flex w-full items-center gap-2 justify-between">
               <Select
                 aria-label="Select an environment"
                 className="overflow-hidden"
-                isOpen={isEnvironmentSelectOpen}
                 onOpenChange={setIsEnvironmentSelectOpen}
+                isOpen={isEnvironmentSelectOpen}
                 onSelectionChange={environmentId => {
                   setActiveEnvironmentFetcher.submit(
                     {
@@ -521,13 +522,13 @@ const Design: FC = () => {
                               borderColor: selectedItem.color ?? 'var(--color-font)',
                             }}
                           >
-                          <Icon
-                            icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
-                            style={{
-                              color: selectedItem.color ?? 'var(--color-font)',
-                            }}
-                            className='text-xs w-5'
-                          />
+                            <Icon
+                              icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
+                              style={{
+                                color: selectedItem.color ?? 'var(--color-font)',
+                              }}
+                              className='text-xs w-5'
+                            />
                           </span>
                           {selectedItem.name}
                         </Fragment>
@@ -555,12 +556,11 @@ const Design: FC = () => {
                       >
                         {({ isSelected }) => (
                           <Fragment>
-                            <span
-                              // className='p-1 border-solid border w-5 h-5 rounded bg-[--hl-sm] flex-shrink-0 flex items-center justify-center'
-                              style={{
+                              <span
+                                style={{
                                 borderColor: item.color ?? 'var(--color-font)',
                               }}
-                            >
+                              >
                               <Icon
                                 icon={item.isPrivate ? 'laptop-code' : 'globe-americas'}
                                 className='text-xs w-5'
@@ -597,16 +597,17 @@ const Design: FC = () => {
               onPress={() => setIsCookieModalOpen(true)}
               className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             >
-              <Icon icon="cookie-bite" className='w-5' />
+                <Icon icon="cookie-bite" className='w-5 flex-shrink-0' />
               <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
             </Button>
             <Button
               onPress={() => setCertificatesModalOpen(true)}
               className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             >
-              <Icon icon="file-contract" className='w-5' />
+                <Icon icon="file-contract" className='w-5 flex-shrink-0' />
               <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates</span>
             </Button>
+          </div>
           </div>
           <div className="flex flex-shrink-0 items-center gap-2 p-[--padding-sm]">
             <Heading className="text-[--hl] uppercase">Spec</Heading>
@@ -1129,7 +1130,7 @@ const Design: FC = () => {
               />
             )}
           </div>
-          <div className="flex flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
+              <div className="flex h-[--line-height-sm] box-border flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
             <div className="flex gap-2 items-center p-[--padding-sm]">
               <TooltipTrigger>
                 <Button className="flex items-center gap-2 cursor-pointer select-none">

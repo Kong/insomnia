@@ -1,6 +1,6 @@
 import { Snippet } from 'codemirror';
 import { CookieObject, Environment, InsomniaObject, Request as ScriptRequest, RequestInfo, Url, Variables } from 'insomnia-sdk';
-import React, { FC, Fragment, useRef } from 'react';
+import React, { FC, useRef } from 'react';
 
 import { translateHandlersInScript } from '../../../../src/utils/importers/importers/postman';
 import { Settings } from '../../../models/settings';
@@ -196,8 +196,8 @@ export const PreRequestScriptEditor: FC<Props> = ({
   );
 
   return (
-    <Fragment>
-      <div className="h-[calc(100%-var(--line-height-xs))]">
+    <div className='h-full flex flex-col'>
+      <div className="flex-1">
         <CodeEditor
           key={uniquenessKey}
           id="pre-request-script-editor"
@@ -215,7 +215,7 @@ export const PreRequestScriptEditor: FC<Props> = ({
           onPaste={translateHandlersInScript}
         />
       </div>
-      <div className="h-[calc(var(--line-height-xs))] border-solid border-t border-[var(--hl-md)] text-[var(--font-size-sm)] p-[var(--padding-xs)]">
+      <div className="flex flex-row border-solid border-t border-[var(--hl-md)] h-[var(--line-height-sm)] text-[var(--font-size-sm)] box-border overflow-x-auto">
         <Dropdown
           aria-label='Variable Snippets'
           placement='top left'
@@ -415,6 +415,6 @@ export const PreRequestScriptEditor: FC<Props> = ({
           </DropdownItem>
         </Dropdown>
       </div>
-    </Fragment>
+    </div>
   );
 };

@@ -2,7 +2,6 @@ import React, { FC, Fragment, useState } from 'react';
 import { Button, Heading, ToggleButton } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
-import styled from 'styled-components';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
 import * as models from '../../../models';
@@ -31,32 +30,6 @@ import { RenderedQueryString } from '../rendered-query-string';
 import { RequestUrlBar } from '../request-url-bar';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderRequestPane } from './placeholder-request-pane';
-const HeaderContainer = styled.div({
-  display: 'flex',
-  flexDirection: 'column',
-  position: 'relative',
-  height: '100%',
-  overflowY: 'auto',
-});
-
-export const TabPanelFooter = styled.div({
-  boxSizing: 'content-box',
-  display: 'flex',
-  flexDirection: 'row',
-  borderTop: '1px solid var(--hl-md)',
-  height: 'var(--line-height-sm)',
-  fontSize: 'var(--font-size-sm)',
-  '& > button': {
-    color: 'var(--hl)',
-    padding: 'var(--padding-xs) var(--padding-xs)',
-    height: '100%',
-  },
-});
-
-const TabPanelBody = styled.div({
-  overflowY: 'auto',
-  flex: '1 0',
-});
 
 interface Props {
   environmentId: string;
@@ -275,29 +248,29 @@ export const RequestPane: FC<Props> = ({
             </div>
           }
         >
-          <HeaderContainer>
+          <div className="flex flex-col relative h-full overflow-hidden">
             <ErrorBoundary
               key={uniqueKey}
               errorClassName="font-error pad text-center"
             >
-              <TabPanelBody>
+              <div className='overflow-y-auto flex-1 flex-shrink-0'>
                 <RequestHeadersEditor bulk={settings.useBulkHeaderEditor} />
-              </TabPanelBody>
+              </div>
             </ErrorBoundary>
 
-            <TabPanelFooter>
-              <button
-                className="btn btn--compact"
-                onClick={() =>
+            <div className="flex flex-row border-solid border-t border-[var(--hl-md)] h-[var(--line-height-sm)] text-[var(--font-size-sm)] box-border">
+              <Button
+                className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                onPress={() =>
                   patchSettings({
                     useBulkHeaderEditor: !settings.useBulkHeaderEditor,
                   })
                 }
               >
                 {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
-              </button>
-            </TabPanelFooter>
-          </HeaderContainer>
+              </Button>
+            </div>
+          </div>
         </TabItem>
         <TabItem
           key="pre-request-script"

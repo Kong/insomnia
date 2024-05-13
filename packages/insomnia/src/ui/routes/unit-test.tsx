@@ -296,163 +296,164 @@ const TestRoute: FC = () => {
 
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
-      <Panel id="sidebar" className='sidebar theme--sidebar' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
+      <Panel id="sidebar" className='sidebar theme--sidebar divide-solid divide-y divide-[--hl-md]' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
         <ErrorBoundary showAlert>
           <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
-          <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
-              <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
-              <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
-                <NavLink
-                  data-testid="project"
-                  className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                  to={`/organization/${organizationId}/project/${activeProject._id}`}
-                >
-                  <Icon className='text-xs' icon="chevron-left" />
-                </NavLink>
-                <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
-              </Breadcrumb>
+            <div className="flex flex-col items-start divide-solid divide-y divide-[--hl-md]">
+              <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 p-[--padding-sm] font-bold w-full'>
+                <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+                  <NavLink
+                    data-testid="project"
+                    className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    to={`/organization/${organizationId}/project/${activeProject._id}`}
+                  >
+                    <Icon className='text-xs' icon="chevron-left" />
+                  </NavLink>
+                  <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
+                </Breadcrumb>
                 <Breadcrumb className="flex truncate select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
-                <WorkspaceDropdown />
-              </Breadcrumb>
-            </Breadcrumbs>
-            <div className="flex w-full items-center gap-2 justify-between">
-              <Select
-                aria-label="Select an environment"
-                className="overflow-hidden"
-                isOpen={isEnvironmentSelectOpen}
-                onOpenChange={setIsEnvironmentSelectOpen}
-                onSelectionChange={environmentId => {
-                  setActiveEnvironmentFetcher.submit(
-                    {
-                      environmentId,
-                    },
-                    {
-                      method: 'POST',
-                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
-                    }
-                  );
-                }}
-                selectedKey={activeEnvironment._id}
-              >
-                  <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden w-full">
-                  <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
-                    {({ isPlaceholder, selectedItem }) => {
-                      if (
-                        isPlaceholder ||
-                        (selectedItem &&
-                          selectedItem._id === baseEnvironment._id) ||
-                        !selectedItem
-                      ) {
-                        return (
-                          <Fragment>
-                            <span
-                              style={{
-                                borderColor: 'var(--color-font)',
-                              }}
-                            >
-                              <Icon className='text-xs w-5' icon="globe-americas" />
-                            </span>
-                            <span className='truncate'>
-                              {baseEnvironment.name}
-                            </span>
-                          </Fragment>
-                        );
-                      }
-
-                      return (
-                        <Fragment>
-                          <span
-                            style={{
-                              borderColor: selectedItem.color ?? 'var(--color-font)',
-                            }}
-                          >
-                          <Icon
-                            icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
-                            style={{
-                              color: selectedItem.color ?? 'var(--color-font)',
-                            }}
-                            className='text-xs w-5'
-                          />
-                          </span>
-                          {selectedItem.name}
-                        </Fragment>
+                  <WorkspaceDropdown />
+                </Breadcrumb>
+              </Breadcrumbs>
+              <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
+                <div className="flex w-full items-center gap-2 justify-between">
+                  <Select
+                    aria-label="Select an environment"
+                    className="overflow-hidden"
+                    onOpenChange={setIsEnvironmentSelectOpen}
+                    isOpen={isEnvironmentSelectOpen}
+                    onSelectionChange={environmentId => {
+                      setActiveEnvironmentFetcher.submit(
+                        {
+                          environmentId,
+                        },
+                        {
+                          method: 'POST',
+                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
+                        }
                       );
                     }}
-                  </SelectValue>
-                  <Icon icon="caret-down" />
-                </Button>
-                <Popover className="min-w-max">
-                    <ListBox
-                      items={environmentsList}
-                      key={activeEnvironment._id}
-                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                    >
-                    {item => (
-                        <ListBoxItem
-                          id={item._id}
-                          key={item._id}
-                          className={
-                          `flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item._id === baseEnvironment._id ? '' : 'pl-8'}`
-                        }
-                          aria-label={item.name}
-                          textValue={item.name}
-                          value={item}
-                        >
-                        {({ isSelected }) => (
-                          <Fragment>
-                            <span
-                              // className='p-1 border-solid border w-5 h-5 rounded bg-[--hl-sm] flex-shrink-0 flex items-center justify-center'
-                              style={{
-                                borderColor: item.color ?? 'var(--color-font)',
-                              }}
-                            >
-                              <Icon
-                                icon={item.isPrivate ? 'laptop-code' : 'globe-americas'}
-                                className='text-xs w-5'
+                    selectedKey={activeEnvironment._id}
+                  >
+                    <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden w-full">
+                      <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
+                        {({ isPlaceholder, selectedItem }) => {
+                          if (
+                            isPlaceholder ||
+                            (selectedItem &&
+                              selectedItem._id === baseEnvironment._id) ||
+                            !selectedItem
+                          ) {
+                            return (
+                              <Fragment>
+                                <span
+                                  style={{
+                                    borderColor: 'var(--color-font)',
+                                  }}
+                                >
+                                  <Icon className='text-xs w-5' icon="globe-americas" />
+                                </span>
+                                <span className='truncate'>
+                                  {baseEnvironment.name}
+                                </span>
+                              </Fragment>
+                            );
+                          }
+
+                          return (
+                            <Fragment>
+                              <span
                                 style={{
-                                  color: item.color ?? 'var(--color-font)',
+                                  borderColor: selectedItem.color ?? 'var(--color-font)',
                                 }}
-                              />
-                            </span>
-                            <span className='flex-1 truncate'>
-                              {item.name}
-                            </span>
-                            {isSelected && (
-                              <Icon
-                                icon="check"
-                                className="text-[--color-success] justify-self-end"
-                              />
+                              >
+                                <Icon
+                                  icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
+                                  style={{
+                                    color: selectedItem.color ?? 'var(--color-font)',
+                                  }}
+                                  className='text-xs w-5'
+                                />
+                              </span>
+                              {selectedItem.name}
+                            </Fragment>
+                          );
+                        }}
+                      </SelectValue>
+                      <Icon icon="caret-down" />
+                    </Button>
+                    <Popover className="min-w-max">
+                      <ListBox
+                        key={activeEnvironment._id}
+                        items={environmentsList}
+                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                      >
+                        {item => (
+                          <ListBoxItem
+                            id={item._id}
+                            key={item._id}
+                            className={
+                              `flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item._id === baseEnvironment._id ? '' : 'pl-8'}`
+                            }
+                            aria-label={item.name}
+                            textValue={item.name}
+                            value={item}
+                          >
+                            {({ isSelected }) => (
+                              <Fragment>
+                                <span
+                                  style={{
+                                    borderColor: item.color ?? 'var(--color-font)',
+                                  }}
+                                >
+                                  <Icon
+                                    icon={item.isPrivate ? 'laptop-code' : 'globe-americas'}
+                                    className='text-xs w-5'
+                                    style={{
+                                      color: item.color ?? 'var(--color-font)',
+                                    }}
+                                  />
+                                </span>
+                                <span className='flex-1 truncate'>
+                                  {item.name}
+                                </span>
+                                {isSelected && (
+                                  <Icon
+                                    icon="check"
+                                    className="text-[--color-success] justify-self-end"
+                                  />
+                                )}
+                              </Fragment>
                             )}
-                          </Fragment>
+                          </ListBoxItem>
                         )}
-                        </ListBoxItem>
-                    )}
-                  </ListBox>
-                </Popover>
-              </Select>
-              <Button
-                aria-label='Manage Environments'
-                onPress={() => setEnvironmentModalOpen(true)}
-                className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-              >
-                <Icon icon="gear" />
-              </Button>
+                      </ListBox>
+                    </Popover>
+                  </Select>
+                  <Button
+                    aria-label='Manage Environments'
+                    onPress={() => setEnvironmentModalOpen(true)}
+                    className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  >
+                    <Icon icon="gear" />
+                  </Button>
+                </div>
+                <Button
+                  onPress={() => setIsCookieModalOpen(true)}
+                  className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                >
+                  <Icon icon="cookie-bite" className='w-5 flex-shrink-0' />
+                  <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
+                </Button>
+                <Button
+                  onPress={() => setCertificatesModalOpen(true)}
+                  className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                >
+                  <Icon icon="file-contract" className='w-5 flex-shrink-0' />
+                  <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates</span>
+                </Button>
+              </div>
             </div>
-            <Button
-              onPress={() => setIsCookieModalOpen(true)}
-              className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-            >
-              <Icon icon="cookie-bite" className='w-5' />
-                <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
-            </Button>
-              <Button
-                onPress={() => setCertificatesModalOpen(true)}
-                className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-              >
-                <Icon icon="file-contract" className='w-5' />
-                <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates</span>
-              </Button>
-          </div>
             <div className="p-[--padding-sm]">
               <Button
                 className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
@@ -581,55 +582,61 @@ const TestRoute: FC = () => {
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
       <Panel>
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
-          <Panel id="pane-one" className='pane-one theme--pane'>
-        <Routes>
-          <Route
-            path={'test-suite/:testSuiteId/*'}
-            element={
-              <Suspense>
-                <TestSuiteRoute />
-              </Suspense>
-            }
-          />
-          <Route
-            path="*"
-            element={
-              <div className="p-[--padding-md]">No test suite selected</div>
-            }
-          />
-        </Routes>
+          <Panel id="pane-one" className='pane-one theme--pane relative overflow-hidden'>
+            <Routes>
+              <Route
+                path={'test-suite/:testSuiteId/*'}
+                element={
+                  <Suspense>
+                    <TestSuiteRoute />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="*"
+                element={
+                  <div className="p-[--padding-md]">No test suite selected</div>
+                }
+              />
+            </Routes>
           </Panel>
           <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
-          <Panel id="pane-two" className='pane-two theme--pane'>
-        <Routes>
-          <Route
-            path="test-suite/:testSuiteId/test-result/:testResultId"
-            element={
-              runningTests ? (
-                <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full p-[--padding-md] border-solid border-b border-b-[--hl-md]">
-                  <Icon icon="spinner" className="fa-pulse" /> Running tests...
-                </Heading>
-              ) : (
-                <TestRunStatus />
-              )
-            }
-          />
-          <Route
-            path="*"
-            element={
-              <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full p-[--padding-md] border-solid border-b border-b-[--hl-md]">
-                {runningTests ? (
+          <Panel id="pane-two" className='pane-two theme--pane divide-y divide-solid divide-[--hl-md] overflow-hidden relative'>
+            <Routes>
+              <Route
+                path="test-suite/:testSuiteId/test-result/:testResultId"
+                element={
+                  runningTests ? (
+                    <>
+                      <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full h-[--line-height-sm] px-[--padding-md]">
+                        <Icon icon="spinner" className="fa-pulse" /> Running tests...
+                      </Heading>
+                      <div />
+                    </>
+                  ) : (
+                    <TestRunStatus />
+                  )
+                }
+              />
+              <Route
+                path="*"
+                element={
                   <>
-                    <Icon icon="spinner" className="fa-pulse" /> Running
-                    tests...
+                    <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full h-[--line-height-sm] px-[--padding-md]">
+                      {runningTests ? (
+                        <>
+                          <Icon icon="spinner" className="fa-pulse" /> Running
+                          tests...
+                        </>
+                      ) : (
+                        'No test results'
+                      )}
+                    </Heading>
+                    <div />
                   </>
-                ) : (
-                  'No test results'
-                )}
-              </Heading>
-            }
-          />
-        </Routes>
+                }
+              />
+            </Routes>
           </Panel>
         </PanelGroup>
       </Panel>

@@ -55,7 +55,7 @@ export const TestRunStatus: FC = () => {
       className="w-full flex-1 flex flex-col h-full divide-solid divide-y divide-[--hl-md]"
     >
       <Heading
-        className={`text-lg flex-shrink-0 flex items-center gap-2 w-full p-[--padding-md] ${
+        className={`text-lg flex-shrink-0 flex items-center gap-2 w-full h-[--line-height-sm] p-[--padding-md] ${
           stats.failures > 0
             ? 'text-[--color-danger]'
             : 'text-[--color-success]'
