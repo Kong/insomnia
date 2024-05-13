@@ -61,12 +61,7 @@ export default defineConfig(({ mode }) => {
     worker: {
       plugins: () => [
         electronNodeRequire({
-          modules: [
-            'electron',
-            ...Object.keys(pkg.dependencies),
-            ...builtinModules.filter(m => m !== 'buffer'),
-            ...builtinModules.map(m => `node:${m}`),
-          ],
+          modules: ['fs'],
         }),
       ],
     },
