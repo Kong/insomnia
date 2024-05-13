@@ -300,7 +300,7 @@ const TestRoute: FC = () => {
         <ErrorBoundary showAlert>
           <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
             <div className="flex flex-col items-start divide-solid divide-y divide-[--hl-md]">
-              <Breadcrumbs className='flex h-[----line-height-sm] list-none items-center m-0 gap-2 p-[--padding-sm] font-bold w-full'>
+              <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 p-[--padding-sm] font-bold w-full'>
                 <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                   <NavLink
                     data-testid="project"
@@ -582,7 +582,7 @@ const TestRoute: FC = () => {
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
       <Panel>
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
-          <Panel id="pane-one" className='pane-one theme--pane'>
+          <Panel id="pane-one" className='pane-one theme--pane relative overflow-hidden'>
             <Routes>
               <Route
                 path={'test-suite/:testSuiteId/*'}
@@ -601,14 +601,14 @@ const TestRoute: FC = () => {
             </Routes>
           </Panel>
           <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
-          <Panel id="pane-two" className='pane-two theme--pane divide-y divide-solid divide-[--hl-md]'>
+          <Panel id="pane-two" className='pane-two theme--pane divide-y divide-solid divide-[--hl-md] overflow-hidden relative'>
             <Routes>
               <Route
                 path="test-suite/:testSuiteId/test-result/:testResultId"
                 element={
                   runningTests ? (
                     <>
-                      <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full h-[----line-height-sm] p-[--padding-md]">
+                      <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full h-[--line-height-sm] px-[--padding-md]">
                         <Icon icon="spinner" className="fa-pulse" /> Running tests...
                       </Heading>
                       <div />
@@ -622,7 +622,7 @@ const TestRoute: FC = () => {
                 path="*"
                 element={
                   <>
-                    <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full h-[----line-height-sm] p-[--padding-md]">
+                    <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full h-[--line-height-sm] px-[--padding-md]">
                       {runningTests ? (
                         <>
                           <Icon icon="spinner" className="fa-pulse" /> Running

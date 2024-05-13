@@ -215,7 +215,7 @@ export const PreRequestScriptEditor: FC<Props> = ({
           onPaste={translateHandlersInScript}
         />
       </div>
-      <div className="flex flex-row border-solid border-t border-[var(--hl-md)] h-[var(--line-height-sm)] text-[var(--font-size-sm)] box-border">
+      <div className="flex flex-row border-solid border-t border-[var(--hl-md)] h-[var(--line-height-sm)] text-[var(--font-size-sm)] box-border overflow-x-auto">
         <Dropdown
           aria-label='Variable Snippets'
           placement='top left'
