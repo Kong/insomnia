@@ -1,4 +1,4 @@
-import { random } from '../../../ui/components/templating/local-template-tags';
+import { fakerFunctions } from '../../../ui/components/templating/local-template-tags';
 import { Converter, ImportRequest, Parameter } from '../entities';
 import {
   Auth as V200Auth,
@@ -52,24 +52,21 @@ type Header = V200Header | V210Header;
 
 let requestCount = 1;
 let requestGroupCount = 1;
-const tagNames = Object.keys(random);
-const regexArrayOfEachTag = tagNames.map(tag => new RegExp(`\\{\\{\\$${tag}\\}\\}`, 'g'));
-export const transformPostmanToInsomniaString = (inputString?: string | null) => {
+const fakerTags = Object.keys(fakerFunctions);
+const postmanTagRegexs = fakerTags.map(tag => ({ tag, regex: new RegExp(`\\{\\{\\$${tag}\\}\\}`, 'g') }));
+// example: { 'guid' : '{% random 'guid' %}' }
+const postmanToNunjucksLookup = fakerTags
+  .map(tag => ({ [tag]: `{% random '${tag}' %}` }))
+  .reduce((acc, obj) => ({ ...acc, ...obj }), {});
+
+export const transformPostmanToNunjucksString = (inputString?: string | null) => {
   if (!inputString) {
     return '';
   }
-  // Define replacements for each tag
-  const replacements = tagNames
-    .map(tag => ({ [tag]: `{% random '${tag}' %}` }))
-    .reduce((acc, obj) => ({ ...acc, ...obj }), {});
 
-  // Replace the matched tags with the desired format
-  let transformedString = inputString;
-  regexArrayOfEachTag.forEach((regex, index) => {
-    transformedString = transformedString.replace(regex, replacements[tagNames[index]]);
-  });
-
-  return transformedString;
+  return postmanTagRegexs.reduce((transformedString, { tag, regex }) => {
+    return transformedString.replace(regex, postmanToNunjucksLookup[tag]);
+  }, inputString);
 };
 
 const POSTMAN_SCHEMA_V2_0 =
@@ -196,12 +193,12 @@ export class ImportPostman {
       _type: 'request',
       name,
       description: (request.description as string) || '',
-      url: transformPostmanToInsomniaString(this.importUrl(request.url)),
+      url: transformPostmanToNunjucksString(this.importUrl(request.url)),
       parameters: parameters,
       method: request.method || 'GET',
       headers: headers.map(({ key, value, disabled, description }) => ({
-        name: transformPostmanToInsomniaString(key),
-        value: transformPostmanToInsomniaString(value),
+        name: transformPostmanToNunjucksString(key),
+        value: transformPostmanToNunjucksString(value),
         ...(typeof disabled !== 'undefined' ? { disabled } : {}),
         ...(typeof description !== 'undefined' ? { description } : {}),
       })),
@@ -216,8 +213,8 @@ export class ImportPostman {
       return [];
     }
     return parameters.map(({ key, value, disabled }) => ({
-      name: transformPostmanToInsomniaString(key),
-      value: transformPostmanToInsomniaString(value),
+      name: transformPostmanToNunjucksString(key),
+      value: transformPostmanToNunjucksString(value),
       disabled: disabled || false,
     }) as Parameter);
   };
@@ -306,7 +303,7 @@ export class ImportPostman {
       ({ key, value, type, enabled, disabled, src }) => {
         const item: Parameter = {
           type,
-          name: transformPostmanToInsomniaString(key),
+          name: transformPostmanToNunjucksString(key),
         };
 
         if (schema === POSTMAN_SCHEMA_V2_0) {
@@ -338,8 +335,8 @@ export class ImportPostman {
 
     const params = urlEncoded?.map(({ key, value, enabled, disabled }) => {
       const item: Parameter = {
-        value: transformPostmanToInsomniaString(value),
-        name: transformPostmanToInsomniaString(key),
+        value: transformPostmanToNunjucksString(value),
+        name: transformPostmanToNunjucksString(key),
       };
 
       if (schema === POSTMAN_SCHEMA_V2_0) {
@@ -364,7 +361,7 @@ export class ImportPostman {
 
     return {
       mimeType,
-      text: transformPostmanToInsomniaString(raw),
+      text: transformPostmanToNunjucksString(raw),
     };
   };
 
@@ -375,7 +372,7 @@ export class ImportPostman {
 
     return {
       mimeType: 'application/graphql',
-      text: transformPostmanToInsomniaString(JSON.stringify(graphql)),
+      text: transformPostmanToNunjucksString(JSON.stringify(graphql)),
     };
   };
 
@@ -592,8 +589,8 @@ export class ImportPostman {
       username: RegExp(/.+?(?=\:)/).exec(authString)?.[0],
       password: RegExp(/(?<=\:).*/).exec(authString)?.[0],
     };
-    item.username = transformPostmanToInsomniaString(item.username);
-    item.password = transformPostmanToInsomniaString(item.password);
+    item.username = transformPostmanToNunjucksString(item.username);
+    item.password = transformPostmanToNunjucksString(item.password);
 
     return item;
   };
@@ -621,7 +618,7 @@ export class ImportPostman {
         'token',
       );
     }
-    item.token = transformPostmanToInsomniaString(item.token);
+    item.token = transformPostmanToNunjucksString(item.token);
     return item;
   };
 
@@ -629,7 +626,7 @@ export class ImportPostman {
     if (!authHeader) {
       return {};
     }
-    const authHeader2 = transformPostmanToInsomniaString(authHeader.replace(/\s+/, ' '));
+    const authHeader2 = transformPostmanToNunjucksString(authHeader.replace(/\s+/, ' '));
     const tokenIndex = authHeader.indexOf(' ');
     return {
       type: 'bearer',

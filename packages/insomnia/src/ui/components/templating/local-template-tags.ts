@@ -15,7 +15,7 @@ import { PluginTemplateTag } from '../../../templating/extensions';
 import { invariant } from '../../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
 
-export const random = {
+export const fakerFunctions = {
   'guid': () => faker.string.uuid(),
   'timestamp': () => faker.date.anytime().getTime().toString(),
   'isoTimestamp': () => faker.date.anytime().toISOString(),
@@ -146,11 +146,11 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         {
           displayName: 'Function',
           type: 'enum',
-          options: Object.keys(random).map(key => ({ displayName: key, value: key })),
+          options: Object.keys(fakerFunctions).map(key => ({ displayName: key, value: key })),
         },
       ],
-      run(_context, keys: keyof typeof random) {
-        return random[keys]();
+      run(_context, keys: keyof typeof fakerFunctions) {
+        return fakerFunctions[keys]();
       },
     },
   },
