@@ -779,6 +779,7 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
   const spectralRunner = new SpectralRunner();
 
   const results = (await spectralRunner.runDiagnostics({ contents: apiSpec.contents, rulesetPath })).filter(isLintError);
+  spectralRunner.terminate();
   if (apiSpec.contents && results && results.length) {
     throw new Error('Error Generating Configuration');
   }

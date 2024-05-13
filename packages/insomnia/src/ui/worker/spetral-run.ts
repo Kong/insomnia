@@ -24,6 +24,10 @@ export class SpectralRunner {
         // onmessage callback will be called several times in one promise, and promise can be resolved or rejected only once, so we cant reject it here
         if (id === this.taskId && diagnostics) {
           resolve(diagnostics);
+        } else if (diagnostics) {
+          console.log('Received diagnostics for old task, ignoring');
+        } else {
+          console.error('Error while running diagnostics:', e.data);
         }
       };
 

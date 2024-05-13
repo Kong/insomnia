@@ -19,7 +19,7 @@ const cachedRuleset: {
   ruleset: oas as RulesetDefinition,
 };
 
-const loadRuleset = async (rulesetPath: string,) => {
+const loadRuleset = async (rulesetPath: string) => {
   if (cachedRuleset.path === rulesetPath) {
     return cachedRuleset.ruleset;
   }
