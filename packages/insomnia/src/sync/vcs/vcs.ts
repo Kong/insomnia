@@ -481,7 +481,7 @@ export class VCS {
     return snapshots;
   }
 
-  async getBranch() {
+  async getCurrentBranchName() {
     const branch = await this._getCurrentBranch();
     return branch.name;
   }
@@ -491,7 +491,7 @@ export class VCS {
     return branches.map(b => b.name);
   }
 
-  async getBranches(): Promise<string[]> {
+  async getBranchNames(): Promise<string[]> {
     const branches = await this._getBranches();
     return branches.map(b => b.name);
   }
@@ -1360,8 +1360,8 @@ export class VCS {
     return this._backendProject.id;
   }
 
-  async _getBranch(name: string, backendProjectId?: string): Promise<Branch | null> {
-    const pId = backendProjectId || this._backendProjectId();
+  async _getBranch(name: string): Promise<Branch | null> {
+    const pId = this._backendProjectId();
 
     const p = paths.branch(pId, name);
     return this._store.getItem(p);
