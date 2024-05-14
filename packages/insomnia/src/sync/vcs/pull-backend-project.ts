@@ -19,7 +19,7 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
   await vcs.checkout([], DEFAULT_BRANCH_NAME);
   const remoteBranches = await interceptAccessError({
     action: 'pull',
-    callback: () => vcs.getRemoteBranches(),
+    callback: () => vcs.getRemoteBranchNames(),
     resourceName: backendProject.name,
   });
 

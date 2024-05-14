@@ -262,7 +262,7 @@ export const syncDataAction: ActionFunction = async ({ params }) => {
     invariant(project, 'Project not found');
     invariant(project.remoteId, 'Project is not remote');
     const vcs = VCSInstance();
-    const remoteBranches = (await vcs.getRemoteBranches()).sort();
+    const remoteBranches = (await vcs.getRemoteBranchNames()).sort();
     const compare = await vcs.compareRemoteBranch();
     const remoteBackendProjects = await vcs.remoteBackendProjects({
       teamId: project.parentId,
@@ -310,11 +310,11 @@ export const syncDataLoader: LoaderFunction = async ({
     invariant(project.remoteId, 'Project is not remote');
     const vcs = VCSInstance();
     const { syncItems } = await getSyncItems({ workspaceId });
-    const localBranches = (await vcs.getBranches()).sort();
+    const localBranches = (await vcs.getBranchNames()).sort();
     const remoteBranches = (
-      remoteBranchesCache[workspaceId] || (await vcs.getRemoteBranches())
+      remoteBranchesCache[workspaceId] || (await vcs.getRemoteBranchNames())
     ).sort();
-    const currentBranch = await vcs.getBranch();
+    const currentBranch = await vcs.getCurrentBranchName();
     const history = (await vcs.getHistory()).sort((a, b) =>
       b.created > a.created ? 1 : -1
     );
@@ -525,7 +525,7 @@ export const fetchRemoteBranchAction: ActionFunction = async ({
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
   const vcs = VCSInstance();
-  const currentBranch = await vcs.getBranch();
+  const currentBranch = await vcs.getCurrentBranchName();
 
   try {
     invariant(project.remoteId, 'Project is not remote');
