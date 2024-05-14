@@ -6,7 +6,6 @@ import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas
 import { projectSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { BackendProject } from '../../types';
-import * as paths from '../paths';
 import { describeChanges } from '../util';
 import { VCS } from '../vcs';
 
@@ -959,9 +958,9 @@ describe('VCS', () => {
       const driver = new MemoryDriver();
       vcs = new VCS(driver);
 
-      driver.setItem(paths.projects(), Buffer.from(JSON.stringify([backendProject])));
-      driver.setItem(paths.projectBase(backendProject.id), Buffer.from(''));
-      driver.setItem(paths.project(backendProject.id), Buffer.from(JSON.stringify(backendProject)));
+      driver.setItem('/projects/', Buffer.from(JSON.stringify([backendProject])));
+      driver.setItem(`/projects/${backendProject.id}/`, Buffer.from(''));
+      driver.setItem(`/projects/${backendProject.id}/meta.json`, Buffer.from(JSON.stringify(backendProject)));
     });
 
     it('should return true if has project', async () => {
