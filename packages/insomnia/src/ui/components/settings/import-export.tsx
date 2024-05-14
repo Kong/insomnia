@@ -254,7 +254,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const workspacesFetcher = useFetcher<ListWorkspacesLoaderData>();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized && organizationId && !isScratchpadOrganizationId(organizationId)) {
+    if (isIdleAndUninitialized && organizationId && projectId && !isScratchpadOrganizationId(organizationId)) {
       workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}/list-workspaces`);
     }
   }, [organizationId, projectId, workspacesFetcher]);
