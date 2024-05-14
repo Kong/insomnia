@@ -304,41 +304,45 @@ export const remoteFilesLoader: LoaderFunction = async (): Promise<RemoteFilesLo
     };
   }
 
-  const remoteFiles = await insomniaFetch<RemoteFile[]>({
-    method: 'GET',
-    path: '/v1/user/files',
-    sessionId,
-  });
+  try {
+    const remoteFiles = await insomniaFetch<RemoteFile[]>({
+      method: 'GET',
+      path: '/v1/user/files',
+      sessionId,
+    });
 
-  const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+    const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
 
-  const allRemoteFilesOrganizationIds = remoteFiles.map(file => file.organizationId);
-  const allRemoteFilesProjectIds = remoteFiles.map(file => file.teamProjectId);
+    const allRemoteFilesOrganizationIds = remoteFiles.map(file => file.organizationId);
+    const allRemoteFilesProjectIds = remoteFiles.map(file => file.teamProjectId);
 
-  const organizations = allOrganizations.filter(org => allRemoteFilesOrganizationIds.includes(org.id));
+    const organizations = allOrganizations.filter(org => allRemoteFilesOrganizationIds.includes(org.id));
 
-  const projects = await database.find<Project>(project.type, {
-    remoteId: {
-      $in: allRemoteFilesProjectIds,
-    },
-  });
+    const projects = await database.find<Project>(project.type, {
+      remoteId: {
+        $in: allRemoteFilesProjectIds,
+      },
+    });
 
-  console.log({ projects, allRemoteFilesProjectIds });
+    const files = remoteFiles.map(file => {
+      const parentProject = projects.find(project => project.remoteId === file.teamProjectId);
+      return {
+        id: file.id,
+        url: `/organization/${file.organizationId}`,
+        pullUrl: parentProject ? `/organization/${file.organizationId}/project/${file.teamProjectId}/remote-collections/pull` : '',
+        name: file.name,
+        item: { ...file, teamProjectLocalId: parentProject?._id || '', scope: 'unsynced' as const },
+        organizationName: organizations.find(org => org.id === file.organizationId)?.display_name || '',
+        projectName: parentProject?.name || '',
+      };
+    });
 
-  const files = remoteFiles.map(file => {
-    const parentProject = projects.find(project => project.remoteId === file.teamProjectId);
     return {
-      id: file.id,
-      url: `/organization/${file.organizationId}/project`,
-      pullUrl: parentProject ? `/organization/${file.organizationId}/project/${file.teamProjectId}/remote-collections/pull` : '',
-      name: file.name,
-      item: { ...file, teamProjectLocalId: parentProject?._id || '', scope: 'unsynced' as const },
-      organizationName: organizations.find(org => org.id === file.organizationId)?.display_name || '',
-      projectName: parentProject?.name || '',
+      files,
     };
-  });
-
-  return {
-    files,
-  };
+  } catch (err) {
+    return {
+      files: [],
+    };
+  }
 };
