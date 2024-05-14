@@ -375,12 +375,12 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
 
   showSelectExportTypeModal({
     onDone: async selectedFormat => {
-      const [baseEnvironment] = await database.find<Environment>(environment.type, {
+      const baseEnvironments = await database.find<Environment>(environment.type, {
         parentId: { $in: workspacesForActiveProject.map(w => w._id) },
       });
 
       const subEnvironments = await database.find<Environment>(environment.type, {
-        parentId: baseEnvironment?._id,
+        parentId: { $in: baseEnvironments.map(w => w._id) },
       });
       const shouldPrompt = subEnvironments.some(e => e.isPrivate);
       let shouldExportPrivateEnvironments = false;
@@ -491,32 +491,15 @@ export const exportMockServerToFile = async (workspace: Workspace) => {
   });
 
 };
-export const exportRequestsToFile = (requestIds: string[]) => {
+export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) => {
   showSelectExportTypeModal({
     onDone: async selectedFormat => {
       const requests: BaseModel[] = [];
-      const workspaceLookup: any = {};
-      let workspaceId: string | null = null;
       for (const requestId of requestIds) {
         const request = await requestOperations.getById(requestId);
-
-        if (request == null) {
-          continue;
+        if (request) {
+          requests.push(request);
         }
-
-        requests.push(request);
-        const ancestors = await database.withAncestors(request, [
-          models.workspace.type,
-          models.requestGroup.type,
-        ]);
-        const workspace = ancestors.find(isWorkspace);
-
-        if (workspace == null || workspaceLookup.hasOwnProperty(workspace._id)) {
-          continue;
-        }
-
-        workspaceLookup[workspace._id] = true;
-        workspaceId = workspace._id;
       }
       const [baseEnvironment] = await database.find<Environment>(environment.type, {
         parentId: workspaceId,
