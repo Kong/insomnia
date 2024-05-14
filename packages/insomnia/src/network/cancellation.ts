@@ -14,7 +14,7 @@ export async function cancelRequestById(requestId: string) {
   console.log(`[network] Failed to cancel req=${requestId} because cancel function not found`);
 }
 
-export const cancellableRunPreRequestScript = async (options: { script: string; context: RequestContext }) => {
+export const cancellableRunScript = async (options: { script: string; context: RequestContext }) => {
   const request = options.context.request;
   const requestId = request._id;
 
@@ -28,7 +28,7 @@ export const cancellableRunPreRequestScript = async (options: { script: string; 
   try {
     const result = await cancellablePromise({
       signal: controller.signal,
-      fn: window.main.hiddenBrowserWindow.runPreRequestScript(options),
+      fn: window.main.hiddenBrowserWindow.runScript(options),
     });
 
     return result as {

@@ -34,7 +34,7 @@ import {
   smartEncodeUrl,
 } from '../utils/url/querystring';
 import { getAuthHeader, getAuthQueryParams } from './authentication';
-import { cancellableCurlRequest, cancellableRunPreRequestScript } from './cancellation';
+import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
@@ -94,7 +94,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         // TODO: restart the hidden browser window
       }, timeout + 1000);
     });
-    const preRequestPromise = cancellableRunPreRequestScript({
+    const executionPromise = cancellableRunScript({
       script,
       context: {
         request,
@@ -112,7 +112,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         response,
       },
     });
-    const output = await Promise.race([timeoutPromise, preRequestPromise]) as {
+    const output = await Promise.race([timeoutPromise, executionPromise]) as {
       request: Request;
       environment: Record<string, any>;
       baseEnvironment: Record<string, any>;
@@ -120,7 +120,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       clientCertificates: ClientCertificate[];
       cookieJar: CookieJar;
     };
-    console.log('[network] Pre-request script succeeded', output);
+    console.log('[network] script execution succeeded', output);
 
     const envPropertyOrder = orderedJSON.parse(
       JSON.stringify(output.environment),
