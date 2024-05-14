@@ -90,7 +90,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
     historyCount: 0,
     history: [],
     syncItems: [],
-    remoteBackendProjects: [],
+    remoteBackendWorkspaces: [],
     compare: { ahead: 0, behind: 0 },
   };
 

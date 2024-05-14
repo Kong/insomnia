@@ -3,24 +3,24 @@ import { database } from '../../common/database';
 import * as models from '../../models';
 import { RemoteProject } from '../../models/project';
 import { isWorkspace, Workspace } from '../../models/workspace';
-import { BackendProjectWithTeam } from './normalize-backend-project-team';
+import { BackendWorkspaceWithTeam } from './normalize-backend-project-team';
 import { interceptAccessError } from './util';
 import { VCS } from './vcs';
 
 interface Options {
   vcs: VCS;
-  backendProject: BackendProjectWithTeam;
+  backendWorkspace: BackendWorkspaceWithTeam;
   remoteProject: RemoteProject;
 }
 
-export const pullBackendProject = async ({ vcs, backendProject, remoteProject }: Options) => {
+export const pullBackendWorkspace = async ({ vcs, backendWorkspace, remoteProject }: Options) => {
   // Set backend project, checkout master, and pull
-  await vcs.setBackendProject(backendProject);
+  await vcs.setBackendWorkspace(backendWorkspace);
   await vcs.checkout([], DEFAULT_BRANCH_NAME);
   const remoteBranches = await interceptAccessError({
     action: 'pull',
     callback: () => vcs.getRemoteBranches(),
-    resourceName: backendProject.name,
+    resourceName: backendWorkspace.name,
   });
 
   const defaultBranchMissing = !remoteBranches.includes(DEFAULT_BRANCH_NAME);
@@ -32,8 +32,8 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
     const workspace = await models.initModel<Workspace>(
       models.workspace.type,
       {
-        _id: backendProject.rootDocumentId,
-        name: backendProject.name,
+        _id: backendWorkspace.rootDocumentId,
+        name: backendWorkspace.name,
         parentId: remoteProject._id,
         scope: 'collection',
       },

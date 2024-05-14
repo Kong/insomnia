@@ -15,7 +15,7 @@ import Store from '../store';
 import type { BaseDriver } from '../store/drivers/base';
 import compress from '../store/hooks/compress';
 import type {
-  BackendProject,
+  BackendWorkspace,
   Branch,
   DocumentKey,
   Head,
@@ -27,7 +27,7 @@ import type {
   StatusCandidate,
   Team,
 } from '../types';
-import { BackendProjectWithTeams, normalizeBackendProjectTeam } from './normalize-backend-project-team';
+import { BackendWorkspaceWithTeams, normalizeBackendWorkspaceTeam } from './normalize-backend-project-team';
 import * as paths from './paths';
 import {
   compareBranches,
@@ -62,16 +62,16 @@ export function chunkArray<T>(arr: T[], chunkSize: number) {
 export class VCS {
   _store: Store;
   _driver: BaseDriver;
-  _backendProject: BackendProject | null;
+  _backendWorkspace: BackendWorkspace | null;
   _conflictHandler?: ConflictHandler | null;
-  _stageByBackendProjectId: Record<string, Stage> = {};
+  _stageByBackendWorkspaceId: Record<string, Stage> = {};
 
   constructor(driver: BaseDriver, conflictHandler?: ConflictHandler) {
     this._store = new Store(driver, [compress]);
     this._conflictHandler = conflictHandler;
     this._driver = driver;
     // To be set later
-    this._backendProject = null;
+    this._backendWorkspace = null;
   }
 
   newInstance(): VCS {
@@ -80,70 +80,70 @@ export class VCS {
     return newVCS;
   }
 
-  async setBackendProject(backendProject: BackendProject) {
-    this._backendProject = backendProject;
-    console.log(`[sync] Activated project ${backendProject.id}`);
+  async setBackendWorkspace(backendWorkspace: BackendWorkspace) {
+    this._backendWorkspace = backendWorkspace;
+    console.log(`[sync] Activated project ${backendWorkspace.id}`);
     // Store it because it might not be yet
-    await this._storeBackendProject(backendProject);
+    await this._storeBackendWorkspace(backendWorkspace);
   }
 
-  hasBackendProject() {
-    return this._backendProject !== null;
+  hasBackendWorkspace() {
+    return this._backendWorkspace !== null;
   }
 
-  async hasBackendProjectForRootDocument(rootDocumentId: string) {
-    return Boolean(await this._getBackendProjectByRootDocument(rootDocumentId));
+  async hasBackendWorkspaceForRootDocument(rootDocumentId: string) {
+    return Boolean(await this._getBackendWorkspaceByRootDocument(rootDocumentId));
   }
 
-  async removeBackendProjectsForRoot(rootDocumentId: string) {
-    const all = await this._allBackendProjects();
+  async removeBackendWorkspacesForRoot(rootDocumentId: string) {
+    const all = await this._allBackendWorkspaces();
     const toRemove = all.filter(p => p.rootDocumentId === rootDocumentId);
 
-    for (const backendProject of toRemove) {
-      await this._removeProject(backendProject);
+    for (const backendWorkspace of toRemove) {
+      await this._removeProject(backendWorkspace);
     }
   }
 
   async archiveProject() {
-    const backendProjectId = this._backendProjectId();
+    const backendWorkspaceId = this._backendWorkspaceId();
 
-    await this._queryProjectArchive(backendProjectId);
-    await this._store.removeItem(paths.project(backendProjectId));
-    this._backendProject = null;
+    await this._queryProjectArchive(backendWorkspaceId);
+    await this._store.removeItem(paths.project(backendWorkspaceId));
+    this._backendWorkspace = null;
   }
 
-  clearBackendProject() {
-    this._backendProject = null;
+  clearBackendWorkspace() {
+    this._backendWorkspace = null;
   }
 
   async switchProject(rootDocumentId: string) {
-    const backendProject = await this._getBackendProjectByRootDocument(rootDocumentId);
+    const backendWorkspace = await this._getBackendWorkspaceByRootDocument(rootDocumentId);
 
-    if (backendProject !== null) {
-      await this.setBackendProject(backendProject);
+    if (backendWorkspace !== null) {
+      await this.setBackendWorkspace(backendWorkspace);
     } else {
-      this._backendProject = null;
+      this._backendWorkspace = null;
     }
   }
 
-  async switchAndCreateBackendProjectIfNotExist(rootDocumentId: string, name: string) {
-    const project = await this._getOrCreateBackendProjectByRootDocument(rootDocumentId, name);
-    await this.setBackendProject(project);
+  async switchAndCreateBackendWorkspaceIfNotExist(rootDocumentId: string, name: string) {
+    const project = await this._getOrCreateBackendWorkspaceByRootDocument(rootDocumentId, name);
+    await this.setBackendWorkspace(project);
   }
 
-  async backendProjectTeams() {
-    return this._queryBackendProjectTeams();
+  async backendWorkspaceTeams() {
+    return this._queryBackendWorkspaceTeams();
   }
 
-  async localBackendProjects() {
-    return this._allBackendProjects();
+  async localBackendWorkspaces() {
+    return this._allBackendWorkspaces();
   }
 
-  async remoteBackendProjects({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
-    return this._queryBackendProjects(teamId, teamProjectId);
+  async remoteBackendWorkspaces({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
+    return this._queryBackendWorkspaces(teamId, teamProjectId);
   }
 
-  async remoteBackendProjectsInAnyTeam() {
+  async remoteBackendWorkspacesInAnyTeam() {
     const { projects } = await this._runGraphQL(
       `
         query ($teamId: ID, $teamProjectId: ID) {
@@ -165,7 +165,7 @@ export class VCS {
       'projects',
     );
 
-    return (projects as BackendProjectWithTeams[]).map(normalizeBackendProjectTeam);
+    return (projects as BackendWorkspaceWithTeams[]).map(normalizeBackendWorkspaceTeam);
   }
 
   async blobFromLastSnapshot(key: string) {
@@ -186,7 +186,7 @@ export class VCS {
   }
 
   async status(candidates: StatusCandidate[]) {
-    const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
+    const stage = clone<Stage>(this._stageByBackendWorkspaceId[this._backendWorkspaceId()] || {});
     const branch = await this._getCurrentBranch();
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
     const state = snapshot ? snapshot.state : [];
@@ -253,7 +253,7 @@ export class VCS {
   }
 
   async stage(stageEntries: StageEntry[]) {
-    const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
+    const stage = clone<Stage>(this._stageByBackendWorkspaceId[this._backendWorkspaceId()] || {});
     const blobsToStore: Record<string, string> = {};
 
     for (const entry of stageEntries) {
@@ -269,18 +269,18 @@ export class VCS {
 
     await this._storeBlobs(blobsToStore);
     console.log(`[sync] Staged ${stageEntries.map(e => e.name).join(', ')}`);
-    this._stageByBackendProjectId[this._backendProjectId()] = stage;
+    this._stageByBackendWorkspaceId[this._backendWorkspaceId()] = stage;
     return stage;
   }
 
   async unstage(stageEntries: StageEntry[]) {
-    const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
+    const stage = clone<Stage>(this._stageByBackendWorkspaceId[this._backendWorkspaceId()] || {});
     for (const entry of stageEntries) {
       delete stage[entry.key];
     }
 
     console.log(`[sync] Unstaged ${stageEntries.map(e => e.name).join(', ')}`);
-    this._stageByBackendProjectId[this._backendProjectId()] = stage;
+    this._stageByBackendWorkspaceId[this._backendWorkspaceId()] = stage;
     return stage;
   }
 
@@ -507,7 +507,7 @@ export class VCS {
   }
 
   async takeSnapshot(name: string) {
-    const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
+    const stage = clone<Stage>(this._stageByBackendWorkspaceId[this._backendWorkspaceId()] || {});
 
     // Ensure there is something on the stage
     if (Object.keys(stage).length === 0) {
@@ -556,12 +556,12 @@ export class VCS {
     for (const key of Object.keys(stage)) {
       delete stage[key];
     }
-    this._stageByBackendProjectId[this._backendProjectId()] = stage;
+    this._stageByBackendWorkspaceId[this._backendWorkspaceId()] = stage;
     console.log(`[sync] Created commit ${snapshot.id} (${name})`);
   }
 
   async pull({ candidates, teamId, teamProjectId }: { candidates: StatusCandidate[]; teamId: string; teamProjectId: string }) {
-    await this._getOrCreateRemoteBackendProject({ teamId, teamProjectId });
+    await this._getOrCreateRemoteBackendWorkspace({ teamId, teamProjectId });
     const localBranch = await this._getCurrentBranch();
     const tmpBranchForRemote = await this.customFetch(localBranch.name + '.hidden', localBranch.name);
     // Merge branch and ensure that we use the remote's history when merging
@@ -579,19 +579,19 @@ export class VCS {
     return delta;
   }
 
-  async _getOrCreateRemoteBackendProject({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
-    const localProject = await this._assertBackendProject();
+  async _getOrCreateRemoteBackendWorkspace({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
+    const localProject = await this._assertBackendWorkspace();
     let remoteProject = await this._queryProject();
 
     if (!remoteProject) {
       remoteProject = await this._createRemoteProject({ ...localProject, teamId, teamProjectId });
     }
 
-    await this._storeBackendProject(remoteProject);
+    await this._storeBackendWorkspace(remoteProject);
     return remoteProject;
   }
 
-  async _createRemoteProject({ rootDocumentId, name, teamId, teamProjectId }: BackendProject & { teamId: string; teamProjectId: string }) {
+  async _createRemoteProject({ rootDocumentId, name, teamId, teamProjectId }: BackendWorkspace & { teamId: string; teamProjectId: string }) {
     if (!teamId) {
       throw new Error('teamId should be defined');
     }
@@ -601,7 +601,7 @@ export class VCS {
   }
 
   async push({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
-    await this._getOrCreateRemoteBackendProject({ teamId, teamProjectId });
+    await this._getOrCreateRemoteBackendWorkspace({ teamId, teamProjectId });
     const branch = await this._getCurrentBranch();
     // Check branch history to make sure there are no conflicts
     let lastMatchingIndex = 0;
@@ -787,7 +787,7 @@ export class VCS {
       : EMPTY_HASH;
 
     // Create the snapshot
-    const id = _generateSnapshotID(parentId, this._backendProjectId(), state);
+    const id = _generateSnapshotID(parentId, this._backendWorkspaceId(), state);
 
     const snapshot: Snapshot = {
       id,
@@ -841,7 +841,7 @@ export class VCS {
         `,
       {
         ids,
-        projectId: this._backendProjectId(),
+        projectId: this._backendWorkspaceId(),
       },
       'missingBlobs',
     );
@@ -860,7 +860,7 @@ export class VCS {
         }
       }`,
       {
-        projectId: this._backendProjectId(),
+        projectId: this._backendWorkspaceId(),
       },
       'branches',
     );
@@ -875,7 +875,7 @@ export class VCS {
         branchRemove(project: $projectId, name: $branch)
       }`,
       {
-        projectId: this._backendProjectId(),
+        projectId: this._backendWorkspaceId(),
         branch: branchName,
       },
       'removeBranch',
@@ -894,7 +894,7 @@ export class VCS {
         }
       }`,
       {
-        projectId: this._backendProjectId(),
+        projectId: this._backendWorkspaceId(),
         branch: branchName,
       },
       'branch',
@@ -930,7 +930,7 @@ export class VCS {
         }`,
         {
           ids,
-          projectId: this._backendProjectId(),
+          projectId: this._backendWorkspaceId(),
         },
         'snapshots',
       );
@@ -978,7 +978,7 @@ export class VCS {
       `,
         {
           branchName: branch.name,
-          projectId: this._backendProjectId(),
+          projectId: this._backendWorkspaceId(),
           snapshots: snapshots.map(s => ({
             created: s.created,
             name: s.name,
@@ -998,7 +998,7 @@ export class VCS {
   }
 
   async _queryBlobs(allIds: string[]) {
-    const symmetricKey = await this._getBackendProjectSymmetricKey();
+    const symmetricKey = await this._getBackendWorkspaceSymmetricKey();
     const result: Record<string, Buffer> = {};
 
     for (const ids of chunkArray(allIds, 50)) {
@@ -1012,7 +1012,7 @@ export class VCS {
       }`,
         {
           ids,
-          projectId: this._backendProjectId(),
+          projectId: this._backendWorkspaceId(),
         },
         'blobs',
       );
@@ -1027,7 +1027,7 @@ export class VCS {
   }
 
   async _queryPushBlobs(allIds: string[]) {
-    const symmetricKey = await this._getBackendProjectSymmetricKey();
+    const symmetricKey = await this._getBackendWorkspaceSymmetricKey();
 
     const next = async (
       items: {
@@ -1049,7 +1049,7 @@ export class VCS {
         `,
         {
           blobs: encodedBlobs,
-          projectId: this._backendProjectId(),
+          projectId: this._backendWorkspaceId(),
         },
         'blobsCreate',
       );
@@ -1092,7 +1092,7 @@ export class VCS {
     console.log(`[sync] Finished uploading ${count}/${allIds.length} blobs`);
   }
 
-  async _queryBackendProjectKey() {
+  async _queryBackendWorkspaceKey() {
     const { projectKey } = await this._runGraphQL(
       `
         query ($projectId: ID!) {
@@ -1102,14 +1102,14 @@ export class VCS {
         }
       `,
       {
-        projectId: this._backendProjectId(),
+        projectId: this._backendWorkspaceId(),
       },
       'projectKey',
     );
     return projectKey.encSymmetricKey as string;
   }
 
-  async _queryBackendProjects(teamId: string, teamProjectId: string) {
+  async _queryBackendWorkspaces(teamId: string, teamProjectId: string) {
     const { projects } = await this._runGraphQL(
       `
         query ($teamId: ID, $teamProjectId: ID) {
@@ -1131,10 +1131,10 @@ export class VCS {
       'projects',
     );
 
-    return (projects as BackendProjectWithTeams[]).map(normalizeBackendProjectTeam);
+    return (projects as BackendWorkspaceWithTeams[]).map(normalizeBackendWorkspaceTeam);
   }
 
-  async _queryProject(): Promise<BackendProject | null> {
+  async _queryProject(): Promise<BackendWorkspace | null> {
     const { project } = await this._runGraphQL(
       `
         query ($id: ID!) {
@@ -1146,14 +1146,14 @@ export class VCS {
         }
       `,
       {
-        id: this._backendProjectId(),
+        id: this._backendWorkspaceId(),
       },
       'project',
     );
     return project;
   }
 
-  async _queryBackendProjectTeams(): Promise<Team[]> {
+  async _queryBackendWorkspaceTeams(): Promise<Team[]> {
     const { project } = await this._runGraphQL(
       `
       query ($id: ID!) {
@@ -1166,7 +1166,7 @@ export class VCS {
       }
     `,
       {
-        id: this._backendProjectId(),
+        id: this._backendWorkspaceId(),
       },
       'project.teams',
     );
@@ -1267,7 +1267,7 @@ export class VCS {
       `,
       {
         name: workspaceName,
-        id: this._backendProjectId(),
+        id: this._backendWorkspaceId(),
         rootDocumentId: workspaceId,
         teamId: teamId,
         teamKeys: teamKeys,
@@ -1277,42 +1277,42 @@ export class VCS {
     );
 
     console.log(`[sync] Created remote project ${projectCreate.id} (${projectCreate.name})`);
-    return projectCreate as BackendProject;
+    return projectCreate as BackendWorkspace;
   }
 
-  async _getBackendProject(): Promise<BackendProject | null> {
-    const projectId = this._backendProject ? this._backendProject.id : 'n/a';
+  async _getBackendWorkspace(): Promise<BackendWorkspace | null> {
+    const projectId = this._backendWorkspace ? this._backendWorkspace.id : 'n/a';
     return this._store.getItem(paths.project(projectId));
   }
 
-  async _getBackendProjectById(id: string): Promise<BackendProject | null> {
+  async _getBackendWorkspaceById(id: string): Promise<BackendWorkspace | null> {
     return this._store.getItem(paths.project(id));
   }
 
-  async _getBackendProjectSymmetricKey() {
+  async _getBackendWorkspaceSymmetricKey() {
     const { privateKey } = await this._assertSession();
 
-    const encSymmetricKey = await this._queryBackendProjectKey();
+    const encSymmetricKey = await this._queryBackendWorkspaceKey();
     const symmetricKeyStr = crypt.decryptRSAWithJWK(privateKey, encSymmetricKey);
     return JSON.parse(symmetricKeyStr);
   }
 
-  async _assertBackendProject() {
-    const project = await this._getBackendProject();
+  async _assertBackendWorkspace() {
+    const project = await this._getBackendWorkspace();
 
     if (project === null) {
-      throw new Error('Failed to find local backend project id=' + this._backendProjectId());
+      throw new Error('Failed to find local backend project id=' + this._backendWorkspaceId());
     }
 
     return project;
   }
 
-  async _storeBackendProject(project: BackendProject) {
+  async _storeBackendWorkspace(project: BackendWorkspace) {
     return this._store.setItem(paths.project(project.id), project);
   }
 
   async _getHead(): Promise<Head> {
-    const head = await this._store.getItem(paths.head(this._backendProjectId()));
+    const head = await this._store.getItem(paths.head(this._backendWorkspaceId()));
 
     if (head === null) {
       await this._storeHead({ branch: 'master' });
@@ -1352,25 +1352,25 @@ export class VCS {
     return branch;
   }
 
-  _backendProjectId() {
-    if (this._backendProject === null) {
+  _backendWorkspaceId() {
+    if (this._backendWorkspace === null) {
       throw new Error('No active backend project');
     }
 
-    return this._backendProject.id;
+    return this._backendWorkspace.id;
   }
 
-  async _getBranch(name: string, backendProjectId?: string): Promise<Branch | null> {
-    const pId = backendProjectId || this._backendProjectId();
+  async _getBranch(name: string, backendWorkspaceId?: string): Promise<Branch | null> {
+    const pId = backendWorkspaceId || this._backendWorkspaceId();
 
     const p = paths.branch(pId, name);
     return this._store.getItem(p);
   }
 
-  async _getBranches(backendProjectId?: string) {
+  async _getBranches(backendWorkspaceId?: string) {
     const branches: Branch[] = [];
 
-    const pId = backendProjectId || this._backendProjectId();
+    const pId = backendWorkspaceId || this._backendWorkspaceId();
 
     for (const p of await this._store.keys(paths.branches(pId))) {
       const b = await this._store.getItem(p);
@@ -1406,43 +1406,43 @@ export class VCS {
     return branch;
   }
 
-  async _getBackendProjectByRootDocument(rootDocumentId: string) {
+  async _getBackendWorkspaceByRootDocument(rootDocumentId: string) {
     if (!rootDocumentId) {
       throw new Error('No root document ID supplied for backend project');
     }
 
     // First, try finding the project
-    const backendProjects = await this._allBackendProjects();
-    let matchedBackendProjects = backendProjects.filter(p => p.rootDocumentId === rootDocumentId);
+    const backendWorkspaces = await this._allBackendWorkspaces();
+    let matchedBackendWorkspaces = backendWorkspaces.filter(p => p.rootDocumentId === rootDocumentId);
 
     // If there is more than one project for root, try pruning unused ones by branch activity
-    if (matchedBackendProjects.length > 1) {
-      for (const p of matchedBackendProjects) {
+    if (matchedBackendWorkspaces.length > 1) {
+      for (const p of matchedBackendWorkspaces) {
         const branches = await this._getBranches(p.id);
 
         if (!branches.find(b => b.snapshots.length > 0)) {
           await this._removeProject(p);
-          matchedBackendProjects = matchedBackendProjects.filter(({ id }) => id !== p.id);
+          matchedBackendWorkspaces = matchedBackendWorkspaces.filter(({ id }) => id !== p.id);
           console.log(`[sync] Remove inactive project for root ${rootDocumentId}`);
         }
       }
     }
 
     // If there are still too many, error out
-    if (matchedBackendProjects.length > 1) {
+    if (matchedBackendWorkspaces.length > 1) {
       console.log('[sync] Multiple backend projects matched for root', {
-        backendProjects,
-        matchedBackendProjects,
+        backendWorkspaces,
+        matchedBackendWorkspaces,
         rootDocumentId,
       });
       throw new Error('More than one backend project matched query');
     }
 
-    return matchedBackendProjects[0] || null;
+    return matchedBackendWorkspaces[0] || null;
   }
 
-  async _getOrCreateBackendProjectByRootDocument(rootDocumentId: string, name: string) {
-    let project: BackendProject | null = await this._getBackendProjectByRootDocument(rootDocumentId);
+  async _getOrCreateBackendWorkspaceByRootDocument(rootDocumentId: string, name: string) {
+    let project: BackendWorkspace | null = await this._getBackendWorkspaceByRootDocument(rootDocumentId);
 
     // If we still don't have a project, create one
     if (!project) {
@@ -1452,35 +1452,35 @@ export class VCS {
         name,
         rootDocumentId,
       };
-      await this._storeBackendProject(project);
+      await this._storeBackendWorkspace(project);
       console.log(`[sync] Created backend project ${project.id}`);
     }
 
     return project;
   }
 
-  async _allBackendProjects() {
-    const backendProjects: BackendProject[] = [];
+  async _allBackendWorkspaces() {
+    const backendWorkspaces: BackendWorkspace[] = [];
     const basePath = paths.projects();
     const keys = await this._store.keys(basePath, false);
 
     for (const key of keys) {
       const id = path.basename(key);
-      const p: BackendProject | null = await this._getBackendProjectById(id);
+      const p: BackendWorkspace | null = await this._getBackendWorkspaceById(id);
 
       if (p === null) {
         // Folder exists but project meta file is gone
         continue;
       }
 
-      backendProjects.push(p);
+      backendWorkspaces.push(p);
     }
 
-    return backendProjects;
+    return backendWorkspaces;
   }
 
   async _assertSnapshot(id: string) {
-    const snapshot: Snapshot = await this._store.getItem(paths.snapshot(this._backendProjectId(), id));
+    const snapshot: Snapshot = await this._store.getItem(paths.snapshot(this._backendWorkspaceId(), id));
 
     if (snapshot && typeof snapshot.created === 'string') {
       snapshot.created = new Date(snapshot.created);
@@ -1494,7 +1494,7 @@ export class VCS {
   }
 
   async _getSnapshot(id: string) {
-    const snapshot: Snapshot = await this._store.getItem(paths.snapshot(this._backendProjectId(), id));
+    const snapshot: Snapshot = await this._store.getItem(paths.snapshot(this._backendWorkspaceId(), id));
 
     if (snapshot && typeof snapshot.created === 'string') {
       snapshot.created = new Date(snapshot.created);
@@ -1511,14 +1511,14 @@ export class VCS {
   }
 
   async _storeSnapshot(snapshot: Snapshot) {
-    return this._store.setItem(paths.snapshot(this._backendProjectId(), snapshot.id), snapshot);
+    return this._store.setItem(paths.snapshot(this._backendWorkspaceId(), snapshot.id), snapshot);
   }
 
   async _storeSnapshots(snapshots: Snapshot[]) {
     const promises: Promise<Snapshot>[] = [];
 
     for (const snapshot of snapshots) {
-      const p = paths.snapshot(this._backendProjectId(), snapshot.id);
+      const p = paths.snapshot(this._backendWorkspaceId(), snapshot.id);
       const promise = this._store.setItem(p, snapshot);
       // @ts-expect-error -- TSCONVERSION appears to be a genuine error
       promises.push(promise);
@@ -1535,24 +1535,24 @@ export class VCS {
     }
 
     branch.modified = new Date();
-    return this._store.setItem(paths.branch(this._backendProjectId(), branch.name.toLowerCase()), branch);
+    return this._store.setItem(paths.branch(this._backendWorkspaceId(), branch.name.toLowerCase()), branch);
   }
 
   async _removeBranch(branch: Branch) {
-    return this._store.removeItem(paths.branch(this._backendProjectId(), branch.name));
+    return this._store.removeItem(paths.branch(this._backendWorkspaceId(), branch.name));
   }
 
-  async _removeProject(project: BackendProject) {
+  async _removeProject(project: BackendWorkspace) {
     console.log(`[sync] Remove local project ${project.id}`);
     return this._store.removeItem(paths.project(project.id));
   }
 
   async _storeHead(head: Head) {
-    await this._store.setItem(paths.head(this._backendProjectId()), head);
+    await this._store.setItem(paths.head(this._backendWorkspaceId()), head);
   }
 
   _getBlob(id: string) {
-    const p = paths.blob(this._backendProjectId(), id);
+    const p = paths.blob(this._backendWorkspaceId(), id);
     return this._store.getItem(p) as Promise<BaseModel | null>;
   }
 
@@ -1567,7 +1567,7 @@ export class VCS {
   }
 
   async _storeBlob(id: string, content: Record<string, any> | null) {
-    return this._store.setItem(paths.blob(this._backendProjectId(), id), content);
+    return this._store.setItem(paths.blob(this._backendWorkspaceId(), id), content);
   }
 
   async _storeBlobs(map: Record<string, string>) {
@@ -1585,7 +1585,7 @@ export class VCS {
     const promises: Promise<any>[] = [];
 
     for (const id of Object.keys(map)) {
-      const p = paths.blob(this._backendProjectId(), id);
+      const p = paths.blob(this._backendWorkspaceId(), id);
       promises.push(this._store.setItemRaw(p, map[id]));
     }
 
@@ -1593,11 +1593,11 @@ export class VCS {
   }
 
   async _getBlobRaw(id: string) {
-    return this._store.getItemRaw(paths.blob(this._backendProjectId(), id));
+    return this._store.getItemRaw(paths.blob(this._backendWorkspaceId(), id));
   }
 
   async _hasBlob(id: string) {
-    return this._store.hasItem(paths.blob(this._backendProjectId(), id));
+    return this._store.hasItem(paths.blob(this._backendWorkspaceId(), id));
   }
 
   async _queryProjectArchive(projectId: string) {
@@ -1616,9 +1616,9 @@ export class VCS {
   }
 }
 
-/** Generate snapshot ID from hashing parent, backendProject, and state together */
-function _generateSnapshotID(parentId: string, backendProjectId: string, state: SnapshotState) {
-  const hash = crypto.createHash('sha1').update(backendProjectId).update(parentId);
+/** Generate snapshot ID from hashing parent, backendWorkspace, and state together */
+function _generateSnapshotID(parentId: string, backendWorkspaceId: string, state: SnapshotState) {
+  const hash = crypto.createHash('sha1').update(backendWorkspaceId).update(parentId);
   const newState = [...state].sort((a, b) => (a.blob > b.blob ? 1 : -1));
 
   for (const entry of newState) {

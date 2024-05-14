@@ -131,7 +131,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         if (!projectData || !projectData.activeProject || !file.remoteId) {
           return null;
         }
-        pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: projectData?.activeProject.remoteId }, {
+        pullFileFetcher.submit({ backendWorkspaceId: file.remoteId, remoteId: projectData?.activeProject.remoteId }, {
           method: 'POST',
           action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
         });
@@ -223,7 +223,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       name: file.name,
       description: <span className='flex items-center gap-1'><span className='px-2 text-[--hl]'>{scopeToLabelMap[file.scope]}</span></span>,
       textValue: file.name + ' ' + scopeToLabelMap[file.scope],
-      loading: Boolean(pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.remoteId),
+      loading: Boolean(pullFileFetcher.formData?.get('backendWorkspaceId') && pullFileFetcher.formData?.get('backendWorkspaceId') === file.remoteId),
       presence: presence
         .filter(p => p.project === projectData?.activeProject?.remoteId && p.file === file.id)
         .filter(p => p.acct !== accountId)

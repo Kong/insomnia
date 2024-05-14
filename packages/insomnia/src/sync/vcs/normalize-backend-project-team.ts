@@ -1,14 +1,14 @@
-import { BackendProject, Team } from '../types';
+import { BackendWorkspace, Team } from '../types';
 
-export interface BackendProjectWithTeams extends BackendProject {
+export interface BackendWorkspaceWithTeams extends BackendWorkspace {
   teams: Team[];
 }
 
-export interface BackendProjectWithTeam extends BackendProject {
+export interface BackendWorkspaceWithTeam extends BackendWorkspace {
   team: Team;
 }
 
-export const normalizeBackendProjectTeam = (backend: BackendProjectWithTeams): BackendProjectWithTeam => ({
+export const normalizeBackendWorkspaceTeam = (backend: BackendWorkspaceWithTeams): BackendWorkspaceWithTeam => ({
   id: backend.id,
   name: backend.name,
   rootDocumentId: backend.rootDocumentId,

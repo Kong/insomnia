@@ -26,7 +26,7 @@ describe('initialize-backend-project', () => {
       const project = await models.project.create({ remoteId: null });
       const workspace = await models.workspace.create({ parentId: project._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
-      vcs.clearBackendProject();
+      vcs.clearBackendWorkspace();
 
       await pushSnapshotOnInitialize({ vcs, project, workspace });
 
@@ -38,7 +38,7 @@ describe('initialize-backend-project', () => {
       const project = await models.project.create({ remoteId: null });
       const workspace = await models.workspace.create({ parentId: project._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
-      vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
+      vcs.switchAndCreateBackendWorkspaceIfNotExist(workspace._id, workspace.name);
 
       await pushSnapshotOnInitialize({ vcs, project, workspace });
 
@@ -50,7 +50,7 @@ describe('initialize-backend-project', () => {
       const project = await models.project.create({ remoteId: 'abc' });
       const anotherProject = await models.project.create({ remoteId: 'def' });
       const workspace = await models.workspace.create({ parentId: anotherProject._id });
-      vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
+      vcs.switchAndCreateBackendWorkspaceIfNotExist(workspace._id, workspace.name);
 
       await pushSnapshotOnInitialize({ vcs, project, workspace });
 
@@ -61,7 +61,7 @@ describe('initialize-backend-project', () => {
       const project = await models.project.create({ remoteId: 'abc', parentId: 'team_abc' });
       const workspace = await models.workspace.create({ parentId: project._id });
       await models.workspaceMeta.create({ parentId: workspace._id, pushSnapshotOnInitialize: true });
-      vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
+      vcs.switchAndCreateBackendWorkspaceIfNotExist(workspace._id, workspace.name);
 
       await pushSnapshotOnInitialize({ vcs, project, workspace });
 

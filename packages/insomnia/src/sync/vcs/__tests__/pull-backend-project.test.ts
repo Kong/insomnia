@@ -6,18 +6,18 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import * as models from '../../../models';
 import { Workspace } from '../../../models/workspace';
-import { backendProjectWithTeamSchema } from '../../__schemas__/type-schemas';
+import { backendWorkspaceWithTeamSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
-import { pullBackendProject } from '../pull-backend-project';
+import { pullBackendWorkspace } from '../pull-backend-project';
 import { VCS } from '../vcs';
 
 jest.mock('../vcs');
 
-const backendProject = createBuilder(backendProjectWithTeamSchema).build();
+const backendWorkspace = createBuilder(backendWorkspaceWithTeamSchema).build();
 
 const newMockedVcs = () => mocked(new VCS(new MemoryDriver()), true);
 
-describe('pullBackendProject()', () => {
+describe('pullBackendWorkspace()', () => {
   let vcs = newMockedVcs();
 
   beforeEach(async () => {
@@ -27,7 +27,7 @@ describe('pullBackendProject()', () => {
   });
 
   afterEach(() => {
-    expect(vcs.setBackendProject).toHaveBeenCalledWith(backendProject);
+    expect(vcs.setBackendWorkspace).toHaveBeenCalledWith(backendWorkspace);
     expect(vcs.checkout).toHaveBeenCalledWith([], DEFAULT_BRANCH_NAME);
   });
 
@@ -43,22 +43,22 @@ describe('pullBackendProject()', () => {
     it('should use existing project', async () => {
       // Arrange
       const project = await models.project.create({
-        name: `${backendProject.team.name} unique`,
-        remoteId: backendProject.team.id,
+        name: `${backendWorkspace.team.name} unique`,
+        remoteId: backendWorkspace.team.id,
       });
 
       // Act
-      await pullBackendProject({ vcs, backendProject, remoteProject: project });
+      await pullBackendWorkspace({ vcs, backendWorkspace, remoteProject: project });
 
       // Assert
-      expect(project?.name).not.toBe(backendProject.team.name); // should not rename if the project already exists
+      expect(project?.name).not.toBe(backendWorkspace.team.name); // should not rename if the project already exists
 
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
       const expectedWorkspace: Partial<Workspace> = {
-        _id: backendProject.rootDocumentId,
-        name: backendProject.name,
+        _id: backendWorkspace.rootDocumentId,
+        name: backendWorkspace.name,
         parentId: project._id,
         scope: 'collection',
       };
@@ -68,19 +68,19 @@ describe('pullBackendProject()', () => {
 
     it('should insert a project and workspace with parent', async () => {
       const project = await models.project.create({
-        name: `${backendProject.team.name} unique`,
-        remoteId: backendProject.team.id,
+        name: `${backendWorkspace.team.name} unique`,
+        remoteId: backendWorkspace.team.id,
       });
       // Act
-      await pullBackendProject({ vcs, backendProject, remoteProject: project });
+      await pullBackendWorkspace({ vcs, backendWorkspace, remoteProject: project });
 
       // Assert
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
       const expectedWorkspace: Partial<Workspace> = {
-        _id: backendProject.rootDocumentId,
-        name: backendProject.name,
+        _id: backendWorkspace.rootDocumentId,
+        name: backendWorkspace.name,
         parentId: project?._id,
         scope: 'collection',
       };
@@ -90,13 +90,13 @@ describe('pullBackendProject()', () => {
 
     it('should update a workspace if the name or parentId is different', async () => {
       // Arrange
-      await models.workspace.create({ _id: backendProject.rootDocumentId, name: 'someName' });
+      await models.workspace.create({ _id: backendWorkspace.rootDocumentId, name: 'someName' });
       const project = await models.project.create({
-        name: `${backendProject.team.name} unique`,
-        remoteId: backendProject.team.id,
+        name: `${backendWorkspace.team.name} unique`,
+        remoteId: backendWorkspace.team.id,
       });
       // Act
-      await pullBackendProject({ vcs, backendProject, remoteProject: project });
+      await pullBackendWorkspace({ vcs, backendWorkspace, remoteProject: project });
 
       // Assert
 
@@ -104,8 +104,8 @@ describe('pullBackendProject()', () => {
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
       const expectedWorkspace: Partial<Workspace> = {
-        _id: backendProject.rootDocumentId,
-        name: backendProject.name,
+        _id: backendWorkspace.rootDocumentId,
+        name: backendWorkspace.name,
         parentId: project?._id,
       };
 
@@ -117,24 +117,24 @@ describe('pullBackendProject()', () => {
     it('should overwrite the parentId only for a workspace with the project id', async () => {
       // Arrange
       vcs.getRemoteBranches.mockResolvedValue([DEFAULT_BRANCH_NAME]);
-      const existingWrk = await models.workspace.create({ _id: backendProject.rootDocumentId, name: backendProject.name });
+      const existingWrk = await models.workspace.create({ _id: backendWorkspace.rootDocumentId, name: backendWorkspace.name });
       const existingReq = await models.request.create({ parentId: existingWrk._id });
 
       vcs.allDocuments.mockResolvedValue([existingWrk, existingReq]);
       const project = await models.project.create({
-        name: `${backendProject.team.name} unique`,
-        remoteId: backendProject.team.id,
+        name: `${backendWorkspace.team.name} unique`,
+        remoteId: backendWorkspace.team.id,
       });
       // Act
-      await pullBackendProject({ vcs, backendProject, remoteProject: project });
+      await pullBackendWorkspace({ vcs, backendWorkspace, remoteProject: project });
 
       // Assert
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
       const expectedWorkspace: Partial<Workspace> = {
-        _id: backendProject.rootDocumentId,
-        name: backendProject.name,
+        _id: backendWorkspace.rootDocumentId,
+        name: backendWorkspace.name,
         parentId: project?._id,
       };
 
@@ -154,7 +154,7 @@ describe('pullBackendProject()', () => {
     vcs.getRemoteBranches.mockRejectedValue(new Error('invalid access to project'));
 
     // Act
-    const action = () => pullBackendProject({ vcs, backendProject, remoteProject: { remoteId: '' } });
+    const action = () => pullBackendWorkspace({ vcs, backendWorkspace, remoteProject: { remoteId: '' } });
 
     // Assert
     expect(vcs.pull).not.toHaveBeenCalled();

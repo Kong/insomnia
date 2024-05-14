@@ -1,5 +1,5 @@
 import { database } from '../../common/database';
-import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
+import { initializeLocalBackendWorkspaceAndMarkForSync, pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
 import { VCS } from '../../sync/vcs/vcs';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
@@ -65,7 +65,7 @@ export async function updateLocalProjectToRemote({
       if (!workspaceMeta.gitRepositoryId) {
         invariant(vcs, 'VCS must be initialized');
 
-        await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });
+        await initializeLocalBackendWorkspaceAndMarkForSync({ vcs, workspace });
         await pushSnapshotOnInitialize({ vcs, workspace, project: updatedProject });
       }
     } catch (e) {

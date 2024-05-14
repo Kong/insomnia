@@ -16,13 +16,13 @@ import { UnitTestSuite } from '../../models/unit-test-suite';
 import { WebSocketRequest } from '../../models/websocket-request';
 import { scopeToActivity, Workspace } from '../../models/workspace';
 import {
-  BackendProject,
+  BackendWorkspace,
   Snapshot,
   Status,
   StatusCandidate,
 } from '../../sync/types';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
-import { pullBackendProject } from '../../sync/vcs/pull-backend-project';
+import { pullBackendWorkspace } from '../../sync/vcs/pull-backend-project';
 import { invariant } from '../../utils/invariant';
 
 async function getSyncItems({ workspaceId }: { workspaceId: string }) {
@@ -129,22 +129,22 @@ export const pullRemoteCollectionAction: ActionFunction = async ({
   invariant(typeof organizationId === 'string', 'Organization Id is required');
   const formData = await request.formData();
 
-  const backendProjectId = formData.get('backendProjectId');
-  invariant(typeof backendProjectId === 'string', 'Collection Id is required');
+  const backendWorkspaceId = formData.get('backendWorkspaceId');
+  invariant(typeof backendWorkspaceId === 'string', 'Collection Id is required');
   const remoteId = formData.get('remoteId');
   invariant(typeof remoteId === 'string', 'Remote Id is required');
 
   const vcs = VCSInstance();
-  const remoteBackendProjects = await vcs.remoteBackendProjects({
+  const remoteBackendWorkspaces = await vcs.remoteBackendWorkspaces({
     teamId: organizationId,
     teamProjectId: remoteId,
   });
 
-  const backendProject = remoteBackendProjects.find(
-    p => p.id === backendProjectId
+  const backendWorkspace = remoteBackendWorkspaces.find(
+    p => p.id === backendWorkspaceId
   );
 
-  invariant(backendProject, 'Backend project not found');
+  invariant(backendWorkspace, 'Backend project not found');
 
   const project = await models.project.getById(projectId);
 
@@ -153,11 +153,11 @@ export const pullRemoteCollectionAction: ActionFunction = async ({
   // Clone old VCS so we don't mess anything up while working on other backend projects
   const newVCS = vcs.newInstance();
   // Remove all backend projects for workspace first
-  await newVCS.removeBackendProjectsForRoot(backendProject.rootDocumentId);
+  await newVCS.removeBackendWorkspacesForRoot(backendWorkspace.rootDocumentId);
 
-  const { workspaceId } = await pullBackendProject({
+  const { workspaceId } = await pullBackendWorkspace({
     vcs: newVCS,
-    backendProject,
+    backendWorkspace,
     remoteProject: project,
   });
 
@@ -172,7 +172,7 @@ export const pullRemoteCollectionAction: ActionFunction = async ({
 };
 
 export interface RemoteCollectionsLoaderData {
-  backendProjectsToPull: BackendProject[];
+  backendWorkspacesToPull: BackendWorkspace[];
 }
 
 export const remoteLoader: LoaderFunction = async ({
@@ -190,24 +190,24 @@ export const remoteLoader: LoaderFunction = async ({
     invariant(remoteId, 'Project is not a remote project');
     const vcs = VCSInstance();
 
-    const allPulledBackendProjectsForRemoteId = (
-      await vcs.localBackendProjects()
+    const allPulledBackendWorkspacesForRemoteId = (
+      await vcs.localBackendWorkspaces()
     ).filter(p => p.id === remoteId);
     // Remote backend projects are fetched from the backend since they are not stored locally
-    const allFetchedRemoteBackendProjectsForRemoteId =
-      await vcs.remoteBackendProjects({
+    const allFetchedRemoteBackendWorkspacesForRemoteId =
+      await vcs.remoteBackendWorkspaces({
         teamId: organizationId,
         teamProjectId: remoteId,
       });
 
     // Get all workspaces that are connected to backend projects and under the current project
-    const workspacesWithBackendProjects = await database.find<Workspace>(
+    const workspacesWithBackendWorkspaces = await database.find<Workspace>(
       models.workspace.type,
       {
         _id: {
           $in: [
-            ...allPulledBackendProjectsForRemoteId,
-            ...allFetchedRemoteBackendProjectsForRemoteId,
+            ...allPulledBackendWorkspacesForRemoteId,
+            ...allFetchedRemoteBackendWorkspacesForRemoteId,
           ].map(p => p.rootDocumentId),
         },
         parentId: project._id,
@@ -215,21 +215,21 @@ export const remoteLoader: LoaderFunction = async ({
     );
 
     // Get the list of remote backend projects that we need to pull
-    const backendProjectsToPull =
-      allFetchedRemoteBackendProjectsForRemoteId.filter(
+    const backendWorkspacesToPull =
+      allFetchedRemoteBackendWorkspacesForRemoteId.filter(
         p =>
-          !workspacesWithBackendProjects.find(w => w._id === p.rootDocumentId)
+          !workspacesWithBackendWorkspaces.find(w => w._id === p.rootDocumentId)
       );
 
     return {
-      backendProjectsToPull,
+      backendWorkspacesToPull,
     };
   } catch (e) {
     console.warn('Failed to load backend projects', e);
   }
 
   return {
-    backendProjectsToPull: [],
+    backendWorkspacesToPull: [],
   };
 };
 
@@ -245,13 +245,13 @@ interface SyncData {
     ahead: number;
     behind: number;
   };
-  remoteBackendProjects: BackendProject[];
+  remoteBackendWorkspaces: BackendWorkspace[];
 }
 
 const remoteBranchesCache: Record<string, string[]> = {};
 const remoteCompareCache: Record<string, { ahead: number; behind: number }> =
   {};
-const remoteBackendProjectsCache: Record<string, BackendProject[]> = {};
+const remoteBackendWorkspacesCache: Record<string, BackendWorkspace[]> = {};
 
 export const syncDataAction: ActionFunction = async ({ params }) => {
   const { projectId, workspaceId } = params;
@@ -264,7 +264,7 @@ export const syncDataAction: ActionFunction = async ({ params }) => {
     const vcs = VCSInstance();
     const remoteBranches = (await vcs.getRemoteBranches()).sort();
     const compare = await vcs.compareRemoteBranch();
-    const remoteBackendProjects = await vcs.remoteBackendProjects({
+    const remoteBackendWorkspaces = await vcs.remoteBackendWorkspaces({
       teamId: project.parentId,
       teamProjectId: project.remoteId,
     });
@@ -272,19 +272,19 @@ export const syncDataAction: ActionFunction = async ({ params }) => {
     // Cache remote branches
     remoteBranchesCache[workspaceId] = remoteBranches;
     remoteCompareCache[workspaceId] = compare;
-    remoteBackendProjectsCache[workspaceId] = remoteBackendProjects;
+    remoteBackendWorkspacesCache[workspaceId] = remoteBackendWorkspaces;
 
     return {
       remoteBranches,
       compare,
-      remoteBackendProjects,
+      remoteBackendWorkspaces,
     };
   } catch (e) {
     const errorMessage =
       e instanceof Error ? e.message : 'Unknown error while syncing data.';
     delete remoteBranchesCache[workspaceId];
     delete remoteCompareCache[workspaceId];
-    delete remoteBackendProjectsCache[workspaceId];
+    delete remoteBackendWorkspacesCache[workspaceId];
     return {
       error: errorMessage,
     };
@@ -322,16 +322,16 @@ export const syncDataLoader: LoaderFunction = async ({
     const status = await vcs.status(syncItems);
     const compare =
       remoteCompareCache[workspaceId] || (await vcs.compareRemoteBranch());
-    const remoteBackendProjects =
-      remoteBackendProjectsCache[workspaceId] ||
-      (await vcs.remoteBackendProjects({
+    const remoteBackendWorkspaces =
+      remoteBackendWorkspacesCache[workspaceId] ||
+      (await vcs.remoteBackendWorkspaces({
         teamId: project.parentId,
         teamProjectId: project.remoteId,
       }));
 
     remoteBranchesCache[workspaceId] = remoteBranches;
     remoteCompareCache[workspaceId] = compare;
-    remoteBackendProjectsCache[workspaceId] = remoteBackendProjects;
+    remoteBackendWorkspacesCache[workspaceId] = remoteBackendWorkspaces;
 
     return {
       syncItems,
@@ -342,7 +342,7 @@ export const syncDataLoader: LoaderFunction = async ({
       historyCount,
       status,
       compare,
-      remoteBackendProjects,
+      remoteBackendWorkspaces,
     };
   } catch (e) {
     const errorMessage =

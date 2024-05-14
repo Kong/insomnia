@@ -19,7 +19,7 @@ import { UnitTestSuite } from '../../models/unit-test-suite';
 import { isCollection, scopeToActivity, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
-import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
+import { initializeLocalBackendWorkspaceAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
@@ -329,7 +329,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   const { id } = await models.userSession.getOrCreate();
   if (id && !workspaceMeta.gitRepositoryId) {
     const vcs = VCSInstance();
-    await initializeLocalBackendProjectAndMarkForSync({
+    await initializeLocalBackendWorkspaceAndMarkForSync({
       vcs,
       workspace,
     });
@@ -365,7 +365,7 @@ export const deleteWorkspaceAction: ActionFunction = async ({
   if (isRemoteProject(project) && !workspaceMeta.gitRepositoryId) {
     try {
       const vcs = VCSInstance();
-      await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, workspace.name);
+      await vcs.switchAndCreateBackendWorkspaceIfNotExist(workspaceId, workspace.name);
       await vcs.archiveProject();
     } catch (err) {
       return {
@@ -427,7 +427,7 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
     // Mark for sync if logged in and in the expected project
     if (id) {
       const vcs = VCSInstance();
-      await initializeLocalBackendProjectAndMarkForSync({
+      await initializeLocalBackendWorkspaceAndMarkForSync({
         vcs: vcs.newInstance(),
         workspace: newWorkspace,
       });

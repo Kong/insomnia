@@ -229,7 +229,7 @@ export const workspaceLoader: LoaderFunction = async ({
   if (userSession.id && !gitRepository) {
     try {
       const vcs = VCSInstance();
-      await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
+      await vcs.switchAndCreateBackendWorkspaceIfNotExist(workspaceId, activeWorkspace.name);
       if (activeWorkspaceMeta.pushSnapshotOnInitialize) {
         await pushSnapshotOnInitialize({ vcs, workspace: activeWorkspace, project: activeProject });
       }

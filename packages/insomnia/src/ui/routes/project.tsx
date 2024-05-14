@@ -416,29 +416,29 @@ async function getAllRemoteFiles({
     invariant(remoteId, 'Project is not a remote project');
     const vcs = VCSInstance();
 
-    const allPulledBackendProjectsForRemoteId = (await vcs.localBackendProjects()).filter(p => p.id === remoteId);
+    const allPulledBackendWorkspacesForRemoteId = (await vcs.localBackendWorkspaces()).filter(p => p.id === remoteId);
     // Remote backend projects are fetched from the backend since they are not stored locally
-    const allFetchedRemoteBackendProjectsForRemoteId = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
+    const allFetchedRemoteBackendWorkspacesForRemoteId = await vcs.remoteBackendWorkspaces({ teamId: organizationId, teamProjectId: remoteId });
 
     // Get all workspaces that are connected to backend projects and under the current project
-    const workspacesWithBackendProjects = await database.find<Workspace>(models.workspace.type, {
+    const workspacesWithBackendWorkspaces = await database.find<Workspace>(models.workspace.type, {
       _id: {
-        $in: [...allPulledBackendProjectsForRemoteId, ...allFetchedRemoteBackendProjectsForRemoteId].map(p => p.rootDocumentId),
+        $in: [...allPulledBackendWorkspacesForRemoteId, ...allFetchedRemoteBackendWorkspacesForRemoteId].map(p => p.rootDocumentId),
       },
       parentId: project._id,
     });
 
     // Get the list of remote backend projects that we need to pull
-    const backendProjectsToPull = allFetchedRemoteBackendProjectsForRemoteId
-      .filter(p => !workspacesWithBackendProjects.find(w => w._id === p.rootDocumentId));
+    const backendWorkspacesToPull = allFetchedRemoteBackendWorkspacesForRemoteId
+      .filter(p => !workspacesWithBackendWorkspaces.find(w => w._id === p.rootDocumentId));
 
-    return backendProjectsToPull.map(backendProject => {
+    return backendWorkspacesToPull.map(backendWorkspace => {
       const file: InsomniaFile = {
-        id: backendProject.rootDocumentId,
-        name: backendProject.name,
+        id: backendWorkspace.rootDocumentId,
+        name: backendWorkspace.name,
         scope: 'unsynced',
         label: 'Unsynced',
-        remoteId: backendProject.id,
+        remoteId: backendWorkspace.id,
         created: 0,
         lastModifiedTimestamp: 0,
       };
@@ -604,7 +604,7 @@ const ProjectRoute: FC = () => {
 
   const { userSession } = useRootLoaderData();
   const pullFileFetcher = useFetcher();
-  const loadingBackendProjects = useFetchers().filter(fetcher => fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`).map(f => f.formData?.get('backendProjectId'));
+  const loadingBackendWorkspaces = useFetchers().filter(fetcher => fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`).map(f => f.formData?.get('backendWorkspaceId'));
 
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
@@ -673,7 +673,7 @@ const ProjectRoute: FC = () => {
       });
     return {
       ...file,
-      loading: loadingBackendProjects.includes(file.remoteId) || pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.remoteId,
+      loading: loadingBackendWorkspaces.includes(file.remoteId) || pullFileFetcher.formData?.get('backendWorkspaceId') && pullFileFetcher.formData?.get('backendWorkspaceId') === file.remoteId,
       presence: workspacePresence,
     };
   });
@@ -1255,7 +1255,7 @@ const ProjectRoute: FC = () => {
                       invariant(file, 'File not found');
                       if (file.scope === 'unsynced') {
                         if (activeProject?.remoteId && file.remoteId) {
-                          return pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: activeProject.remoteId }, {
+                          return pullFileFetcher.submit({ backendWorkspaceId: file.remoteId, remoteId: activeProject.remoteId }, {
                             method: 'POST',
                             action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
                           });
