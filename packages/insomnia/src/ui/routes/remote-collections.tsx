@@ -262,7 +262,7 @@ export const syncDataAction: ActionFunction = async ({ params }) => {
     invariant(project, 'Project not found');
     invariant(project.remoteId, 'Project is not remote');
     const vcs = VCSInstance();
-    const remoteBranches = (await vcs.getRemoteBranches()).sort();
+    const remoteBranches = (await vcs.getRemoteBranchNames()).sort();
     const compare = await vcs.compareRemoteBranch();
     const remoteBackendProjects = await vcs.remoteBackendProjects({
       teamId: project.parentId,
@@ -312,7 +312,7 @@ export const syncDataLoader: LoaderFunction = async ({
     const { syncItems } = await getSyncItems({ workspaceId });
     const localBranches = (await vcs.getBranchNames()).sort();
     const remoteBranches = (
-      remoteBranchesCache[workspaceId] || (await vcs.getRemoteBranches())
+      remoteBranchesCache[workspaceId] || (await vcs.getRemoteBranchNames())
     ).sort();
     const currentBranch = await vcs.getCurrentBranchName();
     const history = (await vcs.getHistory()).sort((a, b) =>

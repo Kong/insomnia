@@ -33,7 +33,7 @@ describe('pullBackendProject()', () => {
 
   describe('creating a new project', () => {
     beforeEach(() => {
-      vcs.getRemoteBranches.mockResolvedValue([]);
+      vcs.getRemoteBranchNames.mockResolvedValue([]);
     });
 
     afterEach(() => {
@@ -116,7 +116,7 @@ describe('pullBackendProject()', () => {
   describe('pulling an existing project', () => {
     it('should overwrite the parentId only for a workspace with the project id', async () => {
       // Arrange
-      vcs.getRemoteBranches.mockResolvedValue([DEFAULT_BRANCH_NAME]);
+      vcs.getRemoteBranchNames.mockResolvedValue([DEFAULT_BRANCH_NAME]);
       const existingWrk = await models.workspace.create({ _id: backendProject.rootDocumentId, name: backendProject.name });
       const existingReq = await models.request.create({ parentId: existingWrk._id });
 
@@ -151,7 +151,7 @@ describe('pullBackendProject()', () => {
 
   it('should throw the corrected intercepted error', async () => {
     // Arrange
-    vcs.getRemoteBranches.mockRejectedValue(new Error('invalid access to project'));
+    vcs.getRemoteBranchNames.mockRejectedValue(new Error('invalid access to project'));
 
     // Act
     const action = () => pullBackendProject({ vcs, backendProject, remoteProject: { remoteId: '' } });
