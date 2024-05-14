@@ -54,9 +54,9 @@ let requestCount = 1;
 let requestGroupCount = 1;
 const fakerTags = Object.keys(fakerFunctions);
 const postmanTagRegexs = fakerTags.map(tag => ({ tag, regex: new RegExp(`\\{\\{\\$${tag}\\}\\}`, 'g') }));
-// example: { 'guid' : '{% random 'guid' %}' }
+// example: { 'guid' : '{% faker 'guid' %}' }
 const postmanToNunjucksLookup = fakerTags
-  .map(tag => ({ [tag]: `{% random '${tag}' %}` }))
+  .map(tag => ({ [tag]: `{% faker '${tag}' %}` }))
   .reduce((acc, obj) => ({ ...acc, ...obj }), {});
 
 export const transformPostmanToNunjucksString = (inputString?: string | null) => {

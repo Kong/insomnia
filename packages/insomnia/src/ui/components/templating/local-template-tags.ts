@@ -18,8 +18,8 @@ import { fakerFunctions } from './faker-functions';
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
   {
     templateTag: {
-      name: 'random',
-      displayName: 'Random',
+      name: 'faker',
+      displayName: 'Faker',
       description: 'generate random outputs',
       args: [
         {

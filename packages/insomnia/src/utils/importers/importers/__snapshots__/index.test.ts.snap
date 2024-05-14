@@ -4957,19 +4957,19 @@ exports[`Fixtures Import postman faker-vars-v2_1-input.json 1`] = `
       "authentication": {
         "disabled": false,
         "prefix": "",
-        "token": "{% random 'guid' %}",
+        "token": "{% faker 'guid' %}",
         "type": "bearer",
       },
       "body": {
         "mimeType": "",
-        "text": "{% random 'guid' %}",
+        "text": "{% faker 'guid' %}",
       },
       "description": "",
       "headers": [
         {
           "description": "",
-          "name": "{% random 'guid' %}",
-          "value": "{% random 'guid' %}",
+          "name": "{% faker 'guid' %}",
+          "value": "{% faker 'guid' %}",
         },
       ],
       "metaSortKey": -1622117983999,
@@ -4978,13 +4978,13 @@ exports[`Fixtures Import postman faker-vars-v2_1-input.json 1`] = `
       "parameters": [
         {
           "disabled": false,
-          "name": "{% random 'guid' %}",
-          "value": "{% random 'guid' %}",
+          "name": "{% faker 'guid' %}",
+          "value": "{% faker 'guid' %}",
         },
       ],
       "parentId": "__GRP_1__",
       "preRequestScript": "",
-      "url": "httpbin.org/anything/{% random 'guid' %}",
+      "url": "httpbin.org/anything/{% faker 'guid' %}",
     },
   ],
 }

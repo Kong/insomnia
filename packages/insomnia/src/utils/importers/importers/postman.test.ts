@@ -35,7 +35,7 @@ describe('postman', () => {
   describe('transformPostmanToNunjucksString', () => {
     it('should transform a postman request string to an insomnia request string', () => {
       const input = '{{$guid}}abc{{$randomStreetAddress}}def{{$guid}}';
-      const output = '{% random \'guid\' %}abc{% random \'randomStreetAddress\' %}def{% random \'guid\' %}';
+      const output = '{% faker \'guid\' %}abc{% faker \'randomStreetAddress\' %}def{% faker \'guid\' %}';
       expect(transformPostmanToNunjucksString(input)).toEqual(output);
       expect(transformPostmanToNunjucksString()).toEqual('');
     });
