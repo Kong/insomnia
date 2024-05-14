@@ -496,6 +496,7 @@ export const exportRequestsToFile = (requestIds: string[]) => {
     onDone: async selectedFormat => {
       const requests: BaseModel[] = [];
       const workspaceLookup: any = {};
+      let workspaceId: string | null = null;
       for (const requestId of requestIds) {
         const request = await requestOperations.getById(requestId);
 
@@ -515,8 +516,20 @@ export const exportRequestsToFile = (requestIds: string[]) => {
         }
 
         workspaceLookup[workspace._id] = true;
+        workspaceId = workspace._id;
       }
-      const exportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
+      const [baseEnvironment] = await database.find<Environment>(environment.type, {
+        parentId: workspaceId,
+      });
+
+      const subEnvironments = await database.find<Environment>(environment.type, {
+        parentId: baseEnvironment?._id,
+      });
+      const shouldPrompt = subEnvironments.some(e => e.isPrivate);
+      let shouldExportPrivateEnvironments = false;
+      if (shouldPrompt) {
+        shouldExportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
+      }
       const fileName = await showSaveExportedFileDialog({
         exportedFileNamePrefix: 'Insomnia',
         selectedFormat,
@@ -531,15 +544,15 @@ export const exportRequestsToFile = (requestIds: string[]) => {
       try {
         switch (selectedFormat) {
           case VALUE_HAR:
-            stringifiedExport = await exportRequestsHAR(requests, exportPrivateEnvironments);
+            stringifiedExport = await exportRequestsHAR(requests, shouldExportPrivateEnvironments);
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await exportRequestsData(requests, exportPrivateEnvironments, 'yaml');
+            stringifiedExport = await exportRequestsData(requests, shouldExportPrivateEnvironments, 'yaml');
             break;
 
           case VALUE_JSON:
-            stringifiedExport = await exportRequestsData(requests, exportPrivateEnvironments, 'json');
+            stringifiedExport = await exportRequestsData(requests, shouldExportPrivateEnvironments, 'json');
             break;
 
           default:
