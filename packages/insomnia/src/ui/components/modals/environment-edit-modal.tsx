@@ -69,6 +69,7 @@ export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, Modal
           ref={environmentEditorRef}
           key={requestGroup ? requestGroup._id : 'n/a'}
           environmentInfo={environmentInfo}
+          onBlur={saveChanges}
         />
       </ModalBody>
       <ModalFooter>
