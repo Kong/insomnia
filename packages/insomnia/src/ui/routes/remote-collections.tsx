@@ -233,21 +233,6 @@ export const remoteLoader: LoaderFunction = async ({
   };
 };
 
-interface SyncData {
-  localBranches: string[];
-  remoteBranches: string[];
-  currentBranch: string;
-  history: Snapshot[];
-  historyCount: number;
-  status: Status | null;
-  syncItems: StatusCandidate[];
-  compare: {
-    ahead: number;
-    behind: number;
-  };
-  remoteBackendProjects: BackendProject[];
-}
-
 const remoteBranchesCache: Record<string, string[]> = {};
 const remoteCompareCache: Record<string, { ahead: number; behind: number }> =
   {};
@@ -290,7 +275,20 @@ export const syncDataAction: ActionFunction = async ({ params }) => {
     };
   }
 };
-
+interface SyncData {
+  localBranches: string[];
+  remoteBranches: string[];
+  currentBranch: string;
+  history: Snapshot[];
+  historyCount: number;
+  status: Status | null;
+  syncItems: StatusCandidate[];
+  compare: {
+    ahead: number;
+    behind: number;
+  };
+  remoteBackendProjects: BackendProject[];
+}
 export type SyncDataLoaderData =
   | SyncData
   | {

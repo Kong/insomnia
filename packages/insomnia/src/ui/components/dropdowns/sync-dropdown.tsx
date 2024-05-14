@@ -109,7 +109,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
     compare: { ahead, behind },
   } = syncData;
 
-  const canCreateSnapshot = Object.keys(status.stage).length > 0 || Object.keys(status.unstaged).length > 0;
+  const canCreateSnapshot = status && (Object.keys(status.stage).length > 0 || Object.keys(status.unstaged).length > 0);
 
   const canPush = ahead > 0;
   const canPull = behind > 0;

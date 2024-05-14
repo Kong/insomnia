@@ -11,7 +11,7 @@ import { Icon } from '../icon';
 
 interface Props {
   branch: string;
-  status: Status;
+  status: Status | null;
   syncItems: StatusCandidate[];
   onClose: () => void;
 }
@@ -56,12 +56,12 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
     organizationId: string;
   };
 
-  const stagedChanges = Object.entries(status.stage).map(([key, entry]) => ({
+  const stagedChanges = !status ? [] : Object.entries(status.stage).map(([key, entry]) => ({
     ...entry,
     document: syncItems.find(item => item.key === key)?.document || 'deleted' in entry ? { type: getModelTypeById(key) } : undefined,
     id: `staged-${key}`,
   }));;
-  const unstagedChanges = Object.entries(status.unstaged).map(([key, entry]) => ({
+  const unstagedChanges = !status ? [] : Object.entries(status.unstaged).map(([key, entry]) => ({
     ...entry,
     document: syncItems.find(item => item.key === key)?.document || 'deleted' in entry ? { type: getModelTypeById(key) } : undefined,
     id: `unstaged-${key}`,

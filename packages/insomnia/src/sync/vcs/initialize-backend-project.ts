@@ -19,7 +19,7 @@ export const initializeLocalBackendProjectAndMarkForSync = async ({ vcs, workspa
   const status = await vcs.status(candidates);
 
   // Stage everything
-  await vcs.stage(Object.values(status.unstaged));
+  status && await vcs.stage(Object.values(status.unstaged));
 
   // Snapshot
   await vcs.takeSnapshot('Initial Snapshot');
