@@ -381,15 +381,15 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
 
   try {
     const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
-    const mutatedContext = await tryToExecutePreRequestScript(
-      req,
+    const mutatedContext = await tryToExecutePreRequestScript({
+      request: req,
       environment,
       timelinePath,
       responseId,
       baseEnvironment,
       clientCertificates,
       cookieJar,
-    );
+    });
     if (!mutatedContext?.request) {
       // exiy early if there was a problem with the pre-request script
       // TODO: improve error message?
@@ -436,8 +436,8 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
     const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
 
-    const postMutatedContext = await tryToExecutePostRequestScript(
-      req,
+    const postMutatedContext = await tryToExecutePostRequestScript({
+      request: req,
       environment,
       timelinePath,
       responseId,
@@ -445,7 +445,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       clientCertificates,
       cookieJar,
       response,
-    );
+    });
     if (!postMutatedContext?.request) {
       // exiy early if there was a problem with the pre-request script
       // TODO: improve error message?

@@ -34,7 +34,7 @@ import {
   smartEncodeUrl,
 } from '../utils/url/querystring';
 import { getAuthHeader, getAuthQueryParams } from './authentication';
-import { cancellableCurlRequest, cancellableRunPreRequestScript } from './cancellation';
+import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
@@ -73,17 +73,8 @@ export const fetchRequestData = async (requestId: string) => {
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
-export const tryToExecuteScript = async (
-  script: string,
-  request: Request,
-  environment: Environment,
-  timelinePath: string,
-  responseId: string,
-  baseEnvironment: Environment,
-  clientCertificates: ClientCertificate[],
-  cookieJar: CookieJar,
-  response?: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse,
-) => {
+export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
+  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response } = context;
   if (!script) {
     return {
       request,
@@ -103,7 +94,7 @@ export const tryToExecuteScript = async (
         // TODO: restart the hidden browser window
       }, timeout + 1000);
     });
-    const preRequestPromise = cancellableRunPreRequestScript({
+    const executionPromise = cancellableRunScript({
       script,
       context: {
         request,
@@ -121,7 +112,7 @@ export const tryToExecuteScript = async (
         response,
       },
     });
-    const output = await Promise.race([timeoutPromise, preRequestPromise]) as {
+    const output = await Promise.race([timeoutPromise, executionPromise]) as {
       request: Request;
       environment: Record<string, any>;
       baseEnvironment: Record<string, any>;
@@ -129,7 +120,7 @@ export const tryToExecuteScript = async (
       clientCertificates: ClientCertificate[];
       cookieJar: CookieJar;
     };
-    console.log('[network] Pre-request script succeeded', output);
+    console.log('[network] script execution succeeded', output);
 
     const envPropertyOrder = orderedJSON.parse(
       JSON.stringify(output.environment),
@@ -176,48 +167,28 @@ export const tryToExecuteScript = async (
   }
 };
 
-export async function tryToExecutePreRequestScript(
-  request: Request,
-  environment: Environment,
-  timelinePath: string,
-  responseId: string,
-  baseEnvironment: Environment,
-  clientCertificates: ClientCertificate[],
-  cookieJar: CookieJar,
-) {
-  return tryToExecuteScript(
-    request.preRequestScript,
-    request,
-    environment,
-    timelinePath,
-    responseId,
-    baseEnvironment,
-    clientCertificates,
-    cookieJar,
-  );
+interface RequestContextForScript {
+  request: Request;
+  environment: Environment;
+  timelinePath: string;
+  responseId: string;
+  baseEnvironment: Environment;
+  clientCertificates: ClientCertificate[];
+  cookieJar: CookieJar;
+}
+type RequestAndContextAndResponse = RequestContextForScript & {
+  response: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
+};
+type RequestAndContextAndOptionalResponse = RequestContextForScript & {
+  script: string;
+  response?: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
+};
+export async function tryToExecutePreRequestScript(context: RequestContextForScript) {
+  return tryToExecuteScript({ script: context.request.preRequestScript, ...context });
 };
 
-export async function tryToExecutePostRequestScript(
-  request: Request,
-  environment: Environment,
-  timelinePath: string,
-  responseId: string,
-  baseEnvironment: Environment,
-  clientCertificates: ClientCertificate[],
-  cookieJar: CookieJar,
-  response: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError,
-) {
-  return tryToExecuteScript(
-    request.postRequestScript,
-    request,
-    environment,
-    timelinePath,
-    responseId,
-    baseEnvironment,
-    clientCertificates,
-    cookieJar,
-    response,
-  );
+export async function tryToExecutePostRequestScript(context: RequestAndContextAndResponse) {
+  return tryToExecuteScript({ script: context.request.postRequestScript, ...context });
 }
 
 export const tryToInterpolateRequest = async (

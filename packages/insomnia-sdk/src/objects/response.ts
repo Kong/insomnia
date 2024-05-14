@@ -17,7 +17,6 @@ export interface ResponseOptions {
     // ideally it should work in both browser and node
     stream?: Buffer | ArrayBuffer;
     responseTime: number;
-    status?: string;
     originalRequest: Request;
 }
 
@@ -59,7 +58,7 @@ export class Response extends Property {
         );
         this.originalRequest = options.originalRequest;
         this.responseTime = options.responseTime;
-        this.status = RESPONSE_CODE_REASONS[options.code];
+        this.status = options.reason || RESPONSE_CODE_REASONS[options.code];
         this.stream = options.stream;
     }
 
@@ -82,7 +81,7 @@ export class Response extends Property {
             stream: response.stream,
             header: response.headers,
             code: response.statusCode,
-            status: response.statusMessage,
+            reason: response.statusMessage,
             responseTime: response.elapsedTime,
             originalRequest: response.originalRequest,
         });
@@ -261,14 +260,13 @@ export function toScriptResponse(
         body: responseBody,
         // stream is duplicated with body
         responseTime: partialResponse.elapsedTime,
-        status: partialResponse.statusMessage,
         originalRequest,
     };
 
     return new Response(responseOption);
 };
 
-export async function readBodyByFromPath(response: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError | undefined) {
+export async function readBodyFromPath(response: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError | undefined) {
     // it allows to execute scripts (e.g., for testing) but body contains nothing
     if (!response || 'error' in response) {
         return '';

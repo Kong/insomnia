@@ -68,13 +68,8 @@ const findHeader =
     header => header.key === 'Content-Type',
     {},
 );`;
-const getCookies =
-  `const { Cookie } = require('insomnia-collection');
-const cookieHeaders = insomnia.response.headers.filter(
-    header => header.key === 'Set-Cookie',
-    {},
-);
-const cookies = cookieHeaders.map(cookieHeader => Cookie.parse(cookieHeader.value));`;
+const getCookies = 'const cookies = insomnia.response.cookies.toObject();';
+
 
 const lintOptions = {
   globals: {

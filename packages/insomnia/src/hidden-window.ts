@@ -5,7 +5,7 @@ import * as _ from 'lodash';
 import { invariant } from '../src/utils/invariant';
 
 export interface HiddenBrowserWindowBridgeAPI {
-  runPreRequestScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
+  runScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
 };
 
 window.bridge.onmessage(async (data, callback) => {
@@ -15,10 +15,10 @@ window.bridge.onmessage(async (data, callback) => {
     const timeout = data.context.timeout || 5000;
     const timeoutPromise = new window.bridge.Promise(resolve => {
       setTimeout(() => {
-        resolve({ error: 'Timeout: Pre-request script took too long' });
+        resolve({ error: 'Timeout: Running script took too long' });
       }, timeout);
     });
-    const result = await window.bridge.Promise.race([timeoutPromise, runPreRequestScript(data)]);
+    const result = await window.bridge.Promise.race([timeoutPromise, runScript(data)]);
     callback(result);
   } catch (err) {
     console.error('error', err);
@@ -28,7 +28,7 @@ window.bridge.onmessage(async (data, callback) => {
   }
 });
 
-const runPreRequestScript = async (
+const runScript = async (
   { script, context }: { script: string; context: RequestContext },
 ): Promise<RequestContext> => {
   console.log(script);

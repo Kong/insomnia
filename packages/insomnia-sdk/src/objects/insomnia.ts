@@ -11,7 +11,7 @@ import { unsupportedError } from './properties';
 import { Request as ScriptRequest, RequestOptions, toScriptRequestBody } from './request';
 import { RequestInfo } from './request-info';
 import { Response as ScriptResponse } from './response';
-import { readBodyByFromPath, toScriptResponse } from './response';
+import { readBodyFromPath, toScriptResponse } from './response';
 import { sendRequest } from './send-request';
 import { test } from './test';
 import { toUrlObject } from './urls';
@@ -211,7 +211,7 @@ export async function initInsomniaObject(
     };
     const request = new ScriptRequest(reqOpt);
 
-    const responseBody = await readBodyByFromPath(rawObj.response);
+    const responseBody = await readBodyFromPath(rawObj.response);
     const response = rawObj.response ? toScriptResponse(request, rawObj.response, responseBody) : undefined;
 
     return new InsomniaObject(
