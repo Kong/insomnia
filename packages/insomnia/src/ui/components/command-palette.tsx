@@ -6,14 +6,12 @@ import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-ro
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';
 import { fuzzyMatch } from '../../common/misc';
 import { isGrpcRequest } from '../../models/grpc-request';
-import { isScratchpadOrganizationId } from '../../models/organization';
 import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import { isWebSocketRequest } from '../../models/websocket-request';
-import { scopeToActivity } from '../../models/workspace';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
-import { LoaderResult } from '../routes/commands';
-import { ProjectLoaderData, scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../routes/project';
+import { LoaderResult, RemoteFilesLoaderResult } from '../routes/commands';
+import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../routes/project';
 import { RootLoaderData } from '../routes/root';
 import { AvatarGroup } from './avatar';
 import { Icon } from './icon';
@@ -76,18 +74,11 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const setActiveEnvironmentFetcher = useFetcher();
   const navigate = useNavigate();
 
-  const projectDataLoader = useFetcher<ProjectLoaderData>();
   const accountId = userSession.accountId;
-
-  useEffect(() => {
-    if (projectId && !projectDataLoader.data && projectDataLoader.state === 'idle' && !isScratchpadOrganizationId(organizationId)) {
-      projectDataLoader.load(`/organization/${organizationId}/project/${projectId}?index`);
-    }
-  }, [organizationId, projectDataLoader, projectId]);
 
   const commandsLoader = useFetcher<LoaderResult>();
 
-  const projectData = projectDataLoader.data;
+  const remoteFilesLoader = useFetcher<RemoteFilesLoaderResult>();
 
   useEffect(() => {
     if (!commandsLoader.data && commandsLoader.state === 'idle') {
@@ -99,6 +90,12 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       commandsLoader.load(`/commands?${searchParams.toString()}`);
     }
   }, [commandsLoader, organizationId, projectId, workspaceId]);
+
+  useEffect(() => {
+    if (!remoteFilesLoader.data && remoteFilesLoader.state === 'idle') {
+      remoteFilesLoader.load('/remote-files');
+    }
+  }, [remoteFilesLoader]);
 
   const comboboxSections: {
     id: string;
@@ -124,21 +121,25 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     },
   })) || [];
 
-  const currentFiles = projectData?.files?.map(file => ({
+  const remoteFiles = remoteFilesLoader.data?.files || [];
+
+  const currentFilesData = commandsLoader.data?.current.files || [];
+  const currentRemoteFilesData = remoteFiles.filter(file => file.item.teamProjectRemoteId === projectId).filter(file => !currentFilesData.some(f => f.id === file.item.id));
+
+  console.log({ currentFilesData });
+
+  const currentFiles = [...currentFilesData, ...currentRemoteFilesData]?.map(file => ({
     ...file,
     action: () => {
-      if (file.scope === 'unsynced') {
-        if (!projectData || !projectData.activeProject || !file.remoteId) {
-          return null;
-        }
-        pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: projectData?.activeProject.remoteId }, {
+      if ('pullUrl' in file && file.pullUrl) {
+        pullFileFetcher.submit({ backendProjectId: file.item.projectId, remoteId: file.item.teamProjectId }, {
           method: 'POST',
-          action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
+          action: file.pullUrl,
         });
 
         return true;
       } else {
-        navigate(`/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${scopeToActivity(file.scope)}`);
+        navigate(file.url);
         return null;
       }
     },
@@ -169,10 +170,23 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     },
   })) || [];
 
-  const otherFiles = commandsLoader.data?.other.files.map(file => ({
+  const otherFilesData = commandsLoader.data?.other.files || [];
+  const otherRemoteFilesData = remoteFiles.filter(file => file.item.teamProjectRemoteId !== projectId).filter(file => !otherFilesData.some(f => f.id === file.item.id));
+
+  const otherFiles = [...otherFilesData, ...otherRemoteFilesData].map(file => ({
     ...file,
     action: () => {
-      navigate(file.url);
+      if ('pullUrl' in file && file.pullUrl) {
+        pullFileFetcher.submit({ backendProjectId: file.item.projectId, remoteId: file.item.teamProjectId }, {
+          method: 'POST',
+          action: file.pullUrl,
+        });
+
+        return true;
+      } else {
+        navigate(file.url);
+        return null;
+      }
     },
   })) || [];
 
@@ -219,13 +233,13 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     name: 'Collections and documents',
     children: currentFiles.map(file => ({
       id: file.id,
-      icon: <span className={`${scopeToBgColorMap[file.scope]} ${scopeToTextColorMap[file.scope]} rounded aspect-square h-6 flex items-center justify-center`}><Icon icon={scopeToIconMap[file.scope]} className="w-4" /></span>,
+      icon: <span className={`${scopeToBgColorMap[file.item.scope]} ${scopeToTextColorMap[file.item.scope]} rounded aspect-square h-6 flex items-center justify-center`}><Icon icon={scopeToIconMap[file.item.scope]} className="w-4" /></span>,
       name: file.name,
-      description: <span className='flex items-center gap-1'><span className='px-2 text-[--hl]'>{scopeToLabelMap[file.scope]}</span></span>,
-      textValue: file.name + ' ' + scopeToLabelMap[file.scope],
-      loading: Boolean(pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.remoteId),
+      description: <span className='flex items-center gap-1'><span className='px-2 text-[--hl]'>{scopeToLabelMap[file.item.scope]}</span></span>,
+      textValue: file.name + ' ' + scopeToLabelMap[file.item.scope],
+      loading: file.item.scope === 'unsynced' ? Boolean(pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.item.projectId) : '',
       presence: presence
-        .filter(p => p.project === projectData?.activeProject?.remoteId && p.file === file.id)
+        .filter(p => p.project === file.item.teamProjectId && p.file === file.id)
         .filter(p => p.acct !== accountId)
         .map(user => {
           return {
@@ -300,13 +314,13 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     id: 'other-collections-and-documents',
     name: 'Other collections and documents',
     children: otherFiles.map(file => ({
-      id: file.item._id,
+      id: file.id,
       icon: <span className={`${scopeToBgColorMap[file.item.scope]} ${scopeToTextColorMap[file.item.scope]} rounded aspect-square h-6 flex items-center justify-center`}><Icon icon={scopeToIconMap[file.item.scope]} className="w-4" /></span>,
       name: file.name,
       description: <span className='flex items-center gap-1'><span className='px-2 text-[--hl]'>{scopeToLabelMap[file.item.scope]}</span>{file.organizationName}<span>/</span>{file.projectName}</span>,
       textValue: file.name + ' ' + scopeToLabelMap[file.item.scope],
       presence: presence
-        .filter(p => p.project === projectData?.activeProject?.remoteId && p.file === file.id)
+        .filter(p => p.project === file.item.teamProjectId && p.file === file.id)
         .filter(p => p.acct !== accountId)
         .map(user => {
           return {
@@ -338,6 +352,12 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
 
     prevEnvFetcherState.current = setActiveEnvironmentFetcher.state;
   }, [close, setActiveEnvironmentFetcher.state]);
+
+  console.log({
+    currentFiles,
+    remoteFiles,
+    otherFiles,
+  });
 
   return (
     <ComboBox

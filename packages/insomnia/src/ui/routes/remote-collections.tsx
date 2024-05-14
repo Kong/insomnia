@@ -124,8 +124,7 @@ export const pullRemoteCollectionAction: ActionFunction = async ({
   request,
   params,
 }) => {
-  const { organizationId, projectId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
+  const { organizationId } = params;
   invariant(typeof organizationId === 'string', 'Organization Id is required');
   const formData = await request.formData();
 
@@ -135,6 +134,7 @@ export const pullRemoteCollectionAction: ActionFunction = async ({
   invariant(typeof remoteId === 'string', 'Remote Id is required');
 
   const vcs = VCSInstance();
+
   const remoteBackendProjects = await vcs.remoteBackendProjects({
     teamId: organizationId,
     teamProjectId: remoteId,
@@ -146,7 +146,7 @@ export const pullRemoteCollectionAction: ActionFunction = async ({
 
   invariant(backendProject, 'Backend project not found');
 
-  const project = await models.project.getById(projectId);
+  const project = await models.project.getByRemoteId(remoteId);
 
   invariant(project?.remoteId, 'Project is not a remote project');
 
@@ -167,7 +167,7 @@ export const pullRemoteCollectionAction: ActionFunction = async ({
   const activity = scopeToActivity(workspace?.scope);
 
   return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${activity}`
+    `/organization/${organizationId}/project/${project._id}/workspace/${workspaceId}/${activity}`
   );
 };
 
