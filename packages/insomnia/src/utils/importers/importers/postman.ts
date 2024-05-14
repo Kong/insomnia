@@ -1,3 +1,4 @@
+import { fakerFunctions } from '../../../ui/components/templating/faker-functions';
 import { Converter, ImportRequest, Parameter } from '../entities';
 import {
   Auth as V200Auth,
@@ -51,6 +52,22 @@ type Header = V200Header | V210Header;
 
 let requestCount = 1;
 let requestGroupCount = 1;
+const fakerTags = Object.keys(fakerFunctions);
+const postmanTagRegexs = fakerTags.map(tag => ({ tag, regex: new RegExp(`\\{\\{\\$${tag}\\}\\}`, 'g') }));
+// example: { 'guid' : '{% faker 'guid' %}' }
+const postmanToNunjucksLookup = fakerTags
+  .map(tag => ({ [tag]: `{% faker '${tag}' %}` }))
+  .reduce((acc, obj) => ({ ...acc, ...obj }), {});
+
+export const transformPostmanToNunjucksString = (inputString?: string | null) => {
+  if (!inputString) {
+    return '';
+  }
+
+  return postmanTagRegexs.reduce((transformedString, { tag, regex }) => {
+    return transformedString.replace(regex, postmanToNunjucksLookup[tag]);
+  }, inputString);
+};
 
 const POSTMAN_SCHEMA_V2_0 =
   'https://schema.getpostman.com/json/collection/v2.0.0/collection.json';
@@ -176,12 +193,12 @@ export class ImportPostman {
       _type: 'request',
       name,
       description: (request.description as string) || '',
-      url: this.importUrl(request.url),
+      url: transformPostmanToNunjucksString(this.importUrl(request.url)),
       parameters: parameters,
       method: request.method || 'GET',
       headers: headers.map(({ key, value, disabled, description }) => ({
-        name: key,
-        value,
+        name: transformPostmanToNunjucksString(key),
+        value: transformPostmanToNunjucksString(value),
         ...(typeof disabled !== 'undefined' ? { disabled } : {}),
         ...(typeof description !== 'undefined' ? { description } : {}),
       })),
@@ -196,8 +213,8 @@ export class ImportPostman {
       return [];
     }
     return parameters.map(({ key, value, disabled }) => ({
-      name: key,
-      value,
+      name: transformPostmanToNunjucksString(key),
+      value: transformPostmanToNunjucksString(value),
       disabled: disabled || false,
     }) as Parameter);
   };
@@ -286,7 +303,7 @@ export class ImportPostman {
       ({ key, value, type, enabled, disabled, src }) => {
         const item: Parameter = {
           type,
-          name: key,
+          name: transformPostmanToNunjucksString(key),
         };
 
         if (schema === POSTMAN_SCHEMA_V2_0) {
@@ -297,6 +314,8 @@ export class ImportPostman {
 
         if (type === 'file') {
           item.fileName = src as string;
+        } else if (typeof value === 'string') {
+          item.value = transformPostmanToNunjucksString(value);
         } else {
           item.value = value as string;
         }
@@ -318,8 +337,8 @@ export class ImportPostman {
 
     const params = urlEncoded?.map(({ key, value, enabled, disabled }) => {
       const item: Parameter = {
-        value,
-        name: key,
+        value: transformPostmanToNunjucksString(value),
+        name: transformPostmanToNunjucksString(key),
       };
 
       if (schema === POSTMAN_SCHEMA_V2_0) {
@@ -344,7 +363,7 @@ export class ImportPostman {
 
     return {
       mimeType,
-      text: raw,
+      text: transformPostmanToNunjucksString(raw),
     };
   };
 
@@ -355,7 +374,7 @@ export class ImportPostman {
 
     return {
       mimeType: 'application/graphql',
-      text: JSON.stringify(graphql),
+      text: transformPostmanToNunjucksString(JSON.stringify(graphql)),
     };
   };
 
@@ -572,6 +591,8 @@ export class ImportPostman {
       username: RegExp(/.+?(?=\:)/).exec(authString)?.[0],
       password: RegExp(/(?<=\:).*/).exec(authString)?.[0],
     };
+    item.username = transformPostmanToNunjucksString(item.username);
+    item.password = transformPostmanToNunjucksString(item.password);
 
     return item;
   };
@@ -599,7 +620,7 @@ export class ImportPostman {
         'token',
       );
     }
-
+    item.token = transformPostmanToNunjucksString(item.token);
     return item;
   };
 
@@ -607,7 +628,7 @@ export class ImportPostman {
     if (!authHeader) {
       return {};
     }
-    const authHeader2 = authHeader.replace(/\s+/, ' ');
+    const authHeader2 = transformPostmanToNunjucksString(authHeader.replace(/\s+/, ' '));
     const tokenIndex = authHeader.indexOf(' ');
     return {
       type: 'bearer',

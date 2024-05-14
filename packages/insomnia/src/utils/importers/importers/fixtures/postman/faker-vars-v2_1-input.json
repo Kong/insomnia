@@ -1,0 +1,71 @@
+{
+	"info": {
+		"_postman_id": "e3bc7b64-f637-425a-8fc6-587e864ed953",
+		"name": "export tags",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "test"
+	},
+	"item": [
+		{
+			"name": "New Request",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{$guid}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "{{$guid}}",
+						"value": "{{$guid}}",
+						"description": "",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{{$guid}}"
+				},
+				"url": {
+					"raw": "httpbin.org/anything/{{$guid}}?{{$guid}}={{$guid}}",
+					"host": [
+						"httpbin",
+						"org"
+					],
+					"path": [
+						"anything",
+						"{{$guid}}"
+					],
+					"query": [
+						{
+							"key": "{{$guid}}",
+							"value": "{{$guid}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
