@@ -16,6 +16,7 @@ import { RootLoaderData } from '../routes/root';
 import { AvatarGroup } from './avatar';
 import { Icon } from './icon';
 import { useDocBodyKeyboardShortcuts } from './keydown-binder';
+import { showAlert } from './modals';
 import { getMethodShortHand } from './tags/method-tag';
 
 export const CommandPalette = memo(function CommandPalette() {
@@ -237,7 +238,6 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       name: file.name,
       description: <span className='flex items-center gap-1'><span className='px-2 text-[--hl]'>{scopeToLabelMap[file.item.scope]}</span></span>,
       textValue: file.name + ' ' + scopeToLabelMap[file.item.scope],
-      loading: file.item.scope === 'unsynced' ? Boolean(pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.item.projectId) : '',
       presence: presence
         .filter(p => p.project === file.item.teamProjectId && p.file === file.id)
         .filter(p => p.acct !== accountId)
@@ -335,11 +335,18 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const prevPullFetcherState = useRef(pullFileFetcher.state);
   useEffect(() => {
     if (pullFileFetcher.state === 'idle' && prevPullFetcherState.current !== 'idle') {
+      if (pullFileFetcher.data?.error) {
+        showAlert({
+          title: 'Error',
+          message: pullFileFetcher.data.error,
+        });
+      }
+
       close();
     }
 
     prevPullFetcherState.current = pullFileFetcher.state;
-  }, [close, pullFileFetcher.state]);
+  }, [close, pullFileFetcher]);
 
   // Close the dialog when the environment is set
   // If we close the dialog when fetcher.submit() is done then the dialog will close before the environment is set
@@ -353,11 +360,15 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     prevEnvFetcherState.current = setActiveEnvironmentFetcher.state;
   }, [close, setActiveEnvironmentFetcher.state]);
 
+  const isPullingFile = pullFileFetcher.state !== 'idle';
+  const pullingFileBackedProjectId = pullFileFetcher.formData?.get('backendProjectId');
+  const pullingFile = remoteFiles.find(file => file.item.projectId === pullingFileBackedProjectId);
+
   return (
     <ComboBox
       aria-label='Quick switcher'
       className='group overflow-hidden'
-      isDisabled={pullFileFetcher.state !== 'idle'}
+      isDisabled={isPullingFile}
       autoFocus
       allowsCustomValue={false}
       menuTrigger='focus'
@@ -406,15 +417,28 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
               aria-label="Filter"
               className="group relative flex items-center flex-1 pt-0"
             >
-              <Icon icon="search" className="text-[--color-font] absolute left-4" />
-              <Input
-                slot='input'
-                placeholder="Search and switch between requests, collections and documents"
-                className="py-3 pl-10 pr-7 w-full bg-[--color-bg] transition-none text-[--color-font] rounded-md group-data-[open]:rounded-b-none border border-solid border-[--hl-sm]"
-              />
+              {isPullingFile ? (
+                <>
+                  <Icon icon="spinner" className="text-[--color-font] absolute left-4 animate-spin" />
+                  <div
+                    slot='input'
+                    className="py-3 pl-10 pr-7 w-full bg-[--color-bg] transition-none text-[--color-font] rounded-md group-data-[open]:rounded-b-none border border-solid border-[--hl-sm]"
+                  >
+                    Pulling: {pullingFile?.name}
+                  </div>
+                </>
+              ) : (
+                <>
+                    <Icon icon="search" className="text-[--color-font] absolute left-4" />
+                    <Input
+                      slot='input'
+                      placeholder="Search and switch between requests, collections and documents"
+                      className="py-3 pl-10 pr-7 w-full bg-[--color-bg] transition-none text-[--color-font] rounded-md group-data-[open]:rounded-b-none border border-solid border-[--hl-sm]"
+                    />
+                </>
+              )}
             </Label>
             <Popover offset={0} className={`outline-none rounded-b-md w-[--trigger-width] bg-[--color-bg] text-[--color-font] relative overflow-y-auto flex-1 border ${isOpen ? 'border-solid' : ''} border-[--hl-sm]`}>
-              {pullFileFetcher.state === 'idle' && (
                 <ListBox
                   aria-label='Commands'
                   className="outline-none relative overflow-y-auto flex-1"
@@ -447,41 +471,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                       </Collection>
                     </Section>
                   )}
-                </ListBox>
-              )}
-              {pullFileFetcher.state !== 'idle' && (
-                <div
-                  className="flex-1 overflow-y-auto outline-none flex flex-col data-[empty]:hidden"
-                >
-                  {comboboxSections.map(section => (
-                    <div className='flex-1 flex flex-col' key={section.id}>
-                      <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
-                      <div>
-                        {section.children.map(item => (
-                          <div key={item.id} className="group cursor-not-allowed outline-none select-none">
-                            <div
-                              className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
-                            >
-                              {item.icon}
-                              <span className="flex-1 px-1 truncate">{item.name}</span>
-                              <span className="flex-1 px-1 truncate">{item.description}</span>
-                              <span className='w-[70px]'>
-                                {item.presence.length > 0 && (
-                                  <AvatarGroup
-                                    size="small"
-                                    maxAvatars={3}
-                                    items={item.presence}
-                                  />
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              </ListBox>
             </Popover>
           </>
         );
