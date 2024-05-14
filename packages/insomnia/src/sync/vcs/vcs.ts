@@ -26,7 +26,6 @@ import type {
   StatusCandidate,
 } from '../types';
 import { BackendProjectWithTeams } from './normalize-backend-project-team';
-import * as paths from './paths';
 import {
   compareBranches,
   generateCandidateMap,
@@ -1238,11 +1237,11 @@ export class VCS {
 
   async _getBackendProject(): Promise<BackendProject | null> {
     const projectId = this._backendProject ? this._backendProject.id : 'n/a';
-    return this._store.getItem(paths.project(projectId));
+    return this._store.getItem(`/projects/${projectId}/meta.json`);
   }
 
-  async _getBackendProjectById(id: string): Promise<BackendProject | null> {
-    return this._store.getItem(paths.project(id));
+  async _getBackendProjectById(projectId: string): Promise<BackendProject | null> {
+    return this._store.getItem(`/projects/${projectId}/meta.json`);
   }
 
   async _getBackendProjectSymmetricKey() {
@@ -1264,11 +1263,11 @@ export class VCS {
   }
 
   async _storeBackendProject(project: BackendProject) {
-    return this._store.setItem(paths.project(project.id), project);
+    return this._store.setItem(`/projects/${project.id}/meta.json`, project);
   }
 
   async _getHead(): Promise<Head> {
-    const head = await this._store.getItem(paths.head(this._backendProjectId()));
+    const head = await this._store.getItem(`/projects/${this._backendProjectId()}/head.json`);
 
     if (head === null) {
       await this._storeHead({ branch: 'master' });
@@ -1317,10 +1316,7 @@ export class VCS {
   }
 
   async _getBranch(name: string): Promise<Branch | null> {
-    const pId = this._backendProjectId();
-
-    const p = paths.branch(pId, name);
-    return this._store.getItem(p);
+    return this._store.getItem(`/projects/${this._backendProjectId()}/branches/${name}.json`);
   }
 
   async _getBranches(backendProjectId?: string) {
@@ -1328,7 +1324,7 @@ export class VCS {
 
     const pId = backendProjectId || this._backendProjectId();
 
-    for (const p of await this._store.keys(paths.branches(pId))) {
+    for (const p of await this._store.keys(`/projects/${pId}/branches/`)) {
       const b = await this._store.getItem(p);
 
       if (b === null) {
@@ -1417,8 +1413,7 @@ export class VCS {
 
   async _allBackendProjects() {
     const backendProjects: BackendProject[] = [];
-    const basePath = paths.projects();
-    const keys = await this._store.keys(basePath, false);
+    const keys = await this._store.keys('/projects/', false);
 
     for (const key of keys) {
       const id = path.basename(key);
@@ -1436,7 +1431,7 @@ export class VCS {
   }
 
   async _assertSnapshot(id: string) {
-    const snapshot: Snapshot = await this._store.getItem(paths.snapshot(this._backendProjectId(), id));
+    const snapshot: Snapshot = await this._store.getItem(`/projects/${this._backendProjectId()}/snapshots/${id}.json`);
 
     if (snapshot && typeof snapshot.created === 'string') {
       snapshot.created = new Date(snapshot.created);
@@ -1450,7 +1445,7 @@ export class VCS {
   }
 
   async _getSnapshot(id: string) {
-    const snapshot: Snapshot = await this._store.getItem(paths.snapshot(this._backendProjectId(), id));
+    const snapshot: Snapshot = await this._store.getItem(`/projects/${this._backendProjectId()}/snapshots/${id}.json`);
 
     if (snapshot && typeof snapshot.created === 'string') {
       snapshot.created = new Date(snapshot.created);
@@ -1467,14 +1462,14 @@ export class VCS {
   }
 
   async _storeSnapshot(snapshot: Snapshot) {
-    return this._store.setItem(paths.snapshot(this._backendProjectId(), snapshot.id), snapshot);
+    return this._store.setItem(`/projects/${this._backendProjectId()}/snapshots/${snapshot.id}.json`, snapshot);
   }
 
   async _storeSnapshots(snapshots: Snapshot[]) {
     const promises: Promise<Snapshot>[] = [];
 
     for (const snapshot of snapshots) {
-      const p = paths.snapshot(this._backendProjectId(), snapshot.id);
+      const p = `/projects/${this._backendProjectId()}/snapshots/${snapshot.id}.json`;
       const promise = this._store.setItem(p, snapshot);
       // @ts-expect-error -- TSCONVERSION appears to be a genuine error
       promises.push(promise);
@@ -1491,25 +1486,24 @@ export class VCS {
     }
 
     branch.modified = new Date();
-    return this._store.setItem(paths.branch(this._backendProjectId(), branch.name.toLowerCase()), branch);
+    return this._store.setItem(`/projects/${this._backendProjectId()}/branches/${branch.name.toLowerCase()}.json`, branch);
   }
 
   async _removeBranch(branch: Branch) {
-    return this._store.removeItem(paths.branch(this._backendProjectId(), branch.name));
+    return this._store.removeItem(`/projects/${this._backendProjectId()}/branches/${branch.name}.json`);
   }
 
   async _removeProject(project: BackendProject) {
     console.log(`[sync] Remove local project ${project.id}`);
-    return this._store.removeItem(paths.project(project.id));
+    return this._store.removeItem(`/projects/${project.id}/meta.json`);
   }
 
   async _storeHead(head: Head) {
     await this._store.setItem(`/projects/${this._backendProjectId()}/head.json`, head);
   }
 
-  _getBlob(id: string) {
-    const p = paths.blob(this._backendProjectId(), id);
-    return this._store.getItem(p) as Promise<BaseModel | null>;
+  _getBlob(blobId: string) {
+    return this._store.getItem(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`) as Promise<BaseModel | null>;
   }
 
   async _getBlobs(ids: string[]) {
@@ -1522,38 +1516,37 @@ export class VCS {
     return Promise.all(promises);
   }
 
-  async _storeBlob(id: string, content: Record<string, any> | null) {
-    return this._store.setItem(paths.blob(this._backendProjectId(), id), content);
+  async _storeBlob(blobId: string, content: Record<string, any> | null) {
+    return this._store.setItem(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`, content);
   }
 
-  async _storeBlobs(map: Record<string, string>) {
+  async _storeBlobs(blobsToStore: Record<string, string>) {
     const promises: Promise<any>[] = [];
 
-    for (const id of Object.keys(map)) {
-      const buff = Buffer.from(map[id], 'utf8');
-      promises.push(this._storeBlob(id, buff));
+    for (const blobId of Object.keys(blobsToStore)) {
+      const buff = Buffer.from(blobsToStore[blobId], 'utf8');
+      promises.push(this._store.setItem(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`, buff));
     }
 
     await Promise.all(promises);
   }
 
-  async _storeBlobsBuffer(map: Record<string, Buffer>) {
+  async _storeBlobsBuffer(decryptedBlobs: Record<string, Buffer>) {
     const promises: Promise<any>[] = [];
 
-    for (const id of Object.keys(map)) {
-      const p = paths.blob(this._backendProjectId(), id);
-      promises.push(this._store.setItemRaw(p, map[id]));
+    for (const blobId of Object.keys(decryptedBlobs)) {
+      promises.push(this._store.setItemRaw(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`, decryptedBlobs[blobId]));
     }
 
     await Promise.all(promises);
   }
 
-  async _getBlobRaw(id: string) {
-    return this._store.getItemRaw(paths.blob(this._backendProjectId(), id));
+  async _getBlobRaw(blobId: string) {
+    return this._store.getItemRaw(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`);
   }
 
-  async _hasBlob(id: string) {
-    return this._store.hasItem(paths.blob(this._backendProjectId(), id));
+  async _hasBlob(blobId: string) {
+    return this._store.hasItem(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`);
   }
 }
 
