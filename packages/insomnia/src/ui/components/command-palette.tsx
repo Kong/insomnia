@@ -127,8 +127,6 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const currentFilesData = commandsLoader.data?.current.files || [];
   const currentRemoteFilesData = remoteFiles.filter(file => file.item.teamProjectLocalId === projectId).filter(file => !currentFilesData.some(f => f.id === file.item.id));
 
-  console.log({ currentFilesData });
-
   const currentFiles = [...currentFilesData, ...currentRemoteFilesData]?.map(file => ({
     ...file,
     action: () => {
