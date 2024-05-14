@@ -7,10 +7,10 @@ import YAML from 'yaml';
 
 import { isApiSpec } from '../models/api-spec';
 import { isCookieJar } from '../models/cookie-jar';
-import { isEnvironment } from '../models/environment';
+import { Environment, isEnvironment } from '../models/environment';
 import { isGrpcRequest } from '../models/grpc-request';
 import * as requestOperations from '../models/helpers/request-operations';
-import type { BaseModel } from '../models/index';
+import { type BaseModel, environment } from '../models/index';
 import * as models from '../models/index';
 import { isProtoDirectory } from '../models/proto-directory';
 import { isProtoFile } from '../models/proto-file';
@@ -375,7 +375,18 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
 
   showSelectExportTypeModal({
     onDone: async selectedFormat => {
-      const exportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
+      const [baseEnvironment] = await database.find<Environment>(environment.type, {
+        parentId: { $in: workspacesForActiveProject.map(w => w._id) },
+      });
+
+      const subEnvironments = await database.find<Environment>(environment.type, {
+        parentId: baseEnvironment?._id,
+      });
+      const shouldPrompt = subEnvironments.some(e => e.isPrivate);
+      let shouldExportPrivateEnvironments = false;
+      if (shouldPrompt) {
+        shouldExportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
+      }
       const fileName = await showSaveExportedFileDialog({
         exportedFileNamePrefix: activeProjectName,
         selectedFormat,
@@ -390,15 +401,15 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
       try {
         switch (selectedFormat) {
           case VALUE_HAR:
-            stringifiedExport = await exportWorkspacesHAR(workspacesForActiveProject, exportPrivateEnvironments);
+            stringifiedExport = await exportWorkspacesHAR(workspacesForActiveProject, shouldExportPrivateEnvironments);
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await exportWorkspacesData(workspacesForActiveProject, exportPrivateEnvironments, 'yaml');
+            stringifiedExport = await exportWorkspacesData(workspacesForActiveProject, shouldExportPrivateEnvironments, 'yaml');
             break;
 
           case VALUE_JSON:
-            stringifiedExport = await exportWorkspacesData(workspacesForActiveProject, exportPrivateEnvironments, 'json');
+            stringifiedExport = await exportWorkspacesData(workspacesForActiveProject, shouldExportPrivateEnvironments, 'json');
             break;
 
           default:
