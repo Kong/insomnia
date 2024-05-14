@@ -70,7 +70,6 @@ const findHeader =
 );`;
 const getCookies = 'const cookies = insomnia.response.cookies.toObject();';
 
-
 const lintOptions = {
   globals: {
     // https://jshint.com/docs/options/
