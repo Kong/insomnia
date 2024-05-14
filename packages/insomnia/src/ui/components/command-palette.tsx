@@ -124,7 +124,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const remoteFiles = remoteFilesLoader.data?.files || [];
 
   const currentFilesData = commandsLoader.data?.current.files || [];
-  const currentRemoteFilesData = remoteFiles.filter(file => file.item.teamProjectRemoteId === projectId).filter(file => !currentFilesData.some(f => f.id === file.item.id));
+  const currentRemoteFilesData = remoteFiles.filter(file => file.item.teamProjectLocalId === projectId).filter(file => !currentFilesData.some(f => f.id === file.item.id));
 
   console.log({ currentFilesData });
 
@@ -171,7 +171,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   })) || [];
 
   const otherFilesData = commandsLoader.data?.other.files || [];
-  const otherRemoteFilesData = remoteFiles.filter(file => file.item.teamProjectRemoteId !== projectId).filter(file => !otherFilesData.some(f => f.id === file.item.id));
+  const otherRemoteFilesData = remoteFiles.filter(file => file.item.teamProjectLocalId !== projectId).filter(file => !otherFilesData.some(f => f.id === file.item.id));
 
   const otherFiles = [...otherFilesData, ...otherRemoteFilesData].map(file => ({
     ...file,

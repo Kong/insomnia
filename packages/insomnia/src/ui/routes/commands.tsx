@@ -292,7 +292,7 @@ interface RemoteFile {
 }
 
 export interface RemoteFilesLoaderResult {
-  files: CommandRemoteItem<RemoteFile & { teamProjectRemoteId: string; scope: 'unsynced' }>[];
+  files: CommandRemoteItem<RemoteFile & { teamProjectLocalId: string; scope: 'unsynced' }>[];
 }
 
 export const remoteFilesLoader: LoaderFunction = async (): Promise<RemoteFilesLoaderResult> => {
@@ -332,7 +332,7 @@ export const remoteFilesLoader: LoaderFunction = async (): Promise<RemoteFilesLo
       url: `/organization/${file.organizationId}/project`,
       pullUrl: parentProject ? `/organization/${file.organizationId}/project/${file.teamProjectId}/remote-collections/pull` : '',
       name: file.name,
-      item: { ...file, teamProjectRemoteId: parentProject?._id || '', scope: 'unsynced' as const },
+      item: { ...file, teamProjectLocalId: parentProject?._id || '', scope: 'unsynced' as const },
       organizationName: organizations.find(org => org.id === file.organizationId)?.display_name || '',
       projectName: parentProject?.name || '',
     };
