@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { memo, useEffect, useRef } from 'react';
 import { useState } from 'react';
-import { Button, Collection, ComboBox, Dialog, DialogTrigger, Header, Input, Keyboard, Label, ListBox, ListBoxItem, Modal, ModalOverlay, Section, Text } from 'react-aria-components';
+import { Button, Collection, ComboBox, Dialog, DialogTrigger, Header, Input, Keyboard, Label, ListBox, ListBoxItem, Modal, ModalOverlay, Popover, Section, Text } from 'react-aria-components';
 import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';
@@ -18,7 +18,7 @@ import { Icon } from './icon';
 import { useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { getMethodShortHand } from './tags/method-tag';
 
-export const CommandPalette = () => {
+export const CommandPalette = memo(function CommandPalette() {
   const [isOpen, setIsOpen] = useState(false);
   const { settings } = useRouteLoaderData('root') as RootLoaderData;
 
@@ -43,8 +43,8 @@ export const CommandPalette = () => {
         </Keyboard>}
       </Button>
       <ModalOverlay isDismissable className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex pt-20 justify-center bg-black/30">
-        <Modal className="max-w-3xl h-max w-full rounded-md flex flex-col overflow-hidden border border-solid border-[--hl-sm] max-h-[80vh] bg-[--color-bg] text-[--color-font]">
-          <Dialog className="outline-none h-max overflow-hidden flex flex-col">
+        <Modal className="max-w-3xl w-full">
+          <Dialog aria-label='Command palette dialog' className="outline-none">
             {({ close }) => (
               <CommandPaletteCombobox close={close} />
             )}
@@ -53,7 +53,7 @@ export const CommandPalette = () => {
       </ModalOverlay>
     </DialogTrigger>
   );
-};
+});
 
 const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const {
@@ -353,16 +353,10 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     prevEnvFetcherState.current = setActiveEnvironmentFetcher.state;
   }, [close, setActiveEnvironmentFetcher.state]);
 
-  console.log({
-    currentFiles,
-    remoteFiles,
-    otherFiles,
-  });
-
   return (
     <ComboBox
       aria-label='Quick switcher'
-      className='flex flex-col divide-y divide-solid divide-[--hl-sm] overflow-hidden'
+      className='group overflow-hidden'
       isDisabled={pullFileFetcher.state !== 'idle'}
       autoFocus
       allowsCustomValue={false}
@@ -405,83 +399,94 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         }
       }}
     >
-      <Label
-        aria-label="Filter"
-        className="group relative flex items-center gap-2 p-2 flex-1"
-      >
-        <Icon icon="search" className="text-[--color-font] pl-2" />
-        <Input
-          placeholder="Search and switch between requests, collections and documents"
-          className="py-1 w-full pl-2 pr-7 bg-[--color-bg] text-[--color-font]"
-        />
-      </Label>
-      {pullFileFetcher.state === 'idle' && (
-        <ListBox
-          className="outline-none relative overflow-y-auto flex-1"
-          items={comboboxSections}
-        >
-          {section => (
-            <Section className='flex-1 flex flex-col'>
-              <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
-              <Collection items={section.children}>
-                {item => (
-                  <ListBoxItem textValue={item.textValue} className="group outline-none select-none">
-                    <div
-                      className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-data-[focused]:bg-[--hl-sm] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
-                    >
-                      {item.icon}
-                      <Text className="flex-shrink-0 px-1 truncate" slot="label">{item.name}</Text>
-                      {item.presence.length > 0 && (
-                        <span className='w-[70px]'>
-                          <AvatarGroup
-                            size="small"
-                            maxAvatars={3}
-                            items={item.presence}
-                          />
-                        </span>
-                      )}
-                      <Text className="flex-1 px-1 truncate text-sm text-[--hl-md]" slot="description">{item.description}</Text>
-                    </div>
-                  </ListBoxItem>
-                )}
-              </Collection>
-            </Section>
-          )}
-        </ListBox>
-      )}
-      {pullFileFetcher.state !== 'idle' && (
-        <div
-          className="flex-1 overflow-y-auto outline-none flex flex-col data-[empty]:hidden"
-        >
-          {comboboxSections.map(section => (
-            <div className='flex-1 flex flex-col' key={section.id}>
-              <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
-              <div>
-                {section.children.map(item => (
-                  <div key={item.id} className="group cursor-not-allowed outline-none select-none">
-                    <div
-                      className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
-                    >
-                      {item.icon}
-                      <span className="flex-1 px-1 truncate">{item.name}</span>
-                      <span className="flex-1 px-1 truncate">{item.description}</span>
-                      <span className='w-[70px]'>
-                        {item.presence.length > 0 && (
-                          <AvatarGroup
-                            size="small"
-                            maxAvatars={3}
-                            items={item.presence}
-                          />
+      {({ isOpen }) => {
+        return (
+          <>
+            <Label
+              aria-label="Filter"
+              className="group relative flex items-center flex-1 pt-0"
+            >
+              <Icon icon="search" className="text-[--color-font] absolute left-4" />
+              <Input
+                slot='input'
+                placeholder="Search and switch between requests, collections and documents"
+                className="py-3 pl-10 pr-7 w-full bg-[--color-bg] transition-none text-[--color-font] rounded-md group-data-[open]:rounded-b-none border border-solid border-[--hl-sm]"
+              />
+            </Label>
+            <Popover offset={0} className={`outline-none rounded-b-md w-[--trigger-width] bg-[--color-bg] text-[--color-font] relative overflow-y-auto flex-1 border ${isOpen ? 'border-solid' : ''} border-[--hl-sm]`}>
+              {pullFileFetcher.state === 'idle' && (
+                <ListBox
+                  aria-label='Commands'
+                  className="outline-none relative overflow-y-auto flex-1"
+                  items={comboboxSections}
+                >
+                  {section => (
+                    <Section className='flex-1 flex flex-col'>
+                      <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
+                      <Collection items={section.children}>
+                        {item => (
+                          <ListBoxItem textValue={item.textValue} className="group outline-none select-none">
+                            <div
+                              className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-data-[focused]:bg-[--hl-sm] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
+                            >
+                              {item.icon}
+                              <Text className="flex-shrink-0 px-1 truncate" slot="label">{item.name}</Text>
+                              {item.presence.length > 0 && (
+                                <span className='w-[70px]'>
+                                  <AvatarGroup
+                                    size="small"
+                                    maxAvatars={3}
+                                    items={item.presence}
+                                  />
+                                </span>
+                              )}
+                              <Text className="flex-1 px-1 truncate text-sm text-[--hl-md]" slot="description">{item.description}</Text>
+                            </div>
+                          </ListBoxItem>
                         )}
-                      </span>
+                      </Collection>
+                    </Section>
+                  )}
+                </ListBox>
+              )}
+              {pullFileFetcher.state !== 'idle' && (
+                <div
+                  className="flex-1 overflow-y-auto outline-none flex flex-col data-[empty]:hidden"
+                >
+                  {comboboxSections.map(section => (
+                    <div className='flex-1 flex flex-col' key={section.id}>
+                      <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
+                      <div>
+                        {section.children.map(item => (
+                          <div key={item.id} className="group cursor-not-allowed outline-none select-none">
+                            <div
+                              className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
+                            >
+                              {item.icon}
+                              <span className="flex-1 px-1 truncate">{item.name}</span>
+                              <span className="flex-1 px-1 truncate">{item.description}</span>
+                              <span className='w-[70px]'>
+                                {item.presence.length > 0 && (
+                                  <AvatarGroup
+                                    size="small"
+                                    maxAvatars={3}
+                                    items={item.presence}
+                                  />
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+                  ))}
+                </div>
+              )}
+            </Popover>
+          </>
+        );
+      }}
+
     </ComboBox>
   );
 };
