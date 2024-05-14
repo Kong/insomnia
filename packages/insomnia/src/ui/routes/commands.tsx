@@ -6,11 +6,13 @@ import { environment, grpcRequest, project, request, requestGroup, userSession, 
 import { Environment } from '../../models/environment';
 import { GrpcRequest } from '../../models/grpc-request';
 import { isScratchpadOrganizationId, Organization } from '../../models/organization';
+import { isRemoteProject, Project } from '../../models/project';
 import { Request } from '../../models/request';
 import { RequestGroup } from '../../models/request-group';
 import { WebSocketRequest } from '../../models/websocket-request';
 import { scopeToActivity, Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
+import { insomniaFetch } from '../insomniaFetch';
 
 export interface CommandItem<TItem> {
   id: string;
@@ -25,12 +27,12 @@ export interface CommandItem<TItem> {
 export interface LoaderResult {
   current: {
     requests: CommandItem<(Request | GrpcRequest | WebSocketRequest)>[];
-    files: CommandItem<Workspace>[];
+    files: CommandItem<Workspace & { teamProjectId: string }>[];
     environments: Environment[];
   };
   other: {
     requests: CommandItem<(Request | GrpcRequest | WebSocketRequest)>[];
-    files: CommandItem<Workspace>[];
+    files: CommandItem<Workspace & { teamProjectId: string }>[];
   };
 }
 
@@ -59,7 +61,7 @@ export const loader: LoaderFunction = async args => {
 
   const allOrganizationsIds = isScratchpadOrganizationId(organizationId) ? [organizationId] : allOrganizations.map(org => org.id);
 
-  const allProjects = await database.find(project.type, {
+  const allProjects = await database.find<Project>(project.type, {
     parentId: { $in: allOrganizationsIds },
   });
 
@@ -232,14 +234,17 @@ export const loader: LoaderFunction = async args => {
         projectName: allProjects.find(project => project._id === parentReferences.get(item.parentId)?.projectId)?.name || '',
         workspaceName: allOrganizationWorkspaces.find(workspace => workspace._id === parentReferences.get(item.parentId)?.workspaceId)?.name || '',
       })),
-      files: currentFiles.map(workspace => ({
-        id: workspace._id,
-        url: `/organization/${parentReferences.get(workspace.parentId)?.organizationId}/project/${parentReferences.get(workspace.parentId)?.projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
-        name: workspace.name,
-        item: workspace,
-        organizationName: allOrganizations.find(org => org.id === parentReferences.get(workspace.parentId)?.organizationId)?.display_name || '',
-        projectName: allProjects.find(project => project._id === parentReferences.get(workspace.parentId)?.projectId)?.name || '',
-      })),
+      files: currentFiles.map(workspace => {
+        const parentProject = allProjects.find(project => project._id === workspace.parentId);
+        return ({
+          id: workspace._id,
+          url: `/organization/${parentReferences.get(workspace.parentId)?.organizationId}/project/${parentReferences.get(workspace.parentId)?.projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+          name: workspace.name,
+          item: { ...workspace, teamProjectId: parentProject && isRemoteProject(parentProject) ? parentProject.remoteId : '' },
+          organizationName: allOrganizations.find(org => org.id === parentReferences.get(workspace.parentId)?.organizationId)?.display_name || '',
+          projectName: allProjects.find(project => project._id === parentReferences.get(workspace.parentId)?.projectId)?.name || '',
+        });
+      }),
       environments,
     },
     other: {
@@ -252,14 +257,92 @@ export const loader: LoaderFunction = async args => {
         projectName: allProjects.find(project => project._id === parentReferences.get(item.parentId)?.projectId)?.name || '',
         workspaceName: allOrganizationWorkspaces.find(workspace => workspace._id === parentReferences.get(item.parentId)?.workspaceId)?.name || '',
       })),
-      files: otherFiles.map(workspace => ({
-        id: workspace._id,
-        url: `/organization/${parentReferences.get(workspace.parentId)?.organizationId}/project/${parentReferences.get(workspace.parentId)?.projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
-        name: workspace.name,
-        item: workspace,
-        organizationName: allOrganizations.find(org => org.id === parentReferences.get(workspace.parentId)?.organizationId)?.display_name || '',
-        projectName: allProjects.find(project => project._id === parentReferences.get(workspace.parentId)?.projectId)?.name || '',
-      })),
+      files: otherFiles.map(workspace => {
+        const parentProject = allProjects.find(project => project._id === workspace.parentId);
+        return ({
+          id: workspace._id,
+          url: `/organization/${parentReferences.get(workspace.parentId)?.organizationId}/project/${parentReferences.get(workspace.parentId)?.projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+          name: workspace.name,
+          item: { ...workspace, teamProjectId: parentProject && isRemoteProject(parentProject) ? parentProject.remoteId : '' },
+          organizationName: allOrganizations.find(org => org.id === parentReferences.get(workspace.parentId)?.organizationId)?.display_name || '',
+          projectName: allProjects.find(project => project._id === parentReferences.get(workspace.parentId)?.projectId)?.name || '',
+        });
+      }),
     },
   };
+};
+
+export interface CommandRemoteItem<TItem> {
+  id: string;
+  url: string;
+  pullUrl: string;
+  name: string;
+  organizationName: string;
+  projectName: string;
+  workspaceName?: string;
+  item: TItem;
+}
+
+interface RemoteFile {
+  id: string;
+  name: string;
+  projectId: string;
+  teamProjectId: string;
+  organizationId: string;
+}
+
+export interface RemoteFilesLoaderResult {
+  files: CommandRemoteItem<RemoteFile & { teamProjectLocalId: string; scope: 'unsynced' }>[];
+}
+
+export const remoteFilesLoader: LoaderFunction = async (): Promise<RemoteFilesLoaderResult> => {
+  const { id: sessionId, accountId } = await userSession.get();
+
+  if (!sessionId) {
+    return {
+      files: [],
+    };
+  }
+
+  try {
+    const remoteFiles = await insomniaFetch<RemoteFile[]>({
+      method: 'GET',
+      path: '/v1/user/files',
+      sessionId,
+    });
+
+    const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+
+    const allRemoteFilesOrganizationIds = remoteFiles.map(file => file.organizationId);
+    const allRemoteFilesProjectIds = remoteFiles.map(file => file.teamProjectId);
+
+    const organizations = allOrganizations.filter(org => allRemoteFilesOrganizationIds.includes(org.id));
+
+    const projects = await database.find<Project>(project.type, {
+      remoteId: {
+        $in: allRemoteFilesProjectIds,
+      },
+    });
+
+    const files = remoteFiles.map(file => {
+      const parentProject = projects.find(project => project.remoteId === file.teamProjectId);
+      return {
+        id: file.id,
+        url: `/organization/${file.organizationId}`,
+        pullUrl: parentProject ? `/organization/${file.organizationId}/project/${file.teamProjectId}/remote-collections/pull` : '',
+        name: file.name,
+        item: { ...file, teamProjectLocalId: parentProject?._id || '', scope: 'unsynced' as const },
+        organizationName: organizations.find(org => org.id === file.organizationId)?.display_name || '',
+        projectName: parentProject?.name || '',
+      };
+    });
+
+    return {
+      files,
+    };
+  } catch (err) {
+    return {
+      files: [],
+    };
+  }
 };

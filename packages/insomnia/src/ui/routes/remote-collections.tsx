@@ -124,51 +124,58 @@ export const pullRemoteCollectionAction: ActionFunction = async ({
   request,
   params,
 }) => {
-  const { organizationId, projectId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof organizationId === 'string', 'Organization Id is required');
-  const formData = await request.formData();
+  try {
+    const { organizationId } = params;
+    invariant(typeof organizationId === 'string', 'Organization Id is required');
+    const formData = await request.formData();
 
-  const backendProjectId = formData.get('backendProjectId');
-  invariant(typeof backendProjectId === 'string', 'Collection Id is required');
-  const remoteId = formData.get('remoteId');
-  invariant(typeof remoteId === 'string', 'Remote Id is required');
+    const backendProjectId = formData.get('backendProjectId');
+    invariant(typeof backendProjectId === 'string', 'Collection Id is required');
+    const remoteId = formData.get('remoteId');
+    invariant(typeof remoteId === 'string', 'Remote Id is required');
 
-  const vcs = VCSInstance();
-  const remoteBackendProjects = await vcs.remoteBackendProjects({
-    teamId: organizationId,
-    teamProjectId: remoteId,
-  });
+    const vcs = VCSInstance();
 
-  const backendProject = remoteBackendProjects.find(
-    p => p.id === backendProjectId
-  );
+    const remoteBackendProjects = await vcs.remoteBackendProjects({
+      teamId: organizationId,
+      teamProjectId: remoteId,
+    });
 
-  invariant(backendProject, 'Backend project not found');
+    const backendProject = remoteBackendProjects.find(
+      p => p.id === backendProjectId
+    );
 
-  const project = await models.project.getById(projectId);
+    invariant(backendProject, 'Backend project not found');
 
-  invariant(project?.remoteId, 'Project is not a remote project');
+    const project = await models.project.getByRemoteId(remoteId);
 
-  // Clone old VCS so we don't mess anything up while working on other backend projects
-  const newVCS = vcs.newInstance();
-  // Remove all backend projects for workspace first
-  await newVCS.removeBackendProjectsForRoot(backendProject.rootDocumentId);
+    invariant(project?.remoteId, 'Project is not a remote project');
 
-  const { workspaceId } = await pullBackendProject({
-    vcs: newVCS,
-    backendProject,
-    remoteProject: project,
-  });
+    // Clone old VCS so we don't mess anything up while working on other backend projects
+    const newVCS = vcs.newInstance();
+    // Remove all backend projects for workspace first
+    await newVCS.removeBackendProjectsForRoot(backendProject.rootDocumentId);
 
-  const workspace = await models.workspace.getById(workspaceId);
+    const { workspaceId } = await pullBackendProject({
+      vcs: newVCS,
+      backendProject,
+      remoteProject: project,
+    });
 
-  invariant(workspace, 'Workspace not found');
-  const activity = scopeToActivity(workspace?.scope);
+    const workspace = await models.workspace.getById(workspaceId);
 
-  return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${activity}`
-  );
+    invariant(workspace, 'Workspace not found');
+    const activity = scopeToActivity(workspace?.scope);
+
+    return redirect(
+      `/organization/${organizationId}/project/${project._id}/workspace/${workspaceId}/${activity}`
+    );
+  } catch (e) {
+    console.warn('Failed to pull remote collection', e);
+    return {
+      error: 'Failed to pull remote collection',
+    };
+  }
 };
 
 export interface RemoteCollectionsLoaderData {
