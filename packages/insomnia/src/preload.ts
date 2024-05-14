@@ -50,7 +50,6 @@ const main: Window['main'] = {
   backup: () => ipcRenderer.invoke('backup'),
   restoreBackup: options => ipcRenderer.invoke('restoreBackup', options),
   authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
-  spectralRun: options => ipcRenderer.invoke('spectralRun', options),
   setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
   installPlugin: options => ipcRenderer.invoke('installPlugin', options),
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),

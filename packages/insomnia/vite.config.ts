@@ -40,6 +40,9 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       exclude: ['@getinsomnia/node-libcurl'],
+      // these packages are only used in web worker, Vite won't be able to discover the import on the initial scan，so we need to include them here to let vite pre-bundle them
+      // https://vitejs.dev/guide/dep-pre-bundling.html#customizing-the-behavior
+      include: ['@stoplight/spectral-core', '@stoplight/spectral-ruleset-bundler/with-loader', '@stoplight/spectral-rulesets'],
     },
     plugins: [
       // Allows us to import modules that will be resolved by Node's require() function.
@@ -55,5 +58,12 @@ export default defineConfig(({ mode }) => {
       }),
       react(),
     ],
+    worker: {
+      plugins: () => [
+        electronNodeRequire({
+          modules: ['fs'],
+        }),
+      ],
+    },
   };
 });

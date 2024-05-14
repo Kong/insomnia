@@ -46,10 +46,6 @@
     "@seald-io/nedb": "^4.0.4",
     "@segment/analytics-node": "2.1.0",
     "@sentry/electron": "^3.0.7",
-    "@stoplight/spectral-core": "^1.18.3",
-    "@stoplight/spectral-formats": "^1.6.0",
-    "@stoplight/spectral-ruleset-bundler": "1.5.2",
-    "@stoplight/spectral-rulesets": "^1.18.1",
     "apiconnect-wsdl": "1.8.31",
     "aws4": "^1.12.0",
     "chai": "^4.3.4",
@@ -87,6 +83,10 @@
     "yaml-source-map": "^2.1.1"
   },
   "devDependencies": {
+    "@stoplight/spectral-core": "^1.18.3",
+    "@stoplight/spectral-formats": "^1.6.0",
+    "@stoplight/spectral-rulesets": "^1.18.1",
+    "@stoplight/spectral-ruleset-bundler": "1.5.2",
     "@develohpanda/fluent-builder": "^2.1.2",
     "@fortawesome/fontawesome-svg-core": "^6.5.2",
     "@fortawesome/free-brands-svg-icons": "^6.5.2",
