@@ -1245,10 +1245,14 @@ const Design: FC = () => {
               </div>
             </div>
           </Panel>
-          <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
-          <Panel id="pane-two" className='pane-two theme--pane'>
-            {isSpecPaneOpen && <SwaggerUIDiv text={apiSpec.contents} />}
-          </Panel>
+          {isSpecPaneOpen && (
+            <>
+              <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
+              <Panel id="pane-two" className='pane-two theme--pane'>
+                <SwaggerUIDiv text={apiSpec.contents} />
+              </Panel>
+            </>
+          )}
         </PanelGroup>
       </Panel>
     </PanelGroup>
