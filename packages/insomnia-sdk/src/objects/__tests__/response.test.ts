@@ -62,5 +62,12 @@ describe('test request and response objects', () => {
             mimeFormat: '',
             mimeType: 'text/plain',
         });
+
+        // extended assertion chains
+        resp.to.have.status(200);
+        resp.to.have.status('OK');
+        resp.to.have.header('header1');
+        resp.to.have.jsonBody({ 'key': 888 });
+        resp.to.have.body('{"key": 888}');
     });
 });

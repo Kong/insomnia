@@ -593,7 +593,7 @@ export function mergeRequestBody(
 
     try {
         const textContent = updatedReqBody?.raw ? updatedReqBody?.raw :
-            updatedReqBody?.graphql ? JSON.stringify(updatedReqBody?.graphql) : '';
+            updatedReqBody?.graphql ? JSON.stringify(updatedReqBody?.graphql) : undefined;
 
         return {
             mimeType: mimeType,
