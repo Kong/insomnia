@@ -1140,7 +1140,7 @@ const Design: FC = () => {
                   />
                 )}
               </div>
-                  <div className="flex h-[--line-height-sm] box-border flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
+              <div className={`flex ${isLintPaneOpen ? '' : 'h-[--line-height-sm]'} box-border flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden`}>
                 <div className="flex gap-2 items-center p-[--padding-sm]">
                   <TooltipTrigger>
                     <Button className="flex items-center gap-2 cursor-pointer select-none">
