@@ -14,7 +14,7 @@ import { RequestGroup } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
 import { UnitTestSuite } from '../../models/unit-test-suite';
 import { WebSocketRequest } from '../../models/websocket-request';
-import { scopeToActivity, Workspace } from '../../models/workspace';
+import { isWorkspace, scopeToActivity, Workspace } from '../../models/workspace';
 import {
   BackendProject,
   Snapshot,
@@ -499,9 +499,15 @@ export const pullFromRemoteAction: ActionFunction = async ({ params }) => {
       candidates: syncItems,
       teamId: project.parentId,
       teamProjectId: project.remoteId,
+    }) as unknown as Operation;
+
+    delta.upsert?.forEach(doc => {
+      if (isWorkspace(doc)) {
+        doc.parentId = project._id;
+      }
     });
 
-    await database.batchModifyDocs(delta as unknown as Operation);
+    await database.batchModifyDocs(delta);
     delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage =
