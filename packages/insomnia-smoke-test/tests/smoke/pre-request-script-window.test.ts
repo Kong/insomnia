@@ -48,7 +48,7 @@ test('handle hidden browser window getting closed', async ({ app, page }) => {
   await page.getByLabel('Request Collection').getByTestId('Long running task').press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
-  await page.getByText('Timeout: Pre-request script took too long').click();
+  await page.getByText('Timeout: Running script took too long').click();
   await page.getByRole('tab', { name: 'Timeline' }).click();
   await page.getByRole('tab', { name: 'Preview ' }).click();
   const windows = await app.windows();
@@ -56,5 +56,5 @@ test('handle hidden browser window getting closed', async ({ app, page }) => {
   hiddenWindow.close();
   await page.getByRole('button', { name: 'Send' }).click();
   // as the hidden window is restarted, it should not show "Timeout: Hidden browser window is not responding"
-  await page.getByText('Timeout: Pre-request script took too long').click();
+  await page.getByText('Timeout: Running script took too long').click();
 });

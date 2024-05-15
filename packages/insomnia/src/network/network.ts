@@ -37,7 +37,7 @@ import {
   smartEncodeUrl,
 } from '../utils/url/querystring';
 import { getAuthHeader, getAuthObjectOrNull, getAuthQueryParams, isAuthEnabled } from './authentication';
-import { cancellableCurlRequest, cancellableRunPreRequestScript } from './cancellation';
+import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
@@ -94,22 +94,16 @@ export const fetchRequestData = async (requestId: string) => {
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
-export const tryToExecutePreRequestScript = async (
-  request: Request,
-  environment: Environment,
-  timelinePath: string,
-  responseId: string,
-  baseEnvironment: Environment,
-  clientCertificates: ClientCertificate[],
-  cookieJar: CookieJar,
-) => {
-  if (!request.preRequestScript) {
+export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
+  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response } = context;
+  if (!script) {
     return {
       request,
       environment: undefined,
       baseEnvironment: undefined,
     };
   }
+
   const settings = await models.settings.get();
 
   try {
@@ -122,7 +116,7 @@ export const tryToExecutePreRequestScript = async (
       }, timeout + 1000);
     });
 
-    const preRequestPromise = cancellableRunPreRequestScript({
+    const executionPromise = cancellableRunScript({
       script: request.preRequestScript,
       context: {
         request,
@@ -137,9 +131,10 @@ export const tryToExecutePreRequestScript = async (
         clientCertificates,
         settings,
         cookieJar,
+        response,
       },
     });
-    const output = await Promise.race([timeoutPromise, preRequestPromise]) as {
+    const output = await Promise.race([timeoutPromise, executionPromise]) as {
       request: Request;
       environment: Record<string, any>;
       baseEnvironment: Record<string, any>;
@@ -147,7 +142,7 @@ export const tryToExecutePreRequestScript = async (
       clientCertificates: ClientCertificate[];
       cookieJar: CookieJar;
     };
-    console.log('[network] Pre-request script succeeded', output);
+    console.log('[network] script execution succeeded', output);
 
     const envPropertyOrder = orderedJSON.parse(
       JSON.stringify(output.environment),
@@ -174,7 +169,10 @@ export const tryToExecutePreRequestScript = async (
       cookieJar: output.cookieJar,
     };
   } catch (err) {
-    await fs.promises.appendFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
+    await fs.promises.appendFile(
+      timelinePath,
+      JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n',
+    );
 
     const requestId = request._id;
     const responsePatch = {
@@ -190,6 +188,30 @@ export const tryToExecutePreRequestScript = async (
     return null;
   }
 };
+
+interface RequestContextForScript {
+  request: Request;
+  environment: Environment;
+  timelinePath: string;
+  responseId: string;
+  baseEnvironment: Environment;
+  clientCertificates: ClientCertificate[];
+  cookieJar: CookieJar;
+}
+type RequestAndContextAndResponse = RequestContextForScript & {
+  response: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
+};
+type RequestAndContextAndOptionalResponse = RequestContextForScript & {
+  script: string;
+  response?: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
+};
+export async function tryToExecutePreRequestScript(context: RequestContextForScript) {
+  return tryToExecuteScript({ script: context.request.preRequestScript, ...context });
+};
+
+export async function tryToExecutePostRequestScript(context: RequestAndContextAndResponse) {
+  return tryToExecuteScript({ script: context.request.postRequestScript, ...context });
+}
 
 export const tryToInterpolateRequest = async (
   request: Request,
@@ -224,6 +246,26 @@ export const tryToTransformRequestWithPlugins = async (renderResult: RequestAndC
     throw new Error(`Failed to transform request with plugins: ${request._id}`);
   }
 };
+
+export interface sendCurlAndWriteTimelineError {
+  _id: string;
+  parentId: string;
+  timelinePath: string;
+  statusMessage: string;
+  // additional
+  url: string;
+  error: string;
+  elapsedTime: number;
+  bytesRead: number;
+}
+
+export interface sendCurlAndWriteTimelineResponse extends ResponsePatch {
+  _id: string;
+  parentId: string;
+  timelinePath: string;
+  statusMessage: string;
+}
+
 export async function sendCurlAndWriteTimeline(
   renderedRequest: RenderedRequest,
   clientCertificates: ClientCertificate[],
@@ -231,7 +273,7 @@ export async function sendCurlAndWriteTimeline(
   settings: Settings,
   timelinePath: string,
   responseId: string,
-) {
+): Promise<sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse> {
   const requestId = renderedRequest._id;
   const timelineStrings: string[] = [];
   const authentication = renderedRequest.authentication as RequestAuthentication;
@@ -303,6 +345,7 @@ export async function sendCurlAndWriteTimeline(
     ...patch,
   };
 }
+
 export const responseTransform = async (patch: ResponsePatch, environmentId: string | null, renderedRequest: RenderedRequest, context: Record<string, any>) => {
   const response: ResponsePatch = {
     ...patch,

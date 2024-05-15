@@ -1,4 +1,6 @@
+import deepEqual from 'deep-equal';
 import { RESPONSE_CODE_REASONS } from 'insomnia/src/common/constants';
+import { sendCurlAndWriteTimelineError, type sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
 
 import { Cookie, CookieOptions } from './cookies';
 import { CookieList } from './cookies';
@@ -15,7 +17,6 @@ export interface ResponseOptions {
     // ideally it should work in both browser and node
     stream?: Buffer | ArrayBuffer;
     responseTime: number;
-    status?: string;
     originalRequest: Request;
 }
 
@@ -57,7 +58,7 @@ export class Response extends Property {
         );
         this.originalRequest = options.originalRequest;
         this.responseTime = options.responseTime;
-        this.status = RESPONSE_CODE_REASONS[options.code];
+        this.status = options.reason || RESPONSE_CODE_REASONS[options.code];
         this.stream = options.stream;
     }
 
@@ -80,7 +81,7 @@ export class Response extends Property {
             stream: response.stream,
             header: response.headers,
             code: response.statusCode,
-            status: response.statusMessage,
+            reason: response.statusMessage,
             responseTime: response.elapsedTime,
             originalRequest: response.originalRequest,
         });
@@ -155,7 +156,7 @@ export class Response extends Property {
         try {
             return JSON.parse(this.body.toString(), reviver);
         } catch (e) {
-            throw Error(`json: faile to parse: ${e}`);
+            throw Error(`json: failed to parse: ${e}`);
         }
     }
 
@@ -182,4 +183,104 @@ export class Response extends Property {
     text() {
         return this.body.toString();
     }
+
+    // Besides chai.expect, "to" is extended to support cases like:
+    // insomnia.response.to.have.status(200);
+    get to() {
+        type valueType = boolean | number | string | object | undefined;
+        const verify = (got: valueType, expected: valueType) => {
+            if (['boolean', 'number', 'string', 'undefined'].includes(typeof got) && expected === got) {
+                return;
+            } else if (deepEqual(got, expected, { strict: true })) {
+                return;
+            }
+            throw Error(`"${got}" is not equal to the expected value: "${expected}"`);
+        };
+
+        return {
+            // follows extend chai's chains for compatibility
+            have: {
+                status: (expected: number | string) => {
+                    if (typeof expected === 'string') {
+                        verify(this.status, expected);
+                    } else {
+                        verify(this.code, expected);
+                    }
+                },
+                header: (expected: string) => verify(
+                    this.headers.toObject().find(header => header.key === expected) !== undefined,
+                    true,
+                ),
+
+                body: (expected: string) => verify(this.text(), expected),
+                jsonBody: (expected: object) => verify(this.json(), expected),
+            },
+        };
+    }
+}
+
+export function toScriptResponse(
+    originalRequest: Request,
+    partialInsoResponse: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError,
+    responseBody: string,
+): Response | undefined {
+    if ('error' in partialInsoResponse) {
+    // it is sendCurlAndWriteTimelineError and basically doesn't contain anything useful
+        return undefined;
+    }
+    const partialResponse = partialInsoResponse as sendCurlAndWriteTimelineResponse;
+
+    const headers = partialResponse.headers ?
+        partialResponse.headers.map(
+            insoHeader => ({
+                key: insoHeader.name,
+                value: insoHeader.value,
+            }),
+            {},
+        )
+        : [];
+
+    const insoCookieOptions = partialResponse.headers ?
+        partialResponse.headers
+            .filter(
+                header => {
+                    return header.name.toLowerCase() === 'set-cookie';
+                },
+                {},
+            ).map(
+                setCookieHeader => Cookie.parse(setCookieHeader.value)
+        )
+        : [];
+
+    const responseOption = {
+        code: partialResponse.statusCode || 0,
+        reason: partialResponse.statusMessage,
+        header: headers,
+        cookie: insoCookieOptions,
+        body: responseBody,
+        // stream is duplicated with body
+        responseTime: partialResponse.elapsedTime,
+        originalRequest,
+    };
+
+    return new Response(responseOption);
+};
+
+export async function readBodyFromPath(response: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError | undefined) {
+    // it allows to execute scripts (e.g., for testing) but body contains nothing
+    if (!response || 'error' in response) {
+        return '';
+    } else if (!response.bodyPath) {
+        return '';
+    }
+
+    const readResponseResult = await window.bridge.readCurlResponse({
+        bodyPath: response.bodyPath,
+        bodyCompression: response.bodyCompression,
+    });
+
+    if (readResponseResult.error) {
+        throw Error(`Failed to read body: ${readResponseResult.error}`);
+    }
+    return readResponseResult.body;
 }
