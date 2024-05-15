@@ -67,8 +67,12 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
 
     if (!newCloudProject || 'error' in newCloudProject) {
       let error = 'An unexpected error occurred while creating the project. Please try again.';
-      if (newCloudProject.error === 'FORBIDDEN' || newCloudProject.error === 'NEEDS_TO_UPGRADE') {
+      if (newCloudProject.error === 'FORBIDDEN') {
         error = newCloudProject.error;
+      }
+
+      if (newCloudProject.error === 'NEEDS_TO_UPGRADE') {
+        error = 'Upgrade your account in order to create new Cloud Projects.';
       }
 
       if (newCloudProject.error === 'PROJECT_STORAGE_RESTRICTION') {
@@ -134,8 +138,21 @@ export const updateProjectAction: ActionFunction = async ({
       });
 
       if (response && 'error' in response) {
+        let error = 'An unexpected error occurred while updating your project. Please try again.';
+        if (response.error === 'FORBIDDEN') {
+          error = response.error;
+        }
+
+        if (response.error === 'NEEDS_TO_UPGRADE') {
+          error = 'Upgrade your account in order to create new Cloud Projects.';
+        }
+
+        if (response.error === 'PROJECT_STORAGE_RESTRICTION') {
+          error = 'The owner of the organization allows only Local Vault project creation, please try again.';
+        }
+
         return {
-          error: response.error === 'FORBIDDEN' ? 'You do not have permission to rename this project.' : 'An unexpected error occurred while renaming the project. Please try again.',
+          error,
         };
       }
 
@@ -155,8 +172,18 @@ export const updateProjectAction: ActionFunction = async ({
       });
 
       if (response && 'error' in response) {
+        let error = 'An unexpected error occurred while updating your project. Please try again.';
+
+        if (response.error === 'FORBIDDEN') {
+          error = 'You do not have permission to change this project.';
+        }
+
+        if (response.error === 'PROJECT_STORAGE_RESTRICTION') {
+          error = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
+        }
+
         return {
-          error: response.error === 'FORBIDDEN' ? 'You do not have permission to change this project.' : 'An unexpected error occurred while deleting the project. Please try again.',
+          error,
         };
       }
 
@@ -181,9 +208,17 @@ export const updateProjectAction: ActionFunction = async ({
       });
 
       if (!newCloudProject || 'error' in newCloudProject) {
-        let error = 'An unexpected error occurred while creating the project. Please try again.';
-        if (newCloudProject.error === 'FORBIDDEN' || newCloudProject.error === 'NEEDS_TO_UPGRADE') {
+        let error = 'An unexpected error occurred while updating your project. Please try again.';
+        if (newCloudProject.error === 'FORBIDDEN') {
           error = newCloudProject.error;
+        }
+
+        if (newCloudProject.error === 'NEEDS_TO_UPGRADE') {
+          error = 'Upgrade your account in order to create new Cloud Projects.';
+        }
+
+        if (newCloudProject.error === 'PROJECT_STORAGE_RESTRICTION') {
+          error = 'The owner of the organization allows only Local Vault project creation, please try again.';
         }
 
         return {
