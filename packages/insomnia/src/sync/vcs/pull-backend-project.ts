@@ -43,14 +43,13 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
 
     workspaceId = workspace._id;
   } else {
-    await vcs.pull({ candidates: [], teamId: remoteProject.parentId, teamProjectId: remoteProject._id }); // There won't be any existing docs since it's a new pull
+    await vcs.pull({ candidates: [], teamId: remoteProject.parentId, teamProjectId: remoteProject._id, projectId: remoteProject._id }); // There won't be any existing docs since it's a new pull
 
     const flushId = await database.bufferChanges();
 
     // @ts-expect-error -- TSCONVERSION
     for (const doc of (await vcs.allDocuments()) || []) {
       if (isWorkspace(doc)) {
-        doc.parentId = remoteProject._id;
         workspaceId = doc._id;
       }
       await database.upsert(doc);

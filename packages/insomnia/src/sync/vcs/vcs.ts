@@ -7,6 +7,7 @@ import path from 'path';
 
 import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
+import type { Operation } from '../../common/database';
 import { generateId } from '../../common/misc';
 import { BaseModel } from '../../models';
 import { insomniaFetch } from '../../ui/insomniaFetch';
@@ -577,7 +578,7 @@ export class VCS {
     console.log(`[sync] Created commit ${snapshot.id} (${name})`);
   }
 
-  async pull({ candidates, teamId, teamProjectId }: { candidates: StatusCandidate[]; teamId: string; teamProjectId: string }) {
+  async pull({ candidates, teamId, teamProjectId, projectId }: { candidates: StatusCandidate[]; teamId: string; teamProjectId: string; projectId: string }) {
     await this._getOrCreateRemoteBackendProject({ teamId, teamProjectId });
     const localBranch = await this._getCurrentBranch();
     const tmpBranchForRemote = await this.customFetch(localBranch.name + '.hidden', localBranch.name);
@@ -589,10 +590,18 @@ export class VCS {
       tmpBranchForRemote.name,
       message,
       true,
-    );
+    ) as unknown as Operation;
     // Remove tmp branch
     await this._removeBranch(tmpBranchForRemote);
     console.log(`[sync] Pulled branch ${localBranch.name}`);
+
+    // vcs.pull sometimes results in a delta with parentId: null, causing workspaces to be orphaned, this is a hack to restore those parentIds until we have a chance to redesign vcs
+    delta.upsert?.forEach(doc => {
+      if (!doc.parentId && doc.type === 'Workspace') {
+        doc.parentId = projectId;
+      }
+    });
+
     return delta;
   }
 

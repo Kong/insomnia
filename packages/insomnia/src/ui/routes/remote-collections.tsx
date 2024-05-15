@@ -14,7 +14,7 @@ import { RequestGroup } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
 import { UnitTestSuite } from '../../models/unit-test-suite';
 import { WebSocketRequest } from '../../models/websocket-request';
-import { isWorkspace, scopeToActivity, Workspace } from '../../models/workspace';
+import { scopeToActivity, Workspace } from '../../models/workspace';
 import {
   BackendProject,
   Snapshot,
@@ -499,12 +499,7 @@ export const pullFromRemoteAction: ActionFunction = async ({ params }) => {
       candidates: syncItems,
       teamId: project.parentId,
       teamProjectId: project.remoteId,
-    }) as unknown as Operation;
-
-    delta.upsert?.forEach(doc => {
-      if (isWorkspace(doc)) {
-        doc.parentId = project._id;
-      }
+      projectId: project._id,
     });
 
     await database.batchModifyDocs(delta);
@@ -543,21 +538,14 @@ export const fetchRemoteBranchAction: ActionFunction = async ({
   try {
     invariant(project.remoteId, 'Project is not remote');
     await vcs.checkout([], branch);
-    const delta = (await vcs.pull({
+    const delta = await vcs.pull({
       candidates: [],
       teamId: project.parentId,
       teamProjectId: project.remoteId,
-    })) as unknown as Operation;
-    // vcs.pull sometimes results in a delta with parentId: null, causing workspaces to be orphaned, this is a hack to restore those parentIds until we have a chance to redesign vcs
-    await database.batchModifyDocs({
-      remove: delta.remove,
-      upsert: delta.upsert?.map(doc => ({
-        ...doc,
-        ...(!doc.parentId && doc.type === models.workspace.type
-          ? { parentId: projectId }
-          : {}),
-      })),
+      projectId,
     });
+
+    await database.batchModifyDocs(delta);
   } catch (err) {
     await vcs.checkout([], currentBranch);
     const errorMessage =
