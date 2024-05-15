@@ -25,8 +25,7 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
 
   const defaultBranchMissing = !remoteBranches.includes(DEFAULT_BRANCH_NAME);
 
-  let workspaceId;
-
+  // @TODO Revisit the UX for this. What should happen if there are other branches?
   // The default branch does not exist, so we create it and the workspace locally
   if (defaultBranchMissing) {
     const workspace = await models.initModel<Workspace>(
@@ -41,23 +40,25 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
 
     await database.upsert(workspace);
 
-    workspaceId = workspace._id;
-  } else {
-    await vcs.pull({ candidates: [], teamId: remoteProject.parentId, teamProjectId: remoteProject._id }); // There won't be any existing docs since it's a new pull
-
-    const flushId = await database.bufferChanges();
-
-    // @ts-expect-error -- TSCONVERSION
-    for (const doc of (await vcs.allDocuments()) || []) {
-      if (isWorkspace(doc)) {
-        doc.parentId = remoteProject._id;
-        workspaceId = doc._id;
-      }
-      await database.upsert(doc);
-    }
-
-    await database.flushChanges(flushId);
+    return { project: remoteProject, workspaceId: workspace._id };
   }
 
+  await vcs.pull({ candidates: [], teamId: remoteProject.parentId, teamProjectId: remoteProject._id, projectId: remoteProject._id }); // There won't be any existing docs since it's a new pull
+
+  const flushId = await database.bufferChanges();
+  let workspaceId;
+  // @ts-expect-error -- TSCONVERSION
+  for (const doc of (await vcs.allDocuments()) || []) {
+    // When we pull a BackendProject we need to update the parent ID of the workspace so that it appears inside.
+    // There can't be more than one workspace.
+    if (isWorkspace(doc)) {
+      doc.parentId = remoteProject._id;
+      workspaceId = doc._id;
+    }
+    await database.upsert(doc);
+  }
+
+  await database.flushChanges(flushId);
   return { project: remoteProject, workspaceId };
+
 };
