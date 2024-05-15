@@ -5,7 +5,7 @@ import * as _ from 'lodash';
 import { invariant } from '../src/utils/invariant';
 
 export interface HiddenBrowserWindowBridgeAPI {
-  runPreRequestScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
+  runScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
 };
 
 window.bridge.onmessage(async (data, callback) => {
@@ -18,7 +18,7 @@ window.bridge.onmessage(async (data, callback) => {
         resolve({ error: 'Timeout: Running script took too long' });
       }, timeout);
     });
-    const result = await window.bridge.Promise.race([timeoutPromise, runPreRequestScript(data)]);
+    const result = await window.bridge.Promise.race([timeoutPromise, runScript(data)]);
     callback(result);
   } catch (err) {
     console.error('error', err);
@@ -28,13 +28,13 @@ window.bridge.onmessage(async (data, callback) => {
   }
 });
 
-const runPreRequestScript = async (
+const runScript = async (
   { script, context }: { script: string; context: RequestContext },
 ): Promise<RequestContext> => {
   console.log(script);
   const scriptConsole = new Console();
 
-  const executionContext = initInsomniaObject(context, scriptConsole.log);
+  const executionContext = await initInsomniaObject(context, scriptConsole.log);
 
   const evalInterceptor = (script: string) => {
     invariant(script && typeof script === 'string', 'eval is called with invalid or empty value');
@@ -83,7 +83,7 @@ const runPreRequestScript = async (
   const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
   const updatedCookieJar = mergeCookieJar(context.cookieJar, mutatedContextObject.cookieJar);
 
-  await window.bridge.writeFile(context.timelinePath, scriptConsole.dumpLogs());
+  await window.bridge.appendFile(context.timelinePath, scriptConsole.dumpLogs());
 
   console.log('mutatedInsomniaObject', mutatedContextObject);
   console.log('context', context);
