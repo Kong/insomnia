@@ -78,7 +78,7 @@ const UnitTestItemView = ({
 
   return (
     <div className="p-[--padding-sm] flex-shrink-0 overflow-hidden">
-      <div className="flex items-center gap-2 w-full">
+      <div className="flex items-center gap-2 w-full" title={unitTest.name}>
         <Button
           className="flex flex-shrink-0 flex-nowrap items-center justify-center aspect-square h-8 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => setIsOpen(!isOpen)}
@@ -474,7 +474,7 @@ const TestSuiteRoute = () => {
   });
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden divide-solid divide-y divide-[--hl-md]">
+    <div className="flex flex-col h-full w-full overflow-hidden divide-solid divide-y divide-[--hl-md]" title={testSuiteName}>
       <div className="flex h-[--line-height-sm] flex-shrink-0 gap-2 items-center px-[--padding-md]">
         <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full truncate flex-1">
           <EditableInput

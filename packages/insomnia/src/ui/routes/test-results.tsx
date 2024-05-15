@@ -89,7 +89,7 @@ export const TestRunStatus: FC = () => {
                     {errorMessage ? 'Failed' : 'Passed'}
                   </span>
                 </div>
-                <div className="flex-1 truncate">{test.title}</div>
+                <div className="flex-1 truncate" title={test.title}>{test.title}</div>
                 <div className="flex flex-shrink-0">{test.duration} ms</div>
               </div>
               {errorMessage && (
