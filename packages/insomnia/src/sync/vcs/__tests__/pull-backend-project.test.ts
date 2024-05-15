@@ -145,7 +145,7 @@ describe('pullBackendProject()', () => {
       const request = requests[0];
       expect(request).toStrictEqual(existingReq);
 
-      expect(vcs.pull).toHaveBeenCalledWith({ candidates: [], teamId: project?.parentId, teamProjectId: project?._id });
+      expect(vcs.pull).toHaveBeenCalledWith({ candidates: [], teamId: project?.parentId, teamProjectId: project?._id, projectId: project?._id });
     });
   });
 
