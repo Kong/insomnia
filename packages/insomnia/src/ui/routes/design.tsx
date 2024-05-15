@@ -1140,7 +1140,7 @@ const Design: FC = () => {
                   />
                 )}
               </div>
-                  <div className="flex h-[--line-height-sm] box-border flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
+              <div className={`flex ${isLintPaneOpen ? '' : 'h-[--line-height-sm]'} box-border flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden`}>
                 <div className="flex gap-2 items-center p-[--padding-sm]">
                   <TooltipTrigger>
                     <Button className="flex items-center gap-2 cursor-pointer select-none">
@@ -1245,10 +1245,14 @@ const Design: FC = () => {
               </div>
             </div>
           </Panel>
-          <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
-          <Panel id="pane-two" className='pane-two theme--pane'>
-            {isSpecPaneOpen && <SwaggerUIDiv text={apiSpec.contents} />}
-          </Panel>
+          {isSpecPaneOpen && (
+            <>
+              <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
+              <Panel id="pane-two" className='pane-two theme--pane'>
+                <SwaggerUIDiv text={apiSpec.contents} />
+              </Panel>
+            </>
+          )}
         </PanelGroup>
       </Panel>
     </PanelGroup>
