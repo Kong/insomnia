@@ -311,7 +311,7 @@ export const ExportRequestsModal = ({ workspace, onClose }: { workspace: Workspa
                 </Button>
                 <Button
                   onPress={() => {
-                    state?.treeRoot && exportRequestsToFile(getSelectedRequestIds(state.treeRoot));
+                    state?.treeRoot && exportRequestsToFile(workspace._id, getSelectedRequestIds(state.treeRoot));
                     close();
                   }}
                   isDisabled={isExportDisabled}
