@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [core@9.2.0] - 2024-05-15
+
+## What's Changed
+
+- :rocket: 9.1.1 by @insomnia-infra in <https://github.com/Kong/insomnia/pull/7386>
+
+- Types/ipc-channels by @jackkav in <https://github.com/Kong/insomnia/pull/7379>
+- fix(analytics): add missing session id by @gatzjames in <https://github.com/Kong/insomnia/pull/7389>
+- point changelog url at releases by @jackkav in <https://github.com/Kong/insomnia/pull/7387>
+- fix: add missing 9.1.1 changelog [no-ticket] by @filfreire in <https://github.com/Kong/insomnia/pull/7392>
+- fixes codemirror measure issue by @jackkav in <https://github.com/Kong/insomnia/pull/7391>
+- fix: extract correct position through err message by @CurryYangxx in <https://github.com/Kong/insomnia/pull/7398>
+- fix(ui): Misalignments in the UI by @gatzjames in <https://github.com/Kong/insomnia/pull/7400>
+- fix: environment edit modal save by @oahmed-OS in <https://github.com/Kong/insomnia/pull/7371>
+- perf: improve performance when spec lint [INS-3724] by @CurryYangxx in <https://github.com/Kong/insomnia/pull/7374>
+- improve VCS api by @jackkav in <https://github.com/Kong/insomnia/pull/7404>
+- Feat: add-faker by @jackkav in <https://github.com/Kong/insomnia/pull/7390>
+- fix(Preferences): Error when there is no active project in the preferences data tab by @gatzjames in <https://github.com/Kong/insomnia/pull/7406>
+- feat(command-palette): Add global search for unsynced files by @gatzjames in <https://github.com/Kong/insomnia/pull/7405>
+- only prompt with private envs by @jackkav in <https://github.com/Kong/insomnia/pull/7407>
+- fix(Project): Show errors when something goes wrong while updating projects by @gatzjames in <https://github.com/Kong/insomnia/pull/7412>
+- fix(Spec): Expand lint errors and hide the preview pane appropriately by @gatzjames in <https://github.com/Kong/insomnia/pull/7413>
+- fix(CloudSync Pull): Fix issue where workspaces could change parentId on pull by @gatzjames in <https://github.com/Kong/insomnia/pull/7414>
+- fix(UI): add titles to some elements in Test view by @filfreire in <https://github.com/Kong/insomnia/pull/7416>
+
+## New Contributors
+
+- @oahmed-OS made their first contribution in <https://github.com/Kong/insomnia/pull/7371>
+
+**Full Changelog**: <https://github.com/Kong/insomnia/compare/core@9.1.1...core@9.2.0>
+
 ## [core@9.1.1] - 2024-05-07
 
 ## What's Changed
