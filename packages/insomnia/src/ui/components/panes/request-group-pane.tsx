@@ -5,6 +5,8 @@ import { Settings } from '../../../models/settings';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
 import { RequestGroupLoaderData } from '../../routes/request-group';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
+import { AuthDropdown } from '../dropdowns/auth-dropdown';
+import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { PreRequestScriptEditor } from '../editors/pre-request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { MarkdownPreview } from '../markdown-preview';
@@ -21,6 +23,15 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
   return (
     <>
       <Tabs aria-label="Request group pane tabs">
+        <TabItem key="auth" title={<AuthDropdown authentication={activeRequestGroup.authentication} />}>
+          <ErrorBoundary
+            key={uniqueKey}
+            errorClassName="font-error pad text-center"
+          >
+            <div />
+            {/* <AuthWrapper /> */}
+          </ErrorBoundary>
+        </TabItem>
         <TabItem
           key="docs"
           title={

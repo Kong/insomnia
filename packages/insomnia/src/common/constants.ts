@@ -410,7 +410,7 @@ export function getAuthTypeName(authType: string, useLong = false) {
   if (authTypesMap.hasOwnProperty(authType)) {
     return useLong ? authTypesMap[authType][1] : authTypesMap[authType][0];
   } else {
-    return '';
+    return 'Auth';
   }
 }
 

@@ -8,13 +8,13 @@ import {
 import type { AuthTypeAPIKey, AuthTypeAwsIam, AuthTypeBasic, AuthTypeNTLM, AuthTypes, RequestAuthentication } from '../../../models/request';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
-import { useRequestPatcher } from '../../hooks/use-request';
+import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 
-function castOneAuthTypeToAnother(type: AuthTypes, oldAuth: RequestAuthentication = { type: 'none' }): RequestAuthentication {
+function castOneAuthTypeToAnother(type: AuthTypes, oldAuth: RequestAuthentication): RequestAuthentication {
   switch (type) {
     // No Auth
     case 'none':
@@ -131,36 +131,34 @@ const defaultTypes: AuthTypes[] = [
 ];
 
 interface Props {
+  authentication?: RequestAuthentication | {};
   authTypes?: AuthTypes[];
   disabled?: boolean;
 }
-export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = false }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const { requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTypes, disabled = false }) => {
+  const { requestId, requestGroupId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId?: string; requestGroupId?: string };
   const patchRequest = useRequestPatcher();
+  const patchRequestGroup = useRequestGroupPatcher();
+  const isInitialised = authentication && 'type' in authentication;
+  const authOrFallback: RequestAuthentication = isInitialised ? authentication : { type: 'none' };
+
   const onClick = useCallback(async (type: AuthTypes) => {
-    if (!activeRequest || !('authentication' in activeRequest)) {
+
+    const clickedSameSetting = type === authOrFallback.type;
+    if (clickedSameSetting) {
       return;
     }
-
-    const authentication = activeRequest.authentication as RequestAuthentication;
-
-    if (type === authentication.type) {
-      // Type didn't change
-      return;
-    }
-
-    const newAuthentication = castOneAuthTypeToAnother(type, authentication);
-    const defaultAuthentication = castOneAuthTypeToAnother(authentication.type);
+    const newAuthentication = castOneAuthTypeToAnother(type, authOrFallback);
+    const defaultAuthentication = castOneAuthTypeToAnother(authOrFallback.type, { type: 'none' });
 
     // Prompt the user if fields will change between new and old
-    for (const key of Object.keys(authentication)) {
+    for (const key of Object.keys(authOrFallback)) {
       if (key === 'type') {
         continue;
       }
 
       // @ts-expect-error -- garbage abstraction
-      const value = authentication[key];
+      const value = authOrFallback[key];
       // @ts-expect-error -- garbage abstraction
       const changedSinceDefault = defaultAuthentication[key] !== value;
       // @ts-expect-error -- garbage abstraction
@@ -175,21 +173,18 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
         break;
       }
     }
-    patchRequest(requestId, { authentication: newAuthentication });
-  }, [activeRequest, patchRequest, requestId]);
+    console.log({ authentication, newAuthentication });
+
+    requestId && patchRequest(requestId, { authentication: newAuthentication });
+    requestGroupId && patchRequestGroup(requestGroupId, { authentication: newAuthentication });
+  }, [authOrFallback, authentication, patchRequest, patchRequestGroup, requestGroupId, requestId]);
   const isCurrent = useCallback((type: AuthTypes) => {
-    if (!activeRequest || !('authentication' in activeRequest)) {
+
+    if (!(authentication && 'type' in authentication)) {
       return false;
     }
-    const authentication = activeRequest.authentication as RequestAuthentication;
-
     return type === (authentication.type || 'none');
-  }, [activeRequest]);
-
-  if (!activeRequest) {
-    return null;
-  }
-  const authentication = activeRequest.authentication as RequestAuthentication;
+  }, [authentication]);
 
   return (
     <Dropdown
@@ -197,7 +192,7 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
       isDisabled={disabled}
       triggerButton={
         <DropdownButton className="tall !text-[--hl]">
-          {'authentication' in activeRequest ? getAuthTypeName(authentication.type) || 'Auth' : 'Auth'}
+          {isInitialised ? getAuthTypeName(authentication.type) : 'Auth'}
           <i className="fa fa-caret-down space-left" />
         </DropdownButton>
       }

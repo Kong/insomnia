@@ -1,4 +1,4 @@
-import React, { FC, Fragment, useState } from 'react';
+import React, { act, FC, Fragment, useState } from 'react';
 import { Button, Heading, ToggleButton } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
@@ -51,7 +51,7 @@ export const RequestPane: FC<Props> = ({
   const patchRequest = useRequestPatcher();
 
   const [dismissPathParameterTip, setDismissPathParameterTip] = useLocalStorage('dismissPathParameterTip', '');
-
+  console.log({ activeRequest });
   const handleImportQueryFromUrl = () => {
     let query;
 
@@ -228,7 +228,7 @@ export const RequestPane: FC<Props> = ({
             environmentId={environmentId}
           />
         </TabItem>
-        <TabItem key="auth" title={<AuthDropdown />}>
+        <TabItem key="auth" title={<AuthDropdown authentication={activeRequest.authentication} />}>
           <ErrorBoundary
             key={uniqueKey}
             errorClassName="font-error pad text-center"

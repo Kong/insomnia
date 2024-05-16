@@ -1,5 +1,6 @@
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
+import { RequestAuthentication } from './request';
 
 export const name = 'Folder';
 
@@ -18,6 +19,7 @@ interface BaseRequestGroup {
   metaSortKey: number;
   preRequestScript: string;
   postRequestScript: string;
+  authentication: RequestAuthentication | {};
 }
 
 export type RequestGroup = BaseModel & BaseRequestGroup;
@@ -35,10 +37,12 @@ export function init(): BaseRequestGroup {
     metaSortKey: -1 * Date.now(),
     preRequestScript: '',
     postRequestScript: '',
+    authentication: {},
   };
 }
 
 export function migrate(doc: RequestGroup) {
+  doc.authentication = doc.authentication || {};
   return doc;
 }
 
