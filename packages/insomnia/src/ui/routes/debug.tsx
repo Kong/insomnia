@@ -187,7 +187,6 @@ export const Debug: FC = () => {
     requestId?: string;
     requestGroupId?: string;
   };
-  console.log('debug', { requestId, requestGroupId });
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(
     grpcRequests.map(r => ({
       requestId: r._id,

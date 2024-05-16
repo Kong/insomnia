@@ -233,7 +233,7 @@ export const RequestPane: FC<Props> = ({
             key={uniqueKey}
             errorClassName="font-error pad text-center"
           >
-            <AuthWrapper />
+            <AuthWrapper authentication={activeRequest.authentication} />
           </ErrorBoundary>
         </TabItem>
         <TabItem

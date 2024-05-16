@@ -397,6 +397,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           {disabled && <PaneReadOnlyBanner />}
           <AuthWrapper
             key={uniqueKey}
+            authentication={activeRequest.authentication}
             disabled={disabled}
           />
         </TabItem>

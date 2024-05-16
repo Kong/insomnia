@@ -29,7 +29,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
             errorClassName="font-error pad text-center"
           >
             <div />
-            {/* <AuthWrapper /> */}
+            <AuthWrapper authentication={activeRequestGroup.authentication} />
           </ErrorBoundary>
         </TabItem>
         <TabItem

@@ -3,8 +3,9 @@ import { useRouteLoaderData } from 'react-router-dom';
 import { useToggle } from 'react-use';
 
 import { toKebabCase } from '../../../../../common/misc';
-import { useRequestPatcher } from '../../../../hooks/use-request';
+import { useRequestGroupPatcher, useRequestPatcher } from '../../../../hooks/use-request';
 import { RequestLoaderData } from '../../../../routes/request';
+import { RequestGroupLoaderData } from '../../../../routes/request-group';
 import { useRootLoaderData } from '../../../../routes/root';
 import { OneLineEditor } from '../../../codemirror/one-line-editor';
 import { AuthRow } from './auth-row';
@@ -22,14 +23,18 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
     settings,
   } = useRootLoaderData();
   const { showPasswords } = settings;
-  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
   const patchRequest = useRequestPatcher();
+  const patchRequestGroup = useRequestGroupPatcher();
+  const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
+  const patcher = Boolean(reqData) ? patchRequest : patchRequestGroup;
   const [masked, toggleMask] = useToggle(true);
   const canBeMasked = !showPasswords && mask;
   const isMasked = canBeMasked && masked;
 
-  const onChange = useCallback((value: string) => patchRequest(requestId, { authentication: { ...authentication, [property]: value } }),
-    [authentication, patchRequest, property, requestId]);
+  const onChange = useCallback((value: string) => patcher(_id, { authentication: { ...authentication, [property]: value } }),
+    [patcher, _id, authentication, property]);
 
   const id = toKebabCase(label);
 
