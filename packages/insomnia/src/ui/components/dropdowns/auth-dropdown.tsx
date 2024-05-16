@@ -1,5 +1,5 @@
 import React, { FC, useCallback } from 'react';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import {
   getAuthTypeName,
@@ -9,12 +9,9 @@ import type { AuthTypeAPIKey, AuthTypeAwsIam, AuthTypeBasic, AuthTypeNTLM, AuthT
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
-import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import { showModal } from '../modals';
-import { AlertModal } from '../modals/alert-modal';
 
-function castOneAuthTypeToAnother(type: AuthTypes, oldAuth: RequestAuthentication): RequestAuthentication {
+function castOneAuthTypeToAnother(type: AuthTypes, oldAuth: RequestAuthentication | {}): RequestAuthentication {
   switch (type) {
     // No Auth
     case 'none':
@@ -139,52 +136,22 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
   const { requestId, requestGroupId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId?: string; requestGroupId?: string };
   const patchRequest = useRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
-  const isInitialised = authentication && 'type' in authentication;
-  const authOrFallback: RequestAuthentication = isInitialised ? authentication : { type: 'none' };
+  const isNotInherited = authentication && 'type' in authentication;
+  const authTypeOrInherit = isNotInherited ? authentication.type : 'inherit';
 
-  const onClick = useCallback(async (type: AuthTypes) => {
-
-    const clickedSameSetting = type === authOrFallback.type;
+  const onClick = useCallback(async (type?: AuthTypes) => {
+    const clickedSameSetting = type === authTypeOrInherit;
     if (clickedSameSetting) {
       return;
     }
-    const newAuthentication = castOneAuthTypeToAnother(type, authOrFallback);
-    const defaultAuthentication = castOneAuthTypeToAnother(authOrFallback.type, { type: 'none' });
-
-    // Prompt the user if fields will change between new and old
-    for (const key of Object.keys(authOrFallback)) {
-      if (key === 'type') {
-        continue;
-      }
-
-      // @ts-expect-error -- garbage abstraction
-      const value = authOrFallback[key];
-      // @ts-expect-error -- garbage abstraction
-      const changedSinceDefault = defaultAuthentication[key] !== value;
-      // @ts-expect-error -- garbage abstraction
-      const willChange = newAuthentication[key] !== value;
-
-      if (changedSinceDefault && willChange) {
-        await showModal(AlertModal, {
-          title: 'Switch Authentication?',
-          message: 'Current authentication settings will be lost',
-          addCancel: true,
-        });
-        break;
-      }
-    }
-    console.log({ authentication, newAuthentication });
-
+    const newAuthentication = type ? castOneAuthTypeToAnother(type, authentication || {}) : {};
     requestId && patchRequest(requestId, { authentication: newAuthentication });
     requestGroupId && patchRequestGroup(requestGroupId, { authentication: newAuthentication });
-  }, [authOrFallback, authentication, patchRequest, patchRequestGroup, requestGroupId, requestId]);
-  const isCurrent = useCallback((type: AuthTypes) => {
+  }, [authTypeOrInherit, authentication, patchRequest, patchRequestGroup, requestGroupId, requestId]);
 
-    if (!(authentication && 'type' in authentication)) {
-      return false;
-    }
-    return type === (authentication.type || 'none');
-  }, [authentication]);
+  const isSelected = useCallback((type: AuthTypes) => {
+    return isNotInherited && type === authTypeOrInherit;
+  }, [authTypeOrInherit, isNotInherited]);
 
   return (
     <Dropdown
@@ -192,7 +159,7 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
       isDisabled={disabled}
       triggerButton={
         <DropdownButton className="tall !text-[--hl]">
-          {isInitialised ? getAuthTypeName(authentication.type) : 'Auth'}
+          {isNotInherited ? getAuthTypeName(authentication.type) : 'Auth'}
           <i className="fa fa-caret-down space-left" />
         </DropdownButton>
       }
@@ -207,7 +174,7 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
             aria-label={getAuthTypeName(authType, true)}
           >
             <ItemContent
-              icon={isCurrent(authType) ? 'check' : 'empty'}
+              icon={isSelected(authType) ? 'check' : 'empty'}
               label={getAuthTypeName(authType, true)}
               onClick={() => onClick(authType)}
             />
@@ -220,9 +187,16 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
       >
         <DropdownItem aria-label='None' key="none">
           <ItemContent
-            icon={isCurrent('none') ? 'check' : 'empty'}
+            icon={isSelected('none') ? 'check' : 'empty'}
             label={'No Authentication'}
             onClick={() => onClick('none')}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label='Inherit from parent' key="inherit">
+          <ItemContent
+            icon={!isNotInherited ? 'check' : 'empty'}
+            label={'Inherit from parent'}
+            onClick={() => onClick()}
           />
         </DropdownItem>
       </DropdownSection>

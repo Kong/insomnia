@@ -9,7 +9,6 @@ import {
   AUTH_DIGEST,
   AUTH_HAWK,
   AUTH_NETRC,
-  AUTH_NONE,
   AUTH_NTLM,
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
@@ -29,8 +28,7 @@ import { OAuth2Auth } from './o-auth-2-auth';
 
 export const AuthWrapper: FC<{ authentication?: RequestAuthentication | {}; disabled?: boolean }> = ({ authentication, disabled = false }) => {
   const isInitialised = authentication && 'type' in authentication;
-  const type = isInitialised ? authentication.type : AUTH_NONE;
-
+  const type = isInitialised ? authentication.type : '';
   let authBody: ReactNode = null;
 
   if (type === AUTH_BASIC) {

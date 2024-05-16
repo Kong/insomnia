@@ -304,6 +304,7 @@ const authTypesMap: Record<string, string[]> = {
   [AUTH_AWS_IAM]: ['AWS', 'AWS IAM v4'],
   [AUTH_ASAP]: ['ASAP', 'Atlassian ASAP'],
   [AUTH_NETRC]: ['Netrc', 'Netrc File'],
+  [AUTH_NONE]: ['None', 'No Auth'],
 };
 
 // Sort Orders
