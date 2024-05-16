@@ -14,7 +14,6 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestGroupLo
   invariant(workspaceId, 'Workspace ID is required');
   invariant(projectId, 'Project ID is required');
   const activeRequestGroup = await models.requestGroup.getById(requestGroupId);
-  console.log('req group loader', requestGroupId);
   if (!activeRequestGroup) {
     throw redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
   }
