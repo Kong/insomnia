@@ -1224,7 +1224,7 @@ export const Debug: FC = () => {
             {workspaceId ? (
               <ErrorBoundary showAlert>
                 {isRequestGroupId(requestGroupId) && (
-                  <RequestGroupPane />
+                  <RequestGroupPane settings={settings} />
                 )}
                 {isGrpcRequestId(requestId) && grpcState && (
                   <GrpcRequestPane

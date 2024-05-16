@@ -16,6 +16,8 @@ interface BaseRequestGroup {
   environment: Record<string, any>;
   environmentPropertyOrder: Record<string, any> | null;
   metaSortKey: number;
+  preRequestScript: string;
+  postRequestScript: string;
 }
 
 export type RequestGroup = BaseModel & BaseRequestGroup;
@@ -31,6 +33,8 @@ export function init(): BaseRequestGroup {
     environment: {},
     environmentPropertyOrder: null,
     metaSortKey: -1 * Date.now(),
+    preRequestScript: '',
+    postRequestScript: '',
   };
 }
 

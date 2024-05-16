@@ -1,16 +1,23 @@
 import React, { FC, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
+import { Settings } from '../../../models/settings';
+import { useRequestGroupPatcher } from '../../hooks/use-request';
 import { RequestGroupLoaderData } from '../../routes/request-group';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
+import { PreRequestScriptEditor } from '../editors/pre-request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { MarkdownPreview } from '../markdown-preview';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 
-export const RequestGroupPane: FC = () => {
+export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
   const { activeRequestGroup } = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
   const [isRequestGroupSettingsModalOpen, setIsRequestGroupSettingsModalOpen] = useState(false);
+  const patchRequestGroup = useRequestGroupPatcher();
 
+  // const uniqueKey = `${activeEnvironment?.modified}::${activeRequestGroup._id}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
+  // TODO
+  const uniqueKey = `${activeRequestGroup._id}`;
   return (
     <>
       <Tabs aria-label="Request group pane tabs">
@@ -71,6 +78,33 @@ export const RequestGroupPane: FC = () => {
               </div>
             )}
           </PanelContainer>
+        </TabItem>
+        <TabItem
+          key="pre-request-script"
+          data-testid="pre-request-script-tab"
+          title={
+            <div className='flex items-center gap-2'>
+              Pre-request Script{' '}
+              {activeRequestGroup.preRequestScript && (
+                <span className="ml-2 p-2 border-solid border border-[--hl-md] rounded-lg">
+                  <span className="flex w-2 h-2 bg-green-500 rounded-full" />
+                </span>
+              )}
+            </div>
+          }
+          aria-label={'experimental'}
+        >
+          <ErrorBoundary
+            key={uniqueKey}
+            errorClassName="tall wide vertically-align font-error pad text-center"
+          >
+            <PreRequestScriptEditor
+              uniquenessKey={uniqueKey}
+              defaultValue={activeRequestGroup.preRequestScript || ''}
+              onChange={preRequestScript => patchRequestGroup(activeRequestGroup._id, { preRequestScript })}
+              settings={settings}
+            />
+          </ErrorBoundary>
         </TabItem>
       </Tabs>
       {isRequestGroupSettingsModalOpen && (
