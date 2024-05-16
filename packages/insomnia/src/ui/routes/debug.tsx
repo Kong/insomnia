@@ -343,7 +343,7 @@ export const Debug: FC = () => {
       }
     },
     request_showDelete: () => {
-      if (activeRequest) {
+      if (activeRequest && requestId) {
         showModal(AskModal, {
           title: 'Delete Request?',
           message: `Really delete ${activeRequest.name}?`,
@@ -961,7 +961,7 @@ export const Debug: FC = () => {
               items={collection.filter(item => item.pinned)}
               aria-label="Pinned Requests"
               disallowEmptySelection
-              selectedKeys={[requestId]}
+              selectedKeys={requestId ? [requestId] : []}
               selectionMode="single"
               onSelectionChange={keys => {
                 if (keys !== 'all') {
@@ -1064,7 +1064,7 @@ export const Debug: FC = () => {
                 disallowEmptySelection
                 key={sortOrder}
                 dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
-                selectedKeys={[requestId]}
+                selectedKeys={requestId ? [requestId] : []}
                 selectionMode="single"
                 onSelectionChange={keys => {
                   if (keys !== 'all') {

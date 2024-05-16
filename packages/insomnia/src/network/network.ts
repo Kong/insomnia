@@ -62,13 +62,13 @@ export const getOrInheritAuthentication = ({ request, requestGroups }: { request
 export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
   invariant(request, 'failed to find request');
-  const ancestors = await db.withAncestors(request, [
+  const ancestors = await db.withAncestors<Request | RequestGroup | Workspace | MockRoute | MockServer>(request, [
     models.request.type,
     models.requestGroup.type,
     models.workspace.type,
     models.mockRoute.type,
     models.mockServer.type,
-  ]) as (Request | RequestGroup | Workspace | MockRoute | MockServer)[];
+  ]);
   const workspaceDoc = ancestors.find(isWorkspace);
   invariant(workspaceDoc?._id, 'failed to find workspace');
   const workspaceId = workspaceDoc._id;
@@ -124,7 +124,7 @@ export const tryToExecutePreRequestScript = async (
         // TODO: restart the hidden browser window
       }, timeout + 1000);
     });
-    const requestGroups = await db.withAncestors(request, [
+    const requestGroups = await db.withAncestors<Request | RequestGroup>(request, [
       models.requestGroup.type,
     ]) as (Request | RequestGroup)[];
 

@@ -5,7 +5,6 @@ import { useRouteLoaderData } from 'react-router-dom';
 import { RequestAccordionKeys } from '../../../../../models/request-meta';
 import { useRequestMetaPatcher } from '../../../../hooks/use-request';
 import { RequestLoaderData } from '../../../../routes/request';
-import { RequestGroupLoaderData } from '../../../../routes/request-group';
 
 interface Props {
   label: string;

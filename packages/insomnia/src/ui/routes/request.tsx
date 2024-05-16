@@ -15,7 +15,7 @@ import { ResponsePatch } from '../../main/network/libcurl-promise';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { CookieJar } from '../../models/cookie-jar';
-import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
+import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { MockRoute } from '../../models/mock-route';
@@ -292,11 +292,11 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
   invariant(workspaceId, 'Workspace ID is required');
   const rendered = await request.json() as ConnectActionParams;
 
-  const ancestors = await db.withAncestors(req, [
-    models.requestGroup.type,
-  ]) as (Request | RequestGroup)[];
   // TODO: support websocket auth inheritance, ensuring only the supported types, apikey, basic and bearer are included from the parents
   if (isRequest(req) && isEventStreamRequest(req)) {
+    const ancestors = await db.withAncestors<Request | RequestGroup>(req, [
+      models.requestGroup.type,
+    ]);
     // check for authentication overrides in parent folders
     const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
     req.authentication = getOrInheritAuthentication({ request: req, requestGroups });

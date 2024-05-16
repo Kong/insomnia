@@ -1,4 +1,4 @@
-import React, { act, FC, Fragment, useState } from 'react';
+import React, { FC, Fragment, useState } from 'react';
 import { Button, Heading, ToggleButton } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';

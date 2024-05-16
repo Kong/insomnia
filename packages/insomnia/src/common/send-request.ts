@@ -2,9 +2,11 @@ import path from 'path';
 
 import { BaseModel, types as modelTypes } from '../models';
 import * as models from '../models';
+import type { Request } from '../models/request';
+import type { RequestGroup } from '../models/request-group';
 import { getBodyBuffer } from '../models/response';
 import { Settings } from '../models/settings';
-import { isWorkspace } from '../models/workspace';
+import { isWorkspace, type Workspace } from '../models/workspace';
 import {
   responseTransform,
   sendCurlAndWriteTimeline,
@@ -48,7 +50,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
   const fetchInsoRequestData = async (requestId: string) => {
     const request = await models.request.getById(requestId);
     invariant(request, 'failed to find request');
-    const ancestors = await database.withAncestors(request, [
+    const ancestors = await database.withAncestors<Request | RequestGroup | Workspace>(request, [
       models.request.type,
       models.requestGroup.type,
       models.workspace.type,
