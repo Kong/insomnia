@@ -1,4 +1,5 @@
 import clone from 'clone';
+import { group } from 'console';
 import fs from 'fs';
 import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
@@ -18,11 +19,13 @@ import {
 } from '../common/render';
 import type { HeaderResult, ResponsePatch } from '../main/network/libcurl-promise';
 import * as models from '../models';
+import { BaseModel } from '../models';
 import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
 import { CookieJar } from '../models/cookie-jar';
 import { Environment } from '../models/environment';
 import type { Request, RequestAuthentication, RequestParameter } from '../models/request';
+import { isRequestGroup, RequestGroup } from '../models/request-group';
 import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
@@ -100,8 +103,15 @@ export const tryToExecutePreRequestScript = async (
         // TODO: restart the hidden browser window
       }, timeout + 1000);
     });
+    const requestGroups = await db.withAncestors(request, [
+      models.requestGroup.type,
+    ]) as (Request | RequestGroup)[];
+    const folderScripts = requestGroups.reverse().filter(group => group?.preRequestScript).map(group => group.preRequestScript);
+    const joinedScript = [...folderScripts].join('\n');
+    console.log({ requestGroups, folderScripts, joinedScript });
+
     const preRequestPromise = cancellableRunPreRequestScript({
-      script: request.preRequestScript,
+      script: joinedScript,
       context: {
         request,
         timelinePath,

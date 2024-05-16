@@ -565,19 +565,19 @@ export const database = {
     }
   },
 
-  withAncestors: async function<T extends BaseModel>(doc: T | null, types: string[] = allTypes()) {
+  withAncestors: async function (doc: BaseModel | null, types: string[] = allTypes()) {
     if (db._empty) {
-      return _send<T[]>('withAncestors', ...arguments);
+      return _send('withAncestors', ...arguments);
     }
 
     if (!doc) {
       return [];
     }
 
-    let docsToReturn: T[] = doc ? [doc] : [];
+    let docsToReturn = doc ? [doc] : [];
 
-    async function next(docs: T[]): Promise<T[]> {
-      const foundDocs: T[] = [];
+    async function next(docs) {
+      const foundDocs = [];
 
       for (const d of docs) {
         for (const type of types) {
