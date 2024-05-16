@@ -106,7 +106,14 @@ export const tryToExecutePreRequestScript = async (
     const requestGroups = await db.withAncestors(request, [
       models.requestGroup.type,
     ]) as (Request | RequestGroup)[];
-    const folderScripts = requestGroups.reverse().filter(group => group?.preRequestScript).map(group => group.preRequestScript);
+
+    const folderScripts = requestGroups.reverse()
+      .filter(group => group?.preRequestScript)
+      .map((group, i) => `const fn${i} = async ()=>{
+      ${group.preRequestScript}
+    }
+    await fn${i}();
+`);
     const joinedScript = [...folderScripts].join('\n');
     console.log({ requestGroups, folderScripts, joinedScript });
 
