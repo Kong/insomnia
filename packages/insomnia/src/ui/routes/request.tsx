@@ -363,10 +363,8 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   invariant(typeof requestId === 'string', 'Request ID is required');
   invariant(workspaceId, 'Workspace ID is required');
 
-  const req = await requestOperations.getById(requestId) as Request;
-  invariant(req, 'Request not found');
-
   const {
+    request: req,
     environment,
     settings,
     clientCertificates,

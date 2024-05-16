@@ -1,5 +1,4 @@
 import clone from 'clone';
-import { group } from 'console';
 import fs from 'fs';
 import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
@@ -19,15 +18,16 @@ import {
 } from '../common/render';
 import type { HeaderResult, ResponsePatch } from '../main/network/libcurl-promise';
 import * as models from '../models';
-import { BaseModel } from '../models';
 import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
 import { CookieJar } from '../models/cookie-jar';
 import { Environment } from '../models/environment';
+import { MockRoute } from '../models/mock-route';
+import { MockServer } from '../models/mock-server';
 import type { Request, RequestAuthentication, RequestParameter } from '../models/request';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
 import type { Settings } from '../models/settings';
-import { isWorkspace } from '../models/workspace';
+import { isWorkspace, Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { invariant } from '../utils/invariant';
@@ -50,15 +50,27 @@ export const fetchRequestData = async (requestId: string) => {
     models.workspace.type,
     models.mockRoute.type,
     models.mockServer.type,
-  ]);
+  ]) as (Request | RequestGroup | Workspace | MockRoute | MockServer)[];
   const workspaceDoc = ancestors.find(isWorkspace);
   invariant(workspaceDoc?._id, 'failed to find workspace');
-
   const workspaceId = workspaceDoc._id;
 
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
+
+  const hasAuthOnRequest = 'type' in request.authentication;
+  const isAuthEnabled = 'disabled' in request.authentication && request.authentication.disabled !== true;
+  const hasValidAuth = hasAuthOnRequest && isAuthEnabled;
+  const hasParentFolders = requestGroups.length > 0;
+  const closestParentFolderWithAuth = requestGroups.find(group => 'type' in group.authentication && group.authentication.disabled !== true);
+  const shouldCheckFolderAuth = !hasValidAuth && hasParentFolders && closestParentFolderWithAuth;
+  if (shouldCheckFolderAuth) {
+    // override auth with closest parent folder that has one set
+    request.authentication = closestParentFolderWithAuth.authentication;
+  }
+  // TODO: add inherit to auth list
 
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
@@ -239,7 +251,7 @@ export async function sendCurlAndWriteTimeline(
   if (!renderedRequest.settingSendCookies) {
     timelineStrings.push(JSON.stringify({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() }) + '\n');
   }
-
+  console.log('send', { authentication });
   const authHeader = await getAuthHeader(renderedRequest, finalUrl);
   const requestOptions = {
     requestId,
