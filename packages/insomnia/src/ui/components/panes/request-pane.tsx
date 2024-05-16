@@ -51,7 +51,6 @@ export const RequestPane: FC<Props> = ({
   const patchRequest = useRequestPatcher();
 
   const [dismissPathParameterTip, setDismissPathParameterTip] = useLocalStorage('dismissPathParameterTip', '');
-  console.log({ activeRequest });
   const handleImportQueryFromUrl = () => {
     let query;
 

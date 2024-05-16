@@ -41,15 +41,16 @@ import { cancellableCurlRequest, cancellableRunPreRequestScript } from './cancel
 import { filterClientCertificates } from './certificate';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
+const hasAuthOnRequest = (auth: RequestAuthentication | {}) => 'type' in auth;
+const isAuthEnabled = (auth: RequestAuthentication | {}) => ('disabled' in auth) ? auth.disabled !== true : true;
+
 export const getOrInheritAuthentication = ({ request, requestGroups }: { request: Request; requestGroups: RequestGroup[] }): RequestAuthentication | {} => {
-  const hasAuthOnRequest = 'type' in request.authentication;
-  const isAuthEnabled = 'disabled' in request.authentication && request.authentication.disabled !== true;
-  const hasValidAuth = hasAuthOnRequest && isAuthEnabled;
+  const hasValidAuth = hasAuthOnRequest(request.authentication) && isAuthEnabled(request.authentication);
   if (hasValidAuth) {
     return request.authentication;
   }
   const hasParentFolders = requestGroups.length > 0;
-  const closestParentFolderWithAuth = requestGroups.find(group => 'type' in group.authentication && group.authentication.disabled !== true);
+  const closestParentFolderWithAuth = requestGroups.find(({ authentication }) => hasAuthOnRequest(authentication) && isAuthEnabled(authentication));
   const shouldCheckFolderAuth = hasParentFolders && closestParentFolderWithAuth;
   if (shouldCheckFolderAuth) {
     // override auth with closest parent folder that has one set
