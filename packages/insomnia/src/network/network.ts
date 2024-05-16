@@ -41,6 +41,23 @@ import { cancellableCurlRequest, cancellableRunPreRequestScript } from './cancel
 import { filterClientCertificates } from './certificate';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
+export const getOrInheritAuthentication = ({ request, requestGroups }: { request: Request; requestGroups: RequestGroup[] }): RequestAuthentication | {} => {
+  const hasAuthOnRequest = 'type' in request.authentication;
+  const isAuthEnabled = 'disabled' in request.authentication && request.authentication.disabled !== true;
+  const hasValidAuth = hasAuthOnRequest && isAuthEnabled;
+  if (hasValidAuth) {
+    return request.authentication;
+  }
+  const hasParentFolders = requestGroups.length > 0;
+  const closestParentFolderWithAuth = requestGroups.find(group => 'type' in group.authentication && group.authentication.disabled !== true);
+  const shouldCheckFolderAuth = hasParentFolders && closestParentFolderWithAuth;
+  if (shouldCheckFolderAuth) {
+    // override auth with closest parent folder that has one set
+    return closestParentFolderWithAuth.authentication;
+  }
+  return { type: 'none' };
+};
+
 export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
   invariant(request, 'failed to find request');
@@ -58,18 +75,9 @@ export const fetchRequestData = async (requestId: string) => {
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  // check for authentication overrides in parent folders
   const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
-
-  const hasAuthOnRequest = 'type' in request.authentication;
-  const isAuthEnabled = 'disabled' in request.authentication && request.authentication.disabled !== true;
-  const hasValidAuth = hasAuthOnRequest && isAuthEnabled;
-  const hasParentFolders = requestGroups.length > 0;
-  const closestParentFolderWithAuth = requestGroups.find(group => 'type' in group.authentication && group.authentication.disabled !== true);
-  const shouldCheckFolderAuth = !hasValidAuth && hasParentFolders && closestParentFolderWithAuth;
-  if (shouldCheckFolderAuth) {
-    // override auth with closest parent folder that has one set
-    request.authentication = closestParentFolderWithAuth.authentication;
-  }
+  request.authentication = getOrInheritAuthentication({ request, requestGroups });
   // TODO: add inherit to auth list
 
   // fallback to base environment
