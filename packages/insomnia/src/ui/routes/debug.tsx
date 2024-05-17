@@ -957,6 +957,7 @@ export const Debug: FC = () => {
             </div>
 
             <GridList
+              id="sidebar-pinned-request-gridlist"
               className="overflow-y-auto border-b border-t data-[empty]:py-0 py-[--padding-sm] data-[empty]:border-none border-solid border-[--hl-sm]"
               items={collection.filter(item => item.pinned)}
               aria-label="Pinned Requests"
@@ -1075,8 +1076,6 @@ export const Debug: FC = () => {
                     );
                     if (item && isRequestGroup(item.doc)) {
                       groupMetaPatcher(value, { collapsed: !item.collapsed });
-                      navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}?${searchParams.toString()}`);
-
                     } else {
                       navigate(
                         `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`
@@ -1146,7 +1145,7 @@ export const Debug: FC = () => {
                           className="px-1 flex-1"
                           onSingleClick={() => {
                             if (item && isRequestGroup(item.doc)) {
-                              groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
+                              // groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
                               navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}?${searchParams.toString()}`);
 
                             } else {
