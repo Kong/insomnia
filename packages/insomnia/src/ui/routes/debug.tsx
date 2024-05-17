@@ -1256,20 +1256,22 @@ export const Debug: FC = () => {
               </ErrorBoundary>
             ) : null}
           </Panel>
-          <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
-          <Panel id="pane-two" className='pane-two theme--pane'>
-            <ErrorBoundary showAlert>
-              {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
-                <GrpcResponsePane grpcState={grpcState} />
-              )}
-              {isRealtimeRequest && (
-                <RealtimeResponsePane requestId={activeRequest._id} />
-              )}
-              {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
-                <ResponsePane runningRequests={runningRequests} />
-              )}
-            </ErrorBoundary>
-          </Panel>
+          {requestGroupId ? null : (<>
+            <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
+            <Panel id="pane-two" className='pane-two theme--pane'>
+              <ErrorBoundary showAlert>
+                {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
+                  <GrpcResponsePane grpcState={grpcState} />
+                )}
+                {isRealtimeRequest && (
+                  <RealtimeResponsePane requestId={activeRequest._id} />
+                )}
+                {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
+                  <ResponsePane runningRequests={runningRequests} />
+                )}
+              </ErrorBoundary>
+            </Panel>
+          </>)}
         </PanelGroup>
       </Panel>
     </PanelGroup>
