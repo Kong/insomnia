@@ -1,5 +1,8 @@
 import { database as db } from '../common/database';
 import * as models from '../models/index';
+import type { Request } from '../models/request';
+import type { RequestGroup } from '../models/request-group';
+import type { Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context';
 import { PluginTemplateTag } from './extensions';
 import * as templating from './index';
@@ -119,7 +122,7 @@ export default class BaseExtension {
           request: {
             getById: models.request.getById,
             getAncestors: async (request: any) => {
-              const ancestors = await db.withAncestors(request, [
+              const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(request, [
                 models.requestGroup.type,
                 models.workspace.type,
               ]);

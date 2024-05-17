@@ -47,12 +47,10 @@ export const RequestPane: FC<Props> = ({
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const patchSettings = useSettingsPatcher();
-  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
-    useState(false);
+  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
   const patchRequest = useRequestPatcher();
 
   const [dismissPathParameterTip, setDismissPathParameterTip] = useLocalStorage('dismissPathParameterTip', '');
-
   const handleImportQueryFromUrl = () => {
     let query;
 
@@ -229,12 +227,12 @@ export const RequestPane: FC<Props> = ({
             environmentId={environmentId}
           />
         </TabItem>
-        <TabItem key="auth" title={<AuthDropdown />}>
+        <TabItem key="auth" title={<AuthDropdown authentication={activeRequest.authentication} />}>
           <ErrorBoundary
             key={uniqueKey}
             errorClassName="font-error pad text-center"
           >
-            <AuthWrapper />
+            <AuthWrapper authentication={activeRequest.authentication} />
           </ErrorBoundary>
         </TabItem>
         <TabItem

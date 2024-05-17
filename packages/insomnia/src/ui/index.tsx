@@ -347,6 +347,15 @@ async function renderApp() {
                                       ).reorderCollectionAction(...args),
                                   },
                                   {
+                                    path: 'request-group/:requestGroupId',
+                                    id: 'request-group/:requestGroupId',
+                                    loader: async (...args) =>
+                                      (await import('./routes/request-group')).loader(
+                                        ...args,
+                                      ),
+                                    element: <Outlet />,
+                                  },
+                                  {
                                     path: 'request/:requestId',
                                     id: 'request/:requestId',
                                     loader: async (...args) =>

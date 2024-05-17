@@ -10,6 +10,7 @@ import {
   SIGNATURE_METHOD_RSA_SHA1,
 } from '../../../../network/o-auth-1/constants';
 import { RequestLoaderData } from '../../../routes/request';
+import { RequestGroupLoaderData } from '../../../routes/request-group';
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthPrivateKeyRow } from './components/auth-private-key-row';
 import { AuthSelectRow } from './components/auth-select-row';
@@ -35,8 +36,9 @@ export const signatureMethodOptions: { name: OAuth1SignatureMethod; value: OAuth
 }];
 
 export const OAuth1Auth: FC = () => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const authentication = activeRequest.authentication as AuthTypeOAuth1;
+  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const authentication = (reqData?.activeRequest || groupData.activeRequestGroup).authentication as AuthTypeOAuth1;
 
   const { signatureMethod } = authentication;
   return (
