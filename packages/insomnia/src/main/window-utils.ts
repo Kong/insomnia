@@ -63,12 +63,15 @@ export async function createHiddenBrowserWindow() {
   ipcMain.removeHandler('open-channel-to-hidden-browser-window');
   // when the main window runs a script
   // if the hidden window is down, start it
-  ipcMain.handle('open-channel-to-hidden-browser-window', async event => {
+  ipcMain.handle('open-channel-to-hidden-browser-window', async (event, isPortAlive: boolean) => {
     // sync the hidden window status
     const runningHiddenWindow = browserWindows.get('HiddenBrowserWindow');
     const isAvailable = !hiddenWindowIsBusy && runningHiddenWindow;
-    if (isAvailable) {
+    if (isAvailable && isPortAlive) {
       return;
+    } else {
+      stopHiddenBrowserWindow();
+      hiddenWindowIsBusy = false;
     }
     const isOccupied = hiddenWindowIsBusy && runningHiddenWindow;
     if (isOccupied) {
@@ -94,6 +97,7 @@ export async function createHiddenBrowserWindow() {
     }
 
     console.log('[main] hidden window is down, restarting');
+
     const hiddenBrowserWindow = new BrowserWindow({
       show: false,
       title: 'HiddenBrowserWindow',
