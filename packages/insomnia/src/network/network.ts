@@ -121,21 +121,9 @@ export const tryToExecutePreRequestScript = async (
         // TODO: restart the hidden browser window
       }, timeout + 1000);
     });
-    //     const requestGroups = await db.withAncestors<Request | RequestGroup>(request, [
-    //       models.requestGroup.type,
-    //     ]) as (Request | RequestGroup)[];
-
-    //     const folderScripts = requestGroups.reverse()
-    //       .filter(group => group?.preRequestScript)
-    //       .map((group, i) => `const fn${i} = async ()=>{
-    //       ${group.preRequestScript}
-    //     }
-    //     await fn${i}();
-    // `);
-    const joinedScript = request.preRequestScript;// [...folderScripts].join('\n');
 
     const preRequestPromise = cancellableRunPreRequestScript({
-      script: joinedScript,
+      script: request.preRequestScript,
       context: {
         request,
         timelinePath,
