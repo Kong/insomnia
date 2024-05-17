@@ -2,6 +2,7 @@ import React, { FC, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { Settings } from '../../../models/settings';
+import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 // import { useRequestGroupPatcher } from '../../hooks/use-request';
 import { RequestGroupLoaderData } from '../../routes/request-group';
 import { WorkspaceLoaderData } from '../../routes/workspace';
@@ -18,10 +19,9 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ }) => {
   const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [isRequestGroupSettingsModalOpen, setIsRequestGroupSettingsModalOpen] = useState(false);
   // const patchRequestGroup = useRequestGroupPatcher();
-
-  // const uniqueKey = `${activeEnvironment?.modified}::${activeRequestGroup._id}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
-  // TODO
-  const uniqueKey = `${activeEnvironment?.modified}::${activeRequestGroup._id}`;
+  const gitVersion = useGitVCSVersion();
+  const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
+  const uniqueKey = `${activeEnvironment?.modified}::${activeRequestGroup._id}::${gitVersion}::${activeRequestSyncVersion}`;
   return (
     <>
       <Tabs aria-label="Request group pane tabs">
