@@ -202,13 +202,27 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         // TODO: restart the hidden browser window
       }, timeout + 2000);
     });
-    // const isBaseEnvironmentSelected = environment._id === baseEnvironment._id;
+
+    const requestGroups = await db.withAncestors<Request | RequestGroup>(request, [
+      models.requestGroup.type,
+    ]) as (Request | RequestGroup)[];
+
+    const folderScripts = requestGroups.reverse()
+      .filter(group => group?.preRequestScript)
+      .map((group, i) => `const fn${i} = async ()=>{
+          ${group.preRequestScript}
+        }
+        await fn${i}();
+    `);
+    const joinedScript = [...folderScripts].join('\n');
+
+  // const isBaseEnvironmentSelected = environment._id === baseEnvironment._id;
     // if (isBaseEnvironmentSelected) {
     //   // postman models base env as no env and does not persist, so we could handle that case better, but for now we throw
     //   throw new Error('Base environment cannot be selected for script execution. Please select an environment.');
     // }
     const executionPromise = cancellableRunScript({
-      script,
+      script: joinedScript,
       context: {
         request,
         timelinePath,
