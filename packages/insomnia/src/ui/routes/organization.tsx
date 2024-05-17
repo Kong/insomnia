@@ -592,7 +592,7 @@ const OrganizationRoute = () => {
                     className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)] focus:bg-[rgba(var(--color-surprise-rgb),0.9)] bg-[--color-surprise] font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                     to="/auth/login"
                   >
-                    Sign Up
+                      Sign up for free
                   </NavLink>
                 </Fragment>
               )}
