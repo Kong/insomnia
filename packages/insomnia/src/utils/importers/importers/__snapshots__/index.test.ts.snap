@@ -5013,6 +5013,7 @@ exports[`Fixtures Import postman faker-vars-v2_1-input.json 1`] = `
         },
       ],
       "parentId": "__GRP_1__",
+      "postRequestScript": "",
       "preRequestScript": "",
       "url": "httpbin.org/anything/{% faker 'guid' %}",
     },
