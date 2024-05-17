@@ -42,7 +42,6 @@ export function init(): BaseRequestGroup {
 }
 
 export function migrate(doc: RequestGroup) {
-  doc.authentication = doc.authentication || {};
   return doc;
 }
 

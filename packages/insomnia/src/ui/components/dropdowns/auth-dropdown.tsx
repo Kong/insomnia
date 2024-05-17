@@ -6,6 +6,7 @@ import {
   HAWK_ALGORITHM_SHA256,
 } from '../../../common/constants';
 import type { AuthTypeAPIKey, AuthTypeAwsIam, AuthTypeBasic, AuthTypeNTLM, AuthTypes, RequestAuthentication } from '../../../models/request';
+import { getAuthObjectOrNull } from '../../../network/authentication';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
@@ -136,22 +137,19 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
   const { requestId, requestGroupId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId?: string; requestGroupId?: string };
   const patchRequest = useRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
-  const isNotInherited = authentication && 'type' in authentication;
-  const authTypeOrInherit = isNotInherited ? authentication.type : 'inherit';
-
   const onClick = useCallback(async (type?: AuthTypes) => {
-    const clickedSameSetting = type === authTypeOrInherit;
+    const clickedSameSetting = type === getAuthObjectOrNull(authentication)?.type;
     if (clickedSameSetting) {
       return;
     }
     const newAuthentication = type ? castOneAuthTypeToAnother(type, authentication || {}) : {};
     requestId && patchRequest(requestId, { authentication: newAuthentication });
     requestGroupId && patchRequestGroup(requestGroupId, { authentication: newAuthentication });
-  }, [authTypeOrInherit, authentication, patchRequest, patchRequestGroup, requestGroupId, requestId]);
+  }, [authentication, patchRequest, patchRequestGroup, requestGroupId, requestId]);
 
   const isSelected = useCallback((type: AuthTypes) => {
-    return isNotInherited && type === authTypeOrInherit;
-  }, [authTypeOrInherit, isNotInherited]);
+    return type === getAuthObjectOrNull(authentication)?.type;
+  }, [authentication]);
 
   return (
     <Dropdown
@@ -159,7 +157,7 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
       isDisabled={disabled}
       triggerButton={
         <DropdownButton className="tall !text-[--hl]">
-          {isNotInherited ? getAuthTypeName(authentication.type) : 'Auth'}
+          {getAuthTypeName(getAuthObjectOrNull(authentication)?.type)}
           <i className="fa fa-caret-down space-left" />
         </DropdownButton>
       }
@@ -194,7 +192,7 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
         </DropdownItem>
         <DropdownItem aria-label='Inherit from parent' key="inherit">
           <ItemContent
-            icon={!isNotInherited ? 'check' : 'empty'}
+            icon={getAuthObjectOrNull(authentication) === null ? 'check' : 'empty'}
             label={'Inherit from parent'}
             onClick={() => onClick()}
           />

@@ -407,8 +407,8 @@ export function getContentTypeName(contentType?: string | null, useLong = false)
   return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
 }
 
-export function getAuthTypeName(authType: string, useLong = false) {
-  if (authTypesMap.hasOwnProperty(authType)) {
+export function getAuthTypeName(authType?: string, useLong = false) {
+  if (authType && authTypesMap.hasOwnProperty(authType)) {
     return useLong ? authTypesMap[authType][1] : authTypesMap[authType][0];
   } else {
     return 'Auth';

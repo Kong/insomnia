@@ -36,21 +36,18 @@ import {
   joinUrlAndQueryString,
   smartEncodeUrl,
 } from '../utils/url/querystring';
-import { getAuthHeader, getAuthQueryParams } from './authentication';
+import { getAuthHeader, getAuthObjectOrNull, getAuthQueryParams, isAuthEnabled } from './authentication';
 import { cancellableCurlRequest, cancellableRunPreRequestScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
-const hasAuthOnRequest = (auth: RequestAuthentication | {}) => 'type' in auth;
-const isAuthEnabled = (auth: RequestAuthentication | {}) => ('disabled' in auth) ? auth.disabled !== true : true;
-
 export const getOrInheritAuthentication = ({ request, requestGroups }: { request: Request; requestGroups: RequestGroup[] }): RequestAuthentication | {} => {
-  const hasValidAuth = hasAuthOnRequest(request.authentication) && isAuthEnabled(request.authentication);
+  const hasValidAuth = getAuthObjectOrNull(request.authentication) && isAuthEnabled(request.authentication);
   if (hasValidAuth) {
     return request.authentication;
   }
   const hasParentFolders = requestGroups.length > 0;
-  const closestParentFolderWithAuth = requestGroups.find(({ authentication }) => hasAuthOnRequest(authentication) && isAuthEnabled(authentication));
+  const closestParentFolderWithAuth = requestGroups.find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
   const shouldCheckFolderAuth = hasParentFolders && closestParentFolderWithAuth;
   if (shouldCheckFolderAuth) {
     // override auth with closest parent folder that has one set
