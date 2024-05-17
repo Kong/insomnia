@@ -9,7 +9,7 @@ import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
 
 export const loader: LoaderFunction = async () => {
-  if (!shouldMigrateProjectUnderOrganization()) {
+  if (!await shouldMigrateProjectUnderOrganization()) {
     return redirect('/organization');
   }
 
