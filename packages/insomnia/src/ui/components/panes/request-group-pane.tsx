@@ -90,7 +90,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
             )}
           </PanelContainer>
         </TabItem>
-        <TabItem
+        {/* <TabItem
           key="pre-request-script"
           data-testid="pre-request-script-tab"
           title={
@@ -116,7 +116,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
               settings={settings}
             />
           </ErrorBoundary>
-        </TabItem>
+        </TabItem> */}
       </Tabs>
       {isRequestGroupSettingsModalOpen && (
         <RequestGroupSettingsModal
