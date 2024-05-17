@@ -2,24 +2,26 @@ import React, { FC, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { Settings } from '../../../models/settings';
-import { useRequestGroupPatcher } from '../../hooks/use-request';
+// import { useRequestGroupPatcher } from '../../hooks/use-request';
 import { RequestGroupLoaderData } from '../../routes/request-group';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
-import { PreRequestScriptEditor } from '../editors/pre-request-script-editor';
+// import { PreRequestScriptEditor } from '../editors/pre-request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { MarkdownPreview } from '../markdown-preview';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 
-export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
+export const RequestGroupPane: FC<{ settings: Settings }> = ({ }) => {
   const { activeRequestGroup } = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [isRequestGroupSettingsModalOpen, setIsRequestGroupSettingsModalOpen] = useState(false);
-  const patchRequestGroup = useRequestGroupPatcher();
+  // const patchRequestGroup = useRequestGroupPatcher();
 
   // const uniqueKey = `${activeEnvironment?.modified}::${activeRequestGroup._id}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
   // TODO
-  const uniqueKey = `${activeRequestGroup._id}`;
+  const uniqueKey = `${activeEnvironment?.modified}::${activeRequestGroup._id}`;
   return (
     <>
       <Tabs aria-label="Request group pane tabs">
