@@ -7,7 +7,6 @@ import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 
 import { version } from '../../../package.json';
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
-import { database as db } from '../../common/database';
 import { ChangeBufferEvent, database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
 import { RENDER_PURPOSE_SEND, RenderedRequest } from '../../common/render';
@@ -21,14 +20,13 @@ import * as requestOperations from '../../models/helpers/request-operations';
 import { MockRoute } from '../../models/mock-route';
 import { MockServer } from '../../models/mock-server';
 import { getPathParametersFromUrl, isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { isRequestMeta, RequestMeta } from '../../models/request-meta';
 import { RequestVersion } from '../../models/request-version';
 import { Response } from '../../models/response';
 import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
-import { fetchRequestData, getOrInheritAuthentication, responseTransform, sendCurlAndWriteTimeline, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import { RenderErrorSubType } from '../../templating';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
@@ -291,16 +289,6 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
   invariant(req, 'Request not found');
   invariant(workspaceId, 'Workspace ID is required');
   const rendered = await request.json() as ConnectActionParams;
-
-  // TODO: support websocket auth inheritance, ensuring only the supported types, apikey, basic and bearer are included from the parents
-  if (isRequest(req) && isEventStreamRequest(req)) {
-    const ancestors = await db.withAncestors<Request | RequestGroup>(req, [
-      models.requestGroup.type,
-    ]);
-    // check for authentication overrides in parent folders
-    const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
-    req.authentication = getOrInheritAuthentication({ request: req, requestGroups });
-  }
 
   if (isWebSocketRequestId(requestId)) {
     window.main.webSocket.open({

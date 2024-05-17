@@ -14,6 +14,7 @@ import {
   AUTH_OAUTH_2,
 } from '../../../../common/constants';
 import { RequestAuthentication } from '../../../../models/request';
+import { getAuthObjectOrNull } from '../../../../network/authentication';
 import { ApiKeyAuth } from './api-key-auth';
 import { AsapAuth } from './asap-auth';
 import { AWSAuth } from './aws-auth';
@@ -27,8 +28,7 @@ import { OAuth1Auth } from './o-auth-1-auth';
 import { OAuth2Auth } from './o-auth-2-auth';
 
 export const AuthWrapper: FC<{ authentication?: RequestAuthentication | {}; disabled?: boolean }> = ({ authentication, disabled = false }) => {
-  const isInitialised = authentication && 'type' in authentication;
-  const type = isInitialised ? authentication.type : '';
+  const type = getAuthObjectOrNull(authentication)?.type || '';
   let authBody: ReactNode = null;
 
   if (type === AUTH_BASIC) {

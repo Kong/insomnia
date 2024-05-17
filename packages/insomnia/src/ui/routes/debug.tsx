@@ -1065,7 +1065,7 @@ export const Debug: FC = () => {
                 disallowEmptySelection
                 key={sortOrder}
                 dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
-                selectedKeys={requestId ? [requestId] : []}
+                selectedKeys={requestId && [requestId] || requestGroupId && [requestGroupId]}
                 selectionMode="single"
                 onSelectionChange={keys => {
                   if (keys !== 'all') {
@@ -1145,9 +1145,7 @@ export const Debug: FC = () => {
                           className="px-1 flex-1"
                           onSingleClick={() => {
                             if (item && isRequestGroup(item.doc)) {
-                              // groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
                               navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}?${searchParams.toString()}`);
-
                             } else {
                               navigate(
                                 `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}?${searchParams.toString()}`
@@ -1255,7 +1253,7 @@ export const Debug: FC = () => {
               </ErrorBoundary>
             ) : null}
           </Panel>
-          {requestGroupId ? null : (<>
+          {activeRequest ? (<>
             <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
             <Panel id="pane-two" className='pane-two theme--pane'>
               <ErrorBoundary showAlert>
@@ -1270,7 +1268,7 @@ export const Debug: FC = () => {
                 )}
               </ErrorBoundary>
             </Panel>
-          </>)}
+          </>) : null}
         </PanelGroup>
       </Panel>
     </PanelGroup>

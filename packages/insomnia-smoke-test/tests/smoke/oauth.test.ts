@@ -93,6 +93,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
 
   // Inherited Auth from folder
   await page.getByLabel('Request Collection').getByTestId('Request with Inherited Auth').press('Enter');
+  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
   await sendButton.click();
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "admin"');

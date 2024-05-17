@@ -7,7 +7,7 @@ resources:
     parentId: fld_9fd59e794fe5455692a3c33af67f7668
     modified: 1715935264320
     created: 1715935207910
-    url: "{{ _.oidc_base_path }}/me"
+    url: "http://127.0.0.1:4010/oidc/me"
     name: Request with Inherited Auth
     description: ""
     method: GET
@@ -53,14 +53,20 @@ resources:
     preRequestScript: ""
     postRequestScript: ""
     authentication:
-      type: oauth2
+      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
+      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
+      clientId: "authorization_code"
+      clientSecret: "secret"
+      disabled: false
       grantType: authorization_code
-      authorizationUrl: "{{ _.oidc_base_path }}/auth"
-      accessTokenUrl: "{{ _.oidc_base_path }}/token"
-      clientId: "{{ _.client_id_authorization_code }}"
-      clientSecret: "{{ _.client_secret }}"
-      redirectUrl: "{{ _.oidc_callback }}"
+      redirectUrl: "http://127.0.0.1:4010/callback"
+      responseType: id_token
       scope: openid offline_access
+      state: ""
+      type: oauth2
+      usePkce: false
+      credentialsInBody: "false"
+      tokenPrefix: ""
     _type: request_group
   - _id: req_54f2824040c847ebaf3ed6d080111b4e
     parentId: fld_0e50ba4426bb4540ade91e0525ea1f29
