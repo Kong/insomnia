@@ -169,6 +169,7 @@ describe('test auth transforming', () => {
             pkceMethod: 'pkceMethod',
             responseType: 'id_token',
             origin: 'origin',
+            organization: 'org',
         };
 
         [

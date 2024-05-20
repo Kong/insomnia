@@ -29,6 +29,7 @@ export type AuthKeys =
     'token_type' |
     'username' |
     'xError' |
-    'xResponseId';
+    'xResponseId' |
+    'organization';
 export const PKCE_CHALLENGE_S256 = 'S256';
 export const PKCE_CHALLENGE_PLAIN = 'plain';

@@ -117,6 +117,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: typeof
     help='Indicates the type of credentials returned in the response'
   />;
   const audience = <AuthInputRow label='Audience' property='audience' key='audience' help='Indicate what resource server to access' />;
+  const organization = <AuthInputRow label='Organization' property='organization' key='organization' help='Indicate what Organization the client belongs to' />;
   const resource = <AuthInputRow label='Resource' property='resource' key='resource' help='Indicate what resource to access' />;
   const origin = <AuthInputRow label='Origin' property='origin' key='origin' help='Specify Origin header when CORS is required for oauth endpoints' />;
   const credentialsInBody = <AuthSelectRow
@@ -142,6 +143,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: typeof
     tokenPrefix,
     responseType,
     audience,
+    organization,
     resource,
     origin,
     credentialsInBody,
@@ -167,6 +169,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
     resource,
     origin,
     credentialsInBody,
+    organization,
   } = getFields(authentication);
 
   const { grantType } = authentication;
@@ -193,6 +196,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
       audience,
       resource,
       origin,
+      organization,
     ];
   } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
     basic = [
@@ -207,6 +211,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
       tokenPrefix,
       audience,
       resource,
+      organization,
     ];
   } else if (grantType === GRANT_TYPE_PASSWORD) {
     basic = [
@@ -222,6 +227,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
       credentialsInBody,
       tokenPrefix,
       audience,
+      organization,
     ];
   } else if (grantType === GRANT_TYPE_IMPLICIT) {
     basic = [
@@ -236,6 +242,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
       state,
       tokenPrefix,
       audience,
+      organization,
     ];
   }
 

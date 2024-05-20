@@ -60,6 +60,7 @@ export const getOAuth2Token = async (
       ...insertAuthKeyIf('scope', authentication.scope),
       ...insertAuthKeyIf('state', authentication.state),
       ...insertAuthKeyIf('audience', authentication.audience),
+      ...insertAuthKeyIf('organization', authentication.organization),
       ...(hasNonce ? [{
         name: 'nonce', value: Math.floor(Math.random() * 9999999999999) + 1 + '',
       }] : []),
@@ -105,6 +106,7 @@ export const getOAuth2Token = async (
       ...insertAuthKeyIf('state', authentication.state),
       ...insertAuthKeyIf('audience', authentication.audience),
       ...insertAuthKeyIf('resource', authentication.resource),
+      ...insertAuthKeyIf('organization', authentication.organization),
       ...(codeChallenge ? [
         { name: 'code_challenge', value: codeChallenge },
         { name: 'code_challenge_method', value: authentication.pkceMethod },
@@ -134,6 +136,7 @@ export const getOAuth2Token = async (
       ...insertAuthKeyIf('audience', authentication.audience),
       ...insertAuthKeyIf('resource', authentication.resource),
       ...insertAuthKeyIf('code_verifier', codeVerifier),
+      ...insertAuthKeyIf('organization', authentication.organization),
     ];
   } else if (authentication.grantType === 'password') {
     params = [
@@ -142,6 +145,7 @@ export const getOAuth2Token = async (
       ...insertAuthKeyIf('password', authentication.password),
       ...insertAuthKeyIf('scope', authentication.scope),
       ...insertAuthKeyIf('audience', authentication.audience),
+      ...insertAuthKeyIf('organization', authentication.organization),
     ];
   } else if (authentication.grantType === 'client_credentials') {
     params = [
@@ -149,6 +153,7 @@ export const getOAuth2Token = async (
       ...insertAuthKeyIf('scope', authentication.scope),
       ...insertAuthKeyIf('audience', authentication.audience),
       ...insertAuthKeyIf('resource', authentication.resource),
+      ...insertAuthKeyIf('organization', authentication.organization),
     ];
   }
   const headers = authentication.origin ? [{ name: 'Origin', value: authentication.origin }] : [];

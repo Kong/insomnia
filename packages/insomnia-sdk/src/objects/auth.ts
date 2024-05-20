@@ -494,6 +494,7 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
                 refreshToken: findValueInOauth2Options('refreshTokenUrl', authObj.oauth2),
                 credentialsInBody: findValueInOauth2Options('client_authentication', authObj.oauth2) === 'body',
                 audience: findValueInOauth2Options('audience', authObj.oauth2) || '',
+                organization: findValueInOauth2Options('organization', authObj.oauth2) || '',
                 resource: findValueInOauth2Options('resource', authObj.oauth2) || '',
                 // following properties are not supported yet in the script side, just try to find and set them
                 tokenPrefix: findValueInOauth2Options('tokenPrefix', authObj.oauth2),
@@ -677,6 +678,13 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
                             {
                                 key: 'resource',
                                 value: auth.resource || '',
+                                enabled: true,
+                                send_as: 'request_url', // request_body or request_header
+
+                            },
+                            {
+                                key: 'organization',
+                                value: auth.organization || '',
                                 enabled: true,
                                 send_as: 'request_url', // request_body or request_header
 
