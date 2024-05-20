@@ -117,7 +117,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     });
 
     const executionPromise = cancellableRunScript({
-      script: request.preRequestScript,
+      script,
       context: {
         request,
         timelinePath,
