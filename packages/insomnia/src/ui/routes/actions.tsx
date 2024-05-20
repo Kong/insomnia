@@ -11,6 +11,7 @@ import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { getById, update } from '../../models/helpers/request-operations';
+import { MockServer } from '../../models/mock-server';
 import { isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
@@ -338,16 +339,36 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   if (scope === 'mock-server') {
     const mockServerType = formData.get('mockServerType');
     invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
+
+    const mockServerPatch: Partial<MockServer> = {
+      name,
+    };
+
     if (mockServerType === 'cloud') {
-      await models.mockServer.getOrCreateForParentId(workspace._id, { name, useInsomniaCloud: true });
-      return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
+      mockServerPatch.useInsomniaCloud = true;
     }
+
     if (mockServerType === 'self-hosted') {
       const mockServerUrl = formData.get('mockServerUrl');
       invariant(typeof mockServerUrl === 'string', 'Mock Server URL is required');
-      await models.mockServer.getOrCreateForParentId(workspace._id, { name, useInsomniaCloud: false, url: mockServerUrl });
-      return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
+      mockServerPatch.url = mockServerUrl;
     }
+
+    await models.environment.getOrCreateForParentId(workspace._id);
+    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+    await models.mockServer.getOrCreateForParentId(workspace._id, mockServerPatch);
+    await database.flushChanges(flushId);
+
+    const { id } = await models.userSession.getOrCreate();
+    if (id && !workspaceMeta.gitRepositoryId) {
+      const vcs = VCSInstance();
+      await initializeLocalBackendProjectAndMarkForSync({
+        vcs,
+        workspace,
+      });
+    }
+
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
   }
 
   if (scope === 'design') {
