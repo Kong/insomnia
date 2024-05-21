@@ -2,8 +2,8 @@ import classnames from 'classnames';
 import React, { FC, PropsWithChildren, ReactNode } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { RequestAuthentication } from '../../../../../models/request';
 import { RequestLoaderData } from '../../../../routes/request';
+import { RequestGroupLoaderData } from '../../../../routes/request-group';
 import { HelpTooltip } from '../../../help-tooltip';
 
 interface Props {
@@ -14,9 +14,10 @@ interface Props {
 }
 
 export const AuthRow: FC<PropsWithChildren<Props>> = ({ labelFor, label, help, disabled, children }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const authentication = activeRequest.authentication as RequestAuthentication;
-
+  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const { authentication } = reqData?.activeRequest || groupData.activeRequestGroup;
+  const isDisabled = (authentication && 'disabled' in authentication && authentication.disabled) || disabled;
   return (
     <tr key={labelFor}>
       <td className="pad-right no-wrap valign-middle">
@@ -28,7 +29,7 @@ export const AuthRow: FC<PropsWithChildren<Props>> = ({ labelFor, label, help, d
       <td className="wide">
         <div
           className={classnames('form-control form-control--underlined no-margin flex wide', {
-            'form-control--inactive': authentication.disabled || disabled,
+            'form-control--inactive': isDisabled,
           })}
         >
           {children}

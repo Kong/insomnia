@@ -4,8 +4,12 @@ import { useFetcher, useParams, useRouteLoaderData, useSearchParams } from 'reac
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
+import { database as db } from '../../common/database';
 import * as models from '../../models';
+import type { Request } from '../../models/request';
 import { isEventStreamRequest } from '../../models/request';
+import { isRequestGroup, type RequestGroup } from '../../models/request-group';
+import { getOrInheritAuthentication } from '../../network/network';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
@@ -147,6 +151,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         const workspaceId = activeWorkspace._id;
         // Render any nunjucks tags in the url/headers/authentication settings/cookies
         const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+
+        const ancestors = await db.withAncestors<Request | RequestGroup>(activeRequest, [
+          models.requestGroup.type,
+        ]);
+        // check for authentication overrides in parent folders
+        const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
+        activeRequest.authentication = getOrInheritAuthentication({ request: activeRequest, requestGroups });
         const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
           request: activeRequest,
           environmentId,

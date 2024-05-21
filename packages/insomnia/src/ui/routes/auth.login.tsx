@@ -68,11 +68,20 @@ const Login = () => {
       className='flex flex-col gap-[--padding-md]'
     >
       <p className='text-center text-[--color-font] text-2xl py-[--padding-md]'>
-        Welcome to Insomnia
+        Get started for free
       </p>
-      <p className='text-[--color-font] text-sm'>
-        Discover Local, Cloud or Git storage for your projects.
-      </p>
+      <div className="font-extrabold text-sm [text-wrap:balance]">
+        <span className="text-indigo-300 inline-flex flex-col h-[calc(theme(fontSize.sm)*theme(lineHeight.tight))] overflow-hidden">
+          <ul className="block animate-text-slide-4 text-right leading-tight [&_li]:block">
+            <li>Debug</li>
+            <li>Design</li>
+            <li>Test</li>
+            <li>Mock</li>
+            <li aria-hidden="true">Debug</li>
+          </ul>
+        </span>
+        <span className='ml-1 text-[--color-font]'>APIs locally, on Git or in the Cloud.</span>
+      </div>
       <Button
         aria-label='Continue with Google'
         onPress={() => {

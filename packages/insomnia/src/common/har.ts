@@ -5,8 +5,9 @@ import { Cookie as ToughCookie } from 'tough-cookie';
 
 import * as models from '../models';
 import type { Request } from '../models/request';
+import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';
-import { isWorkspace } from '../models/workspace';
+import { isWorkspace, type Workspace } from '../models/workspace';
 import { getAuthHeader } from '../network/authentication';
 import * as plugins from '../plugins';
 import * as pluginContexts from '../plugins/context/index';
@@ -26,7 +27,7 @@ export interface ExportRequest {
 }
 
 export async function exportHarCurrentRequest(request: Request, response: Response): Promise<Har.Har> {
-  const ancestors = await database.withAncestors(request, [
+  const ancestors = await database.withAncestors<Request | RequestGroup | Workspace>(request, [
     models.workspace.type,
     models.requestGroup.type,
   ]);

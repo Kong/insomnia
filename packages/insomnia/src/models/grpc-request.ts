@@ -42,7 +42,7 @@ export const isGrpcRequest = (model: Pick<BaseModel, 'type'>): model is GrpcRequ
   model.type === type
 );
 
-export const isGrpcRequestId = (id: string | null) => (
+export const isGrpcRequestId = (id?: string | null) => (
   id?.startsWith(`${prefix}_`)
 );
 

@@ -2,8 +2,9 @@ import React, { FC, ReactNode, useCallback } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { toKebabCase } from '../../../../../common/misc';
-import { useRequestPatcher } from '../../../../hooks/use-request';
+import { useRequestGroupPatcher, useRequestPatcher } from '../../../../hooks/use-request';
 import { RequestLoaderData } from '../../../../routes/request';
+import { RequestGroupLoaderData } from '../../../../routes/request-group';
 import { AuthRow } from './auth-row';
 
 interface Props {
@@ -27,25 +28,27 @@ export const AuthToggleRow: FC<Props> = ({
   offTitle = 'Enable item',
   disabled = false,
 }) => {
-  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const patchRequestGroup = useRequestGroupPatcher();
+  const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   const patchRequest = useRequestPatcher();
+  const patcher = Boolean(reqData) ? patchRequest : patchRequestGroup;
 
   // @ts-expect-error -- garbage abstraction
   const databaseValue = Boolean(authentication[property]);
-  const toggle = useCallback((value?: boolean) => patchRequest(requestId, { authentication: { ...authentication, [property]: value } }), [authentication, patchRequest, property, requestId]);
 
+  const onChange = useCallback((value?: boolean) => patcher(_id, { authentication: { ...authentication, [property]: value } }),
+    [patcher, _id, authentication, property]);
   const isActuallyOn = invert ? !databaseValue : databaseValue;
 
-  const id = toKebabCase(label);
-  const title = isActuallyOn ? onTitle : offTitle;
-
   return (
-    <AuthRow labelFor={id} label={label} help={help} disabled={disabled}>
+    <AuthRow labelFor={toKebabCase(label)} label={label} help={help} disabled={disabled}>
       <button
         className="btn btn--super-duper-compact"
-        id={id}
-        onClick={() => toggle(!databaseValue)}
-        title={title}
+        id={toKebabCase(label)}
+        onClick={() => onChange(!databaseValue)}
+        title={isActuallyOn ? onTitle : offTitle}
         disabled={disabled}
       >
         <ToggleIcon isOn={isActuallyOn} />

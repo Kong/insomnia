@@ -12,14 +12,13 @@ interface Props {
 }
 
 export const AuthAccordion: FC<PropsWithChildren<Props>> = ({ accordionKey, label, children }) => {
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-
-  const expanded = Boolean(activeRequestMeta?.expandedAccordionKeys[accordionKey]);
+  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const expanded = !reqData || Boolean(reqData.activeRequestMeta?.expandedAccordionKeys[accordionKey]);
   const patchRequestMeta = useRequestMetaPatcher();
-  const toggle = async () => {
-    patchRequestMeta(activeRequest._id, {
+  const toggle = () => {
+    reqData && patchRequestMeta(reqData.activeRequest._id, {
       expandedAccordionKeys: {
-        ...activeRequestMeta?.expandedAccordionKeys,
+        ...reqData.activeRequestMeta?.expandedAccordionKeys,
         [accordionKey]: !expanded,
       },
     });

@@ -48,7 +48,7 @@ import {
   isRequestId,
   Request,
 } from '../../models/request';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
+import { isRequestGroup, isRequestGroupId, RequestGroup } from '../../models/request-group';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import {
   isWebSocketRequest,
@@ -76,6 +76,7 @@ import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-e
 import { GrpcRequestPane } from '../components/panes/grpc-request-pane';
 import { GrpcResponsePane } from '../components/panes/grpc-response-pane';
 import { PlaceholderRequestPane } from '../components/panes/placeholder-request-pane';
+import { RequestGroupPane } from '../components/panes/request-group-pane';
 import { RequestPane } from '../components/panes/request-pane';
 import { ResponsePane } from '../components/panes/response-pane';
 import { getMethodShortHand } from '../components/tags/method-tag';
@@ -123,7 +124,7 @@ const INITIAL_GRPC_REQUEST_STATE = {
   methods: [],
 };
 export const loader: LoaderFunction = async ({ params }) => {
-  if (!params.requestId) {
+  if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
     invariant(workspaceId, 'Workspace ID is required');
     invariant(projectId, 'Project ID is required');
@@ -179,11 +180,12 @@ export const Debug: FC = () => {
   const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
   const [pastedCurl, setPastedCurl] = useState('');
 
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as {
+  const { organizationId, projectId, workspaceId, requestId, requestGroupId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
-    requestId: string;
+    requestId?: string;
+    requestGroupId?: string;
   };
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(
     grpcRequests.map(r => ({
@@ -341,7 +343,7 @@ export const Debug: FC = () => {
       }
     },
     request_showDelete: () => {
-      if (activeRequest) {
+      if (activeRequest && requestId) {
         showModal(AskModal, {
           title: 'Delete Request?',
           message: `Really delete ${activeRequest.name}?`,
@@ -955,11 +957,12 @@ export const Debug: FC = () => {
             </div>
 
             <GridList
+              id="sidebar-pinned-request-gridlist"
               className="overflow-y-auto border-b border-t data-[empty]:py-0 py-[--padding-sm] data-[empty]:border-none border-solid border-[--hl-sm]"
               items={collection.filter(item => item.pinned)}
               aria-label="Pinned Requests"
               disallowEmptySelection
-              selectedKeys={[requestId]}
+              selectedKeys={requestId ? [requestId] : []}
               selectionMode="single"
               onSelectionChange={keys => {
                 if (keys !== 'all') {
@@ -1020,6 +1023,7 @@ export const Debug: FC = () => {
                         onSingleClick={() => {
                           if (item && isRequestGroup(item.doc)) {
                             groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
+                            navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}?${searchParams.toString()}`);
                           } else {
                             navigate(
                               `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}?${searchParams.toString()}`
@@ -1061,7 +1065,7 @@ export const Debug: FC = () => {
                 disallowEmptySelection
                 key={sortOrder}
                 dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
-                selectedKeys={[requestId]}
+                selectedKeys={requestId && [requestId] || requestGroupId && [requestGroupId]}
                 selectionMode="single"
                 onSelectionChange={keys => {
                   if (keys !== 'all') {
@@ -1141,7 +1145,7 @@ export const Debug: FC = () => {
                           className="px-1 flex-1"
                           onSingleClick={() => {
                             if (item && isRequestGroup(item.doc)) {
-                              groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
+                              navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}?${searchParams.toString()}`);
                             } else {
                               navigate(
                                 `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}?${searchParams.toString()}`
@@ -1215,6 +1219,9 @@ export const Debug: FC = () => {
           <Panel id="pane-one" className='pane-one theme--pane'>
             {workspaceId ? (
               <ErrorBoundary showAlert>
+                {isRequestGroupId(requestGroupId) && (
+                  <RequestGroupPane settings={settings} />
+                )}
                 {isGrpcRequestId(requestId) && grpcState && (
                   <GrpcRequestPane
                     grpcState={grpcState}
@@ -1236,7 +1243,7 @@ export const Debug: FC = () => {
                     }}
                   />
                 )}
-                {!requestId && <PlaceholderRequestPane />}
+                {Boolean(!requestId && !requestGroupId) && <PlaceholderRequestPane />}
                 {isRequestSettingsModalOpen && activeRequest && (
                   <RequestSettingsModal
                     request={activeRequest}
@@ -1246,20 +1253,22 @@ export const Debug: FC = () => {
               </ErrorBoundary>
             ) : null}
           </Panel>
-          <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
-          <Panel id="pane-two" className='pane-two theme--pane'>
-            <ErrorBoundary showAlert>
-              {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
-                <GrpcResponsePane grpcState={grpcState} />
-              )}
-              {isRealtimeRequest && (
-                <RealtimeResponsePane requestId={activeRequest._id} />
-              )}
-              {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
-                <ResponsePane runningRequests={runningRequests} />
-              )}
-            </ErrorBoundary>
-          </Panel>
+          {activeRequest ? (<>
+            <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
+            <Panel id="pane-two" className='pane-two theme--pane'>
+              <ErrorBoundary showAlert>
+                {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
+                  <GrpcResponsePane grpcState={grpcState} />
+                )}
+                {isRealtimeRequest && (
+                  <RealtimeResponsePane requestId={activeRequest._id} />
+                )}
+                {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
+                  <ResponsePane runningRequests={runningRequests} />
+                )}
+              </ErrorBoundary>
+            </Panel>
+          </>) : null}
         </PanelGroup>
       </Panel>
     </PanelGroup>

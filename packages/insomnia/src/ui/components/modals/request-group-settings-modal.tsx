@@ -44,7 +44,7 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
   const requestFetcher = useFetcher();
 
   const duplicateRequestGroup = (r: Partial<RequestGroup>) => {
-    requestFetcher.submit(r,
+    requestFetcher.submit(JSON.stringify(r),
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/duplicate`,
         method: 'post',

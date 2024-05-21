@@ -393,10 +393,11 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             />
           </div>
         </TabItem>
-        <TabItem key="auth" title={<AuthDropdown authTypes={supportedAuthTypes} disabled={disabled} />}>
+        <TabItem key="auth" title={<AuthDropdown authentication={activeRequest.authentication} authTypes={supportedAuthTypes} disabled={disabled} />}>
           {disabled && <PaneReadOnlyBanner />}
           <AuthWrapper
             key={uniqueKey}
+            authentication={activeRequest.authentication}
             disabled={disabled}
           />
         </TabItem>

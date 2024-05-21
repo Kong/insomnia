@@ -22,9 +22,12 @@ import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
 import { CookieJar } from '../models/cookie-jar';
 import { Environment } from '../models/environment';
+import { MockRoute } from '../models/mock-route';
+import { MockServer } from '../models/mock-server';
 import type { Request, RequestAuthentication, RequestParameter } from '../models/request';
+import { isRequestGroup, RequestGroup } from '../models/request-group';
 import type { Settings } from '../models/settings';
-import { isWorkspace } from '../models/workspace';
+import { isWorkspace, Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { invariant } from '../utils/invariant';
@@ -33,15 +36,30 @@ import {
   joinUrlAndQueryString,
   smartEncodeUrl,
 } from '../utils/url/querystring';
-import { getAuthHeader, getAuthQueryParams } from './authentication';
+import { getAuthHeader, getAuthObjectOrNull, getAuthQueryParams, isAuthEnabled } from './authentication';
 import { cancellableCurlRequest, cancellableRunPreRequestScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
+export const getOrInheritAuthentication = ({ request, requestGroups }: { request: Request; requestGroups: RequestGroup[] }): RequestAuthentication | {} => {
+  const hasValidAuth = getAuthObjectOrNull(request.authentication) && isAuthEnabled(request.authentication);
+  if (hasValidAuth) {
+    return request.authentication;
+  }
+  const hasParentFolders = requestGroups.length > 0;
+  const closestParentFolderWithAuth = requestGroups.find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
+  const shouldCheckFolderAuth = hasParentFolders && closestParentFolderWithAuth;
+  if (shouldCheckFolderAuth) {
+    // override auth with closest parent folder that has one set
+    return closestParentFolderWithAuth.authentication;
+  }
+  return { type: 'none' };
+};
+
 export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
   invariant(request, 'failed to find request');
-  const ancestors = await db.withAncestors(request, [
+  const ancestors = await db.withAncestors<Request | RequestGroup | Workspace | MockRoute | MockServer>(request, [
     models.request.type,
     models.requestGroup.type,
     models.workspace.type,
@@ -50,12 +68,15 @@ export const fetchRequestData = async (requestId: string) => {
   ]);
   const workspaceDoc = ancestors.find(isWorkspace);
   invariant(workspaceDoc?._id, 'failed to find workspace');
-
   const workspaceId = workspaceDoc._id;
 
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  // check for authentication overrides in parent folders
+  const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
+  request.authentication = getOrInheritAuthentication({ request, requestGroups });
+  // TODO: add inherit to auth list
 
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
@@ -100,6 +121,7 @@ export const tryToExecutePreRequestScript = async (
         // TODO: restart the hidden browser window
       }, timeout + 1000);
     });
+
     const preRequestPromise = cancellableRunPreRequestScript({
       script: request.preRequestScript,
       context: {
@@ -222,7 +244,6 @@ export async function sendCurlAndWriteTimeline(
   if (!renderedRequest.settingSendCookies) {
     timelineStrings.push(JSON.stringify({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() }) + '\n');
   }
-
   const authHeader = await getAuthHeader(renderedRequest, finalUrl);
   const requestOptions = {
     requestId,
