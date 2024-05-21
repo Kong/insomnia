@@ -229,7 +229,6 @@ export class ImportPostman {
       authentication,
       preRequestScript,
       postRequestScript,
-      metaSortKey: requestCount,
     };
   };
 
