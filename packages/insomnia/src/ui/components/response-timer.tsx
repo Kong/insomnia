@@ -51,19 +51,23 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
     return (
       <div
         key={`${executionId}-${record.stepName}`}
-        className='flex w-full leading-10'
+        className='flex w-full leading-8'
       >
-        <div className='w-3/4 text-left content-center'>
+        <div className='w-3/4 text-left content-center leading-8'>
+          <span className="leading-8">
           {
             record.isDone ?
               (<i className="fa fa-circle-check fa-2x mr-2 text-green-500" />) :
-              (<i className="fa fa-spinner fa-spin fa-2x mr-3" />)
+                (<i className="fa fa-spinner fa-spin fa-2x mr-2" />)
           }
-          <span>{record.stepName}</span>
-      </div>
+          </span>
+          <span className="inline-block align-top">
+            {record.stepName}
+          </span>
+        </div>
         <div className='w-1/4 text-right' style={{ fontVariantNumeric: 'tabular-nums' }}>
           {timingToDisplay > 0 ? `${timingToDisplay.toFixed(2)}s` : '0s'}
-      </div>
+        </div>
       </div>
     );
   });
