@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { generateId } from '../../../common/misc';
 import type { RequestHeader } from '../../../models/request';
-import { useRequestPatcher } from '../../hooks/use-request';
+import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
@@ -12,7 +12,7 @@ interface Props {
   headers: RequestHeader[];
   bulk: boolean;
   isDisabled?: boolean;
-  isWebSocketRequest?: boolean;
+  requestType: 'Request' | 'RequestGroup' | 'WebSocketRequest';
 }
 const readOnlyWebsocketPairs = [
   { name: 'Connection', value: 'Upgrade' },
@@ -25,13 +25,17 @@ const readOnlyHttpPairs = [
   { name: 'Accept', value: '*/*' },
   { name: 'Host', value: '<calculated at runtime>' },
 ].map(pair => ({ ...pair, id: generateId('pair') }));
+
 export const RequestHeadersEditor: FC<Props> = ({
   headers,
   bulk,
   isDisabled,
-  isWebSocketRequest,
+  requestType,
 }) => {
   const patchRequest = useRequestPatcher();
+  const patchRequestGroup = useRequestGroupPatcher();
+  const patcher = requestType === 'RequestGroup' ? patchRequestGroup : patchRequest;
+  const isWebSocketRequest = requestType === 'WebSocketRequest';
   const { requestId } = useParams() as { requestId: string };
 
   const handleBulkUpdate = useCallback((headersString: string) => {
@@ -55,8 +59,8 @@ export const RequestHeadersEditor: FC<Props> = ({
         value,
       });
     }
-    patchRequest(requestId, { headers: headersArray });
-  }, [patchRequest, requestId]);
+    patcher(requestId, { headers: headersArray });
+  }, [patcher, requestId]);
 
   let headersString = '';
   for (const header of headers) {
@@ -93,7 +97,7 @@ export const RequestHeadersEditor: FC<Props> = ({
       pairs={headers}
       handleGetAutocompleteNameConstants={getCommonHeaderNames}
       handleGetAutocompleteValueConstants={getCommonHeaderValues}
-      onChange={headers => patchRequest(requestId, { headers })}
+      onChange={headers => patcher(requestId, { headers })}
       isDisabled={isDisabled}
       readOnlyPairs={isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs}
     />

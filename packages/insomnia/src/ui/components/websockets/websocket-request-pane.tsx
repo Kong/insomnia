@@ -418,7 +418,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             headers={activeRequest.headers}
             bulk={false}
             isDisabled={readyState}
-            isWebSocketRequest
+            requestType="WebSocketRequest"
           />
         </TabItem>
         <TabItem

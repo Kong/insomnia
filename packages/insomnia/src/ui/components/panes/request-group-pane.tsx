@@ -52,7 +52,11 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ }) => {
               errorClassName="font-error pad text-center"
             >
               <div className='overflow-y-auto flex-1 flex-shrink-0'>
-                <RequestHeadersEditor bulk={false} headers={folderHeaders} />
+                <RequestHeadersEditor
+                  bulk={false}
+                  headers={folderHeaders}
+                  requestType="RequestGroup"
+                />
               </div>
             </ErrorBoundary>
           </div>
