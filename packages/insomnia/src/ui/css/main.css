@@ -2913,6 +2913,7 @@ input.editable {
 }
 .response-pane .overlay .timer-list i.fa {
   font-size: 1.2rem;
+  line-height: 2rem;
 }
 .response-pane .response-pane__notify {
   display: flex;
