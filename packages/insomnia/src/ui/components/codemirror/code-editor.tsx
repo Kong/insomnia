@@ -8,7 +8,7 @@ import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
+import { Button, Menu, MenuItem, MenuTrigger, Popover, Toolbar } from 'react-aria-components';
 import { useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
@@ -592,12 +592,13 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
       </div>
       {
         showFilter || showPrettify ? (
-          <div key={uniquenessKey} className="flex flex-row items-center border-solid border-t border-[--hl-md] h-[--line-height-sm] text-[--font-size-sm]">
+          <div key={uniquenessKey} className="flex w-full items-center border-solid border-t border-[--hl-md] h-[--line-height-sm] text-[--font-size-sm]">
             {showFilter ?
               (<input
                 ref={inputRef}
                 key="filter"
                 type="text"
+                className='flex-1 pl-3'
                 title="Filter response body"
                 defaultValue={filter || ''}
                 placeholder={mode?.includes('json') ? '$.store.books[*].author' : '/store/books/author'}
@@ -619,100 +620,70 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
                   }
                 }}
               />) : null}
-            {/* {showFilter && filterHistory?.length ?
-              (
-                <Dropdown
-                  aria-label='Filter History'
-                  key="history"
-                  className="tall"
-                  triggerButton={
-                    <DropdownButton className="btn btn--compact">
-                      <i className="fa fa-clock-o" />
-                    </DropdownButton>
-                  }
-                >
-                  {filterHistory.reverse().map(filter => (
-                    <DropdownItem
-                      key={JSON.stringify(filter)}
-                      aria-label={filter}
-                    >
-                      <ItemContent
-                        aria-label={filter}
-                        label={filter}
-                        onClick={() => {
-                          if (inputRef.current) {
-                            inputRef.current.value = filter;
-                          }
-                          if (updateFilter) {
-                            updateFilter(filter);
-                          }
-                          maybePrettifyAndSetValue(originalCode, false, filter);
-                        }}
-                      />
-                    </DropdownItem>
-                  ))}
-                </Dropdown>
-              ) : null} */}
-
-            {showFilter && filterHistory?.length && (
-              <MenuTrigger>
-                <Button
-                  aria-label="Filter History"
-                  className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                >
-                  <Icon icon="clock" />
-                </Button>
-                <Popover className="min-w-max">
-                  <Menu
-                    aria-label="Filter history menu"
-                    selectionMode="single"
-                    onAction={key => {
-                      const index = Number(key);
-                      const filter = filterHistory[index];
-                      if (inputRef.current) {
-                        inputRef.current.value = filter;
-                      }
-                      if (updateFilter) {
-                        updateFilter(filter);
-                      }
-                      maybePrettifyAndSetValue(originalCode, false, filter);
-                    }}
-                    items={filterHistory.map((filter, index) => ({
-                      id: filter,
-                      name: filter,
-                      key: index,
-                    }))}
-                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+            <Toolbar className="flex items-center h-full">
+              {showFilter && filterHistory && filterHistory.length > 0 && (
+                <MenuTrigger>
+                  <Button
+                    aria-label="Filter History"
+                    className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   >
-                    {item => (
-                      <MenuItem
-                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                        aria-label={item.name}
-                      >
-                        <span>{item.name}</span>
-                      </MenuItem>
-                    )}
-                  </Menu>
-                </Popover>
-              </MenuTrigger>
-            )}
-            {showFilter ?
-              (<Button key="help" className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all" onPress={() => showModal(FilterHelpModal, { isJSON: Boolean(mode?.includes('json')) })}>
-                <i className="fa fa-question-circle" />
-              </Button>) : null}
-            {showPrettify ?
-              (<Button
-                key="prettify"
-                className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                aria-label="Auto-format request body whitespace"
-                onPress={() => {
-                  if (mode?.includes('json') || mode?.includes('xml')) {
-                    maybePrettifyAndSetValue(codeMirror.current?.getValue(), true);
-                  }
-                }}
-              >
-                Beautify {mode?.includes('json') ? 'JSON' : mode?.includes('xml') ? 'XML' : ''}
-              </Button>) : null}
+                    <Icon icon="clock" />
+                  </Button>
+                  <Popover className="min-w-max">
+                    <Menu
+                      aria-label="Filter history menu"
+                      selectionMode="single"
+                      onAction={key => {
+                        const index = Number(key);
+                        const filter = filterHistory[index];
+                        if (inputRef.current) {
+                          inputRef.current.value = filter;
+                        }
+                        if (updateFilter) {
+                          updateFilter(filter);
+                        }
+                        maybePrettifyAndSetValue(originalCode, false, filter);
+                      }}
+                      items={filterHistory.map((filter, index) => ({
+                        id: filter,
+                        name: filter,
+                        key: index,
+                      }))}
+                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                    >
+                      {item => (
+                        <MenuItem
+                          className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                          aria-label={item.name}
+                        >
+                          <span>{item.name}</span>
+                        </MenuItem>
+                      )}
+                    </Menu>
+                  </Popover>
+                </MenuTrigger>
+              )}
+
+              {showFilter ? (
+                <Button key="help" className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all" onPress={() => showModal(FilterHelpModal, { isJSON: Boolean(mode?.includes('json')) })}>
+                  <i className="fa fa-question-circle" />
+                </Button>
+              ) : null}
+              {showPrettify ? (
+                <Button
+                  key="prettify"
+                  className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                  aria-label="Auto-format request body whitespace"
+                  onPress={() => {
+                    if (mode?.includes('json') || mode?.includes('xml')) {
+                      maybePrettifyAndSetValue(codeMirror.current?.getValue(), true);
+                    }
+                  }}
+                >
+                  Beautify {mode?.includes('json') ? 'JSON' : mode?.includes('xml') ? 'XML' : ''}
+                </Button>
+              ) : null}
+            </Toolbar>
           </div>
         ) : null
       }
