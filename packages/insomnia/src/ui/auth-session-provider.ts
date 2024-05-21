@@ -77,7 +77,8 @@ export async function submitAuthCode(code: string) {
     const box: AuthBox = JSON.parse(decoder.decode(boxData));
     await session.absorbKey(box.token, box.key);
   } catch (error) {
-    return error.message;
+    console.error(error);
+    return error.toString();
   }
 }
 
