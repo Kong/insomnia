@@ -5749,6 +5749,42 @@ exports[`Fixtures Import postman postman-export-oauth2-v2_1-input.json 1`] = `
 }
 `;
 
+exports[`Fixtures Import postman scripts-import-v2_1-input.json 1`] = `
+{
+  "__export_date": "",
+  "__export_format": 4,
+  "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
+  "resources": [
+    {
+      "_id": "__GRP_1__",
+      "_type": "request_group",
+      "description": "",
+      "environment": {},
+      "metaSortKey": -1622117984000,
+      "name": "New Collection",
+      "parentId": "__WORKSPACE_ID__",
+    },
+    {
+      "_id": "__REQ_1__",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "description": "",
+      "headers": [],
+      "metaSortKey": -1622117983999,
+      "method": "GET",
+      "name": "New Request",
+      "parameters": [],
+      "parentId": "__GRP_1__",
+      "postRequestScript": "console.log('this is test script');",
+      "preRequestScript": "console.log('this is pre-request script');",
+      "url": "httpbin.org/get",
+    },
+  ],
+}
+`;
+
 exports[`Fixtures Import postman-env basic-input.json 1`] = `
 {
   "__export_date": "",
