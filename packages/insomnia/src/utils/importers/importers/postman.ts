@@ -170,6 +170,27 @@ export class ImportPostman {
     return translateHandlersInScript(scriptContent);
   };
 
+  importPostRequestScript = (events: EventList | undefined): string => {
+    if (events == null) {
+      return '';
+    }
+
+    const postRequestEvent = events.find(
+      event => event.listen === 'test'
+    );
+
+    const scriptOrRows = postRequestEvent ? postRequestEvent.script : '';
+    if (!scriptOrRows) {
+      return '';
+    }
+
+    const scriptContent = scriptOrRows.exec ?
+      (Array.isArray(scriptOrRows.exec) ? scriptOrRows.exec.join('\n') : scriptOrRows.exec) :
+      '';
+
+    return translateHandlersInScript(scriptContent);
+  };
+
   importRequestItem = (
     { request, name = '', event }: Item,
     parentId: string,
@@ -187,6 +208,8 @@ export class ImportPostman {
     }
 
     const preRequestScript = this.importPreRequestScript(event);
+    const postRequestScript = this.importPostRequestScript(event);
+
     return {
       parentId,
       _id: `__REQ_${requestCount++}__`,
@@ -205,6 +228,7 @@ export class ImportPostman {
       body: this.importBody(request.body, headers.find(({ key }) => key === 'Content-Type')?.value),
       authentication,
       preRequestScript,
+      postRequestScript,
     };
   };
 
