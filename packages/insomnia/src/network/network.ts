@@ -57,12 +57,12 @@ export const getOrInheritAuthentication = ({ request, requestGroups }: { request
 };
 export function getOrInheritHeaders({ request, requestGroups }: { request: Request; requestGroups: RequestGroup[] }): RequestHeader[] {
   // recurse over each parent folder to append headers
-  // in case of duplicate, lowest child should decide
+  // in case of duplicate, node-libcurl joins on comma
   const headers = requestGroups
     .reverse()
     .map(({ headers }) => headers || [])
     .flat();
-  // TODO: check if library dedupes and it what manner
+  // if parent has foo: bar and child has foo: baz, request will have foo: bar, baz
   return [...headers, ...request.headers];
 }
 
