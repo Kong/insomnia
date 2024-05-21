@@ -201,11 +201,11 @@ export const PreRequestScriptEditor: FC<Props> = ({
         <CodeEditor
           key={uniquenessKey}
           id="pre-request-script-editor"
+          disableContextMenu={true}
           showPrettifyButton={true}
           uniquenessKey={uniquenessKey}
           defaultValue={defaultValue}
           className={className}
-          //   enableNunjucks
           onChange={onChange}
           mode='text/javascript'
           placeholder="..."
