@@ -1,18 +1,18 @@
 import React, { FC, useCallback } from 'react';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { generateId } from '../../../common/misc';
 import type { RequestHeader } from '../../../models/request';
-import { isWebSocketRequest } from '../../../models/websocket-request';
 import { useRequestPatcher } from '../../hooks/use-request';
-import { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
+  headers: RequestHeader[];
   bulk: boolean;
   isDisabled?: boolean;
+  isWebSocketRequest?: boolean;
 }
 const readOnlyWebsocketPairs = [
   { name: 'Connection', value: 'Upgrade' },
@@ -26,15 +26,16 @@ const readOnlyHttpPairs = [
   { name: 'Host', value: '<calculated at runtime>' },
 ].map(pair => ({ ...pair, id: generateId('pair') }));
 export const RequestHeadersEditor: FC<Props> = ({
+  headers,
   bulk,
   isDisabled,
+  isWebSocketRequest,
 }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData | WebSocketRequestLoaderData;
   const patchRequest = useRequestPatcher();
   const { requestId } = useParams() as { requestId: string };
 
   const handleBulkUpdate = useCallback((headersString: string) => {
-    const headers: {
+    const headersArray: {
       name: string;
       value: string;
     }[] = [];
@@ -49,16 +50,16 @@ export const RequestHeadersEditor: FC<Props> = ({
         continue;
       }
 
-      headers.push({
+      headersArray.push({
         name,
         value,
       });
     }
-    patchRequest(requestId, { headers });
+    patchRequest(requestId, { headers: headersArray });
   }, [patchRequest, requestId]);
 
   let headersString = '';
-  for (const header of activeRequest.headers) {
+  for (const header of headers) {
     // Make sure it's not disabled
     if (header.disabled) {
       continue;
@@ -70,10 +71,6 @@ export const RequestHeadersEditor: FC<Props> = ({
 
     headersString += `${header.name}: ${header.value}\n`;
   }
-
-  const onChangeHeaders = useCallback((headers: RequestHeader[]) => {
-    patchRequest(requestId, { headers });
-  }, [patchRequest, requestId]);
 
   if (bulk) {
     return (
@@ -93,12 +90,12 @@ export const RequestHeadersEditor: FC<Props> = ({
       namePlaceholder="header"
       valuePlaceholder="value"
       descriptionPlaceholder="description"
-      pairs={activeRequest.headers}
+      pairs={headers}
       handleGetAutocompleteNameConstants={getCommonHeaderNames}
       handleGetAutocompleteValueConstants={getCommonHeaderValues}
-      onChange={onChangeHeaders}
+      onChange={headers => patchRequest(requestId, { headers })}
       isDisabled={isDisabled}
-      readOnlyPairs={isWebSocketRequest(activeRequest) ? readOnlyWebsocketPairs : readOnlyHttpPairs}
+      readOnlyPairs={isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs}
     />
   );
 };
