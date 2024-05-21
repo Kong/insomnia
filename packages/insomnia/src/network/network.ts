@@ -48,11 +48,13 @@ export const getOrInheritAuthentication = ({ request, requestGroups }: { request
   }
   const hasParentFolders = requestGroups.length > 0;
   const closestParentFolderWithAuth = requestGroups.find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
-  const shouldCheckFolderAuth = hasParentFolders && closestParentFolderWithAuth;
+  const closestAuth = getAuthObjectOrNull(closestParentFolderWithAuth?.authentication);
+  const shouldCheckFolderAuth = hasParentFolders && closestAuth;
   if (shouldCheckFolderAuth) {
     // override auth with closest parent folder that has one set
-    return closestParentFolderWithAuth.authentication;
+    return closestAuth;
   }
+  // if no auth is specified on request or folders, default to none
   return { type: 'none' };
 };
 export function getOrInheritHeaders({ request, requestGroups }: { request: Request; requestGroups: RequestGroup[] }): RequestHeader[] {
