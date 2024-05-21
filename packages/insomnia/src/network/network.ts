@@ -24,7 +24,7 @@ import { CookieJar } from '../models/cookie-jar';
 import { Environment } from '../models/environment';
 import { MockRoute } from '../models/mock-route';
 import { MockServer } from '../models/mock-server';
-import type { Request, RequestAuthentication, RequestParameter } from '../models/request';
+import type { Request, RequestAuthentication, RequestHeader, RequestParameter } from '../models/request';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
 import type { Settings } from '../models/settings';
 import { isWorkspace, Workspace } from '../models/workspace';
@@ -55,6 +55,16 @@ export const getOrInheritAuthentication = ({ request, requestGroups }: { request
   }
   return { type: 'none' };
 };
+export function getOrInheritHeaders({ request, requestGroups }: { request: Request; requestGroups: RequestGroup[] }): RequestHeader[] {
+  // recurse over each parent folder to append headers
+  // in case of duplicate, lowest child should decide
+  const headers = requestGroups
+    .reverse()
+    .map(({ headers }) => headers || [])
+    .flat();
+  // TODO: check if library dedupes and it what manner
+  return [...headers, ...request.headers];
+}
 
 export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
@@ -76,8 +86,7 @@ export const fetchRequestData = async (requestId: string) => {
   // check for authentication overrides in parent folders
   const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
   request.authentication = getOrInheritAuthentication({ request, requestGroups });
-  // TODO: add inherit to auth list
-
+  request.headers = getOrInheritHeaders({ request, requestGroups });
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && await models.environment.getById(activeEnvironmentId);

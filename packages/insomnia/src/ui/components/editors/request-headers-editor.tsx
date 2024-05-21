@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { generateId } from '../../../common/misc';
 import type { RequestHeader } from '../../../models/request';
+import { invariant } from '../../../utils/invariant';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
@@ -36,8 +37,9 @@ export const RequestHeadersEditor: FC<Props> = ({
   const patchRequestGroup = useRequestGroupPatcher();
   const patcher = requestType === 'RequestGroup' ? patchRequestGroup : patchRequest;
   const isWebSocketRequest = requestType === 'WebSocketRequest';
-  const { requestId } = useParams() as { requestId: string };
-
+  const { requestId, requestGroupId } = useParams() as { requestId?: string; requestGroupId?: string };
+  const id = requestType === 'RequestGroup' ? requestGroupId : requestId;
+  invariant(id, 'Request or RequestGroup ID is required');
   const handleBulkUpdate = useCallback((headersString: string) => {
     const headersArray: {
       name: string;
@@ -59,8 +61,8 @@ export const RequestHeadersEditor: FC<Props> = ({
         value,
       });
     }
-    patcher(requestId, { headers: headersArray });
-  }, [patcher, requestId]);
+    patcher(id, { headers: headersArray });
+  }, [patcher, id]);
 
   let headersString = '';
   for (const header of headers) {
@@ -97,7 +99,7 @@ export const RequestHeadersEditor: FC<Props> = ({
       pairs={headers}
       handleGetAutocompleteNameConstants={getCommonHeaderNames}
       handleGetAutocompleteValueConstants={getCommonHeaderValues}
-      onChange={headers => patcher(requestId, { headers })}
+      onChange={headers => patcher(id, { headers })}
       isDisabled={isDisabled}
       readOnlyPairs={isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs}
     />
