@@ -3842,6 +3842,7 @@ exports[`Fixtures Import postman api-key-default-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "addTo": "header",
         "disabled": false,
@@ -3857,7 +3858,6 @@ exports[`Fixtures Import postman api-key-default-v2_1-input.json 1`] = `
       "name": "New Request",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "mockbin.org/request/any",
     },
@@ -3884,6 +3884,7 @@ exports[`Fixtures Import postman api-key-header-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "addTo": "header",
         "disabled": false,
@@ -3899,7 +3900,6 @@ exports[`Fixtures Import postman api-key-header-v2_1-input.json 1`] = `
       "name": "New Request",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "mockbin.org/request/any",
     },
@@ -3926,6 +3926,7 @@ exports[`Fixtures Import postman api-key-queryParams-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "addTo": "queryParams",
         "disabled": false,
@@ -3941,7 +3942,6 @@ exports[`Fixtures Import postman api-key-queryParams-v2_1-input.json 1`] = `
       "name": "New Request",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "mockbin.org/request/any",
     },
@@ -3968,6 +3968,7 @@ exports[`Fixtures Import postman aws-signature-auth-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessKeyId": "aws-access-key",
         "disabled": false,
@@ -3985,7 +3986,6 @@ exports[`Fixtures Import postman aws-signature-auth-v2_0-input.json 1`] = `
       "name": "AWS Signature",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
@@ -4012,6 +4012,7 @@ exports[`Fixtures Import postman aws-signature-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessKeyId": "aws-access-key",
         "disabled": false,
@@ -4029,7 +4030,6 @@ exports[`Fixtures Import postman aws-signature-auth-v2_1-input.json 1`] = `
       "name": "AWS Signature",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
@@ -4056,6 +4056,7 @@ exports[`Fixtures Import postman basic-auth-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "basic-password",
@@ -4070,7 +4071,6 @@ exports[`Fixtures Import postman basic-auth-v2_0-input.json 1`] = `
       "name": "Basic Auth",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
@@ -4097,6 +4097,7 @@ exports[`Fixtures Import postman basic-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "basic-password",
@@ -4111,7 +4112,6 @@ exports[`Fixtures Import postman basic-auth-v2_1-input.json 1`] = `
       "name": "Basic Auth",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
@@ -4138,6 +4138,7 @@ exports[`Fixtures Import postman bearer-token-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "prefix": "",
@@ -4152,7 +4153,6 @@ exports[`Fixtures Import postman bearer-token-v2_0-input.json 1`] = `
       "name": "Bearer Token",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
@@ -4179,6 +4179,7 @@ exports[`Fixtures Import postman bearer-token-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "prefix": "",
@@ -4193,7 +4194,6 @@ exports[`Fixtures Import postman bearer-token-v2_1-input.json 1`] = `
       "name": "Bearer Token",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
@@ -4220,6 +4220,7 @@ exports[`Fixtures Import postman complex-url-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "",
@@ -4235,7 +4236,6 @@ exports[`Fixtures Import postman complex-url-v2_0-input.json 1`] = `
         },
       ],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
@@ -4262,6 +4262,7 @@ exports[`Fixtures Import postman complex-url-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "",
@@ -4277,7 +4278,6 @@ exports[`Fixtures Import postman complex-url-v2_1-input.json 1`] = `
         },
       ],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
@@ -4313,6 +4313,7 @@ exports[`Fixtures Import postman complex-v2_0_fromHeaders-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "prefix": "",
@@ -4345,13 +4346,13 @@ exports[`Fixtures Import postman complex-v2_0_fromHeaders-input.json 1`] = `
         },
       ],
       "parentId": "__GRP_2__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "",
     },
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessKeyId": "<accessKeyId>",
         "disabled": false,
@@ -4396,13 +4397,13 @@ exports[`Fixtures Import postman complex-v2_0_fromHeaders-input.json 1`] = `
         },
       ],
       "parentId": "__GRP_2__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "",
     },
     {
       "_id": "__REQ_3__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "abc123",
@@ -4435,13 +4436,13 @@ exports[`Fixtures Import postman complex-v2_0_fromHeaders-input.json 1`] = `
       "name": "Create a new project.",
       "parameters": [],
       "parentId": "__GRP_2__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "",
     },
     {
       "_id": "__REQ_4__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "",
@@ -4481,13 +4482,13 @@ Child projects are provided as references; i.e. they only contain the <code>self
       "name": "Display the specified project.",
       "parameters": [],
       "parentId": "__GRP_2__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "",
     },
     {
       "_id": "__REQ_5__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "Callback%20URL",
         "consumerKey": "Consumer%20Key",
@@ -4537,7 +4538,6 @@ Changing a project's parent or children is currently not possible.
       "name": "Update the specified project.",
       "parameters": [],
       "parentId": "__GRP_2__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "",
     },
@@ -4573,6 +4573,7 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "password",
@@ -4603,13 +4604,13 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
       "name": "{{base_url}}/api/users",
       "parameters": [],
       "parentId": "__GRP_2__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "{{base_url}}/api/users",
     },
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "password",
@@ -4633,13 +4634,13 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
       "name": "Urlencoded Form Test",
       "parameters": [],
       "parentId": "__GRP_2__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "{{base_url}}/api/users",
     },
     {
       "_id": "__REQ_3__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "",
@@ -4652,13 +4653,13 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
       "name": "Test Request Raw Body",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "{{base_url}}/api/users",
     },
     {
       "_id": "__REQ_4__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "Request with empty raw body",
@@ -4668,13 +4669,13 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
       "name": "Test Request Empty Raw Body",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "{{base_url}}/api/users",
     },
     {
       "_id": "__REQ_5__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "Request with unknown body",
@@ -4684,13 +4685,13 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
       "name": "Test Request Unknown Body",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "{{base_url}}/api/users",
     },
     {
       "_id": "__REQ_6__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "application/graphql",
@@ -4703,7 +4704,6 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
       "name": "Test Request GraphQL Body",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "{{base_url}}/graphql/",
     },
@@ -4739,6 +4739,7 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "password",
@@ -4775,13 +4776,13 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
       "name": "{{base_url}}/api/users",
       "parameters": [],
       "parentId": "__GRP_2__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "{{base_url}}/api/users",
     },
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "password",
@@ -4805,13 +4806,13 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
       "name": "Urlencoded Form Test",
       "parameters": [],
       "parentId": "__GRP_2__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "{{base_url}}/api/users",
     },
     {
       "_id": "__REQ_3__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "",
@@ -4824,13 +4825,13 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
       "name": "Test Request",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "{{base_url}}/api/users",
     },
     {
       "_id": "__REQ_4__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "Request with unknown body",
@@ -4840,13 +4841,13 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
       "name": "Test Request Unknown Body",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "{{base_url}}/api/users",
     },
     {
       "_id": "__REQ_5__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "Request with empty raw body",
@@ -4856,13 +4857,13 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
       "name": "Test Request Empty Body",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "{{base_url}}/api/users",
     },
     {
       "_id": "__REQ_6__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "application/graphql",
@@ -4875,7 +4876,6 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
       "name": "Test Request GraphQL Body",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "{{base_url}}/graphql/",
     },
@@ -4902,6 +4902,7 @@ exports[`Fixtures Import postman digest-auth-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "guest",
@@ -4916,7 +4917,6 @@ exports[`Fixtures Import postman digest-auth-v2_0-input.json 1`] = `
       "name": "Digest Auth",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://jigsaw.w3.org/HTTP/Digest/",
     },
@@ -4943,6 +4943,7 @@ exports[`Fixtures Import postman digest-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "guest",
@@ -4957,7 +4958,6 @@ exports[`Fixtures Import postman digest-auth-v2_1-input.json 1`] = `
       "name": "Digest Auth",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://jigsaw.w3.org/HTTP/Digest/",
     },
@@ -4984,6 +4984,7 @@ exports[`Fixtures Import postman faker-vars-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "prefix": "",
@@ -5013,7 +5014,6 @@ exports[`Fixtures Import postman faker-vars-v2_1-input.json 1`] = `
         },
       ],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "httpbin.org/anything/{% faker 'guid' %}",
     },
@@ -5040,6 +5040,7 @@ exports[`Fixtures Import postman minimal-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "",
@@ -5049,7 +5050,6 @@ exports[`Fixtures Import postman minimal-v2_0-input.json 1`] = `
       "name": "",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "",
     },
@@ -5076,6 +5076,7 @@ exports[`Fixtures Import postman minimal-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "",
@@ -5085,7 +5086,6 @@ exports[`Fixtures Import postman minimal-v2_1-input.json 1`] = `
       "name": "",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "",
     },
@@ -5112,6 +5112,7 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "consumer-key-value",
@@ -5136,13 +5137,13 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_0-input.json 1`] = `
       "name": "Added to Request Body/URL",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "consumer-key-value",
@@ -5167,13 +5168,13 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_0-input.json 1`] = `
       "name": "Added to Request Headers",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
     {
       "_id": "__REQ_3__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "plaintext-consumer-key-value",
@@ -5198,13 +5199,13 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_0-input.json 1`] = `
       "name": "Signature Method PLAINTEXT",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
     {
       "_id": "__REQ_4__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "sha256-consumer-key-value",
@@ -5229,13 +5230,13 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_0-input.json 1`] = `
       "name": "Signature Method HMAC-SHA256",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
     {
       "_id": "__REQ_5__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "sha1-consumer-key-value",
@@ -5260,7 +5261,6 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_0-input.json 1`] = `
       "name": "Signature Method HMAC-SHA1",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
@@ -5287,6 +5287,7 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "consumer-key-value",
@@ -5311,13 +5312,13 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_1-input.json 1`] = `
       "name": "Added to Request Body/URL",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "consumer-key-value",
@@ -5342,13 +5343,13 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_1-input.json 1`] = `
       "name": "Added to Request Headers",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
     {
       "_id": "__REQ_3__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "plaintext-consumer-key-value",
@@ -5373,13 +5374,13 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_1-input.json 1`] = `
       "name": "Signature Method PLAINTEXT",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
     {
       "_id": "__REQ_4__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "sha256-consumer-key-value",
@@ -5404,13 +5405,13 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_1-input.json 1`] = `
       "name": "Signature Method HMAC-SHA256",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
     {
       "_id": "__REQ_5__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "sha1-consumer-key-value",
@@ -5435,7 +5436,6 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_1-input.json 1`] = `
       "name": "Signature Method HMAC-SHA1",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
@@ -5462,6 +5462,7 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "",
         "authorizationUrl": "",
@@ -5479,13 +5480,13 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_0-input.json 1`] = `
       "name": "Added to Request URL",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "",
         "authorizationUrl": "",
@@ -5503,7 +5504,6 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_0-input.json 1`] = `
       "name": "Added to Request Headers",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "https://insomnia.rest",
     },
@@ -5530,6 +5530,7 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "test",
         "authorizationUrl": "test",
@@ -5556,13 +5557,13 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_1-input.json 1`] = `
       "name": "auth code",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "mockbin.org/request/any",
     },
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "test",
         "authorizationUrl": "test",
@@ -5589,13 +5590,13 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_1-input.json 1`] = `
       "name": "pkce",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "mockbin.org/request/any",
     },
     {
       "_id": "__REQ_3__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "test",
         "authorizationUrl": "test",
@@ -5622,13 +5623,13 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_1-input.json 1`] = `
       "name": "implicit",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "mockbin.org/request/any",
     },
     {
       "_id": "__REQ_4__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "test",
         "authorizationUrl": "test",
@@ -5655,13 +5656,13 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_1-input.json 1`] = `
       "name": "password",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "mockbin.org/request/any",
     },
     {
       "_id": "__REQ_5__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "test",
         "authorizationUrl": "test",
@@ -5688,7 +5689,6 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_1-input.json 1`] = `
       "name": "client",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "mockbin.org/request/any",
     },
@@ -5715,6 +5715,7 @@ exports[`Fixtures Import postman postman-export-oauth2-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "exampleAccessTokenUrl",
         "authorizationUrl": "exampleAuthorizeUrl",
@@ -5741,7 +5742,6 @@ exports[`Fixtures Import postman postman-export-oauth2-v2_1-input.json 1`] = `
       "name": "Example request with OAuth2",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "",
     },
@@ -5768,6 +5768,7 @@ exports[`Fixtures Import postman scripts-import-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "console.log('this is test script');",
       "authentication": {},
       "body": {},
       "description": "",
@@ -5777,7 +5778,6 @@ exports[`Fixtures Import postman scripts-import-v2_1-input.json 1`] = `
       "name": "New Request",
       "parameters": [],
       "parentId": "__GRP_1__",
-      "postRequestScript": "console.log('this is test script');",
       "preRequestScript": "console.log('this is pre-request script');",
       "url": "httpbin.org/get",
     },
@@ -8151,6 +8151,7 @@ exports[`Fixtures Import wsdl addition-input.wsdl 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "text/xml",
@@ -8199,7 +8200,6 @@ exports[`Fixtures Import wsdl addition-input.wsdl 1`] = `
       "name": "Add",
       "parameters": [],
       "parentId": "__GRP_2__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "http://www.dneonline.com/calculator.asmx",
     },
@@ -8235,6 +8235,7 @@ exports[`Fixtures Import wsdl calculator-input.wsdl 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "text/xml",
@@ -8283,13 +8284,13 @@ exports[`Fixtures Import wsdl calculator-input.wsdl 1`] = `
       "name": "Add",
       "parameters": [],
       "parentId": "__GRP_2__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "http://www.dneonline.com/calculator.asmx",
     },
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "text/xml",
@@ -8338,13 +8339,13 @@ exports[`Fixtures Import wsdl calculator-input.wsdl 1`] = `
       "name": "Subtract",
       "parameters": [],
       "parentId": "__GRP_2__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "http://www.dneonline.com/calculator.asmx",
     },
     {
       "_id": "__REQ_3__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "text/xml",
@@ -8393,13 +8394,13 @@ exports[`Fixtures Import wsdl calculator-input.wsdl 1`] = `
       "name": "Multiply",
       "parameters": [],
       "parentId": "__GRP_2__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "http://www.dneonline.com/calculator.asmx",
     },
     {
       "_id": "__REQ_4__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "text/xml",
@@ -8448,7 +8449,6 @@ exports[`Fixtures Import wsdl calculator-input.wsdl 1`] = `
       "name": "Divide",
       "parameters": [],
       "parentId": "__GRP_2__",
-      "postRequestScript": "",
       "preRequestScript": "",
       "url": "http://www.dneonline.com/calculator.asmx",
     },
