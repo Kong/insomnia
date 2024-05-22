@@ -191,17 +191,19 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         // TODO: restart the hidden browser window
       }, timeout + 1000);
     });
-
+    const isBaseEnvironmentSelected = environment._id === baseEnvironment._id;
+    if (isBaseEnvironmentSelected) {
+      // postman models base env as no env and does not persist, so we could handle that case better, but for now we throw
+      throw new Error('Base environment cannot be selected for script execution. Please select an environment.');
+    }
     const executionPromise = cancellableRunScript({
       script,
       context: {
         request,
         timelinePath,
         timeout: settings.timeout,
-        // it inputs empty environment data when active environment is the base environment
-        // this is more deterministic and avoids that script accidently manipulates baseEnvironment instead of environment
-        environment: environment._id === baseEnvironment._id ? {} : (environment?.data || {}),
-        environmentName: environment._id === baseEnvironment._id ? '' : (environment?.name || ''),
+        environment: environment?.data || {},
+        environmentName: environment?.name || '',
         baseEnvironment: baseEnvironment?.data || {},
         baseEnvironmentName: baseEnvironment?.name || '',
         clientCertificates,

@@ -412,6 +412,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
       const postMutatedContext = await tryToExecuteAfterResponseScript({
         ...requestData,
+        ...mutatedContext,
         baseEnvironment,
         cookieJar,
         response,
