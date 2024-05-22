@@ -39,7 +39,7 @@
     "@bufbuild/protobuf": "^1.8.0",
     "@connectrpc/connect": "^1.4.0",
     "@connectrpc/connect-node": "^1.4.0",
-    "@getinsomnia/node-libcurl": "^2.4.29-1",
+    "@getinsomnia/node-libcurl": "2.4.29-5",
     "@grpc/grpc-js": "^1.10.6",
     "@grpc/proto-loader": "^0.7.12",
     "@jest/globals": "^29.7.0",
