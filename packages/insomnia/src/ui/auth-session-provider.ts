@@ -78,7 +78,7 @@ export async function submitAuthCode(code: string) {
     await session.absorbKey(box.token, box.key);
   } catch (error) {
     console.error(error);
-    return error.toString();
+    return error;
   }
 }
 
