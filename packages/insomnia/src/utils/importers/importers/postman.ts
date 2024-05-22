@@ -170,16 +170,16 @@ export class ImportPostman {
     return translateHandlersInScript(scriptContent);
   };
 
-  importPostRequestScript = (events: EventList | undefined): string => {
+  importAfterResponseScript = (events: EventList | undefined): string => {
     if (events == null) {
       return '';
     }
 
-    const postRequestEvent = events.find(
+    const afterResponseEvent = events.find(
       event => event.listen === 'test'
     );
 
-    const scriptOrRows = postRequestEvent ? postRequestEvent.script : '';
+    const scriptOrRows = afterResponseEvent ? afterResponseEvent.script : '';
     if (!scriptOrRows) {
       return '';
     }
@@ -208,7 +208,7 @@ export class ImportPostman {
     }
 
     const preRequestScript = this.importPreRequestScript(event);
-    const postRequestScript = this.importPostRequestScript(event);
+    const afterResponseScript = this.importAfterResponseScript(event);
 
     return {
       parentId,
@@ -228,7 +228,7 @@ export class ImportPostman {
       body: this.importBody(request.body, headers.find(({ key }) => key === 'Content-Type')?.value),
       authentication,
       preRequestScript,
-      postRequestScript,
+      afterResponseScript,
     };
   };
 

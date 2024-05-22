@@ -209,8 +209,8 @@ export async function tryToExecutePreRequestScript(context: RequestContextForScr
   return tryToExecuteScript({ script: context.request.preRequestScript, ...context });
 };
 
-export async function tryToExecutePostRequestScript(context: RequestAndContextAndResponse) {
-  return tryToExecuteScript({ script: context.request.postRequestScript, ...context });
+export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
+  return tryToExecuteScript({ script: context.request.afterResponseScript, ...context });
 }
 
 export const tryToInterpolateRequest = async (

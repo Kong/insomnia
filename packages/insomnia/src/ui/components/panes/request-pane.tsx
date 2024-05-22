@@ -298,12 +298,12 @@ export const RequestPane: FC<Props> = ({
           </ErrorBoundary>
         </TabItem>
         <TabItem
-          key="post-request-script"
-          data-testid="post-request-script-tab"
+          key="after-response-script"
+          data-testid="after-response-script-tab"
           title={
             <div className='flex items-center gap-2'>
-              Post-request Script{' '}
-              {activeRequest.postRequestScript && (
+              After-response Script{' '}
+              {activeRequest.afterResponseScript && (
                 <span className="ml-2 p-2 border-solid border border-[--hl-md] rounded-lg">
                   <span className="flex w-2 h-2 bg-green-500 rounded-full" />
                 </span>
@@ -318,8 +318,8 @@ export const RequestPane: FC<Props> = ({
           >
             <RequestScriptEditor
               uniquenessKey={uniqueKey}
-              defaultValue={activeRequest.postRequestScript || ''}
-              onChange={postRequestScript => patchRequest(requestId, { postRequestScript })}
+              defaultValue={activeRequest.afterResponseScript || ''}
+              onChange={afterResponseScript => patchRequest(requestId, { afterResponseScript })}
               settings={settings}
             />
           </ErrorBoundary>

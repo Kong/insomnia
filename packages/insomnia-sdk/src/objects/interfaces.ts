@@ -18,6 +18,6 @@ export interface RequestContext {
     settings: Settings;
     clientCertificates: ClientCertificate[];
     cookieJar: InsomniaCookieJar;
-    // only for the post-request script
+    // only for the after-response script
     response?: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError;
 }

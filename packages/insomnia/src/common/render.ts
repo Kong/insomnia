@@ -576,7 +576,7 @@ export async function getRenderedRequestAndContext(
       type: renderedRequest.type,
       url: renderedRequest.url,
       preRequestScript: renderedRequest.preRequestScript,
-      postRequestScript: renderedRequest.postRequestScript,
+      afterResponseScript: renderedRequest.afterResponseScript,
     },
   };
 }

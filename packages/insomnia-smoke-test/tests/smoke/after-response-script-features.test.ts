@@ -3,11 +3,11 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';;
 
-test.describe('post-request features tests', async () => {
+test.describe('after-response script features tests', async () => {
     test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
     test.beforeEach(async ({ app, page }) => {
-        const text = await loadFixture('post-request-collection.yaml');
+        const text = await loadFixture('after-response-collection.yaml');
         await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
         await page.getByRole('button', { name: 'Create in project' }).click();
@@ -16,7 +16,7 @@ test.describe('post-request features tests', async () => {
         await page.getByRole('button', { name: 'Scan' }).click();
         await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-        await page.getByLabel('Post-request Scripts').click();
+        await page.getByLabel('After-response Scripts').click();
     });
 
     test('insomnia.test and insomnia.expect can work together', async ({ page }) => {
@@ -53,8 +53,8 @@ test.describe('post-request features tests', async () => {
 
         expect(bodyJson).toEqual({
             // no environment is selected so the environment value is not persisted
-            '__fromPostScript1': 'baseEnvironment',
-            '__fromPostScript2': 'collection',
+            '__fromAfterScript1': 'baseEnvironment',
+            '__fromAfterScript2': 'collection',
         });
     });
 });
