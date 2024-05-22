@@ -93,16 +93,92 @@ export const fetchRequestData = async (requestId: string) => {
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
+export const getPreRequestScriptOutput = async ({
+  request,
+  environment,
+  settings,
+  clientCertificates,
+  timelinePath,
+  responseId,
+}: Awaited<ReturnType<typeof fetchRequestData>>, workspaceId: string) => {
+  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
-export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
-  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response } = context;
-  if (!script) {
+  if (!request.preRequestScript) {
     return {
       request,
-      environment: undefined,
-      baseEnvironment: undefined,
+      environment,
+      baseEnvironment,
+      clientCertificates,
+      settings,
     };
   }
+  const mutatedContext = await tryToExecutePreRequestScript({
+    request,
+    environment,
+    timelinePath,
+    responseId,
+    baseEnvironment,
+    clientCertificates,
+    cookieJar,
+  });
+  if (!mutatedContext?.request) {
+    // exiy early if there was a problem with the pre-request script
+    // TODO: improve error message?
+    return null;
+  }
+
+  await savePatchesMadeByScript(mutatedContext, environment, baseEnvironment);
+  return {
+    request: mutatedContext.request,
+    environment: mutatedContext.environment,
+    baseEnvironment: mutatedContext.baseEnvironment || baseEnvironment,
+    clientCertificates: mutatedContext.clientCertificates || clientCertificates,
+    settings: mutatedContext.settings || settings,
+  };
+};
+
+export async function savePatchesMadeByScript(
+  mutatedContext: Awaited<ReturnType<typeof tryToExecutePreRequestScript>>,
+  environment: Environment,
+  baseEnvironment: Environment,
+) {
+  if (!mutatedContext) {
+    return;
+  }
+
+  // persist updated cookieJar if needed
+  if (mutatedContext.cookieJar) {
+    await models.cookieJar.update(
+      mutatedContext.cookieJar,
+      { cookies: mutatedContext.cookieJar.cookies },
+    );
+  }
+  // when base environment is activated, `mutatedContext.environment` points to it
+  const isActiveEnvironmentBase = mutatedContext.environment?._id === baseEnvironment._id;
+  const hasEnvironmentAndIsNotBase = mutatedContext.environment && !isActiveEnvironmentBase;
+  if (hasEnvironmentAndIsNotBase) {
+    await models.environment.update(
+      environment,
+      {
+        data: mutatedContext.environment.data,
+        dataPropertyOrder: mutatedContext.environment.dataPropertyOrder,
+      }
+    );
+  }
+  if (mutatedContext.baseEnvironment) {
+    await models.environment.update(
+      baseEnvironment,
+      {
+        data: mutatedContext.baseEnvironment.data,
+        dataPropertyOrder: mutatedContext.baseEnvironment.dataPropertyOrder,
+      }
+    );
+  }
+}
+export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
+  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response } = context;
+  invariant(script, 'script must be provided');
 
   const settings = await models.settings.get();
 
