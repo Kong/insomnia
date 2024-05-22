@@ -1,8 +1,8 @@
-with import <nixpkgs> { };
+with import <nixpkgs-unstable> { };
 
 mkShell {
   nativeBuildInputs = [
-    nodejs-20_x
+    nodejs_20
     electron_30
     stdenv.cc.cc.lib
   ];
