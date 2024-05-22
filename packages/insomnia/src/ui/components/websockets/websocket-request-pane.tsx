@@ -415,8 +415,10 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           {disabled && <PaneReadOnlyBanner />}
           <RequestHeadersEditor
             key={uniqueKey}
+            headers={activeRequest.headers}
             bulk={false}
             isDisabled={readyState}
+            requestType="WebSocketRequest"
           />
         </TabItem>
         <TabItem

@@ -24,7 +24,7 @@ import { CookieJar } from '../models/cookie-jar';
 import { Environment } from '../models/environment';
 import { MockRoute } from '../models/mock-route';
 import { MockServer } from '../models/mock-server';
-import type { Request, RequestAuthentication, RequestParameter } from '../models/request';
+import type { Request, RequestAuthentication, RequestHeader, RequestParameter } from '../models/request';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
 import type { Settings } from '../models/settings';
 import { isWorkspace, Workspace } from '../models/workspace';
@@ -48,13 +48,25 @@ export const getOrInheritAuthentication = ({ request, requestGroups }: { request
   }
   const hasParentFolders = requestGroups.length > 0;
   const closestParentFolderWithAuth = requestGroups.find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
-  const shouldCheckFolderAuth = hasParentFolders && closestParentFolderWithAuth;
+  const closestAuth = getAuthObjectOrNull(closestParentFolderWithAuth?.authentication);
+  const shouldCheckFolderAuth = hasParentFolders && closestAuth;
   if (shouldCheckFolderAuth) {
     // override auth with closest parent folder that has one set
-    return closestParentFolderWithAuth.authentication;
+    return closestAuth;
   }
+  // if no auth is specified on request or folders, default to none
   return { type: 'none' };
 };
+export function getOrInheritHeaders({ request, requestGroups }: { request: Request; requestGroups: RequestGroup[] }): RequestHeader[] {
+  // recurse over each parent folder to append headers
+  // in case of duplicate, node-libcurl joins on comma
+  const headers = requestGroups
+    .reverse()
+    .map(({ headers }) => headers || [])
+    .flat();
+  // if parent has foo: bar and child has foo: baz, request will have foo: bar, baz
+  return [...headers, ...request.headers];
+}
 
 export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
@@ -76,8 +88,7 @@ export const fetchRequestData = async (requestId: string) => {
   // check for authentication overrides in parent folders
   const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
   request.authentication = getOrInheritAuthentication({ request, requestGroups });
-  // TODO: add inherit to auth list
-
+  request.headers = getOrInheritHeaders({ request, requestGroups });
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && await models.environment.getById(activeEnvironmentId);

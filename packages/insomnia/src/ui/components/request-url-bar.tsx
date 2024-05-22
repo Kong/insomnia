@@ -9,7 +9,7 @@ import * as models from '../../models';
 import type { Request } from '../../models/request';
 import { isEventStreamRequest } from '../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../models/request-group';
-import { getOrInheritAuthentication } from '../../network/network';
+import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/network';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
@@ -158,6 +158,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         // check for authentication overrides in parent folders
         const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
         activeRequest.authentication = getOrInheritAuthentication({ request: activeRequest, requestGroups });
+        activeRequest.headers = getOrInheritHeaders({ request: activeRequest, requestGroups });
         const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
           request: activeRequest,
           environmentId,

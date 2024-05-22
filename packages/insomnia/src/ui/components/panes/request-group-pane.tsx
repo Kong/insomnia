@@ -8,6 +8,7 @@ import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
+import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { MarkdownPreview } from '../markdown-preview';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
@@ -19,6 +20,9 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ }) => {
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const uniqueKey = `${activeEnvironment?.modified}::${activeRequestGroup._id}::${gitVersion}::${activeRequestSyncVersion}`;
+  const folderHeaders = activeRequestGroup?.headers || [];
+  const headersCount = folderHeaders.filter(h => !h.disabled)?.length || 0;
+
   return (
     <>
       <Tabs aria-label="Request group pane tabs">
@@ -30,6 +34,32 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ }) => {
             <div />
             <AuthWrapper authentication={activeRequestGroup.authentication} />
           </ErrorBoundary>
+        </TabItem>
+        <TabItem
+          key="headers"
+          title={
+            <div className='flex items-center gap-2'>
+              Headers{' '}
+              {headersCount > 0 && (
+                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{headersCount}</span>
+              )}
+            </div>
+          }
+        >
+          <div className="flex flex-col relative h-full overflow-hidden">
+            <ErrorBoundary
+              key={uniqueKey}
+              errorClassName="font-error pad text-center"
+            >
+              <div className='overflow-y-auto flex-1 flex-shrink-0'>
+                <RequestHeadersEditor
+                  bulk={false}
+                  headers={folderHeaders}
+                  requestType="RequestGroup"
+                />
+              </div>
+            </ErrorBoundary>
+          </div>
         </TabItem>
         <TabItem
           key="docs"
