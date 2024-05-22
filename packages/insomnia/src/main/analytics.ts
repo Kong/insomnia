@@ -64,7 +64,7 @@ export async function trackSegmentEvent(
         properties,
         context,
         anonymousId,
-        userId: accountId,
+        userId: userSession?.accountId || '',
       }, error => {
         if (error) {
           console.warn('[analytics] Error sending segment event', error);
