@@ -15,7 +15,7 @@ window.bridge.onmessage(async (data, callback) => {
     const timeout = data.context.timeout || 5000;
     const timeoutPromise = new window.bridge.Promise(resolve => {
       setTimeout(() => {
-        resolve({ error: 'Timeout: Pre-request script took too long' });
+        resolve({ error: 'Timeout: Running script took too long' });
       }, timeout);
     });
     const result = await window.bridge.Promise.race([timeoutPromise, runPreRequestScript(data)]);

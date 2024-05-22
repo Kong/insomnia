@@ -50,6 +50,17 @@ interface Bounds {
 export function init() {
   initLocalStorage();
 }
+const stopAndWaitForHiddenBrowserWindow = async (runningHiddenBrowserWindow: BrowserWindow) => {
+  return await new Promise<void>(resolve => {
+    // overwrite the closed handler
+    runningHiddenBrowserWindow.on('closed', () => {
+      console.log('[main] restarting hidden browser window:', runningHiddenBrowserWindow.id);
+      browserWindows.delete('HiddenBrowserWindow');
+      resolve();
+    });
+    stopHiddenBrowserWindow();
+  });
+};
 
 export async function createHiddenBrowserWindow() {
   const mainWindow = browserWindows.get('Insomnia');
@@ -63,34 +74,26 @@ export async function createHiddenBrowserWindow() {
   ipcMain.removeHandler('open-channel-to-hidden-browser-window');
   // when the main window runs a script
   // if the hidden window is down, start it
-  ipcMain.handle('open-channel-to-hidden-browser-window', async event => {
-    // sync the hidden window status
-    const runningHiddenWindow = browserWindows.get('HiddenBrowserWindow');
-    const isAvailable = !hiddenWindowIsBusy && runningHiddenWindow;
-    if (isAvailable) {
-      return;
-    }
-    const isOccupied = hiddenWindowIsBusy && runningHiddenWindow;
-    if (isOccupied) {
-      // stop and sync the map
-      await new Promise<void>(resolve => {
-        invariant(runningHiddenWindow, 'hiddenBrowserWindow is running');
-        // overwrite the closed handler
-        runningHiddenWindow.on('closed', () => {
-          if (runningHiddenWindow) {
-            console.log('[main] restarting hidden browser window:', runningHiddenWindow.id);
-            browserWindows.delete('HiddenBrowserWindow');
-          }
-          resolve();
-        });
-        stopHiddenBrowserWindow();
-        hiddenWindowIsBusy = false;
-      });
-    }
-
-    const windowWasClosedUnexpectedly = hiddenWindowIsBusy && !runningHiddenWindow;
+  ipcMain.handle('open-channel-to-hidden-browser-window', async (event, isPortAlive: boolean) => {
+    const runningHiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
+    const isRunning = !!runningHiddenBrowserWindow;
+    // if window crashed
+    const windowWasClosedUnexpectedly = hiddenWindowIsBusy && !isRunning;
     if (windowWasClosedUnexpectedly) {
       hiddenWindowIsBusy = false;
+    }
+
+    const hiddenWindowIsNotBusy = !hiddenWindowIsBusy;
+    const isHealthy = hiddenWindowIsNotBusy && isRunning && isPortAlive;
+    if (isHealthy) {
+      return;
+    }
+
+    // if window froze
+    const isRunningButUnhealthy = isRunning && !isHealthy;
+    if (isRunningButUnhealthy) {
+      // stop and wait for window close event and sync the map and busy status
+      await stopAndWaitForHiddenBrowserWindow(runningHiddenBrowserWindow);
     }
 
     console.log('[main] hidden window is down, restarting');
@@ -160,6 +163,7 @@ export async function createHiddenBrowserWindow() {
 
 export function stopHiddenBrowserWindow() {
   browserWindows.get('HiddenBrowserWindow')?.close();
+  hiddenWindowIsBusy = false;
 }
 
 export function createWindow(): ElectronBrowserWindow {
