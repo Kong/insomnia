@@ -49,7 +49,7 @@ export async function trackSegmentEvent(
   properties?: Record<string, any>,
 ) {
   const settings = await models.settings.get();
-  const { accountId } = await models.userSession.get();
+  const { accountId = '' } = await models.userSession.get();
 
   const allowAnalytics = settings.enableAnalytics || accountId;
   if (allowAnalytics) {
