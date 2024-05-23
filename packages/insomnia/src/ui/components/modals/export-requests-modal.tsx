@@ -44,7 +44,7 @@ export const RequestGroupRow: FC<{
     return (
       <li key={requestGroup._id} className="flex flex-col">
         <div className="flex items-center gap-2 p-2">
-          <Checkbox isIndeterminate={isIndeterminate} slot={null} isSelected={isSelected} onChange={isSelected => handleSetItemSelected(requestGroup._id, isSelected)} className="group p-0 flex items-center h-full">
+          <Checkbox aria-label={requestGroup.name} isIndeterminate={isIndeterminate} slot={null} isSelected={isSelected} onChange={isSelected => handleSetItemSelected(requestGroup._id, isSelected)} className="group p-0 flex items-center h-full">
             <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
               <Icon icon={isIndeterminate ? 'minus' : 'check'} className='opacity-0 group-data-[selected]:opacity-100 group-data-[indeterminate]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
             </div>
@@ -78,6 +78,7 @@ export const RequestRow: FC<{
       <li className="flex items-center gap-2 p-2">
         <Checkbox
           slot={null}
+          aria-label={request.name}
           isSelected={isSelected}
           onChange={isSelected => {
             handleSetItemSelected(request._id, isSelected);
@@ -91,7 +92,6 @@ export const RequestRow: FC<{
         <div className="w-full flex items-center gap-2">
           {isRequest(request) && (
             <span
-              aria-hidden
               className={
                 `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
                   ${{
@@ -109,12 +109,12 @@ export const RequestRow: FC<{
             </span>
           )}
           {isWebSocketRequest(request) && (
-            <span aria-hidden className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+            <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
               WS
             </span>
           )}
           {isGrpcRequest(request) && (
-            <span aria-hidden className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+            <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
               gRPC
             </span>
           )}
