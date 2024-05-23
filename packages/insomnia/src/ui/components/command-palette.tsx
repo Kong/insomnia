@@ -196,6 +196,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       id: request.item._id,
       icon: isRequest(request.item) ? (
         <span
+          aria-hidden
           className={
             `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
               ${{
@@ -212,11 +213,11 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           {getMethodShortHand(request.item)}
         </span>
       ) : isWebSocketRequest(request.item) ? (
-        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+          <span aria-hidden className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
           WS
         </span>
         ) : isGrpcRequest(request.item) && (
-        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+            <span aria-hidden className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
           gRPC
         </span>
       ),
@@ -277,6 +278,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       id: request.item._id,
       icon: isRequest(request.item) ? (
         <span
+          aria-hidden
           className={
             `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
               ${{
@@ -293,11 +295,11 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           {getMethodShortHand(request.item)}
         </span>
       ) : isWebSocketRequest(request.item) ? (
-        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+          <span aria-hidden className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
           WS
         </span>
       ) : isGrpcRequest(request.item) && (
-        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+        <span aria-hidden className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
           gRPC
         </span>
       ),

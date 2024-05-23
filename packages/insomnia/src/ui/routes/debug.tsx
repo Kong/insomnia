@@ -1106,6 +1106,7 @@ export const Debug: FC = () => {
                         <Button slot="drag" className="hidden" />
                         {isRequest(item.doc) && (
                           <span
+                            aria-hidden
                             className={
                               `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
                               ${{
@@ -1123,12 +1124,12 @@ export const Debug: FC = () => {
                           </span>
                         )}
                         {isWebSocketRequest(item.doc) && (
-                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+                          <span aria-hidden className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
                             WS
                           </span>
                         )}
                         {isGrpcRequest(item.doc) && (
-                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+                          <span aria-hidden className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
                             gRPC
                           </span>
                         )}
@@ -1140,8 +1141,8 @@ export const Debug: FC = () => {
                         )}
                         <EditableInput
                           value={getRequestNameOrFallback(item.doc)}
-                          name="request name"
-                          ariaLabel="request name"
+                          name="Request name"
+                          ariaLabel={item.doc.name}
                           className="px-1 flex-1"
                           onSingleClick={() => {
                             if (item && isRequestGroup(item.doc)) {

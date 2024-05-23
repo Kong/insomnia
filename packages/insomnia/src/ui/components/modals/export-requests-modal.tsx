@@ -91,6 +91,7 @@ export const RequestRow: FC<{
         <div className="w-full flex items-center gap-2">
           {isRequest(request) && (
             <span
+              aria-hidden
               className={
                 `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
                   ${{
@@ -108,12 +109,12 @@ export const RequestRow: FC<{
             </span>
           )}
           {isWebSocketRequest(request) && (
-            <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+            <span aria-hidden className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
               WS
             </span>
           )}
           {isGrpcRequest(request) && (
-            <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+            <span aria-hidden className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
               gRPC
             </span>
           )}
