@@ -96,3 +96,37 @@ test.describe('test hidden window handling', async () => {
     await expect(statusTag).toContainText('200 OK');
   });
 });
+
+test('window should be restarted if it hangs', async ({ app, page }) => {
+  test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
+
+  // load collection
+  const text = await loadFixture('pre-request-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
+
+  await page.getByRole('button', { name: 'Create in project' }).click();
+  await page.getByRole('menuitemradio', { name: 'Import' }).click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+  // update timeout
+  await page.getByTestId('settings-button').click();
+  await page.getByLabel('Request timeout (ms)').fill('100');
+  await page.getByRole('button', { name: '' }).click();
+
+  // send the request with infinite loop script
+  await page.getByText('Pre-request Scripts').click();
+  await page.getByLabel('Request Collection').getByTestId('infinite loop').press('Enter');
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+  await page.getByText('Timeout: Hidden browser window is not responding').click();
+
+  // send the another script with normal script
+  await page.getByLabel('Request Collection').getByTestId('simple log').press('Enter');
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+  // it should still work
+  const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
+  await page.waitForSelector('[data-testid="response-status-tag"]:visible');
+  await expect(statusTag).toContainText('200 OK');
+});

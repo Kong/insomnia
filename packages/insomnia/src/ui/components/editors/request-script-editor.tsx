@@ -2,8 +2,8 @@ import { Snippet } from 'codemirror';
 import { CookieObject, Environment, InsomniaObject, Request as ScriptRequest, RequestInfo, Url, Variables } from 'insomnia-sdk';
 import React, { FC, useRef } from 'react';
 
-import { translateHandlersInScript } from '../../../../src/utils/importers/importers/postman';
 import { Settings } from '../../../models/settings';
+import { translateHandlersInScript } from '../../../utils/importers/importers/postman';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 
@@ -58,6 +58,18 @@ const updateRequestAuth =
 );`;
 const requireAModule = "const atob = require('atob');";
 
+const getStatusCode = 'const statusCode = insomnia.response.code;';
+const getStatusMsg = 'const status = insomnia.response.status;';
+const getRespTime = 'const responseTime = insomnia.response.responseTime;';
+const getJsonBody = 'const jsonBody = insomnia.response.json();';
+const getTextBody = 'const textBody = insomnia.response.text();';
+const findHeader =
+  `const header = insomnia.response.headers.find(
+    header => header.key === 'Content-Type',
+    {},
+);`;
+const getCookies = 'const cookies = insomnia.response.cookies.toObject();';
+
 const lintOptions = {
   globals: {
     // https://jshint.com/docs/options/
@@ -80,7 +92,7 @@ const lintOptions = {
 // TODO: introduce this functionality for other objects, such as Url, UrlMatchPattern and so on
 // TODO: introduce function arguments
 // TODO: provide snippets for environment keys if possible
-function getPreRequestScriptSnippets(insomniaObject: InsomniaObject, path: string): Snippet[] {
+function getRequestScriptSnippets(insomniaObject: InsomniaObject, path: string): Snippet[] {
   let snippets: Snippet[] = [];
 
   const refs = new Set();
@@ -117,17 +129,17 @@ function getPreRequestScriptSnippets(insomniaObject: InsomniaObject, path: strin
       });
     } else if (Array.isArray(value)) {
       for (const item of value) {
-        snippets = snippets.concat(getPreRequestScriptSnippets(item, `${path}.${key}`));
+        snippets = snippets.concat(getRequestScriptSnippets(item, `${path}.${key}`));
       }
     } else {
-      snippets = snippets.concat(getPreRequestScriptSnippets(value, `${path}.${key}`));
+      snippets = snippets.concat(getRequestScriptSnippets(value, `${path}.${key}`));
     }
   }
 
   return snippets;
 }
 
-export const PreRequestScriptEditor: FC<Props> = ({
+export const RequestScriptEditor: FC<Props> = ({
   className,
   defaultValue,
   onChange,
@@ -154,7 +166,7 @@ export const PreRequestScriptEditor: FC<Props> = ({
   };
 
   // TODO(george): Add more to this object to provide improved autocomplete
-  const preRequestScriptSnippets = getPreRequestScriptSnippets(
+  const requestScriptSnippets = getRequestScriptSnippets(
     new InsomniaObject({
       globals: new Environment('globals', {}),
       iterationData: new Environment('iterationData', {}),
@@ -199,8 +211,8 @@ export const PreRequestScriptEditor: FC<Props> = ({
     <div className='h-full flex flex-col'>
       <div className="flex-1">
         <CodeEditor
+          id={`script-editor-${uniquenessKey}`}
           key={uniquenessKey}
-          id="pre-request-script-editor"
           disableContextMenu={true}
           showPrettifyButton={true}
           uniquenessKey={uniquenessKey}
@@ -211,7 +223,7 @@ export const PreRequestScriptEditor: FC<Props> = ({
           placeholder="..."
           lintOptions={lintOptions}
           ref={editorRef}
-          getAutocompleteSnippets={() => preRequestScriptSnippets}
+          getAutocompleteSnippets={() => requestScriptSnippets}
           onPaste={translateHandlersInScript}
         />
       </div>
@@ -380,6 +392,70 @@ export const PreRequestScriptEditor: FC<Props> = ({
             />
           </DropdownItem>
         </Dropdown>
+
+        <Dropdown
+          aria-label='Response Handling'
+          placement='top left'
+          triggerButton={
+            <DropdownButton>
+              <ItemContent
+                icon="code"
+                label='Response Handling'
+              />
+            </DropdownButton>
+          }
+        >
+          <DropdownItem textValue='Get status code' arial-label={'Get status code'}>
+            <ItemContent
+              icon="circle-info"
+              label='Get status code'
+              onClick={() => addSnippet(getStatusCode)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Get status message' arial-label={'Get status message'}>
+            <ItemContent
+              icon="circle-info"
+              label='Get status message'
+              onClick={() => addSnippet(getStatusMsg)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Get response time' arial-label={'Get response time'}>
+            <ItemContent
+              icon="circle-info"
+              label='Get response time'
+              onClick={() => addSnippet(getRespTime)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Get body as JSON' arial-label={'Get body as JSON'}>
+            <ItemContent
+              icon="circle-info"
+              label='Get body as JSON'
+              onClick={() => addSnippet(getJsonBody)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Get body as text' arial-label={'Get body as text'}>
+            <ItemContent
+              icon="circle-info"
+              label='Get body as text'
+              onClick={() => addSnippet(getTextBody)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Find a header by name' arial-label={'Find a header by name'}>
+            <ItemContent
+              icon="circle-info"
+              label='Find a header by name'
+              onClick={() => addSnippet(findHeader)}
+            />
+          </DropdownItem>
+          <DropdownItem textValue='Get cookies' arial-label={'Get cookies'}>
+            <ItemContent
+              icon="circle-info"
+              label='Get cookies'
+              onClick={() => addSnippet(getCookies)}
+            />
+          </DropdownItem>
+        </Dropdown>
+
         <Dropdown
           aria-label='Misc'
           placement='top left'

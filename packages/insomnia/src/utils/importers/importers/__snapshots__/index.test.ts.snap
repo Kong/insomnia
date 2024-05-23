@@ -3842,6 +3842,7 @@ exports[`Fixtures Import postman api-key-default-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "addTo": "header",
         "disabled": false,
@@ -3883,6 +3884,7 @@ exports[`Fixtures Import postman api-key-header-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "addTo": "header",
         "disabled": false,
@@ -3924,6 +3926,7 @@ exports[`Fixtures Import postman api-key-queryParams-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "addTo": "queryParams",
         "disabled": false,
@@ -3965,6 +3968,7 @@ exports[`Fixtures Import postman aws-signature-auth-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessKeyId": "aws-access-key",
         "disabled": false,
@@ -4008,6 +4012,7 @@ exports[`Fixtures Import postman aws-signature-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessKeyId": "aws-access-key",
         "disabled": false,
@@ -4051,6 +4056,7 @@ exports[`Fixtures Import postman basic-auth-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "basic-password",
@@ -4091,6 +4097,7 @@ exports[`Fixtures Import postman basic-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "basic-password",
@@ -4131,6 +4138,7 @@ exports[`Fixtures Import postman bearer-token-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "prefix": "",
@@ -4171,6 +4179,7 @@ exports[`Fixtures Import postman bearer-token-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "prefix": "",
@@ -4211,6 +4220,7 @@ exports[`Fixtures Import postman complex-url-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "",
@@ -4252,6 +4262,7 @@ exports[`Fixtures Import postman complex-url-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "",
@@ -4302,6 +4313,7 @@ exports[`Fixtures Import postman complex-v2_0_fromHeaders-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "prefix": "",
@@ -4340,6 +4352,7 @@ exports[`Fixtures Import postman complex-v2_0_fromHeaders-input.json 1`] = `
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessKeyId": "<accessKeyId>",
         "disabled": false,
@@ -4390,6 +4403,7 @@ exports[`Fixtures Import postman complex-v2_0_fromHeaders-input.json 1`] = `
     {
       "_id": "__REQ_3__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "abc123",
@@ -4428,6 +4442,7 @@ exports[`Fixtures Import postman complex-v2_0_fromHeaders-input.json 1`] = `
     {
       "_id": "__REQ_4__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "",
@@ -4473,6 +4488,7 @@ Child projects are provided as references; i.e. they only contain the <code>self
     {
       "_id": "__REQ_5__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "Callback%20URL",
         "consumerKey": "Consumer%20Key",
@@ -4557,6 +4573,7 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "password",
@@ -4593,6 +4610,7 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "password",
@@ -4622,6 +4640,7 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_3__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "",
@@ -4640,6 +4659,7 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_4__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "Request with empty raw body",
@@ -4655,6 +4675,7 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_5__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "Request with unknown body",
@@ -4670,6 +4691,7 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_6__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "application/graphql",
@@ -4717,6 +4739,7 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "password",
@@ -4759,6 +4782,7 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "password",
@@ -4788,6 +4812,7 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_3__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "",
@@ -4806,6 +4831,7 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_4__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "Request with unknown body",
@@ -4821,6 +4847,7 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_5__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "Request with empty raw body",
@@ -4836,6 +4863,7 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_6__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "application/graphql",
@@ -4874,6 +4902,7 @@ exports[`Fixtures Import postman digest-auth-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "guest",
@@ -4914,6 +4943,7 @@ exports[`Fixtures Import postman digest-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "password": "guest",
@@ -4954,6 +4984,7 @@ exports[`Fixtures Import postman faker-vars-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "disabled": false,
         "prefix": "",
@@ -5009,6 +5040,7 @@ exports[`Fixtures Import postman minimal-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "",
@@ -5044,6 +5076,7 @@ exports[`Fixtures Import postman minimal-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {},
       "description": "",
@@ -5079,6 +5112,7 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "consumer-key-value",
@@ -5109,6 +5143,7 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "consumer-key-value",
@@ -5139,6 +5174,7 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_3__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "plaintext-consumer-key-value",
@@ -5169,6 +5205,7 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_4__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "sha256-consumer-key-value",
@@ -5199,6 +5236,7 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_5__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "sha1-consumer-key-value",
@@ -5249,6 +5287,7 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "consumer-key-value",
@@ -5279,6 +5318,7 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "consumer-key-value",
@@ -5309,6 +5349,7 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_3__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "plaintext-consumer-key-value",
@@ -5339,6 +5380,7 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_4__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "sha256-consumer-key-value",
@@ -5369,6 +5411,7 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_5__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "callback": "",
         "consumerKey": "sha1-consumer-key-value",
@@ -5419,6 +5462,7 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "",
         "authorizationUrl": "",
@@ -5442,6 +5486,7 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_0-input.json 1`] = `
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "",
         "authorizationUrl": "",
@@ -5485,6 +5530,7 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "test",
         "authorizationUrl": "test",
@@ -5517,6 +5563,7 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "test",
         "authorizationUrl": "test",
@@ -5549,6 +5596,7 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_3__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "test",
         "authorizationUrl": "test",
@@ -5581,6 +5629,7 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_4__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "test",
         "authorizationUrl": "test",
@@ -5613,6 +5662,7 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_5__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "test",
         "authorizationUrl": "test",
@@ -5665,6 +5715,7 @@ exports[`Fixtures Import postman postman-export-oauth2-v2_1-input.json 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {
         "accessTokenUrl": "exampleAccessTokenUrl",
         "authorizationUrl": "exampleAuthorizeUrl",
@@ -5693,6 +5744,42 @@ exports[`Fixtures Import postman postman-export-oauth2-v2_1-input.json 1`] = `
       "parentId": "__GRP_1__",
       "preRequestScript": "",
       "url": "",
+    },
+  ],
+}
+`;
+
+exports[`Fixtures Import postman scripts-import-v2_1-input.json 1`] = `
+{
+  "__export_date": "",
+  "__export_format": 4,
+  "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
+  "resources": [
+    {
+      "_id": "__GRP_1__",
+      "_type": "request_group",
+      "description": "",
+      "environment": {},
+      "metaSortKey": -1622117984000,
+      "name": "New Collection",
+      "parentId": "__WORKSPACE_ID__",
+    },
+    {
+      "_id": "__REQ_1__",
+      "_type": "request",
+      "afterResponseScript": "console.log('this is test script');",
+      "authentication": {},
+      "body": {},
+      "description": "",
+      "headers": [],
+      "metaSortKey": -1622117983999,
+      "method": "GET",
+      "name": "New Request",
+      "parameters": [],
+      "parentId": "__GRP_1__",
+      "preRequestScript": "console.log('this is pre-request script');",
+      "url": "httpbin.org/get",
     },
   ],
 }
@@ -8064,6 +8151,7 @@ exports[`Fixtures Import wsdl addition-input.wsdl 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "text/xml",
@@ -8147,6 +8235,7 @@ exports[`Fixtures Import wsdl calculator-input.wsdl 1`] = `
     {
       "_id": "__REQ_1__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "text/xml",
@@ -8201,6 +8290,7 @@ exports[`Fixtures Import wsdl calculator-input.wsdl 1`] = `
     {
       "_id": "__REQ_2__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "text/xml",
@@ -8255,6 +8345,7 @@ exports[`Fixtures Import wsdl calculator-input.wsdl 1`] = `
     {
       "_id": "__REQ_3__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "text/xml",
@@ -8309,6 +8400,7 @@ exports[`Fixtures Import wsdl calculator-input.wsdl 1`] = `
     {
       "_id": "__REQ_4__",
       "_type": "request",
+      "afterResponseScript": "",
       "authentication": {},
       "body": {
         "mimeType": "text/xml",

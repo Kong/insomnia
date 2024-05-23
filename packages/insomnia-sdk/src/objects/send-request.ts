@@ -244,7 +244,6 @@ async function curlOutputToResponse(
             body: '',
             stream: undefined,
             responseTime: result.patch.elapsedTime,
-            status: lastRedirect.reason,
             originalRequest,
         });
     }
@@ -266,7 +265,6 @@ async function curlOutputToResponse(
         // because it is inaccurate to differentiate if body is binary
         stream: undefined,
         responseTime: result.patch.elapsedTime,
-        status: lastRedirect.reason,
         originalRequest,
     });
 }

@@ -11,6 +11,7 @@ import { unsupportedError } from './properties';
 import { Request as ScriptRequest, RequestOptions, toScriptRequestBody } from './request';
 import { RequestInfo } from './request-info';
 import { Response as ScriptResponse } from './response';
+import { readBodyFromPath, toScriptResponse } from './response';
 import { sendRequest } from './send-request';
 import { test } from './test';
 import { toUrlObject } from './urls';
@@ -23,6 +24,7 @@ export class InsomniaObject {
     public request: ScriptRequest;
     public cookies: CookieObject;
     public info: RequestInfo;
+    public response?: ScriptResponse;
 
     private clientCertificates: ClientCertificate[];
     private _expect = expect;
@@ -47,6 +49,7 @@ export class InsomniaObject {
             clientCertificates: ClientCertificate[];
             cookies: CookieObject;
             requestInfo: RequestInfo;
+            response?: ScriptResponse;
         },
         log: (...msgs: any[]) => void,
     ) {
@@ -57,6 +60,7 @@ export class InsomniaObject {
         this._iterationData = rawObj.iterationData;
         this.variables = rawObj.variables;
         this.cookies = rawObj.cookies;
+        this.response = rawObj.response;
 
         this.info = rawObj.requestInfo;
         this.request = rawObj.request;
@@ -108,11 +112,12 @@ export class InsomniaObject {
             clientCertificates: this.clientCertificates,
             cookieJar: this.cookies.jar().toInsomniaCookieJar(),
             info: this.info.toObject(),
+            response: this.response ? this.response.toObject() : undefined,
         };
     };
 }
 
-export function initInsomniaObject(
+export async function initInsomniaObject(
     rawObj: RequestContext,
     log: (...args: any[]) => void,
 ) {
@@ -206,6 +211,9 @@ export function initInsomniaObject(
     };
     const request = new ScriptRequest(reqOpt);
 
+    const responseBody = await readBodyFromPath(rawObj.response);
+    const response = rawObj.response ? toScriptResponse(request, rawObj.response, responseBody) : undefined;
+
     return new InsomniaObject(
         {
             globals,
@@ -218,6 +226,7 @@ export function initInsomniaObject(
             clientCertificates: rawObj.clientCertificates,
             cookies,
             requestInfo,
+            response,
         },
         log,
     );

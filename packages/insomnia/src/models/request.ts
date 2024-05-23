@@ -252,6 +252,7 @@ export interface BaseRequest {
   method: string;
   body: RequestBody;
   preRequestScript: string;
+  afterResponseScript: string;
   parameters: RequestParameter[];
   pathParameters: RequestPathParameter[];
   headers: RequestHeader[];
@@ -289,6 +290,7 @@ export function init(): BaseRequest {
     method: METHOD_GET,
     body: {},
     preRequestScript: '',
+    afterResponseScript: '',
     parameters: [],
     headers: [],
     authentication: {},

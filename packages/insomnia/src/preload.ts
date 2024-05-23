@@ -71,7 +71,7 @@ const main: Window['main'] = {
     },
   },
   hiddenBrowserWindow: {
-    runPreRequestScript: options => new Promise(async (resolve, reject) => {
+    runScript: options => new Promise(async (resolve, reject) => {
       const isPortAlive = ports.get('hiddenWindowPort') !== undefined;
       await ipcRenderer.invoke('open-channel-to-hidden-browser-window', isPortAlive);
 
