@@ -27,7 +27,7 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
   await page.getByLabel('Smoke tests').click();
-  await page.getByTestId('sends request with cookie and get cookie in response').getByLabel('request name').click();
+  await page.getByTestId('sends request with cookie and get cookie in response').getByRole('button', { name: 'request name' }).click();
   await page.getByTestId('OneLineEditor').getByText('http://127.0.0.1:4010/cookies').click();
   const requestSwitchKeyboardShortcut = process.platform === 'darwin' ? 'Meta+p' : 'Control+p';
   await page.locator('body').press(requestSwitchKeyboardShortcut);
