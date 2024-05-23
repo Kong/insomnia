@@ -49,7 +49,7 @@ test.describe('test hidden window handling', async () => {
 
     await page.getByText('Pre-request Scripts').click();
     await page.getByLabel('Request Collection').getByTestId('Long running task').press('Enter');
-    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
 
     await page.getByText('Timeout: Running script took too long').click();
     await page.getByRole('tab', { name: 'Timeline' }).click();
@@ -57,7 +57,7 @@ test.describe('test hidden window handling', async () => {
     const windows = await app.windows();
     const hiddenWindow = windows[1];
     hiddenWindow.close();
-    await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByRole('button', { name: 'Send', exact: true }).click();
     // as the hidden window is restarted, it should not show "Timeout: Hidden browser window is not responding"
     await page.getByText('Timeout: Running script took too long').click();
   });
@@ -83,12 +83,12 @@ test.describe('test hidden window handling', async () => {
     // send the request with infinite loop script
     await page.getByText('Pre-request Scripts').click();
     await page.getByLabel('Request Collection').getByTestId('infinite loop').press('Enter');
-    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
     await page.getByText('Timeout: Hidden browser window is not responding').click();
 
     // send the another script with normal script
     await page.getByLabel('Request Collection').getByTestId('simple log').press('Enter');
-    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
 
     // it should still work
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
@@ -118,12 +118,12 @@ test('window should be restarted if it hangs', async ({ app, page }) => {
   // send the request with infinite loop script
   await page.getByText('Pre-request Scripts').click();
   await page.getByLabel('Request Collection').getByTestId('infinite loop').press('Enter');
-  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
   await page.getByText('Timeout: Hidden browser window is not responding').click();
 
   // send the another script with normal script
   await page.getByLabel('Request Collection').getByTestId('simple log').press('Enter');
-  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
 
   // it should still work
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');

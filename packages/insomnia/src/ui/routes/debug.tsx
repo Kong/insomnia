@@ -1151,7 +1151,7 @@ export const Debug: FC = () => {
                         )}
                         <EditableInput
                           value={getRequestNameOrFallback(item.doc)}
-                          name="Request name"
+                          name="request name"
                           ariaLabel={label}
                           className="px-1 flex-1"
                           onSingleClick={() => {
