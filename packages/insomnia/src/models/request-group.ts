@@ -1,6 +1,6 @@
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
-import { RequestAuthentication } from './request';
+import { RequestAuthentication, RequestHeader } from './request';
 
 export const name = 'Folder';
 
@@ -19,7 +19,8 @@ interface BaseRequestGroup {
   metaSortKey: number;
   preRequestScript: string;
   postRequestScript: string;
-  authentication: RequestAuthentication | {};
+  authentication?: RequestAuthentication | {};
+  headers?: RequestHeader[];
 }
 
 export type RequestGroup = BaseModel & BaseRequestGroup;
@@ -38,6 +39,7 @@ export function init(): BaseRequestGroup {
     preRequestScript: '',
     postRequestScript: '',
     authentication: {},
+    headers: [],
   };
 }
 

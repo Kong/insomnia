@@ -49,9 +49,9 @@ export async function trackSegmentEvent(
   properties?: Record<string, any>,
 ) {
   const settings = await models.settings.get();
-  const { accountId } = await models.userSession.get();
+  const userSession = await models.userSession.get();
 
-  const allowAnalytics = settings.enableAnalytics || accountId;
+  const allowAnalytics = settings.enableAnalytics || userSession.accountId;
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
@@ -64,7 +64,7 @@ export async function trackSegmentEvent(
         properties,
         context,
         anonymousId,
-        userId: accountId,
+        userId: userSession?.accountId || '',
       }, error => {
         if (error) {
           console.warn('[analytics] Error sending segment event', error);

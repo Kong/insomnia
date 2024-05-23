@@ -252,7 +252,11 @@ export const RequestPane: FC<Props> = ({
               errorClassName="font-error pad text-center"
             >
               <div className='overflow-y-auto flex-1 flex-shrink-0'>
-                <RequestHeadersEditor bulk={settings.useBulkHeaderEditor} />
+                <RequestHeadersEditor
+                  bulk={settings.useBulkHeaderEditor}
+                  headers={activeRequest.headers}
+                  requestType="Request"
+                />
               </div>
             </ErrorBoundary>
 
