@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [core@9.3.0-beta.0] - 2024-05-23
+
+## What's Changed
+
+* copy changelog from release notes by @jackkav in https://github.com/Kong/insomnia/pull/7410
+* can navigate to folder and inherit auth by @jackkav in https://github.com/Kong/insomnia/pull/7353
+* feat(Auth screen): Improve copy and add animation by @gatzjames in https://github.com/Kong/insomnia/pull/7429
+* fix(Sync): Display errors on sync branches modal by @gatzjames in https://github.com/Kong/insomnia/pull/7433
+* fix(Mock Server): Enable auto-push for mock servers by @gatzjames in https://github.com/Kong/insomnia/pull/7434
+* fix(CodeEditor): UI alignment in toolbar/filter dialog by @gatzjames in https://github.com/Kong/insomnia/pull/7436
+* disable context menu override by @jackkav in https://github.com/Kong/insomnia/pull/7431
+* fix: init the hidden window when renderers are reloaded by @ihexxa in https://github.com/Kong/insomnia/pull/7428
+* disable find in one line editor by @jackkav in https://github.com/Kong/insomnia/pull/7442
+* feat: folder inheritance headers by @jackkav in https://github.com/Kong/insomnia/pull/7437
+* fix: unhandled typerror [no-ticket] by @filfreire in https://github.com/Kong/insomnia/pull/7444
+* bump libcurl by @jackkav in https://github.com/Kong/insomnia/pull/7443
+* feat: enable major features of the after-response script by @ihexxa in https://github.com/Kong/insomnia/pull/7411
+
+
+**Full Changelog**: https://github.com/Kong/insomnia/compare/core@9.2.0...core@9.3.0-beta.0
+
 ## [core@9.2.0] - 2024-05-15
 
 ## What's Changed
