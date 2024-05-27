@@ -133,10 +133,10 @@ test.describe('Debug-Sidebar', async () => {
     });
 
     test('Rename a request by clicking', async ({ page }) => {
-      await page.getByTestId('example http').getByLabel('request name').dblclick();
-      await page.getByRole('textbox', { name: 'request name' }).fill('new name');
+      await page.getByTestId('example http').getByLabel('GET example http', { exact: true }).dblclick();
+      await page.getByRole('textbox', { name: 'GET example http' }).fill('new name');
       await page.getByLabel('Request Collection').click();
-      await expect(page.getByTestId('new name').getByLabel('request name')).toContainText('new name');
+      await expect(page.getByTestId('new name').getByLabel('GET new name', { exact: true })).toContainText('new name');
     });
 
     test('Create a new HTTP request', async ({ page }) => {
