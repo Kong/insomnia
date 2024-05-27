@@ -57,9 +57,17 @@ test.describe('test hidden window handling', async () => {
     const windows = await app.windows();
     const hiddenWindow = windows[1];
     hiddenWindow.close();
-    await page.getByRole('button', { name: 'Send', exact: true }).click();
-    // as the hidden window is restarted, it should not show "Timeout: Hidden browser window is not responding"
-    await page.getByText('Timeout: Running script took too long').click();
+
+    await page.getByTestId('settings-button').click();
+    await page.getByLabel('Request timeout (ms)').fill('6000');
+    await page.getByRole('button', { name: '' }).click();
+
+    await page.getByRole('button', { name: 'Send' }).click();
+
+    // it should still work
+    const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
+    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
+    await expect(statusTag).toContainText('200 OK');
   });
 
   test('window should be restarted if it hangs', async ({ app, page }) => {
