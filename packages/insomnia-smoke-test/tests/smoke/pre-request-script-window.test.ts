@@ -62,7 +62,7 @@ test.describe('test hidden window handling', async () => {
     await page.getByLabel('Request timeout (ms)').fill('6000');
     await page.getByRole('button', { name: '' }).click();
 
-    await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // it should still work
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
