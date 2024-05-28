@@ -127,41 +127,46 @@ function sortOrganizations(accountId: string, organizations: Organization[]): Or
   ];
 }
 
-export const indexLoader: LoaderFunction = async () => {
-  const { id: sessionId, accountId } = await userSession.getOrCreate();
-  if (sessionId) {
-    try {
-      const organizationsResult = await insomniaFetch<OrganizationsResponse | void>({
+async function syncOrganization(sessionId: string, accountId: string) {
+  try {
+    const [organizationsResult, user, currentPlan] = await Promise.all([
+      insomniaFetch<OrganizationsResponse | void>({
         method: 'GET',
         path: '/v1/organizations',
         sessionId,
-      });
-      const user = await insomniaFetch<UserProfileResponse | void>({
+      }),
+      insomniaFetch<UserProfileResponse | void>({
         method: 'GET',
         path: '/v1/user/profile',
         sessionId,
-      });
-
-      const currentPlan = await insomniaFetch<CurrentPlan | void>({
+      }),
+      insomniaFetch<CurrentPlan | void>({
         method: 'GET',
         path: '/v1/billing/current-plan',
         sessionId,
-      });
+      }),
+    ]);
 
-      invariant(organizationsResult && organizationsResult.organizations, 'Failed to load organizations');
-      invariant(user && user.id, 'Failed to load user');
-      invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
+    invariant(organizationsResult && organizationsResult.organizations, 'Failed to load organizations');
+    invariant(user && user.id, 'Failed to load user');
+    invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
 
-      const { organizations } = organizationsResult;
+    const { organizations } = organizationsResult;
 
-      invariant(accountId, 'Account ID is not defined');
+    invariant(accountId, 'Account ID is not defined');
 
-      localStorage.setItem(`${accountId}:organizations`, JSON.stringify(sortOrganizations(accountId, organizations)));
-      localStorage.setItem(`${accountId}:user`, JSON.stringify(user));
-      localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlan));
-    } catch (error) {
-      console.log('Failed to load Organizations', error);
-    }
+    localStorage.setItem(`${accountId}:organizations`, JSON.stringify(sortOrganizations(accountId, organizations)));
+    localStorage.setItem(`${accountId}:user`, JSON.stringify(user));
+    localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlan));
+  } catch (error) {
+    console.log('Failed to load Organizations', error);
+  }
+}
+
+export const indexLoader: LoaderFunction = async () => {
+  const { id: sessionId, accountId } = await userSession.getOrCreate();
+  if (sessionId) {
+    await syncOrganization(sessionId, accountId);
 
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
     invariant(organizations, 'Failed to fetch organizations.');
@@ -214,36 +219,7 @@ export const syncOrganizationsAction: ActionFunction = async () => {
   const { id: sessionId, accountId } = await userSession.getOrCreate();
 
   if (sessionId) {
-    try {
-
-      const organizationsResult = await insomniaFetch<OrganizationsResponse | void>({
-        method: 'GET',
-        path: '/v1/organizations',
-        sessionId,
-      });
-
-      const user = await insomniaFetch<UserProfileResponse | void>({
-        method: 'GET',
-        path: '/v1/user/profile',
-        sessionId,
-      });
-
-      const currentPlan = await insomniaFetch<CurrentPlan | void>({
-        method: 'GET',
-        path: '/v1/billing/current-plan',
-        sessionId,
-      });
-
-      invariant(organizationsResult, 'Failed to load organizations');
-      invariant(user, 'Failed to load user');
-      invariant(currentPlan, 'Failed to load current plan');
-      invariant(accountId, 'Account ID is not defined');
-      localStorage.setItem(`${accountId}:organizations`, JSON.stringify(sortOrganizations(accountId, organizationsResult.organizations)));
-      localStorage.setItem(`${accountId}:user`, JSON.stringify(user));
-      localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlan));
-    } catch (error) {
-      console.log('Failed to load Organizations', error);
-    }
+    await syncOrganization(sessionId, accountId);
   }
 
   return null;

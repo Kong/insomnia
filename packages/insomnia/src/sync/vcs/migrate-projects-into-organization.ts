@@ -17,16 +17,16 @@ import { Project, RemoteProject } from '../../models/project';
 // which is now the remoteId for tracking the projects within an org
 
 export const shouldMigrateProjectUnderOrganization = async () => {
-  const localProjectCount = await database.count<Project>(models.project.type, {
-    remoteId: null,
-    parentId: null,
-    _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
-  });
-
-  const legacyRemoteProjectCount = await database.count<RemoteProject>(models.project.type, {
-    remoteId: { $ne: null },
-    parentId: null,
-  });
+  const [localProjectCount, legacyRemoteProjectCount] = await Promise.all([
+    database.count(models.project.type, {
+      remoteId: null,
+      parentId: null,
+    }),
+    database.count(models.project.type, {
+      remoteId: { $ne: null },
+      parentId: null,
+    }),
+  ]);
 
   return localProjectCount > 0 || legacyRemoteProjectCount > 0;
 };
@@ -37,29 +37,38 @@ export const migrateProjectsIntoOrganization = async ({
   personalOrganization: Organization;
   }) => {
   // Legacy remote projects without organizations
-  const legacyRemoteProjects = await database.find<RemoteProject>(models.project.type, {
-    remoteId: { $ne: null },
-    parentId: null,
-  });
+  // Local projects without organizations except scratchpad
+  const [legacyRemoteProjects, localProjects] = await Promise.all([
+    database.find<RemoteProject>(models.project.type, {
+      remoteId: { $ne: null },
+      parentId: null,
+    }),
+    database.find<Project>(models.project.type, {
+      remoteId: null,
+      parentId: null,
+      _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
+    }),
+  ]);
+
+  const updatePromises = [];
   // Legacy remoteId should be orgId and legacy _id should be remoteId
   for (const remoteProject of legacyRemoteProjects) {
-    await models.project.update(remoteProject, {
-      parentId: remoteProject.remoteId,
-      remoteId: remoteProject._id,
-    });
+    updatePromises.push(
+      models.project.update(remoteProject, {
+        parentId: remoteProject.remoteId,
+        remoteId: remoteProject._id,
+      })
+    );
   }
-
-  // Local projects without organizations except scratchpad
-  const localProjects = await database.find<Project>(models.project.type, {
-    remoteId: null,
-    parentId: null,
-    _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
-  });
 
   // Assign all local projects to personal organization
   for (const localProject of localProjects) {
-    await models.project.update(localProject, {
-      parentId: personalOrganization.id,
-    });
+    updatePromises.push(
+      models.project.update(localProject, {
+        parentId: personalOrganization.id,
+      })
+    );
   }
+
+  await Promise.all(updatePromises);
 };
