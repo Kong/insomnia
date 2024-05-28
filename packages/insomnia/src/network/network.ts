@@ -200,7 +200,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         reject(new Error('Timeout: Hidden browser window is not responding'));
         // Add one extra second to ensure the hidden browser window has had a chance to return its timeout
         // TODO: restart the hidden browser window
-      }, timeout + 1000);
+      }, timeout + 2000);
     });
     // const isBaseEnvironmentSelected = environment._id === baseEnvironment._id;
     // if (isBaseEnvironmentSelected) {
