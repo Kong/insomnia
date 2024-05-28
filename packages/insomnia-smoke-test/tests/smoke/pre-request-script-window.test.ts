@@ -52,7 +52,8 @@ test.describe('test hidden window handling', async () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
 
     await page.waitForSelector('[data-testid="response-status-tag"]:visible');
-    await page.getByText('Timeout: Running script took too long').click();
+
+    expect(await page.locator('.pane-two pre').innerText()).toEqual('Timeout: Running script took too long');
     await page.getByRole('tab', { name: 'Timeline' }).click();
     await page.getByRole('tab', { name: 'Preview ' }).click();
     const windows = await app.windows();
