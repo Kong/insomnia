@@ -51,6 +51,7 @@ test.describe('test hidden window handling', async () => {
     await page.getByLabel('Request Collection').getByTestId('Long running task').press('Enter');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
 
+    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
     await page.getByText('Timeout: Running script took too long').click();
     await page.getByRole('tab', { name: 'Timeline' }).click();
     await page.getByRole('tab', { name: 'Preview ' }).click();
