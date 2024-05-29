@@ -187,7 +187,10 @@ async function syncTeamProjects({
     // filter by this organization so no legacy data can be accidentally removed, because legacy had null parentId
     parentId: organizationId,
     // Remote ID is not in the list of remote projects
-    remoteId: { $nin: teamProjects.map(p => p.id) },
+    remoteId: {
+      $nin: teamProjects.map(p => p.id),
+      $ne: null,
+    },
   });
 
   await Promise.all(removedRemoteProjects.map(async prj => {
