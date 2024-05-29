@@ -38,7 +38,7 @@ resources:
     environmentPropertyOrder: null
     metaSortKey: -1715935256495
     preRequestScript: ""
-    postRequestScript: ""
+    afterResponseScript: ""
     authentication: {}
     _type: request_group
   - _id: fld_e45987966c224b63b68b09b34687209c
@@ -51,7 +51,7 @@ resources:
     environmentPropertyOrder: null
     metaSortKey: -1715935030239
     preRequestScript: ""
-    postRequestScript: ""
+    afterResponseScript: ""
     authentication:
       accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
       authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
