@@ -1086,10 +1086,19 @@ export const Debug: FC = () => {
               >
                 {virtualItem => {
                   const item = visibleCollection[virtualItem.index];
+                  let label = item.doc.name;
+                  if (isRequest(item.doc)) {
+                    label = `${getMethodShortHand(item.doc)} ${label}`;
+                  } else if (isWebSocketRequest(item.doc)) {
+                    label = `WS ${label}`;
+                  } else if (isGrpcRequest(item.doc)) {
+                    label = `gRPC ${label}`;
+                  }
+
                   return (
                     <GridListItem
                       className="group outline-none absolute top-0 left-0 select-none w-full"
-                      textValue={item.doc.name}
+                      textValue={label}
                       data-testid={item.doc.name}
                       style={{
                         height: `${virtualItem.size}`,
@@ -1106,6 +1115,8 @@ export const Debug: FC = () => {
                         <Button slot="drag" className="hidden" />
                         {isRequest(item.doc) && (
                           <span
+                            aria-hidden
+                            role="presentation"
                             className={
                               `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
                               ${{
@@ -1123,12 +1134,12 @@ export const Debug: FC = () => {
                           </span>
                         )}
                         {isWebSocketRequest(item.doc) && (
-                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+                          <span aria-hidden role="presentation" className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
                             WS
                           </span>
                         )}
                         {isGrpcRequest(item.doc) && (
-                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+                          <span aria-hidden role="presentation" className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
                             gRPC
                           </span>
                         )}
@@ -1141,7 +1152,7 @@ export const Debug: FC = () => {
                         <EditableInput
                           value={getRequestNameOrFallback(item.doc)}
                           name="request name"
-                          ariaLabel="request name"
+                          ariaLabel={label}
                           className="px-1 flex-1"
                           onSingleClick={() => {
                             if (item && isRequestGroup(item.doc)) {

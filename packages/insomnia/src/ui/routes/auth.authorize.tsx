@@ -13,11 +13,12 @@ export const action: ActionFunction = async ({
   const data = await request.json();
 
   invariant(typeof data?.code === 'string', 'Expected code to be a string');
-  const fetchError = await submitAuthCode(data.code);
-  if (fetchError) {
+  const error = await submitAuthCode(data.code);
+  if (error) {
+    const humanReadableError = error === 'TypeError: Failed to fetch' ? 'Network failed, try again.' : error;
     return {
       errors: {
-        message: 'Invalid code: ' + fetchError,
+        message: humanReadableError,
       },
     };
   }

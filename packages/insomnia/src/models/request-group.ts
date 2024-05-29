@@ -18,7 +18,7 @@ interface BaseRequestGroup {
   environmentPropertyOrder: Record<string, any> | null;
   metaSortKey: number;
   preRequestScript: string;
-  postRequestScript: string;
+  afterResponseScript: string;
   authentication?: RequestAuthentication | {};
   headers?: RequestHeader[];
 }
@@ -37,7 +37,7 @@ export function init(): BaseRequestGroup {
     environmentPropertyOrder: null,
     metaSortKey: -1 * Date.now(),
     preRequestScript: '',
-    postRequestScript: '',
+    afterResponseScript: '',
     authentication: {},
     headers: [],
   };

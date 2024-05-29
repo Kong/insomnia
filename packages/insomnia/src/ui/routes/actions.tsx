@@ -17,7 +17,7 @@ import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
 import { UnitTestSuite } from '../../models/unit-test-suite';
-import { isCollection, scopeToActivity, Workspace } from '../../models/workspace';
+import { isCollection, isMockServer, scopeToActivity, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
@@ -391,10 +391,16 @@ export const createNewWorkspaceAction: ActionFunction = async ({
     });
   }
 
+  let event = SegmentEvent.documentCreate;
+
+  if (isCollection(workspace)) {
+    event = SegmentEvent.collectionCreate;
+  } else if (isMockServer(workspace)) {
+    event = SegmentEvent.mockCreate;
+  }
+
   window.main.trackSegmentEvent({
-    event: isCollection(workspace)
-      ? SegmentEvent.collectionCreate
-      : SegmentEvent.documentCreate,
+    event: event,
   });
 
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
