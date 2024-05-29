@@ -1,4 +1,4 @@
-type StepName = 'Executing pre-request script' | 'Rendering request' | 'Preparing and sending request';
+type StepName = 'Executing pre-request script' | 'Rendering request' | 'Preparing and sending request' | 'Executing after-response script';
 
 export interface TimingRecord {
     stepName: StepName;

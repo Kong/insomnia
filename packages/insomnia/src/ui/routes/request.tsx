@@ -451,6 +451,16 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
 
     mutatedContext.request.afterResponseScript = afterResponseScript;
     if (requestData.request.afterResponseScript) {
+      addRequestTimingRecord(
+        requestId,
+        {
+          stepName: 'Executing after-response script',
+          isDone: false,
+          startedAt: Date.now(),
+          endedAt: 0,
+        },
+      );
+
       const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
       const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
