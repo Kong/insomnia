@@ -186,8 +186,13 @@ async function syncTeamProjects({
   const removedRemoteProjects = await database.find<Project>(models.project.type, {
     // filter by this organization so no legacy data can be accidentally removed, because legacy had null parentId
     parentId: organizationId,
-    // Remote ID is not in the list of remote projects
-    remoteId: { $nin: teamProjects.map(p => p.id) },
+    // Remote ID is not in the list of remote projects.
+    // add `$ne: null` condition because if remoteId is already null, we dont need to remove it again.
+    // nedb use append-only format, all updates and deletes actually result in lines added
+    remoteId: {
+      $nin: teamProjects.map(p => p.id),
+      $ne: null,
+    },
   });
 
   await Promise.all(removedRemoteProjects.map(async prj => {
