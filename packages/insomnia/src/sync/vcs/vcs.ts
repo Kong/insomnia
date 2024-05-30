@@ -626,6 +626,7 @@ export class VCS {
     return this._queryCreateProject(rootDocumentId, name, teamId, teamProjectId, teamKeys.memberKeys);
   }
 
+  // TODO: may be we can create another push function for initial push, so that we can reduce some api calls
   async push({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
     await this._getOrCreateRemoteBackendProject({ teamId, teamProjectId });
     const branch = await this._getCurrentBranch();

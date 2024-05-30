@@ -320,21 +320,23 @@ async function getAllLocalFiles({
   projectId: string;
 }) {
   const projectWorkspaces = await models.workspace.findByParentId(projectId);
-  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
-    parentId: {
-      $in: projectWorkspaces.map(w => w._id),
-    },
-  });
-  const apiSpecs = await database.find<ApiSpec>(models.apiSpec.type, {
-    parentId: {
-      $in: projectWorkspaces.map(w => w._id),
-    },
-  });
-  const mockServers = await database.find<MockServer>(models.mockServer.type, {
-    parentId: {
-      $in: projectWorkspaces.map(w => w._id),
-    },
-  });
+  const [workspaceMetas, apiSpecs, mockServers] = await Promise.all([
+    database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+      parentId: {
+        $in: projectWorkspaces.map(w => w._id),
+      },
+    }),
+    database.find<ApiSpec>(models.apiSpec.type, {
+      parentId: {
+        $in: projectWorkspaces.map(w => w._id),
+      },
+    }),
+    database.find<MockServer>(models.mockServer.type, {
+      parentId: {
+        $in: projectWorkspaces.map(w => w._id),
+      },
+    }),
+  ]);
 
   const files: InsomniaFile[] = projectWorkspaces.map(workspace => {
     const apiSpec = apiSpecs.find(spec => spec.parentId === workspace._id);
@@ -421,9 +423,11 @@ async function getAllRemoteFiles({
     invariant(remoteId, 'Project is not a remote project');
     const vcs = VCSInstance();
 
-    const allPulledBackendProjectsForRemoteId = (await vcs.localBackendProjects()).filter(p => p.id === remoteId);
+    const [allPulledBackendProjectsForRemoteId, allFetchedRemoteBackendProjectsForRemoteId] = await Promise.all([
+      vcs.localBackendProjects().then(projects => projects.filter(p => p.id === remoteId)),
     // Remote backend projects are fetched from the backend since they are not stored locally
-    const allFetchedRemoteBackendProjectsForRemoteId = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
+      vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId }),
+    ]);
 
     // Get all workspaces that are connected to backend projects and under the current project
     const workspacesWithBackendProjects = await database.find<Workspace>(models.workspace.type, {
@@ -496,6 +500,37 @@ export const projectIdLoader: LoaderFunction = async ({ params }): Promise<Proje
   };
 };
 
+interface LearningFeature {
+  active: boolean;
+  title: string;
+  message: string;
+  cta: string;
+  url: string;
+}
+const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
+  let learningFeature = fallbackLearningFeature;
+  const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
+  const lastFetched = lastFetchedString ? parseInt(lastFetchedString, 10) : 0;
+  const oneDay = 86400000;
+  const hasOneDayPassedSinceLastFetch = (Date.now() - lastFetched) > oneDay;
+  const wasDismissed = window.localStorage.getItem('learning-feature-dismissed');
+  const wasNotDismissedAndOneDayHasPassed = !wasDismissed && hasOneDayPassedSinceLastFetch;
+  if (wasNotDismissedAndOneDayHasPassed) {
+    try {
+      learningFeature = await insomniaFetch<LearningFeature>({
+        method: 'GET',
+        path: '/insomnia-production-public-assets/inapp-learning.json',
+        origin: 'https://storage.googleapis.com',
+        sessionId: '',
+      });
+      window.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
+    } catch (err) {
+      console.log('Could not fetch learning feature data.');
+    }
+  }
+  return learningFeature;
+};
+
 export const loader: LoaderFunction = async ({
   params,
 }): Promise<ProjectLoaderData> => {
@@ -533,42 +568,18 @@ export const loader: LoaderFunction = async ({
   const project = await models.project.getById(projectId);
   invariant(project, `Project was not found ${projectId}`);
 
-  const localFiles = await getAllLocalFiles({ projectId });
-  const remoteFiles = await getAllRemoteFiles({ projectId, organizationId });
+  const [localFiles, remoteFiles, organizationProjects = [], learningFeature] = await Promise.all([
+    getAllLocalFiles({ projectId }),
+    getAllRemoteFiles({ projectId, organizationId }),
+    database.find<Project>(models.project.type, {
+      parentId: organizationId,
+    }),
+    getLearningFeature(fallbackLearningFeature),
+  ]);
+
   const files = [...localFiles, ...remoteFiles];
 
-  const organizationProjects = await database.find<Project>(models.project.type, {
-    parentId: organizationId,
-  }) || [];
-
   const projects = sortProjects(organizationProjects);
-
-  let learningFeature = fallbackLearningFeature;
-  const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
-  const lastFetched = lastFetchedString ? parseInt(lastFetchedString, 10) : 0;
-  const oneDay = 86400000;
-  const hasOneDayPassedSinceLastFetch = (Date.now() - lastFetched) > oneDay;
-  const wasDismissed = window.localStorage.getItem('learning-feature-dismissed');
-  const wasNotDismissedAndOneDayHasPassed = !wasDismissed && hasOneDayPassedSinceLastFetch;
-  if (wasNotDismissedAndOneDayHasPassed) {
-    try {
-      learningFeature = await insomniaFetch<{
-        active: boolean;
-        title: string;
-        message: string;
-        cta: string;
-        url: string;
-      }>({
-        method: 'GET',
-        path: '/insomnia-production-public-assets/inapp-learning.json',
-        origin: 'https://storage.googleapis.com',
-        sessionId: '',
-      });
-      window.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
-    } catch (err) {
-      console.log('Could not fetch learning feature data.');
-    }
-  }
 
   return {
     files,
