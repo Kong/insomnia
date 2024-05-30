@@ -70,6 +70,7 @@ resources:
       insomnia.environment.set('__fromAfterScript', 'environment');
       insomnia.baseEnvironment.set('__fromAfterScript1', 'baseEnvironment');
       insomnia.collectionVariables.set('__fromAfterScript2', 'collection');
+      insomnia.environment.replaceIn('{{ $timestamp }}');
     body:
       mimeType: "application/json"
       text: |-
