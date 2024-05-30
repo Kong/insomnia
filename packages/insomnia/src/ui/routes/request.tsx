@@ -370,6 +370,10 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     if (mutatedContext === null) {
       return null;
     }
+    // disable after-response script here to avoiding rendering it
+    const afterResponseScript = `${mutatedContext.request.afterResponseScript}`;
+    mutatedContext.request.afterResponseScript = '';
+
     const renderedResult = await tryToInterpolateRequest(
       mutatedContext.request,
       mutatedContext.environment,
@@ -407,9 +411,12 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const responsePatch = await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context);
     const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
     const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
+
+    mutatedContext.request.afterResponseScript = afterResponseScript;
     if (requestData.request.afterResponseScript) {
       const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
       const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+
       const postMutatedContext = await tryToExecuteAfterResponseScript({
         ...requestData,
         ...mutatedContext,
