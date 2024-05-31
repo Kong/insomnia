@@ -2,7 +2,7 @@ import { ProcessEnvOptions, spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
-import { getVersion } from '../util';
+import { getPackageNameMacOS, getVersion } from '../util';
 
 const prefixPkgArtifacts = (msg: string) => `[pkg-inso-artifacts] ${msg}`;
 
@@ -14,7 +14,8 @@ const isWindows = () => platform === 'win32';
 const getArchiveName = () => {
   const version = getVersion();
   if (isMac()) {
-    return `inso-macos-${version}.zip`;
+    const packageName = getPackageNameMacOS();
+    return `${packageName}-${version}.zip`;
   }
 
   if (isLinux()) {
