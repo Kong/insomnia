@@ -20,6 +20,9 @@ jobs:
           - os: macos-latest
             csc_link_secret: DESIGNER_MAC_CSC_LINK
             csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
+          - os: macos-13
+            csc_link_secret: DESIGNER_MAC_CSC_LINK
+            csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
           - os: windows-latest
             csc_link_secret: DESIGNER_WINDOWS_CSC_LINK
             csc_key_password_secret: DESIGNER_WINDOWS_CSC_KEY_PASSWORD
@@ -52,7 +55,7 @@ jobs:
           CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
 
       - name: Package app (Windows and Linux)
-        if: matrix.os != 'macos-latest'
+        if: matrix.os != 'macos-latest' && matrix.os != 'macos-13'
         shell: bash
         run: npm run app-package
         env:
@@ -71,7 +74,7 @@ jobs:
           VERSION: ${{ env.INSO_VERSION }}
 
       - name: Code-sign & create Inso CLI installer (macOS only)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' || matrix.os == 'macos-13'
         run: ./src/scripts/macos-pkg.sh
         shell: bash
         working-directory: packages/insomnia-inso
@@ -84,7 +87,7 @@ jobs:
           VERSION: ${{ env.INSO_VERSION }}
 
       - name: Notarize Inso CLI installer (macOS only)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' || matrix.os == 'macos-13'
         uses: lando/notarize-action@v2
         with:
           product-path: packages/insomnia-inso/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
@@ -94,13 +97,13 @@ jobs:
           appstore-connect-team-id: FX44YY62GV
 
       - name: Staple Inso CLI installer (macOS only)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' || matrix.os == 'macos-13'
         uses: BoundfoxStudios/action-xcode-staple@v1
         with:
           product-path: packages/insomnia-inso/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
 
       - name: Notarize Inso CLI binary (macOS only)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' || matrix.os == 'macos-13'
         uses: lando/notarize-action@v2
         with:
           product-path: packages/insomnia-inso/binaries/inso
