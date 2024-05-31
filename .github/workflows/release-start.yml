@@ -55,7 +55,7 @@ jobs:
 
     # handle botched alpha/beta releases, e.g. for iterations that were merged before running release-publish
       - name: App version (alpha/beta, with a specific version)
-        if: github.event.inputs.channel != 'stable' && github.event.inputs.version && github.event.inputs.version != '' && contains(github.event.inputs.version, "-${{ github.event.inputs.channel }}")
+        if: github.event.inputs.channel != 'stable' && github.event.inputs.version != '' && contains(github.event.inputs.version, "-${{ github.event.inputs.channel }}")
         run: npm --workspaces version "${{ github.event.inputs.version }}"
 
       - name: App version (alpha/beta, patch latest)
