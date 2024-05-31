@@ -20,6 +20,11 @@ jobs:
     timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
+
+      - name: debug variables
+        run: |
+          echo "channel: ${{ github.event.inputs.channel }}"
+          echo "version: ${{ github.event.inputs.version }}"
       - name: Checkout branch
         uses: actions/checkout@v4
         with:
