@@ -1,0 +1,53 @@
+name: Inso CLI macos compatibility
+
+on:
+  merge_group:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  build:
+    if: always()
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-12, macos-13, macos-14, macos-11]
+        url: [
+            'v9.3.0-alpha.0-experimental/inso-macos-13-9.3.0-alpha.0.zip',
+            'v9.3.0-alpha.0-experimental/inso-macos-latest-9.3.0-alpha.0.zip',
+            'lib%409.2.0/inso-macos-9.2.0.zip'
+        ]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      continue-on-error: true
+
+    - name: Download Inso ZIP file
+      run: curl -L -o inso.zip https://github.com/Kong/insomnia/releases/download/${{ matrix.url }}
+      continue-on-error: true
+
+    - name: Unzip Inso
+      run: unzip inso.zip -d inso
+      continue-on-error: true
+
+    - name: List files to verify unzip
+      run: ls inso
+      continue-on-error: true
+
+    - name: Make Inso executable
+      run: chmod +x inso/inso
+      continue-on-error: true
+
+    - name: Run Inso
+      run: ./inso/inso --version
+
