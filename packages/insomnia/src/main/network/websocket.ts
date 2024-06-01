@@ -220,7 +220,7 @@ const openWebSocketConnection = async (
       'on': true,
       'global': settings.followRedirects,
     }[request.settingFollowRedirects] ?? true;
-    const protocols = lowerCasedEnabledHeaders['sec-websocket-protocol'];
+    const protocols = lowerCasedEnabledHeaders['sec-websocket-protocol']?.split(',').map(p => p.trim());
     const ws = new WebSocket(url, protocols, {
       headers: lowerCasedEnabledHeaders,
       ca: caCertificate,
