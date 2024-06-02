@@ -74,7 +74,8 @@ test.describe('Environment Editor', async () => {
 
     // Add number variable to request body
     await page.getByRole('tab', { name: 'Plain' }).click();
-    await page.locator('pre').filter({ hasText: '_.exampleObject.anotherNumber' }).click();
+    await page.locator('pre').filter({ hasText: '_.exampleObject.anotherNumber' }).press('Enter');
+
     await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
     await page.getByTestId('CodeEditor').getByRole('textbox').press('Control+ ');
     await page.getByText('_.testNumber').click();

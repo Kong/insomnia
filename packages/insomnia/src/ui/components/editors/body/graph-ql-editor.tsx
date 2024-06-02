@@ -1,12 +1,14 @@
 import { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
-import { GraphQLInfoOptions } from 'codemirror-graphql/info';
-import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
+import type { GraphQLHintOptions } from 'codemirror-graphql/hint';
+import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
+import type { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import type { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
 import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, Kind, NonNullTypeNode, OperationDefinitionNode, parse, typeFromAST } from 'graphql';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { Maybe } from 'graphql-language-service';
 import React, { FC, useEffect, useRef, useState } from 'react';
+import { Button } from 'react-aria-components';
 import ReactDOM from 'react-dom';
 import { useLocalStorage } from 'react-use';
 
@@ -430,7 +432,7 @@ export const GraphQLEditor: FC<Props> = ({
   }
 
   let graphqlOptions: {
-    hintOptions: ShowHintOptions;
+    hintOptions: GraphQLHintOptions & ShowHintOptions;
     infoOptions: GraphQLInfoOptions;
     jumpOptions: ModifiedGraphQLJumpOptions;
     lintOptions: LintOptions;
@@ -449,6 +451,7 @@ export const GraphQLEditor: FC<Props> = ({
     graphqlOptions = {
       hintOptions: {
         completeSingle: false,
+        schema,
       },
       infoOptions: {
         schema,
@@ -646,10 +649,10 @@ export const GraphQLEditor: FC<Props> = ({
           placeholder=""
         />
       </div>
-      <div className="pane__footer">
-        <button className="pull-right btn btn--compact" onClick={beautifyRequestBody}>
+      <div className="flex flex-row items-center border-solid border-t border-[--hl-md] h-[--line-height-sm] text-[--font-size-sm]">
+        <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all" onPress={beautifyRequestBody}>
           Prettify GraphQL
-        </button>
+        </Button>
       </div>
 
       {graphQLExplorerPortal}

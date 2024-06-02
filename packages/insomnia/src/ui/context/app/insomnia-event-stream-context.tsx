@@ -1,7 +1,8 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useFetcher, useParams, useRevalidator, useRouteLoaderData } from 'react-router-dom';
 
-import { ProjectLoaderData } from '../../routes/project';
+import { insomniaFetch } from '../../../ui/insomniaFetch';
+import { ProjectIdLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 
@@ -76,9 +77,9 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   };
 
   const { userSession } = useRootLoaderData();
-  const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
+  const projectData = useRouteLoaderData('/project/:projectId') as ProjectIdLoaderData | null;
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
-  const remoteId = projectData?.activeProject.remoteId || workspaceData?.activeProject.remoteId;
+  const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
   const syncOrganizationsFetcher = useFetcher();
@@ -92,7 +93,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
       const sessionId = userSession.id;
       if (sessionId && remoteId) {
         try {
-          const response = await window.main.insomniaFetch<{
+          const response = await insomniaFetch<{
             data?: UserPresence[];
             }>({
               path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,

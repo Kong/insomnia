@@ -257,7 +257,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
   return (
     <Fragment>
       <MenuTrigger>
-        <div className="flex items-center h-9 gap-4 px-[--padding-md] w-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+        <div className="flex items-center h-[--line-height-sm] gap-4 px-[--padding-md] w-full aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
           <Button
             aria-label="Insomnia Sync"
             className="flex-1 flex items-center gap-2 truncate"

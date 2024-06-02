@@ -4,8 +4,9 @@ import { useRouteLoaderData } from 'react-router-dom';
 import { toKebabCase } from '../../../../../common/misc';
 import { invariant } from '../../../../../utils/invariant';
 import { useNunjucks } from '../../../../context/nunjucks/use-nunjucks';
-import { useRequestPatcher } from '../../../../hooks/use-request';
+import { useRequestGroupPatcher, useRequestPatcher } from '../../../../hooks/use-request';
 import { RequestLoaderData } from '../../../../routes/request';
+import { RequestGroupLoaderData } from '../../../../routes/request-group';
 import { showModal } from '../../../modals';
 import { CodePromptModal } from '../../../modals/code-prompt-modal';
 import { AuthRow } from './auth-row';
@@ -30,13 +31,20 @@ interface Props {
 }
 
 export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help }) => {
-  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  invariant('privateKey' in authentication, 'must have privateKey property in authentication object');
+  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
   const patchRequest = useRequestPatcher();
+  const patchRequestGroup = useRequestGroupPatcher();
+  const patcher = Boolean(reqData) ? patchRequest : patchRequestGroup;
+
+  const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
+  invariant('privateKey' in authentication, 'must have privateKey property in authentication object');
+
   const { handleGetRenderContext, handleRender } = useNunjucks();
 
   const privateKey = authentication[property];
-  const onChange = useCallback((value: string) => patchRequest(requestId, { authentication: { ...authentication, [property]: value } }), [authentication, patchRequest, property, requestId]);
+  const onChange = useCallback((value: string) => patcher(_id, { authentication: { ...authentication, [property]: value } }),
+    [_id, authentication, patcher, property]);
 
   const editPrivateKey = () => {
     showModal(CodePromptModal, {

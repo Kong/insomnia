@@ -1,7 +1,7 @@
 import type { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
-import { exportHarRequest } from '../../../common/har';
+import { exportHarWithRequest } from '../../../common/har';
 import { Request } from '../../../models/request';
 import { CopyButton } from '../base/copy-button';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
@@ -81,7 +81,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
 
     // Some clients need a content-length for the request to succeed
     const addContentLength = Boolean((TO_ADD_CONTENT_LENGTH[targetOrFallback.key] || []).find(c => c === clientOrFallback.key));
-    const har = await exportHarRequest(request._id, props.environmentId, addContentLength);
+    const har = await exportHarWithRequest(request, props.environmentId, addContentLength);
     if (har) {
       const snippet = new HTTPSnippet(har);
       const cmd = snippet.convert(targetOrFallback.key, clientOrFallback.key) || '';

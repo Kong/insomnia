@@ -7,6 +7,7 @@ import {
   MenuTrigger,
   Popover,
   ProgressBar,
+  ToggleButton,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -16,7 +17,6 @@ import {
   NavLink,
   Outlet,
   redirect,
-  ShouldRevalidateFunction,
   useFetcher,
   useLoaderData,
   useNavigate,
@@ -35,6 +35,7 @@ import { Project } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
+import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
@@ -106,12 +107,6 @@ interface CurrentPlan {
   type: PersonalPlanType;
 };
 
-export const organizationsData: OrganizationLoaderData = {
-  organizations: [],
-  user: undefined,
-  currentPlan: undefined,
-};
-
 function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
   const home = organizations.find(organization => isPersonalOrganization(organization) && isOwnerOfOrganization({
     organization,
@@ -132,39 +127,51 @@ function sortOrganizations(accountId: string, organizations: Organization[]): Or
   ];
 }
 
-export const indexLoader: LoaderFunction = async () => {
-  const { id: sessionId, accountId } = await userSession.getOrCreate();
-  if (sessionId) {
-    try {
-      const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
+async function syncOrganization(sessionId: string, accountId: string) {
+  try {
+    const [organizationsResult, user, currentPlan] = await Promise.all([
+      insomniaFetch<OrganizationsResponse | void>({
         method: 'GET',
         path: '/v1/organizations',
         sessionId,
-      });
-
-      const user = await window.main.insomniaFetch<UserProfileResponse | void>({
+      }),
+      insomniaFetch<UserProfileResponse | void>({
         method: 'GET',
         path: '/v1/user/profile',
         sessionId,
-      });
-
-      const currentPlan = await window.main.insomniaFetch<CurrentPlan | void>({
+      }),
+      insomniaFetch<CurrentPlan | void>({
         method: 'GET',
         path: '/v1/billing/current-plan',
         sessionId,
-      });
+      }),
+    ]);
 
-      invariant(organizationsResult && organizationsResult.organizations, 'Failed to load organizations');
-      invariant(user && user.id, 'Failed to load user');
-      invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
+    invariant(organizationsResult && organizationsResult.organizations, 'Failed to load organizations');
+    invariant(user && user.id, 'Failed to load user');
+    invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
 
-      const { organizations } = organizationsResult;
+    const { organizations } = organizationsResult;
 
-      invariant(accountId, 'Account ID is not defined');
-      organizationsData.organizations = sortOrganizations(accountId, organizations);
-      organizationsData.user = user;
-      organizationsData.currentPlan = currentPlan;
-      const personalOrganization = organizations.filter(isPersonalOrganization)
+    invariant(accountId, 'Account ID is not defined');
+
+    localStorage.setItem(`${accountId}:organizations`, JSON.stringify(sortOrganizations(accountId, organizations)));
+    localStorage.setItem(`${accountId}:user`, JSON.stringify(user));
+    localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlan));
+  } catch (error) {
+    console.log('Failed to load Organizations', error);
+  }
+}
+
+export const indexLoader: LoaderFunction = async () => {
+  const { id: sessionId, accountId } = await userSession.getOrCreate();
+  if (sessionId) {
+    await syncOrganization(sessionId, accountId);
+
+    const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+    invariant(organizations, 'Failed to fetch organizations.');
+
+    const personalOrganization = organizations.filter(isPersonalOrganization)
         .find(organization =>
           isOwnerOfOrganization({
             organization,
@@ -202,11 +209,6 @@ export const indexLoader: LoaderFunction = async () => {
       if (organizations.length > 0) {
         return redirect(`/organization/${organizations[0].id}`);
       }
-    } catch (error) {
-      console.log('Failed to load Organizations', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Network connectivity issue: Failed to load Organizations. ${errorMessage}`);
-    }
   }
 
   await session.logout();
@@ -217,36 +219,7 @@ export const syncOrganizationsAction: ActionFunction = async () => {
   const { id: sessionId, accountId } = await userSession.getOrCreate();
 
   if (sessionId) {
-    try {
-
-      const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
-        method: 'GET',
-        path: '/v1/organizations',
-        sessionId,
-      });
-
-      const user = await window.main.insomniaFetch<UserProfileResponse | void>({
-        method: 'GET',
-        path: '/v1/user/profile',
-        sessionId,
-      });
-
-      const currentPlan = await window.main.insomniaFetch<CurrentPlan | void>({
-        method: 'GET',
-        path: '/v1/billing/current-plan',
-        sessionId,
-      });
-
-      invariant(organizationsResult, 'Failed to load organizations');
-      invariant(user, 'Failed to load user');
-      invariant(currentPlan, 'Failed to load current plan');
-      invariant(accountId, 'Account ID is not defined');
-      organizationsData.organizations = sortOrganizations(accountId, organizationsResult.organizations);
-      organizationsData.user = user;
-      organizationsData.currentPlan = currentPlan;
-    } catch (error) {
-      console.log('Failed to load Organizations', error);
-    }
+    await syncOrganization(sessionId, accountId);
   }
 
   return null;
@@ -259,9 +232,17 @@ export interface OrganizationLoaderData {
 }
 
 export const loader: LoaderFunction = async () => {
-  const { id } = await userSession.getOrCreate();
+  const { id, accountId } = await userSession.getOrCreate();
   if (id) {
-    return organizationsData;
+    const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+    const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as UserProfileResponse;
+    const currentPlan = JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan;
+
+    return {
+      organizations: sortOrganizations(accountId, organizations),
+      user,
+      currentPlan,
+    };
   } else {
     return {
       organizations: [],
@@ -297,9 +278,9 @@ export interface OrganizationFeatureLoaderData {
   storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
 }
 
-export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<OrganizationFeatureLoaderData> => {
+export const organizationPermissionsLoader: LoaderFunction = async ({ params }): Promise<OrganizationFeatureLoaderData> => {
   const { organizationId } = params as { organizationId: string };
-  const { id: sessionId } = await userSession.getOrCreate();
+  const { id: sessionId, accountId } = await userSession.getOrCreate();
   const fallbackFeatures = {
     gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
@@ -320,20 +301,21 @@ export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<Organ
     };
   }
 
-  const organization = organizationsData.organizations.find(o => o.id === organizationId);
+  const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+  const organization = organizations.find(o => o.id === organizationId);
 
   if (!organization) {
     throw redirect('/organization');
   }
 
   try {
-    const response = await window.main.insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
+    const response = await insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
       method: 'GET',
       path: `/v1/organizations/${organizationId}/features`,
       sessionId,
     });
 
-    const ruleResponse = await window.main.insomniaFetch<StorageRule | undefined>({
+    const ruleResponse = await insomniaFetch<StorageRule | undefined>({
       method: 'GET',
       path: `/v1/organizations/${organizationId}/storage-rule`,
       sessionId,
@@ -355,15 +337,6 @@ export const singleOrgLoader: LoaderFunction = async ({ params }): Promise<Organ
 
 export const useOrganizationLoaderData = () => {
   return useRouteLoaderData('/organization') as OrganizationLoaderData;
-};
-
-export const shouldOrganizationsRevalidate: ShouldRevalidateFunction = ({
-  currentParams,
-  nextParams,
-}) => {
-  const isSwitchingBetweenOrganizations = currentParams.organizationId !== nextParams.organizationId;
-
-  return isSwitchingBetweenOrganizations;
 };
 
 const UpgradeButton = ({
@@ -451,6 +424,8 @@ const OrganizationRoute = () => {
     };
   }, []);
 
+  const [isOrganizationSidebarOpen, setIsOganizationSidebarOpen] = useLocalStorage('organizationSidebarOpen', true);
+
   const {
     generating: loadingAI,
     progress: loadingAIProgress,
@@ -459,8 +434,8 @@ const OrganizationRoute = () => {
   return (
     <InsomniaEventStreamProvider>
       <div className="w-full h-full">
-        <div className={`w-full h-full divide-x divide-solid divide-y divide-[--hl-md] ${isScratchPadBannerVisible ? 'grid-template-app-layout-with-banner' : 'grid-template-app-layout'} grid relative bg-[--color-bg]`}>
-          <header className="[grid-area:Header] grid grid-cols-3 items-center">
+        <div className={`w-full h-full divide-x divide-solid divide-[--hl-md] ${isOrganizationSidebarOpen ? 'with-navbar' : ''} ${isScratchPadBannerVisible ? 'with-banner' : ''} grid-template-app-layout grid relative bg-[--color-bg]`}>
+          <header className="[grid-area:Header] grid grid-cols-3 items-center border-b border-solid border-[--hl-md]">
             <div className="flex items-center gap-2">
               <div className="flex shrink-0 w-[50px] justify-center py-2">
                 <InsomniaLogo loading={loadingAI} />
@@ -593,7 +568,7 @@ const OrganizationRoute = () => {
                     className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)] focus:bg-[rgba(var(--color-surprise-rgb),0.9)] bg-[--color-surprise] font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                     to="/auth/login"
                   >
-                    Sign Up
+                      Sign up for free
                   </NavLink>
                 </Fragment>
               )}
@@ -629,7 +604,7 @@ const OrganizationRoute = () => {
               </Button>
             </div>
           ) : null}
-          <div className="[grid-area:Navbar]">
+          {isOrganizationSidebarOpen && <div className={`[grid-area:Navbar] overflow-hidden ${isOrganizationSidebarOpen ? '' : 'hidden'}`}>
             <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
               {organizations.map(organization => (
                 <TooltipTrigger key={organization.id}>
@@ -713,116 +688,156 @@ const OrganizationRoute = () => {
                 </Popover>
               </MenuTrigger>
             </nav>
+          </div>}
+          <div className='[grid-area:Content] overflow-hidden border-b border-[--hl-md]'>
+            <Outlet />
           </div>
-          <Outlet />
-          <div className="relative [grid-area:Statusbar] flex items-center justify-between overflow-hidden">
-            <div className="flex h-full">
-              <TooltipTrigger>
-                <Button
-                  data-testid="settings-button"
-                  className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                  onPress={showSettingsModal}
-                >
-                  <Icon icon="gear" /> Preferences
-                </Button>
-                <Tooltip
-                  placement="top"
-                  offset={8}
-                  className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                >
-                  Preferences
-                  <Hotkey
-                    keyBindings={
-                      settings.hotKeyRegistry.preferences_showGeneral
-                    }
-                  />
-                </Tooltip>
-              </TooltipTrigger>
-              {hasUntrackedData ? <div>
-                <Button
-                  className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                  onPress={() => showModal(SettingsModal, { tab: 'data' })}
-                >
-                  <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click here to view them.
-                </Button>
-              </div> : null}
-            </div>
-            <div className='flex items-center gap-2 divide divide-y-[--hl-sm]'>
-              {loadingAI && (
-                <ProgressBar
-                  className="flex items-center gap-2 h-full"
-                  value={loadingAIProgress.progress}
-                  maxValue={loadingAIProgress.total}
-                  minValue={0}
-                  aria-label='AI generation'
-                >
-                  {({ percentage }) => (
-                    <TooltipTrigger>
-                      <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">
-                        <InsomniaAI className='w-4 text-[--color-font] animate-pulse' />
-                        <div className="h-1 w-32 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-40">
-                          <div
-                            className="h-1 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100"
-                            style={{ width: percentage + '%' }}
-                          />
-                        </div>
-                      </Button>
-                      <Tooltip
-                        placement="top"
-                        offset={8}
-                        className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                      >
-                        Generating tests with Insomnia AI
-                      </Tooltip>
-                    </TooltipTrigger>
-                  )}
-                </ProgressBar>
-              )}
-              <TooltipTrigger>
-                <Button
-                  className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                  onPress={() => {
-                    !user && navigate('/auth/login');
-                  }}
-                >
-                  <Icon
-                    icon="circle"
-                    className={
-                      user
-                        ? status === 'online'
-                          ? 'text-[--color-success]'
-                          : 'text-[--color-danger]'
-                        : ''
-                    }
-                  />{' '}
-                  {user
-                    ? status.charAt(0).toUpperCase() + status.slice(1)
-                    : 'Log in to see your projects'}
-                </Button>
-                <Tooltip
-                  placement="top"
-                  offset={8}
-                  className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                >
-                  {user
-                    ? `You are ${status === 'online'
-                      ? 'securely connected to Insomnia Cloud.'
-                      : 'offline. Connect to sync your data.'
-                    }`
-                    : 'Log in to Insomnia to sync your data.'}
-                </Tooltip>
-              </TooltipTrigger>
-              <span className='w-[1px] h-full bg-[--hl-sm]' />
-              <Link>
-                <a
-                  className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
-                  href="https://konghq.com/"
-                >
-                  Made with
-                  <Icon className="text-[--color-surprise-font]" icon="heart" /> by
-                  Kong
-                </a>
-              </Link>
+          <div className="relative [grid-area:Statusbar] flex items-center overflow-hidden">
+            <TooltipTrigger>
+              <ToggleButton
+                className="w-[50px] flex-shrink-0 px-4 py-1 border-solid border-r border-r-[--hl-md] h-full flex items-center justify-center gap-2 text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                onChange={setIsOganizationSidebarOpen}
+                isSelected={isOrganizationSidebarOpen}
+              >
+                {({ isSelected }) => {
+                  return (
+                    <svg
+                      width={10}
+                      height={10}
+                      viewBox="0 0 16 16"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="currentColor"
+                    >
+                      {isSelected ? (
+                        <path
+                          fillRule="evenodd"
+                          clipRule="evenodd"
+                          d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm12 13H7V2h7v12z"
+                        />
+                      ) : (
+                        <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
+                      )}
+                    </svg>
+                  );
+                }}
+              </ToggleButton>
+              <Tooltip
+                placement="top"
+                offset={8}
+                className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+              >
+                Toggle organizations sidebar
+              </Tooltip>
+            </TooltipTrigger>
+            <div className='flex w-full h-full items-center justify-between'>
+              <div className="flex h-full">
+                <TooltipTrigger>
+                  <Button
+                    data-testid="settings-button"
+                    className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                    onPress={showSettingsModal}
+                  >
+                    <Icon icon="gear" /> Preferences
+                  </Button>
+                  <Tooltip
+                    placement="top"
+                    offset={8}
+                    className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                  >
+                    Preferences
+                    <Hotkey
+                      keyBindings={
+                        settings.hotKeyRegistry.preferences_showGeneral
+                      }
+                    />
+                  </Tooltip>
+                </TooltipTrigger>
+                {hasUntrackedData ? <div>
+                  <Button
+                    className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                    onPress={() => showModal(SettingsModal, { tab: 'data' })}
+                  >
+                    <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click here to view them.
+                  </Button>
+                </div> : null}
+              </div>
+              <div className='flex items-center gap-2 divide divide-y-[--hl-sm]'>
+                {loadingAI && (
+                  <ProgressBar
+                    className="flex items-center gap-2 h-full"
+                    value={loadingAIProgress.progress}
+                    maxValue={loadingAIProgress.total}
+                    minValue={0}
+                    aria-label='AI generation'
+                  >
+                    {({ percentage }) => (
+                      <TooltipTrigger>
+                        <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">
+                          <InsomniaAI className='w-4 text-[--color-font] animate-pulse' />
+                          <div className="h-1 w-32 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-40">
+                            <div
+                              className="h-1 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100"
+                              style={{ width: percentage + '%' }}
+                            />
+                          </div>
+                        </Button>
+                        <Tooltip
+                          placement="top"
+                          offset={8}
+                          className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                        >
+                          Generating tests with Insomnia AI
+                        </Tooltip>
+                      </TooltipTrigger>
+                    )}
+                  </ProgressBar>
+                )}
+                <TooltipTrigger>
+                  <Button
+                    className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                    onPress={() => {
+                      !user && navigate('/auth/login');
+                    }}
+                  >
+                    <Icon
+                      icon="circle"
+                      className={
+                        user
+                          ? status === 'online'
+                            ? 'text-[--color-success]'
+                            : 'text-[--color-danger]'
+                          : ''
+                      }
+                    />{' '}
+                    {user
+                      ? status.charAt(0).toUpperCase() + status.slice(1)
+                      : 'Log in to see your projects'}
+                  </Button>
+                  <Tooltip
+                    placement="top"
+                    offset={8}
+                    className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                  >
+                    {user
+                      ? `You are ${status === 'online'
+                        ? 'securely connected to Insomnia Cloud.'
+                        : 'offline. Connect to sync your data.'
+                      }`
+                      : 'Log in to Insomnia to sync your data.'}
+                  </Tooltip>
+                </TooltipTrigger>
+                <span className='w-[1px] h-full bg-[--hl-sm]' />
+                <Link>
+                  <a
+                    className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
+                    href="https://konghq.com/"
+                  >
+                    Made with
+                    <Icon className="text-[--color-surprise-font]" icon="heart" /> by
+                    Kong
+                  </a>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

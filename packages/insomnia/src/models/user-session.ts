@@ -5,7 +5,6 @@ import type { BaseModel } from './index';
 export interface BaseUserSession {
   accountId: string;
   id: string;
-  sessionExpiry: Date | null;
   email: string;
   firstName: string;
   lastName: string;
@@ -25,7 +24,6 @@ export function init(): BaseUserSession {
   return {
     accountId: '',
     id: '',
-    sessionExpiry: null,
     email: '',
     firstName: '',
     lastName: '',

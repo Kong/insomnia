@@ -73,7 +73,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
             <span className="truncate flex items-center gap-2">
               Or import an existing OpenAPI spec or
               <Button
-                className="pointer-events-auto font-bold text-[--hl-lg] hover:text-[--hl] focus:text-[--hl] transition-colors"
+                className="underline pointer-events-auto font-bold text-[--hl-lg] hover:text-[--hl] focus:text-[--hl] transition-colors"
                 onPress={async () => {
                   const spec = await import('./example-openapi-spec');
 

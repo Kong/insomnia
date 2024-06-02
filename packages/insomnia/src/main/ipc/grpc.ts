@@ -25,7 +25,7 @@ import {
   PackageDefinition,
   ServiceDefinition,
 } from '@grpc/proto-loader';
-import electron, { ipcMain, IpcMainEvent } from 'electron';
+import electron, { IpcMainEvent } from 'electron';
 import * as grpcReflection from 'grpc-reflection-js';
 
 import { version } from '../../../package.json';
@@ -36,6 +36,7 @@ import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
 import { writeProtoFile } from '../../network/grpc/write-proto-file';
 import { invariant } from '../../utils/invariant';
 import { mockRequestMethods } from './automock';
+import { ipcMainHandle, ipcMainOn } from './electron';
 
 const grpcCalls = new Map<string, Call>();
 
@@ -59,13 +60,13 @@ export interface gRPCBridgeAPI {
 }
 
 export function registergRPCHandlers() {
-  ipcMain.on('grpc.start', start);
-  ipcMain.on('grpc.sendMessage', sendMessage);
-  ipcMain.on('grpc.commit', (_, requestId) => commit(requestId));
-  ipcMain.on('grpc.cancel', (_, requestId) => cancel(requestId));
-  ipcMain.on('grpc.closeAll', closeAll);
-  ipcMain.handle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
-  ipcMain.handle('grpc.loadMethodsFromReflection', (_, requestId) => loadMethodsFromReflection(requestId));
+  ipcMainOn('grpc.start', start);
+  ipcMainOn('grpc.sendMessage', sendMessage);
+  ipcMainOn('grpc.commit', (_, requestId) => commit(requestId));
+  ipcMainOn('grpc.cancel', (_, requestId) => cancel(requestId));
+  ipcMainOn('grpc.closeAll', closeAll);
+  ipcMainHandle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
+  ipcMainHandle('grpc.loadMethodsFromReflection', (_, requestId) => loadMethodsFromReflection(requestId));
 }
 
 const grpcOptions = {

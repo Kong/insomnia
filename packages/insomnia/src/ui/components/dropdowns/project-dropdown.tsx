@@ -94,6 +94,16 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
       });
     }
   }, [deleteProjectFetcher.data, deleteProjectFetcher.state]);
+
+  useEffect(() => {
+    if (updateProjectFetcher.data && updateProjectFetcher.data.error && updateProjectFetcher.state === 'idle') {
+      showAlert({
+        title: 'Could not update project',
+        message: updateProjectFetcher.data.error,
+      });
+    }
+  }, [updateProjectFetcher.data, updateProjectFetcher.state]);
+
   const defaultStorageSelection = storage === 'local_only' ? 'local' : 'remote';
   return (
     <Fragment>

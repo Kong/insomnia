@@ -5,7 +5,6 @@
   "productName": "Insomnia",
   "synopsis": "The Collaborative API Client and Design Tool",
   "icon": "https://github.com/kong/insomnia/blob/develop/packages/insomnia/src/icons/icon.ico?raw=true",
-  "changelogUrl": "https://insomnia.rest/changelog",
   "theme": "default",
   "lightTheme": "studio-light",
   "darkTheme": "default",

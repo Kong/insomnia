@@ -32,7 +32,6 @@ import Login from './routes/auth.login';
 import { ErrorRoute } from './routes/error';
 import Onboarding from './routes/onboarding';
 import { Migrate } from './routes/onboarding.migrate';
-import { shouldOrganizationsRevalidate } from './routes/organization';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
 
@@ -103,7 +102,6 @@ async function renderApp() {
       const session = JSON.parse(insomniaSession) as SessionData;
       await setSessionData(
         session.id,
-        session.sessionExpiry || new Date(),
         session.accountId,
         session.firstName,
         session.lastName,
@@ -157,6 +155,10 @@ async function renderApp() {
             loader: async (...args) => (await import('./routes/commands')).loader(...args),
           },
           {
+            path: 'remote-files',
+            loader: async (...args) => (await import('./routes/commands')).remoteFilesLoader(...args),
+          },
+          {
             path: 'import',
             children: [
               {
@@ -202,16 +204,19 @@ async function renderApp() {
               {
                 path: ':organizationId',
                 id: ':organizationId',
-                shouldRevalidate: shouldOrganizationsRevalidate,
-                loader: async (...args) =>
-                  (
-                    await import('./routes/organization')
-                  ).singleOrgLoader(...args),
                 children: [
                   {
                     index: true,
                     loader: async (...args) =>
                       (await import('./routes/project')).indexLoader(...args),
+                  },
+                  {
+                    path: 'permissions',
+                    loader: async (...args) =>
+                      (
+                        await import('./routes/organization')
+                      ).organizationPermissionsLoader(...args),
+                    shouldRevalidate: data => data.currentParams.organizationId !== data.nextParams.organizationId,
                   },
                   {
                     path: 'sync-projects',
@@ -232,8 +237,7 @@ async function renderApp() {
                     id: '/project',
                     children: [
                       {
-                        path: ':projectId',
-                        id: '/project/:projectId',
+                        index: true,
                         loader: async (...args) =>
                           (await import('./routes/project')).loader(...args),
                         element: (
@@ -241,7 +245,30 @@ async function renderApp() {
                             <Project />
                           </Suspense>
                         ),
+                      },
+                      {
+                        path: ':projectId',
+                        id: '/project/:projectId',
+                        loader: async (...args) =>
+                          (await import('./routes/project')).projectIdLoader(...args),
                         children: [
+                          {
+                            index: true,
+                            loader: async (...args) =>
+                              (await import('./routes/project')).loader(...args),
+                            element: (
+                              <Suspense fallback={<AppLoadingIndicator />}>
+                                <Project />
+                              </Suspense>
+                            ),
+                          },
+                          {
+                            path: 'list-workspaces',
+                            loader: async (...args) =>
+                              (
+                                await import('./routes/project')
+                              ).listWorkspacesLoader(...args),
+                          },
                           {
                             path: 'delete',
                             action: async (...args) =>
@@ -318,6 +345,15 @@ async function renderApp() {
                                       (
                                         await import('./routes/actions')
                                       ).reorderCollectionAction(...args),
+                                  },
+                                  {
+                                    path: 'request-group/:requestGroupId',
+                                    id: 'request-group/:requestGroupId',
+                                    loader: async (...args) =>
+                                      (await import('./routes/request-group')).loader(
+                                        ...args,
+                                      ),
+                                    element: <Outlet />,
                                   },
                                   {
                                     path: 'request/:requestId',

@@ -1,15 +1,16 @@
 import { Analytics } from '@segment/analytics-node';
-import { BrowserWindow } from 'electron';
+import { net } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
+  getApiBaseURL,
   getAppPlatform,
   getAppVersion,
+  getClientString,
   getProductName,
   getSegmentWriteKey,
 } from '../common/constants';
 import * as models from '../models/index';
-import { insomniaFetch } from './insomniaFetch';
 
 const analytics = new Analytics({ writeKey: getSegmentWriteKey() });
 
@@ -42,30 +43,15 @@ export enum SegmentEvent {
   vcsAction = 'VCS Action Executed',
   buttonClick = 'Button Clicked',
 }
-// TODO: migrating session state to main would be more suitable than doing this.
-const getAccountIdFromRenderer = async () => {
-  let sessionId = '';
-  let accountId = '';
-  try {
-    const windows = BrowserWindow.getAllWindows();
-    const mainWindow = windows[0];
-    sessionId = await mainWindow.webContents.executeJavaScript('localStorage.getItem("currentSessionId");');
-    const sessionJSON = await mainWindow.webContents.executeJavaScript(`localStorage.getItem("session__${(sessionId).slice(0, 10)}");`);
-    const sessionData = JSON.parse(sessionJSON);
-    accountId = sessionData?.accountId ?? '';
-  } catch (e) {
-    return { sessionId, accountId };
-  }
-  return { sessionId, accountId };
-};
+
 export async function trackSegmentEvent(
   event: SegmentEvent,
   properties?: Record<string, any>,
 ) {
   const settings = await models.settings.get();
-  const { accountId } = await getAccountIdFromRenderer();
+  const userSession = await models.userSession.get();
 
-  const allowAnalytics = settings.enableAnalytics || accountId;
+  const allowAnalytics = settings.enableAnalytics || userSession.accountId;
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
@@ -78,7 +64,7 @@ export async function trackSegmentEvent(
         properties,
         context,
         anonymousId,
-        userId: accountId,
+        userId: userSession?.accountId || '',
       }, error => {
         if (error) {
           console.warn('[analytics] Error sending segment event', error);
@@ -92,7 +78,7 @@ export async function trackSegmentEvent(
 
 export async function trackPageView(name: string) {
   const settings = await models.settings.get();
-  const { sessionId, accountId } = await getAccountIdFromRenderer();
+  const { id: sessionId, accountId } = await models.userSession.get();
   const allowAnalytics = settings.enableAnalytics || accountId;
   if (allowAnalytics) {
     try {
@@ -108,12 +94,12 @@ export async function trackPageView(name: string) {
       });
 
       if (sessionId) {
-        insomniaFetch({
+        net.fetch(getApiBaseURL() + '/v1/telemetry/', {
           method: 'POST',
-          path: '/v1/telemetry/',
-          sessionId,
-        }).catch((error: unknown) => {
-          console.warn('[analytics] Unexpected error while sending telemetry', error);
+          headers: new Headers({
+            'X-Session-Id': sessionId,
+            'X-Insomnia-Client': getClientString(),
+          }),
         });
       }
     } catch (error: unknown) {

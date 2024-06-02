@@ -7,6 +7,10 @@ const ENV = 'env';
 
 const env = process[ENV];
 
+export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
+export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
+export const INSOMNIA_GITLAB_API_URL = env.INSOMNIA_GITLAB_API_URL;
+export const PLAYWRIGHT = env.PLAYWRIGHT;
 // App Stuff
 export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
 export const getInsomniaSession = () => env.INSOMNIA_SESSION;
@@ -50,7 +54,6 @@ export function updatesSupported() {
 }
 
 export const getClientString = () => `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
-export const changelogUrl = () => appConfig.changelogUrl + '#' + version;
 
 // Global Stuff
 export const DEBOUNCE_MILLIS = 100;
@@ -124,6 +127,16 @@ export enum UpdateURL {
 // API
 export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
 export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || 'https://mock.insomnia.rest';
+
+export const getMockServiceBinURL = (serverId: string, path: string, customUrl?: string) => {
+  if (serverId && !customUrl) {
+    const baseUrl = getMockServiceURL();
+    const url = new URL(baseUrl);
+    url.host = serverId + '.' + url.host;
+    return url.origin + path;
+  }
+  return customUrl + '/bin/' + serverId + path;
+};
 export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai.insomnia.rest';
 
 export const getUpdatesBaseURL = () => env.INSOMNIA_UPDATES_URL || 'https://updates.insomnia.rest';
@@ -142,21 +155,11 @@ export const PLUGIN_HUB_BASE = 'https://insomnia.rest/plugins';
 export const NPM_PACKAGE_BASE = 'https://www.npmjs.com/package';
 
 // UI Stuf
-export const MAX_SIDEBAR_REMS = 45;
-export const MIN_SIDEBAR_REMS = 0.75;
-export const COLLAPSE_SIDEBAR_REMS = 3;
-export const SIDEBAR_SKINNY_REMS = 10;
-export const MAX_PANE_WIDTH = 0.99;
-export const MIN_PANE_WIDTH = 0.01;
-export const MAX_PANE_HEIGHT = 0.99;
-export const MIN_PANE_HEIGHT = 0.01;
-export const DEFAULT_PANE_WIDTH = 0.5;
-export const DEFAULT_PANE_HEIGHT = 0.5;
-export const DEFAULT_SIDEBAR_WIDTH = 19;
 export const MIN_INTERFACE_FONT_SIZE = 8;
 export const MAX_INTERFACE_FONT_SIZE = 24;
 export const MIN_EDITOR_FONT_SIZE = 8;
 export const MAX_EDITOR_FONT_SIZE = 24;
+export const DEFAULT_SIDEBAR_SIZE = 25;
 
 // Activities
 export type GlobalActivity =
@@ -300,6 +303,7 @@ const authTypesMap: Record<string, string[]> = {
   [AUTH_AWS_IAM]: ['AWS', 'AWS IAM v4'],
   [AUTH_ASAP]: ['ASAP', 'Atlassian ASAP'],
   [AUTH_NETRC]: ['Netrc', 'Netrc File'],
+  [AUTH_NONE]: ['None', 'No Auth'],
 };
 
 // Sort Orders
@@ -375,7 +379,20 @@ export function getPreviewModeName(previewMode: PreviewMode, useLong = false) {
     return '';
   }
 }
+export function getMimeTypeFromContentType(contentType: string) {
+  // Check if the Content-Type header is provided
+  if (!contentType) {
+    return null;
+  }
 
+  // Split the Content-Type header to separate MIME type from parameters
+  const [mimePart] = contentType.split(';');
+
+  // Trim any extra spaces
+  const mimeType = mimePart.trim();
+
+  return mimeType;
+}
 export function getContentTypeName(contentType?: string | null, useLong = false) {
   if (typeof contentType !== 'string') {
     return '';
@@ -389,11 +406,11 @@ export function getContentTypeName(contentType?: string | null, useLong = false)
   return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
 }
 
-export function getAuthTypeName(authType: string, useLong = false) {
-  if (authTypesMap.hasOwnProperty(authType)) {
+export function getAuthTypeName(authType?: string, useLong = false) {
+  if (authType && authTypesMap.hasOwnProperty(authType)) {
     return useLong ? authTypesMap[authType][1] : authTypesMap[authType][0];
   } else {
-    return '';
+    return 'Auth';
   }
 }
 

@@ -91,6 +91,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
     }
     // Render any nunjucks tags in the url/headers/authentication settings/cookies
     const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+    // TODO: support websocket auth inheritance, ensuring only the supported types, apikey, basic and bearer are included from the parents
     const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
       request,
       environmentId,

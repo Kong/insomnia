@@ -1,7 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
-import * as models from '../../../models/index';
 import { RequestGroup } from '../../../models/request-group';
+import { useRequestGroupPatcher } from '../../hooks/use-request';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -36,35 +36,40 @@ export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, Modal
     },
   }), []);
 
+  const patchGroup = useRequestGroupPatcher();
   const { requestGroup } = state;
   const environmentInfo = {
     object: requestGroup ? requestGroup.environment : {},
     propertyOrder: requestGroup && requestGroup.environmentPropertyOrder,
   };
+
+  const saveChanges = () => {
+    setState({ requestGroup });
+    if (environmentEditorRef.current?.isValid()) {
+      try {
+        const data = environmentEditorRef.current?.getValue();
+        if (state.requestGroup && data) {
+          patchGroup(state.requestGroup._id, {
+            environment: data.object,
+            environmentPropertyOrder: data.propertyOrder,
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to update environment', err);
+      }
+    }
+
+  };
+
   return (
-    <Modal ref={modalRef} tall {...props}>
+    <Modal ref={modalRef} tall {...props} onHide={saveChanges}>
       <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
       <ModalBody noScroll className="pad-top-sm">
         <EnvironmentEditor
           ref={environmentEditorRef}
           key={requestGroup ? requestGroup._id : 'n/a'}
           environmentInfo={environmentInfo}
-          onBlur={() => {
-            setState({ requestGroup });
-            if (environmentEditorRef.current?.isValid()) {
-              try {
-                const data = environmentEditorRef.current?.getValue();
-                if (state.requestGroup && data) {
-                  models.requestGroup.update(state.requestGroup, {
-                    environment: data.object,
-                    environmentPropertyOrder: data.propertyOrder,
-                  });
-                }
-              } catch (err) {
-                console.warn('Failed to update environment', err);
-              }
-            }
-          }}
+          onBlur={saveChanges}
         />
       </ModalBody>
       <ModalFooter>

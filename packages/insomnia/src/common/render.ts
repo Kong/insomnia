@@ -219,6 +219,7 @@ export async function render<T>(
   blacklistPathRegex: RegExp | null = null,
   errorMode: string = THROW_ON_ERROR,
   name = '',
+  ignoreUndefinedEnvVariable: boolean = false,
 ) {
   // Make a deep copy so no one gets mad :)
   const newObj = clone(obj);
@@ -244,7 +245,7 @@ export async function render<T>(
     } else if (typeof x === 'string') {
       try {
         // @ts-expect-error -- TSCONVERSION
-        x = await templating.render(x, { context, path });
+        x = await templating.render(x, { context, path, ignoreUndefinedEnvVariable });
 
         // If the variable outputs a tag, render it again. This is a common use
         // case for environment variables:
@@ -301,6 +302,7 @@ interface BaseRenderContextOptions {
   baseEnvironment?: Environment;
   purpose?: RenderPurpose;
   extraInfo?: ExtraRenderInfo;
+  ignoreUndefinedEnvVariable?: boolean;
 }
 
 interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
@@ -328,7 +330,7 @@ export async function getRenderContext(
     workspace ? workspace._id : 'n/a',
   );
   const subEnvironmentId = environment ?
-    typeof environment === 'string' ? environment : 'n/a' :
+    typeof environment === 'string' ? environment : environment._id :
     'n/a';
   const subEnvironment = environment ?
     typeof environment === 'string' ? await models.environment.getById(environment) : environment :
@@ -471,6 +473,7 @@ export async function getRenderedRequestAndContext(
     baseEnvironment,
     extraInfo,
     purpose,
+    ignoreUndefinedEnvVariable,
   }: RenderRequestOptions,
 ): Promise<RequestAndContext> {
   const ancestors = await getRenderContextAncestors(request);
@@ -500,6 +503,9 @@ export async function getRenderedRequestAndContext(
     },
     renderContext,
     request.settingDisableRenderRequestBody ? /^body.*/ : null,
+    THROW_ON_ERROR,
+    '',
+    ignoreUndefinedEnvVariable,
   );
 
   const renderedRequest = renderResult._request;
@@ -570,6 +576,7 @@ export async function getRenderedRequestAndContext(
       type: renderedRequest.type,
       url: renderedRequest.url,
       preRequestScript: renderedRequest.preRequestScript,
+      afterResponseScript: renderedRequest.afterResponseScript,
     },
   };
 }

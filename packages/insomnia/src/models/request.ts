@@ -252,6 +252,7 @@ export interface BaseRequest {
   method: string;
   body: RequestBody;
   preRequestScript: string;
+  afterResponseScript: string;
   parameters: RequestParameter[];
   pathParameters: RequestPathParameter[];
   headers: RequestHeader[];
@@ -273,7 +274,7 @@ export const isRequest = (model: Pick<BaseModel, 'type'>): model is Request => (
   model.type === type
 );
 
-export const isRequestId = (id: string | null) => (
+export const isRequestId = (id?: string | null) => (
   id?.startsWith(`${prefix}_`)
 );
 
@@ -289,6 +290,7 @@ export function init(): BaseRequest {
     method: METHOD_GET,
     body: {},
     preRequestScript: '',
+    afterResponseScript: '',
     parameters: [],
     headers: [],
     authentication: {},

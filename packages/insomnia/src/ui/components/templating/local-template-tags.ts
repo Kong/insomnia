@@ -13,8 +13,26 @@ import { TemplateTag } from '../../../plugins';
 import { PluginTemplateTag } from '../../../templating/extensions';
 import { invariant } from '../../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
+import { fakerFunctions } from './faker-functions';
 
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
+  {
+    templateTag: {
+      name: 'faker',
+      displayName: 'Faker',
+      description: 'generate random outputs',
+      args: [
+        {
+          displayName: 'Function',
+          type: 'enum',
+          options: Object.keys(fakerFunctions).map(key => ({ displayName: key, value: key })),
+        },
+      ],
+      run(_context, keys: keyof typeof fakerFunctions) {
+        return fakerFunctions[keys]();
+      },
+    },
+  },
   {
     templateTag: {
       name: 'base64',

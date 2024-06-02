@@ -1,6 +1,5 @@
-import * as srp from 'srp-js';
-
 import { userSession } from '../models';
+import { insomniaFetch } from '../ui/insomniaFetch';
 import * as crypt from './crypt';
 
 type LoginCallback = (isLoggedIn: boolean) => void;
@@ -31,7 +30,6 @@ export interface WhoamiResponse {
 export interface SessionData {
   accountId: string;
   id: string;
-  sessionExpiry: Date | null;
   email: string;
   firstName: string;
   lastName: string;
@@ -49,7 +47,6 @@ export function onLoginLogout(loginCallback: LoginCallback) {
 export async function absorbKey(sessionId: string, key: string) {
   // Get and store some extra info (salts and keys)
   const {
-    sessionExpiry,
     publicKey,
     encPrivateKey,
     encSymmetricKey,
@@ -60,12 +57,9 @@ export async function absorbKey(sessionId: string, key: string) {
   } = await _whoami(sessionId);
   const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(encSymmetricKey));
 
-  const sessionExpiryDate = new Date(Date.now() + (sessionExpiry * 1000));
-
   // Store the information for later
   await setSessionData(
     sessionId,
-    sessionExpiryDate,
     accountId,
     firstName,
     lastName,
@@ -76,56 +70,6 @@ export async function absorbKey(sessionId: string, key: string) {
   );
 
   window.main.loginStateChange();
-}
-
-export async function changePasswordWithToken(rawNewPassphrase: string, confirmationCode: string) {
-  // Sanitize inputs
-  const newPassphrase = _sanitizePassphrase(rawNewPassphrase);
-
-  const newEmail = await getEmail(); // Use the same one
-
-  if (!newEmail) {
-    throw new Error('Session e-mail unexpectedly not set');
-  }
-
-  // Fetch some things
-  const { saltEnc, encSymmetricKey } = await _whoami();
-  const { saltKey, saltAuth } = await _getAuthSalts(newEmail);
-  // Generate some secrets for the user based on password
-  const newSecret = await crypt.deriveKey(newPassphrase, newEmail, saltEnc);
-  const newAuthSecret = await crypt.deriveKey(newPassphrase, newEmail, saltKey);
-  const newVerifier = srp
-    .computeVerifier(
-      _getSrpParams(),
-      Buffer.from(saltAuth, 'hex'),
-      Buffer.from(newEmail || '', 'utf8'),
-      Buffer.from(newAuthSecret, 'hex'),
-    )
-    .toString('hex');
-  // Re-encrypt existing keys with new secret
-  const symmetricKey = JSON.stringify(_getSymmetricKey());
-  const newEncSymmetricKeyJSON = crypt.encryptAES(newSecret, symmetricKey);
-  const newEncSymmetricKey = JSON.stringify(newEncSymmetricKeyJSON);
-  await window.main.insomniaFetch({
-    method: 'POST',
-    path: '/auth/change-password',
-    data: {
-      code: confirmationCode,
-      newEmail: newEmail,
-      encSymmetricKey: encSymmetricKey,
-      newVerifier,
-      newEncSymmetricKey,
-    },
-    sessionId: await getCurrentSessionId(),
-  });
-}
-
-export async function sendPasswordChangeCode() {
-  window.main.insomniaFetch({
-    method: 'POST',
-    path: '/auth/send-password-code',
-    sessionId: await getCurrentSessionId(),
-  });
 }
 
 export async function getPublicKey() {
@@ -150,35 +94,12 @@ export async function getPrivateKey() {
 }
 
 export async function getCurrentSessionId() {
-  const { id, sessionExpiry } = await userSession.getOrCreate();
-  try {
-    if (typeof sessionExpiry !== 'string' || !sessionExpiry) {
-      return '';
-    }
-
-    const isExpired = new Date(sessionExpiry).getTime() < Date.now();
-    if (isExpired) {
-      console.log('Session has expired', sessionExpiry);
-      return '';
-    }
-    return id;
-  } catch (e) {
-    console.log('Error in expiry logic', e);
-    return '';
-  }
+  const { id } = await userSession.getOrCreate();
+  return id;
 }
 
 export async function getAccountId() {
   return (await getUserSession())?.accountId;
-}
-
-export async function getEmail() {
-  return (await getUserSession())?.email;
-}
-
-export async function getFullName() {
-  const { firstName, lastName } = await getUserSession() || {};
-  return `${firstName} ${lastName}`.trim();
 }
 
 /** Check if we (think) we have a session */
@@ -191,7 +112,7 @@ export async function logout() {
   const sessionId = await getCurrentSessionId();
   if (sessionId) {
     try {
-      window.main.insomniaFetch({
+      insomniaFetch({
         method: 'POST',
         path: '/auth/logout',
         sessionId,
@@ -210,7 +131,6 @@ export async function logout() {
 /** Set data for the new session and store it encrypted with the sessionId */
 export async function setSessionData(
   id: string,
-  sessionExpiry: Date,
   accountId: string,
   firstName: string,
   lastName: string,
@@ -221,7 +141,6 @@ export async function setSessionData(
 ) {
   const sessionData: SessionData = {
     id,
-    sessionExpiry,
     accountId,
     symmetricKey,
     publicKey,
@@ -240,12 +159,9 @@ export async function setSessionData(
 // ~~~~~~~~~~~~~~~~ //
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
-async function _getSymmetricKey() {
-  return (await getUserSession())?.symmetricKey;
-}
 
 async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse> {
-  const response = await window.main.insomniaFetch<WhoamiResponse | string>({
+  const response = await insomniaFetch<WhoamiResponse | string>({
     method: 'GET',
     path: '/auth/whoami',
     sessionId: sessionId || await getCurrentSessionId(),
@@ -259,17 +175,6 @@ async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse>
   return response;
 }
 
-async function _getAuthSalts(email: string) {
-  const response = await window.main.insomniaFetch<{ saltKey: string; saltAuth: string }>({
-    method: 'POST',
-    path: '/auth/login-s',
-    data: { email },
-    sessionId: await getCurrentSessionId(),
-  });
-
-  return response;
-}
-
 export async function getUserSession(): Promise<SessionData> {
   const userData = await userSession.getOrCreate();
 
@@ -280,7 +185,6 @@ async function _unsetSessionData() {
   await userSession.getOrCreate();
   await userSession.update(await userSession.getOrCreate(), {
     id: '',
-    sessionExpiry: null,
     accountId: '',
     email: '',
     firstName: '',
@@ -289,14 +193,6 @@ async function _unsetSessionData() {
     publicKey: {} as JsonWebKey,
     encPrivateKey: {} as crypt.AESMessage,
   });
-}
-
-function _getSrpParams() {
-  return srp.params[2048];
-}
-
-function _sanitizePassphrase(passphrase: string) {
-  return passphrase.trim().normalize('NFKD');
 }
 
 export async function migrateFromLocalStorage() {

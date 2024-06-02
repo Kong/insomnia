@@ -348,7 +348,7 @@ const pairToParameters = (pair: Pair, allowFiles = false): Parameter[] => {
     }
 
     const [name, value] = pair.split('=');
-    if (!value || !pair.includes('=')) {
+    if (!value && !pair.includes('=')) {
       return { name: '', value: pair };
     }
 

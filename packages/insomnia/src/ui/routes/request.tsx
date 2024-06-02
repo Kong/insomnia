@@ -26,7 +26,8 @@ import { Response } from '../../models/response';
 import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
-import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { fetchRequestData, getPreRequestScriptOutput, responseTransform, savePatchesMadeByScript, sendCurlAndWriteTimeline, tryToExecuteAfterResponseScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { RenderErrorSubType } from '../../templating';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
@@ -288,6 +289,7 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
   invariant(req, 'Request not found');
   invariant(workspaceId, 'Workspace ID is required');
   const rendered = await request.json() as ConnectActionParams;
+
   if (isWebSocketRequestId(requestId)) {
     window.main.webSocket.open({
       requestId,
@@ -354,59 +356,31 @@ const writeToDownloadPath = (downloadPathAndName: string, responsePatch: Respons
 export interface SendActionParams {
   requestId: string;
   shouldPromptForPathAfterResponse?: boolean;
+  ignoreUndefinedEnvVariable?: boolean;
 }
 
 export const sendAction: ActionFunction = async ({ request, params }) => {
   const { requestId, workspaceId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
   invariant(workspaceId, 'Workspace ID is required');
-
-  const req = await requestOperations.getById(requestId) as Request;
-  invariant(req, 'Request not found');
-
-  const {
-    environment,
-    settings,
-    clientCertificates,
-    caCert,
-    activeEnvironmentId,
-    timelinePath,
-    responseId,
-  } = await fetchRequestData(requestId);
-  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
-  const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-
+  const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
   try {
-    const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
-    const mutatedContext = await tryToExecutePreRequestScript(
-      req,
-      environment,
-      timelinePath,
-      responseId,
-      baseEnvironment,
-      clientCertificates,
-      cookieJar,
-    );
-    if (!mutatedContext?.request) {
-      // exiy early if there was a problem with the pre-request script
-      // TODO: improve error message?
+    const requestData = await fetchRequestData(requestId);
+    const mutatedContext = await getPreRequestScriptOutput(requestData, workspaceId);
+    if (mutatedContext === null) {
       return null;
-    } else {
-      // persist updated cookieJar if needed
-      if (mutatedContext.cookieJar) {
-        await models.cookieJar.update(
-          mutatedContext.cookieJar,
-          { cookies: mutatedContext.cookieJar.cookies },
-        );
-      }
     }
+    // disable after-response script here to avoiding rendering it
+    const afterResponseScript = `${mutatedContext.request.afterResponseScript}`;
+    mutatedContext.request.afterResponseScript = '';
 
     const renderedResult = await tryToInterpolateRequest(
       mutatedContext.request,
-      mutatedContext.environment || environment._id,
+      mutatedContext.environment,
       RENDER_PURPOSE_SEND,
       undefined,
       mutatedContext.baseEnvironment,
+      ignoreUndefinedEnvVariable,
     );
     const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
 
@@ -425,30 +399,51 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
 
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
-      mutatedContext.clientCertificates || clientCertificates,
-      caCert,
-      mutatedContext.settings || settings,
-      timelinePath,
-      responseId
+      mutatedContext.clientCertificates,
+      requestData.caCert,
+      mutatedContext.settings,
+      requestData.timelinePath,
+      requestData.responseId
     );
 
     const requestMeta = await models.requestMeta.getByParentId(requestId);
     invariant(requestMeta, 'RequestMeta not found');
-    const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderedResult.context);
+    const responsePatch = await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context);
     const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
     const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
+
+    mutatedContext.request.afterResponseScript = afterResponseScript;
+    if (requestData.request.afterResponseScript) {
+      const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+      const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+
+      const postMutatedContext = await tryToExecuteAfterResponseScript({
+        ...requestData,
+        ...mutatedContext,
+        baseEnvironment,
+        cookieJar,
+        response,
+      });
+      if (!postMutatedContext?.request) {
+        // exiy early if there was a problem with the pre-request script
+        // TODO: improve error message?
+        return null;
+      }
+      await savePatchesMadeByScript(postMutatedContext, requestData.environment, baseEnvironment);
+    }
     if (!shouldWriteToFile) {
-      const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
+      const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
       await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
       // setLoading(false);
       return null;
     }
+
     if (requestMeta.downloadPath) {
       const header = getContentDispositionHeader(responsePatch.headers || []);
       const name = header
         ? contentDisposition.parse(header.value).parameters.filename
-        : `${req.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
-      return writeToDownloadPath(path.join(requestMeta.downloadPath, name), responsePatch, requestMeta, settings.maxHistoryResponses);
+        : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
+      return writeToDownloadPath(path.join(requestMeta.downloadPath, name), responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
     } else {
       const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
       const { filePath } = await window.dialog.showSaveDialog({
@@ -462,12 +457,16 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
         return null;
       }
       window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-      return writeToDownloadPath(filePath, responsePatch, requestMeta, settings.maxHistoryResponses);
+      return writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
     }
   } catch (e) {
     console.log('Failed to send request', e);
     const url = new URL(request.url);
     url.searchParams.set('error', e);
+    if (e?.extraInfo && e?.extraInfo?.subType === RenderErrorSubType.EnvironmentVariable) {
+      url.searchParams.set('envVariableMissing', '1');
+      url.searchParams.set('missingKey', e?.extraInfo?.missingKey);
+    }
     return redirect(`${url.pathname}?${url.searchParams}`);
   }
 };

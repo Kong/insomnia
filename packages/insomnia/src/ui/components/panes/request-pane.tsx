@@ -1,7 +1,7 @@
 import React, { FC, Fragment, useState } from 'react';
 import { Button, Heading, ToggleButton } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
-import styled from 'styled-components';
+import { useLocalStorage } from 'react-use';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
 import * as models from '../../../models';
@@ -19,9 +19,9 @@ import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
-import { PreRequestScriptEditor } from '../editors/pre-request-script-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
+import { RequestScriptEditor } from '../editors/request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
 import { MarkdownPreview } from '../markdown-preview';
@@ -30,32 +30,6 @@ import { RenderedQueryString } from '../rendered-query-string';
 import { RequestUrlBar } from '../request-url-bar';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderRequestPane } from './placeholder-request-pane';
-const HeaderContainer = styled.div({
-  display: 'flex',
-  flexDirection: 'column',
-  position: 'relative',
-  height: '100%',
-  overflowY: 'auto',
-});
-
-export const TabPanelFooter = styled.div({
-  boxSizing: 'content-box',
-  display: 'flex',
-  flexDirection: 'row',
-  borderTop: '1px solid var(--hl-md)',
-  height: 'var(--line-height-sm)',
-  fontSize: 'var(--font-size-sm)',
-  '& > button': {
-    color: 'var(--hl)',
-    padding: 'var(--padding-xs) var(--padding-xs)',
-    height: '100%',
-  },
-});
-
-const TabPanelBody = styled.div({
-  overflowY: 'auto',
-  flex: '1 0',
-});
 
 interface Props {
   environmentId: string;
@@ -73,10 +47,10 @@ export const RequestPane: FC<Props> = ({
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const patchSettings = useSettingsPatcher();
-  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
-    useState(false);
+  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
   const patchRequest = useRequestPatcher();
 
+  const [dismissPathParameterTip, setDismissPathParameterTip] = useLocalStorage('dismissPathParameterTip', '');
   const handleImportQueryFromUrl = () => {
     let query;
 
@@ -230,10 +204,16 @@ export const RequestPane: FC<Props> = ({
                     </div>
                   </div>
                 )}
-                {pathParameters.length === 0 && (
+                {pathParameters.length === 0 && !dismissPathParameterTip && (
                   <div className='text-sm text-[--hl] rounded-sm border border-solid border-[--hl-md] p-2 flex items-center gap-2'>
                     <Icon icon='info-circle' />
                     <span>Path parameters are url path segments that start with a colon ':' e.g. ':id' </span>
+                    <Button
+                      className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ml-auto"
+                      onPress={() => setDismissPathParameterTip('true')}
+                    >
+                      <Icon icon='close' />
+                    </Button>
                   </div>
                 )}
               </div>
@@ -247,12 +227,12 @@ export const RequestPane: FC<Props> = ({
             environmentId={environmentId}
           />
         </TabItem>
-        <TabItem key="auth" title={<AuthDropdown />}>
+        <TabItem key="auth" title={<AuthDropdown authentication={activeRequest.authentication} />}>
           <ErrorBoundary
             key={uniqueKey}
             errorClassName="font-error pad text-center"
           >
-            <AuthWrapper />
+            <AuthWrapper authentication={activeRequest.authentication} />
           </ErrorBoundary>
         </TabItem>
         <TabItem
@@ -266,29 +246,33 @@ export const RequestPane: FC<Props> = ({
             </div>
           }
         >
-          <HeaderContainer>
+          <div className="flex flex-col relative h-full overflow-hidden">
             <ErrorBoundary
               key={uniqueKey}
               errorClassName="font-error pad text-center"
             >
-              <TabPanelBody>
-                <RequestHeadersEditor bulk={settings.useBulkHeaderEditor} />
-              </TabPanelBody>
+              <div className='overflow-y-auto flex-1 flex-shrink-0'>
+                <RequestHeadersEditor
+                  bulk={settings.useBulkHeaderEditor}
+                  headers={activeRequest.headers}
+                  requestType="Request"
+                />
+              </div>
             </ErrorBoundary>
 
-            <TabPanelFooter>
-              <button
-                className="btn btn--compact"
-                onClick={() =>
+            <div className="flex flex-row border-solid border-t border-[var(--hl-md)] h-[var(--line-height-sm)] text-[var(--font-size-sm)] box-border">
+              <Button
+                className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                onPress={() =>
                   patchSettings({
                     useBulkHeaderEditor: !settings.useBulkHeaderEditor,
                   })
                 }
               >
                 {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
-              </button>
-            </TabPanelFooter>
-          </HeaderContainer>
+              </Button>
+            </div>
+          </div>
         </TabItem>
         <TabItem
           key="pre-request-script"
@@ -296,8 +280,10 @@ export const RequestPane: FC<Props> = ({
           title={
             <div className='flex items-center gap-2'>
               Pre-request Script{' '}
-              {headersCount > 0 && (
-                <span className="p-1 flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">Beta</span>
+              {activeRequest.preRequestScript && (
+                <span className="ml-2 p-2 border-solid border border-[--hl-md] rounded-lg">
+                  <span className="flex w-2 h-2 bg-green-500 rounded-full" />
+                </span>
               )}
             </div>
           }
@@ -307,10 +293,37 @@ export const RequestPane: FC<Props> = ({
             key={uniqueKey}
             errorClassName="tall wide vertically-align font-error pad text-center"
           >
-            <PreRequestScriptEditor
+            <RequestScriptEditor
               uniquenessKey={uniqueKey}
               defaultValue={activeRequest.preRequestScript || ''}
               onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
+              settings={settings}
+            />
+          </ErrorBoundary>
+        </TabItem>
+        <TabItem
+          key="after-response-script"
+          data-testid="after-response-script-tab"
+          title={
+            <div className='flex items-center gap-2'>
+              After-response Script{' '}
+              {activeRequest.afterResponseScript && (
+                <span className="ml-2 p-2 border-solid border border-[--hl-md] rounded-lg">
+                  <span className="flex w-2 h-2 bg-green-500 rounded-full" />
+                </span>
+              )}
+            </div>
+          }
+          aria-label={'experimental'}
+        >
+          <ErrorBoundary
+            key={uniqueKey}
+            errorClassName="tall wide vertically-align font-error pad text-center"
+          >
+            <RequestScriptEditor
+              uniquenessKey={uniqueKey}
+              defaultValue={activeRequest.afterResponseScript || ''}
+              onChange={afterResponseScript => patchRequest(requestId, { afterResponseScript })}
               settings={settings}
             />
           </ErrorBoundary>
@@ -321,8 +334,8 @@ export const RequestPane: FC<Props> = ({
             <>
               Docs
               {activeRequest.description && (
-                <span className="bubble space-left">
-                  <i className="fa fa--skinny fa-check txt-xxs" />
+                <span className="ml-2 p-2 border-solid border border-[--hl-md] rounded-lg">
+                  <span className="flex w-2 h-2 bg-green-500 rounded-full" />
                 </span>
               )}
             </>

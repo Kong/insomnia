@@ -1,10 +1,15 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { Button } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData, useSearchParams } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
+import { database as db } from '../../common/database';
 import * as models from '../../models';
+import type { Request } from '../../models/request';
 import { isEventStreamRequest } from '../../models/request';
+import { isRequestGroup, type RequestGroup } from '../../models/request-group';
+import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/network';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
@@ -21,6 +26,7 @@ import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
+import { VariableMissingErrorModal } from './modals/variable-missing-error-modal';
 
 const StyledDropdownButton = styled(DropdownButton)({
   '&:hover:not(:disabled)': {
@@ -51,18 +57,25 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   onPaste,
 }, ref) => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [showEnvVariableMissingModal, setShowEnvVariableMissingModal] = useState(false);
+  const [missingKey, setMissingKey] = useState('');
   if (searchParams.has('error')) {
-    showAlert({
-      title: 'Unexpected Request Failure',
-      message: (
-        <div>
-          <p>The request failed due to an unhandled error:</p>
-          <code className="wide selectable">
-            <pre>{searchParams.get('error')}</pre>
-          </code>
-        </div>
-      ),
-    });
+    if (searchParams.has('envVariableMissing') && searchParams.get('missingKey')) {
+      setShowEnvVariableMissingModal(true);
+      setMissingKey(searchParams.get('missingKey')!);
+    } else {
+      showAlert({
+        title: 'Unexpected Request Failure',
+        message: (
+          <div>
+            <p>The request failed due to an unhandled error:</p>
+            <code className="wide selectable">
+              <pre>{searchParams.get('error')}</pre>
+            </code>
+          </div>
+        ),
+      });
+    }
 
     // clean up params
     searchParams.delete('error');
@@ -92,7 +105,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
   const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
   const fetcher = useFetcher();
-  // TODO: unpick this loading hack
+  // TODO: unpick this loading hack. This could be simplified if submit provides a way to update state when it finishes. https://github.com/remix-run/remix/discussions/9020
   useEffect(() => {
     if (fetcher.state !== 'idle') {
       setLoading(true);
@@ -118,7 +131,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       });
   }, [fetcher, organizationId, projectId, requestId, workspaceId]);
 
-  const sendOrConnect = useCallback(async (shouldPromptForPathAfterResponse?: boolean) => {
+  const sendOrConnect = useCallback(async (shouldPromptForPathAfterResponse?: boolean, ignoreUndefinedEnvVariable?: boolean) => {
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
       event: SegmentEvent.requestExecute,
@@ -138,6 +151,14 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         const workspaceId = activeWorkspace._id;
         // Render any nunjucks tags in the url/headers/authentication settings/cookies
         const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+
+        const ancestors = await db.withAncestors<Request | RequestGroup>(activeRequest, [
+          models.requestGroup.type,
+        ]);
+        // check for authentication overrides in parent folders
+        const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
+        activeRequest.authentication = getOrInheritAuthentication({ request: activeRequest, requestGroups });
+        activeRequest.headers = getOrInheritHeaders({ request: activeRequest, requestGroups });
         const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
           request: activeRequest,
           environmentId,
@@ -162,7 +183,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     }
 
     try {
-      send({ requestId, shouldPromptForPathAfterResponse });
+      send({ requestId, shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable });
     } catch (err) {
       showAlert({
         title: 'Unexpected Request Failure',
@@ -196,6 +217,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
 
   useDocBodyKeyboardShortcuts({
     request_focusUrl: () => {
+      inputRef.current?.focusEnd();
       inputRef.current?.selectAll();
     },
     request_send: () => {
@@ -369,6 +391,22 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           )}
         </div>
       </div>
+      <VariableMissingErrorModal
+        isOpen={showEnvVariableMissingModal}
+        title="An environment variable is missing"
+        okText='Execute anyways'
+        onOk={() => {
+          setShowEnvVariableMissingModal(false);
+          sendOrConnect(false, true);
+        }}
+        onCancel={() => setShowEnvVariableMissingModal(false)}
+      >
+        <p>
+          The environment variable
+          <Button className="bg-[--color-surprise] text-[--color-font-surprise] px-3 mx-3 rounded-sm">{missingKey}</Button>
+          has been defined but has no value defined on a currently Active Environment
+        </p>
+      </VariableMissingErrorModal>
     </div>
   );
 });

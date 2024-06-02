@@ -1,4 +1,4 @@
-import electron, { app, ipcMain, session } from 'electron';
+import electron, { app, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
@@ -6,17 +6,18 @@ import fs from 'fs/promises';
 import path from 'path';
 
 import { userDataFolder } from '../config/config.json';
-import { changelogUrl, getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
+import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
 import log, { initializeLogging } from './common/log';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
-import { registerInsomniaStreamProtocol } from './main/api.protocol';
+import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
-import { registerElectronHandlers } from './main/ipc/electron';
+import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
 import { registerCurlHandlers } from './main/network/curl';
 import { registerWebSocketHandlers } from './main/network/websocket';
+import { watchProxySettings } from './main/proxy';
 import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
@@ -28,7 +29,8 @@ import type { ToastNotification } from './ui/components/toast';
 
 initializeSentry();
 
-registerInsomniaStreamProtocol();
+registerInsomniaProtocols();
+
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
   process.exit(0);
@@ -90,6 +92,7 @@ app.on('ready', async () => {
   await database.init(models.types());
   await _createModelInstances();
   sentryWatchAnalyticsEnabled();
+  watchProxySettings();
   windowUtils.init();
   await _launchApp();
 
@@ -148,7 +151,7 @@ const _launchApp = async () => {
   await _trackStats();
   let window: BrowserWindow;
   // Handle URLs sent via command line args
-  ipcMain.once('halfSecondAfterAppStart', () => {
+  ipcMainOnce('halfSecondAfterAppStart', () => {
     console.log('[main] Window ready, handling command line arguments', process.argv);
     const args = process.argv.slice(1).filter(a => a !== '.');
     console.log('[main] Check args and create windows', args);
@@ -180,8 +183,7 @@ const _launchApp = async () => {
         window.webContents.send('shell:open', lastArg);
       });
       window = windowUtils.createWindowsAndReturnMain();
-
-      app.on('open-url', (_event, url) => {
+      const openDeepLinkUrl = (url: string) => {
         console.log('[main] Open Deep Link URL', url);
         window = windowUtils.createWindowsAndReturnMain();
         if (window) {
@@ -193,6 +195,12 @@ const _launchApp = async () => {
           window = windowUtils.createWindowsAndReturnMain();
         }
         window.webContents.send('shell:open', url);
+      };
+      app.on('open-url', (_event, url) => {
+        openDeepLinkUrl(url);
+      });
+      ipcMainOn('openDeepLink', (_event, url) => {
+        openDeepLinkUrl(url);
       });
     }
   } else {
@@ -264,7 +272,7 @@ async function _trackStats() {
     executedRequests: stats.executedRequests,
   });
 
-  ipcMain.once('halfSecondAfterAppStart', async () => {
+  ipcMainOnce('halfSecondAfterAppStart', async () => {
     backupIfNewerVersionAvailable();
     const { currentVersion, launches, lastVersion } = stats;
 
@@ -276,7 +284,7 @@ async function _trackStats() {
     console.log('[main] App update detected', currentVersion, lastVersion);
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
-      url: changelogUrl(),
+      url: 'https://github.com/Kong/insomnia/releases',
       cta: "See What's New",
       message: `Updated to ${currentVersion}`,
     };

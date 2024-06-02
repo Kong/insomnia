@@ -1279,7 +1279,6 @@ html {
   --modal-width-skinny: calc(var(--font-size) * 30);
   /* Other */
   --drag-width: calc(var(--font-size) * 0.5);
-  --height-nav: var(--line-height-sm);
 }
 .txt-xxs {
   font-size: var(--font-size-xxs) !important;
@@ -1498,23 +1497,35 @@ html {
   border-color: var(--hl-md);
   box-sizing: border-box;
   width: 100%;
-  padding: 0 var(--padding-xs);
   box-shadow: 0 0 1em rgba(0, 0, 0, 0.1);
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  overflow: hidden;
   align-items: center;
   white-space: nowrap;
 }
-.editor .CodeMirror-dialog input {
-  font-family: var(--font-monospace) !important;
-  border: 0 !important;
-  height: 1em !important;
-  padding: 0 !important;
-  display: block;
-  width: 100% !important;
+.editor .CodeMirror-dialog .CodeMirror-search-label {
+  font-family: var(--font-monospace);
+  border: 0;
+  height: 1em;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   color: var(--color-font);
   min-height: 1.5em;
 }
+
+.editor .CodeMirror-dialog .CodeMirror-search-label .CodeMirror-search-field {
+  flex: 1;
+}
+
+.editor .CodeMirror-dialog .CodeMirror-search-hint {
+  font-size: var(--font-size-xxs);
+  width: 100%;
+}
+
 .editor .CodeMirror-dialog * {
   margin-left: 0.25em;
   margin-right: 0.25em;
@@ -2031,7 +2042,7 @@ html {
   overflow: hidden;
   border-bottom: 1px solid var(--hl-md);
   box-sizing: border-box;
-  height: var(--height-nav);
+  height: var(--line-height-sm);
   line-height: var(--line-height-md);
   color: var(--color-font);
   display: flex;
@@ -2594,7 +2605,7 @@ input.editable {
 }
 .pane {
   display: grid;
-  grid-template-rows: var(--height-nav) minmax(0, 1fr);
+  grid-template-rows: var(--line-height-sm) minmax(0, 1fr);
   grid-template-columns: 100%;
 }
 .pane .pane__header {
@@ -3007,7 +3018,7 @@ input.editable {
   color: var(--hl);
   padding-left: var(--padding-xs);
   padding-right: var(--padding-xs);
-  height: var(--height-nav);
+  height: var(--line-height-sm);
   overflow: auto;
 }
 .sidebar .sidebar__menu--insomnia-HACK {
@@ -3389,7 +3400,7 @@ input.editable {
 }
 .urlbar > .dropdown > button,
 .urlbar > .dropdown > button > i.fa {
-  line-height: var(--height-nav);
+  line-height: var(--line-height-sm);
 }
 .urlbar .urlbar__send-btn {
   padding-right: var(--padding-md);

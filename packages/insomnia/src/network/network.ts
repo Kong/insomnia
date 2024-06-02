@@ -22,27 +22,56 @@ import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
 import { CookieJar } from '../models/cookie-jar';
 import { Environment } from '../models/environment';
-import type { Request, RequestAuthentication, RequestParameter } from '../models/request';
+import { MockRoute } from '../models/mock-route';
+import { MockServer } from '../models/mock-server';
+import type { Request, RequestAuthentication, RequestHeader, RequestParameter } from '../models/request';
+import { isRequestGroup, RequestGroup } from '../models/request-group';
 import type { Settings } from '../models/settings';
-import { isWorkspace } from '../models/workspace';
+import { isWorkspace, Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { invariant } from '../utils/invariant';
-import { setDefaultProtocol } from '../utils/url/protocol';
 import {
   buildQueryStringFromParams,
   joinUrlAndQueryString,
   smartEncodeUrl,
 } from '../utils/url/querystring';
-import { getAuthHeader, getAuthQueryParams } from './authentication';
-import { cancellableCurlRequest, cancellableRunPreRequestScript } from './cancellation';
+import { getAuthHeader, getAuthObjectOrNull, getAuthQueryParams, isAuthEnabled } from './authentication';
+import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
+import { filterClientCertificates } from './certificate';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
-import { urlMatchesCertHost } from './url-matches-cert-host';
+
+export const getOrInheritAuthentication = ({ request, requestGroups }: { request: Request; requestGroups: RequestGroup[] }): RequestAuthentication | {} => {
+  const hasValidAuth = getAuthObjectOrNull(request.authentication) && isAuthEnabled(request.authentication);
+  if (hasValidAuth) {
+    return request.authentication;
+  }
+  const hasParentFolders = requestGroups.length > 0;
+  const closestParentFolderWithAuth = requestGroups.find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
+  const closestAuth = getAuthObjectOrNull(closestParentFolderWithAuth?.authentication);
+  const shouldCheckFolderAuth = hasParentFolders && closestAuth;
+  if (shouldCheckFolderAuth) {
+    // override auth with closest parent folder that has one set
+    return closestAuth;
+  }
+  // if no auth is specified on request or folders, default to none
+  return { type: 'none' };
+};
+export function getOrInheritHeaders({ request, requestGroups }: { request: Request; requestGroups: RequestGroup[] }): RequestHeader[] {
+  // recurse over each parent folder to append headers
+  // in case of duplicate, node-libcurl joins on comma
+  const headers = requestGroups
+    .reverse()
+    .map(({ headers }) => headers || [])
+    .flat();
+  // if parent has foo: bar and child has foo: baz, request will have foo: bar, baz
+  return [...headers, ...request.headers];
+}
 
 export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
   invariant(request, 'failed to find request');
-  const ancestors = await db.withAncestors(request, [
+  const ancestors = await db.withAncestors<Request | RequestGroup | Workspace | MockRoute | MockServer>(request, [
     models.request.type,
     models.requestGroup.type,
     models.workspace.type,
@@ -51,13 +80,15 @@ export const fetchRequestData = async (requestId: string) => {
   ]);
   const workspaceDoc = ancestors.find(isWorkspace);
   invariant(workspaceDoc?._id, 'failed to find workspace');
-
   const workspaceId = workspaceDoc._id;
 
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-
+  // check for authentication overrides in parent folders
+  const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
+  request.authentication = getOrInheritAuthentication({ request, requestGroups });
+  request.headers = getOrInheritHeaders({ request, requestGroups });
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && await models.environment.getById(activeEnvironmentId);
@@ -73,23 +104,93 @@ export const fetchRequestData = async (requestId: string) => {
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
+export const getPreRequestScriptOutput = async ({
+  request,
+  environment,
+  settings,
+  clientCertificates,
+  timelinePath,
+  responseId,
+}: Awaited<ReturnType<typeof fetchRequestData>>, workspaceId: string) => {
+  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
-export const tryToExecutePreRequestScript = async (
-  request: Request,
-  environment: Environment,
-  timelinePath: string,
-  responseId: string,
-  baseEnvironment: Environment,
-  clientCertificates: ClientCertificate[],
-  cookieJar: CookieJar,
-) => {
   if (!request.preRequestScript) {
     return {
       request,
-      environment: undefined,
-      baseEnvironment: undefined,
+      environment,
+      baseEnvironment,
+      clientCertificates,
+      settings,
     };
   }
+  const mutatedContext = await tryToExecutePreRequestScript({
+    request,
+    environment,
+    timelinePath,
+    responseId,
+    baseEnvironment,
+    clientCertificates,
+    cookieJar,
+  });
+  if (!mutatedContext?.request) {
+    // exiy early if there was a problem with the pre-request script
+    // TODO: improve error message?
+    return null;
+  }
+
+  await savePatchesMadeByScript(mutatedContext, environment, baseEnvironment);
+  return {
+    request: mutatedContext.request,
+    environment: mutatedContext.environment,
+    baseEnvironment: mutatedContext.baseEnvironment || baseEnvironment,
+    clientCertificates: mutatedContext.clientCertificates || clientCertificates,
+    settings: mutatedContext.settings || settings,
+  };
+};
+
+export async function savePatchesMadeByScript(
+  mutatedContext: Awaited<ReturnType<typeof tryToExecutePreRequestScript>>,
+  environment: Environment,
+  baseEnvironment: Environment,
+) {
+  if (!mutatedContext) {
+    return;
+  }
+
+  // persist updated cookieJar if needed
+  if (mutatedContext.cookieJar) {
+    await models.cookieJar.update(
+      mutatedContext.cookieJar,
+      { cookies: mutatedContext.cookieJar.cookies },
+    );
+  }
+  // when base environment is activated, `mutatedContext.environment` points to it
+  const isActiveEnvironmentBase = mutatedContext.environment?._id === baseEnvironment._id;
+  const hasEnvironmentAndIsNotBase = mutatedContext.environment && !isActiveEnvironmentBase;
+  if (hasEnvironmentAndIsNotBase) {
+    await models.environment.update(
+      environment,
+      {
+        data: mutatedContext.environment.data,
+        dataPropertyOrder: mutatedContext.environment.dataPropertyOrder,
+      }
+    );
+  }
+  if (mutatedContext.baseEnvironment) {
+    await models.environment.update(
+      baseEnvironment,
+      {
+        data: mutatedContext.baseEnvironment.data,
+        dataPropertyOrder: mutatedContext.baseEnvironment.dataPropertyOrder,
+      }
+    );
+  }
+}
+export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
+  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response } = context;
+  invariant(script, 'script must be provided');
+
   const settings = await models.settings.get();
 
   try {
@@ -99,10 +200,15 @@ export const tryToExecutePreRequestScript = async (
         reject(new Error('Timeout: Hidden browser window is not responding'));
         // Add one extra second to ensure the hidden browser window has had a chance to return its timeout
         // TODO: restart the hidden browser window
-      }, timeout + 1000);
+      }, timeout + 2000);
     });
-    const preRequestPromise = cancellableRunPreRequestScript({
-      script: request.preRequestScript,
+    // const isBaseEnvironmentSelected = environment._id === baseEnvironment._id;
+    // if (isBaseEnvironmentSelected) {
+    //   // postman models base env as no env and does not persist, so we could handle that case better, but for now we throw
+    //   throw new Error('Base environment cannot be selected for script execution. Please select an environment.');
+    // }
+    const executionPromise = cancellableRunScript({
+      script,
       context: {
         request,
         timelinePath,
@@ -110,13 +216,16 @@ export const tryToExecutePreRequestScript = async (
         // it inputs empty environment data when active environment is the base environment
         // this is more deterministic and avoids that script accidently manipulates baseEnvironment instead of environment
         environment: environment._id === baseEnvironment._id ? {} : (environment?.data || {}),
+        environmentName: environment._id === baseEnvironment._id ? '' : (environment?.name || ''),
         baseEnvironment: baseEnvironment?.data || {},
+        baseEnvironmentName: baseEnvironment?.name || '',
         clientCertificates,
         settings,
         cookieJar,
+        response,
       },
     });
-    const output = await Promise.race([timeoutPromise, preRequestPromise]) as {
+    const output = await Promise.race([timeoutPromise, executionPromise]) as {
       request: Request;
       environment: Record<string, any>;
       baseEnvironment: Record<string, any>;
@@ -124,7 +233,7 @@ export const tryToExecutePreRequestScript = async (
       clientCertificates: ClientCertificate[];
       cookieJar: CookieJar;
     };
-    console.log('[network] Pre-request script succeeded', output);
+    console.log('[network] script execution succeeded', output);
 
     const envPropertyOrder = orderedJSON.parse(
       JSON.stringify(output.environment),
@@ -151,7 +260,10 @@ export const tryToExecutePreRequestScript = async (
       cookieJar: output.cookieJar,
     };
   } catch (err) {
-    await fs.promises.appendFile(timelinePath, JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n');
+    await fs.promises.appendFile(
+      timelinePath,
+      JSON.stringify({ value: err.message, name: 'Text', timestamp: Date.now() }) + '\n',
+    );
 
     const requestId = request._id;
     const responsePatch = {
@@ -168,12 +280,37 @@ export const tryToExecutePreRequestScript = async (
   }
 };
 
+interface RequestContextForScript {
+  request: Request;
+  environment: Environment;
+  timelinePath: string;
+  responseId: string;
+  baseEnvironment: Environment;
+  clientCertificates: ClientCertificate[];
+  cookieJar: CookieJar;
+}
+type RequestAndContextAndResponse = RequestContextForScript & {
+  response: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
+};
+type RequestAndContextAndOptionalResponse = RequestContextForScript & {
+  script: string;
+  response?: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
+};
+export async function tryToExecutePreRequestScript(context: RequestContextForScript) {
+  return tryToExecuteScript({ script: context.request.preRequestScript, ...context });
+};
+
+export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
+  return tryToExecuteScript({ script: context.request.afterResponseScript, ...context });
+}
+
 export const tryToInterpolateRequest = async (
   request: Request,
   environment: string | Environment,
   purpose?: RenderPurpose,
   extraInfo?: ExtraRenderInfo,
   baseEnvironment?: Environment,
+  ignoreUndefinedEnvVariable?: boolean,
 ) => {
   try {
     return await getRenderedRequestAndContext({
@@ -182,6 +319,7 @@ export const tryToInterpolateRequest = async (
       baseEnvironment,
       purpose,
       extraInfo,
+      ignoreUndefinedEnvVariable,
     });
   } catch (err) {
     if ('type' in err && err.type === 'render') {
@@ -199,6 +337,26 @@ export const tryToTransformRequestWithPlugins = async (renderResult: RequestAndC
     throw new Error(`Failed to transform request with plugins: ${request._id}`);
   }
 };
+
+export interface sendCurlAndWriteTimelineError {
+  _id: string;
+  parentId: string;
+  timelinePath: string;
+  statusMessage: string;
+  // additional
+  url: string;
+  error: string;
+  elapsedTime: number;
+  bytesRead: number;
+}
+
+export interface sendCurlAndWriteTimelineResponse extends ResponsePatch {
+  _id: string;
+  parentId: string;
+  timelinePath: string;
+  statusMessage: string;
+}
+
 export async function sendCurlAndWriteTimeline(
   renderedRequest: RenderedRequest,
   clientCertificates: ClientCertificate[],
@@ -206,7 +364,7 @@ export async function sendCurlAndWriteTimeline(
   settings: Settings,
   timelinePath: string,
   responseId: string,
-) {
+): Promise<sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse> {
   const requestId = renderedRequest._id;
   const timelineStrings: string[] = [];
   const authentication = renderedRequest.authentication as RequestAuthentication;
@@ -219,7 +377,6 @@ export async function sendCurlAndWriteTimeline(
   if (!renderedRequest.settingSendCookies) {
     timelineStrings.push(JSON.stringify({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() }) + '\n');
   }
-
   const authHeader = await getAuthHeader(renderedRequest, finalUrl);
   const requestOptions = {
     requestId,
@@ -227,7 +384,7 @@ export async function sendCurlAndWriteTimeline(
     finalUrl,
     socketPath,
     settings,
-    certificates: clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url)),
+    certificates: filterClientCertificates(clientCertificates, renderedRequest.url, 'https:'),
     caCertficatePath: caCert?.disabled === false ? caCert.path : null,
     authHeader,
   };
@@ -279,6 +436,7 @@ export async function sendCurlAndWriteTimeline(
     ...patch,
   };
 }
+
 export const responseTransform = async (patch: ResponsePatch, environmentId: string | null, renderedRequest: RenderedRequest, context: Record<string, any>) => {
   const response: ResponsePatch = {
     ...patch,

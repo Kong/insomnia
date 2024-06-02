@@ -1,7 +1,7 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
+import React, { FC, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -21,6 +21,7 @@ import {
   SelectValue,
   useDragAndDrop,
 } from 'react-aria-components';
+import { ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   LoaderFunction,
   NavLink,
@@ -32,7 +33,7 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import { SORT_ORDERS, SortOrder, sortOrderName } from '../../common/constants';
+import { DEFAULT_SIDEBAR_SIZE, SORT_ORDERS, SortOrder, sortOrderName } from '../../common/constants';
 import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
 import { PlatformKeyCombinations } from '../../common/settings';
@@ -47,7 +48,7 @@ import {
   isRequestId,
   Request,
 } from '../../models/request';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
+import { isRequestGroup, isRequestGroupId, RequestGroup } from '../../models/request-group';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import {
   isWebSocketRequest,
@@ -75,9 +76,9 @@ import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-e
 import { GrpcRequestPane } from '../components/panes/grpc-request-pane';
 import { GrpcResponsePane } from '../components/panes/grpc-response-pane';
 import { PlaceholderRequestPane } from '../components/panes/placeholder-request-pane';
+import { RequestGroupPane } from '../components/panes/request-group-pane';
 import { RequestPane } from '../components/panes/request-pane';
 import { ResponsePane } from '../components/panes/response-pane';
-import { SidebarLayout } from '../components/sidebar-layout';
 import { getMethodShortHand } from '../components/tags/method-tag';
 import { ConnectionCircle } from '../components/websockets/action-bar';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
@@ -123,7 +124,7 @@ const INITIAL_GRPC_REQUEST_STATE = {
   methods: [],
 };
 export const loader: LoaderFunction = async ({ params }) => {
-  if (!params.requestId) {
+  if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
     invariant(workspaceId, 'Workspace ID is required');
     invariant(projectId, 'Project ID is required');
@@ -179,11 +180,12 @@ export const Debug: FC = () => {
   const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
   const [pastedCurl, setPastedCurl] = useState('');
 
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as {
+  const { organizationId, projectId, workspaceId, requestId, requestGroupId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
-    requestId: string;
+    requestId?: string;
+    requestGroupId?: string;
   };
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(
     grpcRequests.map(r => ({
@@ -301,7 +303,32 @@ export const Debug: FC = () => {
     [],
   );
 
+  const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
+
+  function toggleSidebar() {
+    const layout = sidebarPanelRef.current?.getLayout();
+
+    if (!layout) {
+      return;
+    }
+
+    if (layout && layout[0] > 0) {
+      layout[0] = 0;
+    } else {
+      layout[0] = DEFAULT_SIDEBAR_SIZE;
+    }
+
+    sidebarPanelRef.current?.setLayout(layout);
+  }
+
+  useEffect(() => {
+    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
+
+    return unsubscribe;
+  }, []);
+
   useDocBodyKeyboardShortcuts({
+    sidebar_toggle: toggleSidebar,
     request_togglePin: async () => {
       if (requestId) {
         const meta = isGrpcRequestId(requestId)
@@ -316,7 +343,7 @@ export const Debug: FC = () => {
       }
     },
     request_showDelete: () => {
-      if (activeRequest) {
+      if (activeRequest && requestId) {
         showModal(AskModal, {
           title: 'Delete Request?',
           message: `Really delete ${activeRequest.name}?`,
@@ -635,13 +662,34 @@ export const Debug: FC = () => {
     getItemKey: index => visibleCollection[index].doc._id,
   });
 
+  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
+  useLayoutEffect(() => {
+    if (settings.forceVerticalLayout) {
+      setDirection('vertical');
+      return () => { };
+    } else {
+      // Listen on media query changes
+      const mediaQuery = window.matchMedia('(max-width: 880px)');
+      setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
+
+      const handleChange = (e: MediaQueryListEvent) => {
+        setDirection(e.matches ? 'vertical' : 'horizontal');
+      };
+
+      mediaQuery.addEventListener('change', handleChange);
+
+      return () => {
+        mediaQuery.removeEventListener('change', handleChange);
+      };
+    }
+  }, [settings.forceVerticalLayout, direction]);
+
   return (
-    <SidebarLayout
-      className="new-sidebar"
-      renderPageSidebar={
+    <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
+      <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={10} collapsible>
         <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
-          <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
-            <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
+          <div className="flex flex-col items-start">
+            <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 border-solid border-[--hl-md] border-b p-[--padding-sm] font-bold w-full'>
               <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                 <NavLink
                   data-testid="project"
@@ -656,142 +704,144 @@ export const Debug: FC = () => {
                 <WorkspaceDropdown />
               </Breadcrumb>
             </Breadcrumbs>
-            <div className="flex w-full items-center gap-2 justify-between">
-              <Select
-                aria-label="Select an environment"
-                className="overflow-hidden"
-                onOpenChange={setIsEnvironmentSelectOpen}
-                isOpen={isEnvironmentSelectOpen}
-                onSelectionChange={environmentId => {
-                  setActiveEnvironmentFetcher.submit(
-                    {
-                      environmentId,
-                    },
-                    {
-                      method: 'POST',
-                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
-                    }
-                  );
-                }}
-                selectedKey={activeEnvironment._id}
-              >
-                <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden w-full">
-                  <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
-                    {({ isPlaceholder, selectedItem }) => {
-                      if (
-                        isPlaceholder ||
-                        (selectedItem &&
-                          selectedItem._id === baseEnvironment._id) ||
-                        !selectedItem
-                      ) {
+            <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
+              <div className="flex w-full items-center gap-2 justify-between">
+                <Select
+                  aria-label="Select an environment"
+                  className="overflow-hidden"
+                  onOpenChange={setIsEnvironmentSelectOpen}
+                  isOpen={isEnvironmentSelectOpen}
+                  onSelectionChange={environmentId => {
+                    setActiveEnvironmentFetcher.submit(
+                      {
+                        environmentId,
+                      },
+                      {
+                        method: 'POST',
+                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
+                      }
+                    );
+                  }}
+                  selectedKey={activeEnvironment._id}
+                >
+                  <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden w-full">
+                    <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
+                      {({ isPlaceholder, selectedItem }) => {
+                        if (
+                          isPlaceholder ||
+                          (selectedItem &&
+                            selectedItem._id === baseEnvironment._id) ||
+                          !selectedItem
+                        ) {
+                          return (
+                            <Fragment>
+                              <span
+                                style={{
+                                  borderColor: 'var(--color-font)',
+                                }}
+                              >
+                                <Icon className='text-xs w-5' icon="globe-americas" />
+                              </span>
+                              <span className='truncate'>
+                                {baseEnvironment.name}
+                              </span>
+                            </Fragment>
+                          );
+                        }
+
                         return (
                           <Fragment>
                             <span
                               style={{
-                                borderColor: 'var(--color-font)',
+                                borderColor: selectedItem.color ?? 'var(--color-font)',
                               }}
                             >
-                              <Icon className='text-xs w-5' icon="globe-americas" />
+                              <Icon
+                                icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
+                                style={{
+                                  color: selectedItem.color ?? 'var(--color-font)',
+                                }}
+                                className='text-xs w-5'
+                              />
                             </span>
-                            <span className='truncate'>
-                              {baseEnvironment.name}
-                            </span>
+                            {selectedItem.name}
                           </Fragment>
                         );
-                      }
-
-                      return (
-                        <Fragment>
-                          <span
-                            style={{
-                              borderColor: selectedItem.color ?? 'var(--color-font)',
-                            }}
-                          >
-                          <Icon
-                            icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
-                            style={{
-                              color: selectedItem.color ?? 'var(--color-font)',
-                            }}
-                            className='text-xs w-5'
-                          />
-                          </span>
-                          {selectedItem.name}
-                        </Fragment>
-                      );
-                    }}
-                  </SelectValue>
-                  <Icon icon="caret-down" />
-                </Button>
-                <Popover className="min-w-max">
-                  <ListBox
-                    key={activeEnvironment._id}
-                    items={environmentsList}
-                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                  >
-                    {item => (
-                      <ListBoxItem
-                        id={item._id}
-                        key={item._id}
-                        className={
-                          `flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item._id === baseEnvironment._id ? '' : 'pl-8'}`
-                        }
-                        aria-label={item.name}
-                        textValue={item.name}
-                        value={item}
-                      >
-                        {({ isSelected }) => (
-                          <Fragment>
-                            <span
-                              style={{
-                                borderColor: item.color ?? 'var(--color-font)',
-                              }}
-                            >
-                              <Icon
-                                icon={item.isPrivate ? 'laptop-code' : 'globe-americas'}
-                                className='text-xs w-5'
+                      }}
+                    </SelectValue>
+                    <Icon icon="caret-down" />
+                  </Button>
+                  <Popover className="min-w-max">
+                    <ListBox
+                      key={activeEnvironment._id}
+                      items={environmentsList}
+                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                    >
+                      {item => (
+                        <ListBoxItem
+                          id={item._id}
+                          key={item._id}
+                          className={
+                            `flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item._id === baseEnvironment._id ? '' : 'pl-8'}`
+                          }
+                          aria-label={item.name}
+                          textValue={item.name}
+                          value={item}
+                        >
+                          {({ isSelected }) => (
+                            <Fragment>
+                              <span
                                 style={{
-                                  color: item.color ?? 'var(--color-font)',
+                                  borderColor: item.color ?? 'var(--color-font)',
                                 }}
-                              />
-                            </span>
-                            <span className='flex-1 truncate'>
-                              {item.name}
-                            </span>
-                            {isSelected && (
-                              <Icon
-                                icon="check"
-                                className="text-[--color-success] justify-self-end"
-                              />
-                            )}
-                          </Fragment>
-                        )}
-                      </ListBoxItem>
-                    )}
-                  </ListBox>
-                </Popover>
-              </Select>
+                              >
+                                <Icon
+                                  icon={item.isPrivate ? 'laptop-code' : 'globe-americas'}
+                                  className='text-xs w-5'
+                                  style={{
+                                    color: item.color ?? 'var(--color-font)',
+                                  }}
+                                />
+                              </span>
+                              <span className='flex-1 truncate'>
+                                {item.name}
+                              </span>
+                              {isSelected && (
+                                <Icon
+                                  icon="check"
+                                  className="text-[--color-success] justify-self-end"
+                                />
+                              )}
+                            </Fragment>
+                          )}
+                        </ListBoxItem>
+                      )}
+                    </ListBox>
+                  </Popover>
+                </Select>
+                <Button
+                  aria-label='Manage Environments'
+                  onPress={() => setEnvironmentModalOpen(true)}
+                  className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                >
+                  <Icon icon="gear" />
+                </Button>
+              </div>
               <Button
-                aria-label='Manage Environments'
-                onPress={() => setEnvironmentModalOpen(true)}
-                className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                onPress={() => setIsCookieModalOpen(true)}
+                className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
               >
-                <Icon icon="gear" />
+                <Icon icon="cookie-bite" className='w-5 flex-shrink-0' />
+                <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
+              </Button>
+              <Button
+                onPress={() => setCertificatesModalOpen(true)}
+                className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              >
+                <Icon icon="file-contract" className='w-5 flex-shrink-0' />
+                <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates</span>
               </Button>
             </div>
-            <Button
-              onPress={() => setIsCookieModalOpen(true)}
-              className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-            >
-              <Icon icon="cookie-bite" className='w-5' />
-              <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
-            </Button>
-            <Button
-              onPress={() => setCertificatesModalOpen(true)}
-              className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-            >
-              <Icon icon="file-contract" className='w-5' />
-              <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates</span>
-            </Button>
           </div>
 
           <div className="flex flex-col flex-1 overflow-hidden">
@@ -907,11 +957,12 @@ export const Debug: FC = () => {
             </div>
 
             <GridList
+              id="sidebar-pinned-request-gridlist"
               className="overflow-y-auto border-b border-t data-[empty]:py-0 py-[--padding-sm] data-[empty]:border-none border-solid border-[--hl-sm]"
               items={collection.filter(item => item.pinned)}
               aria-label="Pinned Requests"
               disallowEmptySelection
-              selectedKeys={[requestId]}
+              selectedKeys={requestId ? [requestId] : []}
               selectionMode="single"
               onSelectionChange={keys => {
                 if (keys !== 'all') {
@@ -972,6 +1023,7 @@ export const Debug: FC = () => {
                         onSingleClick={() => {
                           if (item && isRequestGroup(item.doc)) {
                             groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
+                            navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}?${searchParams.toString()}`);
                           } else {
                             navigate(
                               `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}?${searchParams.toString()}`
@@ -1013,7 +1065,7 @@ export const Debug: FC = () => {
                 disallowEmptySelection
                 key={sortOrder}
                 dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
-                selectedKeys={[requestId]}
+                selectedKeys={requestId && [requestId] || requestGroupId && [requestGroupId]}
                 selectionMode="single"
                 onSelectionChange={keys => {
                   if (keys !== 'all') {
@@ -1034,10 +1086,19 @@ export const Debug: FC = () => {
               >
                 {virtualItem => {
                   const item = visibleCollection[virtualItem.index];
+                  let label = item.doc.name;
+                  if (isRequest(item.doc)) {
+                    label = `${getMethodShortHand(item.doc)} ${label}`;
+                  } else if (isWebSocketRequest(item.doc)) {
+                    label = `WS ${label}`;
+                  } else if (isGrpcRequest(item.doc)) {
+                    label = `gRPC ${label}`;
+                  }
+
                   return (
                     <GridListItem
                       className="group outline-none absolute top-0 left-0 select-none w-full"
-                      textValue={item.doc.name}
+                      textValue={label}
                       data-testid={item.doc.name}
                       style={{
                         height: `${virtualItem.size}`,
@@ -1054,6 +1115,8 @@ export const Debug: FC = () => {
                         <Button slot="drag" className="hidden" />
                         {isRequest(item.doc) && (
                           <span
+                            aria-hidden
+                            role="presentation"
                             className={
                               `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
                               ${{
@@ -1071,12 +1134,12 @@ export const Debug: FC = () => {
                           </span>
                         )}
                         {isWebSocketRequest(item.doc) && (
-                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+                          <span aria-hidden role="presentation" className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
                             WS
                           </span>
                         )}
                         {isGrpcRequest(item.doc) && (
-                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+                          <span aria-hidden role="presentation" className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
                             gRPC
                           </span>
                         )}
@@ -1089,11 +1152,11 @@ export const Debug: FC = () => {
                         <EditableInput
                           value={getRequestNameOrFallback(item.doc)}
                           name="request name"
-                          ariaLabel="request name"
+                          ariaLabel={label}
                           className="px-1 flex-1"
                           onSingleClick={() => {
                             if (item && isRequestGroup(item.doc)) {
-                              groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
+                              navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}?${searchParams.toString()}`);
                             } else {
                               navigate(
                                 `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}?${searchParams.toString()}`
@@ -1160,55 +1223,66 @@ export const Debug: FC = () => {
             />
           )}
         </div>
-      }
-      renderPaneOne={
-        workspaceId ? (
-          <ErrorBoundary showAlert>
-            {isGrpcRequestId(requestId) && grpcState && (
-              <GrpcRequestPane
-                grpcState={grpcState}
-                setGrpcState={setGrpcState}
-                reloadRequests={reloadRequests}
-              />
-            )}
-            {isWebSocketRequestId(requestId) && (
-              <WebSocketRequestPane environment={activeEnvironment} />
-            )}
-            {isRequestId(requestId) && (
-              <RequestPane
-                environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                settings={settings}
-                setLoading={setLoading}
-                onPaste={text => {
-                  setPastedCurl(text);
-                  setPasteCurlModalOpen(true);
-                }}
-              />
-            )}
-            {!requestId && <PlaceholderRequestPane />}
-            {isRequestSettingsModalOpen && activeRequest && (
-              <RequestSettingsModal
-                request={activeRequest}
-                onHide={() => setIsRequestSettingsModalOpen(false)}
-              />
-            )}
-          </ErrorBoundary>
-        ) : null
-      }
-      renderPaneTwo={
-        <ErrorBoundary showAlert>
-          {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
-            <GrpcResponsePane grpcState={grpcState} />
-          )}
-          {isRealtimeRequest && (
-            <RealtimeResponsePane requestId={activeRequest._id} />
-          )}
-          {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
-            <ResponsePane runningRequests={runningRequests} />
-          )}
-        </ErrorBoundary>
-      }
-    />
+      </Panel>
+      <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
+      <Panel>
+        <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
+          <Panel id="pane-one" className='pane-one theme--pane'>
+            {workspaceId ? (
+              <ErrorBoundary showAlert>
+                {isRequestGroupId(requestGroupId) && (
+                  <RequestGroupPane settings={settings} />
+                )}
+                {isGrpcRequestId(requestId) && grpcState && (
+                  <GrpcRequestPane
+                    grpcState={grpcState}
+                    setGrpcState={setGrpcState}
+                    reloadRequests={reloadRequests}
+                  />
+                )}
+                {isWebSocketRequestId(requestId) && (
+                  <WebSocketRequestPane environment={activeEnvironment} />
+                )}
+                {isRequestId(requestId) && (
+                  <RequestPane
+                    environmentId={activeEnvironment ? activeEnvironment._id : ''}
+                    settings={settings}
+                    setLoading={setLoading}
+                    onPaste={text => {
+                      setPastedCurl(text);
+                      setPasteCurlModalOpen(true);
+                    }}
+                  />
+                )}
+                {Boolean(!requestId && !requestGroupId) && <PlaceholderRequestPane />}
+                {isRequestSettingsModalOpen && activeRequest && (
+                  <RequestSettingsModal
+                    request={activeRequest}
+                    onHide={() => setIsRequestSettingsModalOpen(false)}
+                  />
+                )}
+              </ErrorBoundary>
+            ) : null}
+          </Panel>
+          {activeRequest ? (<>
+            <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
+            <Panel id="pane-two" className='pane-two theme--pane'>
+              <ErrorBoundary showAlert>
+                {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
+                  <GrpcResponsePane grpcState={grpcState} />
+                )}
+                {isRealtimeRequest && (
+                  <RealtimeResponsePane requestId={activeRequest._id} />
+                )}
+                {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
+                  <ResponsePane runningRequests={runningRequests} />
+                )}
+              </ErrorBoundary>
+            </Panel>
+          </>) : null}
+        </PanelGroup>
+      </Panel>
+    </PanelGroup>
   );
 };
 

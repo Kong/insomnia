@@ -26,6 +26,9 @@ test.describe('pre-request features tests', async () => {
         {
             name: 'environments setting and overriding',
             expectedBody: {
+                environmentName: '',
+                baseEnvironmentName: 'Base Environment',
+                collectionVariablesName: 'Base Environment',
                 fromBaseEnv: 'baseEnv',
                 scriptValue: 'fromEnv',
                 preDefinedValue: 'fromScript',
@@ -44,18 +47,16 @@ test.describe('pre-request features tests', async () => {
             name: 'require / require classes from insomnia-collection module and init them',
             expectedBody: {
                 propJson: {
-                    '_kind': 'Property',
-                    'disabled': false,
-                    'id': 'pid',
-                    'name': 'pname',
+                    disabled: false,
+                    id: 'pid',
+                    name: 'pname',
                 },
                 headerJson: {
-                    '_kind': 'Header',
-                    'key': 'headerKey',
-                    'value': 'headerValue',
-                    'id': '',
-                    'name': '',
-                    'type': '',
+                    key: 'headerKey',
+                    value: 'headerValue',
+                    id: '',
+                    name: '',
+                    type: '',
                 },
             },
         },
@@ -124,6 +125,55 @@ test.describe('pre-request features tests', async () => {
                 stream: true,
                 timers: true,
                 events: true,
+            },
+        },
+        {
+            name: 'get sendRequest response through await or callback',
+            customVerify: (bodyJson: any) => {
+                const requestBody = JSON.parse(bodyJson.data);
+                expect(requestBody.bodyFromAwait.method).toEqual('GET');
+                expect(requestBody.bodyFromCallback.method).toEqual('GET');
+            },
+        },
+        {
+            name: 'require the uuid module',
+            expectedBody: {
+                uuid: '00000000-0000-0000-0000-000000000000',
+            },
+        },
+        {
+            name: 'require external modules and built-in lodash',
+            expectedBody: {
+                atob: true,
+                btoa: true,
+                chai: true,
+                cheerio: true,
+                crypto: true,
+                csv: true,
+                lodash: true,
+                moment: true,
+                tv4: true,
+                uuid: true,
+                xml2js: true,
+                builtInLodash: true,
+            },
+        },
+        {
+            name: 'not return until all Promise settled',
+            expectedBody: {
+                asyncTaskDone: true,
+            },
+        },
+        {
+            name: 'not return until all setTimeout finished',
+            expectedBody: {
+                asyncTaskDone: true,
+            },
+        },
+        {
+            name: 'not return until all async tasks finished',
+            expectedBody: {
+                asyncTaskDone: true,
             },
         },
     ];
@@ -355,8 +405,32 @@ test.describe('pre-request features tests', async () => {
         // verify
         await page.getByRole('tab', { name: 'Timeline' }).click();
 
-        await expect(responsePane).toContainText('✓ happy tests'); // original proxy
-        await expect(responsePane).toContainText('✕ unhappy tests: AssertionError: expected 199 to deeply equal 200'); // updated proxy
+        await expect(responsePane).toContainText('✓ happy tests');
+        await expect(responsePane).toContainText('✕ unhappy tests: AssertionError: expected 199 to deeply equal 200');
+    });
+
+    test('environment and baseEnvironment can be persisted', async ({ page }) => {
+        const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
+        await page.getByLabel('Request Collection').getByTestId('persist environment').press('Enter');
+
+        // send
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+        // verify response
+        await page.waitForSelector('[data-testid="response-status-tag"]:visible');
+        await expect(statusTag).toContainText('200 OK');
+
+        // verify persisted environment
+        await page.getByLabel('Manage Environments').click();
+        const responseBody = page.getByRole('dialog').getByTestId('CodeEditor').locator('.CodeMirror-line');
+        const rows = await responseBody.allInnerTexts();
+        const bodyJson = JSON.parse(rows.join(' '));
+
+        expect(bodyJson).toEqual({
+            // no environment is selected so the environment value is not persisted
+            '__fromScript1': 'baseEnvironment',
+            '__fromScript2': 'collection',
+        });
     });
 });
 

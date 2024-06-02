@@ -1,6 +1,7 @@
 import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
-import { Heading } from 'react-aria-components';
+import { Button, Heading } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
 import { CONTENT_TYPE_JSON } from '../../../common/constants';
@@ -217,6 +218,8 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
 
   const [previewMode, setPreviewMode] = useState(CONTENT_TYPE_JSON);
 
+  const [dismissPathParameterTip, setDismissPathParameterTip] = useLocalStorage('dismissPathParameterTip', '');
+
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
@@ -297,11 +300,11 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
               <div className="p-4">
                 <div className="text-xs max-h-32 flex flex-col overflow-y-auto min-h-[2em] bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm]">
                   <label className="label--small no-pad-top">Url Preview</label>
-                <ErrorBoundary
-                  key={uniqueKey}
-                  errorClassName="tall wide vertically-align font-error pad text-center"
-                >
-                  <RenderedQueryString request={activeRequest} />
+                  <ErrorBoundary
+                    key={uniqueKey}
+                    errorClassName="tall wide vertically-align font-error pad text-center"
+                  >
+                    <RenderedQueryString request={activeRequest} />
                   </ErrorBoundary>
                 </div>
               </div>
@@ -310,18 +313,18 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                   <div className='flex items-center w-full p-4 h-4 justify-between'>
                     <Heading className='text-xs font-bold uppercase text-[--hl]'>Query parameters</Heading>
                   </div>
-              <ErrorBoundary
-                key={uniqueKey}
-                errorClassName="tall wide vertically-align font-error pad text-center"
-              >
-                <RequestParametersEditor
-                  bulk={useBulkParametersEditor}
-                  disabled={disabled}
-                />
-              </ErrorBoundary>
-            </div>
+                  <ErrorBoundary
+                    key={uniqueKey}
+                    errorClassName="tall wide vertically-align font-error pad text-center"
+                  >
+                    <RequestParametersEditor
+                      bulk={useBulkParametersEditor}
+                      disabled={disabled}
+                    />
+                  </ErrorBoundary>
+                </div>
                 <div className='flex-1 flex flex-col gap-4 p-4 overflow-y-auto'>
-              <Heading className='text-xs font-bold uppercase text-[--hl]'>Path parameters</Heading>
+                  <Heading className='text-xs font-bold uppercase text-[--hl]'>Path parameters</Heading>
                   {pathParameters.length > 0 && (
                     <div className="pr-[72.73px] w-full">
                       <div className='grid gap-x-[20.8px] grid-cols-2 flex-shrink-0 w-full rounded-sm overflow-hidden'>
@@ -347,10 +350,16 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                       </div>
                     </div>
                   )}
-                  {pathParameters.length === 0 && (
+                  {pathParameters.length === 0 && !dismissPathParameterTip && (
                     <div className='text-sm text-[--hl] rounded-sm border border-solid border-[--hl-md] p-2 flex items-center gap-2'>
                       <Icon icon='info-circle' />
                       <span>Path parameters are url path segments that start with a colon ':' e.g. ':id' </span>
+                      <Button
+                        className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ml-auto"
+                        onPress={() => setDismissPathParameterTip('true')}
+                      >
+                        <Icon icon='close' />
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -384,10 +393,11 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             />
           </div>
         </TabItem>
-        <TabItem key="auth" title={<AuthDropdown authTypes={supportedAuthTypes} disabled={disabled} />}>
+        <TabItem key="auth" title={<AuthDropdown authentication={activeRequest.authentication} authTypes={supportedAuthTypes} disabled={disabled} />}>
           {disabled && <PaneReadOnlyBanner />}
           <AuthWrapper
             key={uniqueKey}
+            authentication={activeRequest.authentication}
             disabled={disabled}
           />
         </TabItem>
@@ -405,8 +415,10 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           {disabled && <PaneReadOnlyBanner />}
           <RequestHeadersEditor
             key={uniqueKey}
+            headers={activeRequest.headers}
             bulk={false}
             isDisabled={readyState}
+            requestType="WebSocketRequest"
           />
         </TabItem>
         <TabItem

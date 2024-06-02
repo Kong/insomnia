@@ -565,7 +565,7 @@ export const database = {
     }
   },
 
-  withAncestors: async function<T extends BaseModel>(doc: T | null, types: string[] = allTypes()) {
+  withAncestors: async function <T extends BaseModel>(doc: T | null, types: string[] = allTypes()) {
     if (db._empty) {
       return _send<T[]>('withAncestors', ...arguments);
     }

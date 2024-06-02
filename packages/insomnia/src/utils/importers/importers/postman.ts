@@ -1,3 +1,4 @@
+import { fakerFunctions } from '../../../ui/components/templating/faker-functions';
 import { Converter, ImportRequest, Parameter } from '../entities';
 import {
   Auth as V200Auth,
@@ -51,6 +52,22 @@ type Header = V200Header | V210Header;
 
 let requestCount = 1;
 let requestGroupCount = 1;
+const fakerTags = Object.keys(fakerFunctions);
+const postmanTagRegexs = fakerTags.map(tag => ({ tag, regex: new RegExp(`\\{\\{\\$${tag}\\}\\}`, 'g') }));
+// example: { 'guid' : '{% faker 'guid' %}' }
+const postmanToNunjucksLookup = fakerTags
+  .map(tag => ({ [tag]: `{% faker '${tag}' %}` }))
+  .reduce((acc, obj) => ({ ...acc, ...obj }), {});
+
+export const transformPostmanToNunjucksString = (inputString?: string | null) => {
+  if (!inputString) {
+    return '';
+  }
+
+  return postmanTagRegexs.reduce((transformedString, { tag, regex }) => {
+    return transformedString.replace(regex, postmanToNunjucksLookup[tag]);
+  }, inputString);
+};
 
 const POSTMAN_SCHEMA_V2_0 =
   'https://schema.getpostman.com/json/collection/v2.0.0/collection.json';
@@ -68,6 +85,24 @@ const mapGrantTypeToInsomniaGrantType = (grantType: string) => {
 
   return grantType;
 };
+
+export function translateHandlersInScript(scriptContent: string): string {
+  let translated = scriptContent;
+
+  // Replace pm.* with insomnia.*
+  // This is a simple implementation that only replaces the first instance of pm.* in the script
+  let offset = 0;
+  for (let i = 0; i < scriptContent.length - 2; i++) {
+    const isPM = scriptContent.slice(i, i + 3) === 'pm.';
+    const isPrevCharacterAlphaNumeric = i - 1 >= 0 && /[0-9a-zA-Z\_\$]/.test(scriptContent[i - 1]);
+    if (isPM && !isPrevCharacterAlphaNumeric) {
+      translated = translated.slice(0, i + offset) + 'insomnia.' + translated.slice(i + 3 + offset);
+      offset += 6;
+    }
+  }
+
+  return translated;
+}
 
 export class ImportPostman {
   collection;
@@ -132,7 +167,28 @@ export class ImportPostman {
       (Array.isArray(scriptOrRows.exec) ? scriptOrRows.exec.join('\n') : scriptOrRows.exec) :
       '';
 
-    return scriptContent;
+    return translateHandlersInScript(scriptContent);
+  };
+
+  importAfterResponseScript = (events: EventList | undefined): string => {
+    if (events == null) {
+      return '';
+    }
+
+    const afterResponseEvent = events.find(
+      event => event.listen === 'test'
+    );
+
+    const scriptOrRows = afterResponseEvent ? afterResponseEvent.script : '';
+    if (!scriptOrRows) {
+      return '';
+    }
+
+    const scriptContent = scriptOrRows.exec ?
+      (Array.isArray(scriptOrRows.exec) ? scriptOrRows.exec.join('\n') : scriptOrRows.exec) :
+      '';
+
+    return translateHandlersInScript(scriptContent);
   };
 
   importRequestItem = (
@@ -152,25 +208,27 @@ export class ImportPostman {
     }
 
     const preRequestScript = this.importPreRequestScript(event);
+    const afterResponseScript = this.importAfterResponseScript(event);
+
     return {
       parentId,
       _id: `__REQ_${requestCount++}__`,
       _type: 'request',
       name,
       description: (request.description as string) || '',
-      url: this.importUrl(request.url),
+      url: transformPostmanToNunjucksString(this.importUrl(request.url)),
       parameters: parameters,
       method: request.method || 'GET',
       headers: headers.map(({ key, value, disabled, description }) => ({
-        name: key,
-        value,
+        name: transformPostmanToNunjucksString(key),
+        value: transformPostmanToNunjucksString(value),
         ...(typeof disabled !== 'undefined' ? { disabled } : {}),
         ...(typeof description !== 'undefined' ? { description } : {}),
       })),
       body: this.importBody(request.body, headers.find(({ key }) => key === 'Content-Type')?.value),
       authentication,
       preRequestScript,
-      metaSortKey: requestCount,
+      afterResponseScript,
     };
   };
 
@@ -179,8 +237,8 @@ export class ImportPostman {
       return [];
     }
     return parameters.map(({ key, value, disabled }) => ({
-      name: key,
-      value,
+      name: transformPostmanToNunjucksString(key),
+      value: transformPostmanToNunjucksString(value),
       disabled: disabled || false,
     }) as Parameter);
   };
@@ -269,7 +327,7 @@ export class ImportPostman {
       ({ key, value, type, enabled, disabled, src }) => {
         const item: Parameter = {
           type,
-          name: key,
+          name: transformPostmanToNunjucksString(key),
         };
 
         if (schema === POSTMAN_SCHEMA_V2_0) {
@@ -280,6 +338,8 @@ export class ImportPostman {
 
         if (type === 'file') {
           item.fileName = src as string;
+        } else if (typeof value === 'string') {
+          item.value = transformPostmanToNunjucksString(value);
         } else {
           item.value = value as string;
         }
@@ -301,8 +361,8 @@ export class ImportPostman {
 
     const params = urlEncoded?.map(({ key, value, enabled, disabled }) => {
       const item: Parameter = {
-        value,
-        name: key,
+        value: transformPostmanToNunjucksString(value),
+        name: transformPostmanToNunjucksString(key),
       };
 
       if (schema === POSTMAN_SCHEMA_V2_0) {
@@ -327,7 +387,7 @@ export class ImportPostman {
 
     return {
       mimeType,
-      text: raw,
+      text: transformPostmanToNunjucksString(raw),
     };
   };
 
@@ -338,7 +398,7 @@ export class ImportPostman {
 
     return {
       mimeType: 'application/graphql',
-      text: JSON.stringify(graphql),
+      text: transformPostmanToNunjucksString(JSON.stringify(graphql)),
     };
   };
 
@@ -555,6 +615,8 @@ export class ImportPostman {
       username: RegExp(/.+?(?=\:)/).exec(authString)?.[0],
       password: RegExp(/(?<=\:).*/).exec(authString)?.[0],
     };
+    item.username = transformPostmanToNunjucksString(item.username);
+    item.password = transformPostmanToNunjucksString(item.password);
 
     return item;
   };
@@ -582,7 +644,7 @@ export class ImportPostman {
         'token',
       );
     }
-
+    item.token = transformPostmanToNunjucksString(item.token);
     return item;
   };
 
@@ -590,7 +652,7 @@ export class ImportPostman {
     if (!authHeader) {
       return {};
     }
-    const authHeader2 = authHeader.replace(/\s+/, ' ');
+    const authHeader2 = transformPostmanToNunjucksString(authHeader.replace(/\s+/, ' '));
     const tokenIndex = authHeader.indexOf(' ');
     return {
       type: 'bearer',
@@ -802,11 +864,14 @@ export const convert: Converter = rawData => {
       collection.info.schema === POSTMAN_SCHEMA_V2_0 ||
       collection.info.schema === POSTMAN_SCHEMA_V2_1
     ) {
-      return new ImportPostman(collection).importCollection();
+      const list = new ImportPostman(collection).importCollection();
+      // make import order play nice with existing pattern of descending negavitve numbers (technically ascending) eg. -3, -2, -1
+      const now = Date.now();
+      const ordered = list.map((item, index) => ({ ...item, metaSortKey: -1 * (now - index) }));
+      return ordered;
     }
   } catch (error) {
     // Nothing
-    console.log('Error importing Postman collection', error);
   }
 
   return null;

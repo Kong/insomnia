@@ -1,5 +1,4 @@
 import React, { FC, ReactNode } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
 
 import {
   AUTH_API_KEY,
@@ -15,7 +14,7 @@ import {
   AUTH_OAUTH_2,
 } from '../../../../common/constants';
 import { RequestAuthentication } from '../../../../models/request';
-import { RequestLoaderData } from '../../../routes/request';
+import { getAuthObjectOrNull } from '../../../../network/authentication';
 import { ApiKeyAuth } from './api-key-auth';
 import { AsapAuth } from './asap-auth';
 import { AWSAuth } from './aws-auth';
@@ -28,12 +27,8 @@ import { NTLMAuth } from './ntlm-auth';
 import { OAuth1Auth } from './o-auth-1-auth';
 import { OAuth2Auth } from './o-auth-2-auth';
 
-export const AuthWrapper: FC<{ disabled?: boolean }> = ({ disabled = false }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const authentication = activeRequest.authentication as RequestAuthentication;
-
-  const { type } = authentication;
-
+export const AuthWrapper: FC<{ authentication?: RequestAuthentication | {}; disabled?: boolean }> = ({ authentication, disabled = false }) => {
+  const type = getAuthObjectOrNull(authentication)?.type || '';
   let authBody: ReactNode = null;
 
   if (type === AUTH_BASIC) {

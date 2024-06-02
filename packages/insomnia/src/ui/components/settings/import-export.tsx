@@ -14,7 +14,7 @@ import { Project } from '../../../models/project';
 import { isScratchpad, Workspace } from '../../../models/workspace';
 import { SegmentEvent } from '../../analytics';
 import { useOrganizationLoaderData } from '../../routes/organization';
-import { ProjectLoaderData } from '../../routes/project';
+import { ListWorkspacesLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
 import { UntrackedProjectsLoaderData } from '../../routes/untracked-projects';
 import { WorkspaceLoaderData } from '../../routes/workspace';
@@ -251,16 +251,16 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
   const { workspaceCount, userSession } = useRootLoaderData();
-  const workspacesFetcher = useFetcher();
+  const workspacesFetcher = useFetcher<ListWorkspacesLoaderData>();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized && organizationId && !isScratchpadOrganizationId(organizationId)) {
-      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}`);
+    if (isIdleAndUninitialized && organizationId && projectId && !isScratchpadOrganizationId(organizationId)) {
+      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}/list-workspaces`);
     }
   }, [organizationId, projectId, workspacesFetcher]);
-  const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData | undefined;
+  const projectLoaderData = workspacesFetcher?.data;
   const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined) || [];
-  const projectName = projectLoaderData?.activeProject.name ?? getProductName();
+  const projectName = projectLoaderData?.activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -271,8 +271,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     hideSettingsModal();
   };
 
-  if (!organizationId) {
-    return null;
+  if (!organizationId || !projectLoaderData?.activeProject) {
+    return <p>There is no active project. Create a new project to import or export data.</p>;
   }
 
   return (

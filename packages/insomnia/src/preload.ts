@@ -44,12 +44,12 @@ const main: Window['main'] = {
   loginStateChange: () => ipcRenderer.send('loginStateChange'),
   restart: () => ipcRenderer.send('restart'),
   openInBrowser: options => ipcRenderer.send('openInBrowser', options),
+  openDeepLink: options => ipcRenderer.send('openDeepLink', options),
   halfSecondAfterAppStart: () => ipcRenderer.send('halfSecondAfterAppStart'),
   manualUpdateCheck: () => ipcRenderer.send('manualUpdateCheck'),
   backup: () => ipcRenderer.invoke('backup'),
   restoreBackup: options => ipcRenderer.invoke('restoreBackup', options),
   authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
-  spectralRun: options => ipcRenderer.invoke('spectralRun', options),
   setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
   installPlugin: options => ipcRenderer.invoke('installPlugin', options),
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
@@ -64,8 +64,6 @@ const main: Window['main'] = {
   curl,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
-  axiosRequest: options => ipcRenderer.invoke('axiosRequest', options),
-  insomniaFetch: options => ipcRenderer.invoke('insomniaFetch', options),
   showContextMenu: options => ipcRenderer.send('show-context-menu', options),
   database: {
     caCertificate: {
@@ -73,8 +71,9 @@ const main: Window['main'] = {
     },
   },
   hiddenBrowserWindow: {
-    runPreRequestScript: options => new Promise(async (resolve, reject) => {
-      await ipcRenderer.invoke('open-channel-to-hidden-browser-window');
+    runScript: options => new Promise(async (resolve, reject) => {
+      const isPortAlive = ports.get('hiddenWindowPort') !== undefined;
+      await ipcRenderer.invoke('open-channel-to-hidden-browser-window', isPortAlive);
 
       const port = ports.get('hiddenWindowPort');
       invariant(port, 'hiddenWindowPort is undefined');
