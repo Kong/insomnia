@@ -51,7 +51,6 @@ export async function trackSegmentEvent(
 ) {
   const settings = await models.settings.get();
   const userSession = await models.userSession.get();
-
   const allowAnalytics = settings.enableAnalytics || userSession.accountId;
   if (allowAnalytics) {
     try {
@@ -60,6 +59,7 @@ export async function trackSegmentEvent(
         app: { name: getProductName(), version: getAppVersion() },
         os: { name: _getOsName(), version: process.getSystemVersion() },
       };
+      playwrightDebugAnalytics({ context, anonymousId, userId: userSession?.accountId || '' });
       analytics.track({
         event,
         properties,
@@ -88,6 +88,7 @@ export async function trackPageView(name: string) {
         app: { name: getProductName(), version: getAppVersion() },
         os: { name: _getOsName(), version: process.getSystemVersion() },
       };
+      playwrightDebugAnalytics({ context, anonymousId, accountId });
       analytics.page({ name, context, anonymousId, userId: accountId }, error => {
         if (error) {
           console.warn('[analytics] Error sending segment event', error);
@@ -121,5 +122,11 @@ function _getOsName() {
       return 'windows';
     default:
       return platform;
+  }
+}
+
+function playwrightDebugAnalytics(object: any) {
+  if (process.env.PLAYWRIGHT) {
+    console.log('[playwright-analytics] analytics debug', object);
   }
 }
