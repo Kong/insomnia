@@ -12,11 +12,26 @@ env:
   RELEASE_CORE_TAG: core@${{ github.event.inputs.version }}
   RELEASE_BRANCH: release/${{ github.event.inputs.version }}
   IS_PRERELEASE: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
+  ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
+  INSO_DOCKER_IMAGE: kong/inso # By default, registry is docker.io
+  NOTARY_REPOSITORY: ${{ (contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta')) && 'kong/notary-internal' || 'kong/notary' }}
 
 jobs:
   publish:
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    outputs:
+      NOTARY_REPOSITORY: ${{ env.NOTARY_REPOSITORY }}
+      INSO_BINARY_ARTIFACTS_DIGEST_BASE64: ${{ steps.metadata.outputs.inso_binary_artifact_digest_base64 }}  
+      INSO_DOCKER_IMAGE: ${{ env.INSO_DOCKER_IMAGE }}
+      INSO_DOCKER_IMAGE_DIGEST: ${{ steps.image_manifest_metadata.outputs.inso_image_sha }}
+      INSOMNIA_RELEASE_TAG: ${{ env.RELEASE_CORE_TAG }}
+      INSOMNIA_BINARY_ARTIFACTS_DIGEST_BASE64: ${{ steps.metadata.outputs.insomnia_binary_artifact_digest_base64 }}
+    permissions:
+      id-token: write # needed for signing the images
+      actions: read # For getting workflow run info for keyless signing of docker image
+      contents: write # Required to upload assets. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
+      packages: write
     steps:
       - name: Checkout branch # Check out the release branch
         uses: actions/checkout@v4
@@ -42,9 +57,30 @@ jobs:
           workflow: release-build.yml
           workflow_conclusion: success
           branch: ${{ env.RELEASE_BRANCH }} # Branch workflow ran on != branch the workflow created
-          path: ./artifacts/
+          path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }} # Base path to download all release workflow assets
+      
+      - name: Set publish metadata # Checksum for provenance must be calculated before moving artifacts temporarily
+        id: metadata
+        run: |
 
-      - name: Temporarily move Windows artifacts
+          INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)
+          echo "INSO_VERSION=${INSO_VERSION}" >> $GITHUB_ENV 
+
+          inso_binary_artifact_digest_base64=$(find "${{env.ARTIFACTS_DOWNLOAD_PATH}}" -type f \
+          \( -name "inso-*.zip" -o -name "inso-*.pkg" -o -name "inso-*.tar.xz" \) \
+          -exec sha256sum {} \; | sed "s/\(.* \)\(.*\(inso\)\)/\1\\3/" | sort | base64 -w0)
+          echo "Inso CLI Artifact digest:"
+          echo "${inso_binary_artifact_digest_base64}"
+          echo "inso_binary_artifact_digest_base64=${inso_binary_artifact_digest_base64}" >> $GITHUB_OUTPUT
+          
+          insomnia_binary_artifact_digest_base64=$(find "${{env.ARTIFACTS_DOWNLOAD_PATH}}" -type f \                                                                                               [18:35:48]
+          \( -name "Insomnia.Core-*" \) \
+          -exec sha256sum {} \; | sed "s/\(.* \)\(.*\(Insomnia.Core\)\)/\1\\3/" | sort | base64 -w0)
+          echo "Insomnia Binary Artifact digest:"
+          echo "${insomnia_binary_artifact_digest_base64}"
+          echo "insomnia_binary_artifact_digest_base64=${insomnia_binary_artifact_digest_base64}" >> $GITHUB_OUTPUT
+          
+      - name: Temporarily move artifacts
         shell: bash
         run: |
           mv ./artifacts/windows-latest-artifacts/insomnia/dist/squirrel-windows/Insomnia.Core-${{ env.RELEASE_VERSION }}.exe ./artifacts/
@@ -71,40 +107,12 @@ jobs:
       #     file_path: ${GITHUB_WORKSPACE}/artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}-portable.exe
       #     output_path: ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist
 
-      - name: Set Inso CLI version on Github Env
-        run:
-          echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
-
-      - name: Create Release for Inso CLI
-        uses: ncipollo/release-action@v1
-        id: release_inso_cli
-        with:
-          tag: lib@${{ env.INSO_VERSION }}
-          name: "Inso CLI ${{ env.INSO_VERSION }} 📦"
-          generateReleaseNotes: false
-          commit: ${{ env.RELEASE_BRANCH }}
-          prerelease: ${{ env.IS_PRERELEASE }}
-          draft: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Inso CLI artifacts to release
-        uses: xresloader/upload-to-github-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          release_id: ${{ steps.release_inso_cli.outputs.id }}
-          tag_name: lib@${{ env.INSO_VERSION }}
-          file: "./artifacts/*-latest-artifacts/insomnia-inso/artifacts/**"
-          prerelease: ${{ env.IS_PRERELEASE }}
-          draft: false
-
       - name: Create Tag and Release
         uses: ncipollo/release-action@v1
         id: core_tag_and_release
         with:
           tag: ${{ env.RELEASE_CORE_TAG }}
-          name: "Insomnia ${{ env.RELEASE_VERSION }} 📦"
+          name: "${{ env.RELEASE_VERSION }} 📦"
           generateReleaseNotes: true
           commit: ${{ env.RELEASE_BRANCH }}
           prerelease: ${{ env.IS_PRERELEASE }}
@@ -119,7 +127,7 @@ jobs:
         with:
           release_id: ${{ steps.core_tag_and_release.outputs.id }}
           tag_name: ${{ env.RELEASE_CORE_TAG }}
-          file: "./artifacts/*-latest-artifacts/insomnia/**"
+          file: "./artifacts/*-latest-artifacts/insomnia/**;./artifacts/inso-*;./artifacts/*sbom.{spdx,cyclonedx}.json"
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
 
@@ -187,23 +195,67 @@ jobs:
             --dist-version focal
             --package-type insomnia
             ${{ env.IS_PRERELEASE == 'true' && '--internal' || '--publish' }}
-
-      - name: Push Inso CLI docker image tags to Docker Hub
+    
+      - name: Load the Inso CLI Docker Archive
         run: |
-          echo -n $DOCKER_REGISTRY_TOKEN | docker login -u "$DOCKER_REGISTRY_USER" --password-stdin $DOCKER_REGISTRY
           docker load -i ./artifacts/ubuntu-latest-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
-          docker tag insomnia-inso:temp ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${{ env.INSO_VERSION }}
-          docker tag insomnia-inso:temp ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}
-          docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${{ env.INSO_VERSION }}
-          docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}
+          docker image ls
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.1.0
+        with:
+          username: ${{ secrets.DOCKER_REGISTRY_USER }}
+          password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+        
+      - name: Docker meta for Inso CLI Docker Image
+        id: inso_docker_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.INSO_DOCKER_IMAGE }}
+          tags: |
+            type=raw,value=${{ env.INSO_VERSION }},prirority=1000
+            type=raw,value=latest,enable=${{ env.IS_PRERELEASE == 'false' }}
+            type=raw,value=alpha,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'alpha') }}
+            type=raw,value=beta,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'beta') }}
+          sep-tags: ","
+      
+      - name: Push Inso CLI docker image tags to Docker Hub
+        id: publish_isno_docker_image
+        run: |
+          for tag in ${IMAGE_TAGS//,/ }; do \
+            docker tag insomnia-inso:temp $tag
+            docker push $tag; \
+          done
         env:
-          DOCKER_REGISTRY_TOKEN: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
-          DOCKER_REGISTRY_USER: ${{ secrets.DOCKER_REGISTRY_USER }}
-          DOCKER_REGISTRY: docker.io
-          DOCKER_IMAGE: kong/inso
-          DOCKER_LATEST_TAG: ${{ env.IS_PRERELEASE == 'false' && 'latest' || contains(github.event.inputs.version, 'alpha') && 'alpha' || 'beta' }}
+          IMAGE_TAGS: ${{ steps.inso_docker_meta.outputs.tags }}
+      
+      # Setup regctl to parse platform specific image digest from image manifest
+      - name: Install regctl
+        uses: regclient/actions/regctl-installer@main
 
+      # The image manifest digest/sha is generated only after the image is published to registry
+      - name: Parse architecture specific digest from image manifest
+        id: image_manifest_metadata
+        run: |
+          INSO_IMAGE=${{ env.INSO_DOCKER_IMAGE }}:${{ steps.inso_docker_meta.outputs.version }}
+          inso_image_sha="$(regctl image digest "${INSO_IMAGE}")"
+          echo "inso_image_sha=${inso_image_sha}" >> $GITHUB_OUTPUT
+
+      # Signing images requires image manifest digest
+      - name: Sign images
+        id: sign_images
+        if: ${{ steps.image_manifest_metadata.outputs.inso_image_sha != '' }}
+        uses: Kong/public-shared-actions/security-actions/sign-docker-image@2f02738ecb1670f01391162e43fe3f5d4e7942a1 # v2.2.2
+        with:
+          image_digest: ${{ steps.image_manifest_metadata.outputs.inso_image_sha }}
+          tags: ${{ steps.inso_docker_meta.outputs.tags }}
+          registry_username: ${{ secrets.DOCKER_REGISTRY_USER }}
+          registry_password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+          # Optional: Central notary repository for image signatures
+          signature_registry_username: ${{ secrets.DOCKER_REGISTRY_USER }}
+          signature_registry_password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+          signature_registry: ${{ env.NOTARY_REPOSITORY }}
+    
       - name: Upload sourcemaps to Sentry
         env:
           SENTRY_AUTH_TOKEN: '${{ secrets.SENTRY_AUTH_TOKEN }}'
@@ -231,3 +283,44 @@ jobs:
           git push "${remote_repo}"
         env:
           RELEASE_GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+  
+  artifact-provenance:
+    needs: [publish]
+    permissions:
+      id-token: write # needed for signing the images
+      actions: read # For getting workflow run info to build provenance
+      packages: write # Required for publishing provenance. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - product: insomnia
+            binary_artifacts_digest_base64: ${{ needs.publish.outputs.INSOMNIA_BINARY_ARTIFACTS_DIGEST_BASE64 }}  
+          - product: inso
+            binary_artifacts_digest_base64: ${{ needs.publish.outputs.INSO_BINARY_ARTIFACTS_DIGEST_BASE64 }}
+    # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    with:
+      base64-subjects: ${{matrix.binary_artifacts_digest_base64 }}
+      upload-assets: true
+      upload-tag-name: ${{ needs.publish.outputs.INSOMNIA_RELEASE_TAG }} 
+      provenance-name: ${{ matrix.product }}-provenance.intoto.jsonl
+      draft-release: false
+
+  inso-image-provenance:
+    needs: [publish]
+    permissions:
+      id-token: write # needed for signing the images
+      actions: read # For getting workflow run info to build provenance
+      packages: write # Required for publishing provenance. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
+    # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    with:
+      image: ${{ needs.publish.outputs.INSO_DOCKER_IMAGE }}
+      digest: ${{ needs.publish.outputs.INSO_DOCKER_IMAGE_DIGEST }}
+      provenance-repository: "${{ needs.publish.outputs.NOTARY_REPOSITORY }}"
+    secrets:
+      registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
+      registry-password:  ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+      provenance-registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
+      provenance-registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
