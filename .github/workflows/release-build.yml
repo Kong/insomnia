@@ -112,8 +112,6 @@ jobs:
           appstore-connect-team-id: FX44YY62GV
 
       - name: Create inso artifacts
-        env:
-          PKG_NAME: inso-${{ matrix.os }}
         run: npm run inso-package:artifacts
 
       - name: Create Docker Image artifacts

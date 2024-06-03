@@ -5,10 +5,6 @@ export const getVersion = () => {
   return process.env.VERSION || packageJson.version;
 };
 
-export const getPackageNameMacOS = () => {
-  return process.env.PKG_NAME || 'inso-macos';
-};
-
 export const logErrorExit1 = (err?: Error) => {
   handleError(err);
   process.exit(1);
