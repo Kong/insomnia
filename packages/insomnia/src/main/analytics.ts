@@ -51,7 +51,7 @@ export async function trackSegmentEvent(
 ) {
   const settings = await models.settings.get();
   const userSession = await models.userSession.get();
-  const allowAnalytics = settings.enableAnalytics || userSession.accountId;
+  const allowAnalytics = settings.enableAnalytics || userSession?.accountId;
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
@@ -79,8 +79,9 @@ export async function trackSegmentEvent(
 
 export async function trackPageView(name: string) {
   const settings = await models.settings.get();
-  const { id: sessionId, accountId } = await models.userSession.get();
-  const allowAnalytics = settings.enableAnalytics || accountId;
+  const userSession = await models.userSession.get();
+
+  const allowAnalytics = settings.enableAnalytics || userSession?.accountId;
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
@@ -88,18 +89,18 @@ export async function trackPageView(name: string) {
         app: { name: getProductName(), version: getAppVersion() },
         os: { name: _getOsName(), version: process.getSystemVersion() },
       };
-      playwrightDebugAnalytics({ context, anonymousId, accountId });
-      analytics.page({ name, context, anonymousId, userId: accountId }, error => {
+      playwrightDebugAnalytics({ context, anonymousId, userId: userSession?.accountId });
+      analytics.page({ name, context, anonymousId, userId: userSession?.accountId }, error => {
         if (error) {
           console.warn('[analytics] Error sending segment event', error);
         }
       });
 
-      if (sessionId) {
+      if (userSession?.id) {
         net.fetch(getApiBaseURL() + '/v1/telemetry/', {
           method: 'POST',
           headers: new Headers({
-            'X-Session-Id': sessionId,
+            'X-Session-Id': userSession?.id,
             'X-Insomnia-Client': getClientString(),
           }),
         });
