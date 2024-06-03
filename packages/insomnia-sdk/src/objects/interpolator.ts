@@ -1,7 +1,7 @@
 import { fakerFunctions } from 'insomnia/src/ui/components/templating/faker-functions';
 import { configure, type ConfigureOptions, type Environment as NunjuncksEnv } from 'nunjucks';
 
-class Intepolator {
+class Interpolator {
     private engine: NunjuncksEnv;
 
     constructor(config: ConfigureOptions) {
@@ -50,7 +50,7 @@ class Intepolator {
     };
 }
 
-const intepolator = new Intepolator({
+const interpolator = new Interpolator({
     autoescape: false,
     // Don't escape HTML
     throwOnUndefined: true,
@@ -65,6 +65,6 @@ const intepolator = new Intepolator({
     },
 });
 
-export function getIntepolator() {
-    return intepolator;
+export function getInterpolator() {
+    return interpolator;
 }

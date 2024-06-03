@@ -1,4 +1,5 @@
-import { getIntepolator } from './interpolator';
+import { getInterpolator } from './interpolator';
+
 export class Environment {
     private _name: string;
     private kvs = new Map<string, boolean | number | string>();
@@ -33,7 +34,7 @@ export class Environment {
     };
 
     replaceIn = (template: string) => {
-        return getIntepolator().render(template, this.toObject());
+        return getInterpolator().render(template, this.toObject());
     };
 
     toObject = () => {
@@ -98,7 +99,7 @@ export class Variables {
 
     replaceIn = (template: string) => {
         const context = this.toObject();
-        return getIntepolator().render(template, context);
+        return getInterpolator().render(template, context);
     };
 
     toObject = () => {
