@@ -14,7 +14,7 @@ env:
   IS_PRERELEASE: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
   ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
   INSO_DOCKER_IMAGE: kong/inso # By default, registry is docker.io
-  NOTARY_REPOSITORY: ${{ (contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta')) && 'kong/notary-internal' || 'kong/notary' }}
+  NOTARY_REPOSITORY: 'kong/notary' # All signatures will be pushed to public notary repository
 
 jobs:
   publish:
@@ -62,7 +62,6 @@ jobs:
       - name: Set publish metadata # Checksum for provenance must be calculated before moving artifacts temporarily
         id: metadata
         run: |
-          set -x
           INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)
           echo "INSO_VERSION=${INSO_VERSION}" >> $GITHUB_ENV 
 
@@ -73,9 +72,12 @@ jobs:
           echo "${inso_binary_artifact_digest_base64}"
           echo "inso_binary_artifact_digest_base64=${inso_binary_artifact_digest_base64}" >> $GITHUB_OUTPUT
           
-          electron_binary_artifact_digest_base64=$(find "${{env.ARTIFACTS_DOWNLOAD_PATH}}" -type f \
+          electron_binary_artifacts=$(find "${{env.ARTIFACTS_DOWNLOAD_PATH}}" -type f \
           \( -name "Insomnia.Core-*" \) \
-          -exec sha256sum {} \; | sed "s/\(.* \)\(.*\(Insomnia.Core\)\)/\1\\3/" | sort | base64 -w0)
+          -exec sha256sum {} \; | sed "s/\(.* \)\(.*\(Insomnia.Core\)\)/\1\\3/" | sort)
+
+          echo "${electron_binary_artifacts}"
+          electron_binary_artifact_digest_base64=$(echo "${electron_binary_artifacts}" | base64 -w0)
           echo "Electron Binary Artifact digest:"
           echo "${electron_binary_artifact_digest_base64}"
           echo "electron_binary_artifact_digest_base64=${electron_binary_artifact_digest_base64}" >> $GITHUB_OUTPUT
