@@ -31,5 +31,6 @@ jobs:
           expected=$(echo "${test}")
           got=$(echo "${digest}" | base64 -d)
 
-          echo "${expected}"
-          echo "${got}"
+          echo "digest: ${digest}"
+          echo "expected: ${expected}"
+          echo "got: ${got}"
