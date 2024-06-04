@@ -27,4 +27,9 @@ jobs:
           EOF
           )
           
-          echo "${out}" | base64 | base64 -d
+          digest=$(echo "${out}" | base64)
+          expected=$(echo "${test}")
+          got=$(echo "${digest}" | base64 -d)
+
+          echo "${expected}"
+          echo "${got}"
