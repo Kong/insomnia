@@ -33,5 +33,5 @@ jobs:
           echo "${electron_binary_artifact_digest_base64}"
 
           echo "Decoding the base64 digest"
-          echo "${electron_binary_artifact_digest_base64} | base64 -d"
+          echo "${electron_binary_artifact_digest_base64}" | base64 -d
     
