@@ -50,7 +50,7 @@ jobs:
       - name: Install packages
         run: npm ci
 
-      - name: Download artifact
+      - name: Download all artifacts from release-build.yml
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
