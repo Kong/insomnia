@@ -40,7 +40,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
     };
 
     watchRequestTiming(executionId, cb);
-  });
+  }, [executionId, timingCount]);
 
   const seconds = milliseconds / 1000;
 
