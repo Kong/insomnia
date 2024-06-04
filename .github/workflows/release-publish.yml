@@ -26,7 +26,7 @@ jobs:
       INSO_DOCKER_IMAGE: ${{ env.INSO_DOCKER_IMAGE }}
       INSO_DOCKER_IMAGE_DIGEST: ${{ steps.image_manifest_metadata.outputs.inso_image_sha }}
       INSOMNIA_RELEASE_TAG: ${{ env.RELEASE_CORE_TAG }}
-      INSOMNIA_BINARY_ARTIFACTS_DIGEST_BASE64: ${{ steps.metadata.outputs.insomnia_binary_artifact_digest_base64 }}
+      ELECTRON_BINARY_ARTIFACTS_DIGEST_BASE64: ${{ steps.metadata.outputs.electron_binary_artifact_digest_base64 }}
     permissions:
       id-token: write # needed for signing the images
       actions: read # For getting workflow run info for keyless signing of docker image
@@ -62,7 +62,7 @@ jobs:
       - name: Set publish metadata # Checksum for provenance must be calculated before moving artifacts temporarily
         id: metadata
         run: |
-
+          set -x
           INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)
           echo "INSO_VERSION=${INSO_VERSION}" >> $GITHUB_ENV 
 
@@ -73,12 +73,12 @@ jobs:
           echo "${inso_binary_artifact_digest_base64}"
           echo "inso_binary_artifact_digest_base64=${inso_binary_artifact_digest_base64}" >> $GITHUB_OUTPUT
           
-          insomnia_binary_artifact_digest_base64=$(find "${{env.ARTIFACTS_DOWNLOAD_PATH}}" -type f \
+          electron_binary_artifact_digest_base64=$(find "${{env.ARTIFACTS_DOWNLOAD_PATH}}" -type f \
           \( -name "Insomnia.Core-*" \) \
           -exec sha256sum {} \; | sed "s/\(.* \)\(.*\(Insomnia.Core\)\)/\1\\3/" | sort | base64 -w0)
-          echo "Insomnia Binary Artifact digest:"
-          echo "${insomnia_binary_artifact_digest_base64}"
-          echo "insomnia_binary_artifact_digest_base64=${insomnia_binary_artifact_digest_base64}" >> $GITHUB_OUTPUT
+          echo "Electron Binary Artifact digest:"
+          echo "${electron_binary_artifact_digest_base64}"
+          echo "electron_binary_artifact_digest_base64=${electron_binary_artifact_digest_base64}" >> $GITHUB_OUTPUT
           
       - name: Temporarily move artifacts
         shell: bash
@@ -296,7 +296,7 @@ jobs:
       matrix:
         include:
           - product: insomnia
-            binary_artifacts_digest_base64: ${{ needs.publish.outputs.INSOMNIA_BINARY_ARTIFACTS_DIGEST_BASE64 }}  
+            binary_artifacts_digest_base64: ${{ needs.publish.outputs.ELECTRON_BINARY_ARTIFACTS_DIGEST_BASE64 }}  
           - product: inso
             binary_artifacts_digest_base64: ${{ needs.publish.outputs.INSO_BINARY_ARTIFACTS_DIGEST_BASE64 }}
     # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
