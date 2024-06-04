@@ -18,7 +18,9 @@ jobs:
           \( -name "*.md" \) \
           -exec sha256sum {} \; | sed "s/\(.* \)\(.*\/\(.*\)\)/\1\\3/" | sort)
 
-          md_binary_artifact_digest_base64=$(echo ${md_binary_artifacts} | base64 -w0)
+          echo "Expected Artifacts: ${md_binary_artifacts}"
+          
+          md_binary_artifact_digest_base64=$(echo "${md_binary_artifacts}" | base64 -w0)
           got=$(echo "${md_binary_artifact_digest_base64}" | base64 -d)
           
           echo "md_binary_artifact_digest_base64=${md_binary_artifact_digest_base64}" >> $GITHUB_OUTPUT
