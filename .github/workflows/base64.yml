@@ -14,11 +14,9 @@ jobs:
       - name: Sha256 of asset containing secret file path
         id: sha256
         run: |
-          md_binary_artifacts=$(find "." -type f \                                                                [14:33:30]
+          md_binary_artifacts=$(find "." -type f \
           \( -name "*.md" \) \
           -exec sha256sum {} \; | sed "s/\(.* \)\(.*\/\(.*\)\)/\1\\3/" | sort)
-
-          echo "Expected Artifacts: ${md_binary_artifacts}"
           
           md_binary_artifact_digest_base64=$(echo "${md_binary_artifacts}" | base64 -w0)
           got=$(echo "${md_binary_artifact_digest_base64}" | base64 -d)
