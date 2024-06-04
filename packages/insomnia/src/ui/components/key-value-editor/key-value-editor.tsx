@@ -170,8 +170,6 @@ export const KeyValueEditor: FC<Props> = ({
     getKey: item => item.id,
   });
 
-  console.log({ pairsList });
-
   const items = pairsList.items.length > 0 ? pairsList.items : [{ id: generateId('pair'), name: '', value: '', description: '', disabled: false }];
 
   const readOnlyPairsList = useListData({
@@ -183,7 +181,6 @@ export const KeyValueEditor: FC<Props> = ({
   });
 
   function upsertPair(pair: typeof pairsList.items[0]) {
-    console.log({ pair });
     if (pairsList.getItem(pair.id)) {
       pairsList.update(pair.id, pair);
       onChange(pairsList.items.map(item => (item.id === pair.id ? pair : item)));
@@ -294,8 +291,6 @@ export const KeyValueEditor: FC<Props> = ({
             const isFile = pair.type === 'file';
             const isMultiline = pair.type === 'text' && pair.multiline;
             const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
-
-            console.log({ pair, isFile, isMultiline, bytes });
 
             let valueEditor = (
               <div className="relative h-full w-full flex flex-1 px-2">
