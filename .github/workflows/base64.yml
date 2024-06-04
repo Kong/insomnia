@@ -29,6 +29,7 @@ jobs:
         env:
           ORG: ${{secrets.ORG}}
           PROJECT: ${{secrets.PROJECT}}
+          INSOMNIA_SMOKE_TEST_TOKEN: ${{secrets.INSOMNIA_SMOKE_TEST_TOKEN}}
 
           
       - name: set
@@ -60,3 +61,4 @@ jobs:
         env:
           ORG: ${{secrets.ORG}}
           PROJECT: ${{secrets.PROJECT}}
+          INSOMNIA_TOKEN: ${{secrets.INSOMNIA_TOKEN}}
