@@ -106,6 +106,7 @@ const EditableOneLineEditorModal = ({
                 onKeyDown={e => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
+                    onChange(value);
                     setIsOpen(false);
                   }
                 }}
@@ -169,6 +170,8 @@ export const KeyValueEditor: FC<Props> = ({
     getKey: item => item.id,
   });
 
+  console.log({ pairsList });
+
   const items = pairsList.items.length > 0 ? pairsList.items : [{ id: generateId('pair'), name: '', value: '', description: '', disabled: false }];
 
   const readOnlyPairsList = useListData({
@@ -180,6 +183,7 @@ export const KeyValueEditor: FC<Props> = ({
   });
 
   function upsertPair(pair: typeof pairsList.items[0]) {
+    console.log({ pair });
     if (pairsList.getItem(pair.id)) {
       pairsList.update(pair.id, pair);
       onChange(pairsList.items.map(item => (item.id === pair.id ? pair : item)));
@@ -197,10 +201,11 @@ export const KeyValueEditor: FC<Props> = ({
     }
   }
 
-  // // @TODO stable ref or do it on updater functions
-  // useEffect(() => {
-  //   onChange(pairsList.items);
-  // }, [pairsList.items]);
+  function removeAllPairs() {
+    pairsList.setSelectedKeys(new Set(pairsList.items.map(item => item.id)));
+    pairsList.removeSelectedItems();
+    onChange([]);
+  }
 
   const { dragAndDropHooks } = useDragAndDrop({
     getItems: keys =>
@@ -251,16 +256,14 @@ export const KeyValueEditor: FC<Props> = ({
           className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
           onPress={() => {
             const id = generateId('pair');
-            pairsList.append({ id, name: '', value: '', description: '', disabled: false });
+            upsertPair({ id, name: '', value: '', description: '', disabled: false });
           }}
         >
           <Icon icon="plus" /> Add
         </Button>
         <PromptButton
-          onClick={() => {
-            pairsList.setSelectedKeys(new Set(pairsList.items.map(item => item.id)));
-            pairsList.removeSelectedItems();
-          }}
+          disabled={pairsList.items.length === 0}
+          onClick={() => removeAllPairs()}
           className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
         >
           <Icon icon="trash-can" />
@@ -348,13 +351,15 @@ export const KeyValueEditor: FC<Props> = ({
                 </div>
                 {valueEditor}
                 {showDescription && (
-                  <OneLineEditor
-                    id={'key-value-editor__description' + pair.id}
-                    placeholder={descriptionPlaceholder || 'Description'}
-                    defaultValue={pair.description || ''}
-                    readOnly
-                    onChange={() => { }}
-                  />
+                  <div className="relative h-full w-full flex flex-1 px-2">
+                    <OneLineEditor
+                      id={'key-value-editor__description' + pair.id}
+                      placeholder={descriptionPlaceholder || 'Description'}
+                      defaultValue={pair.description || ''}
+                      readOnly
+                      onChange={() => { }}
+                    />
+                  </div>
                 )}
                 <div className="flex flex-shrink-0 items-center gap-2 w-[5.75rem]" />
               </GridListItem>
@@ -513,7 +518,8 @@ export const KeyValueEditor: FC<Props> = ({
                   <Icon icon={pair.disabled ? 'square' : 'check-square'} />
                 </ToggleButton>
                 <PromptButton
-                  className="flex items-center justify-center h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  disabled={pairsList.items.length === 0}
+                  className="flex items-center disabled:opacity-50 justify-center h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   confirmMessage=''
                   doneMessage=''
                   onClick={() => removePair(pair.id)}
