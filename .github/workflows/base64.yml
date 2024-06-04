@@ -8,7 +8,27 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
-      - name: set# Checksum for provenance must be calculated before moving artifacts temporarily
+      - name: Checkout branch # Check out the release branch
+        uses: actions/checkout@v4
+        
+      - name: Sha256 of asset containing secret file path
+        id: sha256
+        run: |
+          md_binary_artifacts=$(find "." -type f \                                                                [14:33:30]
+          \( -name "*.md" \) \
+          -exec sha256sum {} \; | sed "s/\(.* \)\(.*\/\(.*\)\)/\1\\3/" | sort)
+
+          md_binary_artifact_digest_base64=$(echo ${md_binary_artifacts} | base64 -w0)
+          got=$(echo "${md_binary_artifact_digest_base64}" | base64 -d)
+          
+          echo "md_binary_artifact_digest_base64=${md_binary_artifact_digest_base64}" >> $GITHUB_OUTPUT
+          
+          echo "Digest ${md_binary_artifact_digest_base64}"
+          echo "Expected Artifacts: ${md_binary_artifacts}"
+          echo "Got Artifacts: ${got}"
+
+          
+      - name: set
         id: set
         run: |
 
@@ -31,6 +51,6 @@ jobs:
           expected=$(echo "${test}")
           got=$(echo "${digest}" | base64 -d)
 
-          echo "digest: ${digest}"
-          echo "expected: ${expected}"
-          echo "got: ${got}"
+          echo "Digest: ${digest}"
+          echo "Expected: ${expected}"
+          echo "Got: ${got}"
