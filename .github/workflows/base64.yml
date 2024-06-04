@@ -15,9 +15,9 @@ jobs:
                   this is line two \n
                   this is line three \n"
 
-          electron_binary_artifacts="test \n
-                                     test 1 \n
-                                     test2 \n"
+          electron_binary_artifacts="test\n
+          test 1 \n
+          test2"
                                     
 
           echo "electron_binary_artifacts_var<<EOF" >> $GITHUB_ENV
