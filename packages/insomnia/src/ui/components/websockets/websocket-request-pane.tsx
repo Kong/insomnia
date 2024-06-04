@@ -299,7 +299,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
             id='params'
           >
-            <span>Parameters</span>
+            <span>Params</span>
             {parametersCount > 0 && (
               <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
                 {parametersCount}

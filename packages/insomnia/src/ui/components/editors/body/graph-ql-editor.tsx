@@ -468,7 +468,7 @@ export const GraphQLEditor: FC<Props> = ({
   const canShowSchema = schema && !schemaIsFetching && !schemaFetchError && schemaLastFetchTime > 0;
   return (
     <>
-      <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
+      <Toolbar aria-label='GraphQL toolbar' className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
         <Dropdown
           aria-label='Operations Dropdown'
           isDisabled={!state.operations.length}
@@ -577,7 +577,7 @@ export const GraphQLEditor: FC<Props> = ({
         </Dropdown>
       </Toolbar>
       <PanelGroup direction={'vertical'}>
-        <Panel minSize={20} defaultSize={60}>
+        <Panel id="GraphQL Editor" minSize={20} defaultSize={60}>
           <CodeEditor
             id="graphql-editor"
             ref={editorRef}
@@ -596,7 +596,7 @@ export const GraphQLEditor: FC<Props> = ({
           />
         </Panel>
         <PanelResizeHandle className={'w-full h-[1px] bg-[--hl-md]'} />
-        <Panel className='flex flex-col' minSize={20}>
+        <Panel id="GraphQL Variables editor" className='flex flex-col' minSize={20}>
           <Heading className="w-full px-2 text-[--hl] select-none flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center">
             Query Variables
             <HelpTooltip className="space-left">

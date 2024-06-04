@@ -217,13 +217,13 @@ test.describe('pre-request features tests', async () => {
         // set request body
         await page.getByRole('tab', { name: 'Body' }).click();
         await page.getByRole('button', { name: 'Body' }).click();
-        await page.getByRole('menuitem', { name: 'JSON' }).click();
+        await page.getByRole('option', { name: 'JSON' }).click();
 
         const bodyEditor = page.getByTestId('CodeEditor').getByRole('textbox');
         await bodyEditor.fill('{ "rawBody": {{ _.rawBody }}, "urlencodedBody": {{ _.urlencodedBody }}, "gqlBody": {{ _.gqlBody }}, "fileBody": {{ _.fileBody }}, "formdataBody": {{ _.formdataBody }} }');
 
         // enter script
-        await page.getByTestId('pre-request-script-tab').click();
+        await page.getByRole('tab', { name: 'Scripts' }).click();
         const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
         await preRequestScriptEditor.fill(`
         const rawReq = {
@@ -500,10 +500,10 @@ test.describe('unhappy paths', async () => {
             // set request body
             await page.getByRole('tab', { name: 'Body' }).click();
             await page.getByRole('button', { name: 'Body' }).click();
-            await page.getByRole('menuitem', { name: 'JSON' }).click();
+            await page.getByRole('option', { name: 'JSON' }).click();
 
             // enter script
-            await page.getByTestId('pre-request-script-tab').click();
+            await page.getByRole('tab', { name: 'Scripts' }).click();
             const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
             await preRequestScriptEditor.fill(tc.preReqScript);
 
