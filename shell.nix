@@ -1,4 +1,4 @@
-with import <nixpkgs-unstable> { };
+with import <nixpkgs> { };
 
 mkShell {
   nativeBuildInputs = [
