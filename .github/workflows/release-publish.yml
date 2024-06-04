@@ -73,7 +73,7 @@ jobs:
           echo "${inso_binary_artifact_digest_base64}"
           echo "inso_binary_artifact_digest_base64=${inso_binary_artifact_digest_base64}" >> $GITHUB_OUTPUT
           
-          insomnia_binary_artifact_digest_base64=$(find "${{env.ARTIFACTS_DOWNLOAD_PATH}}" -type f \                                                                                               [18:35:48]
+          insomnia_binary_artifact_digest_base64=$(find "${{env.ARTIFACTS_DOWNLOAD_PATH}}" -type f \
           \( -name "Insomnia.Core-*" \) \
           -exec sha256sum {} \; | sed "s/\(.* \)\(.*\(Insomnia.Core\)\)/\1\\3/" | sort | base64 -w0)
           echo "Insomnia Binary Artifact digest:"
