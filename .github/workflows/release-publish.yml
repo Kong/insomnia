@@ -290,7 +290,7 @@ jobs:
       id-token: write # needed for signing the images
       actions: read # For getting workflow run info to build provenance
       packages: write # Required for publishing provenance. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
-      contents: read
+      contents: write
     strategy:
       fail-fast: true
       matrix:
@@ -315,7 +315,7 @@ jobs:
       actions: read # For getting workflow run info to build provenance
       packages: write # Required for publishing provenance. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
     # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
-      contents: read
+      contents: write
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
     with:
       image: ${{ needs.publish.outputs.INSO_DOCKER_IMAGE }}
