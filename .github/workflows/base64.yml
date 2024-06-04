@@ -11,27 +11,20 @@ jobs:
       - name: set# Checksum for provenance must be calculated before moving artifacts temporarily
         id: set
         run: |
-          MULTI_LINES_TEXT="this is line one \n
-                  this is line two \n
-                  this is line three \n"
 
-          electron_binary_artifacts="test\n
-          test 1 \n
-          test2"
-                                    
-
-          echo "electron_binary_artifacts_var<<EOF" >> $GITHUB_ENV
-          # here we can place the command that will generate multi-line text
-          echo $electron_binary_artifacts >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      - name: do
-        run: |
-          echo "${{ env.electron_binary_artifacts_var }}"
-          electron_binary_artifact_digest_base64=$(echo "${electron_binary_artifacts_var}" | base64 -w0)
-          echo "Electron Binary Artifact digest:"
-          echo "${electron_binary_artifact_digest_base64}"
-
-          echo "Decoding the base64 digest"
-          echo "${electron_binary_artifact_digest_base64}" | base64 -d
-    
+          test="20fb80760912f56c83d3a53de7e3db7087708949a99e15011b9bc1bd9e358775  Insomnia.Core-9.3.0-alpha.3.rpm 
+          240ea5b1c3bbfa666318713fdb6c50649bcbe61ab8a307ba52fb6a983cddaa2b  Insomnia.Core-9.3.0-alpha.3.snap
+          3aafe450b46e9e30aef192c43f3a6420179a562d7a9ad497c3ad2cc179ebaa63  Insomnia.Core-9.3.0-alpha.3.tar.gz
+          409eeefd0167fc42a3b44cc4bdeca8a23542b82626bb572f174dc9ca612fc2fc  Insomnia.Core-9.3.0-alpha.3.deb 
+          64f06151cd88c7e4afef4a59adb02cee078ac315050a43923df5b54eaa24fe23  Insomnia.Core-9.3.0-alpha.3.dmg 
+          895984cb94ff9b826f70e0211a98eb4f70c035087857dd906e55336c419527ed  Insomnia.Core-9.3.0-alpha.3.AppImage
+          989173dcd47f20ba50ee1f3e65fbcfc53ad592f90f0b02911cf4584889bdf978  Insomnia.Core-9.3.0-alpha.3.exe
+          bc408a7f9ddf45070a26c8ec7fa02d64692f13c779428481d4f4bc404aaa9ee6  Insomnia.Core-9.3.0-alpha.3.zip"
+          
+          out=$(
+          cat <<EOF
+          ${test}
+          EOF
+          )
+          
+          echo "${out}" | base64 | base64 -d
