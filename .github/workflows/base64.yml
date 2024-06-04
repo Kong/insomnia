@@ -14,22 +14,22 @@ jobs:
       - name: Sha256 of asset containing secret file path
         id: sha256
         run: |
-          md_binary_artifacts=$(find "." -type f \
-          \( -name "*.md" \) \
+          binary_artifacts=$(find "." -type f \
+          \( -name "*.deb" \) \
           -exec sha256sum {} \;)
 
-           echo "Found artifacts: ${md_binary_artifacts}"
+           echo "Found artifacts: ${binary_artifacts}"
            
-          trimmed_md_binary_artifacts=$(echo "${md_binary_artifacts}" | sed "s/\(.* \)\(.*\/\(.*\)\)/\1\\3/" | sort)
-          echo "Trimmed: ${trimmed_md_binary_artifacts}"
+          trimmed_binary_artifacts=$(echo "${binary_artifacts}" | sed "s/\(.* \)\(.*\/\(.*\)\)/\1\\3/" | sort)
+          echo "Trimmed: ${trimmed_binary_artifacts}"
           
-          md_binary_artifact_digest_base64=$(echo "${trimmed_md_binary_artifacts}" | base64 -w0)
-          got=$(echo "${md_binary_artifact_digest_base64}" | base64 -d)
+          binary_artifact_digest_base64=$(echo "${trimmed_binary_artifacts}" | base64 -w0)
+          got=$(echo "${binary_artifact_digest_base64}" | base64 -d)
           
-          echo "md_binary_artifact_digest_base64=${md_binary_artifact_digest_base64}" >> $GITHUB_OUTPUT
+          echo "binary_artifact_digest_base64=${binary_artifact_digest_base64}" >> $GITHUB_OUTPUT
           
-          echo "Digest ${md_binary_artifact_digest_base64}"
-          echo "Expected Artifacts: ${trimmed_md_binary_artifacts}"
+          echo "Digest ${binary_artifact_digest_base64}"
+          echo "Expected Artifacts: ${trimmed_binary_artifacts}"
           echo "Got Artifacts: ${got}"
         env:
           ORG: ${{secrets.ORG}}
