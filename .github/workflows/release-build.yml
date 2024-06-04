@@ -10,9 +10,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write 
+      contents: write # publish sbom to GH releases/tag assets
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Perform SCA / SBOM analysis for the entiire monorepo code repository
+      # Produces SBOM and CVE report
+      # Helps understand vulnerabilities / license compliance across third party dependencies
+      # Automatically uploads to workflow assets
+      # (TODO): Prouce workspace/package specific SBOM. Current limitation: https://github.com/anchore/syft/issues/2574
+      - id: sca-project
+        uses: Kong/public-shared-actions/security-actions/sca@62643b74f79f6a697b9add1a2f9c069bf9ca1250 # v2.3.0
+        with:
+          dir: .
+          upload-sbom-release-assets: false
   build-and-upload-release-artifacts:
     timeout-minutes: 30
     runs-on: ${{ matrix.os }}
+    env:
+      INSO_PACKAGE_NAME: insomnia-inso
+      INSO_DOCKER_TAR: inso-docker-image.tar
     strategy:
       fail-fast: false
       matrix:
@@ -62,7 +84,7 @@ jobs:
 
       - name: Setup Inso CLI version env var
         run:
-          echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
+          echo "INSO_VERSION=$(jq .version ./packages/${{ env.INSO_PACKAGE_NAME }}/package.json -rj)" >> $GITHUB_ENV
 
       - name: Package inso
         run: |
@@ -76,7 +98,7 @@ jobs:
         if: matrix.os == 'macos-13'
         run: ./src/scripts/macos-pkg.sh
         shell: bash
-        working-directory: packages/insomnia-inso
+        working-directory: ./packages/${{ env.INSO_PACKAGE_NAME }}
         continue-on-error: false
         env:
           MACOS_CERTIFICATE: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
@@ -89,7 +111,7 @@ jobs:
         if:  matrix.os == 'macos-13'
         uses: lando/notarize-action@v2
         with:
-          product-path: packages/insomnia-inso/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
+          product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
           primary-bundle-id: com.insomnia.inso
           appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
           appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
@@ -99,13 +121,13 @@ jobs:
         if: matrix.os == 'macos-13'
         uses: BoundfoxStudios/action-xcode-staple@v1
         with:
-          product-path: packages/insomnia-inso/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
+          product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
 
       - name: Notarize Inso CLI binary (macOS only)
         if: matrix.os == 'macos-13'
         uses: lando/notarize-action@v2
         with:
-          product-path: packages/insomnia-inso/binaries/inso
+          product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/binaries/inso
           primary-bundle-id: com.insomnia.inso-binary
           appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
           appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
@@ -114,11 +136,24 @@ jobs:
       - name: Create inso artifacts
         run: npm run inso-package:artifacts
 
-      - name: Create Docker Image artifacts
+      - name: Create inso Docker Image artifacts
         if: matrix.os == 'ubuntu-latest'
         run: |
-          DOCKER_BUILDKIT=1 docker build --tag insomnia-inso:temp ./packages/insomnia-inso/
-          docker save insomnia-inso:temp -o ./packages/insomnia-inso/artifacts/inso-docker-image.tar
+          DOCKER_BUILDKIT=1 docker build --tag ${{ env.INSO_PACKAGE_NAME }}:temp ./packages/${{ env.INSO_PACKAGE_NAME }}
+          docker save ${{ env.INSO_PACKAGE_NAME }}:temp -o ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/${{ env.INSO_DOCKER_TAR }}
+      
+      # Produce Docker SBOM for Inso Image
+      # Automatically uploads to workflow assets
+      - name: Scan inso docker artifacts
+        id: sbom_action
+        if: matrix.os == 'ubuntu-latest'
+        uses: Kong/public-shared-actions/security-actions/scan-docker-image@62643b74f79f6a697b9add1a2f9c069bf9ca1250 # v2.3.0
+        with:
+          asset_prefix: image-inso-${{ runner.os }}
+          image: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/${{ env.INSO_DOCKER_TAR }}
+          upload-sbom-release-assets: false # No release is publushed yet. Uploads as workflow assets
+        env:
+          SYFT_SOURCE_NAME: ${{ env.INSO_DOCKER_TAR }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
