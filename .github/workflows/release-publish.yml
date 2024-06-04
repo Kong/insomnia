@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       NOTARY_REPOSITORY: ${{ env.NOTARY_REPOSITORY }}
-      INSO_BINARY_ARTIFACTS_DIGEST_BASE64: ${{ steps.metadata.outputs.inso_binary_artifact_digest_base64 }}  
+      INSO_BINARY_ARTIFACTS_DIGEST_BASE64: ${{ steps.metadata.outputs.inso_binary_artifact_digest_base64 }}
       INSO_DOCKER_IMAGE: ${{ env.INSO_DOCKER_IMAGE }}
       INSO_DOCKER_IMAGE_DIGEST: ${{ steps.image_manifest_metadata.outputs.inso_image_sha }}
       INSOMNIA_RELEASE_TAG: ${{ env.RELEASE_CORE_TAG }}
@@ -58,13 +58,13 @@ jobs:
           workflow_conclusion: success
           branch: ${{ env.RELEASE_BRANCH }} # Branch workflow ran on != branch the workflow created
           path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }} # Base path to download all release workflow assets
-      
+
       - name: Set publish metadata # Checksum for provenance must be calculated before moving artifacts temporarily
         id: metadata
         run: |
 
           INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)
-          echo "INSO_VERSION=${INSO_VERSION}" >> $GITHUB_ENV 
+          echo "INSO_VERSION=${INSO_VERSION}" >> $GITHUB_ENV
 
           inso_binary_artifact_digest_base64=$(find "${{env.ARTIFACTS_DOWNLOAD_PATH}}" -type f \
           \( -name "inso-*.zip" -o -name "inso-*.pkg" -o -name "inso-*.tar.xz" \) \
@@ -72,14 +72,14 @@ jobs:
           echo "Inso CLI Artifact digest:"
           echo "${inso_binary_artifact_digest_base64}"
           echo "inso_binary_artifact_digest_base64=${inso_binary_artifact_digest_base64}" >> $GITHUB_OUTPUT
-          
+
           insomnia_binary_artifact_digest_base64=$(find "${{env.ARTIFACTS_DOWNLOAD_PATH}}" -type f \                                                                                               [18:35:48]
           \( -name "Insomnia.Core-*" \) \
           -exec sha256sum {} \; | sed "s/\(.* \)\(.*\(Insomnia.Core\)\)/\1\\3/" | sort | base64 -w0)
           echo "Insomnia Binary Artifact digest:"
           echo "${insomnia_binary_artifact_digest_base64}"
           echo "insomnia_binary_artifact_digest_base64=${insomnia_binary_artifact_digest_base64}" >> $GITHUB_OUTPUT
-          
+
       - name: Temporarily move artifacts
         shell: bash
         run: |
@@ -175,6 +175,7 @@ jobs:
           release: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       - name: Upload .deb to pulp and/or cloudsmith (stable only)
+        if: "!contains(github.event.inputs.version, 'alpha') && !contains(github.event.inputs.version, 'beta')"
         uses: docker://kong/release-script:latest
         env:
           PULP_USERNAME: ${{ secrets.PULP_USERNAME }}
@@ -195,7 +196,7 @@ jobs:
             --dist-version focal
             --package-type insomnia
             ${{ env.IS_PRERELEASE == 'true' && '--internal' || '--publish' }}
-    
+
       - name: Load the Inso CLI Docker Archive
         run: |
           docker load -i ./artifacts/ubuntu-latest-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
@@ -206,7 +207,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_REGISTRY_USER }}
           password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
-        
+
       - name: Docker meta for Inso CLI Docker Image
         id: inso_docker_meta
         uses: docker/metadata-action@v5
@@ -218,7 +219,7 @@ jobs:
             type=raw,value=alpha,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'alpha') }}
             type=raw,value=beta,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'beta') }}
           sep-tags: ","
-      
+
       - name: Push Inso CLI docker image tags to Docker Hub
         id: publish_isno_docker_image
         run: |
@@ -228,7 +229,7 @@ jobs:
           done
         env:
           IMAGE_TAGS: ${{ steps.inso_docker_meta.outputs.tags }}
-      
+
       # Setup regctl to parse platform specific image digest from image manifest
       - name: Install regctl
         uses: regclient/actions/regctl-installer@main
@@ -255,7 +256,7 @@ jobs:
           signature_registry_username: ${{ secrets.DOCKER_REGISTRY_USER }}
           signature_registry_password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
           signature_registry: ${{ env.NOTARY_REPOSITORY }}
-    
+
       - name: Upload sourcemaps to Sentry
         env:
           SENTRY_AUTH_TOKEN: '${{ secrets.SENTRY_AUTH_TOKEN }}'
@@ -283,7 +284,7 @@ jobs:
           git push "${remote_repo}"
         env:
           RELEASE_GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
-  
+
   artifact-provenance:
     needs: [publish]
     permissions:
@@ -295,7 +296,7 @@ jobs:
       matrix:
         include:
           - product: insomnia
-            binary_artifacts_digest_base64: ${{ needs.publish.outputs.INSOMNIA_BINARY_ARTIFACTS_DIGEST_BASE64 }}  
+            binary_artifacts_digest_base64: ${{ needs.publish.outputs.INSOMNIA_BINARY_ARTIFACTS_DIGEST_BASE64 }}
           - product: inso
             binary_artifacts_digest_base64: ${{ needs.publish.outputs.INSO_BINARY_ARTIFACTS_DIGEST_BASE64 }}
     # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
@@ -303,7 +304,7 @@ jobs:
     with:
       base64-subjects: ${{matrix.binary_artifacts_digest_base64 }}
       upload-assets: true
-      upload-tag-name: ${{ needs.publish.outputs.INSOMNIA_RELEASE_TAG }} 
+      upload-tag-name: ${{ needs.publish.outputs.INSOMNIA_RELEASE_TAG }}
       provenance-name: ${{ matrix.product }}-provenance.intoto.jsonl
       draft-release: false
 

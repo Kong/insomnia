@@ -10,20 +10,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  # shared kong github action for security checking
+  generate-sbom-and-upload-assets:
     runs-on: ubuntu-latest
     permissions:
-      packages: write 
+      packages: write
       contents: write # publish sbom to GH releases/tag assets
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Perform SCA / SBOM analysis for the entiire monorepo code repository
-      # Produces SBOM and CVE report
+      # Perform SCA / SBOM analysis for the entire monorepo code repository
+      # Produces SCA(SBOM and CVE) report
       # Helps understand vulnerabilities / license compliance across third party dependencies
       # Automatically uploads to workflow assets
-      # (TODO): Prouce workspace/package specific SBOM. Current limitation: https://github.com/anchore/syft/issues/2574
+      # (TODO): Produce workspace/package specific SBOM. Current limitation: https://github.com/anchore/syft/issues/2574
+      # (TODO): needs check (block) further steps if SCA fails
       - id: sca-project
         uses: Kong/public-shared-actions/security-actions/sca@62643b74f79f6a697b9add1a2f9c069bf9ca1250 # v2.3.0
         with:
@@ -39,8 +41,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # macos-13 supports both intel and apple sillicon on inso cli properly
-          # macos-latest is defaulting to apple sillicon and breaks inso cli retrocompatibility
+          # macos-13 supports both intel and apple silicon on inso cli properly
+          # macos-latest is defaulting to apple silicon and breaks inso cli retrocompatibility
           - os: macos-13
             csc_link_secret: DESIGNER_MAC_CSC_LINK
             csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
@@ -141,7 +143,7 @@ jobs:
         run: |
           DOCKER_BUILDKIT=1 docker build --tag ${{ env.INSO_PACKAGE_NAME }}:temp ./packages/${{ env.INSO_PACKAGE_NAME }}
           docker save ${{ env.INSO_PACKAGE_NAME }}:temp -o ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/${{ env.INSO_DOCKER_TAR }}
-      
+
       # Produce Docker SBOM for Inso Image
       # Automatically uploads to workflow assets
       - name: Scan inso docker artifacts
