@@ -31,11 +31,20 @@ export async function insomniaFetch<T = void>({ method, path, data, sessionId, o
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
-  const response = await fetch((origin || getApiBaseURL()) + path, config);
-  const uri = response.headers.get('x-insomnia-command');
-  if (uri) {
-    window.main.openDeepLink(uri);
+
+  try {
+    const response = await fetch((origin || getApiBaseURL()) + path, config);
+    const uri = response.headers.get('x-insomnia-command');
+    if (uri) {
+      window.main.openDeepLink(uri);
+    }
+    const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
+    return isJson ? response.json() : response.text();
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error('insomniaFetch timed out');
+    } else {
+      throw err;
+    }
   }
-  const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
-  return isJson ? response.json() : response.text();
 }
