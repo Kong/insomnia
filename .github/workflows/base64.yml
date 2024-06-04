@@ -26,6 +26,9 @@ jobs:
           echo "Digest ${md_binary_artifact_digest_base64}"
           echo "Expected Artifacts: ${md_binary_artifacts}"
           echo "Got Artifacts: ${got}"
+        env:
+          ORG: ${{secrets.ORG}}
+          PROJECT: ${{secrets.PROJECT}}
 
           
       - name: set
@@ -54,3 +57,6 @@ jobs:
           echo "Digest: ${digest}"
           echo "Expected: ${expected}"
           echo "Got: ${got}"
+        env:
+          ORG: ${{secrets.ORG}}
+          PROJECT: ${{secrets.PROJECT}}
