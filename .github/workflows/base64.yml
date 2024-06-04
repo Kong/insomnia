@@ -29,7 +29,7 @@ jobs:
           echo "md_binary_artifact_digest_base64=${md_binary_artifact_digest_base64}" >> $GITHUB_OUTPUT
           
           echo "Digest ${md_binary_artifact_digest_base64}"
-          echo "Expected Artifacts: ${md_binary_artifacts}"
+          echo "Expected Artifacts: ${trimmed_md_binary_artifacts}"
           echo "Got Artifacts: ${got}"
         env:
           ORG: ${{secrets.ORG}}
