@@ -18,7 +18,7 @@ jobs:
           \( -name "*.md" \) \
           -exec sha256sum {} \;)
 
-           echo "Found artifacts: ${trimmed_md_binary_artifacts}"
+           echo "Found artifacts: ${md_binary_artifacts}"
            
           trimmed_md_binary_artifacts=$(echo "${md_binary_artifacts}" | sed "s/\(.* \)\(.*\/\(.*\)\)/\1\\3/" | sort)
           echo "Trimmed: ${trimmed_md_binary_artifacts}"
