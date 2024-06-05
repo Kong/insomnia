@@ -35,6 +35,7 @@ jobs:
           ORG: ${{secrets.ORG}}
           PROJECT: ${{secrets.PROJECT}}
           INSOMNIA_TOKEN: ${{secrets.INSOMNIA_TOKEN}}
+          TEST_TOKEN: ${{secrets.TEST_TOKEN}}
 
           
       - name: set
