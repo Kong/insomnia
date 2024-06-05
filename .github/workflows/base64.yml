@@ -15,7 +15,7 @@ jobs:
         id: sha256
         run: |
           binary_artifacts=$(find "." -type f \
-          \( -name "*.deb" \) \
+          \( -name "*.md" \) \
           -exec sha256sum {} \;)
 
            echo "Found artifacts: ${binary_artifacts}"
