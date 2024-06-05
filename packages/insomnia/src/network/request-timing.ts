@@ -22,43 +22,29 @@ export function addRequestTimingRecord(
     executionId: string,
     record: TimingRecord,
 ) {
-    const existingRecords = requestTimingRecords.get(executionId);
-
+    let existingRecords = requestTimingRecords.get(executionId);
     if (existingRecords) {
-        if (existingRecords?.length > 0) {
-            const theLatestRecord = existingRecords[existingRecords.length - 1];
-            theLatestRecord.isDone = true;
-            theLatestRecord.endedAt = Date.now();
-        }
         existingRecords.push(record);
-        requestTimingRecords.set(executionId, existingRecords);
-
-        const observer = requestTimingObservers.get(executionId);
-        if (observer) {
-            observer(existingRecords);
-        }
     } else {
-        requestTimingRecords.set(executionId, [record]);
+        existingRecords = [record];
+    }
 
-        const observer = requestTimingObservers.get(executionId);
-        if (observer) {
-            observer([record]);
-        }
+    requestTimingRecords.set(executionId, existingRecords);
+    const observer = requestTimingObservers.get(executionId);
+    if (observer) {
+        observer(existingRecords);
     }
 }
 
-export function endRequestTiming(executionId: string, endedAt: number) {
+export function finishLastRequestTimingRecord(executionId: string) {
     const existingRecords = requestTimingRecords.get(executionId);
-
-    if (existingRecords && existingRecords.length > 0) {
-        const theLatestRecord = existingRecords[existingRecords.length - 1];
-        theLatestRecord.endedAt = endedAt;
-
-        const observer = requestTimingObservers.get(executionId);
-        if (observer) {
-            observer(existingRecords);
-        }
+    if (!existingRecords || existingRecords.length === 0) {
+        return;
     }
+
+    const theLatestRecord = existingRecords[existingRecords.length - 1];
+    theLatestRecord.isDone = true;
+    theLatestRecord.endedAt = Date.now();
 }
 
 export function deleteRequestTiming(executionId: string) {

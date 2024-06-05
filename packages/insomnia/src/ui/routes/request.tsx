@@ -30,7 +30,7 @@ import { fetchRequestData, getPreRequestScriptOutput, responseTransform, savePat
 import {
   addRequestTimingRecord,
   deleteRequestTiming,
-  endRequestTiming,
+  finishLastRequestTimingRecord,
 } from '../../network/request-timing';
 import { RenderErrorSubType } from '../../templating';
 import { invariant } from '../../utils/invariant';
@@ -389,6 +389,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const afterResponseScript = `${mutatedContext.request.afterResponseScript}`;
     mutatedContext.request.afterResponseScript = '';
 
+    finishLastRequestTimingRecord(requestId);
     addRequestTimingRecord(
       requestId,
       {
@@ -422,6 +423,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       }
     }
 
+    finishLastRequestTimingRecord(requestId);
     addRequestTimingRecord(
       requestId,
       {
@@ -441,14 +443,13 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       requestData.responseId
     );
 
-    endRequestTiming(requestId, Date.now());
-
     const requestMeta = await models.requestMeta.getByParentId(requestId);
     invariant(requestMeta, 'RequestMeta not found');
     const responsePatch = await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context);
     const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
     const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
 
+    finishLastRequestTimingRecord(requestId);
     mutatedContext.request.afterResponseScript = afterResponseScript;
     if (requestData.request.afterResponseScript) {
       addRequestTimingRecord(
@@ -557,6 +558,7 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
     const renderResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
     const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
+    finishLastRequestTimingRecord(mockRoute._id);
     addRequestTimingRecord(
       mockRoute._id,
       {
@@ -575,8 +577,6 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
       timelinePath,
       responseId,
     );
-
-    endRequestTiming(mockRoute._id, Date.now());
 
     const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
     await models.response.create(response);
