@@ -28,3 +28,12 @@ export const isOwnerOfOrganization = ({
   accountId: string;
 }) =>
   organization.metadata.ownerAccountId === accountId;
+
+export const findPersonalOrganization = (organizations: Organization[], accountId: string) => {
+  return organizations.filter(isPersonalOrganization)
+    .find(organization =>
+      isOwnerOfOrganization({
+        organization,
+        accountId,
+      }));
+};

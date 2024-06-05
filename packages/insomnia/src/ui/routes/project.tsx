@@ -216,6 +216,7 @@ export const syncProjectsAction: ActionFunction = async ({ params }) => {
 };
 
 export const indexLoader: LoaderFunction = async ({ params }) => {
+  console.log('org id index loader');
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
 
@@ -489,6 +490,7 @@ export const listWorkspacesLoader: LoaderFunction = async ({ params }): Promise<
 };
 
 export const projectIdLoader: LoaderFunction = async ({ params }): Promise<ProjectIdLoaderData> => {
+  console.log('project id loader');
   const { projectId } = params;
   invariant(projectId, 'Project ID is required');
 
@@ -534,6 +536,7 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
 export const loader: LoaderFunction = async ({
   params,
 }): Promise<ProjectLoaderData> => {
+  console.log('project id index loader');
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   const { id: sessionId } = await userSession.getOrCreate();
