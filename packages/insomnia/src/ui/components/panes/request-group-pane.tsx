@@ -137,7 +137,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
               >
                 <RequestScriptEditor
                   uniquenessKey={uniqueKey}
-                  defaultValue={activeRequestGroup.preRequestScript || ''}
+                  defaultValue={activeRequestGroup.afterResponseScript || ''}
                   onChange={afterResponseScript => patchRequestGroup(activeRequestGroup._id, { afterResponseScript })}
                   settings={settings}
                 />
