@@ -54,7 +54,7 @@ test('analytics events are sent', async ({ page, app }) => {
         });
     });
 
-    // actions cause analytics events:
+    // Create a collection and requests that cause analytics events:
     await page.getByRole('button', { name: 'New Collection' }).click();
     await page.getByRole('button', { name: 'Create', exact: true }).click();
 
@@ -62,7 +62,6 @@ test('analytics events are sent', async ({ page, app }) => {
         await page.getByLabel('Create in collection').click();
         await page.getByRole('menuitemradio', { name: 'HTTP Request' }).press('Enter');
     }
-    // TODO(filipe) - check for userID and anonymousID, logout and then check for anonymousID only?
 
     const segmentLogs = await app.evaluate(() => globalThis.segmentLogs);
 
