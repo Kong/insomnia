@@ -1,18 +1,60 @@
-import { readFile, rm, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-
 import { expect } from '@playwright/test';
 
 import { test } from '../../playwright/test';
 
-test('analytics events are sent', async ({ page, app, dataPath }) => {
-    const netLogPath = path.join(dataPath, 'netlog.tmp');
+interface SegmentRequestData {
+    batch: {
+        timestamp: string;
+        integrations: {};
+        type: string;
+        properties: {};
+        name?: string;
+        context: {
+            app: {
+                name: string;
+                version: string;
+            };
+            os: {
+                name: string;
+                version: string;
+            };
+            library: {
+                name: string;
+                version: string;
+            };
+        };
+        anonymousId: string;
+        userId: string;
+        messageId: string;
+        _metadata: {
+            nodeVersion: string;
+            jsRuntime: string;
+        };
+        event?: string;
+    }[];
+    writeKey: string;
+    sentAt: string;
+}
 
-    await writeFile(netLogPath, '');
+interface SegmentLog {
+    url: string;
+    data: SegmentRequestData[];
+}
 
-    await app.evaluate(async ({ netLog }, netLogPath) => {
-        await netLog.startLogging(netLogPath);
-    }, netLogPath);
+test('analytics events are sent', async ({ page, app }) => {
+    // const netLogPath = path.join(dataPath, 'netlog.tmp');
+
+    await app.evaluate(async ({ session }) => {
+        global.segmentLogs = [];
+        session.defaultSession.webRequest.onBeforeRequest((details, callback) => {
+            if (details.url.includes('segment')) {
+                console.log('segment event', details.url);
+                console.log('segment event data', details.uploadData);
+                globalThis.segmentLogs.push({ url: details.url, data: details.uploadData });
+            }
+            callback({ cancel: false });
+        });
+    });
 
     // actions cause analytics events:
     await page.getByRole('button', { name: 'New Collection' }).click();
@@ -22,17 +64,13 @@ test('analytics events are sent', async ({ page, app, dataPath }) => {
     await page.locator('text=Insomnia Preferences').first().click();
     // TODO(filipe) - check for userID and anonymousID, logout and then check for anonymousID only?
 
-    await app.evaluate(async ({ netLog }) => {
-        await netLog.stopLogging();
+    const segmentLogs = await app.evaluate(() => globalThis.segmentLogs);
+    const decodedLogs: SegmentLog[] = segmentLogs.map((log: { url: string; data: { type: string; bytes: number[] }[] }) => {
+        return {
+            url: log.url,
+            data: log.data.map(data => JSON.parse(Buffer.from(Object.values(data.bytes)).toString('utf-8'))),
+        };
     });
 
-    const logsFileContents = await readFile(netLogPath, 'utf-8');
-
-    const logs = JSON.parse(logsFileContents) as { events: { params?: { url: string } }[] };
-
-    // @TODO - more checks?
-    const analyticsEvents = logs.events.filter(event => event.params?.url?.includes('segment'));
-    expect(analyticsEvents).not.toHaveLength(0);
-
-    await rm(netLogPath);
+    expect(decodedLogs).not.toHaveLength(0);
 });
