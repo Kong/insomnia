@@ -151,8 +151,6 @@ export const ContentTypeDropdown: FC = () => {
   const hasParams = body && 'params' in body && body.params;
   const numBodyParams = hasParams ? body.params?.filter(({ disabled }) => !disabled).length : 0;
 
-  console.log('bodytype', body.mimeType);
-
   return (
     <Select
       aria-label="Change Body Type"
