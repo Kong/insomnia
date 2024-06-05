@@ -78,8 +78,6 @@ export const RequestHeadersEditor: FC<Props> = ({
     headersString += `${header.name}: ${header.value}\n`;
   }
 
-  const handleChange = useCallback((headers: RequestHeader[]) => patcher(id, { headers }), [id, patcher]);
-
   if (bulk) {
     return (
       <div className="tall">
@@ -101,7 +99,7 @@ export const RequestHeadersEditor: FC<Props> = ({
       pairs={headers}
       handleGetAutocompleteNameConstants={getCommonHeaderNames}
       handleGetAutocompleteValueConstants={getCommonHeaderValues}
-      onChange={handleChange}
+      onChange={headers => patcher(id, { headers })}
       isDisabled={isDisabled}
       readOnlyPairs={isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs}
     />

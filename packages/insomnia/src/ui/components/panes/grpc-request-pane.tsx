@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useCallback, useRef, useState } from 'react';
+import React, { FunctionComponent, useRef, useState } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useMount } from 'react-use';
 import styled from 'styled-components';
@@ -143,8 +143,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   useDocBodyKeyboardShortcuts({
     request_send: handleRequestSend,
   });
-
-  const handleHeadersChange = useCallback((metadata: GrpcRequestHeader[]) => patchRequest(requestId, { metadata }), [patchRequest, requestId]);
 
   return (
     <>
@@ -320,7 +318,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                       isDisabled={running}
                       handleGetAutocompleteNameConstants={getCommonHeaderNames}
                       handleGetAutocompleteValueConstants={getCommonHeaderValues}
-                      onChange={handleHeadersChange}
+                      onChange={(metadata: GrpcRequestHeader[]) => patchRequest(requestId, { metadata })}
                     />
                   </ErrorBoundary>
                 </PanelContainer>
