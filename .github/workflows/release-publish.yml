@@ -133,7 +133,13 @@ jobs:
         with:
           release_id: ${{ steps.core_tag_and_release.outputs.id }}
           tag_name: ${{ env.RELEASE_CORE_TAG }}
-          file: "./artifacts/*-latest-artifacts/insomnia/**;./artifacts/inso-*;./artifacts/*sbom.{spdx,cyclonedx}.json"
+          file: "./artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json"
+          # /home/runner/work/***/***/artifacts/macos-13-artifacts/***/dist/Insomnia.Core-9.3.0-alpha.7.dmg          
+          # /home/runner/work/***/***/artifacts/ubuntu-latest-artifacts/***/dist/Insomnia.Core-9.3.0-alpha.7.deb
+          # /home/runner/work/***/***/artifacts/ubuntu-latest-artifacts/***-inso/artifacts/inso-linux-9.3.0-alpha.7.tar.xz
+          # /home/runner/work/***/***/artifacts/macos-13-artifacts/***-inso/artifacts/inso-macos-13-9.3.0-alpha.7.pkg
+          # /home/runner/work/***/***/artifacts/image-inso-Linux-sbom.spdx.json/image-inso-Linux-sbom.spdx.json
+          # /home/runner/work/***/***/artifacts/sbom.cyclonedx.json/sbom.cyclonedx.json
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
 
