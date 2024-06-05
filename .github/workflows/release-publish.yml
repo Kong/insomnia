@@ -64,23 +64,27 @@ jobs:
         run: |
           INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)
           echo "INSO_VERSION=${INSO_VERSION}" >> $GITHUB_ENV
+          echo "CLI_ARTIFACT_BASE64_FILE=${{env.CLI_ARTIFACT_BASE64_FILE}}" >> $GITHUB_ENV
+          echo "ELECTRON_ARTIFACT_BASE64_FILE=${{env.ELECTRON_ARTIFACT_BASE64_FILE}}" >> $GITHUB_ENV
           ./.github/scripts/generate-binary-digest.sh
         env:
           ARTIFACT_PATH: "${{ env.ARTIFACTS_DOWNLOAD_PATH }}"
           CLI_ARTIFACT_SHAFILE: ${{runner.temp}}/cli.sha256
           ELECTRON_ARTIFACT_SHAFILE: ${{runner.temp}}/electron.sha256
-          CLI_ARTIFACT_HASHES_FILE: ${{runner.temp}}/cli_digests_file.text
-          ELECTRON_ARTIFACT_HASHES_FILE: ${{runner.temp}}/electron_digests_file.text
+          CLI_ARTIFACT_BASE64_FILE: ${{runner.temp}}/cli_digests_file.text
+          ELECTRON_ARTIFACT_BASE64_FILE: ${{runner.temp}}/electron_digests_file.text
 
-      - uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@v2.0.0
+      - name: Calculate CLI Binary base64 file handle
+        uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@v2.0.0
         id: cli_binary_hashes
         with:
-          path: ${{ steps.metadata.outputs.inso_binary_artifact_base64_file }}
+          path: ${{ env.CLI_ARTIFACT_BASE64_FILE }}
       
-      - uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@v2.0.0
+      - name: Calculate Electron Binary base64 file handle
+        uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@v2.0.0
         id: electron_binary_hashes
         with:
-          path: ${{ steps.metadata.outputs.electron_binary_artifact_base64_file }}
+          path: ${{ env.ELECTRON_ARTIFACT_BASE64_FILE }}
       
       - name: Temporarily move artifacts
         shell: bash

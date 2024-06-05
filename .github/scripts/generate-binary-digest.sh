@@ -30,7 +30,3 @@ else
     echo "ELECTRON APP FILE DIGEST"
     base64 -w0 "${ELECTRON_ARTIFACT_SHAFILE}" > "${ELECTRON_ARTIFACT_BASE64_FILE}"
 fi
-
-# Due to limitation here: https://github.com/orgs/community/discussions/37942
-echo "inso_binary_artifact_base64_file=${CLI_ARTIFACT_BASE64_FILE}" >> "$GITHUB_OUTPUT"
-echo "electron_binary_artifact_base64_file=${ELECTRON_ARTIFACT_BASE64_FILE}" >> "$GITHUB_OUTPUT"
