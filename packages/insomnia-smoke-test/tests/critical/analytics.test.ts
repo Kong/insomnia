@@ -42,14 +42,12 @@ interface SegmentLog {
 }
 
 test('analytics events are sent', async ({ page, app }) => {
-    // const netLogPath = path.join(dataPath, 'netlog.tmp');
-
     await app.evaluate(async ({ session }) => {
-        global.segmentLogs = [];
+        // Capture segment requests to a global variable in main process
+        globalThis.segmentLogs = [];
+
         session.defaultSession.webRequest.onBeforeRequest((details, callback) => {
             if (details.url.includes('segment')) {
-                console.log('segment event', details.url);
-                console.log('segment event data', details.uploadData);
                 globalThis.segmentLogs.push({ url: details.url, data: details.uploadData });
             }
             callback({ cancel: false });
@@ -60,11 +58,14 @@ test('analytics events are sent', async ({ page, app }) => {
     await page.getByRole('button', { name: 'New Collection' }).click();
     await page.getByRole('button', { name: 'Create', exact: true }).click();
 
-    await page.locator('[data-testid="settings-button"]').click();
-    await page.locator('text=Insomnia Preferences').first().click();
+    for (let i = 0; i < 10; i++) {
+        await page.getByLabel('Create in collection').click();
+        await page.getByRole('menuitemradio', { name: 'HTTP Request' }).press('Enter');
+    }
     // TODO(filipe) - check for userID and anonymousID, logout and then check for anonymousID only?
 
     const segmentLogs = await app.evaluate(() => globalThis.segmentLogs);
+
     const decodedLogs: SegmentLog[] = segmentLogs.map((log: { url: string; data: { type: string; bytes: number[] }[] }) => {
         return {
             url: log.url,
@@ -72,5 +73,22 @@ test('analytics events are sent', async ({ page, app }) => {
         };
     });
 
-    expect(decodedLogs).not.toHaveLength(0);
+    const analyticsBatch = decodedLogs[0].data[0].batch;
+    const [appStartEvent, ...restEvents] = analyticsBatch;
+
+    // Analytics need at least 15 events to be sent
+    expect(analyticsBatch.length).toBeGreaterThanOrEqual(15);
+
+    // App start event
+    expect(appStartEvent.anonymousId).toBeTruthy();
+    expect(appStartEvent.event).toBe('App Started');
+
+    // First event should have userId and anonymousId
+    expect(restEvents[0].anonymousId).toBeTruthy();
+    expect(restEvents[0].userId).toBeTruthy();
+
+    // Last event should have userId and anonymousId
+    expect(restEvents.at(-1)?.anonymousId).toBeTruthy();
+    expect(restEvents.at(-1)?.userId).toBeTruthy();
+
 });
