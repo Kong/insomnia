@@ -1,11 +1,12 @@
 import { Snippet } from 'codemirror';
 import { CookieObject, Environment, InsomniaObject, Request as ScriptRequest, RequestInfo, Url, Variables } from 'insomnia-sdk';
 import React, { FC, useRef } from 'react';
+import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Section, Toolbar } from 'react-aria-components';
 
 import { Settings } from '../../../models/settings';
 import { translateHandlersInScript } from '../../../utils/importers/importers/postman';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
+import { Icon } from '../icon';
 
 interface Props {
   onChange: (value: string) => void;
@@ -139,6 +140,207 @@ function getRequestScriptSnippets(insomniaObject: InsomniaObject, path: string):
   return snippets;
 }
 
+interface SnippetMenuItem {
+  id: string;
+  name: string;
+  items: ({
+    id: string;
+    name: string;
+    snippet: string;
+  } | {
+    id: string;
+    name: string;
+    items: {
+      id: string;
+      name: string;
+      snippet: string;
+    }[];
+  })[];
+}
+
+const variableSnippetsMenu: SnippetMenuItem = {
+  'id': 'variable-snippets',
+  'name': 'Variable Snippets',
+  items: [
+    {
+      'id': 'get-values',
+      'name': 'Get values',
+      items: [
+        {
+          'id': 'get-env-var',
+          'name': 'Get an environment variable',
+          'snippet': getEnvVar,
+        },
+        // {
+        //   "id": "get-glb-var",
+        //   "name": "Get a global variable",
+        //   "snippet": getGlbVar,
+        // },
+        {
+          'id': 'get-var',
+          'name': 'Get a variable',
+          'snippet': getVar,
+        },
+        {
+          'id': 'get-collection-var',
+          'name': 'Get a collection variable',
+          'snippet': getCollectionVar,
+        },
+      ],
+    },
+    {
+      id: 'set-values',
+      name: 'Set values',
+      items: [
+        {
+          'id': 'set-env-var',
+          'name': 'Set an environment variable',
+          'snippet': setEnvVar,
+        },
+        // {
+        //   "id": "set-glb-var",
+        //   "name": "Set a global variable",
+        //   "snippet": setGlbVar,
+        // },
+        {
+          'id': 'set-var',
+          'name': 'Set a variable',
+          'snippet': setVar,
+        },
+        {
+          'id': 'set-collection-var',
+          'name': 'Set a collection variable',
+          'snippet': setCollectionVar,
+        },
+      ],
+    },
+    {
+      id: 'clear-values',
+      name: 'Clear values',
+      items: [
+        {
+          'id': 'unset-env-var',
+          'name': 'Clear an environment variable',
+          'snippet': unsetEnvVar,
+        },
+        // {
+        //   "id": "unset-glb-var",
+        //   "name": "Clear a global variable",
+        //   "snippet": unsetGlbVar,
+        // },
+        {
+          'id': 'unset-collection-var',
+          'name': 'Clear a collection variable',
+          'snippet': unsetCollectionVar,
+        },
+      ],
+    },
+  ],
+};
+
+const requestManipulationMenu: SnippetMenuItem = {
+  id: 'request-manipulation',
+  name: 'Request Manipulation',
+  items: [
+    {
+      'id': 'add-query-param',
+      'name': 'Add query param',
+      'snippet': addQueryParams,
+    },
+    {
+      'id': 'set-method',
+      'name': 'Set method',
+      'snippet': setMethod,
+    },
+    {
+      'id': 'add-header',
+      'name': 'Add a header',
+      'snippet': addHeader,
+    },
+    {
+      'id': 'remove-header',
+      'name': 'Remove header',
+      'snippet': removeHeader,
+    },
+    {
+      'id': 'update-body-raw',
+      'name': 'Update body as raw',
+      'snippet': updateRequestBody,
+    },
+    {
+      'id': 'update-auth-method',
+      'name': 'Update auth method',
+      'snippet': updateRequestAuth,
+    },
+  ],
+};
+
+const responseHandlingMenu: SnippetMenuItem = {
+  id: 'response-handling',
+  name: 'Response Handling',
+  items: [
+    {
+      'id': 'get-status-code',
+      'name': 'Get status code',
+      'snippet': getStatusCode,
+    },
+    {
+      'id': 'get-status-message',
+      'name': 'Get status message',
+      'snippet': getStatusMsg,
+    },
+    {
+      'id': 'get-response-time',
+      'name': 'Get response time',
+      'snippet': getRespTime,
+    },
+    {
+      'id': 'get-body-json',
+      'name': 'Get body as JSON',
+      'snippet': getJsonBody,
+    },
+    {
+      'id': 'get-body-text',
+      'name': 'Get body as text',
+      'snippet': getTextBody,
+    },
+    {
+      'id': 'find-header',
+      'name': 'Find a header by name',
+      'snippet': findHeader,
+    },
+    {
+      'id': 'get-cookies',
+      'name': 'Get cookies',
+      'snippet': getCookies,
+    },
+  ],
+};
+
+const miscMenu: SnippetMenuItem = {
+  id: 'misc',
+  name: 'Misc',
+  items: [
+    {
+      'id': 'send-request',
+      'name': 'Send a request',
+      'snippet': sendReq,
+    },
+    {
+      'id': 'print-log',
+      'name': 'Print log',
+      'snippet': logValue,
+    },
+    {
+      'id': 'require-module',
+      'name': 'Require a module',
+      'snippet': requireAModule,
+    },
+  ],
+};
+
+const snippetsMenus: SnippetMenuItem[] = [variableSnippetsMenu, requestManipulationMenu, responseHandlingMenu, miscMenu];
+
 export const RequestScriptEditor: FC<Props> = ({
   className,
   defaultValue,
@@ -194,6 +396,7 @@ export const RequestScriptEditor: FC<Props> = ({
         cookies: [],
       }),
       requestInfo: new RequestInfo({
+        // @TODO - Look into this event name when we introduce iteration data
         eventName: 'prerequest',
         iteration: 1,
         iterationCount: 1,
@@ -208,289 +411,63 @@ export const RequestScriptEditor: FC<Props> = ({
   );
 
   return (
-    <div className='h-full flex flex-col'>
-      <div className="flex-1">
-        <CodeEditor
-          id={`script-editor-${uniquenessKey}`}
-          key={uniquenessKey}
-          disableContextMenu={true}
-          showPrettifyButton={true}
-          uniquenessKey={uniquenessKey}
-          defaultValue={defaultValue}
-          className={className}
-          onChange={onChange}
-          mode='text/javascript'
-          placeholder="..."
-          lintOptions={lintOptions}
-          ref={editorRef}
-          getAutocompleteSnippets={() => requestScriptSnippets}
-          onPaste={translateHandlersInScript}
-        />
-      </div>
-      <div className="flex flex-row border-solid border-t border-[var(--hl-md)] h-[var(--line-height-sm)] text-[var(--font-size-sm)] box-border overflow-x-auto">
-        <Dropdown
-          aria-label='Variable Snippets'
-          placement='top left'
-          triggerButton={
-            <DropdownButton>
-              <ItemContent
-                icon="code"
-                label='Variable Snippets'
-              />
-            </DropdownButton>
-          }
-        >
-          <DropdownSection
-            aria-label="Get values"
-            title="Get values"
-          >
+    <div className='h-full flex flex-col divide-y divide-solid divide-[--hl-md]'>
+      <CodeEditor
+        id={`script-editor-${uniquenessKey}`}
+        key={uniquenessKey}
+        disableContextMenu={true}
+        showPrettifyButton={true}
+        uniquenessKey={uniquenessKey}
+        defaultValue={defaultValue}
+        className={className}
+        onChange={onChange}
+        mode='text/javascript'
+        placeholder="..."
+        lintOptions={lintOptions}
+        ref={editorRef}
+        getAutocompleteSnippets={() => requestScriptSnippets}
+        onPaste={translateHandlersInScript}
+      />
+      <Toolbar className="flex items-center h-[--line-height-sm] flex-shrink-0 flex-row text-[var(--font-size-sm)] box-border overflow-x-auto">
+        {snippetsMenus.map(menu => (
+          <MenuTrigger key={menu.id}>
+            <Button className="flex gap-2 px-2 items-center justify-center h-full aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+              <Icon icon="code" />
+              {menu.name}
+            </Button>
+            <Popover className="min-w-max">
+              <Menu
+                aria-label="Create a new request"
+                selectionMode="single"
+                className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                items={menu.items}
+              >
+                {item => {
+                  if ('items' in item) {
+                    return (
+                      <Section>
+                        <Header className='pl-2 py-1 text-[--hl] text-xs uppercase'>
+                          {item.name}
+                        </Header>
+                        <Collection items={item.items}>
+                          {item => (
+                            <MenuItem onAction={() => addSnippet(item.snippet)} className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors" key={item.name}>{item.name}</MenuItem>
+                          )}
+                        </Collection>
+                      </Section>
+                    );
+                  }
 
-            <DropdownItem textValue='Get an environment variable' arial-label={'Get an environment variable'}>
-              <ItemContent
-                icon="sliders"
-                label='Get an environment variable'
-                onClick={() => addSnippet(getEnvVar)}
-              />
-            </DropdownItem>
-            {/* <DropdownItem textValue='Get a global variable' arial-label={'Get a global variable'}>
-            <ItemContent
-              icon="sliders"
-              label='Get a global variable'
-              onClick={() => addSnippet(getGlbVar)}
-            />
-          </DropdownItem> */}
-            <DropdownItem textValue='Get a variable' arial-label={'Get a variable'}>
-              <ItemContent
-                icon="sliders"
-                label='Get a variable'
-                onClick={() => addSnippet(getVar)}
-              />
-            </DropdownItem>
-            <DropdownItem textValue='Get a collection variable' arial-label={'Get a collection variable'}>
-              <ItemContent
-                icon="sliders"
-                label='Get a collection variable'
-                onClick={() => addSnippet(getCollectionVar)}
-              />
-            </DropdownItem>
-          </DropdownSection>
+                  return (
+                    <MenuItem onAction={() => addSnippet(item.snippet)} className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors" key={item.name}>{item.name}</MenuItem>
+                  );
+                }}
+              </Menu>
+            </Popover>
+          </MenuTrigger>
+        ))}
 
-          <DropdownSection
-            aria-label="Set values"
-            title="Set values"
-          >
-            <DropdownItem textValue='Set an environment variable' arial-label={'Set an environment variable'}>
-              <ItemContent
-                icon="circle-plus"
-                label='Set an environment variable'
-                onClick={() => addSnippet(setEnvVar)}
-              />
-            </DropdownItem>
-            {/* <DropdownItem textValue='Set a global variable' arial-label={'Set a global variable'}>
-            <ItemContent
-              icon="circle-plus"
-              label='Set a global variable'
-              onClick={() => addSnippet(setGlbVar)}
-            />
-          </DropdownItem> */}
-            <DropdownItem textValue='Set a variable' arial-label={'Set a variable'}>
-              <ItemContent
-                icon="circle-plus"
-                label='Set a variable'
-                onClick={() => addSnippet(setVar)}
-              />
-            </DropdownItem>
-            <DropdownItem textValue='Set a collection variable' arial-label={'Set a collection variable'}>
-              <ItemContent
-                icon="circle-plus"
-                label='Set a collection variable'
-                onClick={() => addSnippet(setCollectionVar)}
-              />
-            </DropdownItem>
-          </DropdownSection>
-
-          <DropdownSection
-            aria-label="Clear values"
-            title="Clear values"
-          >
-            <DropdownItem textValue='Clear an environment variable' arial-label={'Clear an environment variable'}>
-              <ItemContent
-                icon="circle-minus"
-                label='Clear an environment variable'
-                onClick={() => addSnippet(unsetEnvVar)}
-              />
-            </DropdownItem>
-            {/* <DropdownItem textValue='Clear a global variable' arial-label={'Clear a global variable'}>
-            <ItemContent
-              icon="circle-minus"
-              label='Clear a global variable'
-              onClick={() => addSnippet(unsetGlbVar)}
-            />
-          </DropdownItem> */}
-            <DropdownItem textValue='Clear a collection variable' arial-label={'Clear a collection variable'}>
-              <ItemContent
-                icon="circle-minus"
-                label='Clear a collection variable'
-                onClick={() => addSnippet(unsetCollectionVar)}
-              />
-            </DropdownItem>
-          </DropdownSection>
-        </Dropdown>
-
-        <Dropdown
-          aria-label='Request Manipulation'
-          placement='top left'
-          triggerButton={
-            <DropdownButton>
-              <ItemContent
-                icon="code"
-                label='Request Manipulation'
-              />
-            </DropdownButton>
-          }
-        >
-          <DropdownItem textValue='Add query param' arial-label={'Add query param'}>
-            <ItemContent
-              icon="circle-plus"
-              label='Add a query param'
-              onClick={() => addSnippet(addQueryParams)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Set method' arial-label={'Set method'}>
-            <ItemContent
-              icon="circle-info"
-              label='Set method'
-              onClick={() => addSnippet(setMethod)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Add a header' arial-label={'Add a header'}>
-            <ItemContent
-              icon="circle-plus"
-              label='Add a header'
-              onClick={() => addSnippet(addHeader)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Remove header' arial-label={'Remove header'}>
-            <ItemContent
-              icon="circle-minus"
-              label='Remove a header'
-              onClick={() => addSnippet(removeHeader)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Update body as raw' arial-label={'Update body as raw'}>
-            <ItemContent
-              icon="circle-info"
-              label='Update body as raw'
-              onClick={() => addSnippet(updateRequestBody)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Update auth method' arial-label={'Update auth method'}>
-            <ItemContent
-              icon="circle-user"
-              label='Update auth method'
-              onClick={() => addSnippet(updateRequestAuth)}
-            />
-          </DropdownItem>
-        </Dropdown>
-
-        <Dropdown
-          aria-label='Response Handling'
-          placement='top left'
-          triggerButton={
-            <DropdownButton>
-              <ItemContent
-                icon="code"
-                label='Response Handling'
-              />
-            </DropdownButton>
-          }
-        >
-          <DropdownItem textValue='Get status code' arial-label={'Get status code'}>
-            <ItemContent
-              icon="circle-info"
-              label='Get status code'
-              onClick={() => addSnippet(getStatusCode)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Get status message' arial-label={'Get status message'}>
-            <ItemContent
-              icon="circle-info"
-              label='Get status message'
-              onClick={() => addSnippet(getStatusMsg)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Get response time' arial-label={'Get response time'}>
-            <ItemContent
-              icon="circle-info"
-              label='Get response time'
-              onClick={() => addSnippet(getRespTime)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Get body as JSON' arial-label={'Get body as JSON'}>
-            <ItemContent
-              icon="circle-info"
-              label='Get body as JSON'
-              onClick={() => addSnippet(getJsonBody)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Get body as text' arial-label={'Get body as text'}>
-            <ItemContent
-              icon="circle-info"
-              label='Get body as text'
-              onClick={() => addSnippet(getTextBody)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Find a header by name' arial-label={'Find a header by name'}>
-            <ItemContent
-              icon="circle-info"
-              label='Find a header by name'
-              onClick={() => addSnippet(findHeader)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Get cookies' arial-label={'Get cookies'}>
-            <ItemContent
-              icon="circle-info"
-              label='Get cookies'
-              onClick={() => addSnippet(getCookies)}
-            />
-          </DropdownItem>
-        </Dropdown>
-
-        <Dropdown
-          aria-label='Misc'
-          placement='top left'
-          triggerButton={
-            <DropdownButton>
-              <ItemContent
-                icon="code"
-                label='Misc'
-              />
-            </DropdownButton>
-          }
-        >
-          <DropdownItem textValue='Send a request' arial-label={'Send a request'}>
-            <ItemContent
-              icon="circle-play"
-              label='Send a request'
-              onClick={() => addSnippet(sendReq)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Print log' arial-label={'Print log'}>
-            <ItemContent
-              icon="print"
-              label='Print log'
-              onClick={() => addSnippet(logValue)}
-            />
-          </DropdownItem>
-          <DropdownItem textValue='Require a module' arial-label={'Require a module'}>
-            <ItemContent
-              icon="circle-plus"
-              label='Require a module'
-              onClick={() => addSnippet(requireAModule)}
-            />
-          </DropdownItem>
-        </Dropdown>
-      </div>
+      </Toolbar>
     </div>
   );
 };

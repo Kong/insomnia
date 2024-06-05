@@ -8,8 +8,9 @@ import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, Kind, NonN
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { Maybe } from 'graphql-language-service';
 import React, { FC, useEffect, useRef, useState } from 'react';
-import { Button, Toolbar } from 'react-aria-components';
+import { Button, Group, Heading, Toolbar, Tooltip, TooltipTrigger } from 'react-aria-components';
 import ReactDOM from 'react-dom';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useLocalStorage } from 'react-use';
 
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
@@ -28,6 +29,7 @@ import { CodeEditor, CodeEditorHandle } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
+import { Icon } from '../../icon';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
 import { TimeFromNow } from '../../time-from-now';
 
@@ -174,7 +176,6 @@ interface Props {
 interface State {
   body: GraphQLBody;
   operations: string[];
-  hideSchemaFetchErrors: boolean;
   variablesSyntaxError: string;
   explorerVisible: boolean;
   activeReference: null | ActiveReference;
@@ -214,7 +215,6 @@ export const GraphQLEditor: FC<Props> = ({
       operationName,
     },
     operations,
-    hideSchemaFetchErrors: false,
     variablesSyntaxError: '',
     activeReference: null,
     explorerVisible: false,
@@ -343,16 +343,16 @@ export const GraphQLEditor: FC<Props> = ({
       return '';
     }
     if (schemaIsFetching) {
-      return 'fetching schema...';
+      return 'Fetching schema...';
     }
     if (schemaLastFetchTime > 0) {
       return (
         <span>
-          schema fetched <TimeFromNow timestamp={schemaLastFetchTime} />
+          Schema fetched <TimeFromNow timestamp={schemaLastFetchTime} />
         </span>
       );
     }
-    return <span>schema not yet fetched</span>;
+    return <span>Schema not fetched yet</span>;
   };
 
   const loadAndSetLocalSchema = async () => {
@@ -393,7 +393,6 @@ export const GraphQLEditor: FC<Props> = ({
   };
 
   const {
-    hideSchemaFetchErrors,
     variablesSyntaxError,
     activeReference,
     explorerVisible,
@@ -468,13 +467,13 @@ export const GraphQLEditor: FC<Props> = ({
   }
   const canShowSchema = schema && !schemaIsFetching && !schemaFetchError && schemaLastFetchTime > 0;
   return (
-    <div className="graphql-editor">
-      <Toolbar className="content-box sticky top-0 z-10 bg-[var(--color-bg)] flex flex-row border-b border-[var(--hl-md)] h-[var(--line-height-sm)] text-[var(--font-size-sm)]">
+    <>
+      <Toolbar aria-label='GraphQL toolbar' className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
         <Dropdown
           aria-label='Operations Dropdown'
           isDisabled={!state.operations.length}
           triggerButton={
-            <DropdownButton className="btn btn--compact">
+            <DropdownButton className="btn btn--compact text-[var(--hl)] p-[var(--padding-xs)] h-full">
               {state.body.operationName || 'Operations'}
             </DropdownButton>
           }
@@ -495,7 +494,7 @@ export const GraphQLEditor: FC<Props> = ({
           aria-label='Schema Dropdown'
           triggerButton={
             <DropdownButton
-              className="btn btn--compact"
+              className="btn btn--compact text-[var(--hl)] p-[var(--padding-xs)] h-full"
               disableHoverBehavior={false}
               removeBorderRadius
             >
@@ -523,9 +522,6 @@ export const GraphQLEditor: FC<Props> = ({
                 icon={`refresh ${schemaIsFetching ? 'fa-spin' : ''}`}
                 label="Refresh Schema"
                 onClick={async () => {
-                  // First, "forget" preference to hide errors so they always show
-                  // again after a refresh
-                  setState(state => ({ ...state, hideSchemaFetchErrors: false }));
                   setSchemaIsFetching(true);
                   const newState = await fetchGraphQLSchemaForRequest({
                     requestId: request._id,
@@ -573,7 +569,6 @@ export const GraphQLEditor: FC<Props> = ({
                   </>
                 }
                 onClick={() => {
-                  setState(state => ({ ...state, hideSchemaFetchErrors: false }));
                   loadAndSetLocalSchema();
                 }}
               />
@@ -581,80 +576,85 @@ export const GraphQLEditor: FC<Props> = ({
           </DropdownSection>
         </Dropdown>
       </Toolbar>
-
-      <div className="graphql-editor__query">
-        <CodeEditor
-          id="graphql-editor"
-          ref={editorRef}
-          dynamicHeight
-          showPrettifyButton
-          uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
-          defaultValue={requestBody.query || ''}
-          className={className}
-          onChange={changeQuery}
-          mode="graphql"
-          placeholder=""
-          hintOptions={graphqlOptions?.hintOptions}
-          infoOptions={graphqlOptions?.infoOptions}
-          jumpOptions={graphqlOptions?.jumpOptions}
-          lintOptions={graphqlOptions?.lintOptions}
-        />
-      </div>
-      <div className="graphql-editor__schema-error">
-        {!hideSchemaFetchErrors && schemaFetchError && (
-          <div className="notice error margin no-margin-top margin-bottom-sm">
-            <div className="pull-right">
-              <button
-                className="icon"
-                onClick={() => setState(state => ({ ...state, hideSchemaFetchErrors: true }))}
-              >
-                <i className="fa fa-times" />
-              </button>
-            </div>
-            {schemaFetchError.message}
-            <br />
+      <PanelGroup direction={'vertical'}>
+        <Panel id="GraphQL Editor" minSize={20} defaultSize={60}>
+          <CodeEditor
+            id="graphql-editor"
+            ref={editorRef}
+            dynamicHeight
+            showPrettifyButton
+            uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
+            defaultValue={requestBody.query || ''}
+            className={className}
+            onChange={changeQuery}
+            mode="graphql"
+            placeholder=""
+            hintOptions={graphqlOptions?.hintOptions}
+            infoOptions={graphqlOptions?.infoOptions}
+            jumpOptions={graphqlOptions?.jumpOptions}
+            lintOptions={graphqlOptions?.lintOptions}
+          />
+        </Panel>
+        <PanelResizeHandle className={'w-full h-[1px] bg-[--hl-md]'} />
+        <Panel id="GraphQL Variables editor" className='flex flex-col' minSize={20}>
+          <Heading className="w-full px-2 text-[--hl] select-none flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center">
+            Query Variables
+            <HelpTooltip className="space-left">
+              Variables to use in GraphQL query <br />
+              (JSON format)
+            </HelpTooltip>
+            {variablesSyntaxError && (
+              <span className="text-danger italic pull-right">{variablesSyntaxError}</span>
+            )}
+          </Heading>
+          <div className='flex-1 overflow-hidden'>
+            <CodeEditor
+              id="graphql-editor-variables"
+              dynamicHeight
+              enableNunjucks
+              uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
+              showPrettifyButton={false}
+              defaultValue={jsonPrettify(requestBody.variables)}
+              className={className}
+              getAutocompleteConstants={() => Object.keys(variableTypes)}
+              lintOptions={{
+                variableToType: variableTypes,
+              }}
+              noLint={!variableTypes}
+              onChange={changeVariables}
+              mode="graphql-variables"
+              placeholder=""
+            />
           </div>
-        )}
-      </div>
-      <div className="graphql-editor__meta">
-        {renderSchemaFetchMessage()}
-      </div>
-      <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
-        Query Variables
-        <HelpTooltip className="space-left">
-          Variables to use in GraphQL query <br />
-          (JSON format)
-        </HelpTooltip>
-        {variablesSyntaxError && (
-          <span className="text-danger italic pull-right">{variablesSyntaxError}</span>
-        )}
-      </h2>
-      <div className="graphql-editor__variables">
-        <CodeEditor
-          id="graphql-editor-variables"
-          dynamicHeight
-          enableNunjucks
-          uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
-          showPrettifyButton={false}
-          defaultValue={jsonPrettify(requestBody.variables)}
-          className={className}
-          getAutocompleteConstants={() => Object.keys(variableTypes)}
-          lintOptions={{
-            variableToType: variableTypes,
-          }}
-          noLint={!variableTypes}
-          onChange={changeVariables}
-          mode="graphql-variables"
-          placeholder=""
-        />
-      </div>
-      <div className="flex flex-row items-center border-solid border-t border-[--hl-md] h-[--line-height-sm] text-[--font-size-sm]">
-        <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all" onPress={beautifyRequestBody}>
+        </Panel>
+      </PanelGroup>
+      <Toolbar className="w-full overflow-y-auto  select-none flex-shrink-0 h-[--line-height-sm] border-t border-solid border-[--hl-md] flex items-center">
+        <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-sm hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all" onPress={beautifyRequestBody}>
           Prettify GraphQL
         </Button>
-      </div>
-
+        <span className='flex-1' />
+        {!schemaFetchError && <div className="flex flex-shrink-0 items-center gap-2 text-sm px-2">
+          <Icon icon="info-circle" />
+          {renderSchemaFetchMessage()}
+        </div>}
+        {schemaFetchError && (
+          <Group className="flex items-center h-full">
+            <TooltipTrigger>
+              <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-sm hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">
+                <Icon icon="exclamation-triangle" className='text-[--color-warning]' />
+                <span>Error fetching Schema</span>
+              </Button>
+              <Tooltip
+                offset={8}
+                className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+              >
+                {schemaFetchError.message}
+              </Tooltip>
+            </TooltipTrigger>
+          </Group>
+        )}
+      </Toolbar>
       {graphQLExplorerPortal}
-    </div>
+    </>
   );
 };
