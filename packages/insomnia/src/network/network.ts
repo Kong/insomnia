@@ -202,7 +202,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         // TODO: restart the hidden browser window
       }, timeout + 2000);
     });
-    // const isBaseEnvironmentSelected = environment._id === baseEnvironment._id;
+  // const isBaseEnvironmentSelected = environment._id === baseEnvironment._id;
     // if (isBaseEnvironmentSelected) {
     //   // postman models base env as no env and does not persist, so we could handle that case better, but for now we throw
     //   throw new Error('Base environment cannot be selected for script execution. Please select an environment.');
@@ -297,11 +297,37 @@ type RequestAndContextAndOptionalResponse = RequestContextForScript & {
   response?: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
 };
 export async function tryToExecutePreRequestScript(context: RequestContextForScript) {
-  return tryToExecuteScript({ script: context.request.preRequestScript, ...context });
+  const requestGroups = await db.withAncestors<Request | RequestGroup>(context.request, [
+    models.requestGroup.type,
+  ]) as (Request | RequestGroup)[];
+
+  const folderScripts = requestGroups.reverse()
+    .filter(group => group?.preRequestScript)
+    .map((group, i) => `const fn${i} = async ()=>{
+        ${group.preRequestScript}
+      }
+      await fn${i}();
+  `);
+  const joinedScript = [...folderScripts].join('\n');
+
+  return tryToExecuteScript({ script: joinedScript, ...context });
 };
 
 export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
-  return tryToExecuteScript({ script: context.request.afterResponseScript, ...context });
+  const requestGroups = await db.withAncestors<Request | RequestGroup>(context.request, [
+    models.requestGroup.type,
+  ]) as (Request | RequestGroup)[];
+
+  const folderScripts = requestGroups.reverse()
+    .filter(group => group?.afterResponseScript)
+    .map((group, i) => `const fn${i} = async ()=>{
+        ${group.afterResponseScript}
+      }
+      await fn${i}();
+  `);
+  const joinedScript = [...folderScripts].join('\n');
+
+  return tryToExecuteScript({ script: joinedScript, ...context });
 }
 
 export const tryToInterpolateRequest = async (

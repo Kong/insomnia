@@ -3,19 +3,23 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { Settings } from '../../../models/settings';
+import { useRequestGroupPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { RequestGroupLoaderData } from '../../routes/request-group';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
+import { RequestScriptEditor } from '../editors/request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
+import { Icon } from '../icon';
 import { MarkdownPreview } from '../markdown-preview';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 
-export const RequestGroupPane: FC<{ settings: Settings }> = ({ }) => {
+export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
   const { activeRequestGroup } = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
   const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [isRequestGroupSettingsModalOpen, setIsRequestGroupSettingsModalOpen] = useState(false);
+  const patchRequestGroup = useRequestGroupPatcher();
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const uniqueKey = `${activeEnvironment?.modified}::${activeRequestGroup._id}::${gitVersion}::${activeRequestSyncVersion}`;
@@ -45,6 +49,17 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ }) => {
           </Tab>
           <Tab
             className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='scripts'
+          >
+            <span>Scripts</span>
+            {Boolean(activeRequestGroup.preRequestScript || activeRequestGroup.afterResponseScript) && (
+              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
+                <span className='w-2 h-2 bg-green-500 rounded-full' />
+              </span>
+            )}
+          </Tab>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
             id='docs'
           >
             Docs
@@ -69,6 +84,66 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ }) => {
               requestType="RequestGroup"
             />
           </ErrorBoundary>
+        </TabPanel>
+        <TabPanel className='w-full flex-1' id='scripts'>
+          <Tabs className="w-full h-full flex flex-col overflow-hidden">
+            <TabList className="w-full flex-shrink-0 overflow-x-auto border-solid border-b border-b-[--hl-md] px-2 bg-[--color-bg] flex items-center gap-2 h-[--line-height-sm]" aria-label="Request scripts tabs">
+              <Tab
+                className="rounded-md flex-shrink-0 h-[--line-height-xxs] text-sm flex items-center justify-between cursor-pointer w-[10.5rem] outline-none select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300"
+                id="pre-request"
+              >
+                <div className='flex flex-1 items-center gap-2'>
+                  <Icon icon="arrow-right-to-bracket" />
+                  <span>Pre-request</span>
+                </div>
+                {Boolean(activeRequestGroup.preRequestScript) && (
+                  <span className="p-2 rounded-lg">
+                    <span className="flex w-2 h-2 bg-green-500 rounded-full" />
+                  </span>
+                )}
+              </Tab>
+              <Tab
+                className="rounded-md flex-shrink-0 h-[--line-height-xxs] text-sm flex items-center justify-between cursor-pointer w-[10.5rem] outline-none select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300"
+                id="after-response"
+              >
+                <div className='flex flex-1 items-center gap-2'>
+                  <Icon icon="arrow-right-from-bracket" />
+                  <span>After-response</span>
+                </div>
+                {Boolean(activeRequestGroup.afterResponseScript) && (
+                  <span className="p-2 rounded-lg">
+                    <span className="flex w-2 h-2 bg-green-500 rounded-full" />
+                  </span>
+                )}
+              </Tab>
+            </TabList>
+            <TabPanel className="w-full flex-1" id='pre-request'>
+              <ErrorBoundary
+                key={uniqueKey}
+                errorClassName="tall wide vertically-align font-error pad text-center"
+              >
+                <RequestScriptEditor
+                  uniquenessKey={uniqueKey}
+                  defaultValue={activeRequestGroup.preRequestScript || ''}
+                  onChange={preRequestScript => patchRequestGroup(activeRequestGroup._id, { preRequestScript })}
+                  settings={settings}
+                />
+              </ErrorBoundary>
+            </TabPanel>
+            <TabPanel className="w-full flex-1" id="after-response">
+              <ErrorBoundary
+                key={uniqueKey}
+                errorClassName="tall wide vertically-align font-error pad text-center"
+              >
+                <RequestScriptEditor
+                  uniquenessKey={uniqueKey}
+                  defaultValue={activeRequestGroup.afterResponseScript || ''}
+                  onChange={afterResponseScript => patchRequestGroup(activeRequestGroup._id, { afterResponseScript })}
+                  settings={settings}
+                />
+              </ErrorBoundary>
+            </TabPanel>
+          </Tabs>
         </TabPanel>
         <TabPanel className='w-full flex-1 overflow-y-auto ' id='docs'>
           {activeRequestGroup.description ? (

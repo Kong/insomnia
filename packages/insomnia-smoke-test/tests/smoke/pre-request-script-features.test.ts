@@ -452,18 +452,6 @@ test.describe('unhappy paths', async () => {
 
     const testCases = [
         {
-            name: 'invalid result is returned',
-            preReqScript: `
-          return;
-          `,
-            context: {
-                insomnia: {},
-            },
-            expectedResult: {
-                message: 'insomnia object is invalid or script returns earlier than expected.',
-            },
-        },
-        {
             name: 'custom error is returned',
             preReqScript: `
           throw Error('my custom error');
