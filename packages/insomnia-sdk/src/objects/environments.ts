@@ -44,45 +44,45 @@ export class Environment {
 
 export class Variables {
     // TODO: support vars for all levels
-    private globals: Environment;
-    private collection: Environment;
-    private environment: Environment;
-    private data: Environment;
-    private local: Environment;
+    private globalVars: Environment;
+    private collectionVars: Environment;
+    private environmentVars: Environment;
+    private iterationDataVars: Environment;
+    private localVars: Environment;
 
     constructor(
         args: {
-            globals: Environment;
-            collection: Environment;
-            environment: Environment;
-            data: Environment;
+            globalVars: Environment;
+            collectionVars: Environment;
+            environmentVars: Environment;
+            iterationDataVars: Environment;
         },
     ) {
-        this.globals = args.globals;
-        this.collection = args.collection;
-        this.environment = args.environment;
-        this.data = args.data;
-        this.local = new Environment('__local', {});
+        this.globalVars = args.globalVars;
+        this.collectionVars = args.collectionVars;
+        this.environmentVars = args.environmentVars;
+        this.iterationDataVars = args.iterationDataVars;
+        this.localVars = new Environment('__localVars', {});
     }
 
     has = (variableName: string) => {
-        const globalsHas = this.globals.has(variableName);
-        const collectionHas = this.collection.has(variableName);
-        const environmentHas = this.environment.has(variableName);
-        const dataHas = this.data.has(variableName);
-        const localHas = this.local.has(variableName);
+        const globalVarsHas = this.globalVars.has(variableName);
+        const collectionVarsHas = this.collectionVars.has(variableName);
+        const environmentVarsHas = this.environmentVars.has(variableName);
+        const iterationDataVarsHas = this.iterationDataVars.has(variableName);
+        const localVarsHas = this.localVars.has(variableName);
 
-        return globalsHas || collectionHas || environmentHas || dataHas || localHas;
+        return globalVarsHas || collectionVarsHas || environmentVarsHas || iterationDataVarsHas || localVarsHas;
     };
 
     get = (variableName: string) => {
         let finalVal: boolean | number | string | object | undefined = undefined;
         [
-            this.local,
-            this.data,
-            this.environment,
-            this.collection,
-            this.globals,
+            this.localVars,
+            this.iterationDataVars,
+            this.environmentVars,
+            this.collectionVars,
+            this.globalVars,
         ].forEach(vars => {
             const value = vars.get(variableName);
             if (!finalVal && value) {
@@ -94,7 +94,7 @@ export class Variables {
     };
 
     set = (variableName: string, variableValue: boolean | number | string) => {
-        this.local.set(variableName, variableValue);
+        this.localVars.set(variableName, variableValue);
     };
 
     replaceIn = (template: string) => {
@@ -104,11 +104,11 @@ export class Variables {
 
     toObject = () => {
         return [
-            this.globals,
-            this.collection,
-            this.environment,
-            this.data,
-            this.local,
+            this.globalVars,
+            this.collectionVars,
+            this.environmentVars,
+            this.iterationDataVars,
+            this.localVars,
         ].map(
             vars => vars.toObject()
         ).reduce(

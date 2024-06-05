@@ -137,10 +137,10 @@ export async function initInsomniaObject(
     });
 
     const variables = new Variables({
-        globals,
-        environment,
-        collection: baseEnvironment,
-        data: iterationData,
+        globalVars: globals,
+        environmentVars: environment,
+        collectionVars: baseEnvironment,
+        iterationDataVars: iterationData,
     });
 
     const certificate = rawObj.clientCertificates != null && rawObj.clientCertificates.length > 0 ?

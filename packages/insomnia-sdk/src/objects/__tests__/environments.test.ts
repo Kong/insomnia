@@ -6,10 +6,10 @@ import { Environment, Variables } from '../environments';
 describe('test Variables object', () => {
     it('test basic operations', () => {
         const variables = new Variables({
-            globals: new Environment('globals', { value: '777' }),
-            environment: new Environment('environments', {}),
-            collection: new Environment('baseEnvironment', {}),
-            data: new Environment('iterationData', {}),
+            globalVars: new Environment('globals', { value: '777' }),
+            environmentVars: new Environment('environments', {}),
+            collectionVars: new Environment('baseEnvironment', {}),
+            iterationDataVars: new Environment('iterationData', {}),
         });
 
         const uuidAnd777 = variables.replaceIn('{{    $randomUUID }}{{value  }}');

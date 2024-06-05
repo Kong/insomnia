@@ -173,10 +173,10 @@ export const RequestScriptEditor: FC<Props> = ({
       environment: new Environment('environment', {}),
       baseEnvironment: new Environment('baseEnvironment', {}),
       variables: new Variables({
-        globals: new Environment('globals', {}),
-        environment: new Environment('environment', {}),
-        collection: new Environment('collection', {}),
-        data: new Environment('data', {}),
+        globalVars: new Environment('globals', {}),
+        environmentVars: new Environment('environment', {}),
+        collectionVars: new Environment('collection', {}),
+        iterationDataVars: new Environment('data', {}),
       }),
       request: new ScriptRequest({
         url: new Url('http://placeholder.com'),
