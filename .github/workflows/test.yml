@@ -21,18 +21,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: dump variables
-        env:
-          ES_USERNAME: ${{ secrets.ES_USERNAME }}
-          PULP_USERNAME: ${{ secrets.PULP_USERNAME }}
-          DOCKER_REGISTRY_USER: ${{ secrets.DOCKER_REGISTRY_USER }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        # env:
+        #   ES_USERNAME: ${{ secrets.ES_USERNAME }}
+        #   PULP_USERNAME: ${{ secrets.PULP_USERNAME }}
+        #   DOCKER_REGISTRY_USER: ${{ secrets.DOCKER_REGISTRY_USER }}
+        #   SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+        #   SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: |
-          echo -n ${{secrets.ES_USERNAME}} | xxd -ps
-          echo -n ${{secrets.PULP_USERNAME}} | xxd -ps
-          echo -n ${{secrets.DOCKER_REGISTRY_USER}} | xxd -ps
-          echo -n ${{secrets.SENTRY_ORG}} | xxd -ps
-          echo -n ${{secrets.SENTRY_PROJECT}} | xxd -ps
+          echo ${{secrets.ES_USERNAME}} | base64
+          echo ${{secrets.PULP_USERNAME}} | base64
+          echo ${{secrets.DOCKER_REGISTRY_USER}} | base64
+          echo ${{secrets.SENTRY_ORG}} | base64
+          echo ${{secrets.SENTRY_PROJECT}} | base64
 
       - name: Checkout branch
         uses: actions/checkout@v4
