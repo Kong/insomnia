@@ -22,11 +22,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       NOTARY_REPOSITORY: ${{ env.NOTARY_REPOSITORY }}
-      INSO_BINARY_ARTIFACTS_DIGEST_BASE64: ${{ steps.metadata.outputs.inso_binary_artifact_digest_base64 }}
+      INSO_BINARY_ARTIFACTS_SUBJECTS_AS_FILE: ${{ steps.cli_binary_hashes.outputs.handle }}
       INSO_DOCKER_IMAGE: ${{ env.INSO_DOCKER_IMAGE }}
       INSO_DOCKER_IMAGE_DIGEST: ${{ steps.image_manifest_metadata.outputs.inso_image_sha }}
       INSOMNIA_RELEASE_TAG: ${{ env.RELEASE_CORE_TAG }}
-      ELECTRON_BINARY_ARTIFACTS_DIGEST_BASE64: ${{ steps.metadata.outputs.electron_binary_artifact_digest_base64 }}
+      ELECTRON_BINARY_ARTIFACTS_SUBJECTS_AS_FILE: ${{ steps.electron_binary_hashes.outputs.handle }}
     permissions:
       id-token: write # needed for signing the images
       actions: read # For getting workflow run info for keyless signing of docker image
@@ -69,7 +69,19 @@ jobs:
           ARTIFACT_PATH: "${{ env.ARTIFACTS_DOWNLOAD_PATH }}"
           CLI_ARTIFACT_SHAFILE: ${{runner.temp}}/cli.sha256
           ELECTRON_ARTIFACT_SHAFILE: ${{runner.temp}}/electron.sha256
-          
+          CLI_ARTIFACT_HASHES_FILE: ${{runner.temp}}/cli_digests_file.text
+          ELECTRON_ARTIFACT_HASHES_FILE: ${{runner.temp}}/electron_digests_file.text
+
+      - uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@v2.0.0
+        id: cli_binary_hashes
+        with:
+          path: ${{ steps.metadata.outputs.inso_binary_artifact_base64_file }}
+      
+      - uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@v2.0.0
+        id: electron_binary_hashes
+        with:
+          path: ${{ steps.metadata.outputs.electron_binary_artifact_base64_file }}
+      
       - name: Temporarily move artifacts
         shell: bash
         run: |
@@ -287,13 +299,13 @@ jobs:
       matrix:
         include:
           - product: insomnia
-            binary_artifacts_digest_base64: ${{ needs.publish.outputs.ELECTRON_BINARY_ARTIFACTS_DIGEST_BASE64 }}  
+            binary_artifacts_subject_as_file: ${{ needs.publish.outputs.ELECTRON_BINARY_ARTIFACTS_SUBJECTS_AS_FILE }}  
           - product: inso
-            binary_artifacts_digest_base64: ${{ needs.publish.outputs.INSO_BINARY_ARTIFACTS_DIGEST_BASE64 }}
+            binary_artifacts_subject_as_file: ${{ needs.publish.outputs.INSO_BINARY_ARTIFACTS_SUBJECTS_AS_FILE }}
     # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
-      base64-subjects: ${{matrix.binary_artifacts_digest_base64 }}
+      base64-subjects-as-file: "${{ matrix.binary_artifacts_subject_as_file }}"
       upload-assets: true
       upload-tag-name: ${{ needs.publish.outputs.INSOMNIA_RELEASE_TAG }}
       provenance-name: ${{ matrix.product }}-provenance.intoto.jsonl
