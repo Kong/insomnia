@@ -8,7 +8,7 @@ import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, Kind, NonN
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { Maybe } from 'graphql-language-service';
 import React, { FC, useEffect, useRef, useState } from 'react';
-import { Button } from 'react-aria-components';
+import { Button, Toolbar } from 'react-aria-components';
 import ReactDOM from 'react-dom';
 import { useLocalStorage } from 'react-use';
 
@@ -28,7 +28,6 @@ import { CodeEditor, CodeEditorHandle } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
-import { Toolbar } from '../../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
 import { TimeFromNow } from '../../time-from-now';
 
@@ -470,7 +469,7 @@ export const GraphQLEditor: FC<Props> = ({
   const canShowSchema = schema && !schemaIsFetching && !schemaFetchError && schemaLastFetchTime > 0;
   return (
     <div className="graphql-editor">
-      <Toolbar>
+      <Toolbar className="content-box sticky top-0 z-10 bg-[var(--color-bg)] flex flex-row border-b border-[var(--hl-md)] h-[var(--line-height-sm)] text-[var(--font-size-sm)]">
         <Dropdown
           aria-label='Operations Dropdown'
           isDisabled={!state.operations.length}
