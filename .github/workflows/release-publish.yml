@@ -64,31 +64,11 @@ jobs:
         run: |
           INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)
           echo "INSO_VERSION=${INSO_VERSION}" >> $GITHUB_ENV
-          
-          ARTIFACT_PATH="${{ env.ARTIFACTS_DOWNLOAD_PATH }}"
-
-          # To test set ARTIFACT_PATH to a local path, containing an inso-1.zip and Insomnia.Core-1.zip and paste the next 18 lines in a terminal
-          echo "CLI FILES FOUND"
-          cli_files=$(find "${ARTIFACT_PATH}" -type f \( -name "inso-*.zip" -o -name "inso-*.pkg" -o -name "inso-*.tar.xz" \) -exec sha256sum {} \;)
-          echo "${cli_files}"
-          echo "CLI FILES WITH PATH STRIPPED"
-          cli_replaced_files=$(echo "${cli_files}" | sed "s/\(.* \)\(.*\(inso\)\)/\1\\3/" | sort)
-          echo "${cli_replaced_files}"
-          echo "CLI FILE DIGEST"
-          cli_digest=$(echo "${cli_replaced_files}" | base64 -w0)
-          echo "${cli_digest}"
-          echo "APP FILES FOUND"
-          app_files=$(find "${ARTIFACT_PATH}" -type f \( -name "Insomnia.Core-*" \)  -exec sha256sum {} \;)
-          echo "${app_files}"
-          echo "APP FILES WITH PATH STRIPPED"
-          app_replaced_files=$(echo "${app_files}" | sed "s/\(.* \)\(.*\(Insomnia.Core\)\)/\1\\3/" | sort)
-          echo "${app_replaced_files}"
-          echo "APP FILE DIGEST"
-          app_digest=$(echo "${app_replaced_files}" | base64 -w0)
-          echo "${app_digest}"
-          
-          echo "inso_binary_artifact_digest_base64=${cli_digest}" >> $GITHUB_OUTPUT
-          echo "electron_binary_artifact_digest_base64=${app_digest}" >> $GITHUB_OUTPUT
+          ./.github/scripts/generate-binary-digest.sh
+        env:
+          ARTIFACT_PATH: "${{ env.ARTIFACTS_DOWNLOAD_PATH }}"
+          CLI_ARTIFACT_SHAFILE: ${{runner.temp}}/cli.sha256
+          ELECTRON_ARTIFACT_SHAFILE: ${{runner.temp}}/electron.sha256
           
       - name: Temporarily move artifacts
         shell: bash
