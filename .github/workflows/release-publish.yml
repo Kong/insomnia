@@ -134,7 +134,7 @@ jobs:
           draft: false
 
       - name: Publish beta/stable of Insomnia to Insomnia API
-        if: "!contains(github.event.inputs.version, 'alpha')"
+        if: ${{ !contains(github.event.inputs.version, 'alpha') }}
         run: |
           curl \
             --fail \
@@ -151,7 +151,7 @@ jobs:
           RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       - name: Publish beta/stable of inso to Insomnia API
-        if: "!contains(github.event.inputs.version, 'alpha')"
+        if: ${{ !contains(github.event.inputs.version, 'alpha') }}
         run: |
           curl \
             --fail \
@@ -168,7 +168,7 @@ jobs:
           RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       - name: Upload to snapcraft (beta and stable only)
-        if: "!contains(github.event.inputs.version, 'alpha')"
+        if: ${{ !contains(github.event.inputs.version, 'alpha') }}
         uses: snapcore/action-publish@7fe468c9de12396a9c8964af5d0dfd1d5b493bd7
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
@@ -177,7 +177,7 @@ jobs:
           release: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       - name: Upload .deb to pulp and/or cloudsmith (stable only)
-        if: "!contains(github.event.inputs.version, 'alpha') && !contains(github.event.inputs.version, 'beta')"
+        if: ${{ !contains(github.event.inputs.version, 'alpha') && !contains(github.event.inputs.version, 'beta') }}
         uses: docker://kong/release-script:latest
         env:
           PULP_USERNAME: ${{ secrets.PULP_USERNAME }}
