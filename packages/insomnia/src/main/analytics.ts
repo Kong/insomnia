@@ -24,6 +24,7 @@ export enum SegmentEvent {
   collectionCreate = 'Collection Created',
   dataExport = 'Data Exported',
   dataImport = 'Data Imported',
+  loginSuccess = 'Login Success',
   documentCreate = 'Document Created',
   kongConnected = 'Kong Connected',
   kongSync = 'Kong Synced',
