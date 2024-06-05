@@ -12,7 +12,20 @@ import {
 } from '../common/constants';
 import * as models from '../models/index';
 
-const analytics = new Analytics({ writeKey: getSegmentWriteKey() });
+const analytics = new Analytics({
+  writeKey: getSegmentWriteKey(),
+  httpClient: {
+    makeRequest(_options) {
+      console.log('makeRequest', _options);
+      return net.fetch(_options.url, {
+        method: _options.method,
+        headers: _options.headers,
+        body: _options.body,
+        signal: AbortSignal.timeout(_options.httpRequestTimeout),
+      });
+    },
+  },
+});
 
 const getDeviceId = async () => {
   const settings = await models.settings.get();
@@ -49,9 +62,10 @@ export async function trackSegmentEvent(
   event: SegmentEvent,
   properties?: Record<string, any>,
 ) {
-  const settings = await models.settings.get();
-  const userSession = await models.userSession.get();
+  const settings = await models.settings.getOrCreate();
+  const userSession = await models.userSession.getOrCreate();
   const allowAnalytics = settings.enableAnalytics || userSession?.accountId;
+  console.log('allowAnalytics', allowAnalytics, settings.enableAnalytics, userSession?.accountId);
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
@@ -59,7 +73,7 @@ export async function trackSegmentEvent(
         app: { name: getProductName(), version: getAppVersion() },
         os: { name: _getOsName(), version: process.getSystemVersion() },
       };
-      playwrightDebugAnalytics({ context, anonymousId, userId: userSession?.accountId || '' });
+
       analytics.track({
         event,
         properties,
@@ -78,10 +92,11 @@ export async function trackSegmentEvent(
 }
 
 export async function trackPageView(name: string) {
-  const settings = await models.settings.get();
-  const userSession = await models.userSession.get();
+  const settings = await models.settings.getOrCreate();
+  const userSession = await models.userSession.getOrCreate();
 
   const allowAnalytics = settings.enableAnalytics || userSession?.accountId;
+  console.log('allowAnalytics', allowAnalytics, settings.enableAnalytics, userSession?.accountId);
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
@@ -89,7 +104,7 @@ export async function trackPageView(name: string) {
         app: { name: getProductName(), version: getAppVersion() },
         os: { name: _getOsName(), version: process.getSystemVersion() },
       };
-      playwrightDebugAnalytics({ context, anonymousId, userId: userSession?.accountId });
+
       analytics.page({ name, context, anonymousId, userId: userSession?.accountId }, error => {
         if (error) {
           console.warn('[analytics] Error sending segment event', error);
@@ -123,11 +138,5 @@ function _getOsName() {
       return 'windows';
     default:
       return platform;
-  }
-}
-
-function playwrightDebugAnalytics(object: any) {
-  if (process.env.PLAYWRIGHT) {
-    console.log('[playwright-analytics] analytics debug', object);
   }
 }
