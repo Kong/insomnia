@@ -67,7 +67,7 @@ jobs:
           
           ARTIFACT_PATH="${{ env.ARTIFACTS_DOWNLOAD_PATH }}"
 
-          # To test set ARTIFACT_PATH to a local path and paste the next 18 lines in a terminal
+          # To test set ARTIFACT_PATH to a local path, containing an inso-1.zip and Insomnia.Core-1.zip and paste the next 18 lines in a terminal
           echo "CLI FILES FOUND"
           cli_files=$(find "${ARTIFACT_PATH}" -type f \( -name "inso-*.zip" -o -name "inso-*.pkg" -o -name "inso-*.tar.xz" \) -exec sha256sum {} \;)
           echo "${cli_files}"
