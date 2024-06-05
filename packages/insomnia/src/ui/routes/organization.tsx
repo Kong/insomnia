@@ -30,7 +30,7 @@ import { getAppWebsiteBaseURL } from '../../common/constants';
 import { database } from '../../common/database';
 import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
-import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
+import { findPersonalOrganization, isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
 import { Project } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
@@ -165,6 +165,7 @@ async function syncOrganization(sessionId: string, accountId: string) {
 }
 
 export const indexLoader: LoaderFunction = async () => {
+  console.log('org index loader');
   const { id: sessionId, accountId } = await userSession.getOrCreate();
   if (sessionId) {
     await syncOrganization(sessionId, accountId);
@@ -172,44 +173,39 @@ export const indexLoader: LoaderFunction = async () => {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
     invariant(organizations, 'Failed to fetch organizations.');
 
-    const personalOrganization = organizations.filter(isPersonalOrganization)
-        .find(organization =>
-          isOwnerOfOrganization({
-            organization,
-            accountId,
-          }));
-      invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
-      if (await shouldMigrateProjectUnderOrganization()) {
-        await migrateProjectsIntoOrganization({
-          personalOrganization,
+    const personalOrganization = findPersonalOrganization(organizations, accountId);
+    invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
+    if (await shouldMigrateProjectUnderOrganization()) {
+      await migrateProjectsIntoOrganization({
+        personalOrganization,
+      });
+
+      const preferredProjectType = localStorage.getItem('prefers-project-type');
+      if (preferredProjectType === 'remote') {
+        const localProjects = await database.find<Project>('Project', {
+          parentId: personalOrganization.id,
+          remoteId: null,
         });
 
-        const preferredProjectType = localStorage.getItem('prefers-project-type');
-        if (preferredProjectType === 'remote') {
-          const localProjects = await database.find<Project>('Project', {
-            parentId: personalOrganization.id,
-            remoteId: null,
+        // If any of those fail projects will still be under the organization as local projects
+        for (const project of localProjects) {
+          updateLocalProjectToRemote({
+            project,
+            organizationId: personalOrganization.id,
+            sessionId,
+            vcs: VCSInstance(),
           });
-
-          // If any of those fail projects will still be under the organization as local projects
-          for (const project of localProjects) {
-            updateLocalProjectToRemote({
-              project,
-              organizationId: personalOrganization.id,
-              sessionId,
-              vcs: VCSInstance(),
-            });
-          }
         }
       }
+    }
 
-      if (personalOrganization) {
-        return redirect(`/organization/${personalOrganization.id}`);
-      }
+    if (personalOrganization) {
+      return redirect(`/organization/${personalOrganization.id}`);
+    }
 
-      if (organizations.length > 0) {
-        return redirect(`/organization/${organizations[0].id}`);
-      }
+    if (organizations.length > 0) {
+      return redirect(`/organization/${organizations[0].id}`);
+    }
   }
 
   await session.logout();
@@ -233,6 +229,7 @@ export interface OrganizationLoaderData {
 }
 
 export const loader: LoaderFunction = async () => {
+  console.log('org loader');
   const { id, accountId } = await userSession.getOrCreate();
   if (id) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
@@ -388,6 +385,7 @@ const OrganizationRoute = () => {
     ':workspaceId',
   ) as WorkspaceLoaderData | null;
   const logoutFetcher = useFetcher();
+  const syncOrganizationsFetcher = useFetcher();
   const navigate = useNavigate();
   const [isScratchPadBannerDismissed, setIsScratchPadBannerDismissed] = useLocalStorage('scratchpad-banner-dismissed', '');
   const isScratchpadWorkspace =
@@ -400,6 +398,14 @@ const OrganizationRoute = () => {
     projectId?: string;
     workspaceId?: string;
   };
+
+  useEffect(() => {
+    const submit = syncOrganizationsFetcher.submit;
+    submit({}, {
+      action: '/organization/sync',
+      method: 'POST',
+    });
+  }, [syncOrganizationsFetcher.submit]);
 
   useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
