@@ -122,7 +122,6 @@ export const ResponseMultipartViewer: FC<Props> = ({
 
     // Save the file
     try {
-      // @ts-expect-error -- TSCONVERSION if filePath is undefined, don't try to write anything
       await fs.promises.writeFile(filePath, selectedPart.value);
     } catch (err) {
       console.warn('Failed to save multipart to file', err);
