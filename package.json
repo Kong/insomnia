@@ -15,7 +15,6 @@
     "npm": ">=10"
   },
   "workspaces": [
-    "packages/openapi-2-kong",
     "packages/insomnia-testing",
     "packages/insomnia-send-request",
     "packages/insomnia",

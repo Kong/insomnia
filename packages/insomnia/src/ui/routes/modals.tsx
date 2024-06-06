@@ -11,7 +11,6 @@ import { EnvironmentEditModal } from '../components/modals/environment-edit-moda
 import { ErrorModal } from '../components/modals/error-modal';
 import { FilterHelpModal } from '../components/modals/filter-help-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
-import { GenerateConfigModal } from '../components/modals/generate-config-modal';
 import { NunjucksModal } from '../components/modals/nunjucks-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { RequestRenderErrorModal } from '../components/modals/request-render-error-modal';
@@ -46,9 +45,6 @@ const Modals: FC = () => {
         />
         <RequestRenderErrorModal
           ref={instance => registerModal(instance, 'RequestRenderErrorModal')}
-        />
-        <GenerateConfigModal
-          ref={instance => registerModal(instance, 'GenerateConfigModal')}
         />
 
         <CodePromptModal

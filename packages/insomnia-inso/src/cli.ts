@@ -3,67 +3,21 @@ import { parseArgsStringToArgv } from 'string-argv';
 
 import type { ExportSpecificationOptions } from './commands/export-specification';
 import { exportSpecification } from './commands/export-specification';
-import {
-  ConversionOption,
-  conversionOptions,
-  FormatOption,
-  formatOptions,
-  generateConfig,
-  GenerateConfigOptions,
-  KongVersion,
-  kongVersionOptions,
-} from './commands/generate-config';
 import type { LintSpecificationOptions } from './commands/lint-specification';
 import { lintSpecification } from './commands/lint-specification';
 import type { RunTestsOptions } from './commands/run-tests';
 import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
-import { getOptions } from './get-options';
+import { getOptions, GlobalOptions } from './get-options';
 import { configureLogger, logger } from './logger';
 import { exit, getVersion, logErrorExit1 } from './util';
 
-const prepareCommand = (options: Partial<GenerateConfigOptions>) => {
+const prepareCommand = (options: Partial<GlobalOptions>) => {
   configureLogger(options.verbose, options.ci);
   options.printOptions && logger.log('Loaded options', options, '\n');
   return options;
 };
 
 type CreateCommand = (command: string) => commander.Command;
-
-const makeGenerateCommand = (commandCreator: CreateCommand) => {
-  // inso generate
-  const command = commandCreator('generate').description('Code generation utilities');
-  const defaultType: ConversionOption = 'declarative';
-  const defaultFormat: FormatOption = 'yaml';
-  const defaultKongVersion: KongVersion = 'legacy';
-
-  // inso generate config -t kubernetes config.yaml
-  command
-    .command('config [identifier]')
-    .description('Generate configuration from an api spec.')
-    .option(
-      '-t, --type <value>',
-      `type of configuration to generate, options are [${conversionOptions.join(', ')}] (default: ${defaultType})`,
-    )
-    .option(
-      '-f, --format <value>',
-      `format of configuration to generate, options are [${formatOptions.join(', ')}] (default: ${defaultFormat})`,
-    )
-    .option(
-      '-k, --kongVersion <value>',
-      `version of target Kong instance, options are [${kongVersionOptions.join(', ')}] (default: ${defaultKongVersion})`,
-    )
-    .option('--tags <tags>', 'comma separated list of tags to apply to each entity')
-    .option('-o, --output <path>', 'save the generated config to a file')
-    .action((identifier, cmd) => {
-      let options = getOptions<GenerateConfigOptions>(cmd, {
-        type: defaultType,
-        format: defaultFormat,
-      });
-      options = prepareCommand(options);
-      return exit(generateConfig(identifier, options));
-    });
-  return command;
-};
 
 const makeTestCommand = (commandCreator: CreateCommand) => {
   // inso run
@@ -202,7 +156,6 @@ export const go = (args?: string[], exitOverride?: boolean) => {
 
   // Add commands and sub commands
   cmd
-    .addCommand(makeGenerateCommand(commandCreator))
     .addCommand(makeTestCommand(commandCreator))
     .addCommand(makeLintCommand(commandCreator))
     .addCommand(makeExportCommand(commandCreator));

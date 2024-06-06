@@ -11,7 +11,7 @@ import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import { isRemoteProject } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
-import { isDesign, isScratchpad, Workspace } from '../../../models/workspace';
+import { isScratchpad, Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
@@ -24,7 +24,6 @@ import { InsomniaAI } from '../insomnia-ai-icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showError, showPrompt } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
-import { configGenerators, showGenerateConfigModal } from '../modals/generate-config-modal';
 import { ImportModal } from '../modals/import-modal';
 import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
@@ -43,7 +42,6 @@ export const WorkspaceDropdown: FC = () => {
   const {
     activeWorkspace,
     activeProject,
-    activeApiSpec,
     activeMockServer,
     projects,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
@@ -104,16 +102,6 @@ export const WorkspaceDropdown: FC = () => {
     const actionPlugins = await getWorkspaceActions();
     setActionPlugins(actionPlugins);
   }, []);
-
-  const handleGenerateConfig = useCallback((label: string) => {
-    if (!activeApiSpec) {
-      return;
-    }
-    showGenerateConfigModal({
-      apiSpec: activeApiSpec,
-      activeTabLabel: label,
-    });
-  }, [activeApiSpec]);
 
   const isScratchpadWorkspace = isScratchpad(activeWorkspace);
 
@@ -181,12 +169,6 @@ export const WorkspaceDropdown: FC = () => {
         icon: <Icon icon={(loadingActions[p.label] ? 'refresh' : p.icon || 'code') as IconName} />,
         action: () => handlePluginClick(p, activeWorkspace),
       })),
-      ...isDesign(activeWorkspace) ? configGenerators.map(generator => ({
-        id: generator.label,
-        name: generator.label,
-        icon: <Icon icon='code' />,
-        action: () => handleGenerateConfig(generator.label),
-      } satisfies WorkspaceActionItem)) : [],
     ...userSession.id && access.enabled && activeWorkspace.scope === 'design' ? [{
         id: 'insomnia-ai/generate-test-suite',
         name: 'Auto-generate Tests For Collection',
