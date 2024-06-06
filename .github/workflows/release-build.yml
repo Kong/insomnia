@@ -118,6 +118,7 @@ jobs:
           appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
           appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
           appstore-connect-team-id: FX44YY62GV
+          verbose: true
 
       - name: Staple Inso CLI installer (macOS only)
         if: matrix.os == 'macos-13'
