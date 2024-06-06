@@ -1,3 +1,4 @@
+import { AuthTypeOAuth2 } from '../../../models/request';
 import { fakerFunctions } from '../../../ui/components/templating/faker-functions';
 import { Converter, ImportRequest, Parameter } from '../entities';
 import {
@@ -83,7 +84,7 @@ const mapGrantTypeToInsomniaGrantType = (grantType: string) => {
     return 'password';
   }
 
-  return grantType;
+  return grantType || 'authorization_code';
 };
 
 export function translateHandlersInScript(scriptContent: string): string {
@@ -243,10 +244,10 @@ export class ImportPostman {
     }) as Parameter);
   };
 
-  importFolderItem = ({ name, description, event }: Folder, parentId: string) => {
+  importFolderItem = ({ name, description, event, auth }: Folder, parentId: string) => {
+    const { authentication } = this.importAuthentication(auth);
     const preRequestScript = this.importPreRequestScript(event);
     const afterResponseScript = this.importAfterResponseScript(event);
-
     return {
       parentId,
       _id: `__GRP_${requestGroupCount++}__`,
@@ -255,6 +256,7 @@ export class ImportPostman {
       description: description || '',
       preRequestScript,
       afterResponseScript,
+      authentication,
     };
   };
 
@@ -263,15 +265,19 @@ export class ImportPostman {
       item,
       info: { name, description },
       variable,
+      auth,
     } = this.collection;
 
     const postmanVariable = this.importVariable(variable || []);
+    const { authentication } = this.importAuthentication(auth);
+
     const collectionFolder: ImportRequest = {
       parentId: '__WORKSPACE_ID__',
       _id: `__GRP_${requestGroupCount++}__`,
       _type: 'request_group',
       name,
       description: typeof description === 'string' ? description : '',
+      authentication,
     };
 
     if (postmanVariable) {
@@ -797,7 +803,7 @@ export class ImportPostman {
       disabled: false,
     };
   };
-  importOauth2Authentication = (auth: Authetication) => {
+  importOauth2Authentication = (auth: Authetication): AuthTypeOAuth2 | {} => {
     if (!auth.oauth2) {
       return {};
     }

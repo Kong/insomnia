@@ -16,7 +16,6 @@ const analytics = new Analytics({
   writeKey: getSegmentWriteKey(),
   httpClient: {
     makeRequest(_options) {
-      console.log('makeRequest', _options);
       return net.fetch(_options.url, {
         method: _options.method,
         headers: _options.headers,
@@ -65,7 +64,6 @@ export async function trackSegmentEvent(
   const settings = await models.settings.getOrCreate();
   const userSession = await models.userSession.getOrCreate();
   const allowAnalytics = settings.enableAnalytics || userSession?.accountId;
-  console.log('allowAnalytics', allowAnalytics, settings.enableAnalytics, userSession?.accountId);
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
@@ -96,7 +94,6 @@ export async function trackPageView(name: string) {
   const userSession = await models.userSession.getOrCreate();
 
   const allowAnalytics = settings.enableAnalytics || userSession?.accountId;
-  console.log('allowAnalytics', allowAnalytics, settings.enableAnalytics, userSession?.accountId);
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';

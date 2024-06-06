@@ -139,17 +139,18 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
   const { requestId, requestGroupId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId?: string; requestGroupId?: string };
   const patchRequest = useRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
-  const onClick = useCallback(async (type?: AuthTypes) => {
-    const clickedSameSetting = type === getAuthObjectOrNull(authentication)?.type;
+  const onClick = useCallback(async (type: AuthTypes | 'inherit') => {
+    const clickedSameSetting = type === getAuthObjectOrNull(authentication)?.type || '';
     if (clickedSameSetting) {
       return;
     }
-    const newAuthentication = type ? castOneAuthTypeToAnother(type, authentication || {}) : {};
+    const selectedInherit = type === 'inherit';
+    const newAuthentication = selectedInherit ? {} : castOneAuthTypeToAnother(type, authentication || {});
     requestId && patchRequest(requestId, { authentication: newAuthentication });
     requestGroupId && patchRequestGroup(requestGroupId, { authentication: newAuthentication });
   }, [authentication, patchRequest, patchRequestGroup, requestGroupId, requestId]);
 
-  const selectedAuthType = getAuthObjectOrNull(authentication)?.type || 'none';
+  const selectedAuthType = getAuthObjectOrNull(authentication)?.type || 'inherit';
 
   const authTypesItems: {
     id: AuthTypes;
@@ -206,7 +207,7 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
     icon: IconName;
     name: string;
     items: {
-      id: AuthTypes;
+      id: AuthTypes | 'inherit';
       name: string;
     }[];
   }[] = [
@@ -224,6 +225,10 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
           {
             id: 'none',
             name: 'None',
+          },
+          {
+            id: 'inherit',
+            name: 'Inherit from parent',
           },
         ],
       },
