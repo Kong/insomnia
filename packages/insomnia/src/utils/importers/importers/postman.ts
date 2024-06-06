@@ -1,3 +1,4 @@
+import { AuthTypeOAuth2 } from '../../../models/request';
 import { fakerFunctions } from '../../../ui/components/templating/faker-functions';
 import { Converter, ImportRequest, Parameter } from '../entities';
 import {
@@ -802,7 +803,7 @@ export class ImportPostman {
       disabled: false,
     };
   };
-  importOauth2Authentication = (auth: Authetication) => {
+  importOauth2Authentication = (auth: Authetication): AuthTypeOAuth2 | {} => {
     if (!auth.oauth2) {
       return {};
     }
