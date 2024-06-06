@@ -264,15 +264,19 @@ export class ImportPostman {
       item,
       info: { name, description },
       variable,
+      auth,
     } = this.collection;
 
     const postmanVariable = this.importVariable(variable || []);
+    const { authentication } = this.importAuthentication(auth);
+
     const collectionFolder: ImportRequest = {
       parentId: '__WORKSPACE_ID__',
       _id: `__GRP_${requestGroupCount++}__`,
       _type: 'request_group',
       name,
       description: typeof description === 'string' ? description : '',
+      authentication,
     };
 
     if (postmanVariable) {
