@@ -72,7 +72,8 @@ export function decryptRSAWithJWK(privateJWK: JsonWebKey, encryptedBlob: string)
 
   // @ts-expect-error -- TSCONVERSION appears not to be exported for some reason
   const privateKey = forge.rsa.setPrivateKey(n, e, d, p, q, dP, dQ, qInv);
-  const bytes = forge.util.hexToBytes(encryptedBlob);
+  // deprecated - https://github.com/digitalbazaar/forge/blob/2bb97afb5058285ef09bcf1d04d6bd6b87cffd58/lib/util.js#L1493
+  const bytes = forge.util.binary.hex.decode(encryptedBlob);
   const decrypted = privateKey.decrypt(bytes, 'RSA-OAEP', {
     md: forge.md.sha256.create(),
   });
