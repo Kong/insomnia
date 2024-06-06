@@ -22,29 +22,18 @@ export function addRequestTimingRecord(
     executionId: string,
     record: TimingRecord,
 ) {
-    let existingRecords = requestTimingRecords.get(executionId);
-    if (existingRecords) {
-        existingRecords.push(record);
-    } else {
-        existingRecords = [record];
-    }
-
-    requestTimingRecords.set(executionId, existingRecords);
-    const observer = requestTimingObservers.get(executionId);
-    if (observer) {
-        observer(existingRecords);
-    }
+    // append to new step to execution
+    const execution = [...(requestTimingRecords.get(executionId) || []), record];
+    requestTimingRecords.set(executionId, execution);
+    requestTimingObservers.get(executionId)?.(execution);
 }
 
 export function finishLastRequestTimingRecord(executionId: string) {
-    const existingRecords = requestTimingRecords.get(executionId);
-    if (!existingRecords || existingRecords.length === 0) {
-        return;
+    const latest = requestTimingRecords.get(executionId)?.at(-1);
+    if (latest) {
+        latest.isDone = true;
+        latest.endedAt = Date.now();
     }
-
-    const theLatestRecord = existingRecords[existingRecords.length - 1];
-    theLatestRecord.isDone = true;
-    theLatestRecord.endedAt = Date.now();
 }
 
 export function deleteRequestTiming(executionId: string) {
