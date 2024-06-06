@@ -4304,11 +4304,13 @@ exports[`Fixtures Import postman complex-v2_0_fromHeaders-input.json 1`] = `
     {
       "_id": "__GRP_2__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "description": "",
       "environment": {},
       "metaSortKey": -1622117983999,
       "name": "Projects",
       "parentId": "__GRP_1__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -4564,11 +4566,13 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
     {
       "_id": "__GRP_2__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "description": "The first folder",
       "environment": {},
       "metaSortKey": -1622117983999,
       "name": "First Folder",
       "parentId": "__GRP_1__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -4730,11 +4734,13 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_2__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "description": "The first folder",
       "environment": {},
       "metaSortKey": -1622117983999,
       "name": "First Folder",
       "parentId": "__GRP_1__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -8142,11 +8148,13 @@ exports[`Fixtures Import wsdl addition-input.wsdl 1`] = `
     {
       "_id": "__GRP_2__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "description": "",
       "environment": {},
       "metaSortKey": -1622117983999,
       "name": "Calculator",
       "parentId": "__GRP_1__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -8226,11 +8234,13 @@ exports[`Fixtures Import wsdl calculator-input.wsdl 1`] = `
     {
       "_id": "__GRP_2__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "description": "",
       "environment": {},
       "metaSortKey": -1622117983999,
       "name": "Calculator",
       "parentId": "__GRP_1__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
