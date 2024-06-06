@@ -3,7 +3,7 @@ import React, { FC, useState } from 'react';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';
 
-import { PATH_PARAMETER_REGEX, Request } from '../../models/request';
+import { PATH_PARAMETER_REGEX, Request, RequestAuthentication, RequestParameter } from '../../models/request';
 import { WebSocketRequest } from '../../models/websocket-request';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../utils/url/querystring';
 import { useNunjucks } from '../context/nunjucks/use-nunjucks';
@@ -33,24 +33,38 @@ interface Props {
 
 const defaultPreview = '...';
 
+function getQueryParamsFromAuth(auth: RequestAuthentication | {}): RequestParameter[] {
+  if (!('type' in auth)) {
+    return [];
+  }
+
+  const shouldAddAuthParamsToQuery = auth.type === 'apikey' && auth.addTo === 'queryParams';
+  return shouldAddAuthParamsToQuery && 'key' in auth && 'value' in auth ?
+    [{ name: auth.key, value: auth.value }] :
+    [];
+}
+
 export const RenderedQueryString: FC<Props> = ({ request }) => {
   const [previewString, setPreviewString] = useState(defaultPreview);
   const { handleRender } = useNunjucks();
 
   useAsync(async () => {
     const enabledParameters = request.parameters.filter(({ disabled }) => !disabled);
+    const authQueryParams = getQueryParamsFromAuth(request.authentication);
+
     try {
       const result = await handleRender({
         url: request.url,
         parameters: enabledParameters,
         pathParameters: request.pathParameters,
+        authQueryParams,
       });
 
       if (!result) {
         return;
       }
 
-      const { parameters, pathParameters } = result;
+      const { parameters, pathParameters, authQueryParams: renderedAuthQueryParams } = result;
       let { url } = result;
 
       if (pathParameters) {
@@ -68,7 +82,8 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         });
       }
 
-      const qs = buildQueryStringFromParams(parameters);
+      const mergedParams = [...parameters, ...renderedAuthQueryParams];
+      const qs = buildQueryStringFromParams(mergedParams);
       const fullUrl = joinUrlAndQueryString(url, qs);
       const encoded = smartEncodeUrl(fullUrl, request.settingEncodeUrl);
       setPreviewString(encoded === '' ? defaultPreview : encoded);
@@ -76,7 +91,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
       console.error(error);
       setPreviewString(defaultPreview);
     }
-  }, [request.parameters, request.url, request.pathParameters, request.settingEncodeUrl, handleRender]);
+  }, [request.parameters, request.url, request.pathParameters, request.settingEncodeUrl, handleRender, request.authentication]);
 
   const className = previewString === defaultPreview ? 'super-duper-faint' : 'selectable force-wrap';
 
