@@ -243,13 +243,18 @@ export class ImportPostman {
     }) as Parameter);
   };
 
-  importFolderItem = ({ name, description }: Folder, parentId: string) => {
+  importFolderItem = ({ name, description, event }: Folder, parentId: string) => {
+    const preRequestScript = this.importPreRequestScript(event);
+    const afterResponseScript = this.importAfterResponseScript(event);
+
     return {
       parentId,
       _id: `__GRP_${requestGroupCount++}__`,
       _type: 'request_group',
       name,
       description: description || '',
+      preRequestScript,
+      afterResponseScript,
     };
   };
 
