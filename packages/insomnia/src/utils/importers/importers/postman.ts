@@ -83,7 +83,7 @@ const mapGrantTypeToInsomniaGrantType = (grantType: string) => {
     return 'password';
   }
 
-  return grantType;
+  return grantType || 'authorization_code';
 };
 
 export function translateHandlersInScript(scriptContent: string): string {
@@ -243,10 +243,10 @@ export class ImportPostman {
     }) as Parameter);
   };
 
-  importFolderItem = ({ name, description, event }: Folder, parentId: string) => {
+  importFolderItem = ({ name, description, event, auth }: Folder, parentId: string) => {
+    const { authentication } = this.importAuthentication(auth);
     const preRequestScript = this.importPreRequestScript(event);
     const afterResponseScript = this.importAfterResponseScript(event);
-
     return {
       parentId,
       _id: `__GRP_${requestGroupCount++}__`,
@@ -255,6 +255,7 @@ export class ImportPostman {
       description: description || '',
       preRequestScript,
       afterResponseScript,
+      authentication,
     };
   };
 
