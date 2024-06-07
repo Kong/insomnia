@@ -433,7 +433,7 @@ const TestRoute: FC = () => {
                             disallowEmptySelection
                             key={activeGlobalEnvironment?._id}
                             items={globalEnvironmentListSections}
-                              onSelectionChange={selection => {
+                            onSelectionChange={selection => {
                               if (selection === 'all') {
                                 return;
                               }
@@ -474,7 +474,7 @@ const TestRoute: FC = () => {
                               );
                             }}
                             selectedKeys={[activeGlobalEnvironment?._id || '']}
-                              className="select-none text-sm min-w-max p-2 flex flex-col gap-3 overflow-y-auto focus:outline-none"
+                            className="select-none text-sm min-w-max p-2 flex flex-col gap-3 overflow-y-auto focus:outline-none"
                           >
                             {section => (
                               <Section className='relative py-2'>
