@@ -327,7 +327,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   invariant(typeof name === 'string', 'Name is required');
 
   const scope = formData.get('scope');
-  invariant(scope === 'design' || scope === 'collection' || scope === 'mock-server', 'Scope is required');
+  invariant(scope === 'design' || scope === 'collection' || scope === 'mock-server' || scope === 'environment', 'Scope is required');
 
   const flushId = await database.bufferChanges();
 
@@ -1176,6 +1176,27 @@ export const setActiveEnvironmentAction: ActionFunction = async ({
   invariant(workspaceMeta, 'Workspace meta not found');
 
   await models.workspaceMeta.update(workspaceMeta, { activeEnvironmentId: environmentId || null });
+
+  return null;
+};
+
+export const setActiveGlobalEnvironmentAction: ActionFunction = async ({
+  request, params,
+}) => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+
+  const formData = await request.formData();
+
+  const environmentId = formData.get('environmentId');
+
+  invariant(typeof environmentId === 'string', 'Environment ID is required');
+
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+
+  invariant(workspaceMeta, 'Workspace meta not found');
+
+  await models.workspaceMeta.update(workspaceMeta, { activeGlobalEnvironmentId: environmentId || null });
 
   return null;
 };
