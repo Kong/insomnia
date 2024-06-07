@@ -145,7 +145,7 @@ export const ResponsePane: FC<Props> = ({
         <PaneHeader className="row-spaced">
           <div aria-atomic="true" aria-live="polite" className="no-wrap scrollable scrollable--no-bars pad-left">
             <StatusTag statusCode={activeResponse.statusCode} statusMessage={activeResponse.statusMessage} />
-            <TimeTag milliseconds={activeResponse.elapsedTime} />
+            <TimeTag milliseconds={activeResponse.elapsedTime} requestId={activeResponse.parentId} />
             <SizeTag bytesRead={activeResponse.bytesRead} bytesContent={activeResponse.bytesContent} />
           </div>
           <ResponseHistoryDropdown

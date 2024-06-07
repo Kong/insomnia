@@ -29,8 +29,8 @@ import { getAuthHeader } from '../../network/authentication';
 import { fetchRequestData, getPreRequestScriptOutput, responseTransform, savePatchesMadeByScript, sendCurlAndWriteTimeline, tryToExecuteAfterResponseScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import {
   addRequestTimingRecord,
-  deleteRequestTiming,
   finishLastRequestTimingRecord,
+  startRequestTimingExecution,
 } from '../../network/request-timing';
 import { RenderErrorSubType } from '../../templating';
 import { invariant } from '../../utils/invariant';
@@ -370,6 +370,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   invariant(workspaceId, 'Workspace ID is required');
   const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
   try {
+    startRequestTimingExecution(requestId);
     addRequestTimingRecord(
       requestId,
       {
@@ -472,6 +473,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
         cookieJar,
         response,
       });
+      finishLastRequestTimingRecord(requestId);
       if (!postMutatedContext?.request) {
         // exiy early if there was a problem with the pre-request script
         // TODO: improve error message?
@@ -516,8 +518,6 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       url.searchParams.set('missingKey', e?.extraInfo?.missingKey);
     }
     return redirect(`${url.pathname}?${url.searchParams}`);
-  } finally {
-    deleteRequestTiming(requestId);
   }
 };
 
@@ -534,56 +534,52 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
   invariant(testRequest, 'mock route is missing a testing request');
   const req = await models.request.update(testRequest, patch);
 
-  try {
-    const {
-      environment,
-      settings,
-      clientCertificates,
-      caCert,
-      activeEnvironmentId,
-      timelinePath,
-      responseId,
-    } = await fetchRequestData(req._id);
+  const {
+    environment,
+    settings,
+    clientCertificates,
+    caCert,
+    activeEnvironmentId,
+    timelinePath,
+    responseId,
+  } = await fetchRequestData(req._id);
+  startRequestTimingExecution(req._id);
+  addRequestTimingRecord(
+    req._id,
+    {
+      stepName: 'Rendering request',
+      isDone: false,
+      startedAt: Date.now(),
+      endedAt: 0,
+    },
+  );
 
-    addRequestTimingRecord(
-      mockRoute._id,
-      {
-        stepName: 'Rendering request',
-        isDone: false,
-        startedAt: Date.now(),
-        endedAt: 0,
-      },
-    );
+  const renderResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
+  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
-    const renderResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
-    const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+  finishLastRequestTimingRecord(req._id);
+  addRequestTimingRecord(
+    req._id,
+    {
+      stepName: 'Preparing and sending request',
+      isDone: false,
+      startedAt: Date.now(),
+      endedAt: 0,
+    },
+  );
 
-    finishLastRequestTimingRecord(mockRoute._id);
-    addRequestTimingRecord(
-      mockRoute._id,
-      {
-        stepName: 'Preparing and sending request',
-        isDone: false,
-        startedAt: Date.now(),
-        endedAt: 0,
-      },
-    );
+  const res = await sendCurlAndWriteTimeline(
+    renderedRequest,
+    clientCertificates,
+    caCert,
+    settings,
+    timelinePath,
+    responseId,
+  );
 
-    const res = await sendCurlAndWriteTimeline(
-      renderedRequest,
-      clientCertificates,
-      caCert,
-      settings,
-      timelinePath,
-      responseId,
-    );
-
-    const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
-    await models.response.create(response);
-    return null;
-  } finally {
-    deleteRequestTiming(mockRoute._id);
-  }
+  const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
+  await models.response.create(response);
+  return null;
 };
 export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {
   const { workspaceId, requestId } = params;

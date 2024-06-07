@@ -1,6 +1,7 @@
 import classnames from 'classnames';
 import React, { FC, memo } from 'react';
 
+import { getExecution } from '../../../network/request-timing';
 import { Tooltip } from '../tooltip';
 
 interface Props {
@@ -8,9 +9,10 @@ interface Props {
   small?: boolean;
   className?: string;
   tooltipDelay?: number;
+  requestId?: string;
 }
 
-export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, tooltipDelay }) => {
+export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, tooltipDelay, requestId }) => {
   let unit = 'ms';
   let number = milliseconds;
 
@@ -30,8 +32,7 @@ export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, toolti
   } else {
     number = Math.round(number * 100) / 100;
   }
-
-  const description = `${milliseconds.toFixed(3)} milliseconds`;
+  const steparray = getExecution(requestId);
   return (
     <div
       className={classnames(
@@ -42,7 +43,14 @@ export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, toolti
         className,
       )}
     >
-      <Tooltip message={description} position="bottom" delay={tooltipDelay}>
+      <Tooltip
+        message={<>
+          <div>{milliseconds.toFixed(3)} ms</div>
+          {steparray?.map(step => (<div key={step.stepName}>{step.stepName} {step.endedAt - step.startedAt}ms</div>))}
+        </>}
+        position="bottom"
+        delay={tooltipDelay}
+      >
         {number}&nbsp;{unit}
       </Tooltip>
     </div>

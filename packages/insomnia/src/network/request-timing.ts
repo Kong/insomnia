@@ -14,33 +14,29 @@ export interface RequestTiming {
 
 type TimingCallback = (records: TimingRecord[]) => void;
 
-const requestTimingRecords = new Map<string, TimingRecord[]>();
+export const requestTimingRecords = new Map<string, TimingRecord[]>();
 // only one observer is allowed for simplicity
 const requestTimingObservers = new Map<string, TimingCallback>();
-
+export const getExecution = (requestId?: string) => requestId ? requestTimingRecords.get(requestId) : [];
+export const startRequestTimingExecution = (requestId: string) => requestTimingRecords.set(requestId, []);
 export function addRequestTimingRecord(
-    executionId: string,
+    requestId: string,
     record: TimingRecord,
 ) {
     // append to new step to execution
-    const execution = [...(requestTimingRecords.get(executionId) || []), record];
-    requestTimingRecords.set(executionId, execution);
-    requestTimingObservers.get(executionId)?.(execution);
+    const execution = [...(requestTimingRecords.get(requestId) || []), record];
+    requestTimingRecords.set(requestId, execution);
+    requestTimingObservers.get(requestId)?.(execution);
 }
 
-export function finishLastRequestTimingRecord(executionId: string) {
-    const latest = requestTimingRecords.get(executionId)?.at(-1);
+export function finishLastRequestTimingRecord(requestId: string) {
+    const latest = requestTimingRecords.get(requestId)?.at(-1);
     if (latest) {
         latest.isDone = true;
         latest.endedAt = Date.now();
     }
 }
 
-export function deleteRequestTiming(executionId: string) {
-    requestTimingRecords.delete(executionId);
-    requestTimingObservers.delete(executionId);
-}
-
-export function watchRequestTiming(executionId: string, cb: TimingCallback) {
-    requestTimingObservers.set(executionId, cb);
+export function watchRequestTiming(requestId: string, cb: TimingCallback) {
+    requestTimingObservers.set(requestId, cb);
 }

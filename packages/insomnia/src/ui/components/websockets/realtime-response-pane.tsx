@@ -128,7 +128,7 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
       <PaneHeader className="row-spaced">
         <div className="no-wrap scrollable scrollable--no-bars pad-left">
           <StatusTag statusCode={response.statusCode} statusMessage={response.statusMessage} />
-          <TimeTag milliseconds={response.elapsedTime} />
+          <TimeTag milliseconds={response.elapsedTime} requestId={response.parentId} />
           <SizeTag bytesRead={0} bytesContent={0} />
         </div>
         <ResponseHistoryDropdown
