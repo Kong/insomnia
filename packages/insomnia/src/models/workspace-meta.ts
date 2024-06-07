@@ -10,6 +10,7 @@ export const canSync = false;
 export interface BaseWorkspaceMeta {
   activeActivity: string | null;
   activeEnvironmentId: string | null;
+  activeGlobalEnvironmentId: string | null;
   activeRequestId: string | null;
   activeUnitTestSuiteId: string | null;
   cachedGitLastAuthor: string | null;
@@ -30,6 +31,7 @@ export function init(): BaseWorkspaceMeta {
   return {
     activeActivity: null,
     activeEnvironmentId: null,
+    activeGlobalEnvironmentId: null,
     activeRequestId: null,
     activeUnitTestSuiteId: null,
     cachedGitLastAuthor: null,
