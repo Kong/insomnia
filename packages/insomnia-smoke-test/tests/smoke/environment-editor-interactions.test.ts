@@ -18,7 +18,7 @@ test.describe('Environment Editor', async () => {
     // Create the environment (which will become active on creation)
     // await page.getByLabel("Select an environment").click();
     await page.getByRole('button', { name: 'Manage Environments' }).click();
-    await page.getByLabel('Manage collection environments').click();
+    await page.getByRole('option', { name: 'Manage collection environments' }).click();
     await page.getByTestId('CreateEnvironmentDropdown').click();
     await page.getByRole('menuitemradio', { name: 'Shared Environment' }).press('Enter');
     await page.getByRole('row', { name: 'New Environment' }).click();
@@ -39,7 +39,7 @@ test.describe('Environment Editor', async () => {
   test('Rename an existing environment', async ({ page }) => {
     // Rename the environment
     await page.getByRole('button', { name: 'Manage Environments' }).click();
-    await page.getByLabel('Manage collection environments').click();
+    await page.getByRole('option', { name: 'Manage collection environments' }).click();
     await page.getByRole('row', { name: 'ExampleB' }).getByRole('button', { name: 'name' }).dblclick();
     await page.getByRole('row', { name: 'ExampleB' }).locator('input').fill('Gandalf');
     await page.getByRole('row', { name: 'ExampleB' }).locator('input').press('Enter');
@@ -61,7 +61,7 @@ test.describe('Environment Editor', async () => {
   test('Add new variables to an existing environment', async ({ page }) => {
     // Rename the environment
     await page.getByRole('button', { name: 'Manage Environments' }).click();
-    await page.getByLabel('Manage collection environments').click();
+    await page.getByRole('option', { name: 'Manage collection environments' }).click();
     // add a new string environment variable
     await page.locator('pre').filter({ hasText: '"exampleNumber": 1111,' }).click();
     await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');

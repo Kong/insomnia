@@ -797,7 +797,7 @@ const ProjectRoute: FC = () => {
   const createNewGlobalEnvironment = () => {
     activeProject?._id &&
       showPrompt({
-        title: 'Create new global environment',
+        title: 'Create new Global Environment',
         submitName: 'Create',
         placeholder: 'New environment',
         defaultValue: 'New environment',

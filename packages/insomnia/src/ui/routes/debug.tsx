@@ -811,7 +811,7 @@ export const Debug: FC = () => {
                         >
                           {section => (
                             <Section className='p-2'>
-                              <ListBoxItem id={`manage-environments:${section.id}`} aria-label='Manage environments' className="absolute top-2.5 right-2 flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] outline-none hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                              <ListBoxItem id={`manage-environments:${section.id}`} aria-label='Manage collection environments' className="absolute top-2.5 right-2 flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] outline-none hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                                 <Icon icon="gear" />
                               </ListBoxItem>
                               <Collection items={section.items}>
