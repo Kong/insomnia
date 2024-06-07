@@ -375,9 +375,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       requestId,
       {
         stepName: 'Executing pre-request script',
-        isDone: false,
         startedAt: Date.now(),
-        endedAt: 0,
       },
     );
 
@@ -395,9 +393,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       requestId,
       {
         stepName: 'Rendering request',
-        isDone: false,
         startedAt: Date.now(),
-        endedAt: 0,
       },
     );
 
@@ -429,9 +425,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       requestId,
       {
         stepName: 'Preparing and sending request',
-        isDone: false,
         startedAt: Date.now(),
-        endedAt: 0,
       },
     );
 
@@ -457,9 +451,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
         requestId,
         {
           stepName: 'Executing after-response script',
-          isDone: false,
           startedAt: Date.now(),
-          endedAt: 0,
         },
       );
 
@@ -548,9 +540,7 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
     req._id,
     {
       stepName: 'Rendering request',
-      isDone: false,
       startedAt: Date.now(),
-      endedAt: 0,
     },
   );
 
@@ -562,9 +552,7 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
     req._id,
     {
       stepName: 'Preparing and sending request',
-      isDone: false,
       startedAt: Date.now(),
-      endedAt: 0,
     },
   );
 

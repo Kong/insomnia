@@ -2,9 +2,8 @@ type StepName = 'Executing pre-request script' | 'Rendering request' | 'Preparin
 
 export interface TimingStep {
     stepName: StepName;
-    isDone: boolean;
     startedAt: number;
-    endedAt: number;
+    duration?: number;
 }
 
 type TimingCallback = (steps: TimingStep[]) => void;
@@ -27,8 +26,7 @@ export function addRequestTimingRecord(
 export function finishLastRequestTimingRecord(requestId: string) {
     const latest = executions.get(requestId)?.at(-1);
     if (latest) {
-        latest.isDone = true;
-        latest.endedAt = Date.now();
+        latest.duration = (Date.now() - latest.startedAt);
     }
 }
 

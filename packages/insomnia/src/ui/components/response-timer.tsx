@@ -45,7 +45,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
         <div className='w-3/4 text-left content-center leading-8'>
           <span className="leading-8">
           {
-            record.isDone ?
+              record.duration ?
               (<i className="fa fa-circle-check fa-2x mr-2 text-green-500" />) :
                 (<i className="fa fa-spinner fa-spin fa-2x mr-2" />)
           }
@@ -54,10 +54,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
             {record.stepName}
           </span>
         </div>
-        {record.isDone ? `${((record.endedAt - record.startedAt) / 1000).toFixed(1)} s` : (<MillisecondTimer />)}
-        {/* <div className='w-1/4 text-right' style={{ fontVariantNumeric: 'tabular-nums' }}>
-          {timingToDisplay > 0 ? `${timingToDisplay.toFixed(2)}s` : '0s'}
-        </div> */}
+        {record.duration ? `${((record.duration) / 1000).toFixed(1)} s` : (<MillisecondTimer />)}
       </div>
     );
   });

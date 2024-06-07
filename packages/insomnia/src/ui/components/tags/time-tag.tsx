@@ -45,8 +45,8 @@ export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, toolti
     >
       <Tooltip
         message={<>
-          <div>{milliseconds.toFixed(3)} ms</div>
-          {steparray?.map(step => (<div key={step.stepName}>{step.stepName} {step.endedAt - step.startedAt}ms</div>))}
+          <div>{(milliseconds / 1000).toFixed(2)} s</div>
+          {steparray?.map(step => (<div key={step.stepName}>{step.stepName} {step.duration?.toFixed(2) || '?'} s</div>))}
         </>}
         position="bottom"
         delay={tooltipDelay}
