@@ -359,7 +359,6 @@ export async function duplicate(request: Request, patch: Partial<Request> = {}) 
     },
   };
 
-  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   const [nextRequest] = await db.find<Request>(type, q, {
     metaSortKey: 1,
   });
