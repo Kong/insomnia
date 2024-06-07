@@ -113,7 +113,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
     };
     const { canceled, filePath } = await window.dialog.showSaveDialog(options);
 
-    if (canceled) {
+    if (canceled || !filePath) {
       return;
     }
 

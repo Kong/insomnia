@@ -85,7 +85,7 @@ export async function duplicate(request: WebSocketRequest, patch: Partial<WebSoc
       $gt: request.metaSortKey,
     },
   };
-  // @ts-expect-error -- Database TSCONVERSION
+
   const [nextRequest] = await database.find<WebSocketRequest>(type, q, {
     metaSortKey: 1,
   });
