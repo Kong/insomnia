@@ -101,6 +101,7 @@ export const workspaceLoader: LoaderFunction = async ({
 
   const globalEnvironmentWorkspaces = await database.find<Workspace>(models.workspace.type, {
     parentId: projectId,
+    // @ts-expect-error -- TSCONVERSION db types
     scope: 'environment',
   });
 
@@ -125,10 +126,12 @@ export const workspaceLoader: LoaderFunction = async ({
   });
 
   const activeEnvironment = (await database.getWhere<Environment>(models.environment.type, {
+    // @ts-expect-error -- TSCONVERSION db types
     _id: activeWorkspaceMeta.activeEnvironmentId,
   })) || baseEnvironment;
 
   const activeGlobalEnvironment = (await database.getWhere<Environment>(models.environment.type, {
+    // @ts-expect-error -- TSCONVERSION db types
     _id: activeWorkspaceMeta.activeGlobalEnvironmentId,
   }));
 
