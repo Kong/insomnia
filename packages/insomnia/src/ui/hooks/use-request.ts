@@ -11,6 +11,18 @@ import { Settings } from '../../models/settings';
 import { WebSocketRequest } from '../../models/websocket-request';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 
+export const useRequestReplacer = () => {
+  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const fetcher = useFetcher();
+  return (requestId: string, patch: Partial<GrpcRequest> | Partial<Request> | Partial<WebSocketRequest>) => {
+    fetcher.submit(JSON.stringify(patch), {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/replace`,
+      method: 'post',
+      encType: 'application/json',
+    });
+  };
+};
+
 export const useRequestPatcher = () => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   const fetcher = useFetcher();

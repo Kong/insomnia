@@ -393,6 +393,13 @@ async function renderApp() {
                                           ).updateRequestAction(...args),
                                       },
                                       {
+                                        path: 'replace',
+                                        action: async (...args) =>
+                                          (
+                                            await import('./routes/request')
+                                          ).replaceRequestAction(...args),
+                                      },
+                                      {
                                         path: 'update-meta',
                                         action: async (...args) =>
                                           (

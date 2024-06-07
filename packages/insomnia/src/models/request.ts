@@ -251,8 +251,8 @@ export interface BaseRequest {
   description: string;
   method: string;
   body: RequestBody;
-  preRequestScript: string;
-  afterResponseScript: string;
+  preRequestScript: string | undefined;
+  afterResponseScript: string | undefined;
   parameters: RequestParameter[];
   pathParameters: RequestPathParameter[];
   headers: RequestHeader[];

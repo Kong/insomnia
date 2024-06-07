@@ -188,6 +188,7 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
 
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`);
 };
+
 export const updateRequestAction: ActionFunction = async ({ request, params }) => {
   const { requestId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
@@ -219,6 +220,41 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
   }
 
   await requestOperations.update(req, patch);
+  return null;
+};
+
+export const replaceRequestAction: ActionFunction = async ({ request, params }) => {
+  const { requestId } = params;
+  invariant(typeof requestId === 'string', 'Request ID is required');
+  const req = await requestOperations.getById(requestId);
+  invariant(req, 'Request not found');
+  const patch = await request.json();
+
+  const isRequestURLChanged = (isRequest(req) || isWebSocketRequest(req)) && patch.url && patch.url !== req.url;
+  if (isRequestURLChanged) {
+    const { url } = patch as Request | WebSocketRequest;
+
+    // Check the URL for path parameters and store them in the request
+    const urlPathParameters = getPathParametersFromUrl(url);
+
+    const pathParameters = urlPathParameters.map(name => ({
+      name,
+      value: req.pathParameters?.find(p => p.name === name)?.value || '',
+    }));
+
+    patch.pathParameters = pathParameters;
+  }
+
+  if (isRequest(req) && patch.preRequestScript === '') {
+    req.preRequestScript = undefined;
+    patch.preRequestScript = undefined;
+  }
+  if (isRequest(req) && patch.afterResponseScript === '') {
+    req.afterResponseScript = undefined;
+    patch.afterResponseScript = undefined;
+  }
+
+  await requestOperations.replace({ ...req, ...patch });
   return null;
 };
 

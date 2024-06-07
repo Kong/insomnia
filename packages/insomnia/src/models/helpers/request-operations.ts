@@ -52,3 +52,22 @@ export function duplicate<T extends object>(request: T, patch: Partial<T> = {}):
   // @ts-expect-error -- TSCONVERSION
   return models.request.duplicate(request, patch);
 }
+
+export async function replace<T extends object>(request: T): Promise<T> {
+  // @ts-expect-error -- TSCONVERSION
+  if (isGrpcRequest(request)) {
+    await models.grpcRequest.remove(request);
+    // @ts-expect-error -- TSCONVERSION
+    return models.grpcRequest.create(request);
+  }
+  // @ts-expect-error -- TSCONVERSION
+  if (isWebSocketRequest(request)) {
+    await models.webSocketRequest.remove(request);
+    // @ts-expect-error -- TSCONVERSION
+    return models.webSocketRequest.create(request);
+  }
+  // @ts-expect-error -- TSCONVERSION
+  await models.request.remove(request);
+  // @ts-expect-error -- TSCONVERSION
+  return models.request.create(request);
+}

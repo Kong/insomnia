@@ -9,7 +9,7 @@ import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspa
 import { getCombinedPathParametersFromUrl, RequestParameter } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
-import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
+import { useRequestPatcher, useRequestReplacer, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
@@ -46,6 +46,7 @@ export const RequestPane: FC<Props> = ({
   const patchSettings = useSettingsPatcher();
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
   const patchRequest = useRequestPatcher();
+  const replaceRequest = useRequestReplacer();
 
   const [dismissPathParameterTip, setDismissPathParameterTip] = useLocalStorage('dismissPathParameterTip', '');
   const handleImportQueryFromUrl = () => {
@@ -345,7 +346,7 @@ export const RequestPane: FC<Props> = ({
                 <RequestScriptEditor
                   uniquenessKey={uniqueKey}
                   defaultValue={activeRequest.preRequestScript || ''}
-                  onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
+                  onChange={preRequestScript => replaceRequest(requestId, { preRequestScript })}
                   settings={settings}
                 />
               </ErrorBoundary>
@@ -358,7 +359,7 @@ export const RequestPane: FC<Props> = ({
                 <RequestScriptEditor
                   uniquenessKey={uniqueKey}
                   defaultValue={activeRequest.afterResponseScript || ''}
-                  onChange={afterResponseScript => patchRequest(requestId, { afterResponseScript })}
+                  onChange={afterResponseScript => replaceRequest(requestId, { afterResponseScript })}
                   settings={settings}
                 />
               </ErrorBoundary>
