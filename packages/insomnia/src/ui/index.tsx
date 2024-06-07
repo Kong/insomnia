@@ -176,6 +176,10 @@ async function renderApp() {
                 action: async (...args) => (await import('./routes/organization')).syncOrganizationsAction(...args),
               },
               {
+                path: 'asyncTask',
+                action: async (...args) => (await import('./routes/organization')).asyncTaskAction(...args),
+              },
+              {
                 path: ':organizationId',
                 id: ':organizationId',
                 children: [

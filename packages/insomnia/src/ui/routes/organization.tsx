@@ -53,6 +53,8 @@ import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
 import { useAIContext } from '../context/app/ai-context';
 import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-stream-context';
+import { useAsyncTask } from '../hooks/use-organization-async-task';
+import { syncProjects } from './project';
 import { useRootLoaderData } from './root';
 import { UntrackedProjectsLoaderData } from './untracked-projects';
 import { WorkspaceLoaderData } from './workspace';
@@ -107,6 +109,12 @@ interface CurrentPlan {
   quantity: number;
   type: PersonalPlanType;
 };
+
+export const enum AsyncTask {
+  SyncOrganization,
+  MigrateProjects,
+  SyncProjects,
+}
 
 function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
   const home = organizations.find(organization => isPersonalOrganization(organization) && isOwnerOfOrganization({
@@ -164,6 +172,73 @@ async function syncOrganization(sessionId: string, accountId: string) {
   }
 }
 
+interface AsyncTaskActionRequest {
+  sessionId: string;
+  personalOrganizationId: string;
+  organizationId: string;
+  asyncTaskList: AsyncTask[];
+}
+
+export const asyncTaskAction: ActionFunction = async ({ request }) => {
+  try {
+    const { sessionId, personalOrganizationId, organizationId, asyncTaskList } = await request.json() as AsyncTaskActionRequest;
+    invariant(sessionId, 'sessionId is required');
+    invariant(personalOrganizationId, 'personalOrganizationId is required');
+    invariant(organizationId, 'organizationId is required');
+
+    const taskPromiseList = [];
+
+    for (const task of asyncTaskList) {
+      if (task === AsyncTask.SyncOrganization) {
+        taskPromiseList.push(syncOrganization(sessionId, organizationId));
+      }
+
+      if (task === AsyncTask.MigrateProjects) {
+        taskPromiseList.push(migrateProjectsUnderOrganization(personalOrganizationId, sessionId));
+      }
+
+      if (task === AsyncTask.SyncProjects) {
+        taskPromiseList.push(syncProjects(organizationId));
+      }
+    }
+
+    await Promise.all(taskPromiseList);
+
+    return {};
+  } catch (error) {
+    console.log('Failed to run async task', error);
+    return {
+      error: error.message,
+    };
+  }
+};
+
+async function migrateProjectsUnderOrganization(personalOrganizationId: string, sessionId: string) {
+  if (await shouldMigrateProjectUnderOrganization()) {
+    await migrateProjectsIntoOrganization({
+      personalOrganizationId,
+    });
+
+    const preferredProjectType = localStorage.getItem('prefers-project-type');
+    if (preferredProjectType === 'remote') {
+      const localProjects = await database.find<Project>('Project', {
+        parentId: personalOrganizationId,
+        remoteId: null,
+      });
+
+      // If any of those fail projects will still be under the organization as local projects
+      for (const project of localProjects) {
+        updateLocalProjectToRemote({
+          project,
+          organizationId: personalOrganizationId,
+          sessionId,
+          vcs: VCSInstance(),
+        });
+      }
+    }
+  }
+};
+
 export const indexLoader: LoaderFunction = async () => {
   console.log('org index loader');
   const { id: sessionId, accountId } = await userSession.getOrCreate();
@@ -175,32 +250,11 @@ export const indexLoader: LoaderFunction = async () => {
 
     const personalOrganization = findPersonalOrganization(organizations, accountId);
     invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
-    if (await shouldMigrateProjectUnderOrganization()) {
-      await migrateProjectsIntoOrganization({
-        personalOrganization,
-      });
-
-      const preferredProjectType = localStorage.getItem('prefers-project-type');
-      if (preferredProjectType === 'remote') {
-        const localProjects = await database.find<Project>('Project', {
-          parentId: personalOrganization.id,
-          remoteId: null,
-        });
-
-        // If any of those fail projects will still be under the organization as local projects
-        for (const project of localProjects) {
-          updateLocalProjectToRemote({
-            project,
-            organizationId: personalOrganization.id,
-            sessionId,
-            vcs: VCSInstance(),
-          });
-        }
-      }
-    }
+    const personalOrganizationId = personalOrganization.id;
+    await migrateProjectsUnderOrganization(personalOrganizationId, sessionId);
 
     if (personalOrganization) {
-      return redirect(`/organization/${personalOrganization.id}`);
+      return redirect(`/organization/${personalOrganizationId}`);
     }
 
     if (organizations.length > 0) {
@@ -385,7 +439,6 @@ const OrganizationRoute = () => {
     ':workspaceId',
   ) as WorkspaceLoaderData | null;
   const logoutFetcher = useFetcher();
-  const syncOrganizationsFetcher = useFetcher();
   const navigate = useNavigate();
   const [isScratchPadBannerDismissed, setIsScratchPadBannerDismissed] = useLocalStorage('scratchpad-banner-dismissed', '');
   const isScratchpadWorkspace =
@@ -399,13 +452,11 @@ const OrganizationRoute = () => {
     workspaceId?: string;
   };
 
-  useEffect(() => {
-    const submit = syncOrganizationsFetcher.submit;
-    submit({}, {
-      action: '/organization/sync',
-      method: 'POST',
-    });
-  }, [syncOrganizationsFetcher.submit]);
+  useAsyncTask({
+    organizationId,
+    organizations,
+    userSession,
+  });
 
   useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;

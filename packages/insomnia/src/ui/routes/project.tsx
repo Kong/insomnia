@@ -210,15 +210,23 @@ async function syncTeamProjects({
   }));
 }
 
+export const syncProjects = async (organizationId: string) => {
+  const user = await models.userSession.getOrCreate();
+  const teamProjects = await getAllTeamProjects(organizationId);
+  // ensure we don't sync projects in the wrong place
+  if (teamProjects.length > 0 && user.id && !isScratchpadOrganizationId(organizationId)) {
+    await syncTeamProjects({
+      organizationId,
+      teamProjects,
+    });
+  }
+};
+
 export const syncProjectsAction: ActionFunction = async ({ params }) => {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
 
-  const teamProjects = await getAllTeamProjects(organizationId);
-  await syncTeamProjects({
-    organizationId,
-    teamProjects,
-  });
+  await syncProjects(organizationId);
 
   return null;
 };
@@ -233,18 +241,8 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     `locationHistoryEntry:${organizationId}`
   );
 
-  let teamProjects: TeamProject[] = [];
-
   try {
-    const user = await models.userSession.getOrCreate();
-    teamProjects = await getAllTeamProjects(organizationId);
-    // ensure we don't sync projects in the wrong place
-    if (teamProjects.length > 0 && user.id && !isScratchpadOrganizationId(organizationId)) {
-      await syncTeamProjects({
-        organizationId,
-        teamProjects,
-      });
-    }
+    await syncProjects(organizationId);
   } catch (err) {
     console.log('[project] Could not fetch remote projects.');
   }

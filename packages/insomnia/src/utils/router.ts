@@ -5,6 +5,7 @@ import * as models from '../models';
 import { Organization } from '../models/organization';
 import { findPersonalOrganization } from '../models/organization';
 import { Project } from '../models/project';
+import { AsyncTask } from '../ui/routes/organization';
 
 export const getWholePath = async (accountId: string) => {
   const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
@@ -69,7 +70,13 @@ export const getInitialEntry = async () => {
     if (user.id) {
       // return '/organization';
       const path = await getWholePath(user.accountId);
-      return path;
+      return {
+        pathname: path,
+        state: {
+          // async task need to excute when fisrt entry
+          asyncTaskList: [AsyncTask.SyncOrganization, AsyncTask.MigrateProjects, AsyncTask.SyncProjects],
+        },
+      };
     }
 
     if (hasUserLoggedInBefore) {
