@@ -79,13 +79,13 @@ jobs:
         id: cli_binary_hashes
         with:
           path: ${{ env.CLI_ARTIFACT_BASE64_FILE }}
-      
+
       - name: Calculate Electron Binary base64 file handle
         uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@v2.0.0
         id: electron_binary_hashes
         with:
           path: ${{ env.ELECTRON_ARTIFACT_BASE64_FILE }}
-      
+
       - name: Temporarily move artifacts
         shell: bash
         run: |
@@ -100,18 +100,7 @@ jobs:
           credential_id: ${{secrets.ES_CREDENTIAL_ID}}
           totp_secret: ${{secrets.ES_TOTP_SECRET}}
           file_path: ${GITHUB_WORKSPACE}/artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}.exe
-          output_path: ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist/squirrel-windows
-
-      # - name: Code-sign Windows portable .exe artifact
-      #   uses: sslcom/actions-codesigner@develop
-      #   with:
-      #     command: sign
-      #     username: ${{secrets.ES_USERNAME}}
-      #     password: ${{secrets.ES_PASSWORD}}
-      #     credential_id: ${{secrets.ES_CREDENTIAL_ID}}
-      #     totp_secret: ${{secrets.ES_TOTP_SECRET}}
-      #     file_path: ${GITHUB_WORKSPACE}/artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}-portable.exe
-      #     output_path: ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist
+          output_path: ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist
 
       - name: Create Tag and Release
         uses: ncipollo/release-action@v1
@@ -134,7 +123,8 @@ jobs:
           release_id: ${{ steps.core_tag_and_release.outputs.id }}
           tag_name: ${{ env.RELEASE_CORE_TAG }}
           file: "./artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json"
-          # /home/runner/work/***/***/artifacts/macos-13-artifacts/***/dist/Insomnia.Core-9.3.0-alpha.7.dmg          
+          # /github/workspace/artifacts/windows-latest-artifacts/***/dist/Insomnia.Core-9.3.0-beta.1.exe
+          # /home/runner/work/***/***/artifacts/macos-13-artifacts/***/dist/Insomnia.Core-9.3.0-alpha.7.dmg
           # /home/runner/work/***/***/artifacts/ubuntu-latest-artifacts/***/dist/Insomnia.Core-9.3.0-alpha.7.deb
           # /home/runner/work/***/***/artifacts/ubuntu-latest-artifacts/***-inso/artifacts/inso-linux-9.3.0-alpha.7.tar.xz
           # /home/runner/work/***/***/artifacts/macos-13-artifacts/***-inso/artifacts/inso-macos-13-9.3.0-alpha.7.pkg
@@ -309,7 +299,7 @@ jobs:
       matrix:
         include:
           - product: insomnia
-            binary_artifacts_subject_as_file: ${{ needs.publish.outputs.ELECTRON_BINARY_ARTIFACTS_SUBJECTS_AS_FILE }}  
+            binary_artifacts_subject_as_file: ${{ needs.publish.outputs.ELECTRON_BINARY_ARTIFACTS_SUBJECTS_AS_FILE }}
           - product: inso
             binary_artifacts_subject_as_file: ${{ needs.publish.outputs.INSO_BINARY_ARTIFACTS_SUBJECTS_AS_FILE }}
     # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
