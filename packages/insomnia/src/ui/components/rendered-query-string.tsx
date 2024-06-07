@@ -39,7 +39,7 @@ function getQueryParamsFromAuth(auth: RequestAuthentication | {}): RequestParame
   }
 
   const shouldAddAuthParamsToQuery = auth.type === 'apikey' && auth.addTo === 'queryParams';
-  return shouldAddAuthParamsToQuery && 'key' in auth && 'value' in auth ?
+  return shouldAddAuthParamsToQuery && auth.key && auth.value ?
     [{ name: auth.key, value: auth.value }] :
     [];
 }
