@@ -1,26 +1,20 @@
 import React, { DOMAttributes, FunctionComponent, useEffect, useState } from 'react';
 
-import { REQUEST_SETUP_TEARDOWN_COMPENSATION } from '../../common/constants';
-import { TimingRecord, watchRequestTiming } from '../../network/request-timing';
+import { getExecution, TimingStep, watchExecution } from '../../network/request-timing';
 
 interface Props {
   handleCancel: DOMAttributes<HTMLButtonElement>['onClick'];
   activeRequestId: string;
 }
-
-export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRequestId }) => {
+// triggers a 100 ms render in order to show a incrementing counter
+const MillisecondTimer = () => {
   const [milliseconds, setMilliseconds] = useState(0);
-  const [timingCount, setTimingCount] = useState(0);
-  const [timingRecords, setTimingRecords] = useState(new Array<TimingRecord>());
-
-  const executionId = activeRequestId;
-
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     const loadStartTime = Date.now();
-
     interval = setInterval(() => {
-      setMilliseconds(Date.now() - loadStartTime - REQUEST_SETUP_TEARDOWN_COMPENSATION);
+      const delta = Date.now() - loadStartTime;
+      setMilliseconds(delta);
     }, 100);
     return () => {
       if (interval !== null) {
@@ -29,28 +23,23 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
       }
     };
   }, []);
+  const ms = (milliseconds / 1000);
+  return ms > 0 ? `${ms.toFixed(1)} s` : '0 s';
+};
+export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRequestId }) => {
+  const execution = getExecution(activeRequestId);
+  const [steps, setSteps] = useState(execution || new Array<TimingStep>());
 
   useEffect(() => {
-    const cb = (records: TimingRecord[]) => {
-      if (records && records.length !== timingCount) {
-        setMilliseconds(0);
-        setTimingCount(records.length);
-      }
-      setTimingRecords(records);
-    };
+    watchExecution(activeRequestId, (steps: TimingStep[]) => {
+      setSteps(steps);
+    });
+  }, [activeRequestId, steps.length]);
 
-    watchRequestTiming(executionId, cb);
-  }, [executionId, timingCount]);
-
-  const seconds = milliseconds / 1000;
-
-  const timingList = timingRecords.map((record: TimingRecord) => {
-    const timingToDisplay = record.isDone ?
-      ((record.endedAt - record.startedAt) / 1000) : seconds;
-
+  const timingList = steps.map((record: TimingStep) => {
     return (
       <div
-        key={`${executionId}-${record.stepName}`}
+        key={`${activeRequestId}-${record.stepName}`}
         className='flex w-full leading-8'
       >
         <div className='w-3/4 text-left content-center leading-8'>
@@ -65,9 +54,10 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
             {record.stepName}
           </span>
         </div>
-        <div className='w-1/4 text-right' style={{ fontVariantNumeric: 'tabular-nums' }}>
+        {record.isDone ? `${((record.endedAt - record.startedAt) / 1000).toFixed(1)} s` : (<MillisecondTimer />)}
+        {/* <div className='w-1/4 text-right' style={{ fontVariantNumeric: 'tabular-nums' }}>
           {timingToDisplay > 0 ? `${timingToDisplay.toFixed(2)}s` : '0s'}
-        </div>
+        </div> */}
       </div>
     );
   });

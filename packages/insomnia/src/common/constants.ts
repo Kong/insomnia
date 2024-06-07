@@ -58,16 +58,6 @@ export const getClientString = () => `${getAppEnvironment()}::${getAppPlatform()
 // Global Stuff
 export const DEBOUNCE_MILLIS = 100;
 
-/**
- * A number in milliseconds representing the time required to setup and teardown a request.
- *
- * Should not be used for anything a user may rely on for performance metrics of any kind.
- *
- * While this isn't a perfect "magic-number" (it can be as low as 120ms and as high as 300) it serves as a rough average.
- *
- * For initial introduction, see https://github.com/Kong/insomnia/blob/8aa274d21b351c4710f0bb833cba7deea3d56c29/app/ui/components/ResponsePane.js#L100
-*/
-export const REQUEST_SETUP_TEARDOWN_COMPENSATION = 200;
 export const STATUS_CODE_PLUGIN_ERROR = -222;
 export const LARGE_RESPONSE_MB = 5;
 export const HUGE_RESPONSE_MB = 100;

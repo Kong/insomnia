@@ -127,7 +127,7 @@ export const ResponsePane: FC<Props> = ({
   }
 
   // If there is no previous response, show placeholder for loading indicator
-  if (!activeResponse) {
+  if (runningRequests[activeRequest._id]) {
     return (
       <PlaceholderResponsePane>
         {runningRequests[activeRequest._id] && <ResponseTimer
@@ -136,6 +136,9 @@ export const ResponsePane: FC<Props> = ({
         />}
       </PlaceholderResponsePane>
     );
+  }
+  if (!activeResponse) {
+    return (<PlaceholderResponsePane />);
   }
   const timeline = models.response.getTimeline(activeResponse);
   const cookieHeaders = getSetCookieHeaders(activeResponse.headers);

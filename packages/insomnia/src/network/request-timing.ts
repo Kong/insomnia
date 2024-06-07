@@ -1,42 +1,37 @@
 type StepName = 'Executing pre-request script' | 'Rendering request' | 'Preparing and sending request' | 'Executing after-response script';
 
-export interface TimingRecord {
+export interface TimingStep {
     stepName: StepName;
     isDone: boolean;
     startedAt: number;
     endedAt: number;
 }
 
-export interface RequestTiming {
-    records: TimingRecord[];
-    cb?: (records: TimingRecord[]) => void;
-}
-
-type TimingCallback = (records: TimingRecord[]) => void;
-
-export const requestTimingRecords = new Map<string, TimingRecord[]>();
+type TimingCallback = (steps: TimingStep[]) => void;
+// this is intentially ephemeral state because we only use breifly while waiting for requests or checking the timings
+export const executions = new Map<string, TimingStep[]>();
 // only one observer is allowed for simplicity
-const requestTimingObservers = new Map<string, TimingCallback>();
-export const getExecution = (requestId?: string) => requestId ? requestTimingRecords.get(requestId) : [];
-export const startRequestTimingExecution = (requestId: string) => requestTimingRecords.set(requestId, []);
+const executionObservers = new Map<string, TimingCallback>();
+export const getExecution = (requestId?: string) => requestId ? executions.get(requestId) : [];
+export const startRequestTimingExecution = (requestId: string) => executions.set(requestId, []);
 export function addRequestTimingRecord(
     requestId: string,
-    record: TimingRecord,
+    record: TimingStep,
 ) {
     // append to new step to execution
-    const execution = [...(requestTimingRecords.get(requestId) || []), record];
-    requestTimingRecords.set(requestId, execution);
-    requestTimingObservers.get(requestId)?.(execution);
+    const execution = [...(executions.get(requestId) || []), record];
+    executions.set(requestId, execution);
+    executionObservers.get(requestId)?.(execution);
 }
 
 export function finishLastRequestTimingRecord(requestId: string) {
-    const latest = requestTimingRecords.get(requestId)?.at(-1);
+    const latest = executions.get(requestId)?.at(-1);
     if (latest) {
         latest.isDone = true;
         latest.endedAt = Date.now();
     }
 }
 
-export function watchRequestTiming(requestId: string, cb: TimingCallback) {
-    requestTimingObservers.set(requestId, cb);
+export function watchExecution(requestId: string, cb: TimingCallback) {
+    executionObservers.set(requestId, cb);
 }
