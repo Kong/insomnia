@@ -797,7 +797,7 @@ const ProjectRoute: FC = () => {
   const createNewGlobalEnvironment = () => {
     activeProject?._id &&
       showPrompt({
-        title: 'Create new Global Environment',
+        title: 'Create New Environment',
         submitName: 'Create',
         placeholder: 'New environment',
         defaultValue: 'New environment',
@@ -900,10 +900,16 @@ const ProjectRoute: FC = () => {
       action: createNewDocument,
     },
     {
-        id: 'new-mock-server',
-        name: 'Mock Server',
-        icon: 'server',
+      id: 'new-mock-server',
+      name: 'Mock Server',
+      icon: 'server',
       action: createNewMockServer,
+      },
+      {
+        id: 'new-environment',
+        name: 'Environment',
+        icon: 'code',
+        action: createNewGlobalEnvironment,
       },
       {
       id: 'import',
@@ -1352,6 +1358,7 @@ const ProjectRoute: FC = () => {
                           createRequestCollection={createNewCollection}
                           createDesignDocument={createNewDocument}
                           createMockServer={createNewMockServer}
+                          createEnvironment={createNewGlobalEnvironment}
                           importFrom={() => setImportModalType('file')}
                           cloneFromGit={importFromGit}
                           isGitSyncEnabled={isGitSyncEnabled}

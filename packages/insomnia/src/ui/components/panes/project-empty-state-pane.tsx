@@ -75,12 +75,13 @@ interface Props {
   createRequestCollection: () => void;
   createDesignDocument: () => void;
   createMockServer: () => void;
+  createEnvironment: () => void;
   importFrom: () => void;
   cloneFromGit: () => void;
   isGitSyncEnabled: boolean;
 }
 
-export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, createMockServer, importFrom, cloneFromGit, isGitSyncEnabled }) => {
+export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, createMockServer, createEnvironment, importFrom, cloneFromGit, isGitSyncEnabled }) => {
   const { organizationId } = useParams<{ organizationId: string }>();
   const { organizations } = useOrganizationLoaderData();
   const { userSession } = useRootLoaderData();
@@ -155,6 +156,16 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
               fontSize: 'var(--font-size-xl)',
             }}
           /> New Mock Server
+        </SquareButton>
+        <SquareButton
+          onClick={createEnvironment}
+        >
+          <i
+            className='fa fa-code'
+            style={{
+              fontSize: 'var(--font-size-xl)',
+            }}
+          /> New Environment
         </SquareButton>
       </div>
       <Divider
