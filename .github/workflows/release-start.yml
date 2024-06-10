@@ -65,11 +65,8 @@ jobs:
           echo "RELEASE_VERSION=$(node -e "console.log(require('./packages/insomnia/package.json').version)")" >> $GITHUB_ENV
           echo "RELEASE_BRANCH=release/$(node -e "console.log(require('./packages/insomnia/package.json').version)")" >> $GITHUB_ENV
 
-      # - name: Git create branch locally # Check out the new branch
-      #   run: git checkout -b ${{ env.RELEASE_BRANCH }}
-
       - name: Create Branch # Create a branch if it doesn't exist
-        uses: peterjgrainger/action-create-branch@v2.0.1
+        uses: peterjgrainger/action-create-branch@v2.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
