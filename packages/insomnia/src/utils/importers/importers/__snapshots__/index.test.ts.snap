@@ -3833,12 +3833,14 @@ exports[`Fixtures Import postman api-key-default-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "New Collection",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -3876,12 +3878,14 @@ exports[`Fixtures Import postman api-key-header-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "New Collection",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -3919,12 +3923,14 @@ exports[`Fixtures Import postman api-key-queryParams-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "New Collection",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -3962,12 +3968,14 @@ exports[`Fixtures Import postman aws-signature-auth-v2_0-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "AWS Signature Test",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -4007,12 +4015,14 @@ exports[`Fixtures Import postman aws-signature-auth-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "AWS Signature Test",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -4052,12 +4062,14 @@ exports[`Fixtures Import postman basic-auth-v2_0-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Basic Auth Test",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -4094,12 +4106,14 @@ exports[`Fixtures Import postman basic-auth-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Basic Auth Test",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -4136,12 +4150,14 @@ exports[`Fixtures Import postman bearer-token-v2_0-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Bearer Token Test",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -4178,12 +4194,14 @@ exports[`Fixtures Import postman bearer-token-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Bearer Token Test",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -4220,12 +4238,14 @@ exports[`Fixtures Import postman complex-url-v2_0-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Complex URL Test Collection",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -4263,12 +4283,14 @@ exports[`Fixtures Import postman complex-url-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Complex URL Test Collection",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -4306,12 +4328,14 @@ exports[`Fixtures Import postman complex-v2_0_fromHeaders-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Timing API",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__GRP_2__",
@@ -4570,12 +4594,14 @@ exports[`Fixtures Import postman complex-v2_0-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Complex Test Collection",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__GRP_2__",
@@ -4740,12 +4766,14 @@ exports[`Fixtures Import postman complex-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Complex Test Collection",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__GRP_2__",
@@ -4916,12 +4944,14 @@ exports[`Fixtures Import postman digest-auth-v2_0-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Digest Authentication Test",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -4958,12 +4988,14 @@ exports[`Fixtures Import postman digest-auth-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Digest Authentication Test",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -5000,12 +5032,14 @@ exports[`Fixtures Import postman faker-vars-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "export tags",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -5057,12 +5091,14 @@ exports[`Fixtures Import postman minimal-v2_0-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Minimal Test Collection",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -5094,12 +5130,14 @@ exports[`Fixtures Import postman minimal-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Minimal Test Collection",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -5131,12 +5169,14 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_0-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Oauth 1.0 Test",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -5307,12 +5347,14 @@ exports[`Fixtures Import postman oauth1_0-auth-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Oauth 1.0 Test",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -5483,12 +5525,14 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_0-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "A collection for testing",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Oauth 2.0 Test",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -5552,12 +5596,14 @@ exports[`Fixtures Import postman oauth2_0-auth-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "oauth2",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -5738,12 +5784,14 @@ exports[`Fixtures Import postman postman-export-oauth2-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Example collection",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -5792,12 +5840,14 @@ exports[`Fixtures Import postman scripts-import-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "New Collection",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__REQ_1__",
@@ -8167,12 +8217,14 @@ exports[`Fixtures Import wsdl addition-input.wsdl 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Calculator",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__GRP_2__",
@@ -8255,12 +8307,14 @@ exports[`Fixtures Import wsdl calculator-input.wsdl 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
+      "afterResponseScript": "",
       "authentication": {},
       "description": "",
       "environment": {},
       "metaSortKey": -1622117984000,
       "name": "Calculator",
       "parentId": "__WORKSPACE_ID__",
+      "preRequestScript": "",
     },
     {
       "_id": "__GRP_2__",

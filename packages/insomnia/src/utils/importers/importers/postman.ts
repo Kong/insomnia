@@ -266,10 +266,13 @@ export class ImportPostman {
       info: { name, description },
       variable,
       auth,
+      event,
     } = this.collection;
 
     const postmanVariable = this.importVariable(variable || []);
     const { authentication } = this.importAuthentication(auth);
+    const preRequestScript = this.importPreRequestScript(event);
+    const afterResponseScript = this.importAfterResponseScript(event);
 
     const collectionFolder: ImportRequest = {
       parentId: '__WORKSPACE_ID__',
@@ -278,6 +281,8 @@ export class ImportPostman {
       name,
       description: typeof description === 'string' ? description : '',
       authentication,
+      preRequestScript,
+      afterResponseScript,
     };
 
     if (postmanVariable) {
