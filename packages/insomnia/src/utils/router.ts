@@ -7,6 +7,7 @@ import { findPersonalOrganization } from '../models/organization';
 import { Project } from '../models/project';
 import { AsyncTask } from '../ui/routes/organization';
 
+// generate as complete a path as possible, reduce router redirects, and let all loader run parallel
 export const getWholePath = async (accountId: string) => {
   const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
   const personalOrganization = findPersonalOrganization(organizations, accountId);
