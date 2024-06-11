@@ -1,7 +1,5 @@
 import { cosmiconfigSync } from 'cosmiconfig';
 
-import { GenerateConfigOptions } from './commands/generate-config';
-
 interface ConfigFileOptions {
   __configFile?: {
     options?: GlobalOptions;
@@ -66,10 +64,10 @@ export const loadCosmiConfig = (configFile?: string): Partial<ConfigFileOptions>
 
 interface CommandObj {
   parent?: CommandObj;
-  opts: () => GenerateConfigOptions;
+  opts: () => GlobalOptions;
 }
 
-export const extractCommandOptions = <T extends GenerateConfigOptions>(cmd: CommandObj): Partial<T> => {
+export const extractCommandOptions = <T extends GlobalOptions>(cmd: CommandObj): Partial<T> => {
   let opts: Partial<T> = {};
   let command: CommandObj | undefined = cmd;
 
@@ -82,7 +80,7 @@ export const extractCommandOptions = <T extends GenerateConfigOptions>(cmd: Comm
   return opts;
 };
 
-export const getOptions = <T extends Partial<GenerateConfigOptions>>(cmd: CommandObj, defaultOptions: Partial<T> = {}): Partial<T> => {
+export const getOptions = <T extends Partial<GlobalOptions>>(cmd: CommandObj, defaultOptions: Partial<T> = {}): Partial<T> => {
   const commandOptions = extractCommandOptions(cmd);
   const { __configFile } = loadCosmiConfig(commandOptions.config);
 

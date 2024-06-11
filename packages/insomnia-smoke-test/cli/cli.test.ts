@@ -22,20 +22,6 @@ describe('inso basic features', () => {
     }, 20 * 1000);
   });
 
-  describe('generate config', () => {
-    it('should not fail generating config', async () => {
-      const { failed } = await execa(binPath, [
-        'generate',
-        'config',
-        '--src',
-        'fixtures/inso-nedb',
-        'Smoke Test API server 1.0.0',
-      ]);
-
-      expect(failed).toBe(false);
-    });
-  });
-
   describe('lint spec', () => {
     it('should not fail linting spec', async () => {
       const { failed } = await execa(binPath, [
