@@ -89,6 +89,7 @@ const config = {
   },
   win: {
     certificateSubjectName: 'Kong Inc.',
+    signAndEditExecutable: false,
     target: [
       {
         target: 'squirrel',
