@@ -7,6 +7,7 @@ interface Props {
   intervalSeconds?: number;
   className?: string;
   titleCase?: boolean;
+  title?: (text: string) => string;
 }
 const toTitleCase = (value: string) => (
   value
@@ -54,11 +55,12 @@ export const TimeFromNow: FC<Props> = ({
   className,
   timestamp,
   titleCase,
+  title,
   intervalSeconds,
 }) => {
   const text = useTimeNowLabel(timestamp, titleCase, intervalSeconds);
   return (
-    <span title={new Date(timestamp).toLocaleString()} className={className}>
+    <span title={title ? title(text) : new Date(timestamp).toLocaleString()} className={className}>
       {text}
     </span>
   );

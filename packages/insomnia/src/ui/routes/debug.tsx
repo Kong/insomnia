@@ -19,6 +19,9 @@ import {
   SearchField,
   Select,
   SelectValue,
+  ToggleButton,
+  Tooltip,
+  TooltipTrigger,
   useDragAndDrop,
 } from 'react-aria-components';
 import { ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -651,6 +654,11 @@ export const Debug: FC = () => {
     ...environment,
   }));
 
+  // const allCollapsed = collection.every(item => item.hidden);
+  const [allExpanded, setAllExpanded] = useState(false);
+
+  const toggleExpandAllFetcher = useFetcher();
+
   const visibleCollection = collection.filter(item => !item.hidden);
 
   const parentRef = useRef<HTMLDivElement>(null);
@@ -662,8 +670,19 @@ export const Debug: FC = () => {
     getItemKey: index => visibleCollection[index].doc._id,
   });
 
-  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
+  const expandAllForRequestFetcher = useFetcher();
+
   useLayoutEffect(() => {
+    if (expandAllForRequestFetcher.state !== 'idle' && expandAllForRequestFetcher.data && requestId) {
+      setTimeout(() => {
+        const activeIndex = collection.findIndex(item => item.doc._id === requestId);
+        activeIndex && virtualizer.scrollToIndex(activeIndex);
+      }, 100);
+    }
+  }, [collection, expandAllForRequestFetcher.data, expandAllForRequestFetcher.state, requestId, virtualizer]);
+
+  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
+  useEffect(() => {
     if (settings.forceVerticalLayout) {
       setDirection('vertical');
       return () => { };
@@ -919,6 +938,34 @@ export const Debug: FC = () => {
                   </ListBox>
                 </Popover>
               </Select>
+
+              <TooltipTrigger>
+                <ToggleButton
+                  aria-label="Expand All/Collapse all"
+                  defaultSelected={allExpanded}
+                  onChange={() => {
+                    setAllExpanded(!allExpanded);
+                    toggleExpandAllFetcher.submit({
+                      toggle: allExpanded ? 'collapse-all' : 'expand-all',
+                    }, {
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/toggle-expand-all`,
+                      method: 'POST',
+                      encType: 'application/json',
+                    });
+                  }}
+                  className="flex items-center justify-center h-full aspect-square rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                >
+                  {({ isSelected }) => (
+                    <Icon icon={isSelected ? 'down-left-and-up-right-to-center' : 'up-right-and-down-left-from-center'} />
+                  )}
+                </ToggleButton>
+                <Tooltip
+                  offset={8}
+                  className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                >
+                  <span>{allExpanded ? 'Collapse all' : 'Expand all'}</span>
+                </Tooltip>
+              </TooltipTrigger>
 
               <MenuTrigger>
                 <Button
@@ -1225,7 +1272,17 @@ export const Debug: FC = () => {
         </div>
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
-      <Panel>
+      <Panel
+        onFocus={() => {
+          requestId && expandAllForRequestFetcher.submit({
+            requestId,
+          }, {
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/expand-all-for-request`,
+            method: 'POST',
+            encType: 'application/json',
+          });
+        }}
+      >
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" className='pane-one theme--pane'>
             {workspaceId ? (

@@ -8,6 +8,7 @@ import {
   Heading,
   Input,
   Label,
+  Link,
   ListBox,
   ListBoxItem,
   Menu,
@@ -22,6 +23,8 @@ import {
   Select,
   SelectValue,
   TextField,
+  Tooltip,
+  TooltipTrigger,
 } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
@@ -1340,9 +1343,17 @@ const ProjectRoute: FC = () => {
                               />
                             )}
                           </div>
-                          <Heading className="pt-4 text-lg font-bold line-clamp-2" title={item.name}>
-                            {item.name}
-                          </Heading>
+                          <TooltipTrigger>
+                            <Link onPress={e => e.continuePropagation()} className="pt-4 text-base font-bold line-clamp-4">
+                              {item.name}
+                            </Link>
+                            <Tooltip
+                              offset={8}
+                              className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                            >
+                              <span>{item.name}</span>
+                            </Tooltip>
+                          </TooltipTrigger>
                           <div className="flex-1 flex flex-col gap-2 justify-end text-sm text-[--hl]">
                             {item.version && (
                               <div className="flex-1 pt-2">
@@ -1369,6 +1380,7 @@ const ProjectRoute: FC = () => {
                               <div className="text-sm flex items-center gap-2 truncate">
                                 <Icon icon="clock" />
                                 <TimeFromNow
+                                  title={text => `Last updated ${text}, and created on ${new Date(item.created).toLocaleDateString()}`}
                                   timestamp={
                                     item.lastModifiedTimestamp
                                   }
