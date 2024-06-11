@@ -15,14 +15,14 @@ interface Props {
   isDisabled?: boolean;
   requestType: 'Request' | 'RequestGroup' | 'WebSocketRequest';
 }
-const readOnlyWebsocketPairs = [
+export const readOnlyWebsocketPairs = [
   { name: 'Connection', value: 'Upgrade' },
   { name: 'Upgrade', value: 'websocket' },
   { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>' },
   { name: 'Sec-WebSocket-Version', value: '13' },
   { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits' },
 ].map(pair => ({ ...pair, id: generateId('pair') }));
-const readOnlyHttpPairs = [
+export const readOnlyHttpPairs = [
   { name: 'Accept', value: '*/*' },
   { name: 'Host', value: '<calculated at runtime>' },
 ].map(pair => ({ ...pair, id: generateId('pair') }));
