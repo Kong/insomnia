@@ -6,7 +6,6 @@ import {
   Breadcrumb,
   Breadcrumbs,
   Button,
-  Collection,
   ComboBox,
   Dialog,
   DialogTrigger,
@@ -22,7 +21,6 @@ import {
   MenuTrigger,
   Popover,
   SearchField,
-  Section,
   Select,
   ToggleButton,
   Tooltip,
@@ -47,7 +45,6 @@ import { fuzzyMatch, generateId } from '../../common/misc';
 import { PlatformKeyCombinations } from '../../common/settings';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
-import { Environment } from '../../models/environment';
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import {
@@ -830,7 +827,7 @@ export const Debug: FC = () => {
                           )}
                         </ListBox>
                       </div>
-                      {globalEnvironmentList.length > 0 && (
+                      {globalBaseEnvironments.length > 0 && (
                         <div className='w-full h-full flex flex-col overflow-hidden flex-1 divide-y divide-solid divide-[--hl-md]'>
                           <Heading className='text-sm flex-shrink-0 h-[--line-height-sm] font-bold text-[--hl] px-3 py-1 flex items-center gap-2 justify-between'>
                             <span>Global Environments</span>
@@ -859,15 +856,11 @@ export const Debug: FC = () => {
                                 return;
                               }
 
-                              const sectionId = selection?.toString();
-
-                              if (!sectionId) {
-                                return;
-                              }
+                              const environmentId = selection?.toString() || '';
 
                               setActiveGlobalEnvironmentFetcher.submit(
                                 {
-                                  environmentId: sectionId.replace('section-', ''),
+                                  environmentId,
                                 },
                                 {
                                   method: 'POST',
@@ -877,13 +870,14 @@ export const Debug: FC = () => {
                             }}
                             defaultInputValue={selectedGlobalBaseEnvironment?.workspaceName || selectedGlobalBaseEnvironment?.name || ''}
                             defaultSelectedKey={selectedGlobalBaseEnvironmentId}
-                            defaultItems={globalBaseEnvironments.map(baseEnv => {
+                            defaultItems={[...globalBaseEnvironments.map(baseEnv => {
                               return {
                                 id: baseEnv._id,
+                                icon: 'code',
                                 name: baseEnv.workspaceName || baseEnv.name,
                                 textValue: baseEnv.workspaceName || baseEnv.name,
                               };
-                            })}
+                            }), { id: '', icon: 'cancel', name: 'No Global Environment', textValue: 'No Global Environment' }] satisfies []}
                           >
                             <div className='px-2 mx-2 my-2 flex items-center gap-2 group rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors'>
                               <Input aria-label='Global Environment' placeholder='Choose a global environment' className="py-1 placeholder:italic w-full pl-2 pr-7 " />
@@ -892,11 +886,16 @@ export const Debug: FC = () => {
                               </Button>
                             </div>
                             <Popover className="min-w-max max-h-[90vh] !z-10 border grid grid-flow-col auto-cols-[min(250px,calc(45vw))] overflow-hidden divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] rounded-md focus:outline-none" placement='bottom start' offset={8}>
-                              <ListBox<{ name: string }>
+                              <ListBox<{ name: string; icon: IconName }>
                                 className="select-none text-sm min-w-max p-2 flex flex-col gap-3 overflow-y-auto focus:outline-none"
                               >
                                 {item => (
-                                  <ListBoxItem className={'aria-disabled:opacity-30 aria-selected:bg-[--hl-sm] rounded aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] data-[focused]:bg-[--hl-xs] focus:outline-none transition-colors'}>{item.name}</ListBoxItem>
+                                  <ListBoxItem
+                                    className="aria-disabled:opacity-30 aria-selected:bg-[--hl-sm] rounded aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] data-[focused]:bg-[--hl-xs] focus:outline-none transition-colors"
+                                  >
+                                    <Icon icon={item.icon} className='w-4' />
+                                    <span className='truncate'>{item.name}</span>
+                                  </ListBoxItem>
                                 )}
                               </ListBox>
                             </Popover>
