@@ -180,6 +180,7 @@ interface AsyncTaskActionRequest {
   asyncTaskList: AsyncTask[];
 }
 
+// this action is used to run task that we dont want to block the UI
 export const asyncTaskAction: ActionFunction = async ({ request }) => {
   try {
     const { sessionId, personalOrganizationId, organizationId, asyncTaskList, accountId } = await request.json() as AsyncTaskActionRequest;

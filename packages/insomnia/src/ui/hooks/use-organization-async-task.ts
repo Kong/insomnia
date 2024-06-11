@@ -11,6 +11,8 @@ interface OrganizationSync {
   userSession: UserSession;
 }
 
+// this hook is used to run async task for organizations and projects (such as sync remote or migration)
+// return status so that we can show loading or error message to user
 export const useAsyncTask = ({
   organizationId,
   organizations,
