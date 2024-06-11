@@ -16,7 +16,7 @@ import { WorkspaceLoaderData } from '../../routes/workspace';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
-import { RequestHeadersEditor } from '../editors/request-headers-editor';
+import { readOnlyHttpPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { RequestScriptEditor } from '../editors/request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
@@ -89,7 +89,7 @@ export const RequestPane: FC<Props> = ({
   };
 
   const parametersCount = pathParameters.length + activeRequest.parameters.filter(p => !p.disabled).length;
-  const headersCount = activeRequest.headers.filter(h => !h.disabled).length;
+  const headersCount = activeRequest.headers.filter(h => !h.disabled).length + readOnlyHttpPairs.length;
   const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
   const contentType =
     getContentTypeFromHeaders(activeRequest.headers) ||
