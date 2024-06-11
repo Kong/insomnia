@@ -3,6 +3,7 @@ import { Heading } from 'react-aria-components';
 import { ActionFunction, redirect, useFetcher, useFetchers, useNavigate } from 'react-router-dom';
 
 import { invariant } from '../../utils/invariant';
+import { SegmentEvent } from '../analytics';
 import { getLoginUrl, submitAuthCode } from '../auth-session-provider';
 import { Icon } from '../components/icon';
 import { Button } from '../components/themed-button';
@@ -23,6 +24,9 @@ export const action: ActionFunction = async ({
     };
   }
   console.log('Login successful');
+  window.main.trackSegmentEvent({
+    event: SegmentEvent.loginSuccess,
+  });
   window.localStorage.setItem('hasUserLoggedInBefore', 'true');
 
   return redirect('/organization');

@@ -247,7 +247,6 @@ export const MockRouteRoute = () => {
                 key={mockRoute._id}
                 showPrettifyButton
                 defaultValue={mockRoute.body}
-                enableNunjucks
                 onChange={body => patchMockRoute(mockRoute._id, { body })}
                 onBlur={onBlurTriggerUpsert}
                 mode={mockRoute.mimeType}

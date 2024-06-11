@@ -13,7 +13,7 @@ on:
         - stable
       version:
         required: false
-        description: force version of the release (e.g. 9.0.0) leave blank to increment automatically
+        description: force version of the release (e.g. 9.0.0) if previous release was successful, this should auto increment
 
 jobs:
   setup-release-branch:
@@ -48,19 +48,14 @@ jobs:
         if: github.event.inputs.channel == 'stable' && github.event.inputs.version
         run: npm --workspaces version "${{ github.event.inputs.version }}"
 
-    # handle new "major" beta releases, e.g. 10.0, 11.0, 12.0 ...
-      - name: App version (alpha/beta, with new general version)
-        if: github.event.inputs.channel != 'stable' && github.event.inputs.version && !contains(github.event.inputs.version, "-${{ github.event.inputs.channel }}")
-        run: npm --workspaces version "${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.0"
-
-    # handle botched alpha/beta releases, e.g. for iterations that were merged before running release-publish
-      - name: App version (alpha/beta, with a specific version)
-        if: github.event.inputs.channel != 'stable' && github.event.inputs.version && contains(github.event.inputs.version, "-${{ github.event.inputs.channel }}")
-        run: npm --workspaces version "${{ github.event.inputs.version }}"
-
-      - name: App version (alpha/beta, patch latest)
+      - name: App version (alpha/beta, patch latest alpha/beta)
         if: github.event.inputs.channel != 'stable' && !github.event.inputs.version
         run: npm --workspaces version --preid "${{ github.event.inputs.channel }}" prerelease
+
+      - name: App version (alpha/beta, with a specific version)
+        if: github.event.inputs.channel != 'stable' && github.event.inputs.version
+        run: npm --workspaces version "${{ github.event.inputs.version }}"
+
 
     # ############################################################
 
@@ -70,11 +65,8 @@ jobs:
           echo "RELEASE_VERSION=$(node -e "console.log(require('./packages/insomnia/package.json').version)")" >> $GITHUB_ENV
           echo "RELEASE_BRANCH=release/$(node -e "console.log(require('./packages/insomnia/package.json').version)")" >> $GITHUB_ENV
 
-      # - name: Git create branch locally # Check out the new branch
-      #   run: git checkout -b ${{ env.RELEASE_BRANCH }}
-
       - name: Create Branch # Create a branch if it doesn't exist
-        uses: peterjgrainger/action-create-branch@v2.0.1
+        uses: peterjgrainger/action-create-branch@v2.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -103,19 +95,14 @@ jobs:
         if: github.event.inputs.channel == 'stable' && github.event.inputs.version
         run: npm --workspaces version "${{ github.event.inputs.version }}"
 
-      # handle new "major" beta releases, e.g. 10.0, 11.0, 12.0 ...
-      - name: (Re-run) App version (alpha/beta, with new general version)
-        if: github.event.inputs.channel != 'stable' && github.event.inputs.version && !contains(github.event.inputs.version, "-${{ github.event.inputs.channel }}")
-        run: npm --workspaces version "${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.0"
-
-      # handle botched alpha/beta releases, e.g. for iterations that were merged before running release-publish
-      - name: (Re-run) App version (alpha/beta, with a specific version)
-        if: github.event.inputs.channel != 'stable' && github.event.inputs.version && contains(github.event.inputs.version, "-${{ github.event.inputs.channel }}")
-        run: npm --workspaces version "${{ github.event.inputs.version }}"
-
-      - name: (Re-run) App version (alpha/beta, patch latest)
+      - name: (Re-run) App version (alpha/beta, patch latest alpha/beta)
         if: github.event.inputs.channel != 'stable' && !github.event.inputs.version
         run: npm --workspaces version --preid "${{ github.event.inputs.channel }}" prerelease
+
+      - name: (Re-run) App version (alpha/beta, with a specific version)
+        if: github.event.inputs.channel != 'stable' && github.event.inputs.version
+        run: npm --workspaces version "${{ github.event.inputs.version }}"
+
     # ############################################################
 
       - name: Git Commit

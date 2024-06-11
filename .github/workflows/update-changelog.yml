@@ -1,0 +1,36 @@
+# .github/workflows/update-changelog.yaml
+name: "Update Changelog"
+
+on:
+  release:
+    types: [released]
+
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # updated CHANGELOG back to the repository.
+      # https://github.blog/changelog/2023-02-02-github-actions-updating-the-default-github_token-permissions-to-read-only/
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.target_commitish }}
+
+      - name: Update Changelog
+        uses: stefanzweifel/changelog-updater-action@v1
+        with:
+          latest-version: ${{ github.event.release.tag_name }}
+          release-notes: ${{ github.event.release.body }}
+
+      - name: Commit updated CHANGELOG
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          branch: ${{ github.event.release.target_commitish }}
+          commit_message: Update CHANGELOG
+          file_pattern: CHANGELOG.md

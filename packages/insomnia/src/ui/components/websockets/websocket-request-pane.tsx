@@ -1,5 +1,5 @@
 import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
-import { Button, Heading } from 'react-aria-components';
+import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton, Toolbar } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
 import styled from 'styled-components';
@@ -10,16 +10,14 @@ import { Environment } from '../../../models/environment';
 import { AuthTypes, getCombinedPathParametersFromUrl, RequestPathParameter } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
+import { buildQueryStringFromParams, deconstructQueryStringToParams, extractQueryStringFromUrl, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { useReadyState } from '../../hooks/use-ready-state';
-import { useRequestPatcher } from '../../hooks/use-request';
+import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { WebSocketRequestLoaderData } from '../../routes/request';
 import { useRootLoaderData } from '../../routes/root';
-import { TabItem, Tabs } from '../base/tabs';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 import { OneLineEditor } from '../codemirror/one-line-editor';
-import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { WebSocketPreviewMode } from '../dropdowns/websocket-preview-mode';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
@@ -42,6 +40,7 @@ const SendMessageForm = styled.form({
   position: 'relative',
   boxSizing: 'border-box',
 });
+
 const SendButton = styled.button<{ isConnected: boolean }>(({ isConnected }) => ({
   padding: '0 var(--padding-md)',
   marginLeft: 'var(--padding-xs)',
@@ -55,15 +54,6 @@ const SendButton = styled.button<{ isConnected: boolean }>(({ isConnected }) => 
   },
 }));
 
-const PaneSendButton = styled.div({
-  display: 'flex',
-  flexDirection: 'row',
-  justifyContent: 'flex-end',
-  boxSizing: 'border-box',
-  height: 'var(--line-height-sm)',
-  borderBottom: '1px solid var(--hl-lg)',
-  padding: 3,
-});
 const PaneHeader = styled(OriginalPaneHeader)({
   '&&': { alignItems: 'stretch' },
 });
@@ -209,10 +199,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
 
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const readyState = useReadyState({ requestId: activeRequest._id, protocol: 'webSocket' });
-  const {
-    settings,
-  } = useRootLoaderData();
-  const { useBulkParametersEditor } = settings;
+  const { settings } = useRootLoaderData();
 
   const disabled = readyState;
 
@@ -248,7 +235,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
 
   const parametersCount = pathParameters.length + activeRequest.parameters.filter(p => !p.disabled).length;
   const headersCount = activeRequest.headers.filter(h => !h.disabled).length;
-
+  const patchSettings = useSettingsPatcher();
   const upsertPayloadWithMode = async (mode: string) => {
     // @TODO: multiple payloads
     const payload = await models.webSocketPayload.getByParentId(requestId);
@@ -264,9 +251,33 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   };
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
 
+  const handleImportQueryFromUrl = () => {
+    let query;
+
+    try {
+      query = extractQueryStringFromUrl(activeRequest.url);
+    } catch (error) {
+      console.warn('Failed to parse url to import querystring');
+      return;
+    }
+
+    // Remove the search string (?foo=bar&...) from the Url
+    const url = activeRequest.url.replace(`?${query}`, '');
+    const parameters = [
+      ...activeRequest.parameters,
+      ...deconstructQueryStringToParams(query),
+    ];
+
+    // Only update if url changed
+    if (url !== activeRequest.url) {
+      patchRequest(requestId, { url, parameters });
+    }
+  };
+
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const patchRequest = useRequestPatcher();
+  const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta.activeResponseId}`;
 
@@ -282,136 +293,176 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           onChange={url => patchRequest(requestId, { url })}
         />
       </PaneHeader>
-      <Tabs aria-label="Websocket request pane tabs">
-        <TabItem
-          key="query"
-          title={
-            <div className='flex items-center gap-2'>
-              Parameters
-              {parametersCount > 0 && (
-                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{parametersCount}</span>
+      <Tabs aria-label='Websocket request pane tabs' className="flex-1 w-full h-full flex flex-col">
+        <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='params'
+          >
+            <span>Params</span>
+            {parametersCount > 0 && (
+              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
+                {parametersCount}
+              </span>
+            )}
+          </Tab>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='content-type'
+          >
+            <span>Body</span>
+          </Tab>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='auth'
+          >
+            <span>Auth</span>
+          </Tab>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='headers'
+          >
+            <span>Headers</span>
+            {headersCount > 0 && (
+              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
+                {headersCount}
+              </span>
+            )}
+          </Tab>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='docs'
+          >
+            Docs
+          </Tab>
+        </TabList>
+        <TabPanel className='w-full flex-1 flex flex-col h-full overflow-y-auto' id='params'>
+          {disabled && <PaneReadOnlyBanner />}
+          <div className="p-4 flex-shrink-0">
+            <div className="text-xs max-h-32 flex flex-col overflow-y-auto min-h-[2em] bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm]">
+              <label className="label--small no-pad-top">Url Preview</label>
+              <ErrorBoundary
+                key={uniqueKey}
+                errorClassName="tall wide vertically-align font-error pad text-center"
+              >
+                <RenderedQueryString request={activeRequest} />
+              </ErrorBoundary>
+            </div>
+          </div>
+          <div className="flex-shrink-0 grid flex-1 [grid-template-rows:minmax(auto,min-content)] [grid-template-columns:100%] overflow-hidden">
+            <div className="min-h-[2rem] max-h-full flex flex-col overflow-y-auto [&_.key-value-editor]:p-0 flex-1">
+              <div className='flex items-center w-full p-4 h-4 justify-between'>
+                <Heading className='text-xs font-bold uppercase text-[--hl]'>Query parameters</Heading>
+                <div className='flex items-center gap-2'>
+                  <Button
+                    isDisabled={disabled || !urlHasQueryParameters}
+                    onPress={handleImportQueryFromUrl}
+                    className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 h-full asma-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
+                  >
+                    Import from URL
+                  </Button>
+                  <ToggleButton
+                    isDisabled={disabled}
+                    onChange={isSelected => {
+                      patchSettings({
+                        useBulkParametersEditor: isSelected,
+                      });
+                    }}
+                    isSelected={settings.useBulkParametersEditor}
+                    className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 h-full rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
+                  >
+                    {({ isSelected }) => (
+                      <Fragment>
+                        <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
+                        <span>{
+                          isSelected ? 'Regular Edit' : 'Bulk Edit'
+                        }</span>
+                      </Fragment>
+                    )}
+                  </ToggleButton>
+                </div>
+              </div>
+              <ErrorBoundary
+                key={uniqueKey}
+                errorClassName="tall wide vertically-align font-error pad text-center"
+              >
+                <RequestParametersEditor
+                  bulk={settings.useBulkParametersEditor}
+                  disabled={disabled}
+                />
+              </ErrorBoundary>
+            </div>
+            <div className='flex-1 flex flex-col gap-4 p-4 overflow-y-auto'>
+              <Heading className='text-xs font-bold uppercase text-[--hl]'>Path parameters</Heading>
+              {pathParameters.length > 0 && (
+                <div className="pr-[72.73px] w-full">
+                  <div className='grid gap-x-[20.8px] grid-cols-2 flex-shrink-0 w-full rounded-sm overflow-hidden'>
+                    {pathParameters.map(pathParameter => (
+                      <Fragment key={pathParameter.name}>
+                        <span className='p-2 select-none border-b border-solid border-[--hl-md] truncate flex items-center justify-end rounded-sm'>
+                          {pathParameter.name}
+                        </span>
+                        <div className='px-2 flex items-center h-full border-b border-solid border-[--hl-md]'>
+                          <OneLineEditor
+                            readOnly={disabled}
+                            key={activeRequest._id}
+                            id={'key-value-editor__name' + pathParameter.name}
+                            placeholder="Parameter value"
+                            defaultValue={pathParameter.value || ''}
+                            onChange={name => {
+                              onPathParameterChange(pathParameters.map(p => p.name === pathParameter.name ? { ...p, value: name } : p));
+                            }}
+                          />
+                        </div>
+                      </Fragment>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {pathParameters.length === 0 && !dismissPathParameterTip && (
+                <div className='text-sm text-[--hl] rounded-sm border border-solid border-[--hl-md] p-2 flex items-center gap-2'>
+                  <Icon icon='info-circle' />
+                  <span>Path parameters are url path segments that start with a colon ':' e.g. ':id' </span>
+                  <Button
+                    className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ml-auto"
+                    onPress={() => setDismissPathParameterTip('true')}
+                  >
+                    <Icon icon='close' />
+                  </Button>
+                </div>
               )}
             </div>
-          }
-        >
-          <div className="grid h-full auto-rows-auto [grid-template-columns:100%] divide-y divide-solid divide-[--hl-md]">
-            {disabled && <PaneReadOnlyBanner />}
-            <div className='h-full flex flex-col'>
-              <div className="p-4">
-                <div className="text-xs max-h-32 flex flex-col overflow-y-auto min-h-[2em] bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm]">
-                  <label className="label--small no-pad-top">Url Preview</label>
-                  <ErrorBoundary
-                    key={uniqueKey}
-                    errorClassName="tall wide vertically-align font-error pad text-center"
-                  >
-                    <RenderedQueryString request={activeRequest} />
-                  </ErrorBoundary>
-                </div>
-              </div>
-              <div className="grid flex-1 [grid-template-rows:minmax(auto,min-content)] [grid-template-columns:100%] overflow-hidden">
-                <div className="min-h-[2rem] max-h-full flex flex-col overflow-y-auto [&_.key-value-editor]:p-0 flex-1">
-                  <div className='flex items-center w-full p-4 h-4 justify-between'>
-                    <Heading className='text-xs font-bold uppercase text-[--hl]'>Query parameters</Heading>
-                  </div>
-                  <ErrorBoundary
-                    key={uniqueKey}
-                    errorClassName="tall wide vertically-align font-error pad text-center"
-                  >
-                    <RequestParametersEditor
-                      bulk={useBulkParametersEditor}
-                      disabled={disabled}
-                    />
-                  </ErrorBoundary>
-                </div>
-                <div className='flex-1 flex flex-col gap-4 p-4 overflow-y-auto'>
-                  <Heading className='text-xs font-bold uppercase text-[--hl]'>Path parameters</Heading>
-                  {pathParameters.length > 0 && (
-                    <div className="pr-[72.73px] w-full">
-                      <div className='grid gap-x-[20.8px] grid-cols-2 flex-shrink-0 w-full rounded-sm overflow-hidden'>
-                        {pathParameters.map(pathParameter => (
-                          <Fragment key={pathParameter.name}>
-                            <span className='p-2 select-none border-b border-solid border-[--hl-md] truncate flex items-center justify-end rounded-sm'>
-                              {pathParameter.name}
-                            </span>
-                            <div className='px-2 flex items-center h-full border-b border-solid border-[--hl-md]'>
-                              <OneLineEditor
-                                readOnly={disabled}
-                                id={'key-value-editor__name' + pathParameter.name}
-                                key={activeRequest._id}
-                                placeholder={'Parameter value'}
-                                defaultValue={pathParameter.value || ''}
-                                onChange={name => {
-                                  onPathParameterChange(pathParameters.map(p => p.name === pathParameter.name ? { ...p, value: name } : p));
-                                }}
-                              />
-                            </div>
-                          </Fragment>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {pathParameters.length === 0 && !dismissPathParameterTip && (
-                    <div className='text-sm text-[--hl] rounded-sm border border-solid border-[--hl-md] p-2 flex items-center gap-2'>
-                      <Icon icon='info-circle' />
-                      <span>Path parameters are url path segments that start with a colon ':' e.g. ':id' </span>
-                      <Button
-                        className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ml-auto"
-                        onPress={() => setDismissPathParameterTip('true')}
-                      >
-                        <Icon icon='close' />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
           </div>
-        </TabItem>
-        <TabItem key="websocket-preview-mode" title={<WebSocketPreviewMode previewMode={previewMode} onClick={changeMode} />}>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              height: '100%',
-            }}
-          >
-            <PaneSendButton>
-              <SendButton
-                type="submit"
-                form="websocketMessageForm"
-                isConnected={readyState}
-              >
-                Send
-              </SendButton>
-            </PaneSendButton>
-            <WebSocketRequestForm
-              key={uniqueKey}
-              request={activeRequest}
-              previewMode={previewMode}
-              environmentId={environment?._id || ''}
-              workspaceId={workspaceId}
-            />
-          </div>
-        </TabItem>
-        <TabItem key="auth" title={<AuthDropdown authentication={activeRequest.authentication} authTypes={supportedAuthTypes} disabled={disabled} />}>
+        </TabPanel>
+        <TabPanel className='w-full flex-1 flex flex-col' id='content-type'>
+          <Toolbar className="w-full flex-shrink-0 px-2 border-b border-solid border-[--hl-md] py-2 h-[--line-height-sm] flex items-center gap-2 justify-between">
+            <WebSocketPreviewMode previewMode={previewMode} onSelect={changeMode} />
+            <SendButton
+              type="submit"
+              form="websocketMessageForm"
+              isConnected={readyState}
+            >
+              Send
+            </SendButton>
+          </Toolbar>
+          <WebSocketRequestForm
+            key={uniqueKey}
+            request={activeRequest}
+            previewMode={previewMode}
+            environmentId={environment?._id || ''}
+            workspaceId={workspaceId}
+          />
+        </TabPanel>
+        <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='auth'>
           {disabled && <PaneReadOnlyBanner />}
           <AuthWrapper
             key={uniqueKey}
             authentication={activeRequest.authentication}
             disabled={disabled}
+            authTypes={supportedAuthTypes}
           />
-        </TabItem>
-        <TabItem
-          key="headers"
-          title={
-            <div className='flex items-center gap-2'>
-              Headers{' '}
-              {headersCount > 0 && (
-                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{headersCount}</span>
-              )}
-            </div>
-          }
-        >
+        </TabPanel>
+        <TabPanel className='w-full flex-1 overflow-y-auto ' id='headers'>
           {disabled && <PaneReadOnlyBanner />}
           <RequestHeadersEditor
             key={uniqueKey}
@@ -420,20 +471,8 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             isDisabled={readyState}
             requestType="WebSocketRequest"
           />
-        </TabItem>
-        <TabItem
-          key="docs"
-          title={
-            <>
-              Docs
-              {activeRequest.description && (
-                <span className="bubble space-left">
-                  <i className="fa fa--skinny fa-check txt-xxs" />
-                </span>
-              )}
-            </>
-          }
-        >
+        </TabPanel>
+        <TabPanel className='w-full flex-1 overflow-y-auto ' id='docs'>
           {activeRequest.description ? (
             <div>
               <div className="pull-right pad bg-default">
@@ -470,7 +509,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
               </p>
             </div>
           )}
-        </TabItem>
+        </TabPanel>
       </Tabs>
       {isRequestSettingsModalOpen && (
         <RequestSettingsModal

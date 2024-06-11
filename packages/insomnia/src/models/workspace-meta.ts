@@ -68,7 +68,6 @@ export async function getByParentId(parentId: string) {
 }
 
 export async function getByGitRepositoryId(gitRepositoryId: string) {
-  // @ts-expect-error -- TSCONVERSION needs generic for query
   return db.getWhere<WorkspaceMeta>(type, { gitRepositoryId });
 }
 

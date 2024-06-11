@@ -27,6 +27,7 @@ import { MockServer } from '../models/mock-server';
 import type { Request, RequestAuthentication, RequestHeader, RequestParameter } from '../models/request';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
 import type { Settings } from '../models/settings';
+import { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
@@ -41,7 +42,7 @@ import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
-export const getOrInheritAuthentication = ({ request, requestGroups }: { request: Request; requestGroups: RequestGroup[] }): RequestAuthentication | {} => {
+export const getOrInheritAuthentication = ({ request, requestGroups }: { request: Request | WebSocketRequest; requestGroups: RequestGroup[] }): RequestAuthentication | {} => {
   const hasValidAuth = getAuthObjectOrNull(request.authentication) && isAuthEnabled(request.authentication);
   if (hasValidAuth) {
     return request.authentication;
@@ -202,7 +203,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         // TODO: restart the hidden browser window
       }, timeout + 2000);
     });
-    // const isBaseEnvironmentSelected = environment._id === baseEnvironment._id;
+  // const isBaseEnvironmentSelected = environment._id === baseEnvironment._id;
     // if (isBaseEnvironmentSelected) {
     //   // postman models base env as no env and does not persist, so we could handle that case better, but for now we throw
     //   throw new Error('Base environment cannot be selected for script execution. Please select an environment.');
@@ -297,11 +298,37 @@ type RequestAndContextAndOptionalResponse = RequestContextForScript & {
   response?: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
 };
 export async function tryToExecutePreRequestScript(context: RequestContextForScript) {
-  return tryToExecuteScript({ script: context.request.preRequestScript, ...context });
+  const requestGroups = await db.withAncestors<Request | RequestGroup>(context.request, [
+    models.requestGroup.type,
+  ]) as (Request | RequestGroup)[];
+
+  const folderScripts = requestGroups.reverse()
+    .filter(group => group?.preRequestScript)
+    .map((group, i) => `const fn${i} = async ()=>{
+        ${group.preRequestScript}
+      }
+      await fn${i}();
+  `);
+  const joinedScript = [...folderScripts].join('\n');
+
+  return tryToExecuteScript({ script: joinedScript, ...context });
 };
 
 export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
-  return tryToExecuteScript({ script: context.request.afterResponseScript, ...context });
+  const requestGroups = await db.withAncestors<Request | RequestGroup>(context.request, [
+    models.requestGroup.type,
+  ]) as (Request | RequestGroup)[];
+
+  const folderScripts = requestGroups.reverse()
+    .filter(group => group?.afterResponseScript)
+    .map((group, i) => `const fn${i} = async ()=>{
+        ${group.afterResponseScript}
+      }
+      await fn${i}();
+  `);
+  const joinedScript = [...folderScripts].join('\n');
+
+  return tryToExecuteScript({ script: joinedScript, ...context });
 }
 
 export const tryToInterpolateRequest = async (

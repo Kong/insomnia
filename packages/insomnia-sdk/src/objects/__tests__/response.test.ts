@@ -68,11 +68,27 @@ describe('test request and response objects', () => {
         resp.to.have.header('header1');
         resp.to.have.jsonBody({ 'key': 888 });
         resp.to.have.body('{"key": 888}');
+        resp.to.have.jsonSchema({
+            type: 'object',
+            properties: {
+                key: { type: 'integer' },
+            },
+            required: ['key'],
+            additionalProperties: false,
+        });
 
         resp.to.not.have.status(201);
         resp.to.not.have.status('NOT FOUND');
         resp.to.not.have.header('header_nonexist');
         resp.to.not.have.jsonBody({ 'key': 777 });
         resp.to.not.have.body('{"key": 777}');
+        resp.to.not.have.jsonSchema({
+            type: 'object',
+            properties: {
+                keyNoExist: { type: 'integer' },
+            },
+            required: ['keyNoExist'],
+            additionalProperties: false,
+        });
     });
 });

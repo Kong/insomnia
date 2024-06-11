@@ -12,6 +12,10 @@
 @tailwind components;
 @tailwind utilities;
 
+* {
+  scrollbar-width: thin;
+}
+
 html {
   font-size: 11px;
 }

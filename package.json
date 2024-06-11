@@ -11,7 +11,7 @@
   },
   "homepage": "https://github.com/kong/insomnia#readme",
   "engines": {
-    "node": ">=20.9 <22",
+    "node": ">=20.11.1 <22",
     "npm": ">=10"
   },
   "workspaces": [

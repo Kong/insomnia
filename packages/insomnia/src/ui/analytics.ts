@@ -5,6 +5,8 @@ export enum SegmentEvent {
   dataImport = 'Data Imported',
   documentCreate = 'Document Created',
   mockCreate = 'Mock Created',
+  loginSuccess = 'Login Success',
+  inviteTrigger = 'Invite Triggered From App',
   exportAllCollections = 'Exported All Collections',
   kongConnected = 'Kong Connected',
   kongSync = 'Kong Synced',

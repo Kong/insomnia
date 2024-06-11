@@ -1,3 +1,4 @@
+import Ajv from 'ajv';
 import deepEqual from 'deep-equal';
 import { RESPONSE_CODE_REASONS } from 'insomnia/src/common/constants';
 import { sendCurlAndWriteTimelineError, type sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
@@ -216,6 +217,20 @@ export class Response extends Property {
         );
         const haveBody = (expected: string, checkEquality: boolean) => verify(this.text(), expected, checkEquality);
         const haveJsonBody = (expected: object, checkEquality: boolean) => verify(this.json(), expected, checkEquality);
+        const haveJsonSchema = (expected: object, checkEquality: boolean) => {
+            const ajv = new Ajv();
+
+            try {
+                const jsonBody = JSON.parse(this.body);
+                const schemaMatched = ajv.validate(expected, jsonBody);
+                if ((schemaMatched && checkEquality) || (!schemaMatched && !checkEquality)) {
+                    return;
+                }
+            } catch (e) {
+                throw Error(`Failed to verify response body schema, response could not be a valid json: "${e}"`);
+            }
+            throw Error("Response's schema is not equal to the expected value");
+        };
 
         return {
             // follows extend chai's chains for compatibility
@@ -224,6 +239,7 @@ export class Response extends Property {
                 header: (expected: string) => haveHeader(expected, true),
                 body: (expected: string) => haveBody(expected, true),
                 jsonBody: (expected: object) => haveJsonBody(expected, true),
+                jsonSchema: (expected: object) => haveJsonSchema(expected, true),
             },
             not: {
                 have: {
@@ -231,6 +247,7 @@ export class Response extends Property {
                     header: (expected: string) => haveHeader(expected, false),
                     body: (expected: string) => haveBody(expected, false),
                     jsonBody: (expected: object) => haveJsonBody(expected, false),
+                    jsonSchema: (expected: object) => haveJsonSchema(expected, false),
                 },
             },
         };

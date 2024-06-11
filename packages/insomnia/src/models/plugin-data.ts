@@ -57,7 +57,7 @@ export async function upsertByKey(plugin: string, key: string, value: string) {
 }
 
 export async function removeByKey(plugin: string, key: string) {
-  return db.removeWhere(type, { plugin, key });
+  return db.removeWhere<PluginData>(type, { plugin, key });
 }
 
 export async function all(plugin: string) {
@@ -65,7 +65,7 @@ export async function all(plugin: string) {
 }
 
 export async function removeAll(plugin: string) {
-  return db.removeWhere(type, { plugin });
+  return db.removeWhere<PluginData>(type, { plugin });
 }
 
 export async function getByKey(plugin: string, key: string) {
