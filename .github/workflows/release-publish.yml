@@ -87,7 +87,7 @@ jobs:
           path: ${{ env.ELECTRON_ARTIFACT_BASE64_FILE }}
 
       - name: Code-sign Windows .exe artifact
-        uses: sslcom/actions-codesigner@develop
+        uses: sslcom/esigner-codesign@develop
         with:
           command: sign
           username: ${{secrets.ES_USERNAME}}
@@ -95,7 +95,7 @@ jobs:
           credential_id: ${{secrets.ES_CREDENTIAL_ID}}
           totp_secret: ${{secrets.ES_TOTP_SECRET}}
           file_path: ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist/squirrel-windows/Insomnia.Core-${{ env.RELEASE_VERSION }}.exe
-          output_path: ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist
+          override: true
 
       - name: Create Tag and Release
         uses: ncipollo/release-action@v1
