@@ -40,6 +40,7 @@ export const useAsyncTask = ({
       const submit = asyncTaskFetcher.submit;
       submit({
         sessionId: userSession.id,
+        accountId: userSession.accountId,
         personalOrganizationId: personalOrganization?.id || '',
         organizationId,
         asyncTaskList: asyncTaskList,
@@ -49,7 +50,7 @@ export const useAsyncTask = ({
         encType: 'application/json',
       });
     }
-  }, [asyncTaskList, asyncTaskFetcher.submit, userSession.id, personalOrganization?.id, organizationId]);
+  }, [asyncTaskList, asyncTaskFetcher.submit, userSession.id, personalOrganization?.id, organizationId, userSession.accountId]);
 
   return asyncTaskStatus;
 };
