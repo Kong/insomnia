@@ -174,6 +174,7 @@ async function syncOrganization(sessionId: string, accountId: string) {
 
 interface AsyncTaskActionRequest {
   sessionId: string;
+  accountId: string;
   personalOrganizationId: string;
   organizationId: string;
   asyncTaskList: AsyncTask[];
@@ -181,23 +182,25 @@ interface AsyncTaskActionRequest {
 
 export const asyncTaskAction: ActionFunction = async ({ request }) => {
   try {
-    const { sessionId, personalOrganizationId, organizationId, asyncTaskList } = await request.json() as AsyncTaskActionRequest;
-    invariant(sessionId, 'sessionId is required');
-    invariant(personalOrganizationId, 'personalOrganizationId is required');
-    invariant(organizationId, 'organizationId is required');
+    const { sessionId, personalOrganizationId, organizationId, asyncTaskList, accountId } = await request.json() as AsyncTaskActionRequest;
 
     const taskPromiseList = [];
 
     for (const task of asyncTaskList) {
       if (task === AsyncTask.SyncOrganization) {
-        taskPromiseList.push(syncOrganization(sessionId, organizationId));
+        invariant(sessionId, 'sessionId is required');
+        invariant(accountId, 'accountId is required');
+        taskPromiseList.push(syncOrganization(sessionId, accountId));
       }
 
       if (task === AsyncTask.MigrateProjects) {
+        invariant(personalOrganizationId, 'personalOrganizationId is required');
+        invariant(sessionId, 'sessionId is required');
         taskPromiseList.push(migrateProjectsUnderOrganization(personalOrganizationId, sessionId));
       }
 
       if (task === AsyncTask.SyncProjects) {
+        invariant(organizationId, 'organizationId is required');
         taskPromiseList.push(syncProjects(organizationId));
       }
     }
