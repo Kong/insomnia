@@ -315,6 +315,7 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     preRequestScript: |-
+      insomnia.globals.set('fallbackToGlobal', 'fallbackToGlobal');
       insomnia.baseEnvironment.set('fallbackToBase', 'fallbackToBase');
       insomnia.baseEnvironment.set('scriptValue', 'fromBase');
       insomnia.environment.set('scriptValue', 'fromEnv');
@@ -328,6 +329,7 @@ resources:
       mimeType: "application/json"
       text: |-
         {
+          "fallbackToGlobal": "{{ _.fallbackToGlobal }}",
           "fallbackToBase": "{{ _.fallbackToBase }}",
           "scriptValue": "{{ _.scriptValue }}",
           "preDefinedValue": "{{ _.preDefinedValue }}",
