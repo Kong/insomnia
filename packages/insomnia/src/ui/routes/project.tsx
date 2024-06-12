@@ -37,6 +37,7 @@ import {
   useLoaderData,
   useNavigate,
   useParams,
+  useRouteLoaderData,
 } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
 
@@ -84,7 +85,7 @@ import { MockServerSettingsModal } from '../components/modals/mock-server-settin
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
-import { OrganizationFeatureLoaderData, useOrganizationLoaderData } from './organization';
+import { OrganizationFeatureLoaderData, OrganizationLoaderData, useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
 interface TeamProject {
@@ -636,6 +637,7 @@ const ProjectRoute: FC = () => {
     }
   }, [organizationId, permissionsFetcher]);
 
+  const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { features, billing, storage } = permissionsFetcher.data || {
     features: {
       gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
@@ -768,14 +770,15 @@ const ProjectRoute: FC = () => {
       },
     });
   };
-
+  const isEnterprise = currentPlan?.type.includes('enterprise');
+  const isCloudProjectOrEnterprisePlan = activeProject?.remoteId || isEnterprise;
+  const canCreateMockServer = activeProject?._id && isCloudProjectOrEnterprisePlan;
   const createNewMockServer = () => {
-    activeProject?._id &&
-    activeProject.remoteId
+    canCreateMockServer
       ? setIsMockServerSettingsModalOpen(true)
       : showModal(AlertModal, {
         title: 'Change Project',
-        message: 'Mock feature is only supported for Cloud projects.',
+        message: 'Mock feature is only supported for Cloud projects and Enterprise local projects.',
     });
   };
 

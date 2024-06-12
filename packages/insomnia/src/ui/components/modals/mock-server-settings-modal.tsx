@@ -4,15 +4,24 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { invariant } from '../../../utils/invariant';
 import { OrganizationLoaderData } from '../../routes/organization';
+import { ProjectIdLoaderData } from '../../routes/project';
 import { Icon } from '../icon';
 import { showModal } from '.';
 import { AlertModal } from './alert-modal';
 
 export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) => {
-  const [serverType, setServerType] = useState<'self-hosted' | 'cloud'>('cloud');
   const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
   const fetcher = useFetcher();
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  const projectData = useRouteLoaderData('/project/:projectId') as ProjectIdLoaderData | null;
+  const isLocalProject = !projectData?.activeProject?.remoteId;
+  const isEnterprise = currentPlan?.type.includes('enterprise');
+  const isSelfHostedDisabled = !isEnterprise;
+  const isCloudProjectDisabled = isLocalProject;
+  const canOnlyCreateSelfHosted = isLocalProject && isEnterprise;
+  const defaultServerType = canOnlyCreateSelfHosted ? 'self-hosted' : 'cloud';
+  const [serverType, setServerType] = useState<'self-hosted' | 'cloud'>(defaultServerType);
+
   return (
     <ModalOverlay
       isOpen
@@ -45,11 +54,10 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                   const mockServerUrl = formData.get('mockServerUrl') as string;
                   invariant(mockServerType === 'self-hosted' || mockServerType === 'cloud', 'Project type is required');
 
-                  const isEnterprise = currentPlan?.type.includes('enterprise');
                   if (mockServerType === 'self-hosted' && !isEnterprise) {
                     showModal(AlertModal, {
                       title: 'Upgrade required',
-                      message: 'Self-hosted Mocks are only supported for Enterprise users.',
+                      message: <>Self-hosted Mocks are only supported for Enterprise users. <Link href="https://insomnia.rest/pricing/contact" className="underline">Contact Sales <i className="fa fa-external-link" /></Link></>,
                     });
                     return;
                   }
@@ -111,6 +119,7 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                   <div className="flex gap-2">
                     <Radio
                       value="cloud"
+                      isDisabled={isCloudProjectDisabled}
                       className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                     >
                       <div className='flex items-center gap-2'>
@@ -118,11 +127,12 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                         <Heading className="text-lg font-bold">Cloud Mock</Heading>
                       </div>
                       <p className='pt-2'>
-                        Runs on Insomnia cloud, ideal for collaboration.
+                        {isCloudProjectDisabled ? 'Only available for cloud projects' : 'Runs on Insomnia cloud, ideal for collaboration.'}
                       </p>
                     </Radio>
                     <Radio
                       value="self-hosted"
+                      isDisabled={isSelfHostedDisabled}
                       className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                     >
                       <div className="flex items-center gap-2">
