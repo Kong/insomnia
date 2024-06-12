@@ -19,7 +19,6 @@ import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
 import { AskModal } from '../modals/ask-modal';
-import { EnvironmentEditModal } from '../modals/environment-edit-modal';
 import { PasteCurlModal } from '../modals/paste-curl-modal';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 interface Props extends Partial<DropdownProps> {
@@ -225,12 +224,6 @@ export const RequestGroupActionsDropdown = ({
         icon: 'copy',
         hint: hotKeyRegistry.request_createHTTP,
         action: () => handleRequestGroupDuplicate(),
-      },
-      {
-        id: 'Environment',
-        name: 'Environment',
-        icon: 'code',
-        action: () => showModal(EnvironmentEditModal, { requestGroup }),
       },
       {
         id: 'Rename',
