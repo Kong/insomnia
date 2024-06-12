@@ -91,7 +91,7 @@ export interface CodeEditorProps {
   noLint?: boolean;
   noMatchBrackets?: boolean;
   noStyleActiveLine?: boolean;
-  // used only for saving env editor state
+  // used only for saving env editor state, focusEvent doesn't work well
   onBlur?: (e: FocusEvent) => void;
   onChange?: (value: string) => void;
   onPaste?: (value: string) => string;

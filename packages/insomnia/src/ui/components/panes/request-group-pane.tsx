@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router-dom';
 
@@ -8,6 +8,7 @@ import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/us
 import { RequestGroupLoaderData } from '../../routes/request-group';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
+import { EnvironmentEditor, EnvironmentEditorHandle } from '../editors/environment-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestScriptEditor } from '../editors/request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
@@ -25,7 +26,24 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
   const uniqueKey = `${activeEnvironment?.modified}::${activeRequestGroup._id}::${gitVersion}::${activeRequestSyncVersion}`;
   const folderHeaders = activeRequestGroup?.headers || [];
   const headersCount = folderHeaders.filter(h => !h.disabled)?.length || 0;
+  const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
+  const patchGroup = useRequestGroupPatcher();
 
+  const saveChanges = () => {
+    if (environmentEditorRef.current?.isValid()) {
+      try {
+        const data = environmentEditorRef.current?.getValue();
+        if (activeRequestGroup && data) {
+          patchGroup(activeRequestGroup._id, {
+            environment: data.object,
+            environmentPropertyOrder: data.propertyOrder,
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to update environment', err);
+      }
+    }
+  };
   return (
     <>
       <Tabs aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
@@ -57,6 +75,12 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
                 <span className='w-2 h-2 bg-green-500 rounded-full' />
               </span>
             )}
+          </Tab>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='environment'
+          >
+            Environment
           </Tab>
           <Tab
             className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
@@ -144,6 +168,22 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
               </ErrorBoundary>
             </TabPanel>
           </Tabs>
+        </TabPanel>
+        <TabPanel className='w-full flex-1 overflow-y-auto ' id='environment'>
+          <ErrorBoundary
+            key={uniqueKey}
+            errorClassName="font-error pad text-center"
+          >
+            <EnvironmentEditor
+              ref={environmentEditorRef}
+              key={activeRequestGroup ? activeRequestGroup._id : 'n/a'}
+              environmentInfo={{
+                object: activeRequestGroup ? activeRequestGroup.environment : {},
+                propertyOrder: activeRequestGroup && activeRequestGroup.environmentPropertyOrder,
+              }}
+              onBlur={saveChanges}
+            />
+          </ErrorBoundary>
         </TabPanel>
         <TabPanel className='w-full flex-1 overflow-y-auto ' id='docs'>
           {activeRequestGroup.description ? (
