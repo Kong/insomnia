@@ -49,7 +49,7 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                   if (mockServerType === 'self-hosted' && !isEnterprise) {
                     showModal(AlertModal, {
                       title: 'Upgrade required',
-                      message: 'Self-hosted Mocks are only supported for Enterprise users.',
+                      message: <>Self-hosted Mocks are only supported for Enterprise users. <Link href="https://insomnia.rest/pricing/contact">Contact Sales <i className="fa fa-external-link" /></Link></>,
                     });
                     return;
                   }
