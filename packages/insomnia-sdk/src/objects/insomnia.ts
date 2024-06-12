@@ -122,8 +122,14 @@ export async function initInsomniaObject(
     log: (...args: any[]) => void,
 ) {
     const globals = new Environment('globals', rawObj.globals);
-    const environment = new Environment(rawObj.environmentName || '', rawObj.environment);
     const baseEnvironment = new Environment(rawObj.baseEnvironmentName || '', rawObj.baseEnvironment);
+    // reuse baseEnvironment when the "selected envrionment" points to the base environment
+    const environment = rawObj.baseEnvironmentName === rawObj.environmentName ?
+        baseEnvironment :
+        new Environment(rawObj.environmentName || '', rawObj.environment);
+    if (rawObj.baseEnvironmentName === rawObj.environmentName) {
+        log('warning: No environment is selected, modification of insomnia.environment will be applied to the base environment.');
+    }
     // TODO: update "iterationData" name when it is supported
     const iterationData = new Environment('iterationData', rawObj.iterationData);
     const cookies = new CookieObject(rawObj.cookieJar);

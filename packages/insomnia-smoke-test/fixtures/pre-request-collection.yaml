@@ -201,7 +201,7 @@ resources:
     name: FolderWithEnv
     description: ""
     environment:
-      customValue: "fromFolder"
+      folderEnv: "fromFolder"
     environmentPropertyOrder: null
     metaSortKey: -1668533312225
     _type: request_group
@@ -315,30 +315,23 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     preRequestScript: |-
-      insomnia.environment.set("environmentName", insomnia.environment.name);
-      insomnia.environment.set("baseEnvironmentName", insomnia.baseEnvironment.name);
-      insomnia.environment.set("collectionVariablesName", insomnia.collectionVariables.name);
-      // manipulation
-      insomnia.baseEnvironment.set('fromBaseEnv', 'baseEnv');
+      insomnia.baseEnvironment.set('fallbackToBase', 'fallbackToBase');
       insomnia.baseEnvironment.set('scriptValue', 'fromBase');
       insomnia.environment.set('scriptValue', 'fromEnv');
       // "preDefinedValue" is already defined in the base environment modal.
       // but it is rewritten here
       insomnia.baseEnvironment.set('preDefinedValue', 'fromScript');
-      // "customValue" is already defined in the folder environment.
+      // "folderEnv" is already defined in the folder environment.
       // folder version will override the following one
-      insomnia.baseEnvironment.set('customValue', 'fromScript');
+      insomnia.baseEnvironment.set('folderEnv', 'fromScript');
     body:
       mimeType: "application/json"
       text: |-
         {
-          "environmentName": "{{ _.environmentName }}",
-          "baseEnvironmentName": "{{ _.baseEnvironmentName }}",
-          "collectionVariablesName": "{{ _.collectionVariablesName }}",
-          "fromBaseEnv": "{{ _.fromBaseEnv }}",
+          "fallbackToBase": "{{ _.fallbackToBase }}",
           "scriptValue": "{{ _.scriptValue }}",
           "preDefinedValue": "{{ _.preDefinedValue }}",
-          "customValue": "{{ _.customValue }}"
+          "folderEnv": "{{ _.folderEnv }}"
         }
     _type: request
   - _id: req_89dade2ee9ee42fbb22d588783a9df01
