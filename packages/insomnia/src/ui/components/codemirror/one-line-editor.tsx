@@ -174,11 +174,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     codeMirror.current.on('blur', () => codeMirror.current?.getTextArea().parentElement?.removeAttribute('data-focused'));
     codeMirror.current.on('focus', () => codeMirror.current?.getTextArea().parentElement?.setAttribute('data-focused', 'on'));
     codeMirror.current.on('keyHandled', (_: CodeMirror.Editor, _keyName: string, event: Event) => event.stopPropagation());
-    // Prevent these things if we're type === "password"
-    const preventDefault = (_: CodeMirror.Editor, event: Event) => type?.toLowerCase() === 'password' && event.preventDefault();
-    codeMirror.current.on('copy', preventDefault);
-    codeMirror.current.on('cut', preventDefault);
-    codeMirror.current.on('dragstart', preventDefault);
     codeMirror.current.setCursor({ line: -1, ch: -1 });
 
     // Actually set the value
@@ -193,7 +188,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         settings.showVariableSourceAndValue,
       );
     }
-  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, type]);
+  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue]);
 
   const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();
@@ -213,6 +208,21 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   }, [cleanUpEditor, initEditor]);
 
   useEditorRefresh(reinitialize);
+
+  useEffect(() => {
+    // Prevent these things if we're type === "password"
+    const preventDefault = (_: CodeMirror.Editor, event: Event) => event.preventDefault();
+    if (type === 'password') {
+      codeMirror.current?.on('cut', preventDefault);
+      codeMirror.current?.on('copy', preventDefault);
+      codeMirror.current?.on('dragstart', preventDefault);
+    }
+    return () => {
+      codeMirror.current?.off('cut', preventDefault);
+      codeMirror.current?.off('copy', preventDefault);
+      codeMirror.current?.off('dragstart', preventDefault);
+    };
+  }, [type]);
 
   useEffect(() => {
     const fn = misc.debounce((doc: CodeMirror.Editor) => {
