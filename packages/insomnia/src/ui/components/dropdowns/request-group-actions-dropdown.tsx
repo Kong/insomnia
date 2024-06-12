@@ -143,6 +143,7 @@ export const RequestGroupActionsDropdown = ({
   const requestGroupActionItems: ({
     name: string;
     id: string;
+    icon: IconName;
     items: {
       id: string;
       name: string;
@@ -154,6 +155,7 @@ export const RequestGroupActionsDropdown = ({
       {
       name: 'Create',
       id: 'create',
+      icon: 'plus',
       items: [
         {
           id: 'HTTP',
@@ -237,6 +239,7 @@ export const RequestGroupActionsDropdown = ({
       {
         name: 'Manage',
         id: 'manage',
+        icon: 'cog',
         items: [
           {
             id: 'Rename',
@@ -294,7 +297,9 @@ export const RequestGroupActionsDropdown = ({
           >
             {section => (
               <Section className='flex-1 flex flex-col'>
-                <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
+                <Header className='pl-2 py-1 flex items-center gap-2 text-[--hl] text-xs uppercase'>
+                  <Icon icon={section.icon} /> <span>{section.name}</span>
+                </Header>
                 <Collection items={section.items}>
                   {item => (
                     <MenuItem

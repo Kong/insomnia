@@ -442,14 +442,14 @@ export const RequestScriptEditor: FC<Props> = ({
                 className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                 items={menu.items}
               >
-                {item => {
-                  if ('items' in item) {
+                {section => {
+                  if ('items' in section) {
                     return (
                       <Section>
                         <Header className='pl-2 py-1 text-[--hl] text-xs uppercase'>
-                          {item.name}
+                          {section.name}
                         </Header>
-                        <Collection items={item.items}>
+                        <Collection items={section.items}>
                           {item => (
                             <MenuItem onAction={() => addSnippet(item.snippet)} className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors" key={item.name}>{item.name}</MenuItem>
                           )}
@@ -459,7 +459,7 @@ export const RequestScriptEditor: FC<Props> = ({
                   }
 
                   return (
-                    <MenuItem onAction={() => addSnippet(item.snippet)} className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors" key={item.name}>{item.name}</MenuItem>
+                    <MenuItem onAction={() => addSnippet(section.snippet)} className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors" key={section.name}>{section.name}</MenuItem>
                   );
                 }}
               </Menu>
