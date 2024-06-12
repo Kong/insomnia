@@ -182,12 +182,12 @@ export const ContentTypeDropdown: FC = () => {
           items={contentTypeSections}
           className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
         >
-          {item => (
+          {section => (
             <Section>
               <Header className='pl-2 py-1 flex items-center gap-2 text-[--hl] text-xs uppercase'>
-                <Icon icon={item.icon} /> <span>{item.name}</span>
+                <Icon icon={section.icon} /> <span>{section.name}</span>
               </Header>
-              <Collection items={item.items}>
+              <Collection items={section.items}>
                 {item => (
                   <ListBoxItem
                     className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
