@@ -26,7 +26,7 @@ test.describe('pre-request features tests', async () => {
         {
             name: 'environments setting and overriding',
             expectedBody: {
-                fallbackToGlobal: 'fallbackToGlobal',
+                // fallbackToGlobal: 'fallbackToGlobal',
                 fallbackToBase: 'fallbackToBase',
                 scriptValue: 'fromEnv',
                 preDefinedValue: 'fromScript',

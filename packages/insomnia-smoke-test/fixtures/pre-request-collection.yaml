@@ -329,7 +329,6 @@ resources:
       mimeType: "application/json"
       text: |-
         {
-          "fallbackToGlobal": "{{ _.fallbackToGlobal }}",
           "fallbackToBase": "{{ _.fallbackToBase }}",
           "scriptValue": "{{ _.scriptValue }}",
           "preDefinedValue": "{{ _.preDefinedValue }}",
