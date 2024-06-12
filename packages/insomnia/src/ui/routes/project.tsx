@@ -1,5 +1,5 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { FC, Fragment, useEffect, useState } from 'react';
+import React, { FC, Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -29,6 +29,7 @@ import {
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   ActionFunction,
+  defer,
   LoaderFunction,
   matchPath,
   redirect,
@@ -85,6 +86,7 @@ import { MockServerSettingsModal } from '../components/modals/mock-server-settin
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
+import { useLoaderDeferData } from '../hooks/use-loader-defer-data';
 import { OrganizationFeatureLoaderData, OrganizationLoaderData, useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
@@ -305,7 +307,7 @@ export interface ProjectIdLoaderData {
 }
 
 export interface ProjectLoaderData {
-  files: InsomniaFile[];
+  localFiles: InsomniaFile[];
   allFilesCount: number;
   documentsCount: number;
   environmentsCount: number;
@@ -314,13 +316,8 @@ export interface ProjectLoaderData {
   projectsCount: number;
   activeProject?: Project;
   projects: Project[];
-  learningFeature: {
-    active: boolean;
-    title: string;
-    message: string;
-    cta: string;
-    url: string;
-  };
+  learningFeaturePromise?: Promise<LearningFeature>;
+  remoteFilesPromise?: Promise<InsomniaFile[]>;
 }
 
 async function getAllLocalFiles({
@@ -542,7 +539,7 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
 
 export const loader: LoaderFunction = async ({
   params,
-}): Promise<ProjectLoaderData> => {
+}) => {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   const { id: sessionId } = await userSession.getOrCreate();
@@ -555,7 +552,7 @@ export const loader: LoaderFunction = async ({
   };
   if (!projectId) {
     return {
-      files: [],
+      localFiles: [],
       allFilesCount: 0,
       documentsCount: 0,
       environmentsCount: 0,
@@ -564,7 +561,6 @@ export const loader: LoaderFunction = async ({
       projectsCount: 0,
       activeProject: undefined,
       projects: [],
-      learningFeature: fallbackLearningFeature,
     };
   }
 
@@ -578,44 +574,44 @@ export const loader: LoaderFunction = async ({
   const project = await models.project.getById(projectId);
   invariant(project, `Project was not found ${projectId}`);
 
-  const [localFiles, remoteFiles, organizationProjects = [], learningFeature] = await Promise.all([
+  const [localFiles, organizationProjects = []] = await Promise.all([
     getAllLocalFiles({ projectId }),
-    getAllRemoteFiles({ projectId, organizationId }),
     database.find<Project>(models.project.type, {
       parentId: organizationId,
     }),
-    getLearningFeature(fallbackLearningFeature),
   ]);
 
-  const files = [...localFiles, ...remoteFiles];
+  const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
+  const learningFeaturePromise = getLearningFeature(fallbackLearningFeature);
 
   const projects = sortProjects(organizationProjects);
 
-  return {
-    files,
-    learningFeature,
+  return defer({
+    localFiles,
+    learningFeaturePromise,
+    remoteFilesPromise,
     projects,
     projectsCount: organizationProjects.length,
     activeProject: project,
-    allFilesCount: files.length,
-    environmentsCount: files.filter(
+    allFilesCount: localFiles.length,
+    environmentsCount: localFiles.filter(
       file => file.scope === 'environment'
     ).length,
-    documentsCount: files.filter(
+    documentsCount: localFiles.filter(
       file => file.scope === 'design'
     ).length,
-    collectionsCount: files.filter(
+    collectionsCount: localFiles.filter(
       file => file.scope === 'collection'
     ).length,
-    mockServersCount: files.filter(
+    mockServersCount: localFiles.filter(
       file => file.scope === 'mock-server'
     ).length,
-  };
+  });
 };
 
 const ProjectRoute: FC = () => {
   const {
-    files,
+    localFiles,
     activeProject,
     projects,
     allFilesCount,
@@ -624,13 +620,21 @@ const ProjectRoute: FC = () => {
     mockServersCount,
     documentsCount,
     projectsCount,
-    learningFeature,
+    learningFeaturePromise,
+    remoteFilesPromise,
   } = useLoaderData() as ProjectLoaderData;
   const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = useLocalStorage('learning-feature-dismissed', '');
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
   };
+  const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
+  const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise);
+
+  const finalFiles = useMemo(() => {
+    console.log(remoteFiles, 'remoteFiles');
+    return remoteFiles ? [...localFiles, ...remoteFiles] : localFiles;
+  }, [localFiles, remoteFiles]);
 
   const { userSession } = useRootLoaderData();
   const pullFileFetcher = useFetcher();
@@ -668,7 +672,7 @@ const ProjectRoute: FC = () => {
   const isUserOwner = organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && isPersonalOrganization(organization);
 
-  const filteredFiles = files
+  const filteredFiles = finalFiles
     .filter(w => (workspaceListScope !== 'all' ? w.scope === workspaceListScope : true))
     .filter(workspace =>
       workspaceListFilter
@@ -1160,7 +1164,7 @@ const ProjectRoute: FC = () => {
                   }}
                 </GridList>
               )}
-              {!isLearningFeatureDismissed && learningFeature.active && (
+              {!isLearningFeatureDismissed && learningFeature?.active && (
                 <div className='flex flex-shrink-0 flex-col gap-2 p-[--padding-sm]'>
                   <div className='flex items-center justify-between gap-2'>
                     <Heading className='text-base'>
@@ -1324,7 +1328,7 @@ const ProjectRoute: FC = () => {
                     items={filesWithPresence}
                     onAction={id => {
                       // hack to workaround gridlist not have access to workspace scope
-                      const file = files.find(f => f.id === id);
+                      const file = finalFiles.find(f => f.id === id);
                       invariant(file, 'File not found');
                       if (file.scope === 'unsynced') {
                         if (activeProject?.remoteId && file.remoteId) {
