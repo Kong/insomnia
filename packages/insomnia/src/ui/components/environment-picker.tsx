@@ -1,3 +1,4 @@
+import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment } from 'react';
 import { Button, ComboBox, Dialog, DialogTrigger, Heading, Input, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
@@ -6,8 +7,6 @@ import { fuzzyMatch } from '../../common/misc';
 import { WorkspaceLoaderData } from '../routes/workspace';
 import { Icon } from './icon';
 
-function getGlobalEnvironmentList() { }
-
 export const EnvironmentPicker = ({
   isOpen,
   onOpenChange,
@@ -15,7 +14,7 @@ export const EnvironmentPicker = ({
 }: {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onOpenEnvironmentModal: () => void;
+    onOpenEnvironmentSettingsModal: () => void;
 }) => {
   const {
     activeEnvironment,
@@ -55,7 +54,7 @@ export const EnvironmentPicker = ({
           <div className='relative w-full h-full flex flex-col overflow-hidden flex-1 divide-y divide-solid divide-[--hl-md]'>
             <Heading className='text-sm flex-shrink-0 h-[--line-height-sm] font-bold text-[--hl] px-3 py-1 flex items-center gap-2 justify-between'>
               <span>Collection Environments</span>
-              <Button onPress={() => setEnvironmentModalOpen(true)} aria-label='Manage collection environments' className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] outline-none hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+              <Button onPress={onOpenEnvironmentSettingsModal} aria-label='Manage collection environments' className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] outline-none hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                 <Icon icon="gear" />
               </Button>
             </Heading>
@@ -83,7 +82,7 @@ export const EnvironmentPicker = ({
                 );
               }}
               selectedKeys={[activeEnvironment._id || '']}
-              className="select-none text-sm min-w-max overflow-y-auto focus:outline-none"
+              className="p-2 select-none text-sm min-w-max overflow-y-auto focus:outline-none"
             >
               {item => (
                 <ListBoxItem
@@ -143,20 +142,18 @@ export const EnvironmentPicker = ({
 
                   return match;
                 }}
-                onSelectionChange={selection => {
-                  if (selection === 'all') {
+                onSelectionChange={environmentId => {
+                  if (environmentId === 'all' || !environmentId) {
                     return;
                   }
 
-                  const sectionId = selection?.toString();
-
-                  if (!sectionId) {
-                    return;
+                  if (environmentId === 'no-global-env') {
+                    environmentId = '';
                   }
 
                   setActiveGlobalEnvironmentFetcher.submit(
                     {
-                      environmentId: sectionId.replace('section-', ''),
+                      environmentId,
                     },
                     {
                       method: 'POST',
@@ -166,13 +163,14 @@ export const EnvironmentPicker = ({
                 }}
                 defaultInputValue={selectedGlobalBaseEnvironment?.workspaceName || selectedGlobalBaseEnvironment?.name || ''}
                 defaultSelectedKey={selectedGlobalBaseEnvironmentId}
-                defaultItems={globalBaseEnvironments.map(baseEnv => {
+                defaultItems={[...globalBaseEnvironments.map(baseEnv => {
                   return {
                     id: baseEnv._id,
+                    icon: 'code',
                     name: baseEnv.workspaceName || baseEnv.name,
                     textValue: baseEnv.workspaceName || baseEnv.name,
                   };
-                })}
+                }), { id: 'no-global-env', icon: 'cancel', name: 'No Global Environment', textValue: 'No Global Environment' }]}
               >
                 <div className='px-2 mx-2 my-2 flex items-center gap-2 group rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors'>
                   <Input aria-label='Global Environment' placeholder='Choose a global environment' className="py-1 placeholder:italic w-full pl-2 pr-7 " />
@@ -181,11 +179,17 @@ export const EnvironmentPicker = ({
                   </Button>
                 </div>
                 <Popover className="min-w-max max-h-[90vh] !z-10 border grid grid-flow-col auto-cols-[min(250px,calc(45vw))] overflow-hidden divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] rounded-md focus:outline-none" placement='bottom start' offset={8}>
-                  <ListBox<{ name: string }>
-                    className="select-none text-sm min-w-max p-2 flex flex-col gap-3 overflow-y-auto focus:outline-none"
+                  <ListBox<{ name: string; icon: IconName }>
+                    className="select-none text-sm min-w-max p-2 flex flex-col overflow-y-auto focus:outline-none"
                   >
                     {item => (
-                      <ListBoxItem className={'aria-disabled:opacity-30 aria-selected:bg-[--hl-sm] rounded aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] data-[focused]:bg-[--hl-xs] focus:outline-none transition-colors'}>{item.name}</ListBoxItem>
+                      <ListBoxItem
+                        textValue={item.name}
+                        className="aria-disabled:opacity-30 aria-selected:bg-[--hl-sm] rounded aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] data-[focused]:bg-[--hl-xs] focus:outline-none transition-colors"
+                      >
+                        <Icon icon={item.icon} className='w-4' />
+                        <span className='truncate'>{item.name}</span>
+                      </ListBoxItem>
                     )}
                   </ListBox>
                 </Popover>
@@ -214,7 +218,7 @@ export const EnvironmentPicker = ({
                   );
                 }}
                 selectedKeys={[activeGlobalEnvironment?._id || '']}
-                className="select-none text-sm min-w-max p-2 flex flex-col gap-3 overflow-y-auto focus:outline-none"
+                className="select-none text-sm min-w-max p-2 flex flex-col overflow-y-auto focus:outline-none"
               >
                 {item => (
                   <ListBoxItem

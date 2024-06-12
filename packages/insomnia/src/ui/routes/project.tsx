@@ -668,8 +668,6 @@ const ProjectRoute: FC = () => {
   const isUserOwner = organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && isPersonalOrganization(organization);
 
-  console.log(files, workspaceListScope);
-
   const filteredFiles = files
     .filter(w => (workspaceListScope !== 'all' ? w.scope === workspaceListScope : true))
     .filter(workspace =>

@@ -18,12 +18,8 @@ import {
   Breadcrumb,
   Breadcrumbs,
   Button,
-  Collection,
-  Dialog,
-  DialogTrigger,
   GridList,
   GridListItem,
-  Header,
   Heading,
   ListBox,
   ListBoxItem,
@@ -31,7 +27,6 @@ import {
   MenuItem,
   MenuTrigger,
   Popover,
-  Section,
   ToggleButton,
   Tooltip,
   TooltipTrigger,
@@ -42,7 +37,6 @@ import {
   NavLink,
   useFetcher,
   useLoaderData,
-  useNavigate,
   useParams,
   useRouteLoaderData,
 } from 'react-router-dom';
@@ -55,7 +49,6 @@ import { parseApiSpec } from '../../common/api-specs';
 import { ACTIVITY_SPEC, DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { debounce } from '../../common/misc';
 import { ApiSpec } from '../../models/api-spec';
-import { Environment } from '../../models/environment';
 import * as models from '../../models/index';
 import { invariant } from '../../utils/invariant';
 import {
@@ -65,6 +58,7 @@ import {
 import { DesignEmptyState } from '../components/design-empty-state';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
+import { EnvironmentPicker } from '../components/environment-picker';
 import { Icon } from '../components/icon';
 import { InsomniaAI } from '../components/insomnia-ai-icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
@@ -192,41 +186,15 @@ const Design: FC = () => {
   };
   const {
     activeProject,
-    activeEnvironment,
-    activeGlobalEnvironment,
     activeCookieJar,
     caCertificate,
     clientCertificates,
-    subEnvironments,
-    baseEnvironment,
-    globalBaseEnvironments,
-    globalSubEnvironments,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const navigate = useNavigate();
-  const setActiveEnvironmentFetcher = useFetcher();
-  const setActiveGlobalEnvironmentFetcher = useFetcher();
   const { settings } = useRootLoaderData();
-
-  const environmentListSections = [{
-    id: 'collection-environments',
-    name: 'Collection Environments',
-    items: [baseEnvironment, ...subEnvironments].map(({ type, ...environment }) => ({ ...environment, id: environment._id, isBase: environment._id === baseEnvironment._id })),
-  }];
-  const globalEnvironmentListSections: { id: string; name: string; items: (Omit<Environment, 'type'> & { id: string; isBase: boolean })[] }[] = [];
-
-  if (globalBaseEnvironments.length > 0) {
-    globalBaseEnvironments.forEach(globalBaseEnvironment => {
-      globalEnvironmentListSections.push({
-        id: `section-${globalBaseEnvironment._id}`,
-        name: globalBaseEnvironment.workspaceName || globalBaseEnvironment.name,
-        items: [globalBaseEnvironment, ...globalSubEnvironments.filter(e => e.parentId === globalBaseEnvironment._id)].map(({ type, ...subenvironment }) => ({ ...subenvironment, id: subenvironment._id, isBase: subenvironment._id === globalBaseEnvironment._id })),
-      });
-    });
-  }
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
-  const [isEnvironmentSelectOpen, setIsEnvironmentSelectOpen] = useState(false);
+  const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
 
@@ -415,7 +383,7 @@ const Design: FC = () => {
   useDocBodyKeyboardShortcuts({
     sidebar_toggle: toggleSidebar,
     environment_showEditor: () => setEnvironmentModalOpen(true),
-    environment_showSwitchMenu: () => setIsEnvironmentSelectOpen(true),
+    environment_showSwitchMenu: () => setIsEnvironmentPickerOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
   });
 
@@ -504,195 +472,11 @@ const Design: FC = () => {
             </Breadcrumbs>
             <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
             <div className="flex w-full items-center gap-2 justify-between">
-                <DialogTrigger isOpen={isEnvironmentSelectOpen} onOpenChange={setIsEnvironmentSelectOpen}>
-                  <Button className="py-1 px-4 max-w-full gap-2 truncate flex items-center justify-center aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                    <Icon icon="code" className='w-5 flex-shrink-0' />
-                    <span className='truncate'>{activeGlobalEnvironment?._id || activeEnvironment._id ? 'Manage' : 'Add'} Environments</span>
-                  </Button>
-                  <Popover className="min-w-max max-h-[90vh] flex flex-col overflow-hidden !z-10" placement='bottom start' offset={8}>
-                    <Dialog className="border h-full w-full grid grid-flow-col auto-cols-[min(250px,calc(45vw))] overflow-hidden divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] rounded-md focus:outline-none">
-                      <div className='relative w-full h-full flex flex-col overflow-hidden flex-1 divide-y divide-solid divide-[--hl-md]'>
-                        <Heading className='text-sm pr-10 flex-shrink-0 h-[--line-height-sm] font-bold text-[--hl] px-3 py-1 flex items-center gap-2 justify-start'>
-                          <span>Collection Environments</span>
-                        </Heading>
-                        <ListBox
-                          aria-label='Select a Collection Environment'
-                          selectionMode='single'
-                          key={activeEnvironment._id}
-                          items={environmentListSections}
-                          disallowEmptySelection
-                          onSelectionChange={selection => {
-                            if (selection === 'all') {
-                              return;
-                            }
-
-                            const environmentId = selection.values().next().value;
-
-                            if (environmentId.startsWith('manage-environments')) {
-                              setEnvironmentModalOpen(true);
-                              return;
-                            }
-
-                            setActiveEnvironmentFetcher.submit(
-                              {
-                                environmentId,
-                              },
-                              {
-                                method: 'POST',
-                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
-                              }
-                            );
-                          }}
-                          selectedKeys={[activeEnvironment._id || '']}
-                          className="select-none text-sm min-w-max overflow-y-auto focus:outline-none"
-                        >
-                          {section => (
-                            <Section className='p-2'>
-                              <ListBoxItem id={`manage-environments:${section.id}`} aria-label='Manage collection environments' className="absolute top-2.5 right-2 flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] outline-none hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                                <Icon icon="gear" />
-                              </ListBoxItem>
-                              <Collection items={section.items}>
-                                {item => (
-                                  <ListBoxItem
-                                    className={`aria-disabled:opacity-30 rounded aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item.isBase ? '' : 'pl-8'}`}
-                                  >
-                                    {({ isSelected }) => (
-                                      <Fragment>
-                                        <span
-                                          style={{
-                                            borderColor: item.color ?? 'var(--color-font)',
-                                          }}
-                                        >
-                                          <Icon
-                                            icon={item.isPrivate ? 'laptop-code' : 'globe-americas'}
-                                            className='text-xs w-5'
-                                            style={{
-                                              color: item.color ?? 'var(--color-font)',
-                                            }}
-                                          />
-                                        </span>
-                                        <span className='flex-1 truncate'>
-                                          {item.name}
-                                        </span>
-                                        {isSelected && (
-                                          <Icon
-                                            icon="check"
-                                            className="text-[--color-success] justify-self-end"
-                                          />
-                                        )}
-                                      </Fragment>
-                                    )}
-                                  </ListBoxItem>
-                                )}
-                              </Collection>
-                            </Section>
-                          )}
-                        </ListBox>
-                      </div>
-                      {globalEnvironmentListSections.length > 0 && (
-                        <div className='w-full h-full flex flex-col overflow-hidden flex-1 divide-y divide-solid divide-[--hl-md]'>
-                          <Heading className='text-sm flex-shrink-0 h-[--line-height-sm] font-bold text-[--hl] px-3 py-1 flex items-center gap-2 justify-start'>
-                            <span>Global Environments</span>
-                          </Heading>
-                          <ListBox
-                            aria-label='Select a Global Environment'
-                            selectionMode='single'
-                            disallowEmptySelection
-                            key={activeGlobalEnvironment?._id}
-                            items={globalEnvironmentListSections}
-                            onSelectionChange={selection => {
-                              if (selection === 'all') {
-                                return;
-                              }
-
-                              const environmentId = selection.values().next().value;
-                              if (environmentId.startsWith('manage-environments')) {
-                                const selectedEnvironmentId = environmentId.replace('manage-environments:section-', '');
-                                const selectedGlobalBaseEnvironment = globalBaseEnvironments.find(e => e._id === selectedEnvironmentId);
-
-                                if (!selectedGlobalBaseEnvironment) {
-                                  const sybGlobalEnvironment = globalSubEnvironments.find(e => e._id === selectedEnvironmentId);
-
-                                  if (!sybGlobalEnvironment) {
-                                    return;
-                                  }
-
-                                  const baseGlobalEnvironment = globalBaseEnvironments.find(e => e._id === sybGlobalEnvironment.parentId);
-
-                                  if (!baseGlobalEnvironment) {
-                                    return;
-                                  }
-
-                                  navigate(`/organization/${organizationId}/project/${projectId}/workspace/${baseGlobalEnvironment.parentId}/environment`);
-                                }
-
-                                navigate(`/organization/${organizationId}/project/${projectId}/workspace/${selectedGlobalBaseEnvironment?.parentId}/environment`);
-                                return;
-                              }
-
-                              setActiveGlobalEnvironmentFetcher.submit(
-                                {
-                                  environmentId,
-                                },
-                                {
-                                  method: 'POST',
-                                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active-global`,
-                                }
-                              );
-                            }}
-                            selectedKeys={[activeGlobalEnvironment?._id || '']}
-                            className="select-none text-sm min-w-max p-2 flex flex-col gap-3 overflow-y-auto focus:outline-none"
-                          >
-                            {section => (
-                              <Section className='relative py-2'>
-                                <Header className='text-xs text-[--hl] px-2 py-1 flex items-center gap-2 justify-between'>
-                                  <span>{section.name}</span>
-                                </Header>
-                                <ListBoxItem id={`manage-environments:${section.id}`} aria-label='Manage environments' className="absolute top-2 right-2 flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] outline-none hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                                  <Icon icon="gear" />
-                                </ListBoxItem>
-                                <Collection items={section.items}>
-                                  {item => (
-                                    <ListBoxItem
-                                      className={`aria-disabled:opacity-30 rounded aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item.isBase ? '' : 'pl-8'}`}
-                                    >
-                                      {({ isSelected }) => (
-                                        <Fragment>
-                                          <span
-                                            style={{
-                                              borderColor: item.color ?? 'var(--color-font)',
-                                            }}
-                                          >
-                                            <Icon
-                                              icon={item.isPrivate ? 'laptop-code' : 'globe-americas'}
-                                              className='text-xs w-5'
-                                              style={{
-                                                color: item.color ?? 'var(--color-font)',
-                                              }}
-                                            />
-                                          </span>
-                                          <span className='flex-1 truncate'>
-                                            {item.name}
-                                          </span>
-                                          {isSelected && (
-                                            <Icon
-                                              icon="check"
-                                              className="text-[--color-success] justify-self-end"
-                                            />
-                                          )}
-                                        </Fragment>
-                                      )}
-                                    </ListBoxItem>
-                                  )}
-                                </Collection>
-                              </Section>
-                            )}
-                          </ListBox>
-                        </div>
-                      )}
-                    </Dialog>
-                  </Popover>
-                </DialogTrigger>
+                <EnvironmentPicker
+                  isOpen={isEnvironmentPickerOpen}
+                  onOpenChange={setIsEnvironmentPickerOpen}
+                  onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
+                />
               </div>
             <Button
               onPress={() => setIsCookieModalOpen(true)}
