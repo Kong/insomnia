@@ -424,7 +424,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     addRequestTimingRecord(
       requestId,
       {
-        stepName: 'Preparing and sending request',
+        stepName: 'Sending request',
         startedAt: Date.now(),
       },
     );
@@ -551,7 +551,7 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
   addRequestTimingRecord(
     req._id,
     {
-      stepName: 'Preparing and sending request',
+      stepName: 'Sending request',
       startedAt: Date.now(),
     },
   );

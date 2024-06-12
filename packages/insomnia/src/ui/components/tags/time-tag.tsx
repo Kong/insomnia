@@ -11,8 +11,7 @@ interface Props {
   tooltipDelay?: number;
   requestId?: string;
 }
-
-export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, tooltipDelay, requestId }) => {
+const getTimeAndUnit = (milliseconds: number) => {
   let unit = 'ms';
   let number = milliseconds;
 
@@ -32,7 +31,14 @@ export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, toolti
   } else {
     number = Math.round(number * 100) / 100;
   }
+
+  return { number, unit };
+};
+export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, tooltipDelay, requestId }) => {
   const steparray = getExecution(requestId);
+  const totalMs = steparray?.reduce((acc, step) => acc + (step.duration || 0), 0) || milliseconds;
+  const { number, unit } = getTimeAndUnit(totalMs);
+
   return (
     <div
       className={classnames(
@@ -44,10 +50,16 @@ export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, toolti
       )}
     >
       <Tooltip
-        message={<>
-          <div>{(milliseconds / 1000).toFixed(2)} s</div>
-          {steparray?.map(step => (<div key={step.stepName}>{step.stepName} {step.duration?.toFixed(2) || '?'} s</div>))}
-        </>}
+        message={(
+          <div>
+            {steparray?.map(step => {
+              const { number, unit } = getTimeAndUnit(step.duration || 0);
+              return (<div key={step.stepName} className='flex justify-between'>
+                <div>{step.stepName}</div> <div>{number} {unit}</div>
+              </div>);
+            })}
+            <div key="total">Total {number} {unit}</div>
+          </div>)}
         position="bottom"
         delay={tooltipDelay}
       >
