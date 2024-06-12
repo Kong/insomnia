@@ -13,6 +13,7 @@ import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { CreateRequestType, useRequestGroupPatcher } from '../../hooks/use-request';
+import { action } from '../../routes/auth.authorize';
 import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
@@ -169,7 +170,7 @@ export const RequestGroupActionsDropdown = ({
         },
         {
           id: 'Event Stream',
-          name: 'Event Stream Request',
+          name: 'Event Stream Request (SSE)',
           icon: 'plus-circle',
           action: () => createRequest({
             requestType: 'Event Stream',
@@ -204,13 +205,6 @@ export const RequestGroupActionsDropdown = ({
           }),
         },
         {
-          id: 'From Curl',
-          name: 'From Curl',
-          icon: 'terminal',
-          action: () => setPasteCurlModalOpen(true),
-
-        },
-        {
           id: 'New Folder',
           name: 'New Folder',
           icon: 'folder',
@@ -227,20 +221,33 @@ export const RequestGroupActionsDropdown = ({
                   method: 'post',
                 }),
             }),
-        },
-        {
-          id: 'Duplicate',
-          name: 'Duplicate',
-          icon: 'copy',
-          hint: hotKeyRegistry.request_createHTTP,
-          action: () => handleRequestGroupDuplicate(),
         }],
       },
       {
-        name: 'Manage',
-        id: 'manage',
+        name: 'Import',
+        id: 'import',
+        icon: 'file-import',
+        items: [
+          {
+            id: 'From Curl',
+            name: 'From Curl',
+            icon: 'terminal',
+            action: () => setPasteCurlModalOpen(true),
+          },
+        ],
+      },
+      {
+        name: 'Actions',
+        id: 'actions',
         icon: 'cog',
         items: [
+          {
+            id: 'Duplicate',
+            name: 'Duplicate',
+            icon: 'copy',
+            hint: hotKeyRegistry.request_createHTTP,
+            action: () => handleRequestGroupDuplicate(),
+          },
           {
             id: 'Rename',
             name: 'Rename',
@@ -249,29 +256,35 @@ export const RequestGroupActionsDropdown = ({
               handleRename(),
           },
           {
-            id: 'Delete',
-            name: 'Delete',
-            icon: 'trash',
-            action: () =>
-              handleDeleteFolder(),
-          },
-          ...actionPlugins.map(plugin => ({
-            id: plugin.label,
-            name: plugin.label,
-            icon: plugin.icon as IconName || 'plug',
-            action: () =>
-              handlePluginClick(plugin),
-          })),
-          {
             id: 'Settings',
             name: 'Settings',
             icon: 'wrench',
             action: () =>
               setIsSettingsModalOpen(true),
           },
+          {
+            id: 'Delete',
+            name: 'Delete',
+            icon: 'trash',
+            action: () =>
+              handleDeleteFolder(),
+          },
         ],
       },
-
+      ...(actionPlugins.length > 0 ? [
+        {
+          name: 'Plugins',
+          id: 'plugins',
+          icon: 'plug' as IconName,
+          items: actionPlugins.map(plugin => ({
+            id: plugin.label,
+            name: plugin.label,
+            icon: plugin.icon as IconName || 'plug',
+            action: () =>
+              handlePluginClick(plugin),
+          })),
+        },
+      ] : []),
     ];
 
   return (
