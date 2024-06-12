@@ -302,8 +302,9 @@ export const GraphQLEditor: FC<Props> = ({
     try {
       const documentAST = parse(query);
       const operations = documentAST.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '').filter(Boolean) || [];
+
       // default to first operation when none selected
-      let operationName = state.body.operationName || operations[0] || '';
+      let operationName = operations[0] || '';
       if (operations.length && state.body.operationName) {
         const operationsChanged = state.operations.join() !== operations.join();
         const operationNameWasChanged = !operations.includes(state.body.operationName);
