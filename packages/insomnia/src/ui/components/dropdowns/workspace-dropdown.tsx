@@ -233,7 +233,7 @@ export const WorkspaceDropdown: FC = () => {
                       className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                       aria-label={item.name}
                     >
-                      {/* {item.icon} */}
+                      {item.icon}
                       <span>{item.name}</span>
                     </MenuItem>
                   )}
