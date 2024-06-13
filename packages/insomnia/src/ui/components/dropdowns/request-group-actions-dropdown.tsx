@@ -301,10 +301,7 @@ export const RequestGroupActionsDropdown = ({
           <Menu
             aria-label="Request Group Actions Menu"
             selectionMode="single"
-            onAction={key => {
-              const item = requestGroupActionItems[0].items.find(a => a.id === key) || requestGroupActionItems[1].items.find(a => a.id === key);
-              item && item.action();
-            }}
+            onAction={key => requestGroupActionItems.find(i => i.items.find(a => a.id === key))?.items.find(a => a.id === key)?.action()}
             items={requestGroupActionItems}
             className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
           >
