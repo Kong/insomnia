@@ -8,6 +8,7 @@ import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
+import { useExecutionState } from '../../hooks/use-execution-state';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { RequestLoaderData } from '../../routes/request';
 import { useRootLoaderData } from '../../routes/root';
@@ -30,11 +31,9 @@ import { Pane, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
-  runningRequests: Record<string, boolean>;
   activeRequestId: string;
 }
 export const ResponsePane: FC<Props> = ({
-  runningRequests,
   activeRequestId,
 }) => {
   const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
@@ -75,6 +74,9 @@ export const ResponsePane: FC<Props> = ({
       window.clipboard.writeText(bodyBuffer.toString('utf8'));
     }
   }, [handleGetResponseBody]);
+
+  const { isLoading } = useExecutionState({ requestId: activeRequest._id });
+
   const handleDownloadResponseBody = useCallback(async (prettify: boolean) => {
     if (!activeResponse || !activeRequest) {
       console.warn('Nothing to download');
@@ -127,19 +129,17 @@ export const ResponsePane: FC<Props> = ({
   }
 
   // If there is no previous response, show placeholder for loading indicator
-  if (runningRequests[activeRequest._id]) {
+  if (!activeResponse) {
     return (
       <PlaceholderResponsePane>
-        {runningRequests[activeRequest._id] && <ResponseTimer
+        {isLoading && <ResponseTimer
           handleCancel={() => cancelRequestById(activeRequest._id)}
           activeRequestId={activeRequestId}
         />}
       </PlaceholderResponsePane>
     );
   }
-  if (!activeResponse) {
-    return (<PlaceholderResponsePane />);
-  }
+
   const timeline = models.response.getTimeline(activeResponse);
   const cookieHeaders = getSetCookieHeaders(activeResponse.headers);
   return (
@@ -235,7 +235,7 @@ export const ResponsePane: FC<Props> = ({
         </TabItem>
       </Tabs>
       <ErrorBoundary errorClassName="font-error pad text-center">
-        {runningRequests[activeRequest._id] && <ResponseTimer
+        {isLoading && <ResponseTimer
           handleCancel={() => cancelRequestById(activeRequest._id)}
           activeRequestId={activeRequestId}
         />}

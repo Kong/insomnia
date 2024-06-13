@@ -91,6 +91,7 @@ import { getMethodShortHand } from '../components/tags/method-tag';
 import { ConnectionCircle } from '../components/websockets/action-bar';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
+import { useExecutionState } from '../hooks/use-execution-state';
 import { useReadyState } from '../hooks/use-ready-state';
 import {
   CreateRequestType,
@@ -162,6 +163,11 @@ const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
 
 const getRequestNameOrFallback = (doc: Request | RequestGroup | GrpcRequest | WebSocketRequest): string => {
   return !isRequestGroup(doc) ? doc.name || doc.url || 'Untitled request' : doc.name || 'Untitled folder';
+};
+
+const RequestTiming = ({ requestId }: { requestId: string }) => {
+  const { isLoading } = useExecutionState({ requestId });
+  return isLoading ? <ConnectionCircle className='flex-shrink-0' data-testid="WebSocketSpinner__Connected" /> : null;
 };
 
 export const Debug: FC = () => {
@@ -1252,6 +1258,7 @@ export const Debug: FC = () => {
                           }}
                         />
                         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+                        {isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
                         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
                         {item.pinned && (
                           <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
@@ -1376,7 +1383,7 @@ export const Debug: FC = () => {
                   <RealtimeResponsePane requestId={activeRequest._id} />
                 )}
                 {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
-                  <ResponsePane runningRequests={runningRequests} activeRequestId={activeRequest._id} />
+                  <ResponsePane activeRequestId={activeRequest._id} />
                 )}
               </ErrorBoundary>
             </Panel>

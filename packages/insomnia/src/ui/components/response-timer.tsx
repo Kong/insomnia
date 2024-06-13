@@ -1,6 +1,7 @@
 import React, { DOMAttributes, FunctionComponent, useEffect, useState } from 'react';
 
-import { getExecution, TimingStep, watchExecution } from '../../network/request-timing';
+import { TimingStep } from '../../network/request-timing';
+import { useExecutionState } from '../hooks/use-execution-state';
 
 interface Props {
   handleCancel: DOMAttributes<HTMLButtonElement>['onClick'];
@@ -27,16 +28,9 @@ const MillisecondTimer = () => {
   return ms > 0 ? `${ms.toFixed(1)} s` : '0 s';
 };
 export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRequestId }) => {
-  const execution = getExecution(activeRequestId);
-  const [steps, setSteps] = useState(execution || new Array<TimingStep>());
+  const { steps, isLoading } = useExecutionState({ requestId: activeRequestId });
 
-  useEffect(() => {
-    watchExecution(activeRequestId, (steps: TimingStep[]) => {
-      setSteps(steps);
-    });
-  }, [activeRequestId, steps.length]);
-
-  const timingList = steps.map((record: TimingStep) => {
+  const timingList = isLoading ? (steps || []).map((record: TimingStep) => {
     return (
       <div
         key={`${activeRequestId}-${record.stepName}`}
@@ -57,7 +51,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
         {record.duration ? `${((record.duration) / 1000).toFixed(1)} s` : (<MillisecondTimer />)}
       </div>
     );
-  });
+  }) : [];
 
   return (
     <div className="overlay theme--transparent-overlay">

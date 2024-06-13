@@ -53,7 +53,7 @@ export interface RequestUrlBarHandle {
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   handleAutocompleteUrls,
   uniquenessKey,
-  setLoading,
+  // setLoading,
   onPaste,
 }, ref) => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -105,14 +105,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
   const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
   const fetcher = useFetcher();
-  // TODO: unpick this loading hack. This could be simplified if submit provides a way to update state when it finishes. https://github.com/remix-run/remix/discussions/9020
-  useEffect(() => {
-    if (fetcher.state !== 'idle') {
-      setLoading(true);
-    } else {
-      setLoading(false);
-    }
-  }, [fetcher.state, setLoading]);
+
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const connect = useCallback((connectParams: ConnectActionParams) => {
     fetcher.submit(JSON.stringify(connectParams),
