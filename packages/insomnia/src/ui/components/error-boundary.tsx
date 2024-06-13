@@ -58,7 +58,7 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
   render() {
     if (this.state.error) {
       return (
-        <div className={this.props.errorClassName ?? ''}>Render Failure: {this.state.error.message}</div>
+        <div className={this.props.errorClassName ?? 'font-error'}>Render Failure: {this.state.error.message}</div>
       );
     }
 
