@@ -13,6 +13,12 @@ import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { CodePromptModal } from '../modals/code-prompt-modal';
 
+function isCodeMirrorAutocompleteActive() {
+  const codeMirrorAutocomplete = document.querySelector('.CodeMirror-hints');
+
+  return codeMirrorAutocomplete && document.body.contains(codeMirrorAutocomplete);
+}
+
 const EditableOneLineEditorModal = ({
   id,
   defaultValue,
@@ -53,10 +59,15 @@ const EditableOneLineEditorModal = ({
     onResize: onResize,
   });
 
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+
   return (
     <DialogTrigger
       isOpen={isOpen}
       onOpenChange={(isOpen => {
+        if (isCodeMirrorAutocompleteActive()) {
+          return;
+        }
         setIsOpen(isOpen);
         if (!isOpen) {
           onChange(value);
@@ -64,7 +75,7 @@ const EditableOneLineEditorModal = ({
         }
       })}
     >
-      <Button ref={buttonRef} className={`relative px-2 hover:bg-[--hl-sm] aria-pressed:bg-[--hl-md] focus:bg-[--hl-md] ${isOpen ? 'opacity-0' : ''}`}>
+      <Button ref={buttonRef} className={`relative px-2 ${isOpen ? 'opacity-0' : ''}`}>
         <OneLineEditor
           id={id}
           key={(isOpen ? 'open' : 'closed') + value}
@@ -77,6 +88,7 @@ const EditableOneLineEditorModal = ({
         <span className='absolute top-0 left-0 w-full h-full' />
       </Button>
       <Popover
+        isNonModal
         offset={0}
         placement='start top'
         style={{
@@ -90,6 +102,7 @@ const EditableOneLineEditorModal = ({
         <Dialog className='w-full outline-none'>
           <FocusScope autoFocus>
             <div
+              ref={editorContainerRef}
               className='w-full h-full'
               onFocus={() => {
                 editorRef.current?.focusEnd();
@@ -170,7 +183,7 @@ export const KeyValueEditor: FC<Props> = ({
     getKey: item => item.id,
   });
 
-  const items = pairsList.items.length > 0 ? pairsList.items : [{ id: generateId('pair'), name: '', value: '', description: '', disabled: false }];
+  const items = pairsList.items.length > 0 ? pairsList.items : [{ id: 'pair-empty', name: '', value: '', description: '', disabled: false }];
 
   const readOnlyPairsList = useListData({
     initialItems: readOnlyPairs?.map(pair => {
@@ -185,7 +198,8 @@ export const KeyValueEditor: FC<Props> = ({
       pairsList.update(pair.id, pair);
       onChange(pairsList.items.map(item => (item.id === pair.id ? pair : item)));
     } else {
-      pairsList.append(pair);
+      const id = pair.id === 'pair-empty' ? generateId('pair') : pair.id;
+      pairsList.append({ ...pair, id });
       onChange(pairsList.items.concat(pair));
     }
 
@@ -513,7 +527,7 @@ export const KeyValueEditor: FC<Props> = ({
                   <Icon icon={pair.disabled ? 'square' : 'check-square'} />
                 </ToggleButton>
                 <PromptButton
-                  disabled={pairsList.items.length === 0}
+                  disabled={pair.id === 'pair-empty' || isDisabled}
                   className="flex items-center disabled:opacity-50 justify-center h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   confirmMessage=''
                   doneMessage=''
