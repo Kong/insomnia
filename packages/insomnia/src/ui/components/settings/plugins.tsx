@@ -15,6 +15,7 @@ import { useRootLoaderData } from '../../routes/root';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
+import { Icon } from '../icon';
 import { showAlert, showPrompt } from '../modals';
 import { Button } from '../themed-button';
 interface State {
@@ -148,8 +149,8 @@ export const Plugins: FC = () => {
           </button>
           <div className="selectable force-pre-wrap">
             <b>{installPluginErrMsg}</b>
-            {'\n\nThere may be an issue with the plugin itself, as a note you can discover and install plugins from the '}
-            <a href={PLUGIN_HUB_BASE}>Plugin Hub.</a>
+            <br />
+            Try using the install button on <a href={PLUGIN_HUB_BASE}>Plugin Hub.</a>
             <details>
               <summary>Additional Information</summary>
               <pre className="pad-top-sm force-wrap selectable">
@@ -169,17 +170,29 @@ export const Plugins: FC = () => {
             error: null,
             installPluginErrMsg: '',
           };
+          if (!npmPluginValue.startsWith('insomnia-plugin-')) {
+            newState.installPluginErrMsg = 'Please enter a plugin name starting with insomnia-plugin-';
+            newState.error = new Error('Invalid plugin name');
+            setState(state => ({ ...state, ...newState }));
+            return;
+          }
           try {
             await window.main.installPlugin(npmPluginValue.trim());
             await refreshPlugins();
             newState.npmPluginValue = ''; // Clear input if successful install
           } catch (err) {
-            newState.installPluginErrMsg = `Failed to install ${npmPluginValue}`;
+            newState.installPluginErrMsg = `Failed to install ${npmPluginValue}. Please contact the plugin author sharing the below stack trace to help them to ensure compatibility with the latest Insomnia.`;
             newState.error = err;
           }
           setState(state => ({ ...state, ...newState }));
         }}
       >
+        <div className="form-row">
+          <div className="form-control">
+            <Icon icon='info-circle' className='px-2' />
+            <span>Enter the full name of an npm package beginning with insomnia-plugin-*</span>
+          </div>
+        </div>
         <div className="form-row">
           <div className="form-control form-control--outlined">
             <input
@@ -190,7 +203,7 @@ export const Plugins: FC = () => {
               }}
               disabled={isInstallingFromNpm}
               type="text"
-              placeholder="npm-package-name"
+              placeholder="insomnia-plugin-placeholder"
               value={npmPluginValue}
             />
           </div>
@@ -201,7 +214,7 @@ export const Plugins: FC = () => {
             </Button>
           </div>
         </div>
-      </form>
+      </form >
       <hr />
       <div className="text-right mt-2">
         <Button
@@ -266,6 +279,6 @@ export const Plugins: FC = () => {
           {isRefreshingPlugins && <i className="fa fa-refresh fa-spin space-left" />}
         </Button>
       </div>
-    </div>
+    </div >
   );
 };
