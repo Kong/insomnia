@@ -1,5 +1,5 @@
 import { useResizeObserver } from '@react-aria/utils';
-import React, { FC, Fragment, useCallback, useRef, useState } from 'react';
+import React, { FC, Fragment, useCallback, useMemo, useRef, useState } from 'react';
 import { FocusScope } from 'react-aria';
 import { Button, Dialog, DialogTrigger, DropIndicator, GridList, GridListItem, Menu, MenuItem, MenuTrigger, Popover, ToggleButton, Toolbar, useDragAndDrop } from 'react-aria-components';
 import { useListData } from 'react-stately';
@@ -170,7 +170,9 @@ export const KeyValueEditor: FC<Props> = ({
     getKey: item => item.id,
   });
 
-  const items = pairsList.items.length > 0 ? pairsList.items : [{ id: generateId('pair'), name: '', value: '', description: '', disabled: false }];
+  const items = useMemo(() => {
+    return pairsList.items.length > 0 ? pairsList.items : [{ id: generateId('pair'), name: '', value: '', description: '', disabled: false }];
+  }, [pairsList.items]);
 
   const readOnlyPairsList = useListData({
     initialItems: readOnlyPairs?.map(pair => {
