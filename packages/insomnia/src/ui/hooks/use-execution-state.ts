@@ -45,5 +45,5 @@ export function useExecutionState({ requestId }: { requestId: string }) {
     return latest.duration === undefined;
   };
 
-  return { steps, isLoading: isExecuting() };
+  return { steps, isExecuting: isExecuting() };
 }

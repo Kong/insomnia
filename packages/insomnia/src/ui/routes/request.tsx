@@ -476,7 +476,6 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     if (!shouldWriteToFile) {
       const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
       await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-      // setLoading(false);
       return null;
     }
 
@@ -495,7 +494,6 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
         ...(defaultPath ? { defaultPath } : {}),
       });
       if (!filePath) {
-        // setLoading(false);
         return null;
       }
       window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);

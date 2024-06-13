@@ -75,7 +75,7 @@ export const ResponsePane: FC<Props> = ({
     }
   }, [handleGetResponseBody]);
 
-  const { isLoading } = useExecutionState({ requestId: activeRequest._id });
+  const { isExecuting } = useExecutionState({ requestId: activeRequest._id });
 
   const handleDownloadResponseBody = useCallback(async (prettify: boolean) => {
     if (!activeResponse || !activeRequest) {
@@ -132,7 +132,7 @@ export const ResponsePane: FC<Props> = ({
   if (!activeResponse) {
     return (
       <PlaceholderResponsePane>
-        {isLoading && <ResponseTimer
+        {isExecuting && <ResponseTimer
           handleCancel={() => cancelRequestById(activeRequest._id)}
           activeRequestId={activeRequestId}
         />}
@@ -235,7 +235,7 @@ export const ResponsePane: FC<Props> = ({
         </TabItem>
       </Tabs>
       <ErrorBoundary errorClassName="font-error pad text-center">
-        {isLoading && <ResponseTimer
+        {isExecuting && <ResponseTimer
           handleCancel={() => cancelRequestById(activeRequest._id)}
           activeRequestId={activeRequestId}
         />}

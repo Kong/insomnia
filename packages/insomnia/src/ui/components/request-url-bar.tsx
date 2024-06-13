@@ -42,7 +42,6 @@ interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   nunjucksPowerUserMode: boolean;
   uniquenessKey: string;
-  setLoading: (l: boolean) => void;
   onPaste: (text: string) => void;
 }
 
@@ -53,7 +52,6 @@ export interface RequestUrlBarHandle {
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   handleAutocompleteUrls,
   uniquenessKey,
-  // setLoading,
   onPaste,
 }, ref) => {
   const [searchParams, setSearchParams] = useSearchParams();

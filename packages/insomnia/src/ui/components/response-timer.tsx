@@ -28,9 +28,9 @@ const MillisecondTimer = () => {
   return ms > 0 ? `${ms.toFixed(1)} s` : '0 s';
 };
 export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRequestId }) => {
-  const { steps, isLoading } = useExecutionState({ requestId: activeRequestId });
+  const { steps, isExecuting } = useExecutionState({ requestId: activeRequestId });
 
-  const timingList = isLoading ? (steps || []).map((record: TimingStep) => {
+  const timingList = isExecuting ? (steps || []).map((record: TimingStep) => {
     return (
       <div
         key={`${activeRequestId}-${record.stepName}`}
