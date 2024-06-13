@@ -1,6 +1,6 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { FC, ReactNode, useCallback, useState } from 'react';
-import { Button, Dialog, Heading, Menu, MenuItem, MenuTrigger, Modal, ModalOverlay, Popover } from 'react-aria-components';
+import { Button, Collection, Dialog, Header, Heading, Menu, MenuItem, MenuTrigger, Modal, ModalOverlay, Popover, Section } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { getProductName } from '../../../common/constants';
@@ -8,6 +8,7 @@ import { database as db } from '../../../common/database';
 import { exportMockServerToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
+import { PlatformKeyCombinations } from '../../../common/settings';
 import { isRemoteProject } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
@@ -27,13 +28,6 @@ import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { ImportModal } from '../modals/import-modal';
 import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
-
-interface WorkspaceActionItem {
-  id: string;
-  name: string;
-  icon: ReactNode;
-  action: () => void;
-}
 
 export const WorkspaceDropdown: FC = () => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
@@ -105,78 +99,106 @@ export const WorkspaceDropdown: FC = () => {
 
   const isScratchpadWorkspace = isScratchpad(activeWorkspace);
 
-  const workspaceActionsList: WorkspaceActionItem[] = [
-      ...!isScratchpadWorkspace ? [{
-        id: 'duplicate',
-        name: 'Duplicate',
-        icon: <Icon icon='bars' />,
-        action: () => setIsDuplicateModalOpen(true),
-      },
+  const workspaceActionsList: {
+    name: string;
+    id: string;
+    icon: IconName;
+    items: {
+      id: string;
+      name: string;
+      icon: ReactNode;
+      hint?: PlatformKeyCombinations;
+      action: () => void;
+    }[];
+  }[] = [
       {
-        id: 'rename',
-        name: 'Rename',
-        icon: <Icon icon='pen-to-square' />,
-        action: () => {
-          showPrompt({
-            title: `Rename ${getWorkspaceLabel(activeWorkspace).singular}`,
-            defaultValue: activeWorkspaceName,
-            submitName: 'Rename',
-            selectText: true,
-            label: 'Name',
-            onComplete: name =>
-              fetcher.submit(
-                { name, workspaceId: activeWorkspace._id },
-                {
-                  action: `/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/update`,
-                  method: 'post',
-                  encType: 'application/json',
-                }
-              ),
-          });
-        },
-      },
-      {
-        id: 'delete',
-        name: 'Delete',
-        icon: <Icon icon='trash' />,
-        action: () => {
-          setIsDeleteRemoteWorkspaceModalOpen(true);
-        },
-      }] : [],
-      {
-        id: 'import',
         name: 'Import',
-        icon: <Icon icon='file-import' />,
-        action: () => setIsImportModalOpen(true),
+        id: 'import',
+        icon: 'cog',
+        items: [{
+          id: 'from-file',
+          name: 'From File',
+          icon: <Icon icon='file-import' />,
+          action: () => setIsImportModalOpen(true),
+        }],
       },
       {
-        id: 'export',
-        name: 'Export',
-        icon: <Icon icon='file-export' />,
-        action: () => activeWorkspace.scope !== 'mock-server'
-          ? setIsExportModalOpen(true)
-          : exportMockServerToFile(activeWorkspace),
+        name: 'Actions',
+        id: 'actions',
+        icon: 'cog',
+        items: [
+          {
+            id: 'duplicate',
+            name: 'Duplicate',
+            icon: <Icon icon='bars' />,
+            action: () => setIsDuplicateModalOpen(true),
+          },
+          {
+            id: 'rename',
+            name: 'Rename',
+            icon: <Icon icon='pen-to-square' />,
+            action: () => showPrompt({
+              title: `Rename ${getWorkspaceLabel(activeWorkspace).singular}`,
+              defaultValue: activeWorkspaceName,
+              submitName: 'Rename',
+              selectText: true,
+              label: 'Name',
+              onComplete: name =>
+                fetcher.submit(
+                  { name, workspaceId: activeWorkspace._id },
+                  {
+                    action: `/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/update`,
+                    method: 'post',
+                    encType: 'application/json',
+                  }
+                ),
+            }),
+          },
+          {
+            id: 'export',
+            name: 'Export',
+            icon: <Icon icon='file-export' />,
+            action: () => activeWorkspace.scope !== 'mock-server'
+              ? setIsExportModalOpen(true)
+              : exportMockServerToFile(activeWorkspace),
+          },
+          {
+            id: 'settings',
+            name: 'Settings',
+            icon: <Icon icon='wrench' />,
+            action: () => setIsSettingsModalOpen(true),
+          },
+          {
+            id: 'delete',
+            name: 'Delete',
+            icon: <Icon icon='trash' />,
+            action: () => setIsDeleteRemoteWorkspaceModalOpen(true),
+
+          },
+          ...userSession.id && access.enabled && activeWorkspace.scope === 'design' ? [{
+            id: 'insomnia-ai/generate-test-suite',
+            name: 'Auto-generate Tests For Collection',
+            action: generateTests,
+            icon: <span className='flex items-center py-0 px-[--padding-xs]'>
+              <InsomniaAI />
+            </span>,
+          }] : [],
+        ],
       },
-      {
-        id: 'settings',
-        name: 'Settings',
-        icon: <Icon icon='wrench' />,
-        action: () => setIsSettingsModalOpen(true),
-      },
-      ...actionPlugins.map((p: WorkspaceAction) => ({
-        id: p.label,
-        name: p.label,
-        icon: <Icon icon={(loadingActions[p.label] ? 'refresh' : p.icon || 'code') as IconName} />,
-        action: () => handlePluginClick(p, activeWorkspace),
-      })),
-    ...userSession.id && access.enabled && activeWorkspace.scope === 'design' ? [{
-        id: 'insomnia-ai/generate-test-suite',
-        name: 'Auto-generate Tests For Collection',
-        action: generateTests,
-        icon: <span className='flex items-center py-0 px-[--padding-xs]'>
-          <InsomniaAI />
-        </span>,
-      }] : [],
+      ...(actionPlugins.length > 0 ? [
+        {
+          name: 'Plugins',
+          id: 'plugins',
+          icon: 'plug' as IconName,
+          items: actionPlugins.map(plugin => ({
+            id: plugin.label,
+            name: plugin.label,
+            icon: plugin.icon as IconName || 'plug',
+            action: () =>
+              handlePluginClick(plugin, activeWorkspace),
+          })),
+        },
+      ] : []),
     ];
 
   return (
@@ -194,27 +216,29 @@ export const WorkspaceDropdown: FC = () => {
           <Menu
             aria-label="Create in project actions"
             selectionMode="single"
-            onAction={key => {
-              const item = workspaceActionsList.find(
-                item => item.id === key
-              );
-              if (item) {
-                item.action();
-              }
-            }}
-            items={workspaceActionsList}
+            onAction={key => workspaceActionsList.find(i => i.items.find(a => a.id === key))?.items.find(a => a.id === key)?.action()}
+            items={isScratchpadWorkspace ? [] : workspaceActionsList}
             className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
           >
-            {item => (
-              <MenuItem
-                key={item.id}
-                id={item.id}
-                className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                aria-label={item.name}
-              >
-                {item.icon}
-                <span>{item.name}</span>
-              </MenuItem>
+            {section => (
+              <Section className='flex-1 flex flex-col'>
+                <Header className='pl-2 py-1 flex items-center gap-2 text-[--hl] text-xs uppercase'>
+                  <Icon icon={section.icon} /> <span>{section.name}</span>
+                </Header>
+                <Collection items={section.items}>
+                  {item => (
+                    <MenuItem
+                      key={item.id}
+                      id={item.id}
+                      className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                      aria-label={item.name}
+                    >
+                      {/* {item.icon} */}
+                      <span>{item.name}</span>
+                    </MenuItem>
+                  )}
+                </Collection>
+              </Section>
             )}
           </Menu>
         </Popover>
