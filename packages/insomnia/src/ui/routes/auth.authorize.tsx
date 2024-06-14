@@ -17,7 +17,7 @@ export const action: ActionFunction = async ({
   invariant(typeof data?.code === 'string', 'Expected code to be a string');
   const error = await submitAuthCode(data.code);
   if (error) {
-    const humanReadableError = error?.message === 'Failed to fetch' ? 'Network failed, please try again. If the problem persists, check you rnetwork and proxy settings.' : error?.message;
+    const humanReadableError = error?.message === 'Failed to fetch' ? 'Network failed, please try again. If the problem persists, check you network and proxy settings.' : error?.message;
     return {
       errors: {
         message: humanReadableError,
