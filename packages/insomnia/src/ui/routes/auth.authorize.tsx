@@ -17,7 +17,7 @@ export const action: ActionFunction = async ({
   invariant(typeof data?.code === 'string', 'Expected code to be a string');
   const error = await submitAuthCode(data.code);
   if (error) {
-    const humanReadableError = error?.message === 'Failed to fetch' ? 'Network failed, please try again. If this happens repeatedly, check if you have any Proxy enabled on Insomnia Preferences or on your device and try to disable it.' : error?.message;
+    const humanReadableError = error?.message === 'Failed to fetch' ? 'Network failed, please try again. If the problem persists, check you rnetwork and proxy settings.' : error?.message;
     return {
       errors: {
         message: humanReadableError,
