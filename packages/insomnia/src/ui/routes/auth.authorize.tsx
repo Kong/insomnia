@@ -6,6 +6,7 @@ import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { getLoginUrl, submitAuthCode } from '../auth-session-provider';
 import { Icon } from '../components/icon';
+import { showSettingsModal } from '../components/modals/settings-modal';
 import { Button } from '../components/themed-button';
 
 export const action: ActionFunction = async ({
@@ -16,7 +17,7 @@ export const action: ActionFunction = async ({
   invariant(typeof data?.code === 'string', 'Expected code to be a string');
   const error = await submitAuthCode(data.code);
   if (error) {
-    const humanReadableError = error?.message === 'Failed to fetch' ? 'Network failed, please try again. Note: if this happens many times, check if you have any Proxy configuration enabled on Insomnia settings and disable it.' : error?.message;
+    const humanReadableError = error?.message === 'Failed to fetch' ? 'Network failed, please try again. If this happens repeatedly, check if you have any Proxy enabled on Insomnia Preferences or on your device and try to disable it.' : error?.message;
     return {
       errors: {
         message: humanReadableError,
@@ -151,6 +152,13 @@ const Authorize = () => {
         >
           <Icon icon="arrow-left" />
           <span>Go Back</span>
+        </Button>
+        <Button
+          data-testid="settings-button"
+          className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+          onClick={showSettingsModal}
+        >
+          <Icon icon="gear" /> Preferences
         </Button>
       </div>
     </div>
