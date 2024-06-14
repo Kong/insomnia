@@ -96,7 +96,7 @@ export const keyboardKeys: Record<string, { keyCode: number; label: string; code
   },
   delete: {
     keyCode: 46,
-    code: 'NumpadDecimal',
+    code: 'Delete',
     label: 'Delete',
   },
   num0: {
@@ -353,11 +353,6 @@ export const keyboardKeys: Record<string, { keyCode: number; label: string; code
     keyCode: 107,
     code: 'NumpadAdd',
     label: 'NumPad_Add',
-  },
-  separator: {
-    keyCode: 108,
-    code: 'NumpadDecimal',
-    label: 'NumPad_Separator',
   },
   subtract: {
     keyCode: 109,
