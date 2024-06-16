@@ -1,9 +1,8 @@
 import React, { FC, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { Settings } from '../../../models/settings';
-import { Workspace } from '../../../models/workspace';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { RequestGroupLoaderData } from '../../routes/request-group';
@@ -18,8 +17,6 @@ import { MarkdownEditor } from '../markdown-editor';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 
 export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
-  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
-
   const { activeRequestGroup } = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
   const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [isRequestGroupSettingsModalOpen, setIsRequestGroupSettingsModalOpen] = useState(false);
@@ -47,14 +44,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
       }
     }
   };
-  const workspaceFetcher = useFetcher();
-  const workspacePatcher = (workspaceId: string, patch: Partial<Workspace>) => {
-    workspaceFetcher.submit({ ...patch, workspaceId }, {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/update`,
-      method: 'post',
-      encType: 'application/json',
-    });
-  };
+
   return (
     <>
       <Tabs aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
@@ -202,7 +192,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
             defaultPreviewMode={true}
             placeholder="Write a description"
             defaultValue={activeRequestGroup.description}
-            onChange={(description: string) => workspacePatcher(workspaceId, { description })}
+            onChange={(description: string) => patchRequestGroup(activeRequestGroup._id, { description })}
           />
         </TabPanel>
       </Tabs>

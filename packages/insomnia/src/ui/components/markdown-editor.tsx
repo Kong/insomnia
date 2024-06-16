@@ -75,6 +75,7 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
       <Tabs
         aria-label="Markdown editor tabs"
         defaultSelectedKey={defaultPreviewMode ? 'preview' : 'write' }
+        disabledKeys={[defaultValue ? '' : 'preview']}
       >
         <TabItem key="write" title="Write">
           <MarkdownEdit withDynamicHeight={!tall}>

@@ -1,6 +1,6 @@
 import React, { FC, Fragment, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
@@ -8,7 +8,6 @@ import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { getCombinedPathParametersFromUrl, RequestParameter } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
-import { Workspace } from '../../../models/workspace';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
@@ -23,7 +22,6 @@ import { RequestScriptEditor } from '../editors/request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
-import { MarkdownPreview } from '../markdown-preview';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { RenderedQueryString } from '../rendered-query-string';
 import { RequestUrlBar } from '../request-url-bar';
@@ -42,7 +40,7 @@ export const RequestPane: FC<Props> = ({
   onPaste,
 }) => {
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
 
   const patchSettings = useSettingsPatcher();
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
@@ -95,14 +93,7 @@ export const RequestPane: FC<Props> = ({
   const contentType =
     getContentTypeFromHeaders(activeRequest.headers) ||
     activeRequest.body.mimeType;
-  const workspaceFetcher = useFetcher();
-  const workspacePatcher = (workspaceId: string, patch: Partial<Workspace>) => {
-    workspaceFetcher.submit({ ...patch, workspaceId }, {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/update`,
-      method: 'post',
-      encType: 'application/json',
-    });
-  };
+
   return (
     <Pane type="request">
       <PaneHeader>
@@ -374,11 +365,10 @@ export const RequestPane: FC<Props> = ({
         </TabPanel>
         <TabPanel className='w-full flex-1' id='docs'>
           <MarkdownEditor
-            className="margin-top"
-            defaultPreviewMode={true}
+            defaultPreviewMode={!!activeRequest.description}
             placeholder="Write a description"
             defaultValue={activeRequest.description}
-            onChange={(description: string) => workspacePatcher(workspaceId, { description })}
+            onChange={(description: string) => patchRequest(requestId, { description })}
           />
         </TabPanel>
       </Tabs>
