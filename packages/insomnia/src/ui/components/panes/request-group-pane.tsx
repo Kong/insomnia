@@ -1,8 +1,9 @@
 import React, { FC, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { Settings } from '../../../models/settings';
+import { Workspace } from '../../../models/workspace';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { RequestGroupLoaderData } from '../../routes/request-group';
@@ -13,10 +14,12 @@ import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestScriptEditor } from '../editors/request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
-import { MarkdownPreview } from '../markdown-preview';
+import { MarkdownEditor } from '../markdown-editor';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 
 export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+
   const { activeRequestGroup } = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
   const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [isRequestGroupSettingsModalOpen, setIsRequestGroupSettingsModalOpen] = useState(false);
@@ -43,6 +46,14 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
         console.warn('Failed to update environment', err);
       }
     }
+  };
+  const workspaceFetcher = useFetcher();
+  const workspacePatcher = (workspaceId: string, patch: Partial<Workspace>) => {
+    workspaceFetcher.submit({ ...patch, workspaceId }, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/update`,
+      method: 'post',
+      encType: 'application/json',
+    });
   };
   return (
     <>
@@ -186,48 +197,13 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
           </ErrorBoundary>
         </TabPanel>
         <TabPanel className='w-full flex-1 overflow-y-auto ' id='docs'>
-          {activeRequestGroup.description ? (
-            <div>
-              <div className="pull-right pad bg-default">
-                <button
-                  className="btn btn--clicky"
-                  onClick={() => setIsRequestGroupSettingsModalOpen(true)}
-                >
-                  Edit
-                </button>
-              </div>
-              <div className="pad">
-                <ErrorBoundary errorClassName="font-error pad text-center">
-                  <MarkdownPreview
-                    heading={activeRequestGroup.name}
-                    markdown={activeRequestGroup.description}
-                  />
-                </ErrorBoundary>
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-hidden editor vertically-center text-center">
-              <p className="pad text-sm text-center">
-                <span className="super-faint">
-                  <i
-                    className="fa fa-file-text-o"
-                    style={{
-                      fontSize: '8rem',
-                      opacity: 0.3,
-                    }}
-                  />
-                </span>
-                <br />
-                <br />
-                <button
-                  className="btn btn--clicky faint"
-                  onClick={() => setIsRequestGroupSettingsModalOpen(true)}
-                >
-                  Add Description
-                </button>
-              </p>
-            </div>
-          )}
+          <MarkdownEditor
+            className="margin-top"
+            defaultPreviewMode={true}
+            placeholder="Write a description"
+            defaultValue={activeRequestGroup.description}
+            onChange={(description: string) => workspacePatcher(workspaceId, { description })}
+          />
         </TabPanel>
       </Tabs>
       {
