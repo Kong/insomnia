@@ -18,7 +18,6 @@ export interface RequestGroupSettingsModalOptions {
   requestGroup: RequestGroup;
 }
 interface State {
-  defaultPreviewMode: boolean;
   activeWorkspaceIdToCopyTo: string;
 }
 export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps & {
@@ -38,7 +37,6 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
   const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined).filter(w => w.scope !== 'mock-server') || [];
   const [state, setState] = useState<State>({
     activeWorkspaceIdToCopyTo: '',
-    defaultPreviewMode: !!requestGroup.description,
   });
   const patchRequestGroup = useRequestGroupPatcher();
   const requestFetcher = useFetcher();
@@ -72,7 +70,6 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
   };
 
   const {
-    defaultPreviewMode,
     activeWorkspaceIdToCopyTo,
   } = state;
   return (
@@ -102,7 +99,6 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
           <MarkdownEditor
             ref={editorRef}
             className="margin-top"
-            defaultPreviewMode={defaultPreviewMode}
             placeholder="Write a description"
             defaultValue={requestGroup?.description || ''}
             onChange={async (description: string) => {

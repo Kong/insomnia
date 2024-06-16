@@ -365,7 +365,6 @@ export const RequestPane: FC<Props> = ({
         </TabPanel>
         <TabPanel className='w-full flex-1' id='docs'>
           <MarkdownEditor
-            defaultPreviewMode={!!activeRequest.description}
             placeholder="Write a description"
             defaultValue={activeRequest.description}
             onChange={(description: string) => patchRequest(requestId, { description })}

@@ -23,7 +23,6 @@ export interface RequestSettingsModalOptions {
   request: Request | GrpcRequest | WebSocketRequest;
 }
 interface State {
-  defaultPreviewMode: boolean;
   activeWorkspaceIdToCopyTo: string;
 }
 
@@ -41,7 +40,6 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   const projectLoaderData = workspacesFetcher?.data;
   const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined).filter(w => w.scope !== 'mock-server') || [];
   const [state, setState] = useState<State>({
-    defaultPreviewMode: !!request?.description,
     activeWorkspaceIdToCopyTo: '',
   });
   useEffect(() => {
@@ -70,7 +68,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
     invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
     duplicateRequest({ parentId: state.activeWorkspaceIdToCopyTo });
   }
-  const { defaultPreviewMode, activeWorkspaceIdToCopyTo } = state;
+  const { activeWorkspaceIdToCopyTo } = state;
   const toggleCheckBox = async (event: any) => {
     patchRequest(request._id, { [event.currentTarget.name]: event.currentTarget.checked ? true : false });
   };
@@ -87,7 +85,6 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
     patchRequest(request._id, { description });
     setState({
       ...state,
-      defaultPreviewMode: false,
     });
   };
 
@@ -117,7 +114,6 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                 <MarkdownEditor
                   ref={editorRef}
                   className="margin-top"
-                  defaultPreviewMode={defaultPreviewMode}
                   placeholder="Write a description"
                   defaultValue={request.description}
                   onChange={updateDescription}

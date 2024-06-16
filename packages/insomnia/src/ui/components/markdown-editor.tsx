@@ -9,7 +9,6 @@ interface Props {
   onChange: Function;
   defaultValue: string;
   placeholder?: string;
-  defaultPreviewMode?: boolean;
   className?: string;
   mode?: string;
   tall?: boolean;
@@ -56,7 +55,6 @@ const MarkdownPreiview = styled.div({
 export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
   mode,
   placeholder,
-  defaultPreviewMode,
   className,
   tall,
   defaultValue,
@@ -74,7 +72,7 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
     <Wrapper className={className}>
       <Tabs
         aria-label="Markdown editor tabs"
-        defaultSelectedKey={defaultPreviewMode ? 'preview' : 'write' }
+        defaultSelectedKey={defaultValue ? 'preview' : 'write'}
         disabledKeys={[defaultValue ? '' : 'preview']}
       >
         <TabItem key="write" title="Write">

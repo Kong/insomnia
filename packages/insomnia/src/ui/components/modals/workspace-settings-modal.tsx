@@ -24,7 +24,6 @@ interface Props {
 }
 
 export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props) => {
-  const hasDescription = !!workspace.description;
   const isScratchpadWorkspace = isScratchpad(workspace);
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
 
@@ -97,7 +96,6 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                       Description
                     </Label>
                     <MarkdownEditor
-                      defaultPreviewMode={hasDescription}
                       placeholder="Write a description"
                       defaultValue={workspace.description}
                       onChange={(description: string) => {
