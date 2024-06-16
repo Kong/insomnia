@@ -22,9 +22,6 @@ import { MarkdownEditor } from '../markdown-editor';
 export interface RequestSettingsModalOptions {
   request: Request | GrpcRequest | WebSocketRequest;
 }
-interface State {
-  activeWorkspaceIdToCopyTo: string;
-}
 
 export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSettingsModalOptions) => {
   const modalRef = useRef<ModalHandle>(null);
@@ -39,9 +36,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data;
   const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined).filter(w => w.scope !== 'mock-server') || [];
-  const [state, setState] = useState<State>({
-    activeWorkspaceIdToCopyTo: '',
-  });
+  const [workspaceToCopyTo, setWorkspaceToCopyTo] = useState('');
   useEffect(() => {
     modalRef.current?.show();
   }, []);
@@ -58,17 +53,17 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
       });
   };
   async function handleMoveToWorkspace() {
-    invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
-    patchRequest(request._id, { parentId: state.activeWorkspaceIdToCopyTo });
+    invariant(workspaceToCopyTo, 'Workspace ID is required');
+    patchRequest(request._id, { parentId: workspaceToCopyTo });
     modalRef.current?.hide();
-    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${state.activeWorkspaceIdToCopyTo}/debug`);
+    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceToCopyTo}/debug`);
   }
 
   async function handleCopyToWorkspace() {
-    invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
-    duplicateRequest({ parentId: state.activeWorkspaceIdToCopyTo });
+    invariant(workspaceToCopyTo, 'Workspace ID is required');
+    duplicateRequest({ parentId: workspaceToCopyTo });
   }
-  const { activeWorkspaceIdToCopyTo } = state;
+
   const toggleCheckBox = async (event: any) => {
     patchRequest(request._id, { [event.currentTarget.name]: event.currentTarget.checked ? true : false });
   };
@@ -83,9 +78,6 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   };
   const updateDescription = (description: string) => {
     patchRequest(request._id, { description });
-    setState({
-      ...state,
-    });
   };
 
   return (
@@ -168,10 +160,9 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                         the new workspace's folder structure.
                       </HelpTooltip>
                       <select
-                        value={activeWorkspaceIdToCopyTo}
+                        value={workspaceToCopyTo}
                         onChange={event => {
-                          const activeWorkspaceIdToCopyTo = event.currentTarget.value;
-                          setState(state => ({ ...state, activeWorkspaceIdToCopyTo }));
+                          setWorkspaceToCopyTo(event.currentTarget.value);
                         }}
                       >
                         <option value="">-- Select Workspace --</option>
@@ -191,7 +182,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   </div>
                   <div className="form-control form-control--no-label width-auto">
                     <button
-                      disabled={!activeWorkspaceIdToCopyTo}
+                      disabled={!workspaceToCopyTo}
                       className="btn btn--clicky"
                       onClick={handleCopyToWorkspace}
                     >
@@ -200,7 +191,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   </div>
                   <div className="form-control form-control--no-label width-auto">
                     <button
-                      disabled={!activeWorkspaceIdToCopyTo}
+                      disabled={!workspaceToCopyTo}
                       className="btn btn--clicky"
                       onClick={handleMoveToWorkspace}
                     >
@@ -294,7 +285,6 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                 <MarkdownEditor
                   ref={editorRef}
                   className="margin-top"
-                  defaultPreviewMode={defaultPreviewMode}
                   placeholder="Write a description"
                   defaultValue={request.description}
                   onChange={updateDescription}
@@ -376,10 +366,9 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                         defaultValue={request.settingFollowRedirects}
                         name="settingFollowRedirects"
                         onChange={async event => {
-                          const updated = await models.request.update(request, {
+                          await models.request.update(request, {
                             [event.currentTarget.name]: event.currentTarget.value,
                           });
-                          setState(state => ({ ...state, request: updated }));
                         }}
                       >
                         <option value={'global'}>Use global setting</option>
@@ -399,10 +388,9 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                         the new workspace's folder structure.
                       </HelpTooltip>
                       <select
-                        value={activeWorkspaceIdToCopyTo}
+                        value={workspaceToCopyTo}
                         onChange={event => {
-                          const activeWorkspaceIdToCopyTo = event.currentTarget.value;
-                          setState(state => ({ ...state, activeWorkspaceIdToCopyTo }));
+                          setWorkspaceToCopyTo(event.currentTarget.value);
                         }}
                       >
                         <option value="">-- Select Workspace --</option>
@@ -422,7 +410,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   </div>
                   <div className="form-control form-control--no-label width-auto">
                     <button
-                      disabled={!activeWorkspaceIdToCopyTo}
+                      disabled={!workspaceToCopyTo}
                       className="btn btn--clicky"
                       onClick={handleCopyToWorkspace}
                     >
@@ -431,7 +419,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   </div>
                   <div className="form-control form-control--no-label width-auto">
                     <button
-                      disabled={!activeWorkspaceIdToCopyTo}
+                      disabled={!workspaceToCopyTo}
                       className="btn btn--clicky"
                       onClick={handleMoveToWorkspace}
                     >

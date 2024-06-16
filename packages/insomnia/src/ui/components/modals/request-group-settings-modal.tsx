@@ -17,9 +17,7 @@ import { MarkdownEditor } from '../markdown-editor';
 export interface RequestGroupSettingsModalOptions {
   requestGroup: RequestGroup;
 }
-interface State {
-  activeWorkspaceIdToCopyTo: string;
-}
+
 export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps & {
   requestGroup: RequestGroup;
 }) => {
@@ -35,9 +33,7 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data;
   const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined).filter(w => w.scope !== 'mock-server') || [];
-  const [state, setState] = useState<State>({
-    activeWorkspaceIdToCopyTo: '',
-  });
+  const [workspaceToCopyTo, setWorkspaceToCopyTo] = useState('');
   const patchRequestGroup = useRequestGroupPatcher();
   const requestFetcher = useFetcher();
 
@@ -54,24 +50,21 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
   }, []);
   const navigate = useNavigate();
   const handleMoveToWorkspace = async () => {
-    invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
-    patchRequestGroup(requestGroup._id, { parentId: state.activeWorkspaceIdToCopyTo });
+    invariant(workspaceToCopyTo, 'Workspace ID is required');
+    patchRequestGroup(requestGroup._id, { parentId: workspaceToCopyTo });
     modalRef.current?.hide();
-    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${state.activeWorkspaceIdToCopyTo}/debug`);
+    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceToCopyTo}/debug`);
   };
 
   const handleCopyToWorkspace = async () => {
-    invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
+    invariant(workspaceToCopyTo, 'Workspace ID is required');
     duplicateRequestGroup({
       _id: requestGroup._id,
       name: requestGroup.name, // Because duplicate will add (Copy) suffix if name is not provided in patch
-      parentId: state.activeWorkspaceIdToCopyTo,
+      parentId: workspaceToCopyTo,
     });
   };
 
-  const {
-    activeWorkspaceIdToCopyTo,
-  } = state;
   return (
     <OverlayContainer onClick={e => e.stopPropagation()}>
       <Modal ref={modalRef} onHide={onHide}>
@@ -116,13 +109,9 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
                   placed at the root of the new workspace's folder structure.
                 </HelpTooltip>
                 <select
-                  value={activeWorkspaceIdToCopyTo}
+                  value={workspaceToCopyTo}
                   onChange={event => {
-                    const activeWorkspaceIdToCopyTo = event.currentTarget.value;
-                    setState(state => ({
-                      ...state,
-                      activeWorkspaceIdToCopyTo,
-                    }));
+                    setWorkspaceToCopyTo(event.currentTarget.value);
                   }}
                 >
                   <option value="">-- Select Workspace --</option>
@@ -139,7 +128,7 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
             </div>
             <div className="form-control form-control--no-label width-auto">
               <button
-                disabled={!activeWorkspaceIdToCopyTo}
+                disabled={!workspaceToCopyTo}
                 className="btn btn--clicky"
                 onClick={handleCopyToWorkspace}
               >
@@ -148,7 +137,7 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
             </div>
             <div className="form-control form-control--no-label width-auto">
               <button
-                disabled={!activeWorkspaceIdToCopyTo}
+                disabled={!workspaceToCopyTo}
                 className="btn btn--clicky"
                 onClick={handleMoveToWorkspace}
               >
