@@ -41,6 +41,8 @@ const grpc: gRPCBridgeAPI = {
   loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
 };
 const main: Window['main'] = {
+  watchFile: options => ipcRenderer.send('watchFile', options),
+  readFile: options => ipcRenderer.invoke('readFile', options),
   loginStateChange: () => ipcRenderer.send('loginStateChange'),
   restart: () => ipcRenderer.send('restart'),
   openInBrowser: options => ipcRenderer.send('openInBrowser', options),

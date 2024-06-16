@@ -26,7 +26,8 @@ export type HandleChannels =
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
-  | 'writeFile';
+  | 'writeFile'
+  | 'readFile';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
@@ -63,7 +64,8 @@ export type MainOnChannels =
   | 'trackSegmentEvent'
   | 'webSocket.close'
   | 'webSocket.closeAll'
-  | 'writeText';
+  | 'writeText'
+  | 'watchFile';
 export type RendererOnChannels =
   'clear-all-models'
   | 'clear-model'
@@ -80,7 +82,8 @@ export type RendererOnChannels =
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
   | 'toggle-sidebar'
-  | 'updaterStatus';
+  | 'updaterStatus'
+  | 'file-changed';
 export const ipcMainOn = (
   channel: MainOnChannels,
   listener: (

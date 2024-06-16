@@ -41,8 +41,20 @@ export interface RendererToMainBridgeAPI {
     };
   };
   hiddenBrowserWindow: HiddenBrowserWindowBridgeAPI;
+  watchFile: (options: { filePath: string }) => void;
+  readFile: (options: { filePath: string }) => Promise<string>;
 }
 export function registerMainHandlers() {
+  ipcMainOn('watchFile', (event, options) => {
+    console.log('created watcher --------------');
+    fs.watch(options.filePath, (eventType, filename) => {
+      console.log(`File changed: ${filename}, Event type: ${eventType}`);
+      fs.promises.readFile(options.filePath).then(rawBuffer => event.sender.send('file-changed', { content: rawBuffer.toString() }));
+    });
+  });
+  ipcMainHandle('readFile', (event, options) => {
+    return fs.promises.readFile(options.filePath, { encoding: 'utf8' });
+  });
   ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
     return models.caCertificate.create(options);
   });

@@ -8,6 +8,7 @@ import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
+import { useFileWatcher } from '../../hooks/use-file-watcher';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { RequestLoaderData } from '../../routes/request';
 import { useRootLoaderData } from '../../routes/root';
@@ -120,6 +121,8 @@ export const ResponsePane: FC<Props> = ({
     }
   }, [activeRequest, activeResponse]);
 
+  const content = useFileWatcher({ filePath: activeResponse?.timelinePath });
+  console.log('content', content?.substring(content.length - 11, content.length - 1), activeResponse?.timelinePath);
   if (!activeRequest) {
     return <BlankPane type="response" />;
   }
