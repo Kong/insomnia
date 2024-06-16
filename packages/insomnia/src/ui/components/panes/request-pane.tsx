@@ -1,6 +1,6 @@
 import React, { FC, Fragment, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
@@ -8,6 +8,7 @@ import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { getCombinedPathParametersFromUrl, RequestParameter } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
+import { Workspace } from '../../../models/workspace';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
@@ -21,6 +22,7 @@ import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { RequestScriptEditor } from '../editors/request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
+import { MarkdownEditor } from '../markdown-editor';
 import { MarkdownPreview } from '../markdown-preview';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { RenderedQueryString } from '../rendered-query-string';
@@ -40,7 +42,8 @@ export const RequestPane: FC<Props> = ({
   onPaste,
 }) => {
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+
   const patchSettings = useSettingsPatcher();
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
   const patchRequest = useRequestPatcher();
@@ -92,7 +95,14 @@ export const RequestPane: FC<Props> = ({
   const contentType =
     getContentTypeFromHeaders(activeRequest.headers) ||
     activeRequest.body.mimeType;
-
+  const workspaceFetcher = useFetcher();
+  const workspacePatcher = (workspaceId: string, patch: Partial<Workspace>) => {
+    workspaceFetcher.submit({ ...patch, workspaceId }, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/update`,
+      method: 'post',
+      encType: 'application/json',
+    });
+  };
   return (
     <Pane type="request">
       <PaneHeader>
@@ -363,50 +373,13 @@ export const RequestPane: FC<Props> = ({
           </Tabs>
         </TabPanel>
         <TabPanel className='w-full flex-1' id='docs'>
-          <div className="tall">
-            {activeRequest.description ? (
-              <div>
-                <div className="pull-right pad bg-default">
-                  <button
-                    className="btn btn--clicky"
-                    onClick={() => setIsRequestSettingsModalOpen(true)}
-                  >
-                    Edit
-                  </button>
-                </div>
-                <div className="pad">
-                  <ErrorBoundary errorClassName="font-error pad text-center">
-                    <MarkdownPreview
-                      heading={activeRequest.name}
-                      markdown={activeRequest.description}
-                    />
-                  </ErrorBoundary>
-                </div>
-              </div>
-            ) : (
-              <div className="overflow-hidden editor vertically-center text-center">
-                <p className="pad text-sm text-center">
-                  <span className="super-faint">
-                    <i
-                      className="fa fa-file-text-o"
-                      style={{
-                        fontSize: '8rem',
-                        opacity: 0.3,
-                      }}
-                    />
-                  </span>
-                  <br />
-                  <br />
-                  <button
-                    className="btn btn--clicky faint"
-                    onClick={() => setIsRequestSettingsModalOpen(true)}
-                  >
-                    Add Description
-                  </button>
-                </p>
-              </div>
-            )}
-          </div>
+          <MarkdownEditor
+            className="margin-top"
+            defaultPreviewMode={true}
+            placeholder="Write a description"
+            defaultValue={activeRequest.description}
+            onChange={(description: string) => workspacePatcher(workspaceId, { description })}
+          />
         </TabPanel>
       </Tabs>
       {isRequestSettingsModalOpen && (
