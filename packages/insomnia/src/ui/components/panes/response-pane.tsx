@@ -239,6 +239,7 @@ export const ResponsePane: FC<Props> = ({
         {isExecuting && <ResponseTimer
           handleCancel={() => cancelRequestById(activeRequest._id)}
           activeRequestId={activeRequestId}
+          steps={steps}
         />}
       </ErrorBoundary>
     </Pane>

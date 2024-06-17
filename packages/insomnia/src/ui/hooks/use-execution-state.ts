@@ -36,12 +36,10 @@ export function useExecutionState({ requestId }: { requestId?: string }) {
   }, [requestId]);
 
   const isExecuting = () => {
-    if (!steps) {
+    const hasSteps = steps && steps.length > 0;
+    if (!hasSteps) {
       return false;
-    } else if (steps.length === 0) {
-      return true;
     }
-
     const latest = steps[steps.length - 1];
     return latest.duration === undefined;
   };

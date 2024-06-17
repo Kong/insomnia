@@ -28,33 +28,29 @@ const MillisecondTimer = () => {
   return ms > 0 ? `${ms.toFixed(1)} s` : '0 s';
 };
 export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRequestId, steps }) => {
-  const timingList = steps.map((record: TimingStep) => {
-    return (
-      <div
-        key={`${activeRequestId}-${record.stepName}`}
-        className='flex w-full leading-8'
-      >
-        <div className='w-3/4 text-left content-center leading-8'>
-          <span className="leading-8">
-          {
-              record.duration ?
-              (<i className="fa fa-circle-check fa-2x mr-2 text-green-500" />) :
-                (<i className="fa fa-spinner fa-spin fa-2x mr-2" />)
-          }
-          </span>
-          <span className="inline-block align-top">
-            {record.stepName}
-          </span>
-        </div>
-        {record.duration ? `${((record.duration) / 1000).toFixed(1)} s` : (<MillisecondTimer />)}
-      </div>
-    );
-  });
-
   return (
     <div className="overlay theme--transparent-overlay">
       <div className="timer-list w-full">
-        {timingList}
+        {steps.map((record: TimingStep) => (
+          <div
+            key={`${activeRequestId}-${record.stepName}`}
+            className='flex w-full leading-8'
+          >
+            <div className='w-3/4 text-left content-center leading-8'>
+              <span className="leading-8">
+                {
+                  record.duration ?
+                    (<i className="fa fa-circle-check fa-2x mr-2 text-green-500" />) :
+                    (<i className="fa fa-spinner fa-spin fa-2x mr-2" />)
+                }
+              </span>
+              <span className="inline-block align-top">
+                {record.stepName}
+              </span>
+            </div>
+            {record.duration ? `${((record.duration) / 1000).toFixed(1)} s` : (<MillisecondTimer />)}
+          </div>
+        ))}
       </div>
 
       <div className="pad">
