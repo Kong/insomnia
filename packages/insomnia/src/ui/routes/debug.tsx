@@ -62,6 +62,7 @@ import {
   WebSocketRequest,
 } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
+import { DropdownHint } from '../components/base/dropdown/dropdown-hint';
 import { RequestActionsDropdown } from '../components/dropdowns/request-actions-dropdown';
 import { RequestGroupActionsDropdown } from '../components/dropdowns/request-group-actions-dropdown';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
@@ -589,6 +590,7 @@ export const Debug: FC = () => {
             id: 'New Folder',
             name: 'New Folder',
             icon: 'folder',
+            hint: hotKeyRegistry.request_showCreateFolder,
             action: () => showPrompt({
               title: 'New Folder',
               defaultValue: 'My Folder',
@@ -1023,6 +1025,7 @@ export const Debug: FC = () => {
                             >
                               <Icon icon={item.icon} />
                               <span>{item.name}</span>
+                              {item.hint && (<DropdownHint keyBindings={item.hint} />)}
                             </MenuItem>
                           )}
                         </Collection>

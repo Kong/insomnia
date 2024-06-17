@@ -20,6 +20,7 @@ import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { useRequestMetaPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
+import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
@@ -215,12 +216,14 @@ export const RequestActionsDropdown = ({
             name: isPinned ? 'Unpin' : 'Pin',
             action: togglePin,
             icon: 'thumbtack',
+            hint: hotKeyRegistry.request_togglePin,
           },
           {
             id: 'Duplicate',
             name: 'Duplicate',
             action: handleDuplicateRequest,
             icon: 'copy',
+            hint: hotKeyRegistry.request_showDuplicate,
           },
           {
             id: 'Rename',
@@ -233,6 +236,7 @@ export const RequestActionsDropdown = ({
             name: 'Delete',
             action: deleteRequest,
             icon: 'trash',
+            hint: hotKeyRegistry.request_showDelete,
           },
           {
             id: 'Settings',
@@ -294,6 +298,7 @@ export const RequestActionsDropdown = ({
                     >
                       <Icon icon={item.icon} />
                       <span>{item.name}</span>
+                      {item.hint && (<DropdownHint keyBindings={item.hint} />)}
                     </MenuItem>
                   )}
                 </Collection>

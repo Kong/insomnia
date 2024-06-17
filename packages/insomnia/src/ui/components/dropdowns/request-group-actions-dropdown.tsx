@@ -16,6 +16,7 @@ import { CreateRequestType, useRequestGroupPatcher } from '../../hooks/use-reque
 import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
+import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
 import { AskModal } from '../modals/ask-modal';
@@ -245,7 +246,6 @@ export const RequestGroupActionsDropdown = ({
             id: 'Duplicate',
             name: 'Duplicate',
             icon: 'copy',
-            hint: hotKeyRegistry.request_createHTTP,
             action: () => handleRequestGroupDuplicate(),
           },
           {
@@ -320,12 +320,12 @@ export const RequestGroupActionsDropdown = ({
                     >
                       <Icon icon={item.icon} />
                       <span>{item.name}</span>
+                      {item.hint && (<DropdownHint keyBindings={item.hint} />)}
                     </MenuItem>
                   )}
                 </Collection>
               </Section>
             )}
-
           </Menu>
         </Popover>
       </MenuTrigger>

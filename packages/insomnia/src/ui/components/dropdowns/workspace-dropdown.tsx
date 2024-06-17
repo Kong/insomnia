@@ -20,6 +20,7 @@ import { invariant } from '../../../utils/invariant';
 import { useAIContext } from '../../context/app/ai-context';
 import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
+import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { InsomniaAI } from '../insomnia-ai-icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -191,7 +192,7 @@ export const WorkspaceDropdown: FC = () => {
           items: actionPlugins.map(plugin => ({
             id: plugin.label,
             name: plugin.label,
-            icon: plugin.icon as IconName || 'plug',
+            icon: <Icon icon={plugin.icon as IconName || 'plug'} />,
             action: () =>
               handlePluginClick(plugin, activeWorkspace),
           })),
@@ -233,6 +234,7 @@ export const WorkspaceDropdown: FC = () => {
                     >
                       {item.icon}
                       <span>{item.name}</span>
+                      {item.hint && (<DropdownHint keyBindings={item.hint} />)}
                     </MenuItem>
                   )}
                 </Collection>
