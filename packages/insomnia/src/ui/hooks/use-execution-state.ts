@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react';
 
 import { TimingStep } from '../../main/network/request-timing';
 
-export function useExecutionState({ requestId }: { requestId: string }) {
-  const [steps, setSteps] = useState<TimingStep[]>();
+export function useExecutionState({ requestId }: { requestId?: string }) {
+  const [steps, setSteps] = useState<TimingStep[]>([]);
 
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
+      if (!requestId) {
+        return;
+      }
       const targetSteps = await window.main.getExecution({ requestId });
       if (targetSteps) {
         isMounted && setSteps(targetSteps);

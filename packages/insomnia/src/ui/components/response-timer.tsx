@@ -1,11 +1,11 @@
 import React, { DOMAttributes, FunctionComponent, useEffect, useState } from 'react';
 
 import type { TimingStep } from '../../main/network/request-timing';
-import { useExecutionState } from '../hooks/use-execution-state';
 
 interface Props {
   handleCancel: DOMAttributes<HTMLButtonElement>['onClick'];
   activeRequestId: string;
+  steps: TimingStep[];
 }
 // triggers a 100 ms render in order to show a incrementing counter
 const MillisecondTimer = () => {
@@ -27,10 +27,8 @@ const MillisecondTimer = () => {
   const ms = (milliseconds / 1000);
   return ms > 0 ? `${ms.toFixed(1)} s` : '0 s';
 };
-export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRequestId }) => {
-  const { steps, isExecuting } = useExecutionState({ requestId: activeRequestId });
-
-  const timingList = isExecuting ? (steps || []).map((record: TimingStep) => {
+export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRequestId, steps }) => {
+  const timingList = steps.map((record: TimingStep) => {
     return (
       <div
         key={`${activeRequestId}-${record.stepName}`}
@@ -51,7 +49,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
         {record.duration ? `${((record.duration) / 1000).toFixed(1)} s` : (<MillisecondTimer />)}
       </div>
     );
-  }) : [];
+  });
 
   return (
     <div className="overlay theme--transparent-overlay">

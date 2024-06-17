@@ -65,9 +65,9 @@ export type MainOnChannels =
   | 'webSocket.close'
   | 'webSocket.closeAll'
   | 'writeText'
-  | 'addRequestTimingRecord'
-  | 'finishLastRequestTimingRecord'
-  | 'startRequestTimingExecution';
+  | 'addExecutionStep'
+  | 'completeExecutionStep'
+  | 'startExecution';
 export type RendererOnChannels =
   'clear-all-models'
   | 'clear-model'

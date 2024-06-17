@@ -15,6 +15,7 @@ import { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { jsonPrettify } from '../../../utils/prettify/json';
+import { useExecutionState } from '../../hooks/use-execution-state';
 import { MockRouteLoaderData } from '../../routes/mock-route';
 import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -54,6 +55,7 @@ export const MockResponsePane = () => {
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [previewMode, setPreviewMode] = useState<PreviewMode>(PREVIEW_MODE_FRIENDLY);
   const requestFetcher = useFetcher({ key: 'mock-request-fetcher' });
+  const { steps } = useExecutionState({ requestId: activeResponse?.parentId });
 
   useEffect(() => {
     const fn = async () => {
@@ -70,6 +72,7 @@ export const MockResponsePane = () => {
         {<ResponseTimer
           handleCancel={() => activeResponse && cancelRequestById(activeResponse.parentId)}
           activeRequestId={mockRoute._id}
+          steps={steps}
         />}
       </PlaceholderResponsePane>
     );

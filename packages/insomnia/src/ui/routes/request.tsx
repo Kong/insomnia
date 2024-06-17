@@ -365,8 +365,8 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   invariant(workspaceId, 'Workspace ID is required');
   const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
   try {
-    window.main.startRequestTimingExecution({ requestId });
-    window.main.addRequestTimingRecord({
+    window.main.startExecution({ requestId });
+    window.main.addExecutionStep({
       requestId,
       record: {
         stepName: 'Executing pre-request script',
@@ -384,8 +384,8 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const afterResponseScript = `${mutatedContext.request.afterResponseScript}`;
     mutatedContext.request.afterResponseScript = '';
 
-    window.main.finishLastRequestTimingRecord({ requestId });
-    window.main.addRequestTimingRecord({
+    window.main.completeExecutionStep({ requestId });
+    window.main.addExecutionStep({
       requestId,
       record: {
         stepName: 'Rendering request',
@@ -417,8 +417,8 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       }
     }
 
-    window.main.finishLastRequestTimingRecord({ requestId });
-    window.main.addRequestTimingRecord({
+    window.main.completeExecutionStep({ requestId });
+    window.main.addExecutionStep({
       requestId,
       record: {
         stepName: 'Sending request',
@@ -442,10 +442,10 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
     const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
 
-    window.main.finishLastRequestTimingRecord({ requestId });
+    window.main.completeExecutionStep({ requestId });
     mutatedContext.request.afterResponseScript = afterResponseScript;
     if (requestData.request.afterResponseScript) {
-      window.main.addRequestTimingRecord({
+      window.main.addExecutionStep({
         requestId,
         record: {
           stepName: 'Executing after-response script',
@@ -464,7 +464,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
         cookieJar,
         response,
       });
-      window.main.finishLastRequestTimingRecord({ requestId });
+      window.main.completeExecutionStep({ requestId });
       if (!postMutatedContext?.request) {
         // exiy early if there was a problem with the pre-request script
         // TODO: improve error message?
@@ -532,8 +532,8 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
     timelinePath,
     responseId,
   } = await fetchRequestData(req._id);
-  window.main.startRequestTimingExecution({ requestId: req._id });
-  window.main.addRequestTimingRecord({
+  window.main.startExecution({ requestId: req._id });
+  window.main.addExecutionStep({
     requestId: req._id,
     record: {
       stepName: 'Rendering request',
@@ -545,8 +545,8 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
   const renderResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
-  window.main.finishLastRequestTimingRecord({ requestId: req._id });
-  window.main.addRequestTimingRecord({
+  window.main.completeExecutionStep({ requestId: req._id });
+  window.main.addExecutionStep({
     requestId: req._id,
     record: {
       stepName: 'Sending request',
