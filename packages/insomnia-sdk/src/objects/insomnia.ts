@@ -116,7 +116,7 @@ export async function initInsomniaObject(
     rawObj: RequestContext,
     log: (...args: any[]) => void,
 ) {
-    const globals = new Environment('globals', rawObj.globals);
+    const globals = new Environment('globals', rawObj.globals || {}); // could be null
     const baseEnvironment = new Environment(rawObj.baseEnvironmentName || '', rawObj.baseEnvironment);
     // reuse baseEnvironment when the "selected envrionment" points to the base environment
     const environment = rawObj.baseEnvironmentName === rawObj.environmentName ?
