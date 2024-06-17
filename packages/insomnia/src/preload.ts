@@ -41,6 +41,10 @@ const grpc: gRPCBridgeAPI = {
   loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
 };
 const main: Window['main'] = {
+  startRequestTimingExecution: options => ipcRenderer.send('startRequestTimingExecution', options),
+  addRequestTimingRecord: options => ipcRenderer.send('addRequestTimingRecord', options),
+  finishLastRequestTimingRecord: options => ipcRenderer.send('finishLastRequestTimingRecord', options),
+  getExecution: options => ipcRenderer.invoke('getExecution', options),
   loginStateChange: () => ipcRenderer.send('loginStateChange'),
   restart: () => ipcRenderer.send('restart'),
   openInBrowser: options => ipcRenderer.send('openInBrowser', options),

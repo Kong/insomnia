@@ -27,11 +27,6 @@ import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../.
 import { WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
 import { fetchRequestData, getPreRequestScriptOutput, responseTransform, savePatchesMadeByScript, sendCurlAndWriteTimeline, tryToExecuteAfterResponseScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
-import {
-  addRequestTimingRecord,
-  finishLastRequestTimingRecord,
-  startRequestTimingExecution,
-} from '../../network/request-timing';
 import { RenderErrorSubType } from '../../templating';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
@@ -370,13 +365,14 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   invariant(workspaceId, 'Workspace ID is required');
   const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
   try {
-    startRequestTimingExecution(requestId);
-    addRequestTimingRecord(
+    window.main.startRequestTimingExecution({ requestId });
+    window.main.addRequestTimingRecord({
       requestId,
-      {
+      record: {
         stepName: 'Executing pre-request script',
         startedAt: Date.now(),
       },
+    }
     );
 
     const requestData = await fetchRequestData(requestId);
@@ -388,13 +384,14 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const afterResponseScript = `${mutatedContext.request.afterResponseScript}`;
     mutatedContext.request.afterResponseScript = '';
 
-    finishLastRequestTimingRecord(requestId);
-    addRequestTimingRecord(
+    window.main.finishLastRequestTimingRecord({ requestId });
+    window.main.addRequestTimingRecord({
       requestId,
-      {
+      record: {
         stepName: 'Rendering request',
         startedAt: Date.now(),
       },
+    }
     );
 
     const renderedResult = await tryToInterpolateRequest(
@@ -420,13 +417,14 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       }
     }
 
-    finishLastRequestTimingRecord(requestId);
-    addRequestTimingRecord(
+    window.main.finishLastRequestTimingRecord({ requestId });
+    window.main.addRequestTimingRecord({
       requestId,
-      {
+      record: {
         stepName: 'Sending request',
         startedAt: Date.now(),
       },
+    }
     );
 
     const response = await sendCurlAndWriteTimeline(
@@ -444,15 +442,16 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
     const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
 
-    finishLastRequestTimingRecord(requestId);
+    window.main.finishLastRequestTimingRecord({ requestId });
     mutatedContext.request.afterResponseScript = afterResponseScript;
     if (requestData.request.afterResponseScript) {
-      addRequestTimingRecord(
+      window.main.addRequestTimingRecord({
         requestId,
-        {
+        record: {
           stepName: 'Executing after-response script',
           startedAt: Date.now(),
         },
+      }
       );
 
       const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
@@ -465,7 +464,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
         cookieJar,
         response,
       });
-      finishLastRequestTimingRecord(requestId);
+      window.main.finishLastRequestTimingRecord({ requestId });
       if (!postMutatedContext?.request) {
         // exiy early if there was a problem with the pre-request script
         // TODO: improve error message?
@@ -533,26 +532,27 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
     timelinePath,
     responseId,
   } = await fetchRequestData(req._id);
-  startRequestTimingExecution(req._id);
-  addRequestTimingRecord(
-    req._id,
-    {
+  window.main.startRequestTimingExecution({ requestId: req._id });
+  window.main.addRequestTimingRecord({
+    requestId: req._id,
+    record: {
       stepName: 'Rendering request',
       startedAt: Date.now(),
     },
+  }
   );
 
   const renderResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
-  finishLastRequestTimingRecord(req._id);
-  addRequestTimingRecord(
-    req._id,
-    {
+  window.main.finishLastRequestTimingRecord({ requestId: req._id });
+  window.main.addRequestTimingRecord({
+    requestId: req._id,
+    record: {
       stepName: 'Sending request',
       startedAt: Date.now(),
     },
-  );
+  });
 
   const res = await sendCurlAndWriteTimeline(
     renderedRequest,

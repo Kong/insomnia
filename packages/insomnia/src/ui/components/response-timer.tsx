@@ -1,6 +1,6 @@
 import React, { DOMAttributes, FunctionComponent, useEffect, useState } from 'react';
 
-import { TimingStep } from '../../network/request-timing';
+import type { TimingStep } from '../../main/network/request-timing';
 import { useExecutionState } from '../hooks/use-execution-state';
 
 interface Props {

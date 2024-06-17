@@ -75,7 +75,7 @@ export const ResponsePane: FC<Props> = ({
     }
   }, [handleGetResponseBody]);
 
-  const { isExecuting } = useExecutionState({ requestId: activeRequest._id });
+  const { isExecuting, steps } = useExecutionState({ requestId: activeRequest._id });
 
   const handleDownloadResponseBody = useCallback(async (prettify: boolean) => {
     if (!activeResponse || !activeRequest) {
@@ -148,7 +148,7 @@ export const ResponsePane: FC<Props> = ({
         <PaneHeader className="row-spaced">
           <div aria-atomic="true" aria-live="polite" className="no-wrap scrollable scrollable--no-bars pad-left">
             <StatusTag statusCode={activeResponse.statusCode} statusMessage={activeResponse.statusMessage} />
-            <TimeTag milliseconds={activeResponse.elapsedTime} requestId={activeResponse.parentId} />
+            <TimeTag milliseconds={activeResponse.elapsedTime} steps={steps} />
             <SizeTag bytesRead={activeResponse.bytesRead} bytesContent={activeResponse.bytesContent} />
           </div>
           <ResponseHistoryDropdown

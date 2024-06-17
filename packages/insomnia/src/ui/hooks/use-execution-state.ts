@@ -1,22 +1,19 @@
-// import { protocol } from 'electron';
 import { useEffect, useState } from 'react';
 
-import { getExecution, TimingStep, watchExecution } from '../../network/request-timing';
+import { TimingStep } from '../../main/network/request-timing';
 
 export function useExecutionState({ requestId }: { requestId: string }) {
   const [steps, setSteps] = useState<TimingStep[]>();
 
   useEffect(() => {
     let isMounted = true;
-    const fn = () => {
-      const targetSteps = getExecution(requestId);
+    const fn = async () => {
+      const targetSteps = await window.main.getExecution({ requestId });
       if (targetSteps) {
         isMounted && setSteps(targetSteps);
       }
     };
-
     fn();
-
     return () => {
       isMounted = false;
     };
@@ -24,13 +21,14 @@ export function useExecutionState({ requestId }: { requestId: string }) {
 
   useEffect(() => {
     let isMounted = true;
-
-    watchExecution(requestId, (steps: TimingStep[]) => {
-      isMounted && setSteps(steps);
-    });
-
+    // @ts-expect-error -- we use a dynamic channel here
+    const unsubscribe = window.main.on(`syncTimers.${requestId}`,
+      (_, { executions }: { executions: TimingStep[] }) => {
+        isMounted && setSteps(executions);
+      });
     return () => {
       isMounted = false;
+      unsubscribe();
     };
   }, [requestId]);
 

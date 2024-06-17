@@ -1,7 +1,7 @@
 import classnames from 'classnames';
 import React, { FC, memo } from 'react';
 
-import { getExecution } from '../../../network/request-timing';
+import { TimingStep } from '../../../main/network/request-timing';
 import { Tooltip } from '../tooltip';
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
   small?: boolean;
   className?: string;
   tooltipDelay?: number;
-  requestId?: string;
+  steps?: TimingStep[];
 }
 const getTimeAndUnit = (milliseconds: number) => {
   let unit = 'ms';
@@ -34,9 +34,8 @@ const getTimeAndUnit = (milliseconds: number) => {
 
   return { number, unit };
 };
-export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, tooltipDelay, requestId }) => {
-  const steparray = getExecution(requestId);
-  const totalMs = steparray?.reduce((acc, step) => acc + (step.duration || 0), 0) || milliseconds;
+export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, tooltipDelay, steps }) => {
+  const totalMs = steps?.reduce((acc, step) => acc + (step.duration || 0), 0) || milliseconds;
   const { number, unit } = getTimeAndUnit(totalMs);
 
   return (
@@ -52,7 +51,7 @@ export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, toolti
       <Tooltip
         message={(
           <div>
-            {steparray?.map(step => {
+            {steps?.map(step => {
               const { number, unit } = getTimeAndUnit(step.duration || 0);
               return (<div key={step.stepName} className='flex justify-between'>
                 <div>{step.stepName}</div> <div>{number} {unit}</div>
