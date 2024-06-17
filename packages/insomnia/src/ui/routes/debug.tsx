@@ -6,9 +6,11 @@ import {
   Breadcrumb,
   Breadcrumbs,
   Button,
+  Collection,
   DropIndicator,
   GridList,
   GridListItem,
+  Header,
   Input,
   ListBox,
   ListBoxItem,
@@ -17,6 +19,7 @@ import {
   MenuTrigger,
   Popover,
   SearchField,
+  Section,
   Select,
   SelectValue,
   ToggleButton,
@@ -563,91 +566,106 @@ export const Debug: FC = () => {
   });
 
   const createInCollectionActionList: {
-    id: string;
     name: string;
+    id: string;
     icon: IconName;
-    hint?: PlatformKeyCombinations;
-    action: () => void;
-  }[] = [
+    items: {
+      id: string;
+      name: string;
+      icon: IconName;
+      hint?: PlatformKeyCombinations;
+      action: () => void;
+    }[];
+  }[] =
+    [
       {
-        id: 'HTTP',
-        name: 'HTTP Request',
-        icon: 'plus-circle',
-        hint: hotKeyRegistry.request_createHTTP,
-        action: () =>
-          createRequest({
-            requestType: 'HTTP',
-            parentId: workspaceId,
-          }),
+        name: 'Create',
+        id: 'create',
+        icon: 'plus',
+        items: [
+          {
+            id: 'New Folder',
+            name: 'New Folder',
+            icon: 'folder',
+            action: () => showPrompt({
+              title: 'New Folder',
+              defaultValue: 'My Folder',
+              submitName: 'Create',
+              label: 'Name',
+              selectText: true,
+              onComplete: name =>
+                requestFetcher.submit(
+                  { parentId: workspaceId, name },
+                  {
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+                    method: 'post',
+                  }
+                ),
+            }),
+          },
+          {
+            id: 'HTTP',
+            name: 'HTTP Request',
+            icon: 'plus-circle',
+            hint: hotKeyRegistry.request_createHTTP,
+            action: () =>
+              createRequest({
+                requestType: 'HTTP',
+                parentId: workspaceId,
+              }),
+          },
+          {
+            id: 'Event Stream',
+            name: 'Event Stream Request (SSE)',
+            icon: 'plus-circle',
+            action: () =>
+              createRequest({
+                requestType: 'Event Stream',
+                parentId: workspaceId,
+              }),
+          },
+          {
+            id: 'GraphQL Request',
+            name: 'GraphQL Request',
+            icon: 'plus-circle',
+            action: () =>
+              createRequest({
+                requestType: 'GraphQL',
+                parentId: workspaceId,
+              }),
+          },
+          {
+            id: 'gRPC Request',
+            name: 'gRPC Request',
+            icon: 'plus-circle',
+            action: () =>
+              createRequest({
+                requestType: 'gRPC',
+                parentId: workspaceId,
+              }),
+          },
+          {
+            id: 'WebSocket Request',
+            name: 'WebSocket Request',
+            icon: 'plus-circle',
+            action: () =>
+              createRequest({
+                requestType: 'WebSocket',
+                parentId: workspaceId,
+              }),
+          }],
       },
       {
-        id: 'Event Stream',
-        name: 'Event Stream Request',
-        icon: 'plus-circle',
-        action: () =>
-          createRequest({
-            requestType: 'Event Stream',
-            parentId: workspaceId,
-          }),
-      },
-      {
-        id: 'GraphQL Request',
-        name: 'GraphQL Request',
-        icon: 'plus-circle',
-        action: () =>
-          createRequest({
-            requestType: 'GraphQL',
-            parentId: workspaceId,
-          }),
-      },
-      {
-        id: 'gRPC Request',
-        name: 'gRPC Request',
-        icon: 'plus-circle',
-        action: () =>
-          createRequest({
-            requestType: 'gRPC',
-            parentId: workspaceId,
-          }),
-      },
-      {
-        id: 'WebSocket Request',
-        name: 'WebSocket Request',
-        icon: 'plus-circle',
-        action: () =>
-          createRequest({
-            requestType: 'WebSocket',
-            parentId: workspaceId,
-          }),
-      },
-      {
-        id: 'From Curl',
-        name: 'From Curl',
-        icon: 'terminal',
-        action: () => setPasteCurlModalOpen(true),
-      },
-      {
-        id: 'New Folder',
-        name: 'New Folder',
-        icon: 'folder',
-        action: () =>
-          showPrompt({
-            title: 'New Folder',
-            defaultValue: 'My Folder',
-            submitName: 'Create',
-            label: 'Name',
-            selectText: true,
-            onComplete: name =>
-              requestFetcher.submit(
-                { parentId: workspaceId, name },
-                {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
-                  method: 'post',
-                }
-              ),
-          }),
-      },
-    ];
+        name: 'Import',
+        id: 'import',
+        icon: 'file-import',
+        items: [{
+          id: 'From Curl',
+          name: 'From Curl',
+          icon: 'terminal',
+          action: () => setPasteCurlModalOpen(true),
+        }],
+      }];
 
   const environmentsList = [baseEnvironment, ...subEnvironments].map(environment => ({
     id: environment._id,
@@ -978,25 +996,29 @@ export const Debug: FC = () => {
                   <Menu
                     aria-label="Create a new request"
                     selectionMode="single"
-                    onAction={key => {
-                      const item = createInCollectionActionList.find(item => item.id === key);
-                      if (item) {
-                        item.action();
-                      }
-                    }}
+                    onAction={key => createInCollectionActionList.find(i => i.items.find(a => a.id === key))?.items.find(a => a.id === key)?.action()}
                     items={createInCollectionActionList}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
-                    {item => (
-                      <MenuItem
-                        key={item.id}
-                        id={item.id}
-                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                        aria-label={item.name}
-                      >
-                        <Icon icon={item.icon} />
-                        <span>{item.name}</span>
-                      </MenuItem>
+                    {section => (
+                      <Section className='flex-1 flex flex-col'>
+                        <Header className='pl-2 py-1 flex items-center gap-2 text-[--hl] text-xs uppercase'>
+                          <Icon icon={section.icon} /> <span>{section.name}</span>
+                        </Header>
+                        <Collection items={section.items}>
+                          {item => (
+                            <MenuItem
+                              key={item.id}
+                              id={item.id}
+                              className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                              aria-label={item.name}
+                            >
+                              <Icon icon={item.icon} />
+                              <span>{item.name}</span>
+                            </MenuItem>
+                          )}
+                        </Collection>
+                      </Section>
                     )}
                   </Menu>
                 </Popover>

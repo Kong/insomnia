@@ -13,7 +13,6 @@ import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { CreateRequestType, useRequestGroupPatcher } from '../../hooks/use-request';
-import { action } from '../../routes/auth.authorize';
 import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
@@ -152,76 +151,77 @@ export const RequestGroupActionsDropdown = ({
       hint?: PlatformKeyCombinations;
       action: () => void;
     }[];
-  })[] = [
+  })[] =
+    [
       {
-      name: 'Create',
-      id: 'create',
-      icon: 'plus',
-      items: [
-        {
-          id: 'HTTP',
-          name: 'HTTP Request',
-          icon: 'plus-circle',
-          hint: hotKeyRegistry.request_createHTTP,
-          action: () => createRequest({
-            requestType: 'HTTP',
-            parentId: requestGroup._id,
-          }),
-        },
-        {
-          id: 'Event Stream',
-          name: 'Event Stream Request (SSE)',
-          icon: 'plus-circle',
-          action: () => createRequest({
-            requestType: 'Event Stream',
-            parentId: requestGroup._id,
-          }),
-        },
-        {
-          id: 'GraphQL Request',
-          name: 'GraphQL Request',
-          icon: 'plus-circle',
-          action: () => createRequest({
-            requestType: 'GraphQL',
-            parentId: requestGroup._id,
-          }),
-        },
-        {
-          id: 'gRPC Request',
-          name: 'gRPC Request',
-          icon: 'plus-circle',
-          action: () => createRequest({
-            requestType: 'gRPC',
-            parentId: requestGroup._id,
-          }),
-        },
-        {
-          id: 'WebSocket Request',
-          name: 'WebSocket Request',
-          icon: 'plus-circle',
-          action: () => createRequest({
-            requestType: 'WebSocket',
-            parentId: requestGroup._id,
-          }),
-        },
-        {
-          id: 'New Folder',
-          name: 'New Folder',
-          icon: 'folder',
-          action: () =>
-            showPrompt({
-              title: 'New Folder',
-              defaultValue: 'My Folder',
-              submitName: 'Create',
-              label: 'Name',
-              selectText: true,
-              onComplete: name => requestFetcher.submit({ parentId: requestGroup._id, name },
-                {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
-                  method: 'post',
-                }),
+        name: 'Create',
+        id: 'create',
+        icon: 'plus',
+        items: [
+          {
+            id: 'HTTP',
+            name: 'HTTP Request',
+            icon: 'plus-circle',
+            hint: hotKeyRegistry.request_createHTTP,
+            action: () => createRequest({
+              requestType: 'HTTP',
+              parentId: requestGroup._id,
             }),
-        }],
+          },
+          {
+            id: 'Event Stream',
+            name: 'Event Stream Request (SSE)',
+            icon: 'plus-circle',
+            action: () => createRequest({
+              requestType: 'Event Stream',
+              parentId: requestGroup._id,
+            }),
+          },
+          {
+            id: 'GraphQL Request',
+            name: 'GraphQL Request',
+            icon: 'plus-circle',
+            action: () => createRequest({
+              requestType: 'GraphQL',
+              parentId: requestGroup._id,
+            }),
+          },
+          {
+            id: 'gRPC Request',
+            name: 'gRPC Request',
+            icon: 'plus-circle',
+            action: () => createRequest({
+              requestType: 'gRPC',
+              parentId: requestGroup._id,
+            }),
+          },
+          {
+            id: 'WebSocket Request',
+            name: 'WebSocket Request',
+            icon: 'plus-circle',
+            action: () => createRequest({
+              requestType: 'WebSocket',
+              parentId: requestGroup._id,
+            }),
+          },
+          {
+            id: 'New Folder',
+            name: 'New Folder',
+            icon: 'folder',
+            action: () =>
+              showPrompt({
+                title: 'New Folder',
+                defaultValue: 'My Folder',
+                submitName: 'Create',
+                label: 'Name',
+                selectText: true,
+                onComplete: name => requestFetcher.submit({ parentId: requestGroup._id, name },
+                  {
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+                    method: 'post',
+                  }),
+              }),
+          }],
       },
       {
         name: 'Import',
@@ -326,15 +326,15 @@ export const RequestGroupActionsDropdown = ({
               </Section>
             )}
 
-        </Menu>
-      </Popover>
-    </MenuTrigger>
+          </Menu>
+        </Popover>
+      </MenuTrigger>
       {
         isSettingsModalOpen && (
-      <RequestGroupSettingsModal
-        requestGroup={requestGroup}
-        onHide={() => setIsSettingsModalOpen(false)}
-      />
+          <RequestGroupSettingsModal
+            requestGroup={requestGroup}
+            onHide={() => setIsSettingsModalOpen(false)}
+          />
         )
       }
       {isPasteCurlModalOpen && (
