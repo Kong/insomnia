@@ -212,25 +212,25 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
     }[];
   }[] = [
       {
-        id: 'Auth Types',
-        name: 'Auth Types',
-        icon: 'lock',
-        items: authTypesItems.filter(item => authTypes.includes(item.id)),
-      },
-      {
         id: 'Other',
         name: 'Other',
         icon: 'ellipsis-h',
         items: [
           {
-            id: 'none',
-            name: 'None',
-          },
-          {
             id: 'inherit',
             name: 'Inherit from parent',
           },
+          {
+            id: 'none',
+            name: 'None',
+          },
         ],
+      },
+      {
+        id: 'Auth Types',
+        name: 'Auth Types',
+        icon: 'lock',
+        items: authTypesItems.filter(item => authTypes.includes(item.id)),
       },
     ];
 
