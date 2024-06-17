@@ -39,13 +39,11 @@ export const WorkspaceDropdown: FC = () => {
     activeMockServer,
     projects,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const activeWorkspaceName = activeWorkspace.name;
+
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const workspaceName = activeWorkspace.name;
-  const projectName = activeProject.name ?? getProductName();
   const fetcher = useFetcher();
   const [isDeleteRemoteWorkspaceModalOpen, setIsDeleteRemoteWorkspaceModalOpen] = useState(false);
   const deleteWorkspaceFetcher = useFetcher();
@@ -139,7 +137,7 @@ export const WorkspaceDropdown: FC = () => {
             icon: <Icon icon='pen-to-square' />,
             action: () => showPrompt({
               title: `Rename ${getWorkspaceLabel(activeWorkspace).singular}`,
-              defaultValue: activeWorkspaceName,
+              defaultValue: activeWorkspace.name,
               submitName: 'Rename',
               selectText: true,
               label: 'Name',
@@ -209,7 +207,7 @@ export const WorkspaceDropdown: FC = () => {
           data-testid="workspace-context-dropdown"
           className="px-3 py-1 h-7 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm truncate"
         >
-          <span className="truncate" title={activeWorkspaceName}>{activeWorkspaceName}</span>
+          <span className="truncate" title={activeWorkspace.name}>{activeWorkspace.name}</span>
           <Icon icon="caret-down" />
         </Button>
         <Popover className="min-w-max">
@@ -254,8 +252,8 @@ export const WorkspaceDropdown: FC = () => {
         <ImportModal
           onHide={() => setIsImportModalOpen(false)}
           from={{ type: 'file' }}
-          projectName={projectName}
-          workspaceName={workspaceName}
+          projectName={activeProject.name ?? getProductName()}
+          workspaceName={activeWorkspace.name}
           organizationId={organizationId}
           defaultProjectId={projectId}
           defaultWorkspaceId={workspaceId}

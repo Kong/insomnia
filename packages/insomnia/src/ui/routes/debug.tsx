@@ -39,7 +39,7 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import { DEFAULT_SIDEBAR_SIZE, SORT_ORDERS, SortOrder, sortOrderName } from '../../common/constants';
+import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, SortOrder, sortOrderName } from '../../common/constants';
 import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
 import { PlatformKeyCombinations } from '../../common/settings';
@@ -74,6 +74,7 @@ import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
+import { ImportModal } from '../components/modals/import-modal';
 import { PasteCurlModal } from '../components/modals/paste-curl-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
@@ -203,6 +204,7 @@ export const Debug: FC = () => {
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
     useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isEnvironmentSelectOpen, setIsEnvironmentSelectOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
@@ -664,6 +666,12 @@ export const Debug: FC = () => {
           name: 'From Curl',
           icon: 'terminal',
           action: () => setPasteCurlModalOpen(true),
+        },
+          {
+            id: 'from-file',
+            name: 'From File',
+            icon: 'file-import',
+            action: () => setIsImportModalOpen(true),
         }],
       }];
 
@@ -1270,6 +1278,17 @@ export const Debug: FC = () => {
           {isEnvironmentModalOpen && (
             <WorkspaceEnvironmentsEditModal
               onClose={() => setEnvironmentModalOpen(false)}
+            />
+          )}
+          {isImportModalOpen && (
+            <ImportModal
+              onHide={() => setIsImportModalOpen(false)}
+              from={{ type: 'file' }}
+              projectName={activeProject.name ?? getProductName()}
+              workspaceName={activeWorkspace.name}
+              organizationId={organizationId}
+              defaultProjectId={projectId}
+              defaultWorkspaceId={workspaceId}
             />
           )}
           {isCookieModalOpen && (
