@@ -37,7 +37,10 @@ const getTimeAndUnit = (milliseconds: number) => {
 export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, tooltipDelay, steps }) => {
   const totalMs = steps?.reduce((acc, step) => acc + (step.duration || 0), 0) || milliseconds;
   const { number, unit } = getTimeAndUnit(totalMs);
-
+  const timesandunits = steps?.map(step => {
+    const { number, unit } = getTimeAndUnit(step.duration || 0);
+    return { stepName: step.stepName, number, unit };
+  });
   return (
     <div
       className={classnames(
@@ -51,13 +54,14 @@ export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, toolti
       <Tooltip
         message={(
           <div>
-            {steps?.map(step => {
-              const { number, unit } = getTimeAndUnit(step.duration || 0);
-              return (<div key={step.stepName} className='flex justify-between'>
-                <div>{step.stepName}</div> <div>{number} {unit}</div>
-              </div>);
-            })}
-            <div key="total">Total {number} {unit}</div>
+            {timesandunits?.map(step =>
+            (<div key={step.stepName} className='flex justify-between'>
+              <div className='mr-5'>{step.stepName} </div><div>{step.number} {step.unit}</div>
+            </div>)
+            )}
+            <div key="total" className='flex justify-between'>
+              <div className='mr-5'>Total </div><div>{number} {unit}</div>
+            </div>
           </div>)}
         position="bottom"
         delay={tooltipDelay}
