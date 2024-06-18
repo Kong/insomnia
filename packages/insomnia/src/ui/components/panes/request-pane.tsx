@@ -31,14 +31,12 @@ import { PlaceholderRequestPane } from './placeholder-request-pane';
 interface Props {
   environmentId: string;
   settings: Settings;
-  setLoading: (l: boolean) => void;
   onPaste: (text: string) => void;
 }
 
 export const RequestPane: FC<Props> = ({
   environmentId,
   settings,
-  setLoading,
   onPaste,
 }) => {
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
@@ -104,7 +102,6 @@ export const RequestPane: FC<Props> = ({
             uniquenessKey={uniqueKey}
             handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            setLoading={setLoading}
             onPaste={onPaste}
           />
         </ErrorBoundary>

@@ -9,6 +9,7 @@ import { backup, restoreBackup } from '../backup';
 import installPlugin from '../install-plugin';
 import { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
+import { addExecutionStep, completeExecutionStep, getExecution, startExecution, StepName, TimingStep } from '../network/request-timing';
 import { WebSocketBridgeAPI } from '../network/websocket';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import { gRPCBridgeAPI } from './grpc';
@@ -41,8 +42,24 @@ export interface RendererToMainBridgeAPI {
     };
   };
   hiddenBrowserWindow: HiddenBrowserWindowBridgeAPI;
+  getExecution: (options: { requestId: string }) => Promise<TimingStep[]>;
+  addExecutionStep: (options: { requestId: string; stepName: StepName }) => void;
+  startExecution: (options: { requestId: string }) => void;
+  completeExecutionStep: (options: { requestId: string }) => void;
 }
 export function registerMainHandlers() {
+  ipcMainOn('addExecutionStep', (_, options: { requestId: string; stepName: StepName }) => {
+    addExecutionStep(options.requestId, options.stepName);
+  });
+  ipcMainOn('startExecution', (_, options: { requestId: string }) => {
+    return startExecution(options.requestId);
+  });
+  ipcMainOn('completeExecutionStep', (_, options: { requestId: string }) => {
+    return completeExecutionStep(options.requestId);
+  });
+  ipcMainHandle('getExecution', (_, options: { requestId: string }) => {
+    return getExecution(options.requestId);
+  });
   ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
     return models.caCertificate.create(options);
   });

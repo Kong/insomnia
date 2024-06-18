@@ -58,6 +58,7 @@ const updateRequestAuth =
   'bearer'
 );`;
 const requireAModule = "const atob = require('atob');";
+const delay = 'new Promise((resolve)=>setTimeout(resolve, 1000));';
 
 const getStatusCode = 'const statusCode = insomnia.response.code;';
 const getStatusMsg = 'const status = insomnia.response.status;';
@@ -335,6 +336,11 @@ const miscMenu: SnippetMenuItem = {
       'id': 'require-module',
       'name': 'Require a module',
       'snippet': requireAModule,
+    },
+    {
+      'id': 'delay',
+      'name': 'Delay',
+      'snippet': delay,
     },
   ],
 };

@@ -16,6 +16,7 @@ import { CreateRequestType, useRequestGroupPatcher } from '../../hooks/use-reque
 import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
+import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
 import { AskModal } from '../modals/ask-modal';
@@ -151,96 +152,102 @@ export const RequestGroupActionsDropdown = ({
       hint?: PlatformKeyCombinations;
       action: () => void;
     }[];
-  })[] = [
+  })[] =
+    [
       {
-      name: 'Create',
-      id: 'create',
-      icon: 'plus',
-      items: [
-        {
-          id: 'HTTP',
-          name: 'HTTP Request',
-          icon: 'plus-circle',
-          hint: hotKeyRegistry.request_createHTTP,
-          action: () => createRequest({
-            requestType: 'HTTP',
-            parentId: requestGroup._id,
-          }),
-        },
-        {
-          id: 'Event Stream',
-          name: 'Event Stream Request',
-          icon: 'plus-circle',
-          action: () => createRequest({
-            requestType: 'Event Stream',
-            parentId: requestGroup._id,
-          }),
-        },
-        {
-          id: 'GraphQL Request',
-          name: 'GraphQL Request',
-          icon: 'plus-circle',
-          action: () => createRequest({
-            requestType: 'GraphQL',
-            parentId: requestGroup._id,
-          }),
-        },
-        {
-          id: 'gRPC Request',
-          name: 'gRPC Request',
-          icon: 'plus-circle',
-          action: () => createRequest({
-            requestType: 'gRPC',
-            parentId: requestGroup._id,
-          }),
-        },
-        {
-          id: 'WebSocket Request',
-          name: 'WebSocket Request',
-          icon: 'plus-circle',
-          action: () => createRequest({
-            requestType: 'WebSocket',
-            parentId: requestGroup._id,
-          }),
-        },
-        {
-          id: 'From Curl',
-          name: 'From Curl',
-          icon: 'terminal',
-          action: () => setPasteCurlModalOpen(true),
-
-        },
-        {
-          id: 'New Folder',
-          name: 'New Folder',
-          icon: 'folder',
-          action: () =>
-            showPrompt({
-              title: 'New Folder',
-              defaultValue: 'My Folder',
-              submitName: 'Create',
-              label: 'Name',
-              selectText: true,
-              onComplete: name => requestFetcher.submit({ parentId: requestGroup._id, name },
-                {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
-                  method: 'post',
-                }),
+        name: 'Create',
+        id: 'create',
+        icon: 'plus',
+        items: [
+          {
+            id: 'HTTP',
+            name: 'HTTP Request',
+            icon: 'plus-circle',
+            hint: hotKeyRegistry.request_createHTTP,
+            action: () => createRequest({
+              requestType: 'HTTP',
+              parentId: requestGroup._id,
             }),
-        },
-        {
-          id: 'Duplicate',
-          name: 'Duplicate',
-          icon: 'copy',
-          hint: hotKeyRegistry.request_createHTTP,
-          action: () => handleRequestGroupDuplicate(),
-        }],
+          },
+          {
+            id: 'Event Stream',
+            name: 'Event Stream Request (SSE)',
+            icon: 'plus-circle',
+            action: () => createRequest({
+              requestType: 'Event Stream',
+              parentId: requestGroup._id,
+            }),
+          },
+          {
+            id: 'GraphQL Request',
+            name: 'GraphQL Request',
+            icon: 'plus-circle',
+            action: () => createRequest({
+              requestType: 'GraphQL',
+              parentId: requestGroup._id,
+            }),
+          },
+          {
+            id: 'gRPC Request',
+            name: 'gRPC Request',
+            icon: 'plus-circle',
+            action: () => createRequest({
+              requestType: 'gRPC',
+              parentId: requestGroup._id,
+            }),
+          },
+          {
+            id: 'WebSocket Request',
+            name: 'WebSocket Request',
+            icon: 'plus-circle',
+            action: () => createRequest({
+              requestType: 'WebSocket',
+              parentId: requestGroup._id,
+            }),
+          },
+          {
+            id: 'New Folder',
+            name: 'New Folder',
+            icon: 'folder',
+            action: () =>
+              showPrompt({
+                title: 'New Folder',
+                defaultValue: 'My Folder',
+                submitName: 'Create',
+                label: 'Name',
+                selectText: true,
+                onComplete: name => requestFetcher.submit({ parentId: requestGroup._id, name },
+                  {
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+                    method: 'post',
+                  }),
+              }),
+          }],
       },
       {
-        name: 'Manage',
-        id: 'manage',
+        name: 'Import',
+        id: 'import',
+        icon: 'file-import',
+        items: [
+          {
+            id: 'From Curl',
+            name: 'From Curl',
+            icon: 'terminal',
+            action: () => setPasteCurlModalOpen(true),
+          },
+        ],
+      },
+      {
+        name: 'Actions',
+        id: 'actions',
         icon: 'cog',
         items: [
+          {
+            id: 'Duplicate',
+            name: 'Duplicate',
+            icon: 'copy',
+            action: () => handleRequestGroupDuplicate(),
+          },
           {
             id: 'Rename',
             name: 'Rename',
@@ -249,29 +256,35 @@ export const RequestGroupActionsDropdown = ({
               handleRename(),
           },
           {
-            id: 'Delete',
-            name: 'Delete',
-            icon: 'trash',
-            action: () =>
-              handleDeleteFolder(),
-          },
-          ...actionPlugins.map(plugin => ({
-            id: plugin.label,
-            name: plugin.label,
-            icon: plugin.icon as IconName || 'plug',
-            action: () =>
-              handlePluginClick(plugin),
-          })),
-          {
             id: 'Settings',
             name: 'Settings',
             icon: 'wrench',
             action: () =>
               setIsSettingsModalOpen(true),
           },
+          {
+            id: 'Delete',
+            name: 'Delete',
+            icon: 'trash',
+            action: () =>
+              handleDeleteFolder(),
+          },
         ],
       },
-
+      ...(actionPlugins.length > 0 ? [
+        {
+          name: 'Plugins',
+          id: 'plugins',
+          icon: 'plug' as IconName,
+          items: actionPlugins.map(plugin => ({
+            id: plugin.label,
+            name: plugin.label,
+            icon: plugin.icon as IconName || 'plug',
+            action: () =>
+              handlePluginClick(plugin),
+          })),
+        },
+      ] : []),
     ];
 
   return (
@@ -288,10 +301,7 @@ export const RequestGroupActionsDropdown = ({
           <Menu
             aria-label="Request Group Actions Menu"
             selectionMode="single"
-            onAction={key => {
-              const item = requestGroupActionItems[0].items.find(a => a.id === key) || requestGroupActionItems[1].items.find(a => a.id === key);
-              item && item.action();
-            }}
+            onAction={key => requestGroupActionItems.find(i => i.items.find(a => a.id === key))?.items.find(a => a.id === key)?.action()}
             items={requestGroupActionItems}
             className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
           >
@@ -310,21 +320,21 @@ export const RequestGroupActionsDropdown = ({
                     >
                       <Icon icon={item.icon} />
                       <span>{item.name}</span>
+                      {item.hint && (<DropdownHint keyBindings={item.hint} />)}
                     </MenuItem>
                   )}
                 </Collection>
               </Section>
             )}
-
-        </Menu>
-      </Popover>
-    </MenuTrigger>
+          </Menu>
+        </Popover>
+      </MenuTrigger>
       {
         isSettingsModalOpen && (
-      <RequestGroupSettingsModal
-        requestGroup={requestGroup}
-        onHide={() => setIsSettingsModalOpen(false)}
-      />
+          <RequestGroupSettingsModal
+            requestGroup={requestGroup}
+            onHide={() => setIsSettingsModalOpen(false)}
+          />
         )
       }
       {isPasteCurlModalOpen && (
