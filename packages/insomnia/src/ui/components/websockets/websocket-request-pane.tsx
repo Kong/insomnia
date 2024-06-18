@@ -25,7 +25,6 @@ import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
-import { MarkdownPreview } from '../markdown-preview';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
