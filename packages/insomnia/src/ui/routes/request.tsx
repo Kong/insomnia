@@ -368,10 +368,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     window.main.startExecution({ requestId });
     window.main.addExecutionStep({
       requestId,
-      record: {
-        stepName: 'Executing pre-request script',
-        startedAt: Date.now(),
-      },
+      stepName: 'Executing pre-request script',
     }
     );
 
@@ -387,10 +384,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
 
     window.main.addExecutionStep({
       requestId,
-      record: {
-        stepName: 'Rendering request',
-        startedAt: Date.now(),
-      },
+      stepName: 'Rendering request',
     }
     );
 
@@ -420,10 +414,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     window.main.completeExecutionStep({ requestId });
     window.main.addExecutionStep({
       requestId,
-      record: {
-        stepName: 'Sending request',
-        startedAt: Date.now(),
-      },
+      stepName: 'Sending request',
     }
     );
 
@@ -447,10 +438,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     if (requestData.request.afterResponseScript) {
       window.main.addExecutionStep({
         requestId,
-        record: {
-          stepName: 'Executing after-response script',
-          startedAt: Date.now(),
-        },
+        stepName: 'Executing after-response script',
       }
       );
 
@@ -536,10 +524,7 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
   window.main.startExecution({ requestId: req._id });
   window.main.addExecutionStep({
     requestId: req._id,
-    record: {
-      stepName: 'Rendering request',
-      startedAt: Date.now(),
-    },
+    stepName: 'Rendering request',
   }
   );
 
@@ -549,10 +534,7 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
   window.main.completeExecutionStep({ requestId: req._id });
   window.main.addExecutionStep({
     requestId: req._id,
-    record: {
-      stepName: 'Sending request',
-      startedAt: Date.now(),
-    },
+    stepName: 'Sending request',
   });
 
   const res = await sendCurlAndWriteTimeline(
