@@ -365,8 +365,11 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   invariant(workspaceId, 'Workspace ID is required');
   const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
   try {
+    window.main.startExecution({ requestId });
     const requestData = await fetchRequestData(requestId);
+    window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
     const mutatedContext = await getPreRequestScriptOutput(requestData, workspaceId);
+    window.main.completeExecutionStep({ requestId });
     if (mutatedContext === null) {
       return null;
     }
@@ -374,6 +377,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const afterResponseScript = `${mutatedContext.request.afterResponseScript}`;
     mutatedContext.request.afterResponseScript = '';
 
+    window.main.addExecutionStep({ requestId, stepName: 'Rendering request' });
     const renderedResult = await tryToInterpolateRequest(
       mutatedContext.request,
       mutatedContext.environment,
@@ -383,6 +387,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       ignoreUndefinedEnvVariable,
     );
     const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
+    window.main.completeExecutionStep({ requestId });
 
     // TODO: remove this temporary hack to support GraphQL variables in the request body properly
     if (renderedRequest && renderedRequest.body?.text && renderedRequest.body?.mimeType === 'application/graphql') {
@@ -397,6 +402,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       }
     }
 
+    window.main.addExecutionStep({ requestId, stepName: 'Sending request' });
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
       mutatedContext.clientCertificates,
@@ -405,6 +411,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       requestData.timelinePath,
       requestData.responseId
     );
+    window.main.completeExecutionStep({ requestId });
 
     const requestMeta = await models.requestMeta.getByParentId(requestId);
     invariant(requestMeta, 'RequestMeta not found');
@@ -416,7 +423,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     if (requestData.request.afterResponseScript) {
       const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
       const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-
+      window.main.addExecutionStep({ requestId, stepName: 'Executing after-response script' });
       const postMutatedContext = await tryToExecuteAfterResponseScript({
         ...requestData,
         ...mutatedContext,
@@ -424,6 +431,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
         cookieJar,
         response,
       });
+      window.main.completeExecutionStep({ requestId });
       if (!postMutatedContext?.request) {
         // exiy early if there was a problem with the pre-request script
         // TODO: improve error message?
@@ -434,7 +442,6 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     if (!shouldWriteToFile) {
       const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
       await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-      // setLoading(false);
       return null;
     }
 
@@ -453,7 +460,6 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
         ...(defaultPath ? { defaultPath } : {}),
       });
       if (!filePath) {
-        // setLoading(false);
         return null;
       }
       window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
@@ -461,6 +467,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     }
   } catch (e) {
     console.log('Failed to send request', e);
+    window.main.completeExecutionStep({ requestId });
     const url = new URL(request.url);
     url.searchParams.set('error', e);
     if (e?.extraInfo && e?.extraInfo?.subType === RenderErrorSubType.EnvironmentVariable) {
@@ -493,9 +500,22 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
     timelinePath,
     responseId,
   } = await fetchRequestData(req._id);
+  window.main.startExecution({ requestId: req._id });
+  window.main.addExecutionStep({
+    requestId: req._id,
+    stepName: 'Rendering request',
+  }
+  );
 
   const renderResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+
+  window.main.completeExecutionStep({ requestId: req._id });
+  window.main.addExecutionStep({
+    requestId: req._id,
+    stepName: 'Sending request',
+  });
+
   const res = await sendCurlAndWriteTimeline(
     renderedRequest,
     clientCertificates,
@@ -504,8 +524,10 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
     timelinePath,
     responseId,
   );
+
   const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
   await models.response.create(response);
+  window.main.completeExecutionStep({ requestId: req._id });
   return null;
 };
 export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {

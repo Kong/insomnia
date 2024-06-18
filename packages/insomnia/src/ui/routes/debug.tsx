@@ -91,6 +91,7 @@ import { getMethodShortHand } from '../components/tags/method-tag';
 import { ConnectionCircle } from '../components/websockets/action-bar';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
+import { useExecutionState } from '../hooks/use-execution-state';
 import { useReadyState } from '../hooks/use-ready-state';
 import {
   CreateRequestType,
@@ -164,6 +165,11 @@ const getRequestNameOrFallback = (doc: Request | RequestGroup | GrpcRequest | We
   return !isRequestGroup(doc) ? doc.name || doc.url || 'Untitled request' : doc.name || 'Untitled folder';
 };
 
+const RequestTiming = ({ requestId }: { requestId: string }) => {
+  const { isExecuting } = useExecutionState({ requestId });
+  return isExecuting ? <ConnectionCircle className='flex-shrink-0' data-testid="WebSocketSpinner__Connected" /> : null;
+};
+
 export const Debug: FC = () => {
   const {
     activeWorkspace,
@@ -227,18 +233,6 @@ export const Debug: FC = () => {
   }, []);
 
   const { settings } = useRootLoaderData();
-  const [runningRequests, setRunningRequests] = useState<
-    Record<string, boolean>
-  >({});
-  const setLoading = (isLoading: boolean) => {
-    invariant(requestId, 'No active request');
-    if (Boolean(runningRequests?.[requestId]) !== isLoading) {
-      setRunningRequests({
-        ...runningRequests,
-        [requestId]: isLoading ? true : false,
-      });
-    }
-  };
 
   const grpcState = grpcStates.find(s => s.requestId === requestId);
   const setGrpcState = (newState: GrpcRequestState) =>
@@ -1252,6 +1246,7 @@ export const Debug: FC = () => {
                           }}
                         />
                         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+                        {isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
                         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
                         {item.pinned && (
                           <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
@@ -1348,7 +1343,6 @@ export const Debug: FC = () => {
                   <RequestPane
                     environmentId={activeEnvironment ? activeEnvironment._id : ''}
                     settings={settings}
-                    setLoading={setLoading}
                     onPaste={text => {
                       setPastedCurl(text);
                       setPasteCurlModalOpen(true);
@@ -1376,7 +1370,7 @@ export const Debug: FC = () => {
                   <RealtimeResponsePane requestId={activeRequest._id} />
                 )}
                 {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
-                  <ResponsePane runningRequests={runningRequests} />
+                  <ResponsePane activeRequestId={activeRequest._id} />
                 )}
               </ErrorBoundary>
             </Panel>

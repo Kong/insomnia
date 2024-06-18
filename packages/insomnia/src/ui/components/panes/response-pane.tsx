@@ -8,6 +8,7 @@ import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
+import { useExecutionState } from '../../hooks/use-execution-state';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { RequestLoaderData } from '../../routes/request';
 import { useRootLoaderData } from '../../routes/root';
@@ -30,10 +31,10 @@ import { Pane, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
-  runningRequests: Record<string, boolean>;
+  activeRequestId: string;
 }
 export const ResponsePane: FC<Props> = ({
-  runningRequests,
+  activeRequestId,
 }) => {
   const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const filterHistory = activeRequestMeta.responseFilterHistory || [];
@@ -73,6 +74,9 @@ export const ResponsePane: FC<Props> = ({
       window.clipboard.writeText(bodyBuffer.toString('utf8'));
     }
   }, [handleGetResponseBody]);
+
+  const { isExecuting, steps } = useExecutionState({ requestId: activeRequest._id });
+
   const handleDownloadResponseBody = useCallback(async (prettify: boolean) => {
     if (!activeResponse || !activeRequest) {
       console.warn('Nothing to download');
@@ -128,12 +132,15 @@ export const ResponsePane: FC<Props> = ({
   if (!activeResponse) {
     return (
       <PlaceholderResponsePane>
-        {runningRequests[activeRequest._id] && <ResponseTimer
+        {isExecuting && <ResponseTimer
           handleCancel={() => cancelRequestById(activeRequest._id)}
+          activeRequestId={activeRequestId}
+          steps={steps}
         />}
       </PlaceholderResponsePane>
     );
   }
+
   const timeline = models.response.getTimeline(activeResponse);
   const cookieHeaders = getSetCookieHeaders(activeResponse.headers);
   return (
@@ -142,7 +149,7 @@ export const ResponsePane: FC<Props> = ({
         <PaneHeader className="row-spaced">
           <div aria-atomic="true" aria-live="polite" className="no-wrap scrollable scrollable--no-bars pad-left">
             <StatusTag statusCode={activeResponse.statusCode} statusMessage={activeResponse.statusMessage} />
-            <TimeTag milliseconds={activeResponse.elapsedTime} />
+            <TimeTag milliseconds={activeResponse.elapsedTime} steps={steps} />
             <SizeTag bytesRead={activeResponse.bytesRead} bytesContent={activeResponse.bytesContent} />
           </div>
           <ResponseHistoryDropdown
@@ -229,8 +236,10 @@ export const ResponsePane: FC<Props> = ({
         </TabItem>
       </Tabs>
       <ErrorBoundary errorClassName="font-error pad text-center">
-        {runningRequests[activeRequest._id] && <ResponseTimer
+        {isExecuting && <ResponseTimer
           handleCancel={() => cancelRequestById(activeRequest._id)}
+          activeRequestId={activeRequestId}
+          steps={steps}
         />}
       </ErrorBoundary>
     </Pane>
