@@ -251,10 +251,10 @@ export interface BaseRequest {
   description: string;
   method: string;
   body: RequestBody;
-  preRequestScript: string;
-  afterResponseScript: string;
-  parameters: RequestParameter[];
-  pathParameters: RequestPathParameter[];
+  preRequestScript?: string;
+  afterResponseScript?: string;
+  parameters?: RequestParameter[];
+  pathParameters?: RequestPathParameter[];
   headers: RequestHeader[];
   authentication: RequestAuthentication | {};
   metaSortKey: number;
@@ -289,8 +289,8 @@ export function init(): BaseRequest {
     description: '',
     method: METHOD_GET,
     body: {},
-    preRequestScript: '',
-    afterResponseScript: '',
+    preRequestScript: undefined,
+    afterResponseScript: undefined,
     parameters: [],
     headers: [],
     authentication: {},
