@@ -377,6 +377,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
 
     const requestData = await fetchRequestData(requestId);
     const mutatedContext = await getPreRequestScriptOutput(requestData, workspaceId);
+    window.main.completeExecutionStep({ requestId });
     if (mutatedContext === null) {
       return null;
     }
@@ -384,7 +385,6 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const afterResponseScript = `${mutatedContext.request.afterResponseScript}`;
     mutatedContext.request.afterResponseScript = '';
 
-    window.main.completeExecutionStep({ requestId });
     window.main.addExecutionStep({
       requestId,
       record: {
@@ -500,6 +500,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     }
   } catch (e) {
     console.log('Failed to send request', e);
+    window.main.completeExecutionStep({ requestId });
     const url = new URL(request.url);
     url.searchParams.set('error', e);
     if (e?.extraInfo && e?.extraInfo?.subType === RenderErrorSubType.EnvironmentVariable) {
@@ -565,6 +566,7 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
 
   const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
   await models.response.create(response);
+  window.main.completeExecutionStep({ requestId: req._id });
   return null;
 };
 export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {
