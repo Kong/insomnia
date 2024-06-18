@@ -39,12 +39,9 @@ export interface WorkspaceLoaderData {
   activeProject: Project;
   gitRepository: GitRepository | null;
   activeEnvironment: Environment;
-  activeGlobalEnvironment?: Environment | null;
   activeCookieJar: CookieJar;
   baseEnvironment: Environment;
   subEnvironments: Environment[];
-  globalBaseEnvironments: (Environment & { workspaceName: string })[];
-  globalSubEnvironments: Environment[];
   activeApiSpec: ApiSpec | null;
   activeMockServer?: MockServer | null;
   clientCertificates: ClientCertificate[];
@@ -99,38 +96,10 @@ export const workspaceLoader: LoaderFunction = async ({
     await models.environment.findByParentId(baseEnvironment._id)
   ).sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
 
-  const globalEnvironmentWorkspaces = await database.find<Workspace>(models.workspace.type, {
-    parentId: projectId,
-    scope: 'environment',
-  });
-
-  const globalBaseEnvironments = await database.find<Environment>(models.environment.type, {
-    parentId: {
-      $in: globalEnvironmentWorkspaces.map(w => w._id),
-    },
-  });
-
-  const globalSubEnvironments = await database.find<Environment>(models.environment.type, {
-    parentId: {
-      $in: globalBaseEnvironments.map(e => e._id),
-    },
-  });
-
-  const globalBaseEnvironmentsWithWorkspaceName = globalBaseEnvironments.map(e => {
-    const workspace = globalEnvironmentWorkspaces.find(w => w._id === e.parentId);
-    return {
-      ...e,
-      workspaceName: workspace?.name || '',
-    };
-  });
-
-  const activeEnvironment = (await database.getWhere<Environment>(models.environment.type, {
-    _id: activeWorkspaceMeta.activeEnvironmentId,
-  })) || baseEnvironment;
-
-  const activeGlobalEnvironment = (await database.getWhere<Environment>(models.environment.type, {
-    _id: activeWorkspaceMeta.activeGlobalEnvironmentId,
-  }));
+  const activeEnvironment =
+    subEnvironments.find(
+      ({ _id }) => activeWorkspaceMeta.activeEnvironmentId === _id,
+    ) || baseEnvironment;
 
   const activeCookieJar = await models.cookieJar.getOrCreateForParentId(
     workspaceId,
@@ -296,11 +265,8 @@ export const workspaceLoader: LoaderFunction = async ({
     activeWorkspaceMeta,
     activeCookieJar,
     activeEnvironment,
-    activeGlobalEnvironment,
     subEnvironments,
     baseEnvironment,
-    globalSubEnvironments,
-    globalBaseEnvironments: globalBaseEnvironmentsWithWorkspaceName,
     activeApiSpec,
     activeMockServer,
     clientCertificates,

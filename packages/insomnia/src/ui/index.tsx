@@ -42,7 +42,6 @@ const UnitTest = lazy(() => import('./routes/unit-test'));
 const Debug = lazy(() => import('./routes/debug'));
 const Design = lazy(() => import('./routes/design'));
 const MockServer = lazy(() => import('./routes/mock-server'));
-const Environments = lazy(() => import('./routes/environments'));
 
 initializeSentry();
 initializeLogging();
@@ -557,14 +556,6 @@ async function renderApp() {
                                 ],
                               },
                               {
-                                path: 'environment',
-                                element: (
-                                  <Suspense fallback={<AppLoadingIndicator />}>
-                                    <Environments />
-                                  </Suspense>
-                                ),
-                              },
-                              {
                                 path: 'cacert',
                                 children: [
                                   {
@@ -653,13 +644,6 @@ async function renderApp() {
                                       (
                                         await import('./routes/actions')
                                       ).setActiveEnvironmentAction(...args),
-                                  },
-                                  {
-                                    path: 'set-active-global',
-                                    action: async (...args) =>
-                                      (
-                                        await import('./routes/actions')
-                                      ).setActiveGlobalEnvironmentAction(...args),
                                   },
                                 ],
                               },

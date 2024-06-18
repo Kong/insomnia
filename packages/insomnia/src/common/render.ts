@@ -60,37 +60,15 @@ export async function buildRenderContext(
     ancestors,
     rootEnvironment,
     subEnvironment,
-    rootGlobalEnvironment,
-    subGlobalEnvironment,
     baseContext = {},
   }: {
     ancestors?: RenderContextAncestor[];
     rootEnvironment?: Environment;
     subEnvironment?: Environment;
-      rootGlobalEnvironment?: Environment | null;
-      subGlobalEnvironment?: Environment | null;
     baseContext?: Record<string, any>;
   },
 ) {
   const envObjects: Record<string, any>[] = [];
-
-  if (rootGlobalEnvironment) {
-    const ordered = orderedJSON.order(
-      rootGlobalEnvironment.data,
-      rootGlobalEnvironment.dataPropertyOrder,
-      JSON_ORDER_SEPARATOR,
-    );
-    envObjects.push(ordered);
-  }
-
-  if (subGlobalEnvironment) {
-    const ordered = orderedJSON.order(
-      subGlobalEnvironment.data,
-      subGlobalEnvironment.dataPropertyOrder,
-      JSON_ORDER_SEPARATOR,
-    );
-    envObjects.push(ordered);
-  }
 
   // Get root environment keys in correct order
   // Then get sub environment keys in correct order
@@ -322,8 +300,6 @@ interface RenderRequest<T extends Request | GrpcRequest | WebSocketRequest> {
 interface BaseRenderContextOptions {
   environment?: string | Environment;
   baseEnvironment?: Environment;
-  rootGlobalEnvironment?: Environment;
-  subGlobalEnvironment?: Environment;
   purpose?: RenderPurpose;
   extraInfo?: ExtraRenderInfo;
   ignoreUndefinedEnvVariable?: boolean;
@@ -348,29 +324,6 @@ export async function getRenderContext(
   const workspace = ancestors.find(isWorkspace);
   if (!workspace) {
     throw new Error('Failed to render. Could not find workspace');
-  }
-
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
-
-  let rootGlobalEnvironment: Environment | null = null;
-  let subGlobalEnvironment: Environment | null = null;
-
-  if (workspaceMeta?.activeGlobalEnvironmentId) {
-    const activeGlobalEnvironment = await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId);
-
-    if (activeGlobalEnvironment) {
-      if (activeGlobalEnvironment?.parentId.startsWith('wrk_')) {
-        rootGlobalEnvironment = activeGlobalEnvironment;
-      } else {
-        subGlobalEnvironment = activeGlobalEnvironment;
-
-        const baseGlobalEnvironment = await models.environment.getById(activeGlobalEnvironment.parentId);
-
-        if (baseGlobalEnvironment) {
-          rootGlobalEnvironment = baseGlobalEnvironment;
-        }
-      }
-    }
   }
 
   const rootEnvironment = baseEnvironment || await models.environment.getOrCreateForParentId(
@@ -408,15 +361,6 @@ export async function getRenderContext(
   }
 
   const inKey = templating.NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
-
-  if (rootGlobalEnvironment) {
-    getKeySource(rootGlobalEnvironment.data || {}, inKey, 'rootGlobal');
-  }
-
-  if (subGlobalEnvironment) {
-    getKeySource(subGlobalEnvironment.data || {}, inKey, 'subGlobal');
-  }
-
   // Get Keys from root environment
   getKeySource((rootEnvironment || {}).data, inKey, 'root');
 
@@ -464,14 +408,7 @@ export async function getRenderContext(
   };
 
   // Generate the context we need to render
-  return buildRenderContext({
-    ancestors,
-    rootGlobalEnvironment,
-    subGlobalEnvironment,
-    rootEnvironment,
-    subEnvironment: subEnvironment || undefined,
-    baseContext,
-  });
+  return buildRenderContext({ ancestors, rootEnvironment, subEnvironment: subEnvironment || undefined, baseContext });
 }
 interface BaseRenderContext {
   getMeta: () => {};

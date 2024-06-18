@@ -421,8 +421,7 @@ test.describe('pre-request features tests', async () => {
         await expect(statusTag).toContainText('200 OK');
 
         // verify persisted environment
-        await page.getByRole('button', { name: 'Manage Environments' }).click();
-        await page.getByRole('button', { name: 'Manage collection environments' }).click();
+        await page.getByLabel('Manage Environments').click();
         const responseBody = page.getByRole('dialog').getByTestId('CodeEditor').locator('.CodeMirror-line');
         const rows = await responseBody.allInnerTexts();
         const bodyJson = JSON.parse(rows.join(' '));
