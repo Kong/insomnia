@@ -1,11 +1,13 @@
-import { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { useRef, useState } from 'react';
-import { Button, Dialog, DropIndicator, GridList, GridListItem, Heading, Label, ListBoxItem, Menu, MenuTrigger, Modal, ModalOverlay, Popover, useDragAndDrop } from 'react-aria-components';
+import { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import React, { useEffect, useRef, useState } from 'react';
+import { Button, Dialog, DropIndicator, GridList, GridListItem, Heading, Label, ListBoxItem, Menu, MenuTrigger, Modal, ModalOverlay, Popover, Text, useDragAndDrop } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { docsTemplateTags } from '../../../common/documentation';
 import { debounce } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
+import { isRemoteProject } from '../../../models/project';
+import { OrganizationFeatureLoaderData } from '../../routes/organization';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { EditableInput } from '../editable-input';
 import { EnvironmentEditor, EnvironmentEditorHandle, EnvironmentInfo } from '../editors/environment-editor';
@@ -20,7 +22,20 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
     ':workspaceId'
   ) as WorkspaceLoaderData;
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
+  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
 
+  useEffect(() => {
+    const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
+    if (isIdleAndUninitialized) {
+      permissionsFetcher.load(`/organization/${organizationId}/permissions`);
+    }
+  }, [organizationId, permissionsFetcher]);
+
+  const { features } = permissionsFetcher.data || {
+    features: {
+      gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
+    },
+  };
   const createEnvironmentFetcher = useFetcher();
   const deleteEnvironmentFetcher = useFetcher();
   const updateEnvironmentFetcher = useFetcher();
@@ -30,8 +45,12 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
     baseEnvironment,
     activeEnvironment,
     subEnvironments,
+    activeProject,
+    activeWorkspaceMeta,
   } = routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
+  const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
+  const isUsingGitSync = Boolean(features.gitSync.enabled && (activeWorkspaceMeta?.gitRepositoryId || !isRemoteProject(activeProject)));
 
   const selectedEnvironment = [baseEnvironment, ...subEnvironments].find(env => env._id === selectedEnvironmentId);
 
@@ -80,26 +99,30 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
   const createEnvironmentActionsList: {
     id: string;
     name: string;
-    icon: IconName;
+    description: string;
+    icon: IconProp;
     action: (environment: Environment) => void;
-  }[] = [{
-    id: 'shared',
-    name: 'Shared environment',
-    icon: 'globe-americas',
-    action: async () => {
-      createEnvironmentFetcher.submit({
-        isPrivate: false,
-      },
-        {
-          method: 'post',
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/create`,
-          encType: 'application/json',
-        });
-      },
-    }, {
+  }[] = [
+      {
+        id: 'shared',
+        name: 'Shared environment',
+        description: `${isUsingGitSync ? 'Synced with Git Sync and exportable' : isUsingInsomniaCloudSync ? 'Synced with Insomnia Sync and exportable' : 'Exportable'}`,
+        icon: isUsingGitSync ? ['fab', 'git-alt'] : isUsingInsomniaCloudSync ? 'globe-americas' : 'file-arrow-down',
+        action: async () => {
+          createEnvironmentFetcher.submit({
+            isPrivate: false,
+          },
+            {
+              method: 'post',
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/create`,
+              encType: 'application/json',
+            });
+        },
+      }, {
         id: 'private',
         name: 'Private environment',
-    icon: 'laptop-code',
+      description: 'Local and not exportable',
+      icon: 'lock',
         action: async () => {
           createEnvironmentFetcher.submit({
             isPrivate: true,
@@ -246,46 +269,44 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                           <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                           <Icon
                             icon={
-                              item.parentId === workspaceId ? 'globe-americas' : item.isPrivate ? 'laptop-code' : 'globe-americas'
+                              item.isPrivate ? 'lock' : isUsingGitSync ? ['fab', 'git-alt'] : isUsingInsomniaCloudSync ? 'globe-americas' : 'file-arrow-down'
                             }
                             className='w-5'
                             style={{
                               color: item.color || undefined,
                             }}
                           />
-                          {item.parentId === workspaceId ? <span className='truncate flex-1'>{item.name}</span> : (
-                            <EditableInput
-                              value={item.name}
-                              name="name"
-                              ariaLabel="Environment name"
-                              className="px-1 flex-1"
-                              onSingleClick={() => {
-                                setSelectedEnvironmentId(item._id);
-                              }}
-                              onSubmit={name => {
-                                name && updateEnvironmentFetcher.submit({
-                                  patch: {
-                                    name,
-                                  },
-                                  environmentId: item._id,
-                                }, {
-                                  method: 'post',
-                                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-                                  encType: 'application/json',
-                                });
-                              }}
-                            />
-                          )}
+                          <EditableInput
+                            value={item.name}
+                            name="name"
+                            ariaLabel="Environment name"
+                            className="px-1 flex-1"
+                            onSingleClick={() => {
+                              setSelectedEnvironmentId(item._id);
+                            }}
+                            onSubmit={name => {
+                              name && updateEnvironmentFetcher.submit({
+                                patch: {
+                                  name,
+                                },
+                                environmentId: item._id,
+                              }, {
+                                method: 'post',
+                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
+                                encType: 'application/json',
+                              });
+                            }}
+                          />
                           {item.parentId !== workspaceId && <MenuTrigger>
                             <Button
-                              aria-label="Project Actions"
+                              aria-label="Environment Actions"
                               className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                             >
                               <Icon icon="caret-down" />
                             </Button>
                             <Popover className="min-w-max">
                               <Menu
-                                aria-label="Environment Actions"
+                                aria-label="Environment Actions menu"
                                 selectionMode="single"
                                 onAction={key => {
                                   environmentActionsList
@@ -320,7 +341,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                               </Button>
                               <Popover className="min-w-max">
                                 <Menu
-                                  aria-label="New Environment"
+                                  aria-label="Create Environment menu"
                                   selectionMode="single"
                                   onAction={key => {
                                     createEnvironmentActionsList
@@ -334,11 +355,16 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                                     <ListBoxItem
                                       key={item.id}
                                       id={item.id}
-                                      className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                                      className="flex flex-col gap-1 px-[--padding-md] py-2 aria-selected:font-bold text-[--color-font] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                                       aria-label={item.name}
                                     >
-                                      <Icon className='w-5' icon={item.icon} />
-                                      <span>{item.name}</span>
+                                      <div className='flex gap-2 items-center'>
+                                        <Icon className='w-5' icon={item.icon} />
+                                        <span>{item.name}</span>
+                                      </div>
+                                      <Text slot="description" className='text-xs text-[--hl]'>
+                                        {item.description}
+                                      </Text>
                                     </ListBoxItem>
                                   )}
                                 </Menu>
@@ -353,7 +379,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                 <div className='flex-1 flex flex-col divide-solid divide-y divide-[--hl-md] overflow-hidden'>
                   <div className='flex items-center justify-between gap-2 w-full overflow-hidden'>
                     <Heading className='flex items-center gap-2 text-lg py-2 px-4 overflow-hidden'>
-                      <Icon className='w-4' icon={selectedEnvironment?.isPrivate ? 'laptop-code' : 'globe-americas'} />
+                      <Icon className='w-4' icon={selectedEnvironment?.isPrivate ? 'lock' : isUsingGitSync ? ['fab', 'git-alt'] : isUsingInsomniaCloudSync ? 'globe-americas' : 'file-arrow-down'} />
                       <EditableInput
                         value={selectedEnvironment?.name || ''}
                         name="name"
