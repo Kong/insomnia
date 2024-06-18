@@ -366,13 +366,8 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
   try {
     window.main.startExecution({ requestId });
-    window.main.addExecutionStep({
-      requestId,
-      stepName: 'Executing pre-request script',
-    }
-    );
-
     const requestData = await fetchRequestData(requestId);
+    window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
     const mutatedContext = await getPreRequestScriptOutput(requestData, workspaceId);
     window.main.completeExecutionStep({ requestId });
     if (mutatedContext === null) {
@@ -382,12 +377,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const afterResponseScript = `${mutatedContext.request.afterResponseScript}`;
     mutatedContext.request.afterResponseScript = '';
 
-    window.main.addExecutionStep({
-      requestId,
-      stepName: 'Rendering request',
-    }
-    );
-
+    window.main.addExecutionStep({ requestId, stepName: 'Rendering request' });
     const renderedResult = await tryToInterpolateRequest(
       mutatedContext.request,
       mutatedContext.environment,
@@ -397,6 +387,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       ignoreUndefinedEnvVariable,
     );
     const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
+    window.main.completeExecutionStep({ requestId });
 
     // TODO: remove this temporary hack to support GraphQL variables in the request body properly
     if (renderedRequest && renderedRequest.body?.text && renderedRequest.body?.mimeType === 'application/graphql') {
@@ -411,13 +402,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       }
     }
 
-    window.main.completeExecutionStep({ requestId });
-    window.main.addExecutionStep({
-      requestId,
-      stepName: 'Sending request',
-    }
-    );
-
+    window.main.addExecutionStep({ requestId, stepName: 'Sending request' });
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
       mutatedContext.clientCertificates,
@@ -426,6 +411,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       requestData.timelinePath,
       requestData.responseId
     );
+    window.main.completeExecutionStep({ requestId });
 
     const requestMeta = await models.requestMeta.getByParentId(requestId);
     invariant(requestMeta, 'RequestMeta not found');
@@ -433,18 +419,11 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
     const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
 
-    window.main.completeExecutionStep({ requestId });
     mutatedContext.request.afterResponseScript = afterResponseScript;
     if (requestData.request.afterResponseScript) {
-      window.main.addExecutionStep({
-        requestId,
-        stepName: 'Executing after-response script',
-      }
-      );
-
       const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
       const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-
+      window.main.addExecutionStep({ requestId, stepName: 'Executing after-response script' });
       const postMutatedContext = await tryToExecuteAfterResponseScript({
         ...requestData,
         ...mutatedContext,
