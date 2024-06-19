@@ -7,20 +7,11 @@ import { findPersonalOrganization } from '../models/organization';
 import { Project } from '../models/project';
 import { AsyncTask } from '../ui/routes/organization';
 
-// generate as complete a path as possible, reduce router redirects, and let all loader run parallel
-export const getWholePath = async (accountId: string) => {
-  const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
-  const personalOrganization = findPersonalOrganization(organizations, accountId);
-  if (!personalOrganization) {
-    return '/organization';
-  }
-
-  const personalOrganizationId = personalOrganization.id;
-  // When org icon is clicked this ensures we remember the last visited page
+export const findBestRoute = async (orgId: string) => {
+  // 1. assuming we have history, try to redirect to the last visited project
   const prevOrganizationLocation = localStorage.getItem(
-    `locationHistoryEntry:${personalOrganizationId}`
+    `locationHistoryEntry:${orgId}`
   );
-
   // Check if the last visited project exists and redirect to it
   if (prevOrganizationLocation) {
     const match = matchPath(
@@ -40,18 +31,14 @@ export const getWholePath = async (accountId: string) => {
       }
     }
   }
-  const allOrganizationProjects = await database.find<Project>(models.project.type, {
-    parentId: personalOrganizationId,
-  }) || [];
+  // 2. if no history, redirect to the first project (TODO: can be a loop?)
+  const firstProject = await database.getWhere<Project>(models.project.type, { parentId: orgId });
 
-  // Check if the org has any projects and redirect to the first one
-  const projectId = allOrganizationProjects[0]?._id;
-
-  if (!projectId) {
-    return `/organization/${personalOrganizationId}/project`;
+  if (firstProject?._id) {
+    return `/organization/${orgId}/project/${firstProject?._id}`;
   }
-
-  return `/organization/${personalOrganizationId}/project/${projectId}`;
+  // 3. if no project, redirect to the project route
+  return `/organization/${orgId}/project`;
 };
 
 export const getInitialEntry = async () => {
@@ -69,10 +56,17 @@ export const getInitialEntry = async () => {
 
     const user = await models.userSession.getOrCreate();
     if (user.id) {
-      // return '/organization';
-      const path = await getWholePath(user.accountId);
+      const organizations = JSON.parse(localStorage.getItem(`${user.accountId}:organizations`) || '[]') as Organization[];
+      const personalOrganization = findPersonalOrganization(organizations, user.accountId);
+      // If the personal org is not found in local storage go fetch from org index loader
+      if (!personalOrganization) {
+        return {
+          pathname: '/organization',
+        };
+      }
+      const personalOrganizationId = personalOrganization.id;
       return {
-        pathname: path,
+        pathname: findBestRoute(personalOrganizationId),
         state: {
           // async task need to excute when fisrt entry
           asyncTaskList: [AsyncTask.SyncOrganization, AsyncTask.MigrateProjects, AsyncTask.SyncProjects],

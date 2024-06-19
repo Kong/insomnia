@@ -30,7 +30,6 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   ActionFunction,
   LoaderFunction,
-  matchPath,
   redirect,
   useFetcher,
   useFetchers,
@@ -72,6 +71,7 @@ import { showModal } from '../../ui/components/modals';
 import { AskModal } from '../../ui/components/modals/ask-modal';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
+import { findBestRoute } from '../../utils/router';
 import { AvatarGroup } from '../components/avatar';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
@@ -232,54 +232,17 @@ export const syncProjectsAction: ActionFunction = async ({ params }) => {
 };
 
 export const indexLoader: LoaderFunction = async ({ params }) => {
-  console.log('org id index loader');
+  console.log('org id index loader(/organization/:organizationId)');
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
-
-  // When org icon is clicked this ensures we remember the last visited page
-  const prevOrganizationLocation = localStorage.getItem(
-    `locationHistoryEntry:${organizationId}`
-  );
 
   try {
     await syncProjects(organizationId);
   } catch (err) {
     console.log('[project] Could not fetch remote projects.');
   }
-
-  // Check if the last visited project exists and redirect to it
-  if (prevOrganizationLocation) {
-    const match = matchPath(
-      {
-        path: '/organization/:organizationId/project/:projectId',
-        end: false,
-      },
-      prevOrganizationLocation
-    );
-
-    if (match && match.params.organizationId && match.params.projectId) {
-      const existingProject = await models.project.getById(match.params.projectId);
-
-      if (existingProject) {
-        console.log('[project] Redirecting to last visited project', existingProject._id);
-        return redirect(`/organization/${match?.params.organizationId}/project/${existingProject._id}`);
-      }
-    }
-  }
-
-  const allOrganizationProjects = await database.find<Project>(models.project.type, {
-    parentId: organizationId,
-  }) || [];
-
-  // Check if the org has any projects and redirect to the first one
-  const projectId = allOrganizationProjects[0]?._id;
-
-  if (!projectId) {
-    return redirect(`/organization/${organizationId}/project`);
-  }
-  invariant(projectId, 'No projects found for this organization.');
-
-  return redirect(`/organization/${organizationId}/project/${projectId}`);
+  const bestRoute = await findBestRoute(organizationId);
+  return redirect(bestRoute);
 };
 
 export interface InsomniaFile {
