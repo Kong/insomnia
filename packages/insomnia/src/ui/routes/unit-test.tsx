@@ -1,5 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { FC, Fragment, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { FC, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -8,13 +8,10 @@ import {
   GridList,
   GridListItem,
   Heading,
-  ListBox,
   ListBoxItem,
   Menu,
   MenuTrigger,
   Popover,
-  Select,
-  SelectValue,
   useDragAndDrop,
 } from 'react-aria-components';
 import { ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -34,7 +31,6 @@ import {
 import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { Environment } from '../../models/environment';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { showModal } from '../../ui/components/modals';
 import { AskModal } from '../../ui/components/modals/ask-modal';
@@ -42,6 +38,7 @@ import { invariant } from '../../utils/invariant';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { EditableInput } from '../components/editable-input';
+import { EnvironmentPicker } from '../components/environment-picker';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
@@ -95,23 +92,14 @@ const TestRoute: FC = () => {
 
   const {
     activeProject,
-    activeEnvironment,
     activeCookieJar,
     caCertificate,
     clientCertificates,
-    subEnvironments,
-    baseEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const setActiveEnvironmentFetcher = useFetcher();
-
-  const environmentsList = [baseEnvironment, ...subEnvironments].map(environment => ({
-    id: environment._id,
-    ...environment,
-  }));
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
-  const [isEnvironmentSelectOpen, setIsEnvironmentSelectOpen] = useState(false);
+  const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
   const createUnitTestSuiteFetcher = useFetcher();
@@ -154,7 +142,7 @@ const TestRoute: FC = () => {
   useDocBodyKeyboardShortcuts({
     sidebar_toggle: toggleSidebar,
     environment_showEditor: () => setEnvironmentModalOpen(true),
-    environment_showSwitchMenu: () => setIsEnvironmentSelectOpen(true),
+    environment_showSwitchMenu: () => setIsEnvironmentPickerOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
   });
 
@@ -317,126 +305,11 @@ const TestRoute: FC = () => {
               </Breadcrumbs>
               <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
                 <div className="flex w-full items-center gap-2 justify-between">
-                  <Select
-                    aria-label="Select an environment"
-                    className="overflow-hidden"
-                    onOpenChange={setIsEnvironmentSelectOpen}
-                    isOpen={isEnvironmentSelectOpen}
-                    onSelectionChange={environmentId => {
-                      setActiveEnvironmentFetcher.submit(
-                        {
-                          environmentId,
-                        },
-                        {
-                          method: 'POST',
-                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
-                        }
-                      );
-                    }}
-                    selectedKey={activeEnvironment._id}
-                  >
-                    <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden w-full">
-                      <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
-                        {({ isPlaceholder, selectedItem }) => {
-                          if (
-                            isPlaceholder ||
-                            (selectedItem &&
-                              selectedItem._id === baseEnvironment._id) ||
-                            !selectedItem
-                          ) {
-                            return (
-                              <Fragment>
-                                <span
-                                  style={{
-                                    borderColor: 'var(--color-font)',
-                                  }}
-                                >
-                                  <Icon className='text-xs w-5' icon="globe-americas" />
-                                </span>
-                                <span className='truncate'>
-                                  {baseEnvironment.name}
-                                </span>
-                              </Fragment>
-                            );
-                          }
-
-                          return (
-                            <Fragment>
-                              <span
-                                style={{
-                                  borderColor: selectedItem.color ?? 'var(--color-font)',
-                                }}
-                              >
-                                <Icon
-                                  icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
-                                  style={{
-                                    color: selectedItem.color ?? 'var(--color-font)',
-                                  }}
-                                  className='text-xs w-5'
-                                />
-                              </span>
-                              {selectedItem.name}
-                            </Fragment>
-                          );
-                        }}
-                      </SelectValue>
-                      <Icon icon="caret-down" />
-                    </Button>
-                    <Popover className="min-w-max">
-                      <ListBox
-                        key={activeEnvironment._id}
-                        items={environmentsList}
-                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                      >
-                        {item => (
-                          <ListBoxItem
-                            id={item._id}
-                            key={item._id}
-                            className={
-                              `flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item._id === baseEnvironment._id ? '' : 'pl-8'}`
-                            }
-                            aria-label={item.name}
-                            textValue={item.name}
-                            value={item}
-                          >
-                            {({ isSelected }) => (
-                              <Fragment>
-                                <span
-                                  style={{
-                                    borderColor: item.color ?? 'var(--color-font)',
-                                  }}
-                                >
-                                  <Icon
-                                    icon={item.isPrivate ? 'laptop-code' : 'globe-americas'}
-                                    className='text-xs w-5'
-                                    style={{
-                                      color: item.color ?? 'var(--color-font)',
-                                    }}
-                                  />
-                                </span>
-                                <span className='flex-1 truncate'>
-                                  {item.name}
-                                </span>
-                                {isSelected && (
-                                  <Icon
-                                    icon="check"
-                                    className="text-[--color-success] justify-self-end"
-                                  />
-                                )}
-                              </Fragment>
-                            )}
-                          </ListBoxItem>
-                        )}
-                      </ListBox>
-                    </Popover>
-                  </Select>
-                  <Button
-                    aria-label='Manage Environments'
-                    onPress={() => setEnvironmentModalOpen(true)}
-                    className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                  >
-                    <Icon icon="gear" />
-                  </Button>
+                  <EnvironmentPicker
+                    isOpen={isEnvironmentPickerOpen}
+                    onOpenChange={setIsEnvironmentPickerOpen}
+                    onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
+                  />
                 </div>
                 <Button
                   onPress={() => setIsCookieModalOpen(true)}

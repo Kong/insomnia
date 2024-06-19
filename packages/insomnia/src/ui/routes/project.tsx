@@ -114,11 +114,12 @@ async function getAllTeamProjects(organizationId: string) {
   return response.data as TeamProject[];
 }
 
-export const scopeToLabelMap: Record<WorkspaceScope | 'unsynced', 'Document' | 'Collection' | 'Mock Server' | 'Unsynced'> = {
+export const scopeToLabelMap: Record<WorkspaceScope | 'unsynced', 'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment'> = {
   design: 'Document',
   collection: 'Collection',
   'mock-server': 'Mock Server',
   unsynced: 'Unsynced',
+  environment: 'Environment',
 };
 
 export const scopeToIconMap: Record<string, IconName> = {
@@ -126,6 +127,7 @@ export const scopeToIconMap: Record<string, IconName> = {
   collection: 'bars',
   'mock-server': 'server',
   unsynced: 'cloud-download',
+  environment: 'code',
 };
 
 export const scopeToBgColorMap: Record<string, string> = {
@@ -133,6 +135,7 @@ export const scopeToBgColorMap: Record<string, string> = {
   collection: 'bg-[--color-surprise]',
   'mock-server': 'bg-[--color-warning]',
   unsynced: 'bg-[--hl-md]',
+  environment: 'bg-[--color-font]',
 };
 
 export const scopeToTextColorMap: Record<string, string> = {
@@ -140,6 +143,7 @@ export const scopeToTextColorMap: Record<string, string> = {
   collection: 'text-[--color-font-surprise]',
   'mock-server': 'text-[--color-font-warning]',
   unsynced: 'text-[--color-font]',
+  environment: 'text-[--color-bg]',
 };
 
 async function syncTeamProjects({
@@ -284,7 +288,7 @@ export interface InsomniaFile {
   name: string;
   remoteId?: string;
   scope: WorkspaceScope | 'unsynced';
-  label: 'Document' | 'Collection' | 'Mock Server' | 'Unsynced';
+  label: 'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment';
   created: number;
   lastModifiedTimestamp: number;
   branch?: string;
@@ -304,6 +308,7 @@ export interface ProjectLoaderData {
   files: InsomniaFile[];
   allFilesCount: number;
   documentsCount: number;
+  environmentsCount: number;
   collectionsCount: number;
   mockServersCount: number;
   projectsCount: number;
@@ -553,6 +558,7 @@ export const loader: LoaderFunction = async ({
       files: [],
       allFilesCount: 0,
       documentsCount: 0,
+      environmentsCount: 0,
       collectionsCount: 0,
       mockServersCount: 0,
       projectsCount: 0,
@@ -592,6 +598,9 @@ export const loader: LoaderFunction = async ({
     projectsCount: organizationProjects.length,
     activeProject: project,
     allFilesCount: files.length,
+    environmentsCount: files.filter(
+      file => file.scope === 'environment'
+    ).length,
     documentsCount: files.filter(
       file => file.scope === 'design'
     ).length,
@@ -610,6 +619,7 @@ const ProjectRoute: FC = () => {
     activeProject,
     projects,
     allFilesCount,
+    environmentsCount,
     collectionsCount,
     mockServersCount,
     documentsCount,
@@ -782,6 +792,29 @@ const ProjectRoute: FC = () => {
     });
   };
 
+  const createNewGlobalEnvironment = () => {
+    activeProject?._id &&
+      showPrompt({
+        title: 'Create New Environment',
+        submitName: 'Create',
+        placeholder: 'New environment',
+        defaultValue: 'New environment',
+        selectText: true,
+        onComplete: async (name: string) => {
+          fetcher.submit(
+            {
+              name,
+              scope: 'environment',
+            },
+            {
+              action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
+              method: 'post',
+            }
+          );
+        },
+      });
+  };
+
   const createNewProjectFetcher = useFetcher();
 
   useEffect(() => {
@@ -865,10 +898,16 @@ const ProjectRoute: FC = () => {
       action: createNewDocument,
     },
     {
-        id: 'new-mock-server',
-        name: 'Mock Server',
-        icon: 'server',
+      id: 'new-mock-server',
+      name: 'Mock Server',
+      icon: 'server',
       action: createNewMockServer,
+      },
+      {
+        id: 'new-environment',
+        name: 'Environment',
+        icon: 'code',
+        action: createNewGlobalEnvironment,
       },
       {
       id: 'import',
@@ -929,6 +968,16 @@ const ProjectRoute: FC = () => {
           icon: 'plus',
           label: 'New Mock Server',
           run: createNewMockServer,
+        },
+      },
+      {
+        id: 'environment',
+        label: `Environments (${environmentsCount})`,
+        icon: 'code',
+        action: {
+          icon: 'plus',
+          label: 'New Environment',
+          run: createNewGlobalEnvironment,
         },
       },
   ];
@@ -1307,6 +1356,7 @@ const ProjectRoute: FC = () => {
                           createRequestCollection={createNewCollection}
                           createDesignDocument={createNewDocument}
                           createMockServer={createNewMockServer}
+                          createEnvironment={createNewGlobalEnvironment}
                           importFrom={() => setImportModalType('file')}
                           cloneFromGit={importFromGit}
                           isGitSyncEnabled={isGitSyncEnabled}

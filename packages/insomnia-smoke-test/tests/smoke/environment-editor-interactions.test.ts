@@ -17,14 +17,15 @@ test.describe('Environment Editor', async () => {
   test('create a new environment', async ({ page }) => {
     // Create the environment (which will become active on creation)
     // await page.getByLabel("Select an environment").click();
-    await page.getByLabel('Manage Environments').click();
+    await page.getByRole('button', { name: 'Manage Environments' }).click();
+    await page.getByRole('button', { name: 'Manage collection environments' }).click();
     await page.getByTestId('CreateEnvironmentDropdown').click();
     await page.getByRole('menuitemradio', { name: 'Shared Environment' }).press('Enter');
     await page.getByRole('row', { name: 'New Environment' }).click();
     await page.getByRole('button', { name: 'Close' }).click();
 
-    await page.getByRole('button', { name: 'Select an environment' }).press('Enter');
     await page.getByRole('option', { name: 'New Environment' }).press('Enter');
+    await page.getByRole('option', { name: 'New Environment' }).press('Escape');
 
     // Send a request check variables defaulted to base env since new env is empty
     await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
@@ -37,15 +38,16 @@ test.describe('Environment Editor', async () => {
   // rename an existing environment
   test('Rename an existing environment', async ({ page }) => {
     // Rename the environment
-    await page.getByLabel('Manage Environments').click();
+    await page.getByRole('button', { name: 'Manage Environments' }).click();
+    await page.getByRole('button', { name: 'Manage collection environments' }).click();
     await page.getByRole('row', { name: 'ExampleB' }).getByRole('button', { name: 'name' }).dblclick();
     await page.getByRole('row', { name: 'ExampleB' }).locator('input').fill('Gandalf');
     await page.getByRole('row', { name: 'ExampleB' }).locator('input').press('Enter');
 
     await page.getByRole('button', { name: 'Close' }).click();
 
-    await page.getByRole('button', { name: 'Select an environment' }).press('Enter');
     await page.getByRole('option', { name: 'Gandalf' }).press('Enter');
+    await page.getByRole('option', { name: 'Gandalf' }).press('Escape');
 
     // Send a request check variables defaulted to base env since new env is empty
     await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
@@ -58,7 +60,8 @@ test.describe('Environment Editor', async () => {
 
   test('Add new variables to an existing environment', async ({ page }) => {
     // Rename the environment
-    await page.getByLabel('Manage Environments').click();
+    await page.getByRole('button', { name: 'Manage Environments' }).click();
+    await page.getByRole('button', { name: 'Manage collection environments' }).click();
     // add a new string environment variable
     await page.locator('pre').filter({ hasText: '"exampleNumber": 1111,' }).click();
     await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
@@ -70,6 +73,7 @@ test.describe('Environment Editor', async () => {
 
     // Open request
     await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByLabel('Manage collection environments').press('Escape');
     await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
 
     // Add number variable to request body
