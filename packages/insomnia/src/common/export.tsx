@@ -268,10 +268,11 @@ export async function exportRequestsData(
       return d;
     });
 
+  const stringifiedData = JSON.stringify(data);
   if (format.toLowerCase() === 'yaml') {
-    return YAML.stringify(data);
+    return YAML.stringify(JSON.parse(stringifiedData));
   } else if (format.toLowerCase() === 'json') {
-    return JSON.stringify(data);
+    return stringifiedData;
   } else {
     throw new Error(`Invalid export format ${format}. Must be "json" or "yaml"`);
   }

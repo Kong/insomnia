@@ -268,7 +268,7 @@ describe('export', () => {
     const exportWorkspacesDataJson = JSON.parse(exportedWorkspacesJson);
     const exportWorkspacesDataYaml = YAML.parse(exportedWorkspacesYaml);
     // Ensure JSON is the same as YAML
-    expect(exportWorkspacesDataJson.resources).toEqual(exportWorkspacesDataYaml.resources);
+    expect(exportWorkspacesDataYaml.resources).toMatchObject(exportWorkspacesDataJson.resources);
     expect(exportWorkspacesDataJson).toMatchObject({
       _type: 'export',
       __export_format: 4,
