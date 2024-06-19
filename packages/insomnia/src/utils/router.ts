@@ -5,8 +5,11 @@ import * as models from '../models';
 import { Organization } from '../models/organization';
 import { findPersonalOrganization } from '../models/organization';
 import { Project } from '../models/project';
-import { AsyncTask } from '../ui/routes/organization';
-
+export const enum AsyncTask {
+  SyncOrganization,
+  MigrateProjects,
+  SyncProjects,
+}
 export const findBestRoute = async (orgId: string) => {
   // 1. assuming we have history, try to redirect to the last visited project
   const prevOrganizationLocation = localStorage.getItem(
@@ -66,7 +69,7 @@ export const getInitialEntry = async () => {
       }
       const personalOrganizationId = personalOrganization.id;
       return {
-        pathname: findBestRoute(personalOrganizationId),
+        pathname: await findBestRoute(personalOrganizationId),
         state: {
           // async task need to excute when fisrt entry
           asyncTaskList: [AsyncTask.SyncOrganization, AsyncTask.MigrateProjects, AsyncTask.SyncProjects],
