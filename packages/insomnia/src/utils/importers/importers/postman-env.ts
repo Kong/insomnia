@@ -1,4 +1,5 @@
 import { Converter } from '../entities';
+import { replaceHyphens } from './postman';
 
 export const id = 'postman-environment';
 export const name = 'Postman Environment';
@@ -39,9 +40,11 @@ export const convert: Converter<Data> = rawData => {
           if (!enabled) {
             return accumulator;
           }
+          // hyphenated keys are not allowed in nunjucks eg. {{ foo-bar }} -> {{ foo_bar }}
+          const sanitized = replaceHyphens(key);
           return {
             ...accumulator,
-            [key]: value,
+            [sanitized]: value,
           };
         }, {}),
       },

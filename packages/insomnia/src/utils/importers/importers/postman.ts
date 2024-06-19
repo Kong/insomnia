@@ -64,10 +64,26 @@ export const transformPostmanToNunjucksString = (inputString?: string | null) =>
   if (!inputString) {
     return '';
   }
-
+  if (typeof inputString !== 'string') {
+    return inputString;
+  }
+  const sanitizedString = replaceHyphens(inputString);
   return postmanTagRegexs.reduce((transformedString, { tag, regex }) => {
     return transformedString.replace(regex, postmanToNunjucksLookup[tag]);
-  }, inputString);
+  }, sanitizedString);
+};
+
+export const replaceHyphens = (input?: string) => {
+  if (!input) {
+    return '';
+  }
+  // Use a regular expression to find and replace the pattern
+  return input.replace(/\{\{([^\}]+)\}\}/g, (_, match) => {
+    // Replace hyphens with underscores within the match
+    const replaced = match.replace(/-/g, '_');
+    // Return the replaced pattern within the curly braces
+    return `{{${replaced}}}`;
+  });
 };
 
 const POSTMAN_SCHEMA_V2_0 =
@@ -119,7 +135,8 @@ export class ImportPostman {
 
     const variable: { [key: string]: Variable['value'] } = {};
     for (let i = 0; i < variables.length; i++) {
-      const key = variables[i].key;
+
+      const key = transformPostmanToNunjucksString(variables[i].key);
       if (key === undefined) {
         continue;
       }
