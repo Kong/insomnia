@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/electron';
+import * as Sentry from '@sentry/electron/renderer';
 
 import { getAccountId, onLoginLogout } from '../account/session';
 import { SENTRY_OPTIONS } from '../common/sentry';
