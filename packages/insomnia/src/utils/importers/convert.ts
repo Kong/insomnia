@@ -26,6 +26,7 @@ export const convert = async (rawData: string) => {
     if (!resources) {
       continue;
     }
+    checkKey(resources);
 
     if (resources.length > 0 && resources[0].variable) {
       resources[0].environment = resources[0].variable;
@@ -51,3 +52,16 @@ export const convert = async (rawData: string) => {
 
   throw new Error('No importers found for file');
 };
+
+// this checks invalid keys ahead, or nedb would return error in importing.
+function checkKey(resources: Record<string, any>) {
+  for (const key in resources) {
+    const value = resources[key];
+
+    if (Array.isArray(value) || typeof value === 'object') {
+      checkKey(value);
+    } else if (key.indexOf('.') !== -1) {
+      throw new Error(`Detected invalid key "${key}", which contains '.'. please update it in the original tool and re-import it.`);
+    }
+  }
+}
