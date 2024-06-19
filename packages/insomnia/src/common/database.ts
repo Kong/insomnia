@@ -525,25 +525,6 @@ export const database = {
         return reject(err);
       }
 
-      const docDefaults = await models.initModel<T>(doc.type, {});
-      Object.keys(doc).forEach(key => {
-        // Need to figure out if it's ok to be undefined
-        const canKeyBeUndefined = typeof docDefaults[key as keyof BaseModel] === 'undefined';
-
-        if (canKeyBeUndefined) {
-          const isCurrentValueEmptyString = doc[key as keyof BaseModel] === '';
-          // @ts-expect-error -- TSCONVERSION keys can be arrays and objects
-          const isCurentValueEmptyArray = Array.isArray(doc[key as keyof BaseModel]) && doc[key as keyof BaseModel].length === 0;
-          const isCurrentValueUndefined = typeof doc[key as keyof BaseModel] === 'undefined';
-          const isCurrentValueNull = doc[key as keyof BaseModel] === null;
-          const isCurrentValueEmptyObject = JSON.stringify(doc[key as keyof BaseModel]) === '{}';
-
-          if (isCurrentValueUndefined || isCurrentValueNull || isCurrentValueEmptyString || isCurentValueEmptyArray || isCurrentValueEmptyObject) {
-            delete docWithDefaults[key as keyof BaseModel];
-          }
-        }
-      });
-
       (db[doc.type] as NeDB<T>).update(
         { _id: docWithDefaults._id },
         docWithDefaults,

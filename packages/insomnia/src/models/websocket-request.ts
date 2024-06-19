@@ -20,7 +20,7 @@ export interface BaseWebSocketRequest {
   headers: RequestHeader[];
   authentication: RequestAuthentication | {};
   parameters: RequestParameter[];
-  pathParameters: RequestPathParameter[];
+  pathParameters?: RequestPathParameter[];
   settingEncodeUrl: boolean;
   settingStoreCookies: boolean;
   settingSendCookies: boolean;
@@ -44,7 +44,7 @@ export const init = (): BaseWebSocketRequest => ({
   headers: [],
   authentication: {},
   parameters: [],
-  pathParameters: [],
+  pathParameters: undefined,
   settingEncodeUrl: true,
   settingStoreCookies: true,
   settingSendCookies: true,

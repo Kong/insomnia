@@ -254,7 +254,7 @@ export interface BaseRequest {
   preRequestScript?: string;
   afterResponseScript?: string;
   parameters: RequestParameter[];
-  pathParameters: RequestPathParameter[];
+  pathParameters?: RequestPathParameter[];
   headers: RequestHeader[];
   authentication: RequestAuthentication | {};
   metaSortKey: number;
@@ -292,9 +292,11 @@ export function init(): BaseRequest {
     parameters: [],
     headers: [],
     authentication: {},
+    preRequestScript: undefined,
     metaSortKey: -1 * Date.now(),
     isPrivate: false,
-    pathParameters: [],
+    pathParameters: undefined,
+    afterResponseScript: undefined,
     // Settings
     settingStoreCookies: true,
     settingSendCookies: true,
