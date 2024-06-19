@@ -53,7 +53,6 @@ import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
 import { useAIContext } from '../context/app/ai-context';
 import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-stream-context';
-import { useAsyncTask } from '../hooks/use-organization-async-task';
 import { syncProjects } from './project';
 import { useRootLoaderData } from './root';
 import { UntrackedProjectsLoaderData } from './untracked-projects';
@@ -110,12 +109,6 @@ interface CurrentPlan {
   type: PersonalPlanType;
 };
 
-export const enum AsyncTask {
-  SyncOrganization,
-  MigrateProjects,
-  SyncProjects,
-}
-
 function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
   const home = organizations.find(organization => isPersonalOrganization(organization) && isOwnerOfOrganization({
     organization,
@@ -136,7 +129,7 @@ function sortOrganizations(accountId: string, organizations: Organization[]): Or
   ];
 }
 
-async function syncOrganization(sessionId: string, accountId: string) {
+async function syncOrganizations(sessionId: string, accountId: string) {
   try {
     const [organizationsResult, user, currentPlan] = await Promise.all([
       insomniaFetch<OrganizationsResponse | void>({
@@ -172,39 +165,31 @@ async function syncOrganization(sessionId: string, accountId: string) {
   }
 }
 
-interface AsyncTaskActionRequest {
+interface SyncOrgsAndProjectsActionRequest {
   sessionId: string;
   accountId: string;
-  personalOrganizationId: string;
+  personalOrganizationId?: string;
   organizationId: string;
-  asyncTaskList: AsyncTask[];
 }
 
 // this action is used to run task that we dont want to block the UI
-export const asyncTaskAction: ActionFunction = async ({ request }) => {
+export const syncOrgsAndProjectsAction: ActionFunction = async ({ request }) => {
   try {
-    const { sessionId, personalOrganizationId, organizationId, asyncTaskList, accountId } = await request.json() as AsyncTaskActionRequest;
+    const { organizationId } = await request.json() as SyncOrgsAndProjectsActionRequest;
+    const { id: sessionId, accountId } = await userSession.getOrCreate();
 
+    invariant(sessionId, 'sessionId is required');
+    invariant(accountId, 'accountId is required');
     const taskPromiseList = [];
-
-    for (const task of asyncTaskList) {
-      if (task === AsyncTask.SyncOrganization) {
-        invariant(sessionId, 'sessionId is required');
-        invariant(accountId, 'accountId is required');
-        taskPromiseList.push(syncOrganization(sessionId, accountId));
-      }
-
-      if (task === AsyncTask.MigrateProjects) {
-        invariant(personalOrganizationId, 'personalOrganizationId is required');
-        invariant(sessionId, 'sessionId is required');
-        taskPromiseList.push(migrateProjectsUnderOrganization(personalOrganizationId, sessionId));
-      }
-
-      if (task === AsyncTask.SyncProjects) {
-        invariant(organizationId, 'organizationId is required');
-        taskPromiseList.push(syncProjects(organizationId));
-      }
-    }
+    taskPromiseList.push(syncOrganizations(sessionId, accountId));
+    const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+    invariant(organizations, 'Failed to fetch organizations.');
+    const personalOrganization = findPersonalOrganization(organizations, accountId);
+    invariant(personalOrganization, 'personalOrganization is required');
+    invariant(personalOrganization.id, 'personalOrganizationId is required');
+    taskPromiseList.push(migrateProjectsUnderOrganization(personalOrganization.id, sessionId));
+    invariant(organizationId, 'organizationId is required');
+    taskPromiseList.push(syncProjects(organizationId));
 
     await Promise.all(taskPromiseList);
 
@@ -247,7 +232,7 @@ export const indexLoader: LoaderFunction = async () => {
   console.log('org index loader');
   const { id: sessionId, accountId } = await userSession.getOrCreate();
   if (sessionId) {
-    await syncOrganization(sessionId, accountId);
+    await syncOrganizations(sessionId, accountId);
 
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
     invariant(organizations, 'Failed to fetch organizations.');
@@ -274,7 +259,7 @@ export const syncOrganizationsAction: ActionFunction = async () => {
   const { id: sessionId, accountId } = await userSession.getOrCreate();
 
   if (sessionId) {
-    await syncOrganization(sessionId, accountId);
+    await syncOrganizations(sessionId, accountId);
   }
 
   return null;
@@ -455,12 +440,32 @@ const OrganizationRoute = () => {
     projectId?: string;
     workspaceId?: string;
   };
+  const [status, setStatus] = useState<'online' | 'offline'>('online');
+  const syncOrgsAndProjects = useFetcher();
+  // TODO: This could run more than once
+  // controlling useEffect execution
+  // use fetcher history state to avoid running the same task multiple times
+  // ideas:
+  // 1. useEffect with controlled execution
+  // 2. use fetcher history state to avoid running the same task multiple times
+  // 3. create an event after logged in user is detected in initial entry and listen.once in this component
 
-  useAsyncTask({
-    organizationId,
-    organizations,
-    userSession,
-  });
+  // other note:
+  // submit existing actions rather than this new action
+
+  useEffect(() => {
+    console.log('run async task in useEffect');
+    const isIdleAndUninitialized = syncOrgsAndProjects.state === 'idle' && !syncOrgsAndProjects.data;
+    if (isIdleAndUninitialized) {
+      syncOrgsAndProjects.submit({
+        organizationId,
+      }, {
+        action: '/organization/syncOrgsAndProjectsAction',
+        method: 'POST',
+        encType: 'application/json',
+      });
+    }
+  }, [userSession.id, organizationId, userSession.accountId, syncOrgsAndProjects]);
 
   useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
