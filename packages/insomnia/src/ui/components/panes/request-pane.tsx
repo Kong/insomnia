@@ -80,7 +80,7 @@ export const RequestPane: FC<Props> = ({
   if (!activeRequest) {
     return <PlaceholderRequestPane />;
   }
-  const pathParameters = getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters);
+  const pathParameters = getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters || []);
 
   const onPathParameterChange = (pathParameters: RequestParameter[]) => {
     patchRequest(requestId, { pathParameters });

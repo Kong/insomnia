@@ -251,10 +251,10 @@ export interface BaseRequest {
   description: string;
   method: string;
   body: RequestBody;
-  preRequestScript: string;
-  afterResponseScript: string;
+  preRequestScript?: string;
+  afterResponseScript?: string;
   parameters: RequestParameter[];
-  pathParameters: RequestPathParameter[];
+  pathParameters?: RequestPathParameter[];
   headers: RequestHeader[];
   authentication: RequestAuthentication | {};
   metaSortKey: number;
@@ -289,14 +289,14 @@ export function init(): BaseRequest {
     description: '',
     method: METHOD_GET,
     body: {},
-    preRequestScript: '',
-    afterResponseScript: '',
     parameters: [],
     headers: [],
     authentication: {},
+    preRequestScript: undefined,
     metaSortKey: -1 * Date.now(),
     isPrivate: false,
-    pathParameters: [],
+    pathParameters: undefined,
+    afterResponseScript: undefined,
     // Settings
     settingStoreCookies: true,
     settingSendCookies: true,
