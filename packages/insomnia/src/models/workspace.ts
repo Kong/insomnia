@@ -169,8 +169,8 @@ function expectParentToBeProject(parentId?: string | null) {
 
 export const SCRATCHPAD_WORKSPACE_ID = 'wrk_scratchpad';
 
-export function isScratchpad(workspace: Workspace) {
-  return workspace._id === SCRATCHPAD_WORKSPACE_ID;
+export function isScratchpad(workspace?: Workspace) {
+  return workspace?._id === SCRATCHPAD_WORKSPACE_ID;
 }
 
 export const scopeToActivity = (scope: WorkspaceScope) => {
