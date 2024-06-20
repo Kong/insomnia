@@ -41,10 +41,10 @@ export const convert: Converter<Data> = rawData => {
             return accumulator;
           }
           // hyphenated keys are not allowed in nunjucks eg. {{ foo-bar }} -> {{ foo_bar }}
-          const sanitized = replaceHyphens(key);
+          const transformedString = key.replace(/-/g, '_');
           return {
             ...accumulator,
-            [sanitized]: value,
+            [transformedString]: value,
           };
         }, {}),
       },

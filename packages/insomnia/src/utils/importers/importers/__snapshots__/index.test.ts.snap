@@ -5900,7 +5900,7 @@ exports[`Fixtures Import postman-env no-name-input.json 1`] = `
       "_id": "__ENV_1__",
       "_type": "environment",
       "data": {
-        "foo": "production",
+        "foo_and_bar": "production-env",
       },
       "name": "Postman Environment",
       "parentId": "__BASE_ENVIRONMENT_ID__",
