@@ -1,5 +1,4 @@
 import { Converter } from '../entities';
-import { replaceHyphens } from './postman';
 
 export const id = 'postman-environment';
 export const name = 'Postman Environment';
