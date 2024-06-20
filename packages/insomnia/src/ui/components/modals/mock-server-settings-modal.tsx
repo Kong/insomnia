@@ -11,7 +11,9 @@ import { AlertModal } from './alert-modal';
 
 export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) => {
   const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
-  const fetcher = useFetcher();
+  const fetcher = useFetcher({
+    key: `${organizationId}-create-mock-server`,
+  });
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const projectData = useRouteLoaderData('/project/:projectId') as ProjectIdLoaderData | null;
   const isLocalProject = !projectData?.activeProject?.remoteId;

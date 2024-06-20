@@ -815,7 +815,9 @@ const ProjectRoute: FC = () => {
       });
   };
 
-  const createNewProjectFetcher = useFetcher();
+  const createNewProjectFetcher = useFetcher({
+    key: `${organizationId}-create-new-project`,
+  });
 
   useEffect(() => {
     if (createNewProjectFetcher.data && createNewProjectFetcher.data.error && createNewProjectFetcher.state === 'idle') {
