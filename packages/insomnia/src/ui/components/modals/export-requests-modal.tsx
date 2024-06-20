@@ -8,7 +8,6 @@ import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
-import { Workspace } from '../../../models/workspace';
 import { Child, WorkspaceLoaderData } from '../../routes/workspace';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
