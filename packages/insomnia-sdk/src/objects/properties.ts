@@ -2,6 +2,8 @@ import clone from 'clone';
 import equal from 'deep-equal';
 import _ from 'lodash';
 
+import { getInterpolator } from './interpolator';
+
 export const unsupportedError = (featureName: string, alternative?: string) => {
     const message = `${featureName} is not supported yet` +
         (alternative ? `, please use ${alternative} instead temporarily.` : '');
@@ -162,16 +164,38 @@ export class Property extends PropertyBase {
 
     static _index = 'id';
 
-    // TODO: unsupported yet
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    static replaceSubstitutions(_str: string, _variables: object): string {
-        throw unsupportedError('replaceSubstitutions');
+    static replaceSubstitutions(content: string, ...variables: object[]): string {
+        if (!Array.isArray(variables) || typeof content !== 'string') {
+            throw Error("replaceSubstitutions: the first param's type is not string or other parameters are not an array");
+        }
+
+        let context: object = {};
+        // the searching priority of rendering is from left to right
+        variables.reverse().forEach(variable => context = { ...context, ...variable });
+
+        return getInterpolator().render(content, context);
     }
 
-    // TODO: unsupported yet
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    static replaceSubstitutionsIn(_obj: string, _variables: object): object {
-        throw unsupportedError('replaceSubstitutionsIn');
+    static replaceSubstitutionsIn(obj: object, ...variables: object[]): object {
+        if (!Array.isArray(variables) || typeof obj !== 'object') {
+            throw Error("replaceSubstitutions: the first param's type is not object or other parameters are not an array");
+        }
+
+        try {
+            const content = JSON.stringify(obj);
+
+            let context: object = {};
+            // the searching priority of rendering is from left to right
+            variables.reverse().forEach(variable => {
+                context = { ...context, ...variable };
+            });
+
+            const rendered = getInterpolator().render(content, context);
+            return JSON.parse(rendered);
+
+        } catch (e) {
+            throw Error(`replaceSubstitutionsIn: ${e.toString()}`);
+        }
     }
 
     describe(content: string, typeName: string) {

@@ -28,6 +28,15 @@ describe('test Property objects', () => {
             id: 'real_id',
             name: 'real_name',
         });
+
+        expect(Property.replaceSubstitutions('{{ hehe }}', { hehe: 777 })).toEqual('777');
+        expect(Property.replaceSubstitutionsIn(
+            {
+                value: '{{ hehe }}',
+            },
+            { hehe: 777 },
+        ))
+            .toEqual({ value: '777' });
     });
 
     it('PropertyList: basic operations: add, append, count, all, clear', () => {
