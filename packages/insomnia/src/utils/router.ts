@@ -63,9 +63,7 @@ export const getInitialEntry = async () => {
       const personalOrganization = findPersonalOrganization(organizations, user.accountId);
       // If the personal org is not found in local storage go fetch from org index loader
       if (!personalOrganization) {
-        return {
-          pathname: '/organization',
-        };
+        return '/organization';
       }
       const personalOrganizationId = personalOrganization.id;
       return {
