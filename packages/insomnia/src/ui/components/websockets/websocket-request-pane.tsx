@@ -227,7 +227,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   };
 
   // Path parameters are path segments that start with a colon (:)
-  const pathParameters = getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters);
+  const pathParameters = getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters || []);
 
   const onPathParameterChange = (pathParameters: RequestPathParameter[]) => {
     patchRequest(requestId, { pathParameters });
