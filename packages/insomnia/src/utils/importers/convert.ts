@@ -14,7 +14,7 @@ export interface ConvertResult {
     __export_format: 4;
     __export_date: string;
     __export_source: `insomnia.importers:v${string}`;
-    resources: ImportRequest[];
+    entity: ImportRequest[];
   };
 }
 
@@ -26,7 +26,7 @@ export const convert = async (rawData: string) => {
     if (!resources) {
       continue;
     }
-    checkKey(resources);
+    checkInvalidPeriod(resources);
 
     if (resources.length > 0 && resources[0].variable) {
       resources[0].environment = resources[0].variable;
@@ -53,16 +53,18 @@ export const convert = async (rawData: string) => {
   throw new Error('No importers found for file');
 };
 
-// this checks invalid keys ahead, or nedb would return error in importing.
-function throwIfContainsPeriod(resources: Record<string, any>) {
-  for (const key in resources) {
-    const value = resources[key];
-    const shouldRecurse = Array.isArray(value) || typeof value === 'object';
+// this checks invalid keys ahead, or nedb would return an error in importing.
+function checkInvalidPeriod(entity: Record<string, any> | any[]) {
+  for (const key in entity) {
     const containsPeriod = key.indexOf('.') !== -1;
-    if (shouldRecurse) {
-      checkKey(value);
-    } else if (containsPeriod) {
+    if (containsPeriod) {
       throw new Error(`Detected invalid key "${key}", which contains '.'. Please update it in the original tool and re-import it.`);
+    }
+
+    const value = typeof entity === 'object' ? (entity as Record<string, any>)[key] : entity[key];
+    const shouldRecurse = Array.isArray(value) || typeof value === 'object';
+    if (shouldRecurse) {
+      checkInvalidPeriod(value);
     }
   }
 }
