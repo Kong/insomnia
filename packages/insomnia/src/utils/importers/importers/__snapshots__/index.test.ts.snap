@@ -5840,14 +5840,21 @@ exports[`Fixtures Import postman scripts-import-v2_1-input.json 1`] = `
     {
       "_id": "__GRP_1__",
       "_type": "request_group",
-      "afterResponseScript": "",
+      "afterResponseScript": "console.log('after')",
       "authentication": {},
       "description": "",
-      "environment": {},
+      "environment": {
+        "bob": "something",
+        "dssx": "{{env_var_in_global}}",
+      },
       "metaSortKey": -1622117984000,
       "name": "New Collection",
       "parentId": "__WORKSPACE_ID__",
-      "preRequestScript": "",
+      "preRequestScript": "console.log('pre')",
+      "variable": {
+        "bob": "something",
+        "dssx": "{{env_var_in_global}}",
+      },
     },
     {
       "_id": "__REQ_1__",
@@ -5900,7 +5907,7 @@ exports[`Fixtures Import postman-env no-name-input.json 1`] = `
       "_id": "__ENV_1__",
       "_type": "environment",
       "data": {
-        "foo": "production",
+        "foo_and_bar": "production-env",
       },
       "name": "Postman Environment",
       "parentId": "__BASE_ENVIRONMENT_ID__",

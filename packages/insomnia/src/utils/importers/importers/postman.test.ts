@@ -33,9 +33,15 @@ describe('postman', () => {
   })) as HttpsSchemaGetpostmanComJsonCollectionV210;
 
   describe('transformPostmanToNunjucksString', () => {
-    it('should transform a postman request string to an insomnia request string', () => {
+    it('should transform to nunjucks syntax', () => {
       const input = '{{$guid}}abc{{$randomStreetAddress}}def{{$guid}}';
       const output = '{% faker \'guid\' %}abc{% faker \'randomStreetAddress\' %}def{% faker \'guid\' %}';
+      expect(transformPostmanToNunjucksString(input)).toEqual(output);
+      expect(transformPostmanToNunjucksString()).toEqual('');
+    });
+    it('should transform hyphens to underscores', () => {
+      const input = 'abc{{my-env-var}}def{{here-and-here}}ghi';
+      const output = 'abc{{my_env_var}}def{{here_and_here}}ghi';
       expect(transformPostmanToNunjucksString(input)).toEqual(output);
       expect(transformPostmanToNunjucksString()).toEqual('');
     });
