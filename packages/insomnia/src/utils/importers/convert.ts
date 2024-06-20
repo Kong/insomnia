@@ -14,7 +14,7 @@ export interface ConvertResult {
     __export_format: 4;
     __export_date: string;
     __export_source: `insomnia.importers:v${string}`;
-    entity: ImportRequest[];
+    resources: ImportRequest[];
   };
 }
 
