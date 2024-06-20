@@ -170,7 +170,7 @@ const _launchApp = async () => {
     } else {
       // Called when second instance launched with args (Windows/Linux)
       app.on('second-instance', (_1, args) => {
-        console.log('Second instance listener received:', args.join('||'));
+        console.log('[main] Second instance listener received:', args.join('||'));
         window = windowUtils.createWindowsAndReturnMain();
         if (window) {
           if (window.isMinimized()) {
@@ -229,16 +229,16 @@ async function _createModelInstances() {
     const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
     const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
-      console.log('Initializing Scratch Pad Project');
+      console.log('[main] Initializing Scratch Pad Project');
       await models.project.create({ _id: models.project.SCRATCHPAD_PROJECT_ID, name: getProductName(), remoteId: null, parentId: models.organization.SCRATCHPAD_ORGANIZATION_ID });
     }
 
     if (!scratchPad) {
-      console.log('Initializing Scratch Pad');
+      console.log('[main] Initializing Scratch Pad');
       await models.workspace.create({ _id: models.workspace.SCRATCHPAD_WORKSPACE_ID, name: 'Scratch Pad', parentId: models.project.SCRATCHPAD_PROJECT_ID, scope: 'collection' });
     }
   } catch (err) {
-    console.warn('Failed to create default project. It probably already exists', err);
+    console.warn('[main] Failed to create default project. It probably already exists', err);
   }
 }
 

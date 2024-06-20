@@ -495,7 +495,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
             tryToSetOption('lint', newValue);
           }
         } catch (err) {
-          console.log('Failed to set CodeMirror option', err.message);
+          console.log('[codemirror] Failed to set CodeMirror option', err.message);
         }
         onChange(doc.getValue() || '');
         setOriginalCode(doc.getValue() || '');
@@ -516,7 +516,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     try {
       codeMirror.current?.setOption(key, value);
     } catch (err) {
-      console.log('Failed to set CodeMirror option', err.message, { key, value });
+      console.log('[codemirror] Failed to set CodeMirror option', err.message, { key, value });
     }
   };
   useEffect(() => {

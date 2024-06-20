@@ -72,12 +72,12 @@ export function render(
   const renderMode = config.renderMode || RENDER_ALL;
   return new Promise<string | null>(async (resolve, reject) => {
     // NOTE: this is added as a breadcrumb because renderString sometimes hangs
-    const id = setTimeout(() => console.log('Warning: nunjucks failed to respond within 5 seconds'), 5000);
+    const id = setTimeout(() => console.log('[templating] Warning: nunjucks failed to respond within 5 seconds'), 5000);
     const nj = await getNunjucks(renderMode, config.ignoreUndefinedEnvVariable);
     nj?.renderString(text, templatingContext, (err: Error | null, result: any) => {
       clearTimeout(id);
       if (err) {
-        console.log('Error rendering template', err);
+        console.warn('[templating] Error rendering template', err);
         const sanitizedMsg = err.message
           .replace(/\(unknown path\)\s/, '')
           .replace(/\[Line \d+, Column \d*]/, '')

@@ -345,7 +345,7 @@ export const KeyValueEditor: FC<Props> = ({
             }
 
             return (
-              <GridListItem className="flex outline-none bg-[--color-bg] flex-shrink-0 h-[--line-height-sm] items-center gap-2 px-2 data-[dragging]:opacity-50">
+              <GridListItem textValue={pair.name + '-' + pair.value} className="flex outline-none bg-[--color-bg] flex-shrink-0 h-[--line-height-sm] items-center gap-2 px-2 data-[dragging]:opacity-50">
                 <Button slot="drag" className="cursor-grab invisible p-2 w-5 flex focus-visible:bg-[--hl-sm] justify-center items-center flex-shrink-0">
                   <Icon icon="grip-vertical" className='w-2 text-[--hl]' />
                 </Button>
@@ -444,7 +444,7 @@ export const KeyValueEditor: FC<Props> = ({
           }
 
           return (
-            <GridListItem id={pair.id} className={`grid relative outline-none bg-[--color-bg] flex-shrink-0 h-[--line-height-sm] gap-2 px-2 data-[dragging]:opacity-50 ${showDescription ? '[grid-template-columns:max-content_1fr_1fr_1fr_max-content]' : '[grid-template-columns:max-content_1fr_1fr_max-content]'}`}>
+            <GridListItem id={pair.id} textValue={pair.name + '-' + pair.value} className={`grid relative outline-none bg-[--color-bg] flex-shrink-0 h-[--line-height-sm] gap-2 px-2 data-[dragging]:opacity-50 ${showDescription ? '[grid-template-columns:max-content_1fr_1fr_1fr_max-content]' : '[grid-template-columns:max-content_1fr_1fr_max-content]'}`}>
               <Button slot="drag" className="cursor-grab p-2 w-5 flex focus-visible:bg-[--hl-sm] justify-center items-center flex-shrink-0">
                 <Icon icon="grip-vertical" className='w-2 text-[--hl]' />
               </Button>

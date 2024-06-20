@@ -110,7 +110,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
             setPresence(rows);
           }
         } catch (e) {
-          console.log('Error parsing response', e);
+          console.log('[sse] Error parsing response', e);
         }
       }
     }
@@ -164,14 +164,14 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               });
             }
           } catch (e) {
-            console.log('Error parsing response from SSE', e);
+            console.log('[sse] Error parsing response from SSE', e);
           }
         });
         return () => {
           source.close();
         };
       } catch (e) {
-        console.log('ERROR', e);
+        console.log('[sse] ERROR', e);
         return;
       }
     }

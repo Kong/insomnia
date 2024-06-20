@@ -24,7 +24,7 @@ export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & 
         setReq(importedRequest);
 
       } catch (error) {
-        console.log('error', error);
+        console.log('[importer] error', error);
         setIsValid(false);
         setReq({});
       } finally {
@@ -59,7 +59,7 @@ export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & 
                 setReq(importedRequest);
 
               } catch (error) {
-                console.log('error', error);
+                console.log('[importer] error', error);
                 setIsValid(false);
                 setReq({});
               }
