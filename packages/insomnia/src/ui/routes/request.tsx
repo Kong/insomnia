@@ -423,7 +423,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     if (requestData.request.afterResponseScript) {
       const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
       const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-      const globals = mutatedContext.globals ? mutatedContext.globals : null;
+      const globals = mutatedContext.globals || null;
 
       window.main.addExecutionStep({ requestId, stepName: 'Executing after-response script' });
 

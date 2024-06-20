@@ -198,6 +198,7 @@ export async function savePatchesMadeByScript(
   }
 
   if (activeGlobalEnvironment && mutatedContext) {
+    invariant(mutatedContext.globals, 'globals must be defined when there is selected one');
     await models.environment.update(
       activeGlobalEnvironment,
       {
