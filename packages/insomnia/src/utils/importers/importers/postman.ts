@@ -12,7 +12,6 @@ import {
   Request1 as V200Request1,
   Url,
   UrlEncodedParameter as V200UrlEncodedParameter,
-  Variable2 as V200Variable2,
 } from './postman-2.0.types';
 import {
   Auth as V210Auth,
@@ -26,7 +25,6 @@ import {
   QueryParam,
   Request1 as V210Request1,
   UrlEncodedParameter as V210UrlEncodedParameter,
-  Variable2 as V210Variable2,
 } from './postman-2.1.types';
 
 export const id = 'postman';
@@ -35,7 +33,6 @@ export const description = 'Importer for Postman collections';
 
 type PostmanCollection = V200Schema | V210Schema;
 type EventList = V200EventList | V210EventList;
-type Variable = V200Variable2 | V210Variable2;
 
 type Authetication = V200Auth | V210Auth;
 
@@ -128,19 +125,18 @@ export class ImportPostman {
     this.collection = collection;
   }
 
-  importVariable = (variables: Variable[]) => {
+  importVariable = (variables: { [key: string]: string }[]) => {
     if (variables?.length === 0) {
       return null;
     }
 
-    const variable: { [key: string]: Variable['value'] } = {};
+    const variable: { [key: string]: string } = {};
     for (let i = 0; i < variables.length; i++) {
-
-      const key = transformPostmanToNunjucksString(variables[i].key);
+      const { key, value } = variables[i];
       if (key === undefined) {
         continue;
       }
-      variable[key] = variables[i].value;
+      variable[key] = transformPostmanToNunjucksString(value);
     }
     return variable;
   };
@@ -286,7 +282,7 @@ export class ImportPostman {
       event,
     } = this.collection;
 
-    const postmanVariable = this.importVariable(variable || []);
+    const postmanVariable = this.importVariable((variable as { [key: string]: string }[]) || []);
     const { authentication } = this.importAuthentication(auth);
     const preRequestScript = this.importPreRequestScript(event);
     const afterResponseScript = this.importAfterResponseScript(event);
