@@ -83,7 +83,7 @@ const main: Window['main'] = {
       invariant(port, 'hiddenWindowPort is undefined');
 
       port.onmessage = event => {
-        console.log('received result:', event.data);
+        console.log('[preload] received result:', event.data);
         if (event.data.error) {
           reject(new Error(event.data.error));
         }

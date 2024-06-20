@@ -95,11 +95,11 @@ interface TeamProject {
 
 async function getAllTeamProjects(organizationId: string) {
   const { id: sessionId } = await userSession.getOrCreate();
-  console.log('Fetching projects for team', organizationId);
   if (!sessionId) {
     return [];
   }
 
+  console.log('[project] Fetching', organizationId);
   const response = await insomniaFetch<{
     data: {
       id: string;
@@ -245,7 +245,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
       });
     }
   } catch (err) {
-    console.log('Could not fetch remote projects.');
+    console.log('[project] Could not fetch remote projects.');
   }
 
   // Check if the last visited project exists and redirect to it
@@ -262,7 +262,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
       const existingProject = await models.project.getById(match.params.projectId);
 
       if (existingProject) {
-        console.log('Redirecting to last visited project', existingProject._id);
+        console.log('[project] Redirecting to last visited project', existingProject._id);
         return redirect(`/organization/${match?.params.organizationId}/project/${existingProject._id}`);
       }
     }
@@ -534,7 +534,7 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
       });
       window.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
     } catch (err) {
-      console.log('Could not fetch learning feature data.');
+      console.log('[project] Could not fetch learning feature data.');
     }
   }
   return learningFeature;

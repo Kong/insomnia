@@ -59,7 +59,7 @@ try {
     window.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
   }
 } catch (e) {
-  console.log('Failed to parse session data', e);
+  console.log('[onboarding] Failed to parse session data', e);
 }
 
 async function getInitialEntry() {
@@ -112,7 +112,7 @@ async function renderApp() {
         session.encPrivateKey
       );
     } catch (e) {
-      console.log('Failed to parse session data', e);
+      console.log('[init] Failed to parse session data', e);
     }
   }
 
@@ -1140,7 +1140,6 @@ async function renderApp() {
     if (bothHaveValueButNotEqual) {
       // transforms /organization/:org_* to /organization/:org_id
       const routeWithoutUUID = nextRoute.replace(/_[a-f0-9]{32}/g, '_id');
-      // console.log('Tracking page view', { name: routeWithoutUUID });
       window.main.trackPageView({ name: routeWithoutUUID });
     }
 

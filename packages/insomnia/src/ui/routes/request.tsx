@@ -466,7 +466,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       return writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
     }
   } catch (e) {
-    console.log('Failed to send request', e);
+    console.log('[request] Failed to send request', e);
     window.main.completeExecutionStep({ requestId });
     const url = new URL(request.url);
     url.searchParams.set('error', e);

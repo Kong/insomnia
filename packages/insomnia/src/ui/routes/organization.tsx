@@ -160,7 +160,7 @@ async function syncOrganization(sessionId: string, accountId: string) {
     localStorage.setItem(`${accountId}:user`, JSON.stringify(user));
     localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlan));
   } catch (error) {
-    console.log('Failed to load Organizations', error);
+    console.log('[organization] Failed to load Organizations', error);
   }
 }
 

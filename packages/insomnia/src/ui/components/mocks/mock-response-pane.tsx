@@ -154,7 +154,7 @@ const HistoryViewWrapperComponentFactory = ({ mockServer, mockRoute }: { mockSer
         setLogs(res);
         return;
       }
-      console.log('Error: fetching logs from remote', { mockbinUrl, res });
+      console.log('[mock] Error: fetching logs from remote', { mockbinUrl, res });
     } catch (e) {
       // network erros will be managed by the upsert trigger, so we can ignore them here
       console.log({ mockbinUrl, e });

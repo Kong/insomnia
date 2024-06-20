@@ -85,7 +85,7 @@ export async function submitAuthCode(code: string) {
 export function getLoginUrl() {
   const publicKey = window.localStorage.getItem('insomnia.publicKey');
   if (!publicKey) {
-    console.log('No public key found');
+    console.log('[auth] No public key found');
     return '';
   }
 

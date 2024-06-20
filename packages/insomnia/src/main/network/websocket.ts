@@ -420,7 +420,7 @@ const sendPayload = async (ws: WebSocket, options: { payload: string; requestId:
     if (error) {
       console.error(error);
     } else {
-      console.log('Message sent');
+      console.log('[main] Message sent');
     }
   });
 

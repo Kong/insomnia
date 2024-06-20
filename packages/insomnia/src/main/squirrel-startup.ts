@@ -15,7 +15,7 @@ export function checkIfRestartNeeded() {
   }
 
   const cmd = process.argv[1];
-  console.log('processing squirrel command `%s`', cmd);
+  console.log('[main] processing squirrel command `%s`', cmd);
   const target = path.basename(process.execPath);
 
   switch (cmd) {

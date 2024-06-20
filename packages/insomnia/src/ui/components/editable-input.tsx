@@ -53,7 +53,6 @@ export const EditableInput = ({
         e.stopPropagation();
         e.preventDefault();
         if (clickTimeout !== null) {
-          console.log('click: timeout exists');
           clearTimeout(clickTimeout);
         }
         // If timeout passes fire the single click
