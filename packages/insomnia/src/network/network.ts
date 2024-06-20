@@ -117,9 +117,9 @@ export const getPreRequestScriptOutput = async ({
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-  let activeGlobalEnvironment: Environment | null = null;
+  let activeGlobalEnvironment: Environment | undefined = undefined;
   if (workspaceMeta?.activeGlobalEnvironmentId) {
-    activeGlobalEnvironment = await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId);
+    activeGlobalEnvironment = await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId) || undefined;
   }
 
   if (!request.preRequestScript) {
@@ -162,7 +162,7 @@ export async function savePatchesMadeByScript(
   mutatedContext: Awaited<ReturnType<typeof tryToExecutePreRequestScript>>,
   environment: Environment,
   baseEnvironment: Environment,
-  activeGlobalEnvironment: Environment | null,
+  activeGlobalEnvironment: Environment | undefined,
 ) {
   if (!mutatedContext) {
     return;
@@ -233,14 +233,21 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         timeout: settings.timeout,
         // if the selected environment points to the base environment
         // script operations on the environment will be applied on the base environment
-        environment: environment?.data || {},
-        environmentName: environment?._id || '',
-        baseEnvironment: baseEnvironment?.data || {},
-        baseEnvironmentName: baseEnvironment?._id || '',
+        environment: {
+          id: environment._id,
+          name: environment.name,
+          data: environment.data || {},
+        },
+        baseEnvironment: {
+          id: baseEnvironment._id,
+          name: baseEnvironment.name,
+          data: baseEnvironment.data || {},
+        },
         clientCertificates,
         settings,
         cookieJar,
         response,
+        globals: globals?.data || undefined,
       },
     });
     const output = await Promise.race([timeoutPromise, executionPromise]) as {
@@ -255,28 +262,28 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     console.log('[network] script execution succeeded', output);
 
     const envPropertyOrder = orderedJSON.parse(
-      JSON.stringify(output.environment),
+      JSON.stringify(output.environment.data),
       JSON_ORDER_PREFIX,
       JSON_ORDER_SEPARATOR,
     );
-    environment.data = output.environment;
+    environment.data = output.environment.data;
     environment.dataPropertyOrder = envPropertyOrder.map;
 
     const baseEnvPropertyOrder = orderedJSON.parse(
-      JSON.stringify(output.baseEnvironment),
+      JSON.stringify(output.baseEnvironment.data),
       JSON_ORDER_PREFIX,
       JSON_ORDER_SEPARATOR,
     );
-    baseEnvironment.data = output.baseEnvironment;
+    baseEnvironment.data = output.baseEnvironment.data;
     baseEnvironment.dataPropertyOrder = baseEnvPropertyOrder.map;
 
     if (globals) {
       const globalEnvPropertyOrder = orderedJSON.parse(
-        JSON.stringify(output.globals),
+        JSON.stringify(output.globals.data || {}),
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
-      globals.data = output.globals;
+      globals.data = output.globals.data;
       globals.dataPropertyOrder = globalEnvPropertyOrder.map;
     }
 
@@ -318,7 +325,7 @@ interface RequestContextForScript {
   baseEnvironment: Environment;
   clientCertificates: ClientCertificate[];
   cookieJar: CookieJar;
-  globals: Environment | null;
+  globals?: Environment; // there could be no global environment
 }
 type RequestAndContextAndResponse = RequestContextForScript & {
   response: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;

@@ -116,19 +116,19 @@ export async function initInsomniaObject(
     rawObj: RequestContext,
     log: (...args: any[]) => void,
 ) {
-    const globals = new Environment('globals', rawObj.globals || {}); // could be null
-    const baseEnvironment = new Environment(rawObj.baseEnvironmentName || '', rawObj.baseEnvironment);
+    const globals = new Environment('globals', rawObj.globals || {}); // could be undefined
+    const baseEnvironment = new Environment(rawObj.baseEnvironment.name || '', rawObj.baseEnvironment.data);
     // reuse baseEnvironment when the "selected envrionment" points to the base environment
-    const environment = rawObj.baseEnvironmentName === rawObj.environmentName ?
+    const environment = rawObj.baseEnvironment.id === rawObj.environment.id ?
         baseEnvironment :
-        new Environment(rawObj.environmentName || '', rawObj.environment);
-    if (rawObj.baseEnvironmentName === rawObj.environmentName) {
+        new Environment(rawObj.environment.name || '', rawObj.environment.data);
+    if (rawObj.baseEnvironment.id === rawObj.environment.id) {
         log('warning: No environment is selected, modification of insomnia.environment will be applied to the base environment.');
     }
     // TODO: update "iterationData" name when it is supported
     const iterationData = new Environment('iterationData', rawObj.iterationData);
     const cookies = new CookieObject(rawObj.cookieJar);
-    // TODO: update follows when post-request script and iterating are introduced
+    // TODO: update follows when post-request script and iterationData are introduced
     const requestInfo = new RequestInfo({
         eventName: 'prerequest',
         iteration: 1,

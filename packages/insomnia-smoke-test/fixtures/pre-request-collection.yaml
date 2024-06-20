@@ -315,7 +315,7 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     preRequestScript: |-
-      insomnia.globals.set('fallbackToGlobal', 'fallbackToGlobal');
+      // insomnia.globals.set('fallbackToGlobal', 'fallbackToGlobal');
       insomnia.baseEnvironment.set('fallbackToBase', 'fallbackToBase');
       insomnia.baseEnvironment.set('scriptValue', 'fromBase');
       insomnia.environment.set('scriptValue', 'fromEnv');
@@ -1163,4 +1163,34 @@ resources:
       mimeType: "application/json"
       text: |-
         {}
+    _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df19
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: can manipulate global envs
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      insomnia.globals.set('setByScript', 'setByScript');
+    body:
+      mimeType: "application/json"
+      text: |-
+        {
+          "setByScript": "{{ setByScript }}"
+        }
     _type: request
