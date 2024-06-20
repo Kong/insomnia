@@ -97,6 +97,36 @@ export const WorkspaceDropdown: FC = () => {
   }, []);
 
   const isScratchpadWorkspace = isScratchpad(activeWorkspace);
+  const scratchpadActionList: {
+    name: string;
+    id: string;
+    icon: IconName;
+    items: {
+      id: string;
+      name: string;
+      icon: ReactNode;
+      hint?: PlatformKeyCombinations;
+      action: () => void;
+    }[];
+  }[] = [{
+    name: 'Actions',
+    id: 'Actions',
+    icon: 'cog',
+    items: [{
+      id: 'Import',
+      name: 'Import',
+      icon: <Icon icon='file-import' />,
+      action: () => setIsImportModalOpen(true),
+    },
+    {
+      id: 'Export',
+      name: 'Export',
+      icon: <Icon icon='file-export' />,
+      action: () => activeWorkspace.scope !== 'mock-server'
+        ? setIsExportModalOpen(true)
+        : exportMockServerToFile(activeWorkspace),
+    }],
+  }];
 
   const workspaceActionsList: {
     name: string;
@@ -199,7 +229,7 @@ export const WorkspaceDropdown: FC = () => {
         },
       ] : []),
     ];
-
+  const actionlist = isScratchpadWorkspace ? scratchpadActionList : workspaceActionsList;
   return (
     <>
       <MenuTrigger onOpenChange={isOpen => isOpen && handleDropdownOpen()}>
@@ -215,8 +245,8 @@ export const WorkspaceDropdown: FC = () => {
           <Menu
             aria-label="Create in project actions"
             selectionMode="single"
-            onAction={key => workspaceActionsList.find(i => i.items.find(a => a.id === key))?.items.find(a => a.id === key)?.action()}
-            items={isScratchpadWorkspace ? [] : workspaceActionsList}
+            onAction={key => actionlist.find(i => i.items.find(a => a.id === key))?.items.find(a => a.id === key)?.action()}
+            items={actionlist}
             className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
           >
             {section => (
@@ -263,7 +293,7 @@ export const WorkspaceDropdown: FC = () => {
       )}
       {isExportModalOpen && (
         <ExportRequestsModal
-          workspace={activeWorkspace}
+          workspaceIdToExport={activeWorkspace._id}
           onClose={() => setIsExportModalOpen(false)}
         />
       )}
