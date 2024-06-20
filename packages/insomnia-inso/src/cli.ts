@@ -17,14 +17,9 @@ const prepareCommand = (options: Partial<GlobalOptions>) => {
   return options;
 };
 
-type CreateCommand = (command: string) => commander.Command;
-
-const makeTestCommand = (commandCreator: CreateCommand) => {
-  // inso run
-  const run = commandCreator('run').description('Execution utilities');
+const makeTestCommand = () => {
+  const run = new commander.Command('run').storeOptionsAsProperties(false).description('Execution utilities');
   const defaultReporter: TestReporter = 'spec';
-
-  // inso run tests
   run
     .command('test [identifier]')
     .description('Run Insomnia unit test suites')
@@ -47,37 +42,25 @@ const makeTestCommand = (commandCreator: CreateCommand) => {
   return run;
 };
 
-const makeLintCommand = (commandCreator: CreateCommand) => {
-  // inso lint
-  const lint = commandCreator('lint').description('Linting utilities');
-
-  // inso lint spec
+const makeLintCommand = () => {
+  const lint = new commander.Command('lint').storeOptionsAsProperties(false).description('Linting utilities');
   lint
     .command('spec [identifier]')
     .description('Lint an API Specification')
-    .action((identifier, cmd) => {
-      let options = getOptions<LintSpecificationOptions>(cmd);
-      options = prepareCommand(options);
-      return exit(lintSpecification(identifier, options));
-    });
+    .action((identifier, cmd) =>
+      exit(lintSpecification(identifier, prepareCommand(getOptions<LintSpecificationOptions>(cmd)))));
   return lint;
 };
 
-const makeExportCommand = (commandCreator: CreateCommand) => {
-  // inso export
-  const exportCmd = commandCreator('export').description('Export data from insomnia models');
-
-  // inso export spec
+const makeExportCommand = () => {
+  const exportCmd = new commander.Command('export').storeOptionsAsProperties(false).description('Export data from insomnia models');
   exportCmd
     .command('spec [identifier]')
     .description('Export an API Specification to a file')
     .option('-o, --output <path>', 'save the generated config to a file')
     .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations ', false)
-    .action((identifier, cmd) => {
-      let options = getOptions<ExportSpecificationOptions>(cmd);
-      options = prepareCommand(options);
-      return exit(exportSpecification(identifier, options));
-    });
+    .action((identifier, cmd) =>
+      exit(exportSpecification(identifier, prepareCommand(getOptions<ExportSpecificationOptions>(cmd)))));
   return exportCmd;
 };
 
@@ -123,21 +106,12 @@ const addScriptCommand = (originalCommand: commander.Command) => {
     });
 };
 
-export const go = (args?: string[], exitOverride?: boolean) => {
-  const commandCreator = (cmd?: string) => {
-    const command = new commander.Command(cmd).storeOptionsAsProperties(false);
-
-    if (exitOverride) {
-      command.exitOverride();
-    }
-
-    return command;
-  };
+export const go = (args?: string[]) => {
 
   configureLogger();
 
   // inso
-  const cmd = commandCreator();
+  const cmd = new commander.Command().storeOptionsAsProperties(false);
 
   // Version and description
   cmd
@@ -156,9 +130,9 @@ export const go = (args?: string[], exitOverride?: boolean) => {
 
   // Add commands and sub commands
   cmd
-    .addCommand(makeTestCommand(commandCreator))
-    .addCommand(makeLintCommand(commandCreator))
-    .addCommand(makeExportCommand(commandCreator));
+    .addCommand(makeTestCommand())
+    .addCommand(makeLintCommand())
+    .addCommand(makeExportCommand());
 
   // Add script base command
   addScriptCommand(cmd);
