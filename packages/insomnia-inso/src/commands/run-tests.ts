@@ -5,7 +5,7 @@ import { loadEnvironment, promptEnvironment } from '../db/models/environment';
 import type { UnitTest, UnitTestSuite } from '../db/models/types';
 import { loadTestSuites, promptTestSuites } from '../db/models/unit-test-suite';
 import type { GlobalOptions } from '../get-options';
-import { logger, noConsoleLog } from '../logger';
+import { logger } from '../logger';
 
 export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress';
 
@@ -28,31 +28,13 @@ export type RunTestsOptions = GlobalOptions & {
   disableCertValidation?: boolean;
 };
 
-function validateOptions({ reporter }: Partial<RunTestsOptions>): boolean {
-  if (reporter && !reporterTypesSet.has(reporter)) {
-    logger.fatal(`Reporter "${reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
-    return false;
-  }
-
-  return true;
-}
-
-const createTestSuite = (dbSuite: UnitTestSuite, dbTests: UnitTest[]): TestSuite => ({
-  name: dbSuite.name,
-  suites: [],
-  tests: dbTests.map(({ name, code, requestId }) => ({
-    name,
-    code,
-    defaultRequestId: requestId,
-  })),
-});
-
 // Identifier can be the id or name of a workspace, apiSpec, or unit test suite
 export async function runInsomniaTests(
   identifier: string | null | undefined,
   options: Partial<RunTestsOptions>,
 ) {
-  if (!validateOptions(options)) {
+  if (options.reporter && !reporterTypesSet.has(options.reporter)) {
+    logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
     return false;
   }
 
@@ -85,13 +67,16 @@ export async function runInsomniaTests(
 
   // Generate test file
   const testFileContents = generate(
-    suites.map(suite =>
-      createTestSuite(
-        suite,
-        db.UnitTest.filter(test => test.parentId === suite._id).sort((a, b) => a.metaSortKey - b.metaSortKey),
-      ),
-    ),
-  );
+    suites.map(dbSuite =>
+    ({
+      name: dbSuite.name,
+      suites: [],
+      tests: db.UnitTest.filter(test => test.parentId === dbSuite._id).sort((a, b) => a.metaSortKey - b.metaSortKey).map(({ name, code, requestId }) => ({
+        name,
+        code,
+        defaultRequestId: requestId,
+      })),
+    })));
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires -- Load lazily when needed, otherwise this require slows down the entire CLI.
   const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
@@ -107,3 +92,14 @@ export async function runInsomniaTests(
 
   return options.verbose ? res : noConsoleLog(() => res);
 }
+// hide network logs
+export const noop = () => { };
+export const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
+  const oldConsoleLog = console.log;
+  console.log = noop;
+  try {
+    return await callback();
+  } finally {
+    console.log = oldConsoleLog;
+  }
+};

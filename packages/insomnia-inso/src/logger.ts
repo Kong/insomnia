@@ -1,14 +1,5 @@
 import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consola';
-export const noop = () => { };
-export const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
-  const oldConsoleLog = console.log;
-  console.log = noop;
-  try {
-    return await callback();
-  } finally {
-    console.log = oldConsoleLog;
-  }
-};
+
 export type LogsByType = { [t in logType]?: string[] };
 export type ModifiedConsola = ReturnType<typeof consola.create> & { __getLogs: () => LogsByType };
 const consolaLogger = consola.create({
