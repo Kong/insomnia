@@ -41,7 +41,7 @@ describe('postman', () => {
     });
     it('should transform hyphens to underscores', () => {
       const input = 'abc{{my-env-var}}def{{here-and-here}}ghi';
-      const output = 'abc{{my_env_var}}def{{here_and_here}}ghi';
+      const output = "abc{{_['my-env-var']}}def{{_['here-and-here']}}ghi";
       expect(transformPostmanToNunjucksString(input)).toEqual(output);
       expect(transformPostmanToNunjucksString()).toEqual('');
     });

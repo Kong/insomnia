@@ -65,10 +65,10 @@ export const transformPostmanToNunjucksString = (inputString?: string | null) =>
   if (typeof inputString !== 'string') {
     return inputString;
   }
-  const sanitizedString = normaliseJsonPath(inputString);
-  return postmanTagRegexs.reduce((transformedString, { tag, regex }) => {
+  const replaceFaker = postmanTagRegexs.reduce((transformedString, { tag, regex }) => {
     return transformedString.replace(regex, postmanToNunjucksLookup[tag]);
-  }, sanitizedString);
+  }, inputString);
+  return normaliseJsonPath(replaceFaker);
 };
 
 // old: {{ arr-name-with-dash }}
@@ -77,8 +77,11 @@ export const normaliseJsonPath = (input?: string) => {
   if (!input) {
     return '';
   }
+  if (!input.includes('-')) {
+    return input;
+  }
   // Use a regular expression to find and replace the pattern
-  return input.replace(/\{\{([^\}]+)\}\}/g, (_, match) => {
+  return input.replace(/{{\s*([^ }]+)\s*[^}]*\s*}}/g, (_, match) => {
     // Replace hyphens with underscores within the match
     const replaced = forceBracketNotation('_', match);
     // Return the replaced pattern within the curly braces
