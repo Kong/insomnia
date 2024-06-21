@@ -41,7 +41,7 @@ describe('test checkInvalidPeriod', () => {
       let e: Error | undefined = undefined;
 
       try {
-        checkInvalidPeriod(testCase.input);
+        dotInKeyNameInvariant(testCase.input);
       } catch (ex) {
         e = ex;
       }
