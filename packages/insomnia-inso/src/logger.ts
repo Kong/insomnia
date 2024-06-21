@@ -15,8 +15,8 @@ const consolaLogger = consola.create({
 
 (consolaLogger as ModifiedConsola).__getLogs = () => ({});
 export const logger = consolaLogger as ModifiedConsola;
-export const configureLogger = (verbose = false, ci = false) => {
-  logger.level = verbose ? LogLevel.Verbose : LogLevel.Info;
+export const configureLogger = (quiet = false, ci = false) => {
+  logger.level = quiet ? LogLevel.Info : LogLevel.Verbose;
   if (ci) {
     logger.setReporters([new BasicReporter()]);
   }

@@ -10,7 +10,7 @@ import { configureLogger, logger } from './logger';
 import { exit, logErrorExit1 } from './util';
 
 const prepareCommand = (options: Partial<GlobalOptions>) => {
-  configureLogger(options.verbose, options.ci);
+  configureLogger(options.quiet, options.ci);
   options.printOptions && logger.log('Loaded options', options, '\n');
   return options;
 };
@@ -25,9 +25,8 @@ export const go = (args?: string[]) => {
   program
     .configureHelp({ showGlobalOptions: true })
     .option('-w, --workingDir <dir>', 'set working directory')
-    .option('-a, --appDataDir <dir>', 'set the app data directory (deprecated; use --src instead)')
     .option('--config <path>', 'path to configuration file')
-    .option('--verbose', 'show additional logs while running the command')
+    .option('--quiet', 'hide logs')
     .option('--src <file|dir>', 'set the app data source, this is where your insomnia database lives')
     .option('--printOptions', 'print the loaded options')
     .option('--ci', 'run in CI, disables all prompts');

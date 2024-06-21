@@ -1,8 +1,7 @@
-import { generate, runTestsCli, TestSuite } from 'insomnia-testing';
+import { generate, runTestsCli } from 'insomnia-testing';
 
 import { loadDb } from '../db';
 import { loadEnvironment, promptEnvironment } from '../db/models/environment';
-import type { UnitTest, UnitTestSuite } from '../db/models/types';
 import { loadTestSuites, promptTestSuites } from '../db/models/unit-test-suite';
 import type { GlobalOptions } from '../get-options';
 import { logger } from '../logger';
@@ -90,7 +89,7 @@ export async function runInsomniaTests(
     testFilter: testNamePattern,
   });
 
-  return options.verbose ? res : noConsoleLog(() => res);
+  return options.quiet ? noConsoleLog(() => res) : res;
 }
 // hide network logs
 export const noop = () => { };

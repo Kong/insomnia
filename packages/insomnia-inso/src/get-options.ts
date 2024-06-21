@@ -14,7 +14,7 @@ export type GlobalOptions = {
   appDataDir?: string;
   workingDir?: string;
   ci?: boolean;
-  verbose?: boolean;
+  quiet?: boolean;
   printOptions?: boolean;
   config?: string;
   src?: string;
@@ -24,7 +24,7 @@ export const OptionsSupportedInConfigFile: (keyof GlobalOptions)[] = [
   'appDataDir',
   'workingDir',
   'ci',
-  'verbose',
+  'quiet',
   'src',
   'printOptions',
 ];
