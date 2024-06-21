@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import { fail } from 'assert';
 
-import { checkInvalidPeriod, convert } from './convert';
+import { dotInKeyNameInvariant, convert } from './convert';
 
 describe('Import errors', () => {
   it('fail to find importer', async () => {
