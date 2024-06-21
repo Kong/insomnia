@@ -431,6 +431,7 @@ const ExportSection = ({
   setIsExportModalOpen: (value: boolean) => void;
   handleExportProjectToFile: () => void;
 }) => {
+
   if (isScratchpad(workspace)) {
     return (
       <Button
@@ -443,34 +444,20 @@ const ExportSection = ({
   }
 
   return (
-    <Dropdown
-      aria-label='Export Data Dropdown'
-      triggerButton={
-        <Button className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-          Export Data <i className="fa fa-caret-down" />
-        </Button>
-      }
-    >
-      <DropdownSection
-        aria-label="Choose Export Type"
-        title="Choose Export Type"
+    <>
+      <Button
+        className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        onPress={() => setIsExportModalOpen(true)}
       >
-        <DropdownItem aria-label={`Export the "${workspace.name}" ${getWorkspaceLabel(workspace).singular}`}>
-          <ItemContent
-            icon="home"
-            label={`Export the "${workspace.name}" ${getWorkspaceLabel(workspace).singular}`}
-            onClick={() => setIsExportModalOpen(true)}
-          />
-        </DropdownItem>
-        <DropdownItem aria-label={`Export files from the "${projectName}" ${strings.project.singular}`}>
-          <ItemContent
-            icon="empty"
-            label={`Export files from the "${projectName}" ${strings.project.singular}`}
-            onClick={handleExportProjectToFile}
-          />
-        </DropdownItem>
-      </DropdownSection>
-    </Dropdown>
+        Export the "{workspace.name}" {getWorkspaceLabel(workspace).singular}
+      </Button>
+      <Button
+        className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        onPress={handleExportProjectToFile}
+      >
+        Export the "{projectName}" ${strings.project.singular}
+      </Button>
+    </>
   );
 
 };
