@@ -1,4 +1,5 @@
 import { AuthTypeOAuth2 } from '../../../models/request';
+import { forceBracketNotation } from '../../../templating/utils';
 import { fakerFunctions } from '../../../ui/components/templating/faker-functions';
 import { Converter, ImportRequest, Parameter } from '../entities';
 import {
@@ -64,20 +65,22 @@ export const transformPostmanToNunjucksString = (inputString?: string | null) =>
   if (typeof inputString !== 'string') {
     return inputString;
   }
-  const sanitizedString = replaceHyphens(inputString);
+  const sanitizedString = normaliseJsonPath(inputString);
   return postmanTagRegexs.reduce((transformedString, { tag, regex }) => {
     return transformedString.replace(regex, postmanToNunjucksLookup[tag]);
   }, sanitizedString);
 };
 
-export const replaceHyphens = (input?: string) => {
+// old: {{ arr-name-with-dash }}
+// new: {{ _['arr-name-with-dash'] }}
+export const normaliseJsonPath = (input?: string) => {
   if (!input) {
     return '';
   }
   // Use a regular expression to find and replace the pattern
   return input.replace(/\{\{([^\}]+)\}\}/g, (_, match) => {
     // Replace hyphens with underscores within the match
-    const replaced = match.replace(/-/g, '_');
+    const replaced = forceBracketNotation('_', match);
     // Return the replaced pattern within the curly braces
     return `{{${replaced}}}`;
   });
