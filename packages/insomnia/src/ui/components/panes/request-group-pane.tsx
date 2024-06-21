@@ -13,7 +13,7 @@ import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestScriptEditor } from '../editors/request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
-import { MarkdownPreview } from '../markdown-preview';
+import { MarkdownEditor } from '../markdown-editor';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 
 export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
@@ -44,6 +44,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
       }
     }
   };
+
   return (
     <>
       <Tabs aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
@@ -185,49 +186,13 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
             />
           </ErrorBoundary>
         </TabPanel>
-        <TabPanel className='w-full flex-1 overflow-y-auto ' id='docs'>
-          {activeRequestGroup.description ? (
-            <div>
-              <div className="pull-right pad bg-default">
-                <button
-                  className="btn btn--clicky"
-                  onClick={() => setIsRequestGroupSettingsModalOpen(true)}
-                >
-                  Edit
-                </button>
-              </div>
-              <div className="pad">
-                <ErrorBoundary errorClassName="font-error pad text-center">
-                  <MarkdownPreview
-                    heading={activeRequestGroup.name}
-                    markdown={activeRequestGroup.description}
-                  />
-                </ErrorBoundary>
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-hidden editor vertically-center text-center">
-              <p className="pad text-sm text-center">
-                <span className="super-faint">
-                  <i
-                    className="fa fa-file-text-o"
-                    style={{
-                      fontSize: '8rem',
-                      opacity: 0.3,
-                    }}
-                  />
-                </span>
-                <br />
-                <br />
-                <button
-                  className="btn btn--clicky faint"
-                  onClick={() => setIsRequestGroupSettingsModalOpen(true)}
-                >
-                  Add Description
-                </button>
-              </p>
-            </div>
-          )}
+        <TabPanel className='w-full flex-1 overflow-y-auto' id='docs'>
+          <MarkdownEditor
+            className="margin-top"
+            placeholder="Write a description"
+            defaultValue={activeRequestGroup.description}
+            onChange={(description: string) => patchRequestGroup(activeRequestGroup._id, { description })}
+          />
         </TabPanel>
       </Tabs>
       {

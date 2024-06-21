@@ -21,7 +21,7 @@ import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { RequestScriptEditor } from '../editors/request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
-import { MarkdownPreview } from '../markdown-preview';
+import { MarkdownEditor } from '../markdown-editor';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { RenderedQueryString } from '../rendered-query-string';
 import { RequestUrlBar } from '../request-url-bar';
@@ -40,7 +40,8 @@ export const RequestPane: FC<Props> = ({
   onPaste,
 }) => {
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
+
   const patchSettings = useSettingsPatcher();
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
   const patchRequest = useRequestPatcher();
@@ -362,51 +363,12 @@ export const RequestPane: FC<Props> = ({
             </TabPanel>
           </Tabs>
         </TabPanel>
-        <TabPanel className='w-full flex-1' id='docs'>
-          <div className="tall">
-            {activeRequest.description ? (
-              <div>
-                <div className="pull-right pad bg-default">
-                  <button
-                    className="btn btn--clicky"
-                    onClick={() => setIsRequestSettingsModalOpen(true)}
-                  >
-                    Edit
-                  </button>
-                </div>
-                <div className="pad">
-                  <ErrorBoundary errorClassName="font-error pad text-center">
-                    <MarkdownPreview
-                      heading={activeRequest.name}
-                      markdown={activeRequest.description}
-                    />
-                  </ErrorBoundary>
-                </div>
-              </div>
-            ) : (
-              <div className="overflow-hidden editor vertically-center text-center">
-                <p className="pad text-sm text-center">
-                  <span className="super-faint">
-                    <i
-                      className="fa fa-file-text-o"
-                      style={{
-                        fontSize: '8rem',
-                        opacity: 0.3,
-                      }}
-                    />
-                  </span>
-                  <br />
-                  <br />
-                  <button
-                    className="btn btn--clicky faint"
-                    onClick={() => setIsRequestSettingsModalOpen(true)}
-                  >
-                    Add Description
-                  </button>
-                </p>
-              </div>
-            )}
-          </div>
+        <TabPanel className='w-full flex-1 overflow-y-auto' id='docs'>
+          <MarkdownEditor
+            placeholder="Write a description"
+            defaultValue={activeRequest.description}
+            onChange={(description: string) => patchRequest(requestId, { description })}
+          />
         </TabPanel>
       </Tabs>
       {isRequestSettingsModalOpen && (

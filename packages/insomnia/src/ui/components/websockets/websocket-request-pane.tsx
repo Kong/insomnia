@@ -24,7 +24,7 @@ import { readOnlyWebsocketPairs, RequestHeadersEditor } from '../editors/request
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
-import { MarkdownPreview } from '../markdown-preview';
+import { MarkdownEditor } from '../markdown-editor';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
@@ -462,7 +462,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             authTypes={supportedAuthTypes}
           />
         </TabPanel>
-        <TabPanel className='w-full flex-1 overflow-y-auto ' id='headers'>
+        <TabPanel className='w-full flex-1 overflow-y-auto' id='headers'>
           {disabled && <PaneReadOnlyBanner />}
           <RequestHeadersEditor
             key={uniqueKey}
@@ -472,43 +472,12 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             requestType="WebSocketRequest"
           />
         </TabPanel>
-        <TabPanel className='w-full flex-1 overflow-y-auto ' id='docs'>
-          {activeRequest.description ? (
-            <div>
-              <div className="pull-right pad bg-default">
-                <button className="btn btn--clicky" onClick={() => setIsRequestSettingsModalOpen(true)}>
-                  Edit
-                </button>
-              </div>
-              <div className="pad">
-                <ErrorBoundary errorClassName="font-error pad text-center">
-                  <MarkdownPreview
-                    heading={activeRequest.name}
-                    markdown={activeRequest.description}
-                  />
-                </ErrorBoundary>
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-hidden editor vertically-center text-center">
-              <p className="pad text-sm text-center">
-                <span className="super-faint">
-                  <i
-                    className="fa fa-file-text-o"
-                    style={{
-                      fontSize: '8rem',
-                      opacity: 0.3,
-                    }}
-                  />
-                </span>
-                <br />
-                <br />
-                  <button className="btn btn--clicky faint" onClick={() => setIsRequestSettingsModalOpen(true)}>
-                  Add Description
-                </button>
-              </p>
-            </div>
-          )}
+        <TabPanel className='w-full flex-1 overflow-y-auto' id='docs'>
+          <MarkdownEditor
+            placeholder="Write a description"
+            defaultValue={activeRequest.description}
+            onChange={(description: string) => patchRequest(requestId, { description })}
+          />
         </TabPanel>
       </Tabs>
       {isRequestSettingsModalOpen && (
