@@ -37,7 +37,6 @@ test.describe('Debug-Sidebar', async () => {
       await ws.click();
       await ws.getByLabel('Request Actions').click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-      await page.getByRole('tab', { name: 'Write' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
 
@@ -45,14 +44,12 @@ test.describe('Debug-Sidebar', async () => {
       await gql.click();
       await gql.getByLabel('Request Actions').click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-      await page.getByRole('tab', { name: 'Write' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
       const folderLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'test folder' });
       await folderLocator.click();
       await folderLocator.getByLabel('Request Group Actions').click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-      await page.getByRole('tab', { name: 'Write' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
     });
