@@ -28,7 +28,7 @@ export const go = (args?: string[]) => {
     .option('-a, --appDataDir <dir>', 'set the app data directory (deprecated; use --src instead)')
     .option('--config <path>', 'path to configuration file')
     .option('--verbose', 'show additional logs while running the command')
-    .option('--src <file|dir>', 'set the app data source')
+    .option('--src <file|dir>', 'set the app data source, this is where your insomnia database lives')
     .option('--printOptions', 'print the loaded options')
     .option('--ci', 'run in CI, disables all prompts');
   program
@@ -72,7 +72,8 @@ export const go = (args?: string[]) => {
     .allowUnknownOption()
     // @ts-expect-error this appears to actually be valid, and I don't want to risk changing any behavior
     .action((scriptName: 'lint', cmd) => {
-      const scriptTask = prepareCommand(getOptions(cmd)).__configFile?.scripts?.[scriptName];
+      const globals = program.optsWithGlobals();
+      const scriptTask = prepareCommand(getOptions({ ...globals, ...cmd })).__configFile?.scripts?.[scriptName];
       if (!scriptTask) {
         logger.fatal(`Could not find inso script "${scriptName}" in the config file.`);
         return exit(new Promise(resolve => resolve(false)));
@@ -83,7 +84,7 @@ export const go = (args?: string[]) => {
       }
       // Collect args, Ignore the first arg because that will be scriptName, get the rest
       const scriptArgs: string[] = parseArgsStringToArgv(
-        `self ${scriptTask} ${cmd.args.slice(1).join(' ')}`,
+        `self ${scriptTask} ${program.args.slice(1).join(' ')}`,
       );
       // Print command
       logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`); // Run
