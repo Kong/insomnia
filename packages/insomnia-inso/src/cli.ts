@@ -1,13 +1,13 @@
-import type { Command } from 'commander';
 import * as commander from 'commander';
 import parseArgsStringToArgv from 'string-argv';
 
+import packageJson from '../package.json';
 import { exportSpecification } from './commands/export-specification';
 import { lintSpecification } from './commands/lint-specification';
 import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
 import { getOptions, GlobalOptions } from './get-options';
 import { configureLogger, logger } from './logger';
-import { exit, getVersion, logErrorExit1 } from './util';
+import { exit, logErrorExit1 } from './util';
 
 const prepareCommand = (options: Partial<GlobalOptions>) => {
   configureLogger(options.verbose, options.ci);
@@ -16,17 +16,11 @@ const prepareCommand = (options: Partial<GlobalOptions>) => {
 };
 
 export const go = (args?: string[]) => {
-
   configureLogger();
-
-  // inso
   const program = new commander.Command().storeOptionsAsProperties(false);
-
-  // Version and description
   program
-    .version(getVersion(), '-v, --version')
+    .version(process.env.VERSION || packageJson.version, '-v, --version')
     .description('A CLI for Insomnia!');
-
   // Global options
   program
     .configureHelp({ showGlobalOptions: true })
@@ -37,7 +31,6 @@ export const go = (args?: string[]) => {
     .option('--src <file|dir>', 'set the app data source')
     .option('--printOptions', 'print the loaded options')
     .option('--ci', 'run in CI, disables all prompts');
-
   program
     .command('export spec [identifier]')
     .description('Export an API Specification to a file')
@@ -47,7 +40,6 @@ export const go = (args?: string[]) => {
       const globals = program.optsWithGlobals();
       return exit(exportSpecification(identifier, prepareCommand(getOptions({ ...globals, ...cmd }))));
     });
-
   program
     .command('lint spec [identifier]')
     .description('Lint an API Specification')
@@ -80,39 +72,23 @@ export const go = (args?: string[]) => {
     .allowUnknownOption()
     // @ts-expect-error this appears to actually be valid, and I don't want to risk changing any behavior
     .action((scriptName: 'lint', cmd) => {
-      // Load scripts
-      let options = getOptions(cmd);
-      options = prepareCommand(options);
-
-      // Ignore the first arg because that will be scriptName, get the rest
-      const passThroughArgs = cmd.args.slice(1);
-
-      // Find script
-      const scriptTask = options.__configFile?.scripts?.[scriptName];
-
+      const scriptTask = prepareCommand(getOptions(cmd)).__configFile?.scripts?.[scriptName];
       if (!scriptTask) {
         logger.fatal(`Could not find inso script "${scriptName}" in the config file.`);
         return exit(new Promise(resolve => resolve(false)));
       }
-
       if (!scriptTask.startsWith('inso')) {
-        logger.fatal('Tasks in a script should start with `inso`.');
+        logger.fatal('Tasks in a script must start with `inso`.');
         return exit(new Promise(resolve => resolve(false)));
       }
-
-      // Collect args
+      // Collect args, Ignore the first arg because that will be scriptName, get the rest
       const scriptArgs: string[] = parseArgsStringToArgv(
-        `self ${scriptTask} ${passThroughArgs.join(' ')}`,
+        `self ${scriptTask} ${cmd.args.slice(1).join(' ')}`,
       );
-
       // Print command
       logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`); // Run
 
-      runWithArgs(program, scriptArgs);
+      program.parseAsync(scriptArgs).catch(logErrorExit1);
     });
-  runWithArgs(program, args || process.argv);
-};
-
-const runWithArgs = (program: Command, args: string[]) => {
-  program.parseAsync(args).catch(logErrorExit1);
+  program.parseAsync(args || process.argv).catch(logErrorExit1);
 };

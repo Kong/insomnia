@@ -1,28 +1,27 @@
-import packageJson from '../package.json';
-import { handleError } from './errors';
+import { logger } from './logger';
 
-export const getVersion = () => {
-  return process.env.VERSION || packageJson.version;
-};
+export class InsoError extends Error {
+  cause?: Error | null;
+
+  constructor(message: string, cause?: Error) {
+    super(message);
+    this.name = 'InsoError';
+    this.cause = cause;
+  }
+}
 
 export const logErrorExit1 = (err?: Error) => {
-  handleError(err);
+  if (err instanceof InsoError) {
+    logger.fatal(err.message);
+    err.cause && logger.fatal(err.cause);
+  } else if (err) {
+    logger.fatal(err);
+  }
+
+  logger.info('To view tracing information, re-run `inso` with `--verbose`');
   process.exit(1);
 };
 
 export const exit = async (result: Promise<boolean>): Promise<void> => {
   return result.then(r => process.exit(r ? 0 : 1)).catch(logErrorExit1);
 };
-
-export const getDefaultProductName = (): string => {
-  const name = process.env.DEFAULT_APP_NAME;
-
-  if (!name) {
-    throw new Error('Environment variable DEFAULT_APP_NAME is not set.');
-  }
-
-  return name;
-};
-
-// eslint-disable-next-line @typescript-eslint/no-empty-function
-export const noop = () => {};

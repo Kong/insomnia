@@ -2,7 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 
 import path from 'path';
 
-import { InsoError } from './errors';
+import { InsoError } from './util';
 
 export async function writeFileWithCliOptions(
   output: string,

@@ -8,9 +8,9 @@ import path from 'path';
 
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
-import { InsoError } from '../errors';
 import type { GlobalOptions } from '../get-options';
 import { logger } from '../logger';
+import { InsoError } from '../util';
 
 export type LintSpecificationOptions = GlobalOptions;
 

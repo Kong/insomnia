@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import * as packageJson from '../package.json';
+import { getDefaultProductName } from './db';
 import { InsoError } from './errors';
 import { globalBeforeAll, globalBeforeEach } from './jest/before';
 import { logger } from './logger';
-import { exit, getDefaultProductName, getVersion, logErrorExit1, noop } from './util';
+import { exit, logErrorExit1 } from './util';
 
 describe('exit()', () => {
   beforeAll(() => {
@@ -120,27 +120,5 @@ describe('getDefaultProductName()', () => {
   it('should throw error if not set', () => {
     process.env.DEFAULT_APP_NAME = '';
     expect(getDefaultProductName).toThrowError('Environment variable DEFAULT_APP_NAME is not set.');
-  });
-});
-
-describe('getVersion()', () => {
-  it('should return version from packageJson', () => {
-    expect(getVersion()).toBe(packageJson.version);
-  });
-
-  it('should get version from env variable', () => {
-    const oldVersion = process.env.VERSION;
-    process.env.VERSION = '2.3.3-canary.1234';
-    expect(getVersion()).toBe('2.3.3-canary.1234');
-    process.env.VERSION = oldVersion;
-  });
-});
-
-describe('noop()', () => {
-  it('should return nothing', () => {
-    expect(noop()).toBe(undefined);
-
-    // @ts-expect-error -- intentionally testing invalid inputs
-    expect(noop('argument')).toBe(undefined);
   });
 });

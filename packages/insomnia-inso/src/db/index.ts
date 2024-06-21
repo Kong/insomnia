@@ -2,7 +2,6 @@ import path from 'path';
 
 import { getAppDataDir } from '../data-directory';
 import { logger } from '../logger';
-import { getDefaultProductName } from '../util';
 import gitAdapter from './adapters/git-adapter';
 import insomniaAdapter from './adapters/insomnia-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
@@ -46,6 +45,13 @@ interface Options {
   filterTypes?: (keyof Database)[];
   src?: string;
 }
+export const getDefaultProductName = (): string => {
+  const name = process.env.DEFAULT_APP_NAME;
+  if (!name) {
+    throw new Error('Environment variable DEFAULT_APP_NAME is not set.');
+  }
+  return name;
+};
 
 export const loadDb = async ({
   workingDir,
