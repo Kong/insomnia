@@ -18,7 +18,6 @@ import { ListWorkspacesLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
 import { UntrackedProjectsLoaderData } from '../../routes/untracked-projects';
 import { WorkspaceLoaderData } from '../../routes/workspace';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
 import { showAlert } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
