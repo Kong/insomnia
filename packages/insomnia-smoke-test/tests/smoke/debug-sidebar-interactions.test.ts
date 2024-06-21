@@ -22,7 +22,6 @@ test.describe('Debug-Sidebar', async () => {
       await requestLocator.click();
       await requestLocator.getByLabel('Request Actions').click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-      await page.getByRole('tab', { name: 'Write' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
 
