@@ -14,7 +14,7 @@ describe('Import errors', () => {
   });
 });
 
-describe('test checkInvalidPeriod', () => {
+describe('test dotInKeyNameInvariant', () => {
   [
     {
       input: {
