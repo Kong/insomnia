@@ -10,9 +10,7 @@ import { ListWorkspacesLoaderData } from '../../routes/project';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import { CodeEditorHandle } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
-import { MarkdownEditor } from '../markdown-editor';
 
 export interface RequestGroupSettingsModalOptions {
   requestGroup: RequestGroup;
@@ -22,7 +20,6 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
   requestGroup: RequestGroup;
 }) => {
   const modalRef = useRef<ModalHandle>(null);
-  const editorRef = useRef<CodeEditorHandle>(null);
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
   const workspacesFetcher = useFetcher<ListWorkspacesLoaderData>();
   useEffect(() => {
@@ -89,17 +86,6 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
               />
             </label>
           </div>
-          <MarkdownEditor
-            ref={editorRef}
-            className="margin-top"
-            placeholder="Write a description"
-            defaultValue={requestGroup?.description || ''}
-            onChange={async (description: string) => {
-              invariant(requestGroup, 'No request group');
-              patchRequestGroup(requestGroup._id, { description });
-            }}
-          />
-          <hr />
           <div className="form-row">
             <div className="form-control form-control--outlined">
               <label>

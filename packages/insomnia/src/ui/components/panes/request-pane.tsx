@@ -363,7 +363,7 @@ export const RequestPane: FC<Props> = ({
             </TabPanel>
           </Tabs>
         </TabPanel>
-        <TabPanel className='w-full flex-1' id='docs'>
+        <TabPanel className='w-full flex-1 overflow-y-auto' id='docs'>
           <MarkdownEditor
             placeholder="Write a description"
             defaultValue={activeRequest.description}

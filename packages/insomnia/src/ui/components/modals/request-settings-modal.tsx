@@ -14,10 +14,8 @@ import { ListWorkspacesLoaderData } from '../../routes/project';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import { CodeEditorHandle } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
-import { MarkdownEditor } from '../markdown-editor';
 
 export interface RequestSettingsModalOptions {
   request: Request | GrpcRequest | WebSocketRequest;
@@ -25,7 +23,6 @@ export interface RequestSettingsModalOptions {
 
 export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSettingsModalOptions) => {
   const modalRef = useRef<ModalHandle>(null);
-  const editorRef = useRef<CodeEditorHandle>(null);
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
   const workspacesFetcher = useFetcher<ListWorkspacesLoaderData>();
   useEffect(() => {
@@ -76,9 +73,6 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
       },
     });
   };
-  const updateDescription = (description: string) => {
-    patchRequest(request._id, { description });
-  };
 
   return (
     <OverlayContainer>
@@ -103,13 +97,6 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
             </div>
             {request && isWebSocketRequest(request) && (
               <>
-                <MarkdownEditor
-                  ref={editorRef}
-                  className="margin-top"
-                  placeholder="Write a description"
-                  defaultValue={request.description}
-                  onChange={updateDescription}
-                />
                 <>
                   <div className="pad-top pad-bottom">
                     <div className="form-control form-control--thin">
@@ -282,13 +269,6 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
             )}
             {request && isRequest(request) && (
               <>
-                <MarkdownEditor
-                  ref={editorRef}
-                  className="margin-top"
-                  placeholder="Write a description"
-                  defaultValue={request.description}
-                  onChange={updateDescription}
-                />
                 <>
                   <div className="pad-top pad-bottom">
                     <div className="form-control form-control--thin">

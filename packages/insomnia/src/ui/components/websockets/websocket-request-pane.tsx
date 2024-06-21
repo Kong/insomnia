@@ -462,7 +462,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             authTypes={supportedAuthTypes}
           />
         </TabPanel>
-        <TabPanel className='w-full flex-1 overflow-y-auto ' id='headers'>
+        <TabPanel className='w-full flex-1 overflow-y-auto' id='headers'>
           {disabled && <PaneReadOnlyBanner />}
           <RequestHeadersEditor
             key={uniqueKey}
@@ -472,7 +472,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             requestType="WebSocketRequest"
           />
         </TabPanel>
-        <TabPanel className='w-full flex-1 overflow-y-auto ' id='docs'>
+        <TabPanel className='w-full flex-1 overflow-y-auto' id='docs'>
           <MarkdownEditor
             placeholder="Write a description"
             defaultValue={activeRequest.description}

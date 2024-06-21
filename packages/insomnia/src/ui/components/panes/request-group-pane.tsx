@@ -186,7 +186,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
             />
           </ErrorBoundary>
         </TabPanel>
-        <TabPanel className='w-full flex-1 overflow-y-auto ' id='docs'>
+        <TabPanel className='w-full flex-1 overflow-y-auto' id='docs'>
           <MarkdownEditor
             className="margin-top"
             placeholder="Write a description"
