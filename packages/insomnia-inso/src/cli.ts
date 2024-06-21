@@ -1,11 +1,9 @@
-import commander from 'commander';
-import { parseArgsStringToArgv } from 'string-argv';
+import type { Command } from 'commander';
+import * as commander from 'commander';
+import parseArgsStringToArgv from 'string-argv';
 
-import type { ExportSpecificationOptions } from './commands/export-specification';
 import { exportSpecification } from './commands/export-specification';
-import type { LintSpecificationOptions } from './commands/lint-specification';
 import { lintSpecification } from './commands/lint-specification';
-import type { RunTestsOptions } from './commands/run-tests';
 import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
 import { getOptions, GlobalOptions } from './get-options';
 import { configureLogger, logger } from './logger';
@@ -17,11 +15,49 @@ const prepareCommand = (options: Partial<GlobalOptions>) => {
   return options;
 };
 
-const makeTestCommand = () => {
-  const run = new commander.Command('run').storeOptionsAsProperties(false).description('Execution utilities');
+export const go = (args?: string[]) => {
+
+  configureLogger();
+
+  // inso
+  const program = new commander.Command().storeOptionsAsProperties(false);
+
+  // Version and description
+  program
+    .version(getVersion(), '-v, --version')
+    .description('A CLI for Insomnia!');
+
+  // Global options
+  program
+    .configureHelp({ showGlobalOptions: true })
+    .option('-w, --workingDir <dir>', 'set working directory')
+    .option('-a, --appDataDir <dir>', 'set the app data directory (deprecated; use --src instead)')
+    .option('--config <path>', 'path to configuration file')
+    .option('--verbose', 'show additional logs while running the command')
+    .option('--src <file|dir>', 'set the app data source')
+    .option('--printOptions', 'print the loaded options')
+    .option('--ci', 'run in CI, disables all prompts');
+
+  program
+    .command('export spec [identifier]')
+    .description('Export an API Specification to a file')
+    .option('-o, --output <path>', 'save the generated config to a file, defaults to stdout')
+    .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations ', false)
+    .action((_, identifier, cmd) => {
+      const globals = program.optsWithGlobals();
+      return exit(exportSpecification(identifier, prepareCommand(getOptions({ ...globals, ...cmd }))));
+    });
+
+  program
+    .command('lint spec [identifier]')
+    .description('Lint an API Specification')
+    .action((_, identifier, cmd) => {
+      const globals = program.optsWithGlobals();
+      return exit(lintSpecification(identifier, prepareCommand(getOptions({ ...globals, ...cmd }))));
+    });
   const defaultReporter: TestReporter = 'spec';
-  run
-    .command('test [identifier]')
+  program
+    .command('run test [identifier]')
     .description('Run Insomnia unit test suites')
     .option('-e, --env <identifier>', 'environment to use')
     .option('-t, --testNamePattern <regex>', 'run tests that match the regex')
@@ -32,41 +68,11 @@ const makeTestCommand = () => {
     .option('-b, --bail', 'abort ("bail") after first test failure')
     .option('--keepFile', 'do not delete the generated test file')
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL')
-    .action((identifier, cmd) => {
-      let options = getOptions<RunTestsOptions>(cmd, {
-        reporter: defaultReporter,
-      });
-      options = prepareCommand(options);
-      return exit(runInsomniaTests(identifier, options));
+    .action((_, identifier, cmd) => {
+      const globals = program.optsWithGlobals();
+      return exit(runInsomniaTests(identifier, prepareCommand(getOptions({ reporter: defaultReporter, ...globals, ...cmd }))));
     });
-  return run;
-};
-
-const makeLintCommand = () => {
-  const lint = new commander.Command('lint').storeOptionsAsProperties(false).description('Linting utilities');
-  lint
-    .command('spec [identifier]')
-    .description('Lint an API Specification')
-    .action((identifier, cmd) =>
-      exit(lintSpecification(identifier, prepareCommand(getOptions<LintSpecificationOptions>(cmd)))));
-  return lint;
-};
-
-const makeExportCommand = () => {
-  const exportCmd = new commander.Command('export').storeOptionsAsProperties(false).description('Export data from insomnia models');
-  exportCmd
-    .command('spec [identifier]')
-    .description('Export an API Specification to a file')
-    .option('-o, --output <path>', 'save the generated config to a file')
-    .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations ', false)
-    .action((identifier, cmd) =>
-      exit(exportSpecification(identifier, prepareCommand(getOptions<ExportSpecificationOptions>(cmd)))));
-  return exportCmd;
-};
-
-const addScriptCommand = (originalCommand: commander.Command) => {
-  // inso script
-  originalCommand
+  program
     .command('script <name>', {
       isDefault: true,
     })
@@ -102,43 +108,11 @@ const addScriptCommand = (originalCommand: commander.Command) => {
       // Print command
       logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`); // Run
 
-      runWithArgs(originalCommand, scriptArgs);
+      runWithArgs(program, scriptArgs);
     });
+  runWithArgs(program, args || process.argv);
 };
 
-export const go = (args?: string[]) => {
-
-  configureLogger();
-
-  // inso
-  const cmd = new commander.Command().storeOptionsAsProperties(false);
-
-  // Version and description
-  cmd
-    .version(getVersion(), '-v, --version')
-    .description('A CLI for Insomnia!');
-
-  // Global options
-  cmd
-    .option('-w, --workingDir <dir>', 'set working directory')
-    .option('-a, --appDataDir <dir>', 'set the app data directory (deprecated; use --src instead)')
-    .option('--config <path>', 'path to configuration file')
-    .option('--verbose', 'show additional logs while running the command')
-    .option('--src <file|dir>', 'set the app data source')
-    .option('--printOptions', 'print the loaded options')
-    .option('--ci', 'run in CI, disables all prompts');
-
-  // Add commands and sub commands
-  cmd
-    .addCommand(makeTestCommand())
-    .addCommand(makeLintCommand())
-    .addCommand(makeExportCommand());
-
-  // Add script base command
-  addScriptCommand(cmd);
-  runWithArgs(cmd, args || process.argv);
-};
-
-const runWithArgs = (cmd: commander.Command, args: string[]) => {
-  cmd.parseAsync(args).catch(logErrorExit1);
+const runWithArgs = (program: Command, args: string[]) => {
+  program.parseAsync(args).catch(logErrorExit1);
 };

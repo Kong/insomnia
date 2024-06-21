@@ -1,5 +1,21 @@
 # CLI
 
+## Developer experience, inso needs a different build of node-libcurl
+
+```shell
+# inso dx
+node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+npm run build:sr -w packages/insomnia
+npm run start -w packages/insomnia-inso
+
+# insomnia dx
+rm -rf node_modules/@getinsomnia/
+npm install
+npm run dev
+```
+
+
+
 ## install node version of libcurl
 
 npm install will download the electron version of libcurl but for inso we need the node version

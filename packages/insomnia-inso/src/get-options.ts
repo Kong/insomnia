@@ -62,39 +62,16 @@ export const loadCosmiConfig = (configFile?: string): Partial<ConfigFileOptions>
   return {};
 };
 
-interface CommandObj {
-  parent?: CommandObj;
-  opts: () => GlobalOptions;
-}
-
-export const extractCommandOptions = <T extends GlobalOptions>(cmd: CommandObj): Partial<T> => {
-  let opts: Partial<T> = {};
-  let command: CommandObj | undefined = cmd;
-
-  do {
-    // overwrite options with more specific ones
-    opts = { ...command.opts(), ...opts };
-    command = command.parent;
-  } while (command);
-
-  return opts;
-};
-
-export const getOptions = <T extends Partial<GlobalOptions>>(cmd: CommandObj, defaultOptions: Partial<T> = {}): Partial<T> => {
-  const commandOptions = extractCommandOptions(cmd);
-  const { __configFile } = loadCosmiConfig(commandOptions.config);
+export const getOptions = (defaultOptions: Partial<GlobalOptions> = {}): Partial<GlobalOptions> => {
+  const { __configFile } = loadCosmiConfig(defaultOptions.config);
 
   if (__configFile) {
     return {
       ...defaultOptions,
       ...(__configFile.options || {}),
-      ...commandOptions,
       __configFile,
     };
   }
 
-  return {
-    ...defaultOptions,
-    ...commandOptions,
-  };
+  return defaultOptions;
 };
