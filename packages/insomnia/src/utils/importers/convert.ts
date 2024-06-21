@@ -64,7 +64,7 @@ export function dotInKeyNameInvariant(entity: Record<string | number, any>) {
     const value = entity[key];
     const shouldRecurse = Array.isArray(value) || typeof value === 'object';
     if (shouldRecurse) {
-      checkInvalidPeriod(value);
+      dotInKeyNameInvariant(value);
     }
   }
 }
