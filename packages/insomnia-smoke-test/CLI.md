@@ -14,8 +14,6 @@ npm install
 npm run dev
 ```
 
-
-
 ## install node version of libcurl
 
 npm install will download the electron version of libcurl but for inso we need the node version
