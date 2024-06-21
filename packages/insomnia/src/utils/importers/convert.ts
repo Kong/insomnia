@@ -54,7 +54,7 @@ export const convert = async (rawData: string) => {
 };
 
 // this checks invalid keys ahead, or nedb would return an error in importing.
-export function checkInvalidPeriod(entity: Record<string | number, any>) {
+export function dotInKeyNameInvariant(entity: Record<string | number, any>) {
   for (const key in entity) {
     const containsPeriod = key.indexOf('.') !== -1;
     if (containsPeriod) {
