@@ -54,6 +54,14 @@ const EditableOneLineEditorModal = ({
     }
   }, [buttonRef]);
 
+  const onKeydown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      setIsOpen(false);
+      onChange(value);
+    }
+  }, [onChange, value]);
+
   useResizeObserver({
     ref: buttonRef,
     onResize: onResize,
@@ -116,13 +124,7 @@ const EditableOneLineEditorModal = ({
                 readOnly={readOnly}
                 getAutocompleteConstants={getAutocompleteConstants}
                 onChange={setValue}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    onChange(value);
-                    setIsOpen(false);
-                  }
-                }}
+                onKeyDown={onKeydown}
               />
             </div>
           </FocusScope>
