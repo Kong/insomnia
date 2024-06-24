@@ -18,7 +18,6 @@ Options:
   -h, --help              display help for command
 
 Commands:
-  generate                Code generation utilities
   run                     Execution utilities
   lint                    Linting utilities
   export                  Export data from insomnia models
@@ -44,7 +43,6 @@ Options:
   -h, --help              display help for command
 
 Commands:
-  generate                Code generation utilities
   run                     Execution utilities
   lint                    Linting utilities
   export                  Export data from insomnia models
@@ -72,39 +70,33 @@ Export an API Specification to a file
 
 Options:
   -o, --output <path>    save the generated config to a file
-  -s, --skipAnnotations  remove all \\"x-kong-\\" annotations  (default: false)
+  -s, --skipAnnotations  remove all "x-kong-" annotations  (default: false)
   -h, --help             display help for command"
 `;
 
 exports[`Snapshot for "inso generate -h" 1`] = `
-"Usage: inso generate [options] [command]
+"Usage: inso [options] [command]
 
-Code generation utilities
+A CLI for Insomnia!
 
 Options:
-  -h, --help                     display help for command
+  -v, --version           output the version number
+  -w, --workingDir <dir>  set working directory
+  -a, --appDataDir <dir>  set the app data directory (deprecated; use --src
+                          instead)
+  --config <path>         path to configuration file
+  --verbose               show additional logs while running the command
+  --src <file|dir>        set the app data source
+  --printOptions          print the loaded options
+  --ci                    run in CI, disables all prompts
+  -h, --help              display help for command
 
 Commands:
-  config [options] [identifier]  Generate configuration from an api spec.
-  help [command]                 display help for command"
-`;
-
-exports[`Snapshot for "inso generate config -h" 1`] = `
-"Usage: inso generate config [options] [identifier]
-
-Generate configuration from an api spec.
-
-Options:
-  -t, --type <value>         type of configuration to generate, options are
-                             [declarative, kubernetes] (default: declarative)
-  -f, --format <value>       format of configuration to generate, options are
-                             [yaml, json] (default: yaml)
-  -k, --kongVersion <value>  version of target Kong instance, options are
-                             [legacy, 3] (default: legacy)
-  --tags <tags>              comma separated list of tags to apply to each
-                             entity
-  -o, --output <path>        save the generated config to a file
-  -h, --help                 display help for command"
+  run                     Execution utilities
+  lint                    Linting utilities
+  export                  Export data from insomnia models
+  script <name>           Run scripts defined in .insorc
+  help [command]          display help for command"
 `;
 
 exports[`Snapshot for "inso help" 1`] = `
@@ -125,7 +117,6 @@ Options:
   -h, --help              display help for command
 
 Commands:
-  generate                Code generation utilities
   run                     Execution utilities
   lint                    Linting utilities
   export                  Export data from insomnia models
@@ -178,7 +169,7 @@ Options:
   -t, --testNamePattern <regex>  run tests that match the regex
   -r, --reporter <reporter>      reporter to use, options are [dot, list, min,
                                  progress, spec] (default: spec)
-  -b, --bail                     abort (\\"bail\\") after first test failure
+  -b, --bail                     abort ("bail") after first test failure
   --keepFile                     do not delete the generated test file
   --disableCertValidation        disable certificate validation for requests
                                  with SSL
