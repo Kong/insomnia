@@ -8,13 +8,12 @@ A CLI for Insomnia!
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  -a, --appDataDir <dir>  set the app data directory (deprecated; use --src
-                          instead)
-  --config <path>         path to configuration file
+  --src <file|dir>        set the target source file or directory (git path or
+                          insomnia db path)
   --verbose               show additional logs while running the command
-  --src <file|dir>        set the app data source
-  --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
+  --config <path>         path to configuration file containing above options
+  --printOptions          print the loaded options
   -h, --help              display help for command
 
 Commands:
@@ -33,13 +32,12 @@ A CLI for Insomnia!
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  -a, --appDataDir <dir>  set the app data directory (deprecated; use --src
-                          instead)
-  --config <path>         path to configuration file
+  --src <file|dir>        set the target source file or directory (git path or
+                          insomnia db path)
   --verbose               show additional logs while running the command
-  --src <file|dir>        set the app data source
-  --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
+  --config <path>         path to configuration file containing above options
+  --printOptions          print the loaded options
   -h, --help              display help for command
 
 Commands:
@@ -82,13 +80,12 @@ A CLI for Insomnia!
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  -a, --appDataDir <dir>  set the app data directory (deprecated; use --src
-                          instead)
-  --config <path>         path to configuration file
+  --src <file|dir>        set the target source file or directory (git path or
+                          insomnia db path)
   --verbose               show additional logs while running the command
-  --src <file|dir>        set the app data source
-  --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
+  --config <path>         path to configuration file containing above options
+  --printOptions          print the loaded options
   -h, --help              display help for command
 
 Commands:
@@ -107,13 +104,12 @@ A CLI for Insomnia!
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  -a, --appDataDir <dir>  set the app data directory (deprecated; use --src
-                          instead)
-  --config <path>         path to configuration file
+  --src <file|dir>        set the target source file or directory (git path or
+                          insomnia db path)
   --verbose               show additional logs while running the command
-  --src <file|dir>        set the app data source
-  --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
+  --config <path>         path to configuration file containing above options
+  --printOptions          print the loaded options
   -h, --help              display help for command
 
 Commands:

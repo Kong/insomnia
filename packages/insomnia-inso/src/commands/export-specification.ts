@@ -23,11 +23,10 @@ function  deleteField(obj: any, field: any): void {
 
 export async function exportSpecification(
   identifier: string | null | undefined,
-  { output, skipAnnotations, workingDir, appDataDir, ci, src }: ExportSpecificationOptions,
+  { output, skipAnnotations, workingDir, ci, src }: ExportSpecificationOptions,
 ) {
   const db = await loadDb({
     workingDir,
-    appDataDir,
     filterTypes: ['ApiSpec'],
     src,
   });

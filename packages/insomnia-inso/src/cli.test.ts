@@ -50,14 +50,6 @@ describe('cli', () => {
   });
 
   describe('global options', () => {
-    it('should throw error if app data dir argument is missing', () => {
-      expect(() => inso('-a')).toThrowError();
-    });
-
-    it('should throw error if working dir argument is missing', () => {
-      expect(() => inso('-w')).toThrowError();
-    });
-
     it.each(['-v', '--version'])('inso %s should print version from package.json', args => {
       logger.wrapAll();
       expect(() => inso(args)).toThrowError(packageJson.version);
@@ -78,10 +70,9 @@ describe('cli', () => {
     });
 
     it('should call generateConfig with global options', () => {
-      inso('lint spec file.yaml -w dir1 -a dir2 --src src --ci');
+      inso('lint spec file.yaml -w dir1 --src src --ci');
       expect(lintSpecification).toHaveBeenCalledWith('file.yaml', {
         workingDir: 'dir1',
-        appDataDir: 'dir2',
         src: 'src',
         ci: true,
       });
@@ -120,12 +111,11 @@ describe('cli', () => {
     });
 
     it('should call runInsomniaTests with global options', () => {
-      inso('run test uts_123 -w dir1 -a dir2 --src src --ci');
+      inso('run test uts_123 -w dir1 --src src --ci');
       expect(runInsomniaTests).toHaveBeenCalledWith(
         'uts_123',
         expect.objectContaining({
           workingDir: 'dir1',
-          appDataDir: 'dir2',
           src: 'src',
           ci: true,
         }),

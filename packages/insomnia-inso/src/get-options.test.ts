@@ -35,7 +35,7 @@ describe('loadCosmiConfig()', () => {
     expect(result).toEqual({
       __configFile: {
         options: {
-          appDataDir: 'configFile',
+          src: 'configFile',
           workingDir: 'workingDir',
           ci: true,
         },
@@ -80,27 +80,27 @@ describe('getOptions', () => {
       opts: () => ({}),
     };
     const defaultOptions = {
-      appDataDir: 'default',
+      src: 'default',
     };
     const result = getOptions(commandOptions, defaultOptions);
     expect(result).toEqual({
-      appDataDir: 'default',
+      src: 'default',
     });
   });
 
   it('should combine default options with command options, favouring command', () => {
     const commandOptions = {
       opts: () => ({
-        appDataDir: 'command',
+        src: 'command',
       }),
     };
     const defaultOptions = {
-      appDataDir: 'default',
+      src: 'default',
       anotherDefault: '0',
     };
     const result = getOptions(commandOptions, defaultOptions);
     expect(result).toEqual({
-      appDataDir: 'command',
+      src: 'command',
       anotherDefault: '0',
     });
   });
@@ -113,19 +113,19 @@ describe('getOptions', () => {
       }),
     };
     const defaultOptions = {
-      appDataDir: 'default',
+      src: 'default',
       anotherDefault: '0',
     };
     const result = getOptions(commandOptions, defaultOptions);
     expect(result).toEqual({
-      appDataDir: 'configFile',
+      src: 'configFile',
       workingDir: 'workingDir',
       ci: true,
       anotherDefault: '0',
       config: path.join(fixturesDir, '.insorc.yaml'),
       __configFile: {
         options: {
-          appDataDir: 'configFile',
+          src: 'configFile',
           workingDir: 'workingDir',
           ci: true,
         },
@@ -148,12 +148,12 @@ describe('getOptions', () => {
       }),
     };
     const defaultOptions = {
-      appDataDir: 'default',
+      src: 'default',
       anotherDefault: '0',
     };
     const result = getOptions(commandOptions, defaultOptions);
     expect(result).toEqual({
-      appDataDir: 'default',
+      src: 'default',
       anotherDefault: '0',
       config: configFilePath,
     });
