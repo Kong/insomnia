@@ -24,6 +24,11 @@ export async function lintSpecification(
     src,
   });
 
+  if (!identifier && ci) {
+    logger.fatal('Identifier is required in CI mode');
+    return false;
+  }
+
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
   let specContent = '';
   let ruleset = oas;
@@ -53,7 +58,7 @@ export async function lintSpecification(
         throw new InsoError(`Failed to read "${fileName}"`, error);
       }
     } else {
-      logger.fatal('Specification not found.');
+      logger.fatal('Specification not found at ' + src + ',' + workingDir);
       return false;
     }
   } catch (error) {

@@ -89,7 +89,6 @@ const addScriptCommand = (originalCommand: commander.Command) => {
     })
     .description('Run scripts defined in .insorc')
     .allowUnknownOption()
-    // @ts-expect-error this appears to actually be valid, and I don't want to risk changing any behavior
     .action((scriptName: 'lint', cmd) => {
       // Load scripts
       let options = getOptions(cmd);
@@ -147,7 +146,7 @@ export const go = (args?: string[], exitOverride?: boolean) => {
   // Global options
   cmd
     .option('-w, --workingDir <dir>', 'set working directory')
-    .option('--src <file|dir>', 'set the target source file or directory (git path or insomnia db path)')
+    .option('--src <file|dir>', 'set the file or directory to read from, defaults to installed Insomnia data directory')
     .option('--verbose', 'show additional logs while running the command')
     .option('--ci', 'run in CI, disables all prompts')
     .option('--config <path>', 'path to configuration file containing above options')

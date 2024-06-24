@@ -33,7 +33,7 @@ export async function exportSpecification(
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
 
   if (!specFromDb) {
-    logger.fatal('Specification not found.');
+    logger.fatal('Specification not found at ' + src + ',' + workingDir);
     return false;
   }
 

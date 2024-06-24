@@ -1,7 +1,6 @@
 options:
-  src: configFile
-  workingDir: workingDir
-  ci: true
+  src: packages/insomnia-inso/src/db/fixtures/git-repo-malformed-spec
+  ci: false
   shouldBeIgnored: this should be ignored because it is not a global option
 scripts:
-  lint: inso lint spec
+  lint2: inso lint spec
