@@ -17,5 +17,4 @@ module.exports = {
       statements: 95,
     },
   },
-  setupFiles: ['./src/jest/setup.ts'],
 };
