@@ -42,42 +42,40 @@ export type DbAdapter = (
 
 interface Options {
   workingDir?: string;
-  appDataDir?: string;
   filterTypes?: (keyof Database)[];
   src?: string;
 }
 
 export const loadDb = async ({
   workingDir,
-  appDataDir,
   filterTypes,
   src,
 }: Options = {}) => {
   let db: Database | null = null;
-
-  // try load from git
-  if (!appDataDir) {
-    const dir = src || workingDir || '.';
-    db = await gitAdapter(dir, filterTypes);
-    db && logger.debug(`Data store configured from git repository at \`${path.resolve(dir)}\``);
+  let userSpecifiedDirectory = '.';
+  if (workingDir) {
+    userSpecifiedDirectory = path.resolve(workingDir, src || '');
   }
+  if (!workingDir && src) {
+    userSpecifiedDirectory = path.resolve('.', src);
+  }
+  const fullPath = userSpecifiedDirectory || '.';
+  // try load from git
+  db = await gitAdapter(fullPath, filterTypes);
+  db && logger.debug(`Data store configured from git repository at \`${fullPath}\``);
 
   // try load from file (higher priority)
-  if (!db && src) {
-    db = await insomniaAdapter(src, filterTypes);
-    db && logger.debug(`Data store configured from file at \`${path.resolve(src)}\``);
+  if (!db) {
+    db = await insomniaAdapter(fullPath, filterTypes);
+    db && logger.debug(`Data store configured from file at \`${fullPath}\``);
   }
 
   // try load from nedb
   if (!db) {
-    const dir = src || appDataDir || getAppDataDir(getDefaultProductName());
+    const dir = userSpecifiedDirectory || getAppDataDir(getDefaultProductName());
     db = await neDbAdapter(dir, filterTypes);
-    db && logger.debug(`Data store configured from app data directory at \`${path.resolve(dir)}\``); // Try to load from the Designer data dir, if the Core data directory does not exist
+    db && logger.debug(`Data store configured from app data directory at \`${dir}\``); // Try to load from the Designer data dir, if the Core data directory does not exist
   } // return empty db
-
-  appDataDir && logger.warn(
-    'The option `--appDataDir` has been deprecated and will be removed in future releases. Please use `--src` as an alternative',
-  );
 
   if (!db) {
     logger.warn(

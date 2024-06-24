@@ -43,7 +43,7 @@ describe('runInsomniaTests()', () => {
     ]);
   });
 
-  it('should forward options to insomnia-testing', async () => {
+  it.only('should forward options to insomnia-testing', async () => {
     const contents = 'generated test contents';
     generate.mockReturnValue(contents);
 

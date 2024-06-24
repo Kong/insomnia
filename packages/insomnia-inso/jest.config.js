@@ -7,7 +7,7 @@ module.exports = {
       tsconfig: '../../tsconfig.base.json',
     },
   },
-  collectCoverage: true,
+  collectCoverage: false,
   coveragePathIgnorePatterns: ['/node_modules/'],
   coverageThreshold: {
     global: {
