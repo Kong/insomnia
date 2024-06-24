@@ -5,8 +5,8 @@ import path from 'path';
 import { writeFileWithCliOptions } from './write-file';
 
 jest.mock('node:fs/promises', () => ({
-  writeFile: jest.fn().mockResolvedValue(() => { }),
-  mkdir: jest.fn().mockResolvedValue(() => { }),
+  writeFile: jest.fn(),
+  mkdir: jest.fn(),
 }));
 
 describe('writeFileWithCliOptions', () => {

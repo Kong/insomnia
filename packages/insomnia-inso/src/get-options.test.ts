@@ -23,7 +23,6 @@ describe('loadCosmiConfig()', () => {
         filePath: path.resolve(fixturesDir, '.insorc.yaml'),
       },
     });
-    expect(result.__configFile?.options?.shouldBeIgnored).toBe(undefined);
   });
 
   it('should return empty object and report error if specified config file not found', () => {

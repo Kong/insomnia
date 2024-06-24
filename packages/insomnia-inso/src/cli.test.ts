@@ -20,7 +20,7 @@ jest.mock('./util');
 const initInso = () => {
   return (...args: string[]): void => {
     const cliArgs = parseArgsStringToArgv(`node test ${args.join(' ')}`);
-    return cli.go(cliArgs, true);
+    return cli.go(cliArgs);
   };
 };
 
@@ -114,7 +114,6 @@ describe('cli', () => {
         'uts_123',
         expect.objectContaining({
           workingDir: 'dir1',
-          appDataDir: 'dir2',
           src: 'src',
           ci: true,
         }),

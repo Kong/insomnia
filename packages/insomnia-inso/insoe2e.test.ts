@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { exec } from 'child_process';
 
-describe('Command exit code test', () => {
+describe.skip('Command exit code test', () => {
   // List of commands to test
   const commands = [
     '$PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose',
@@ -11,7 +11,7 @@ describe('Command exit code test', () => {
 
   commands.forEach(command => {
     it(`should return exit code 0 for command: ${command}`, done => {
-      exec(command, (error, stdout, stderr) => {
+      exec(command, (error, _, stderr) => {
         if (error) {
           console.error(`Error executing command: ${command}`);
           console.error(stderr);

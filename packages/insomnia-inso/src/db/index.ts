@@ -45,13 +45,6 @@ interface Options {
   filterTypes?: (keyof Database)[];
   src?: string;
 }
-export const getDefaultProductName = (): string => {
-  const name = process.env.DEFAULT_APP_NAME;
-  if (!name) {
-    throw new Error('Environment variable DEFAULT_APP_NAME is not set.');
-  }
-  return name;
-};
 
 export const loadDb = async ({
   workingDir,
@@ -74,9 +67,9 @@ export const loadDb = async ({
     db && logger.debug(`Data store configured from file at \`${path.resolve(src)}\``);
   }
 
-  // try load from nedb
+  // try load from nedb,
   if (!db) {
-    const dir = src || appDataDir || getAppDataDir(getDefaultProductName());
+    const dir = src || appDataDir || getAppDataDir(process.env.DEFAULT_APP_NAME || 'insomnia');
     db = await neDbAdapter(dir, filterTypes);
     db && logger.debug(`Data store configured from app data directory at \`${path.resolve(dir)}\``); // Try to load from the Designer data dir, if the Core data directory does not exist
   } // return empty db

@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { logType } from 'consola';
 
 import { logger, LogsByType } from '../logger';
@@ -20,8 +21,8 @@ const logTypes: logType[] = [
 
 export const globalBeforeAll = () => {
   logger.__getLogs = () => logTypes.reduce((accumulator, level) => {
-    // @ts-expect-error the consola types are incomplete
-    const calls = (logger[level] as jest.Mock).mock.calls.map(call => (
+    // @ts-expect-error TS doesn't like this, but it's fine
+    const calls = logger[level].mock.calls.map(call => (
       call.length === 1 ? call[0] : call
     ));
     return {

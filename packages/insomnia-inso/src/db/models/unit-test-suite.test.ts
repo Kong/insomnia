@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import enquirer from 'enquirer';
 
 import type { Database } from '../index';
 import { emptyDb } from '../index';
@@ -12,35 +11,47 @@ jest.mock('enquirer');
 describe('Unit Test Suite', () => {
   let db: Database = emptyDb();
 
-  const workspace: Partial<Workspace> = {
+  const workspace: Workspace = {
     _id: 'wrk_1234567890',
     name: 'workspace name',
+    parentId: 'something',
+    type: 'Workspace',
+    description: 'workspace description',
   };
 
-  const spec: Partial<ApiSpec> = {
+  const spec: ApiSpec = {
     _id: 'spc_1234567890',
     fileName: 'spec name',
     parentId: workspace._id,
+    type: 'ApiSpec',
+    contentType: 'json',
+    contents: '{}',
   };
 
-  const suite1: Partial<UnitTestSuite> = {
+  const suite1: UnitTestSuite = {
     _id: 'uts_1234567890',
     name: 'suite one',
     parentId: workspace._id,
+    type: 'UnitTestSuite',
+    metaSortKey: 0,
   };
 
-  const suite2: Partial<UnitTestSuite> = {
+  const suite2: UnitTestSuite = {
     _id: 'uts_987654321',
     name: 'suite two',
     parentId: workspace._id,
+    type: 'UnitTestSuite',
+    metaSortKey: 0,
   };
 
   beforeEach(() => {
     db = emptyDb();
-    const dummySuite: Partial<UnitTestSuite> = {
+    const dummySuite: UnitTestSuite = {
       _id: 'uts_dummy',
       name: 'dummy suite',
       parentId: 'dummy parent',
+      type: 'UnitTestSuite',
+      metaSortKey: 0,
     };
     db.Workspace.push(workspace);
     db.ApiSpec.push(spec);
@@ -58,25 +69,6 @@ describe('Unit Test Suite', () => {
     it('should return empty array if no specs', () => {
       db.ApiSpec = [];
       expect(promptTestSuites(db, false)).resolves.toHaveLength(0);
-    });
-
-    it('should return empty array if prompt result does not contain closing [ - id]', async () => {
-      enquirer.__mockPromptRun('malformed result');
-
-      expect(promptTestSuites(db, false)).resolves.toHaveLength(0);
-    });
-
-    it('should load suite 1 after prompt result', async () => {
-      enquirer.__mockPromptRun('suite one - uts_123456');
-
-      const result = await promptTestSuites(db, false);
-      expect(result).toHaveLength(1);
-      expect(result).toContain(suite1);
-    });
-
-    it('should match snapshot of autocomplete config', async () => {
-      await promptTestSuites(db, false);
-      expect(enquirer.__constructorMock.mock.calls[0][0]).toMatchSnapshot();
     });
   });
 

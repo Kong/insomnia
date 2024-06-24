@@ -7,7 +7,7 @@ import { lintSpecification } from './commands/lint-specification';
 import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
 import { getOptions, GlobalOptions } from './get-options';
 import { configureLogger, logger } from './logger';
-import { exit, logErrorExit1 } from './util';
+import { exit, InsoError } from './util';
 
 const prepareCommand = (options: Partial<GlobalOptions>) => {
   configureLogger(options.quiet, options.ci);
@@ -24,7 +24,7 @@ export const go = (args?: string[]) => {
   // Global options
   program
     .configureHelp({ showGlobalOptions: true })
-    .option('-w, --workingDir <dir>', 'set working directory')
+    .option('-w, --workingDir <dir>', 'set working directory', '.')
     .option('--config <path>', 'path to configuration file')
     .option('--quiet', 'hide logs')
     .option('--src <file|dir>', 'set the app data source, this is where your insomnia database lives')
@@ -88,7 +88,23 @@ export const go = (args?: string[]) => {
       // Print command
       logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`); // Run
 
-      program.parseAsync(scriptArgs).catch(logErrorExit1);
+      // program.parseAsync(scriptArgs).catch(err => {
+      //   if (err instanceof InsoError) {
+      //     logger.fatal(err.message);
+      //     err.cause && logger.fatal(err.cause);
+      //   } else if (err) {
+      //     logger.fatal(err);
+      //   }
+      //   process.exit(1);
+      // });
     });
-  program.parseAsync(args || process.argv).catch(logErrorExit1);
+  program.parseAsync(args || process.argv).catch(err => {
+    if (err instanceof InsoError) {
+      logger.fatal(err.message);
+      err.cause && logger.fatal(err.cause);
+    } else if (err) {
+      logger.fatal(err);
+    }
+    process.exit(1);
+  });
 };

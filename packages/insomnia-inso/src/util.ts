@@ -10,18 +10,14 @@ export class InsoError extends Error {
   }
 }
 
-export const logErrorExit1 = (err?: Error) => {
-  if (err instanceof InsoError) {
-    logger.fatal(err.message);
-    err.cause && logger.fatal(err.cause);
-  } else if (err) {
-    logger.fatal(err);
-  }
-
-  logger.info('To view tracing information, re-run `inso` with `--verbose`');
-  process.exit(1);
-};
-
 export const exit = async (result: Promise<boolean>): Promise<void> => {
-  return result.then(r => process.exit(r ? 0 : 1)).catch(logErrorExit1);
+  return result.then(r => process.exit(r ? 0 : 1)).catch(err => {
+    if (err instanceof InsoError) {
+      logger.fatal(err.message);
+      err.cause && logger.fatal(err.cause);
+    } else if (err) {
+      logger.fatal(err);
+    }
+    process.exit(1);
+  });
 };

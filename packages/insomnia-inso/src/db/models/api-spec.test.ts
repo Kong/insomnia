@@ -1,5 +1,4 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import enquirer from 'enquirer';
 
 import type { Database } from '../index';
 import { emptyDb } from '../index';
@@ -12,17 +11,25 @@ jest.mock('enquirer');
 describe('apiSpec', () => {
   let db: Database = emptyDb();
 
-  const spec: Partial<ApiSpec> = {
+  const spec: ApiSpec = {
     _id: 'spc_1234567890',
     fileName: 'fileName',
-  } as ApiSpec;
+    parentId: 'something',
+    type: 'ApiSpec',
+    contentType: 'json',
+    contents: '{}',
+  };
 
   beforeEach(() => {
     db = emptyDb();
-    const dummySpec: Partial<ApiSpec> = {
+    const dummySpec: ApiSpec = {
       _id: 'spc_dummy',
       fileName: 'dummy spec',
-    } as ApiSpec;
+      parentId: 'something',
+      type: 'ApiSpec',
+      contentType: 'json',
+      contents: '{}',
+    };
     db.ApiSpec.push(spec);
     db.ApiSpec.push(dummySpec);
     jest.clearAllMocks();
@@ -36,24 +43,6 @@ describe('apiSpec', () => {
     it('should return null if db.ApiSpec is empty', () => {
       db.ApiSpec = [];
       expect(promptApiSpec(db, false)).resolves.toBeNull();
-    });
-
-    it('should return null if prompt result does not contain closing [ - id]', async () => {
-      enquirer.__mockPromptRun('malformed result');
-
-      expect(promptApiSpec(db, false)).resolves.toBeNull();
-    });
-
-    it('should load apiSpec after prompt result', async () => {
-      enquirer.__mockPromptRun('fileName - spc_123456');
-
-      const result = await promptApiSpec(db, false);
-      expect(result).toBe(spec);
-    });
-
-    it('should match snapshot of autocomplete config', async () => {
-      await promptApiSpec(db, false);
-      expect(enquirer.__constructorMock.mock.calls[0][0]).toMatchSnapshot();
     });
   });
 

@@ -8,16 +8,22 @@ import { loadWorkspace } from './workspace';
 
 describe('workspace', () => {
   let db: Database = emptyDb();
-  const workspace: Partial<Workspace> = {
+  const workspace: Workspace = {
     _id: 'wrk_1234567890',
     name: 'workspace name',
+    parentId: 'something',
+    type: 'Workspace',
+    description: 'workspace description',
   };
 
   beforeEach(() => {
     db = emptyDb();
-    const dummyWorkspace: Partial<Workspace> = {
+    const dummyWorkspace: Workspace = {
       _id: 'wrk_dummy',
       name: 'dummy workspace',
+      parentId: 'something',
+      type: 'Workspace',
+      description: 'workspace description',
     };
     db.Workspace.push(workspace);
     db.Workspace.push(dummyWorkspace);
