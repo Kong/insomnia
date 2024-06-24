@@ -81,10 +81,6 @@ export const loadDb = async ({
     db && logger.debug(`Data store configured from app data directory at \`${path.resolve(dir)}\``); // Try to load from the Designer data dir, if the Core data directory does not exist
   } // return empty db
 
-  appDataDir && logger.warn(
-    'The option `--appDataDir` has been deprecated and will be removed in future releases. Please use `--src` as an alternative',
-  );
-
   if (!db) {
     logger.warn(
       'No git, app data store or Insomnia V4 export file found, re-run `inso` with `--verbose` to see tracing information',

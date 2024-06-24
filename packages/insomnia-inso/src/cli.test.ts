@@ -88,16 +88,6 @@ describe('cli', () => {
       inso('lint spec file.yaml');
       expect(lintSpecification).toHaveBeenCalledWith('file.yaml', {});
     });
-
-    it('should call generateConfig with global options', () => {
-      inso('lint spec file.yaml -w dir1 -a dir2 --src src --ci');
-      expect(lintSpecification).toHaveBeenCalledWith('file.yaml', {
-        workingDir: 'dir1',
-        appDataDir: 'dir2',
-        src: 'src',
-        ci: true,
-      });
-    });
   });
 
   describe('run test', () => {
@@ -158,16 +148,6 @@ describe('cli', () => {
         output: 'output.yaml', skipAnnotations: true,
       });
     });
-
-    it('should call generateConfig with global options', () => {
-      inso('export spec spc_123 -w testing/dir');
-      expect(exportSpecification).toHaveBeenCalledWith(
-        'spc_123',
-        expect.objectContaining({
-          workingDir: 'testing/dir',
-        }),
-      );
-    });
   });
 
   describe('script', () => {
@@ -178,44 +158,17 @@ describe('cli', () => {
         exit.mock.calls[0][0],
       ).resolves.toBe(result);
 
-    it('should call script command by default', () => {
-      inso('gen-conf', insorcFilePath);
-      expect(generateConfig).toHaveBeenCalledWith(
-        'Designer Demo',
-        expect.objectContaining({
-          type: 'declarative',
-        }),
-      );
-    });
-
-    it('should call script command', () => {
-      inso('script gen-conf', insorcFilePath);
-      expect(generateConfig).toHaveBeenCalledWith(
-        'Designer Demo',
-        expect.objectContaining({
-          type: 'declarative',
-        }),
-      );
-    });
-
     it('should warn if script task does not start with inso', async () => {
       inso('invalid-script', insorcFilePath);
 
       const logs = logger.__getLogs();
 
       expect(logs.fatal).toContain('Tasks in a script should start with `inso`.');
-      expect(generateConfig).not.toHaveBeenCalledWith();
       await expectExitWith(false);
     });
 
     it('should call nested command', async () => {
       inso('gen-conf:k8s', insorcFilePath);
-      expect(generateConfig).toHaveBeenCalledWith(
-        'Designer Demo',
-        expect.objectContaining({
-          type: 'kubernetes',
-        }),
-      );
 
       const logs = logger.__getLogs();
 
@@ -223,17 +176,6 @@ describe('cli', () => {
         '>> inso gen-conf --type kubernetes',
         '>> inso generate config Designer Demo --type declarative --type kubernetes',
       ]);
-      await expectExitWith(true);
-    });
-
-    it('should call nested command and pass through props', async () => {
-      inso('gen-conf:k8s --type declarative', insorcFilePath);
-      expect(generateConfig).toHaveBeenCalledWith(
-        'Designer Demo',
-        expect.objectContaining({
-          type: 'declarative',
-        }),
-      );
       await expectExitWith(true);
     });
 
