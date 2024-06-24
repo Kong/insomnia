@@ -1,63 +1,23 @@
 import React, { forwardRef, ReactElement, useCallback, useState } from 'react';
-import styled from 'styled-components';
+import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 
-import { PanelContainer, TabItem, Tabs } from './base/tabs';
 import { CodeEditor, CodeEditorHandle } from './codemirror/code-editor';
+import { ErrorBoundary } from './error-boundary';
+import { Icon } from './icon';
 import { MarkdownPreview } from './markdown-preview';
 
 interface Props {
   onChange: Function;
   defaultValue: string;
   placeholder?: string;
-  defaultPreviewMode?: boolean;
   className?: string;
   mode?: string;
   tall?: boolean;
 }
 
-interface MarkdownEditProps {
-  withDynamicHeight: boolean;
-}
-
-const Wrapper = styled.div({
-  border: '1px solid var(--hl-md)',
-  boxSizing: 'border-box',
-});
-
-const MarkdownEdit = styled.div<MarkdownEditProps>(({ withDynamicHeight }) => ({
-  padding: 'var(--padding-xs) var(--padding-sm)',
-
-  ...withDynamicHeight ? {
-    '.CodeMirror-scroll': {
-      // Not sure why this style doesn't work on .CodeMirror...
-      maxHeight: '30vh',
-    },
-
-    '.input': {
-      height: 'auto !important',
-    },
-  } : {
-    height: '100%',
-    display: 'grid',
-    gridTemplateRows: '1fr auto',
-
-    '.input': {
-      height: '100%',
-    },
-  },
-}));
-
-const MarkdownPreiview = styled.div({
-  maxHeight: '35vh',
-  padding: 'var(--padding-sm)',
-  overflow: 'auto',
-});
-
 export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
   mode,
   placeholder,
-  defaultPreviewMode,
-  className,
   tall,
   defaultValue,
   onChange,
@@ -71,43 +31,63 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
   }, [onChange]);
 
   return (
-    <Wrapper className={className}>
-      <Tabs
-        aria-label="Markdown editor tabs"
-        defaultSelectedKey={defaultPreviewMode ? 'preview' : 'write' }
-      >
-        <TabItem key="write" title="Write">
-          <MarkdownEdit withDynamicHeight={!tall}>
-            <div className='form-control form-control--outlined'>
-              <CodeEditor
-                id="markdown-editor"
-                ref={ref}
-                hideGutters
-                hideLineNumbers
-                dynamicHeight={!tall}
-                showPrettifyButton
-                noStyleActiveLine
-                enableNunjucks
-                mode={mode || 'text/x-markdown'}
-                placeholder={placeholder}
-                defaultValue={markdown}
-                onChange={handleChange}
-              />
-            </div>
-            <div className='txt-sm italic faint'>
-              Styling with Markdown is supported
-            </div>
-          </MarkdownEdit>
-        </TabItem>
-        <TabItem key="preview" title="Preview">
-          <MarkdownPreiview>
-            <PanelContainer className="markdown-editor__preview">
-              <MarkdownPreview markdown={markdown} />
-            </PanelContainer>
-          </MarkdownPreiview>
-        </TabItem>
-      </Tabs>
-    </Wrapper>
+    <Tabs
+      className="w-full h-full flex flex-col overflow-hidden"
+      aria-label="Markdown editor tabs"
+      defaultSelectedKey={defaultValue ? 'preview' : 'write'}
+      disabledKeys={[defaultValue ? '' : 'preview']}
+    >
+      <TabList className="w-full flex-shrink-0 overflow-x-auto border-solid border-b border-b-[--hl-md] px-2 bg-[--color-bg] flex items-center gap-2 h-[--line-height-sm]" aria-label="Request scripts tabs">
+        <Tab
+          className="rounded-md flex-shrink-0 h-[--line-height-xxs] text-sm flex items-center justify-between cursor-pointer w-[10.5rem] outline-none select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300"
+          id="write"
+        >
+          <div className='flex flex-1 items-center gap-2'>
+            <Icon icon="arrow-right-to-bracket" />
+            <span>Write</span>
+          </div>
+        </Tab>
+        <Tab
+          className="rounded-md flex-shrink-0 h-[--line-height-xxs] text-sm flex items-center justify-between cursor-pointer w-[10.5rem] outline-none select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300"
+          id="preview"
+        >
+          <div className='flex flex-1 items-center gap-2'>
+            <Icon icon="arrow-right-from-bracket" />
+            <span>Preview</span>
+          </div>
+        </Tab>
+      </TabList>
+      <TabPanel className="w-full flex-1 overflow-hidden m-2" id='write'>
+        <ErrorBoundary
+          errorClassName="tall wide vertically-align font-error pad text-center"
+        >
+          <div className='h-full flex flex-col divide-y divide-solid divide-[--hl-md]'>
+            <CodeEditor
+              id="markdown-editor"
+              ref={ref}
+              hideGutters
+              hideLineNumbers
+              dynamicHeight={!tall}
+              showPrettifyButton
+              noStyleActiveLine
+              enableNunjucks
+              mode={mode || 'text/x-markdown'}
+              placeholder={placeholder}
+              defaultValue={markdown}
+              onChange={handleChange}
+            />
+          </div>
+        </ErrorBoundary>
+      </TabPanel>
+      <TabPanel className="w-full flex-1 overflow-y-auto m-2" id="preview">
+        <ErrorBoundary
+          errorClassName="tall wide vertically-align font-error pad text-center"
+        >
+          <MarkdownPreview markdown={markdown} />
+        </ErrorBoundary>
+      </TabPanel>
+    </Tabs>
+
   );
 });
 MarkdownEditor.displayName = 'MarkdownEditor';

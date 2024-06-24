@@ -22,7 +22,6 @@ test.describe('Debug-Sidebar', async () => {
       await requestLocator.click();
       await requestLocator.getByLabel('Request Actions').click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-      await page.getByRole('tab', { name: 'Preview' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
 
@@ -37,7 +36,6 @@ test.describe('Debug-Sidebar', async () => {
       await ws.click();
       await ws.getByLabel('Request Actions').click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-      await page.getByRole('tab', { name: 'Preview' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
 
@@ -45,14 +43,12 @@ test.describe('Debug-Sidebar', async () => {
       await gql.click();
       await gql.getByLabel('Request Actions').click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-      await page.getByRole('tab', { name: 'Preview' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
       const folderLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'test folder' });
       await folderLocator.click();
       await folderLocator.getByLabel('Request Group Actions').click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-      await page.getByRole('tab', { name: 'Preview' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
     });
@@ -83,10 +79,6 @@ test.describe('Debug-Sidebar', async () => {
       await page.getByRole('menuitemradio', { name: 'Generate Code' }).click();
       await page.locator('[data-testid="CodeEditor"] >> text=curl').click();
       await page.locator('text=Done').click();
-    });
-
-    test.skip('Use Copy as Curl for a request', async ({}) => {
-      // TODO: implement this in a separate ticket
     });
 
     test('Pin a Request', async ({ page }) => {

@@ -15,9 +15,8 @@ test('Request tabs', async ({ page }) => {
   await page.getByRole('tab', { name: 'Params' }).click();
   await page.getByRole('tab', { name: 'Headers' }).click();
   await page.getByRole('tab', { name: 'Docs' }).click();
-  await page.locator('text=Add Description').click();
-  await page.locator('[data-testid="CodeEditor"] pre[role="presentation"]:has-text("")').click();
-  await page.locator('textarea').nth(1).fill('new request');
+  await page.getByTestId('CodeEditor').getByRole('textbox').fill('some docs');
+  await page.getByRole('tab', { name: 'Preview' }).click();
 });
 
 test('WS tabs', async ({ page }) => {
@@ -33,7 +32,6 @@ test('WS tabs', async ({ page }) => {
   await page.getByRole('tab', { name: 'Params' }).click();
   await page.getByRole('tab', { name: 'Headers' }).click();
   await page.getByRole('tab', { name: 'Docs' }).click();
-  await page.getByRole('button', { name: 'Add Description' }).click();
-  await page.locator('[data-testid="CodeEditor"] pre[role="presentation"]:has-text("")').click();
-  await page.locator('textarea').nth(1).fill('new wss');
+  await page.getByTestId('CodeEditor').getByRole('textbox').fill('some docs');
+  await page.getByRole('tab', { name: 'Preview' }).click();
 });

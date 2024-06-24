@@ -5845,7 +5845,7 @@ exports[`Fixtures Import postman scripts-import-v2_1-input.json 1`] = `
       "description": "",
       "environment": {
         "bob": "something",
-        "dssx": "{{env_var_in_global}}",
+        "dssx": "{{_['env-var-in-global']}}",
       },
       "metaSortKey": -1622117984000,
       "name": "New Collection",
@@ -5853,7 +5853,7 @@ exports[`Fixtures Import postman scripts-import-v2_1-input.json 1`] = `
       "preRequestScript": "console.log('pre')",
       "variable": {
         "bob": "something",
-        "dssx": "{{env_var_in_global}}",
+        "dssx": "{{_['env-var-in-global']}}",
       },
     },
     {
@@ -5907,7 +5907,7 @@ exports[`Fixtures Import postman-env no-name-input.json 1`] = `
       "_id": "__ENV_1__",
       "_type": "environment",
       "data": {
-        "foo_and_bar": "production-env",
+        "foo-and-bar": "production-env",
       },
       "name": "Postman Environment",
       "parentId": "__BASE_ENVIRONMENT_ID__",

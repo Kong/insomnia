@@ -18,7 +18,6 @@ import { ListWorkspacesLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
 import { UntrackedProjectsLoaderData } from '../../routes/untracked-projects';
 import { WorkspaceLoaderData } from '../../routes/workspace';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
 import { showAlert } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
@@ -270,8 +269,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     exportProjectToFile(projectName, workspacesForActiveProject);
     hideSettingsModal();
   };
-
-  if (!organizationId || !projectLoaderData?.activeProject) {
+  const isLoggedIn = userSession.id || organizationId || projectLoaderData?.activeProject;
+  const isScratchPadWorkspace = isScratchpad(workspaceData?.activeWorkspace);
+  const hasUntrackedWorkspaces = untrackedWorkspaces.length > 0;
+  const hasUntrackedProjects = untrackedProjects.length > 0;
+  const showImportToProject = !isScratchPadWorkspace;
+  if (!isScratchPadWorkspace && !isLoggedIn) {
     return <p>There is no active project. Create a new project to import or export data.</p>;
   }
 
@@ -281,48 +284,19 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
           <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="file-export" /> Export</Heading>
           <div className="flex gap-2 flex-wrap">
-            {workspaceData?.activeWorkspace ?
-              isScratchpad(workspaceData.activeWorkspace) ?
-                <Button className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm" onPress={() => setIsExportModalOpen(true)}>Export the "{activeWorkspaceName}" {getWorkspaceLabel(workspaceData.activeWorkspace).singular}</Button>
-                :
-                (
-                  <Dropdown
-                    aria-label='Export Data Dropdown'
-                    triggerButton={
-                      <Button className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                        Export Data <i className="fa fa-caret-down" />
-                      </Button>
-                    }
-                  >
-                    <DropdownSection
-                      aria-label="Choose Export Type"
-                      title="Choose Export Type"
-                    >
-                      <DropdownItem aria-label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(workspaceData.activeWorkspace).singular}`}>
-                        <ItemContent
-                          icon="home"
-                          label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(workspaceData.activeWorkspace).singular}`}
-                          onClick={() => setIsExportModalOpen(true)}
-                        />
-                      </DropdownItem>
-                      <DropdownItem aria-label={`Export files from the "${projectName}" ${strings.project.singular}`}>
-                        <ItemContent
-                          icon="empty"
-                          label={`Export files from the "${projectName}" ${strings.project.singular}`}
-                          onClick={handleExportProjectToFile}
-                        />
-                      </DropdownItem>
-                    </DropdownSection>
-                  </Dropdown>
-                ) : (
-                <Button
-                  className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                  onPress={handleExportProjectToFile}
-                >
-                  {`Export files from the "${projectName}" ${strings.project.singular}`}
-                </Button>
-              )
-            }
+            {workspaceData?.activeWorkspace ? (
+              <ExportSection
+                workspace={workspaceData.activeWorkspace}
+                projectName={projectName}
+                setIsExportModalOpen={setIsExportModalOpen}
+                handleExportProjectToFile={handleExportProjectToFile}
+              />) : (
+              <Button
+                className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                onPress={handleExportProjectToFile}
+              >
+                {`Export files from the "${projectName}" ${strings.project.singular}`}
+              </Button>)}
             <Button
               className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
               onPress={async () => {
@@ -374,7 +348,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
             </Button>
           </div>
         </div>
-        <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
+        {showImportToProject && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
           <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="file-import" /> Import</Heading>
           <div className="flex gap-2 flex-wrap">
             <Button
@@ -386,8 +360,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
               {`Import to the "${projectName}" ${strings.project.singular}`}
             </Button>
           </div>
-        </div>
-        {untrackedProjects.length > 0 && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
+        </div>}
+        {hasUntrackedProjects && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
           <div className='flex flex-col gap-1'>
             <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="cancel" /> Untracked projects ({untrackedProjects.length})</Heading>
             <p className='text-[--hl] text-sm'>
@@ -405,7 +379,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
             ))}
           </div>
         </div>}
-        {untrackedWorkspaces.length > 0 && projects.length > 0 && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
+        {hasUntrackedWorkspaces && projects.length > 0 && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
           <div className='flex flex-col gap-1'>
             <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="cancel" /> Untracked files ({untrackedWorkspaces.length})</Heading>
             <p className='text-[--hl] text-sm'>
@@ -443,4 +417,46 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       )}
     </Fragment>
   );
+};
+
+const ExportSection = ({
+  workspace,
+  projectName,
+  setIsExportModalOpen,
+  handleExportProjectToFile,
+}: {
+  workspace: Workspace;
+  projectName: string;
+  setIsExportModalOpen: (value: boolean) => void;
+  handleExportProjectToFile: () => void;
+}) => {
+
+  if (isScratchpad(workspace)) {
+    return (
+      <Button
+        className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        onPress={() => setIsExportModalOpen(true)}
+      >
+        Export the "{workspace.name}" {getWorkspaceLabel(workspace).singular}
+      </Button>
+    );
+  }
+
+  return (
+    <>
+      <Button
+        className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        onPress={() => setIsExportModalOpen(true)}
+      >
+        Export the "{workspace.name}" {getWorkspaceLabel(workspace).singular}
+      </Button>
+      <Button
+        className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        onPress={handleExportProjectToFile}
+      >
+        Export the "{projectName}" ${strings.project.singular}
+      </Button>
+    </>
+  );
+
 };
