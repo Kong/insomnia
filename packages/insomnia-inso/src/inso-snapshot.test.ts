@@ -10,7 +10,6 @@ describe('Snapshot for', () => {
     '--help',
     'help',
     'generate -h',
-    'generate config -h',
     'run -h',
     'run test -h',
     'lint -h',
