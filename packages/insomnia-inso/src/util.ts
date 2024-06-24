@@ -14,15 +14,5 @@ export const exit = async (result: Promise<boolean>): Promise<void> => {
   return result.then(r => process.exit(r ? 0 : 1)).catch(logErrorExit1);
 };
 
-export const getDefaultProductName = (): string => {
-  const name = process.env.DEFAULT_APP_NAME;
-
-  if (!name) {
-    throw new Error('Environment variable DEFAULT_APP_NAME is not set.');
-  }
-
-  return name;
-};
-
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export const noop = () => {};

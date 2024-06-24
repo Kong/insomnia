@@ -1,10 +1,10 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import * as packageJson from '../package.json';
 import { InsoError } from './errors';
 import { globalBeforeAll, globalBeforeEach } from './jest/before';
 import { logger } from './logger';
-import { exit, getDefaultProductName, getVersion, logErrorExit1, noop } from './util';
+import { exit, getVersion, logErrorExit1, noop } from './util';
 
 describe('exit()', () => {
   beforeAll(() => {
@@ -98,28 +98,6 @@ describe('logErrorExit1()', () => {
     expect(logs.error).toEqual([]);
     expect(logs.info).toEqual(['To view tracing information, re-run `inso` with `--verbose`']);
     expect(exitSpy).toHaveBeenCalledWith(1);
-  });
-});
-
-describe('getDefaultProductName()', () => {
-  const OLD_ENV = process.env;
-  beforeEach(() => {
-    process.env = { ...OLD_ENV }; // make a copy
-  });
-
-  afterAll(() => {
-    process.env = OLD_ENV; // restore old env
-  });
-
-  it('should return value if set', () => {
-    const value = 'dir';
-    process.env.DEFAULT_APP_NAME = value;
-    expect(getDefaultProductName()).toBe(value);
-  });
-
-  it('should throw error if not set', () => {
-    process.env.DEFAULT_APP_NAME = '';
-    expect(getDefaultProductName).toThrowError('Environment variable DEFAULT_APP_NAME is not set.');
   });
 });
 
