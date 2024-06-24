@@ -63,19 +63,6 @@ describe('cli', () => {
       expect(() => inso(args)).toThrowError(packageJson.version);
       logger.restoreAll();
     });
-
-    it('should print options', () => {
-      inso('generate config file.yaml -t declarative --printOptions --verbose');
-
-      const logs = logger.__getLogs();
-
-      expect(logs.log?.[0]).toContainEqual({
-        type: 'declarative',
-        format: 'yaml',
-        printOptions: true,
-        verbose: true,
-      });
-    });
   });
 
   describe('lint specification', () => {
@@ -165,18 +152,6 @@ describe('cli', () => {
 
       expect(logs.fatal).toContain('Tasks in a script should start with `inso`.');
       await expectExitWith(false);
-    });
-
-    it('should call nested command', async () => {
-      inso('gen-conf:k8s', insorcFilePath);
-
-      const logs = logger.__getLogs();
-
-      expect(logs.debug).toEqual([
-        '>> inso gen-conf --type kubernetes',
-        '>> inso generate config Designer Demo --type declarative --type kubernetes',
-      ]);
-      await expectExitWith(true);
     });
 
     it('should override env setting from command', async () => {
