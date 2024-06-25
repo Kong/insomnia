@@ -103,7 +103,6 @@ export interface CodeEditorProps {
   // NOTE: for caching scroll and marks
   uniquenessKey?: string;
   updateFilter?: (filter: string) => void;
-  disableContextMenu?: boolean;
 }
 
 const normalizeMimeType = (mode?: string) => {
@@ -172,7 +171,6 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
   style,
   uniquenessKey,
   updateFilter,
-  disableContextMenu,
 }, ref) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -575,7 +573,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
       data-editor-type="text"
       data-testid="CodeEditor"
       onContextMenu={event => {
-        if (readOnly || disableContextMenu) {
+        if (readOnly || !enableNunjucks) {
           return;
         }
         event.preventDefault();
