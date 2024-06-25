@@ -279,11 +279,11 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
 
     if (globals) {
       const globalEnvPropertyOrder = orderedJSON.parse(
-        JSON.stringify(output.globals.data || {}),
+        JSON.stringify(output.globals || {}),
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
-      globals.data = output.globals.data;
+      globals.data = output.globals;
       globals.dataPropertyOrder = globalEnvPropertyOrder.map;
     }
 
