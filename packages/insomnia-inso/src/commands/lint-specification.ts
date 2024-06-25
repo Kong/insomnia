@@ -16,11 +16,10 @@ export type LintSpecificationOptions = GlobalOptions;
 
 export async function lintSpecification(
   identifier: string | null | undefined,
-  { workingDir, appDataDir, ci, src }: LintSpecificationOptions,
+  { workingDir, ci, src }: LintSpecificationOptions,
 ) {
   const db = await loadDb({
     workingDir,
-    appDataDir,
     filterTypes: ['ApiSpec'],
     src,
   });

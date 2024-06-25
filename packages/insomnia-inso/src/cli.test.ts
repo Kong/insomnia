@@ -50,32 +50,12 @@ describe('cli', () => {
   });
 
   describe('global options', () => {
-    it('should throw error if app data dir argument is missing', () => {
-      expect(() => inso('-a')).toThrowError();
-    });
-
-    it('should throw error if working dir argument is missing', () => {
-      expect(() => inso('-w')).toThrowError();
-    });
-
     it.each(['-v', '--version'])('inso %s should print version from package.json', args => {
       logger.wrapAll();
       expect(() => inso(args)).toThrowError(packageJson.version);
       logger.restoreAll();
     });
 
-    it('should print options', () => {
-      inso('generate config file.yaml -t declarative --printOptions --verbose');
-
-      const logs = logger.__getLogs();
-
-      expect(logs.log?.[0]).toContainEqual({
-        type: 'declarative',
-        format: 'yaml',
-        printOptions: true,
-        verbose: true,
-      });
-    });
   });
 
   describe('lint specification', () => {
@@ -90,10 +70,9 @@ describe('cli', () => {
     });
 
     it('should call generateConfig with global options', () => {
-      inso('lint spec file.yaml -w dir1 -a dir2 --src src --ci');
+      inso('lint spec file.yaml -w dir1 --src src --ci');
       expect(lintSpecification).toHaveBeenCalledWith('file.yaml', {
         workingDir: 'dir1',
-        appDataDir: 'dir2',
         src: 'src',
         ci: true,
       });
@@ -132,12 +111,11 @@ describe('cli', () => {
     });
 
     it('should call runInsomniaTests with global options', () => {
-      inso('run test uts_123 -w dir1 -a dir2 --src src --ci');
+      inso('run test uts_123 -w dir1 --src src --ci');
       expect(runInsomniaTests).toHaveBeenCalledWith(
         'uts_123',
         expect.objectContaining({
           workingDir: 'dir1',
-          appDataDir: 'dir2',
           src: 'src',
           ci: true,
         }),
@@ -178,63 +156,13 @@ describe('cli', () => {
         exit.mock.calls[0][0],
       ).resolves.toBe(result);
 
-    it('should call script command by default', () => {
-      inso('gen-conf', insorcFilePath);
-      expect(generateConfig).toHaveBeenCalledWith(
-        'Designer Demo',
-        expect.objectContaining({
-          type: 'declarative',
-        }),
-      );
-    });
-
-    it('should call script command', () => {
-      inso('script gen-conf', insorcFilePath);
-      expect(generateConfig).toHaveBeenCalledWith(
-        'Designer Demo',
-        expect.objectContaining({
-          type: 'declarative',
-        }),
-      );
-    });
-
     it('should warn if script task does not start with inso', async () => {
       inso('invalid-script', insorcFilePath);
 
       const logs = logger.__getLogs();
 
       expect(logs.fatal).toContain('Tasks in a script should start with `inso`.');
-      expect(generateConfig).not.toHaveBeenCalledWith();
       await expectExitWith(false);
-    });
-
-    it('should call nested command', async () => {
-      inso('gen-conf:k8s', insorcFilePath);
-      expect(generateConfig).toHaveBeenCalledWith(
-        'Designer Demo',
-        expect.objectContaining({
-          type: 'kubernetes',
-        }),
-      );
-
-      const logs = logger.__getLogs();
-
-      expect(logs.debug).toEqual([
-        '>> inso gen-conf --type kubernetes',
-        '>> inso generate config Designer Demo --type declarative --type kubernetes',
-      ]);
-      await expectExitWith(true);
-    });
-
-    it('should call nested command and pass through props', async () => {
-      inso('gen-conf:k8s --type declarative', insorcFilePath);
-      expect(generateConfig).toHaveBeenCalledWith(
-        'Designer Demo',
-        expect.objectContaining({
-          type: 'declarative',
-        }),
-      );
-      await expectExitWith(true);
     });
 
     it('should override env setting from command', async () => {

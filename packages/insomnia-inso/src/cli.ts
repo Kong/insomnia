@@ -147,12 +147,11 @@ export const go = (args?: string[], exitOverride?: boolean) => {
   // Global options
   cmd
     .option('-w, --workingDir <dir>', 'set working directory')
-    .option('-a, --appDataDir <dir>', 'set the app data directory (deprecated; use --src instead)')
-    .option('--config <path>', 'path to configuration file')
+    .option('--src <file|dir>', 'set the target source file or directory (git path or insomnia db path)')
     .option('--verbose', 'show additional logs while running the command')
-    .option('--src <file|dir>', 'set the app data source')
-    .option('--printOptions', 'print the loaded options')
-    .option('--ci', 'run in CI, disables all prompts');
+    .option('--ci', 'run in CI, disables all prompts')
+    .option('--config <path>', 'path to configuration file containing above options')
+    .option('--printOptions', 'print the loaded options');
 
   // Add commands and sub commands
   cmd

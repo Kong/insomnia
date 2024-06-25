@@ -11,7 +11,6 @@ interface ConfigFileOptions {
 }
 
 export type GlobalOptions = {
-  appDataDir?: string;
   workingDir?: string;
   ci?: boolean;
   verbose?: boolean;
@@ -21,7 +20,6 @@ export type GlobalOptions = {
 } & ConfigFileOptions;
 
 export const OptionsSupportedInConfigFile: (keyof GlobalOptions)[] = [
-  'appDataDir',
   'workingDir',
   'ci',
   'verbose',
