@@ -421,7 +421,6 @@ export const RequestScriptEditor: FC<Props> = ({
       <CodeEditor
         id={`script-editor-${uniquenessKey}`}
         key={uniquenessKey}
-        disableContextMenu={true}
         showPrettifyButton={true}
         uniquenessKey={uniquenessKey}
         defaultValue={defaultValue}
