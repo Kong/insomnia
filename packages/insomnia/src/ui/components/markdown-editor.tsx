@@ -3,7 +3,6 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 
 import { CodeEditor, CodeEditorHandle } from './codemirror/code-editor';
 import { ErrorBoundary } from './error-boundary';
-import { Icon } from './icon';
 import { MarkdownPreview } from './markdown-preview';
 
 interface Props {
