@@ -8,7 +8,7 @@ import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import * as models from '../../../models/index';
 import { MockServer } from '../../../models/mock-server';
 import { isRequest } from '../../../models/request';
-import { isScratchpad, Workspace } from '../../../models/workspace';
+import { isEnvironment, isMockServer, isScratchpad, Workspace } from '../../../models/workspace';
 import { OrganizationLoaderData } from '../../routes/organization';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
@@ -90,7 +90,7 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                   className='p-2 w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors'
                   onChange={event => workspacePatcher(workspace._id, { name: event.target.value })}
                 />
-                {workspace.scope !== 'mock-server' && (
+                {!isMockServer(workspace) && (
                   <>
                     <Label className='text-sm text-[--hl]' aria-label='Description'>
                       Description
@@ -102,22 +102,27 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                         workspacePatcher(workspace._id, { description });
                       }}
                     />
-                    <Heading>Actions</Heading>
-                    <PromptButton
-                      onClick={async () => {
-                        const docs = await db.withDescendants(workspace, models.request.type);
-                        const requests = docs.filter(isRequest);
-                        for (const req of requests) {
-                          await models.response.removeForRequest(req._id);
-                        }
-                        close();
-                      }}
-                      className="width-auto btn btn--clicky inline-block space-left"
-                    >
-                      <i className="fa fa-trash-o" /> Clear All Responses
-                    </PromptButton>
-                  </>)}
-                {Boolean(workspace.scope === 'mock-server' && mockServer) && (
+                    {!isEnvironment(workspace) && (
+                      <>
+                        <Heading>Actions</Heading>
+                        <PromptButton
+                          onClick={async () => {
+                            const docs = await db.withDescendants(workspace, models.request.type);
+                            const requests = docs.filter(isRequest);
+                            for (const req of requests) {
+                              await models.response.removeForRequest(req._id);
+                            }
+                            close();
+                          }}
+                          className="width-auto btn btn--clicky inline-block space-left"
+                        >
+                          <i className="fa fa-trash-o" /> Clear All Responses
+                        </PromptButton>
+                      </>
+                    )}
+                  </>
+                )}
+                {Boolean(isMockServer(workspace) && mockServer) && (
                   <>
                     <RadioGroup
                       name="mockServerType"
