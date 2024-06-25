@@ -12,6 +12,7 @@ type StringId =
   | 'defaultProject'
   | 'localProject'
   | 'remoteProject'
+  | 'environment'
   ;
 
 export const strings: Record<StringId, StringInfo> = {
@@ -46,5 +47,9 @@ export const strings: Record<StringId, StringInfo> = {
   remoteProject: {
     singular: 'Remote',
     plural: 'Remote',
+  },
+  environment: {
+    singular: 'Environment',
+    plural: 'Environments',
   },
 };
