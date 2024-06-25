@@ -43,7 +43,6 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
           id="write"
         >
           <div className='flex flex-1 items-center gap-2'>
-            <Icon icon="arrow-right-to-bracket" />
             <span>Write</span>
           </div>
         </Tab>
@@ -52,7 +51,6 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
           id="preview"
         >
           <div className='flex flex-1 items-center gap-2'>
-            <Icon icon="arrow-right-from-bracket" />
             <span>Preview</span>
           </div>
         </Tab>
@@ -70,7 +68,6 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
               dynamicHeight={!tall}
               showPrettifyButton
               noStyleActiveLine
-              enableNunjucks
               mode={mode || 'text/x-markdown'}
               placeholder={placeholder}
               defaultValue={markdown}
