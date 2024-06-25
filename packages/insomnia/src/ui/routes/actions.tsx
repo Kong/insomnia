@@ -1382,6 +1382,7 @@ export const toggleExpandAllRequestGroupsAction: ActionFunction = async ({ param
   const data = await request.json() as {
     toggle: 'collapse-all' | 'expand-all';
   };
+  const isCollapsed = data.toggle === 'collapse-all';
 
   const descendants = await database.withDescendants(workspace);
   const requestGroups = descendants.filter(isRequestGroup);
@@ -1389,11 +1390,10 @@ export const toggleExpandAllRequestGroupsAction: ActionFunction = async ({ param
   await Promise.all(requestGroups.map(requestGroup => {
     const requestGroupMeta = requestGroupMetas.find(meta => meta.parentId === requestGroup._id);
 
-    if (!requestGroupMeta) {
-      return;
+    if (requestGroupMeta) {
+      return models.requestGroupMeta.update(requestGroupMeta, { collapsed: isCollapsed });
     }
-
-    return models.requestGroupMeta.update(requestGroupMeta, { collapsed: data.toggle === 'collapse-all' });
+    return models.requestGroupMeta.create({ parentId: requestGroup._id, collapsed: isCollapsed });
   }));
   return null;
 };
@@ -1414,11 +1414,10 @@ export const expandAllForRequest: ActionFunction = async ({ params, request }) =
   await Promise.all(requestGroups.map(async requestGroup => {
     const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroup._id);
 
-    if (!requestGroupMeta) {
-      return;
+    if (requestGroupMeta) {
+      return models.requestGroupMeta.update(requestGroupMeta, { collapsed: false });
     }
-
-    return models.requestGroupMeta.update(requestGroupMeta, { collapsed: false });
+    return models.requestGroupMeta.create({ parentId: requestGroup._id, collapsed: false });
   }));
 
   return { success: true };
