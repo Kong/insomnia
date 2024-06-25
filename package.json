@@ -29,7 +29,7 @@
     "test": "npm run test --workspaces --if-present",
     "lint:markdown": "npx markdownlint-cli2 \"**/*.md\" \"#**/node_modules\" \"#**/CHANGELOG.md\"",
     "clean": "git clean -dfX",
-    "inso-start": "npm start --workspace=packages/insomnia-inso",
+    "inso-start": "node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl && npm run build:sr -w insomnia && npm start -w insomnia-inso",
     "inso-package": "npm run build:sr --workspace=packages/insomnia && npm run package --workspace=packages/insomnia-inso",
     "inso-package:artifacts": "npm run artifacts --workspace=packages/insomnia-inso",
     "test:bundled-inso": "npm run build --workspace=packages/insomnia-inso && npm run test:bundled-inso --workspace=packages/insomnia-inso",

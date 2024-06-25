@@ -141,12 +141,18 @@ export const go = (args?: string[], exitOverride?: boolean) => {
   // Version and description
   cmd
     .version(getVersion(), '-v, --version')
-    .description('A CLI for Insomnia!');
+    .description(`A CLI for Insomnia!
+  With this tool you can lint, test and export your Insomnia data.
+  It can read from three data sources, but will use local Insomnia application data as a default:
+    - Insomnia data directory (~/.config/Insomnia/)
+    - Insomnia export file (eg. export.json)
+    - Git repository (~/git/myproject)
+`);
 
   // Global options
   cmd
     .option('-w, --workingDir <dir>', 'set working directory')
-    .option('--src <file|dir>', 'set the file or directory to read from, defaults to installed Insomnia data directory')
+    .option('--src <file>', 'set the file read from, defaults to installed Insomnia data directory')
     .option('--verbose', 'show additional logs while running the command')
     .option('--ci', 'run in CI, disables all prompts')
     .option('--config <path>', 'path to configuration file containing above options')

@@ -1,5 +1,16 @@
 # CLI
 
+## Getting started
+
+```shell
+npm run inso-start
+npm run test -w insomnia-inso
+# will default to insomnia app database
+$PWD/packages/insomnia-inso/bin/inso run test
+# will use config, useful for testing with fewer args
+$PWD/packages/insomnia-inso/bin/inso script whatever --config packages/insomnia-inso/src/fixtures/.insorc.yaml
+```
+
 ## install node version of libcurl
 
 npm install will download the electron version of libcurl but for inso we need the node version
