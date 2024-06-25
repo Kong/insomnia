@@ -3,6 +3,7 @@ import React, { FC, Fragment, useCallback, useRef, useState } from 'react';
 import { FocusScope } from 'react-aria';
 import { Button, Dialog, DialogTrigger, DropIndicator, GridList, GridListItem, Menu, MenuItem, MenuTrigger, Popover, ToggleButton, Toolbar, useDragAndDrop } from 'react-aria-components';
 import { useListData } from 'react-stately';
+import { createKeybindingsHandler } from 'tinykeys';
 
 import { describeByteSize, generateId } from '../../../common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
@@ -54,13 +55,19 @@ const EditableOneLineEditorModal = ({
     }
   }, [buttonRef]);
 
-  const onKeydown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      setIsOpen(false);
-      onChange(value);
-    }
-  }, [onChange, value]);
+  const onKeydown = useCallback((e: KeyboardEvent, value: string) => {
+    const handler = createKeybindingsHandler({
+      'Enter': e => {
+        e.preventDefault();
+        setIsOpen(false);
+        onChange(value);
+        setValue(value);
+      },
+    });
+
+    handler(e);
+  },
+    [onChange]);
 
   useResizeObserver({
     ref: buttonRef,
