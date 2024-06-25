@@ -267,6 +267,27 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     },
   });
 
+  // NOTE: maybe we don't need this anymore? Maybe not.
+  const persistState = useCallback(() => {
+    if (uniquenessKey && codeMirror.current) {
+      editorStates[uniquenessKey] = {
+        scroll: codeMirror.current.getScrollInfo(),
+        selections: codeMirror.current.listSelections(),
+        cursor: codeMirror.current.getCursor(),
+        history: codeMirror.current.getHistory(),
+        marks: codeMirror.current.getAllMarks()
+          .filter(mark => mark.__isFold)
+          .map((mark): Partial<CodeMirror.MarkerRange> => {
+            const markerRange = mark.find();
+            return markerRange && 'from' in markerRange ? markerRange : {
+              from: undefined,
+              to: undefined,
+            };
+          }),
+      };
+    }
+  }, [uniquenessKey, codeMirror]);
+
   const initEditor = useCallback(() => {
     if (!textAreaRef.current) {
       return;
@@ -369,6 +390,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
         meta: event.metaKey,
         keyCode: event.keyCode,
       };
+
       const isUserDefinedKeyboardShortcut = isKeyCombinationInRegistry(pressedKeyComb, settings.hotKeyRegistry);
       const isAutoCompleteBinding = isKeyCombinationInRegistry(pressedKeyComb, {
         'showAutocomplete': settings.hotKeyRegistry.showAutocomplete,
@@ -401,26 +423,6 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
         }
       }
     });
-    // NOTE: maybe we don't need this anymore?
-    const persistState = () => {
-      if (uniquenessKey && codeMirror.current) {
-        editorStates[uniquenessKey] = {
-          scroll: codeMirror.current.getScrollInfo(),
-          selections: codeMirror.current.listSelections(),
-          cursor: codeMirror.current.getCursor(),
-          history: codeMirror.current.getHistory(),
-          marks: codeMirror.current.getAllMarks()
-            .filter(mark => mark.__isFold)
-            .map((mark): Partial<CodeMirror.MarkerRange> => {
-              const markerRange = mark.find();
-              return markerRange && 'from' in markerRange ? markerRange : {
-                from: undefined,
-                to: undefined,
-              };
-            }),
-        };
-      }
-    };
 
     codeMirror.current.on('scroll', persistState);
     codeMirror.current.on('fold', persistState);
@@ -458,7 +460,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
         codeMirror.current.foldCode(from, to);
       }
     }
-  }, [defaultValue, dynamicHeight, extraKeys, filter, getAutocompleteConstants, getAutocompleteSnippets, handleGetRenderContext, handleRender, hideGutters, hideLineNumbers, hintOptions, indentSize, indentWithTabs, infoOptions, jumpOptions, maybePrettifyAndSetValue, mode, noLint, noMatchBrackets, noStyleActiveLine, onClickLink, pinToBottom, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.editorLineWrapping, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, uniquenessKey, onPaste]);
+  }, [defaultValue, dynamicHeight, extraKeys, filter, getAutocompleteConstants, getAutocompleteSnippets, handleGetRenderContext, handleRender, hideGutters, hideLineNumbers, hintOptions, indentSize, indentWithTabs, infoOptions, jumpOptions, maybePrettifyAndSetValue, mode, noLint, noMatchBrackets, noStyleActiveLine, onClickLink, pinToBottom, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.editorLineWrapping, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, uniquenessKey, onPaste, persistState]);
 
   const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();
@@ -470,6 +472,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     initEditor();
   });
   useUnmount(() => {
+    persistState();
     cleanUpEditor();
   });
 
