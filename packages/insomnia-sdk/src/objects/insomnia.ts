@@ -116,7 +116,14 @@ export async function initInsomniaObject(
     rawObj: RequestContext,
     log: (...args: any[]) => void,
 ) {
+    // Mapping rule for the global environment:
+    // - when one global environment is selected, `globals` points to the selected one
+    // Potential mapping rule for the future:
+    // - The base global environment could also be introduced
     const globals = new Environment('globals', rawObj.globals || {}); // could be undefined
+    // Mapping rule for the environment and base environment:
+    // - If base environment is selected, both `baseEnvironment` and `environment` point to the selected one.
+    // - If one sub environment is selected,  `baseEnvironment` points to the base env and `environment` points to the selected one.
     const baseEnvironment = new Environment(rawObj.baseEnvironment.name || '', rawObj.baseEnvironment.data);
     // reuse baseEnvironment when the "selected envrionment" points to the base environment
     const environment = rawObj.baseEnvironment.id === rawObj.environment.id ?

@@ -158,6 +158,10 @@ export const getPreRequestScriptOutput = async ({
   };
 };
 
+// savePatchesMadeByScript persists entities
+// The rule for the global environment:
+//  - If no global environment is seleted, no operation
+//  - If one global environment is selected, it persists content to the selected global environment (base or sub).
 export async function savePatchesMadeByScript(
   mutatedContext: Awaited<ReturnType<typeof tryToExecutePreRequestScript>>,
   environment: Environment,
