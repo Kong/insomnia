@@ -48,7 +48,7 @@ export async function exportSpecification(
     return obj;
   };
   const cleaned = YAML.stringify(recursiveDeleteKey(YAML.parse(specFromDb.contents)));
-  logger.log('Removed keys starting with x-kong-');
+  logger.debug('Removed keys starting with x-kong-');
   if (!output) {
     logger.log(cleaned);
     return true;
