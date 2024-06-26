@@ -164,12 +164,6 @@ export const logErrorAndExit = (err?: Error) => {
   process.exit(1);
 };
 
-const prepareCommand = (options: Partial<GlobalOptions>) => {
-  configureLogger(options.verbose, options.ci);
-  options.printOptions && logger.log('Loaded options', options, '\n');
-  return options;
-};
-
 const addScriptCommand = (originalCommand: commander.Command) => {
   // inso script
   originalCommand
@@ -180,8 +174,10 @@ const addScriptCommand = (originalCommand: commander.Command) => {
     .allowUnknownOption()
     .action(async (scriptName: 'lint', cmd) => {
       // Load scripts
-      let options = await getOptions(cmd);
-      options = prepareCommand(options);
+      const options = await getOptions(cmd);
+
+      configureLogger(options.verbose, options.ci);
+      options.printOptions && logger.log('Loaded options', options, '\n');
 
       // Ignore the first arg because that will be scriptName, get the rest
       const passThroughArgs = cmd.args.slice(1);
@@ -265,10 +261,12 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .option('--keepFile', 'do not delete the generated test file')
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL')
     .action(async (identifier, cmd) => {
-      let options = await getOptions(cmd, {
+      const options = await getOptions(cmd, {
         reporter: defaultReporter,
       });
-      options = prepareCommand(options);
+      configureLogger(options.verbose, options.ci);
+      options.printOptions && logger.log('Loaded options', options, '\n');
+
       return runInsomniaTests(identifier, options)
         .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
     });
@@ -278,8 +276,8 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .command('spec [identifier]')
     .description('Lint an API Specification')
     .action(async (identifier, cmd) => {
-      let options = await getOptions(cmd);
-      options = prepareCommand(options);
+      const options = await getOptions(cmd);
+      configureLogger(options.verbose, options.ci);
       return lintSpecification(identifier, options)
         .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
     });
@@ -291,8 +289,8 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .option('-o, --output <path>', 'save the generated config to a file')
     .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations ', false)
     .action(async (identifier, cmd) => {
-      let options = await getOptions(cmd);
-      options = prepareCommand(options);
+      const options = await getOptions(cmd);
+      options.printOptions && logger.log('Loaded options', options, '\n');
       return exportSpecification(identifier, options)
         .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
     });
