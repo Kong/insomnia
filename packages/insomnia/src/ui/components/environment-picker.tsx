@@ -1,5 +1,5 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { Fragment } from 'react';
+import React, { Fragment, useRef } from 'react';
 import { Button, ComboBox, Dialog, DialogTrigger, Heading, Input, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
@@ -50,6 +50,8 @@ export const EnvironmentPicker = ({
 
   const navigate = useNavigate();
 
+  const globalEnvironmentListBox = useRef<HTMLDivElement>(null);
+
   return (
     <DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
       <Button className="py-1 px-4 max-w-full gap-2 truncate flex items-center justify-center aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
@@ -72,25 +74,6 @@ export const EnvironmentPicker = ({
                 key={activeEnvironment._id}
                 items={collectionEnvironmentList}
                 disabledKeys={selectedEnvironments.map(e => e.id)}
-                // disallowEmptySelection
-                // onSelectionChange={selection => {
-                //   if (selection === 'all') {
-                //     return;
-                //   }
-
-                //   const environmentId = selection.values().next().value;
-
-                //   setActiveEnvironmentFetcher.submit(
-                //     {
-                //       environmentId,
-                //     },
-                //     {
-                //       method: 'POST',
-                //       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
-                //     }
-                //   );
-                // }}
-                // selectedKeys={[activeEnvironment._id || '']}
                 onAction={environmentId => {
                   setActiveEnvironmentFetcher.submit(
                     {
@@ -149,71 +132,77 @@ export const EnvironmentPicker = ({
                 </Button>
               )}
             </Heading>
-            <ComboBox
-              aria-label='Global Environment'
-              shouldFocusWrap
-              allowsCustomValue={false}
-              menuTrigger='focus'
-              defaultFilter={(textValue, filter) => {
-                const match = Boolean(fuzzyMatch(
-                  filter,
-                  textValue,
-                  { splitSpace: false, loose: true }
-                )?.indexes);
+            <div>
+              <ComboBox
+                aria-label='Global Environment'
+                shouldFocusWrap
+                key={activeGlobalBaseEnvironment?._id}
+                allowsCustomValue={false}
+                menuTrigger='focus'
+                defaultFilter={(textValue, filter) => {
+                  const match = Boolean(fuzzyMatch(
+                    filter,
+                    textValue,
+                    { splitSpace: false, loose: true }
+                  )?.indexes);
 
-                return match;
-              }}
-              onSelectionChange={environmentId => {
-                if (environmentId === 'all' || !environmentId) {
-                  return;
-                }
-
-                setActiveGlobalEnvironmentFetcher.submit(
-                  {
-                    environmentId,
-                  },
-                  {
-                    method: 'POST',
-                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active-global`,
+                  return match;
+                }}
+                onSelectionChange={environmentId => {
+                  if (environmentId === 'all' || environmentId === null) {
+                    return;
                   }
-                );
-              }}
-              inputValue={selectedGlobalBaseEnvironment?.workspaceName || selectedGlobalBaseEnvironment?.name || ''}
-              selectedKey={selectedGlobalBaseEnvironmentId}
-              defaultItems={[...globalBaseEnvironments.map(baseEnv => {
-                return {
-                  id: baseEnv._id,
-                  icon: 'code',
-                  name: baseEnv.workspaceName || baseEnv.name,
-                  textValue: baseEnv.workspaceName || baseEnv.name,
-                };
-              }), { id: '', icon: 'cancel', name: 'No Global Environment', textValue: 'No Global Environment' }]}
-            >
-              <div className='px-2 mx-2 my-2 flex items-center gap-2 group rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors'>
-                <Input aria-label='Global Environment' placeholder='Choose a global environment' className="py-1 placeholder:italic w-full pl-2 pr-7 " />
-                <Button className="aspect-square gap-2 truncate flex items-center justify-center aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                  <Icon icon="caret-down" className='w-5 flex-shrink-0' />
-                </Button>
-              </div>
-              <Popover className="min-w-max max-h-[90vh] !z-10 border grid grid-flow-col auto-cols-[min(250px,calc(45vw))] overflow-hidden divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] rounded-md focus:outline-none" placement='bottom start' offset={8}>
-                <ListBox<{ name: string; icon: IconName }>
-                  className="select-none text-sm min-w-max p-2 flex flex-col overflow-y-auto focus:outline-none"
-                >
-                  {item => (
-                    <ListBoxItem
-                      textValue={item.name}
-                      className="aria-disabled:opacity-30 aria-selected:bg-[--hl-sm] rounded aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] data-[focused]:bg-[--hl-xs] focus:outline-none transition-colors"
-                    >
-                      <Icon icon={item.icon} className='w-4' />
-                      <span className='truncate'>{item.name}</span>
-                    </ListBoxItem>
-                  )}
-                </ListBox>
-              </Popover>
-            </ComboBox>
+
+                  setActiveGlobalEnvironmentFetcher.submit(
+                    {
+                      environmentId,
+                    },
+                    {
+                      method: 'POST',
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active-global`,
+                    }
+                  );
+
+                  globalEnvironmentListBox.current?.focus();
+                }}
+                defaultInputValue={selectedGlobalBaseEnvironment?.workspaceName || selectedGlobalBaseEnvironment?.name || ''}
+                selectedKey={selectedGlobalBaseEnvironmentId}
+                defaultItems={[...globalBaseEnvironments.map(baseEnv => {
+                  return {
+                    id: baseEnv._id,
+                    icon: 'code',
+                    name: baseEnv.workspaceName || baseEnv.name,
+                    textValue: baseEnv.workspaceName || baseEnv.name,
+                  };
+                }), { id: '', icon: 'cancel', name: 'No Global Environment', textValue: 'No Global Environment' }]}
+              >
+                <div className='px-2 mx-2 my-2 flex items-center gap-2 group rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors'>
+                  <Input aria-label='Global Environment' placeholder='Choose a global environment' className="py-1 placeholder:italic w-full pl-2 pr-7 " />
+                  <Button className="aspect-square gap-2 truncate flex items-center justify-center aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                    <Icon icon="caret-down" className='w-5 flex-shrink-0' />
+                  </Button>
+                </div>
+                <Popover className="min-w-max max-h-[90vh] !z-10 border grid grid-flow-col auto-cols-[min(250px,calc(45vw))] overflow-hidden divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] rounded-md focus:outline-none" placement='bottom start' offset={8}>
+                  <ListBox<{ name: string; icon: IconName }>
+                    className="select-none text-sm min-w-max p-2 flex flex-col overflow-y-auto focus:outline-none"
+                  >
+                    {item => (
+                      <ListBoxItem
+                        textValue={item.name}
+                        className="aria-disabled:opacity-30 aria-selected:bg-[--hl-sm] rounded aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] data-[focused]:bg-[--hl-xs] focus:outline-none transition-colors"
+                      >
+                        <Icon icon={item.icon} className='w-4' />
+                        <span className='truncate'>{item.name}</span>
+                      </ListBoxItem>
+                    )}
+                  </ListBox>
+                </Popover>
+              </ComboBox>
+            </div>
             <ListBox
               aria-label='Select a Global Environment'
               selectionMode='none'
+              ref={globalEnvironmentListBox}
               disallowEmptySelection
               key={activeGlobalEnvironment?._id}
               items={globalEnvironmentList}
