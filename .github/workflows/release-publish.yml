@@ -18,6 +18,7 @@ env:
 
 jobs:
   publish:
+    if: always()
     timeout-minutes: 15
     runs-on: ubuntu-latest
     outputs:
@@ -165,6 +166,7 @@ jobs:
           RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       - name: Upload to snapcraft (beta and stable only)
+        continue-on-error: true
         if: ${{ !contains(github.event.inputs.version, 'alpha') }}
         uses: snapcore/action-publish@v1
         env:
@@ -174,6 +176,7 @@ jobs:
           release: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       - name: Upload .deb to pulp and/or cloudsmith (stable only)
+        continue-on-error: true
         if: ${{ !contains(github.event.inputs.version, 'alpha') && !contains(github.event.inputs.version, 'beta') }}
         uses: docker://kong/release-script:latest
         env:
@@ -197,17 +200,20 @@ jobs:
             ${{ env.IS_PRERELEASE == 'true' && '--internal' || '--publish' }}
 
       - name: Load the Inso CLI Docker Archive
+        continue-on-error: true
         run: |
           docker load -i ./artifacts/ubuntu-latest-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
           docker image ls
 
       - name: Login to Docker Hub
+        continue-on-error: true
         uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.1.0
         with:
           username: ${{ secrets.DOCKER_REGISTRY_USER }}
           password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 
       - name: Docker meta for Inso CLI Docker Image
+        continue-on-error: true
         id: inso_docker_meta
         uses: docker/metadata-action@v5
         with:
@@ -220,7 +226,8 @@ jobs:
           sep-tags: ","
 
       - name: Push Inso CLI docker image tags to Docker Hub
-        id: publish_isno_docker_image
+        continue-on-error: true
+        id: publish_inso_docker_image
         run: |
           for tag in ${IMAGE_TAGS//,/ }; do \
             docker tag insomnia-inso:temp $tag
@@ -257,6 +264,7 @@ jobs:
           signature_registry: ${{ env.NOTARY_REPOSITORY }}
 
       - name: Upload sourcemaps to Sentry
+        continue-on-error: true
         env:
           SENTRY_AUTH_TOKEN: '${{ secrets.SENTRY_AUTH_TOKEN }}'
           SENTRY_ORG: '${{ secrets.SENTRY_ORG }}'
