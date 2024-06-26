@@ -87,13 +87,6 @@ const consolaLogger = consola.create({
 
 export const logger = consolaLogger as ModifiedConsola;
 
-export const configureLogger = (verbose = false, ci = false) => {
-  logger.level = verbose ? LogLevel.Verbose : LogLevel.Info;
-
-  if (ci) {
-    logger.setReporters([new BasicReporter()]);
-  }
-};
 export class InsoError extends Error {
   cause?: Error | null;
 
@@ -117,7 +110,6 @@ export const logErrorAndExit = (err?: Error) => {
 };
 
 export const go = (args?: string[]) => {
-  configureLogger();
 
   const program = new commander.Command();
   const version = process.env.VERSION || packageJson.version;
@@ -165,7 +157,8 @@ export const go = (args?: string[]) => {
         ...commandOptions,
         ...(__configFile ? { __configFile } : {}),
       };
-      configureLogger(options.verbose, options.ci);
+      logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
+      options.ci && logger.setReporters([new BasicReporter()]);
       options.printOptions && logger.log('Loaded options', options, '\n');
 
       return runInsomniaTests(identifier, options)
@@ -185,7 +178,8 @@ export const go = (args?: string[]) => {
         ...commandOptions,
         ...(__configFile ? { __configFile } : {}),
       };
-      configureLogger(options.verbose, options.ci);
+      logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
+      options.ci && logger.setReporters([new BasicReporter()]);
       return lintSpecification(identifier, options)
         .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
     });
@@ -225,7 +219,8 @@ export const go = (args?: string[]) => {
         ...commandOptions,
         ...(__configFile ? { __configFile } : {}),
       };
-      configureLogger(options.verbose, options.ci);
+      logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
+      options.ci && logger.setReporters([new BasicReporter()]);
       options.printOptions && logger.log('Loaded options', options, '\n');
 
       // Ignore the first arg because that will be scriptName, get the rest
