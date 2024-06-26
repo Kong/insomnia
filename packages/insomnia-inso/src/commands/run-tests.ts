@@ -1,6 +1,6 @@
 import { generate, runTestsCli, TestSuite } from 'insomnia-testing';
 
-import { type GlobalOptions, logger, noConsoleLog } from '../cli';
+import { type GlobalOptions, logger } from '../cli';
 import { loadDb } from '../db';
 import { loadEnvironment, promptEnvironment } from '../db/models/environment';
 import type { UnitTest, UnitTestSuite } from '../db/models/types';
@@ -45,6 +45,16 @@ const createTestSuite = (dbSuite: UnitTestSuite, dbTests: UnitTest[]): TestSuite
     defaultRequestId: requestId,
   })),
 });
+
+const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
+  const oldConsoleLog = console.log;
+  console.log = () => { };
+  try {
+    return await callback();
+  } finally {
+    console.log = oldConsoleLog;
+  }
+};
 
 // Identifier can be the id or name of a workspace, apiSpec, or unit test suite
 export async function runInsomniaTests(

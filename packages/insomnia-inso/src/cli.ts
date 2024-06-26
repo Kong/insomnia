@@ -65,18 +65,6 @@ export const loadCosmiConfig = async (configFile?: string) => {
   return {};
 };
 
-export const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
-  const oldConsoleLog = console.log;
-
-  console.log = () => { };
-
-  try {
-    return await callback();
-  } finally {
-    console.log = oldConsoleLog;
-  }
-};
-
 export type LogsByType = {
   [t in logType]?: string[]
 };
@@ -175,20 +163,11 @@ const addScriptCommand = (originalCommand: commander.Command) => {
     });
 };
 
-export const go = (args?: string[], exitOverride?: boolean) => {
-  const commandCreator = (cmd?: string) => {
-    const command = new commander.Command(cmd);
-
-    if (exitOverride) {
-      command.exitOverride();
-    }
-
-    return command;
-  };
+export const go = (args?: string[]) => {
 
   configureLogger();
 
-  const program = commandCreator();
+  const program = new commander.Command();
   const version = process.env.VERSION || packageJson.version;
 
   program
@@ -210,7 +189,7 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .option('--config <path>', 'path to configuration file containing above options')
     .option('--printOptions', 'print the loaded options');
 
-  const run = commandCreator('run').description('Execution utilities');
+  const run = new commander.Command('run').description('Execution utilities');
   const defaultReporter: TestReporter = 'spec';
   run
     .command('test [identifier]')
@@ -241,7 +220,7 @@ export const go = (args?: string[], exitOverride?: boolean) => {
         .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
     });
 
-  const lint = commandCreator('lint').description('Linting utilities');
+  const lint = new commander.Command('lint').description('Linting utilities');
   lint
     .command('spec [identifier]')
     .description('Lint an API Specification')
@@ -259,7 +238,7 @@ export const go = (args?: string[], exitOverride?: boolean) => {
         .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
     });
 
-  const exportCmd = commandCreator('export').description('Export data from insomnia models');
+  const exportCmd = new commander.Command('export').description('Export data from insomnia models');
   exportCmd
     .command('spec [identifier]')
     .description('Export an API Specification to a file')
