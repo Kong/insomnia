@@ -115,54 +115,6 @@ export const logErrorAndExit = (err?: Error) => {
   process.exit(1);
 };
 
-const addScriptCommand = (originalCommand: commander.Command) => {
-  // inso script
-  originalCommand
-    .command('script <script-name>', {
-      isDefault: true,
-    })
-    .description('Run scripts defined in .insorc')
-    .allowUnknownOption()
-    .action(async (scriptName: 'lint', cmd) => {
-      const commandOptions = { ...originalCommand.optsWithGlobals(), ...cmd };
-      const { __configFile } = await loadCosmiConfig(commandOptions.config);
-
-      const options = {
-        ...__configFile?.options || {},
-        ...commandOptions,
-        ...(__configFile ? { __configFile } : {}),
-      };
-      configureLogger(options.verbose, options.ci);
-      options.printOptions && logger.log('Loaded options', options, '\n');
-
-      // Ignore the first arg because that will be scriptName, get the rest
-      const passThroughArgs = originalCommand.args.slice(1);
-
-      // Find script
-      const scriptTask = options.__configFile?.scripts?.[scriptName];
-
-      if (!scriptTask) {
-        logger.fatal(`Could not find inso script "${scriptName}" in the config file.`);
-        return process.exit(1);
-
-      }
-
-      if (!scriptTask.startsWith('inso')) {
-        logger.fatal('Tasks in a script should start with `inso`.');
-        return process.exit(1);
-      }
-
-      const scriptArgs: string[] = parseArgsStringToArgv(
-        `self ${scriptTask} ${passThroughArgs.join(' ')}`,
-      );
-
-      logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`);
-
-      originalCommand.parseAsync(scriptArgs).catch(logErrorAndExit);
-      return;
-    });
-};
-
 export const go = (args?: string[]) => {
   configureLogger();
 
@@ -251,6 +203,47 @@ export const go = (args?: string[]) => {
     });
 
   // Add script base command
-  addScriptCommand(program);
+  program.command('script <script-name>', {
+    isDefault: true,
+  })
+    .description('Run scripts defined in .insorc')
+    .allowUnknownOption()
+    .action(async (scriptName: 'lint', cmd) => {
+      const commandOptions = { ...program.optsWithGlobals(), ...cmd };
+      // TODO: getAbsolutePath to working directory and use it to check from config file
+      const { __configFile } = await loadCosmiConfig(commandOptions.config);
+
+      const options = {
+        ...__configFile?.options || {},
+        ...commandOptions,
+        ...(__configFile ? { __configFile } : {}),
+      };
+      configureLogger(options.verbose, options.ci);
+      options.printOptions && logger.log('Loaded options', options, '\n');
+
+      // Ignore the first arg because that will be scriptName, get the rest
+      const passThroughArgs = program.args.slice(1);
+
+      const scriptTask = options.__configFile?.scripts?.[scriptName];
+
+      if (!scriptTask) {
+        logger.fatal(`Could not find inso script "${scriptName}" in the config file.`);
+        return process.exit(1);
+      }
+
+      if (!scriptTask.startsWith('inso')) {
+        logger.fatal('Tasks in a script should start with `inso`.');
+        return process.exit(1);
+      }
+
+      const scriptArgs: string[] = parseArgsStringToArgv(
+        `self ${scriptTask} ${passThroughArgs.join(' ')}`,
+      );
+
+      logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`);
+
+      program.parseAsync(scriptArgs).catch(logErrorAndExit);
+      return;
+    });
   program.parseAsync(args || process.argv).catch(logErrorAndExit);
 };
