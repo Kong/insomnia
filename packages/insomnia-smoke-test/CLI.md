@@ -8,7 +8,7 @@ npm run test -w insomnia-inso
 # will default to insomnia app database
 $PWD/packages/insomnia-inso/bin/inso run test
 # will use config, useful for testing with fewer args
-$PWD/packages/insomnia-inso/bin/inso script whatever --config packages/insomnia-inso/src/fixtures/.insorc.yaml
+$PWD/packages/insomnia-inso/bin/inso -w packages/insomnia-inso/src/db/fixtures/git-repo script runTest
 ```
 
 ## install node version of libcurl
