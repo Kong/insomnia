@@ -87,19 +87,12 @@ export const getOptions = async (cmd: CommandObj, defaultOptions = {}) => {
   const commandOptions = extractCommandOptions(cmd);
   const { __configFile } = await loadCosmiConfig(commandOptions.config);
 
-  if (__configFile) {
     return {
       ...defaultOptions,
-      ...__configFile.options,
+      ...__configFile?.options || {},
       ...commandOptions,
-      __configFile,
+      ...(__configFile ? { __configFile } : {}),
     };
-  }
-
-  return {
-    ...defaultOptions,
-    ...commandOptions,
-  };
 };
 
 export const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
@@ -174,8 +167,15 @@ const addScriptCommand = (originalCommand: commander.Command) => {
     .allowUnknownOption()
     .action(async (scriptName: 'lint', cmd) => {
       // Load scripts
-      const options = await getOptions(cmd);
 
+      const commandOptions = extractCommandOptions(cmd);
+      const { __configFile } = await loadCosmiConfig(commandOptions.config);
+
+      const options = {
+        ...__configFile?.options || {},
+        ...commandOptions,
+        ...(__configFile ? { __configFile } : {}),
+      };
       configureLogger(options.verbose, options.ci);
       options.printOptions && logger.log('Loaded options', options, '\n');
 
@@ -261,9 +261,15 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .option('--keepFile', 'do not delete the generated test file')
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL')
     .action(async (identifier, cmd) => {
-      const options = await getOptions(cmd, {
+      const commandOptions = extractCommandOptions(cmd);
+      const { __configFile } = await loadCosmiConfig(commandOptions.config);
+
+      const options = {
         reporter: defaultReporter,
-      });
+        ...__configFile?.options || {},
+        ...commandOptions,
+        ...(__configFile ? { __configFile } : {}),
+      };
       configureLogger(options.verbose, options.ci);
       options.printOptions && logger.log('Loaded options', options, '\n');
 
@@ -276,7 +282,14 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .command('spec [identifier]')
     .description('Lint an API Specification')
     .action(async (identifier, cmd) => {
-      const options = await getOptions(cmd);
+      const commandOptions = extractCommandOptions(cmd);
+      const { __configFile } = await loadCosmiConfig(commandOptions.config);
+
+      const options = {
+        ...__configFile?.options || {},
+        ...commandOptions,
+        ...(__configFile ? { __configFile } : {}),
+      };
       configureLogger(options.verbose, options.ci);
       return lintSpecification(identifier, options)
         .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
@@ -289,7 +302,14 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .option('-o, --output <path>', 'save the generated config to a file')
     .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations ', false)
     .action(async (identifier, cmd) => {
-      const options = await getOptions(cmd);
+      const commandOptions = extractCommandOptions(cmd);
+      const { __configFile } = await loadCosmiConfig(commandOptions.config);
+
+      const options = {
+        ...__configFile?.options || {},
+        ...commandOptions,
+        ...(__configFile ? { __configFile } : {}),
+      };
       options.printOptions && logger.log('Loaded options', options, '\n');
       return exportSpecification(identifier, options)
         .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
