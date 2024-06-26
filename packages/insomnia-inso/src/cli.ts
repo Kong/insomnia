@@ -13,7 +13,7 @@ import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-te
 
 interface ConfigFileOptions {
   __configFile?: {
-    options?: GlobalOptions;
+    options: GlobalOptions;
     scripts?: {
       lint: string;
     };
@@ -44,21 +44,17 @@ export const loadCosmiConfig = (configFile?: string): Partial<ConfigFileOptions>
     const results = configFile ? explorer.load(configFile) : explorer.search();
 
     if (results && !results?.isEmpty) {
-      const options: GlobalOptions = {};
-      OptionsSupportedInConfigFile.forEach(key => {
+      const scripts = results.config?.scripts || {};
+      const filePath = results.filepath;
+      const options: GlobalOptions = OptionsSupportedInConfigFile.reduce((acc, key) => {
         const value = results.config?.options?.[key];
-
         if (value) {
-          options[key] = value;
+          return { ...acc, [key]: value };
         }
-      });
-      return {
-        __configFile: {
-          options,
-          scripts: results.config?.scripts || {},
-          filePath: results.filepath,
-        },
-      };
+        return acc;
+      }, {});
+
+      return { __configFile: { options, scripts, filePath } };
     }
   } catch (error) {
     // Report fatal error when loading from explicitly defined config file
@@ -96,7 +92,7 @@ export const getOptions = <T extends Partial<GlobalOptions>>(cmd: CommandObj, de
   if (__configFile) {
     return {
       ...defaultOptions,
-      ...(__configFile.options || {}),
+      ...__configFile.options,
       ...commandOptions,
       __configFile,
     };
@@ -184,70 +180,6 @@ const prepareCommand = (options: Partial<GlobalOptions>) => {
   return options;
 };
 
-type CreateCommand = (command: string) => commander.Command;
-
-const makeTestCommand = (commandCreator: CreateCommand) => {
-  // inso run
-  const run = commandCreator('run').description('Execution utilities');
-  const defaultReporter: TestReporter = 'spec';
-
-  // inso run tests
-  run
-    .command('test [identifier]')
-    .description('Run Insomnia unit test suites')
-    .option('-e, --env <identifier>', 'environment to use')
-    .option('-t, --testNamePattern <regex>', 'run tests that match the regex')
-    .option(
-      '-r, --reporter <reporter>',
-      `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`,
-    )
-    .option('-b, --bail', 'abort ("bail") after first test failure')
-    .option('--keepFile', 'do not delete the generated test file')
-    .option('--disableCertValidation', 'disable certificate validation for requests with SSL')
-    .action((identifier, cmd) => {
-      let options = getOptions<RunTestsOptions>(cmd, {
-        reporter: defaultReporter,
-      });
-      options = prepareCommand(options);
-      return exit(runInsomniaTests(identifier, options));
-    });
-  return run;
-};
-
-const makeLintCommand = (commandCreator: CreateCommand) => {
-  // inso lint
-  const lint = commandCreator('lint').description('Linting utilities');
-
-  // inso lint spec
-  lint
-    .command('spec [identifier]')
-    .description('Lint an API Specification')
-    .action((identifier, cmd) => {
-      let options = getOptions<LintSpecificationOptions>(cmd);
-      options = prepareCommand(options);
-      return exit(lintSpecification(identifier, options));
-    });
-  return lint;
-};
-
-const makeExportCommand = (commandCreator: CreateCommand) => {
-  // inso export
-  const exportCmd = commandCreator('export').description('Export data from insomnia models');
-
-  // inso export spec
-  exportCmd
-    .command('spec [identifier]')
-    .description('Export an API Specification to a file')
-    .option('-o, --output <path>', 'save the generated config to a file')
-    .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations ', false)
-    .action((identifier, cmd) => {
-      let options = getOptions<ExportSpecificationOptions>(cmd);
-      options = prepareCommand(options);
-      return exit(exportSpecification(identifier, options));
-    });
-  return exportCmd;
-};
-
 const addScriptCommand = (originalCommand: commander.Command) => {
   // inso script
   originalCommand
@@ -285,7 +217,7 @@ const addScriptCommand = (originalCommand: commander.Command) => {
       // Print command
       logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`); // Run
 
-      runWithArgs(originalCommand, scriptArgs);
+      originalCommand.parseAsync(scriptArgs).catch(logErrorExit1);
       return;
     });
 };
@@ -327,17 +259,56 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .option('--config <path>', 'path to configuration file containing above options')
     .option('--printOptions', 'print the loaded options');
 
-  // Add commands and sub commands
+  const run = commandCreator('run').description('Execution utilities');
+  const defaultReporter: TestReporter = 'spec';
+  run
+    .command('test [identifier]')
+    .description('Run Insomnia unit test suites')
+    .option('-e, --env <identifier>', 'environment to use')
+    .option('-t, --testNamePattern <regex>', 'run tests that match the regex')
+    .option(
+      '-r, --reporter <reporter>',
+      `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`,
+    )
+    .option('-b, --bail', 'abort ("bail") after first test failure')
+    .option('--keepFile', 'do not delete the generated test file')
+    .option('--disableCertValidation', 'disable certificate validation for requests with SSL')
+    .action((identifier, cmd) => {
+      let options = getOptions<RunTestsOptions>(cmd, {
+        reporter: defaultReporter,
+      });
+      options = prepareCommand(options);
+      return exit(runInsomniaTests(identifier, options));
+    });
+
+  const lint = commandCreator('lint').description('Linting utilities');
+  lint
+    .command('spec [identifier]')
+    .description('Lint an API Specification')
+    .action((identifier, cmd) => {
+      let options = getOptions<LintSpecificationOptions>(cmd);
+      options = prepareCommand(options);
+      return exit(lintSpecification(identifier, options));
+    });
+
+  const exportCmd = commandCreator('export').description('Export data from insomnia models');
+  exportCmd
+    .command('spec [identifier]')
+    .description('Export an API Specification to a file')
+    .option('-o, --output <path>', 'save the generated config to a file')
+    .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations ', false)
+    .action((identifier, cmd) => {
+      let options = getOptions<ExportSpecificationOptions>(cmd);
+      options = prepareCommand(options);
+      return exit(exportSpecification(identifier, options));
+    });
+
   cmd
-    .addCommand(makeTestCommand(commandCreator))
-    .addCommand(makeLintCommand(commandCreator))
-    .addCommand(makeExportCommand(commandCreator));
+    .addCommand(run)
+    .addCommand(lint)
+    .addCommand(exportCmd);
 
   // Add script base command
   addScriptCommand(cmd);
-  runWithArgs(cmd, args || process.argv);
-};
-
-const runWithArgs = (cmd: commander.Command, args: string[]) => {
-  cmd.parseAsync(args).catch(logErrorExit1);
+  cmd.parseAsync(args || process.argv).catch(logErrorExit1);
 };

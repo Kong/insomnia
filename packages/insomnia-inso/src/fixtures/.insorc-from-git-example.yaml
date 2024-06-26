@@ -8,4 +8,3 @@ scripts:
   lintSpecName: inso lint spec "Imported Workspace"
   exportSpec: inso export spec
   runTest: inso run test
-  runTest: inso run test
