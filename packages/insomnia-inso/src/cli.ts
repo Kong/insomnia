@@ -41,7 +41,7 @@ export const loadCosmiConfig = async (configFile?: string) => {
     const results = configFile ? await explorer.load(configFile) : await explorer.search();
 
     if (results && !results?.isEmpty) {
-      console.log(`Found config file at ${results?.filepath}.`);
+      logger.debug(`Found config file at ${results?.filepath}.`);
       const scripts = results.config?.scripts || {};
       const filePath = results.filepath;
       const options: GlobalOptions = OptionsSupportedInConfigFile.reduce((acc, key) => {
