@@ -29,17 +29,19 @@ describe('extractCommandOptions()', () => {
 });
 
 describe('loadCosmiConfig()', () => {
-  it('should load .insorc.yaml config file in fixtures dir', () => {
-    const result = loadCosmiConfig(path.join(fixturesDir, '.insorc.yaml'));
+  it('should load .insorc-from-file-example.yaml config file in fixtures dir', () => {
+    const result = loadCosmiConfig(path.join(fixturesDir, '.insorc-from-file-example.yaml'));
     expect(result).toEqual({
       __configFile: {
         options: {
-          src: 'packages/insomnia-inso/src/db/fixtures/git-repo-malformed-spec',
+          src: 'insomnia-export.json',
+          workingDir: '/home/runner/work/myproject',
         },
         scripts: {
-          lint2: 'inso lint spec',
+          exportSpec: 'inso export spec',
+          lintSpec: 'inso lint spec',
         },
-        filePath: path.resolve(fixturesDir, '.insorc.yaml'),
+        filePath: path.resolve(fixturesDir, '.insorc-from-file-example.yaml'),
       },
     });
     expect(result.__configFile?.options?.shouldBeIgnored).toBe(undefined);
@@ -103,10 +105,10 @@ describe('getOptions', () => {
   });
 
   it('should combine config file options with default options, favouring config file', () => {
-    // Will also load src/fixtures/.insorc.yaml
+    // Will also load src/fixtures/.insorc-from-file-example.yaml
     const commandOptions = {
       opts: () => ({
-        config: path.join(fixturesDir, '.insorc.yaml'),
+        config: path.join(fixturesDir, '.insorc-from-file-example.yaml'),
       }),
     };
     const defaultOptions = {
@@ -115,17 +117,20 @@ describe('getOptions', () => {
     };
     const result = getOptions(commandOptions, defaultOptions);
     expect(result).toEqual({
-      src: 'packages/insomnia-inso/src/db/fixtures/git-repo-malformed-spec',
+      src: 'insomnia-export.json',
+      workingDir: '/home/runner/work/myproject',
       anotherDefault: '0',
-      config: path.join(fixturesDir, '.insorc.yaml'),
+      config: path.join(fixturesDir, '.insorc-from-file-example.yaml'),
       __configFile: {
         options: {
-          src: 'packages/insomnia-inso/src/db/fixtures/git-repo-malformed-spec',
+          src: 'insomnia-export.json',
+          workingDir: '/home/runner/work/myproject',
         },
         scripts: {
-          lint2: 'inso lint spec',
+          exportSpec: 'inso export spec',
+          lintSpec: 'inso lint spec',
         },
-        filePath: path.resolve(fixturesDir, '.insorc.yaml'),
+        filePath: path.resolve(fixturesDir, '.insorc-from-file-example.yaml'),
       },
     });
   });
@@ -134,7 +139,7 @@ describe('getOptions', () => {
     const logSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
     const errSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
     const configFilePath = path.join(fixturesDir, '.insorc-not-found.yaml');
-    // Will also load src/fixtures/.insorc.yaml
+    // Will also load src/fixtures/.insorc-from-file-example.yaml
     const commandOptions = {
       opts: () => ({
         config: configFilePath,
