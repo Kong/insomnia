@@ -423,13 +423,17 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     if (requestData.request.afterResponseScript) {
       const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
       const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+      const globals = mutatedContext.globals;
+
       window.main.addExecutionStep({ requestId, stepName: 'Executing after-response script' });
+
       const postMutatedContext = await tryToExecuteAfterResponseScript({
         ...requestData,
         ...mutatedContext,
         baseEnvironment,
         cookieJar,
         response,
+        globals,
       });
       window.main.completeExecutionStep({ requestId });
       if (!postMutatedContext?.request) {
@@ -437,7 +441,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
         // TODO: improve error message?
         return null;
       }
-      await savePatchesMadeByScript(postMutatedContext, requestData.environment, baseEnvironment);
+      await savePatchesMadeByScript(postMutatedContext, requestData.environment, baseEnvironment, globals);
     }
     if (!shouldWriteToFile) {
       const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);

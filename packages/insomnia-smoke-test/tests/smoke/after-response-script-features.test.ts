@@ -53,9 +53,10 @@ test.describe('after-response script features tests', async () => {
         const bodyJson = JSON.parse(rows.join(' '));
 
         expect(bodyJson).toEqual({
-            // no environment is selected so the environment value is not persisted
+            // no environment is selected so the environment value will be persisted to the base environment
             '__fromAfterScript1': 'baseEnvironment',
             '__fromAfterScript2': 'collection',
+            '__fromAfterScript': 'environment',
         });
     });
 });

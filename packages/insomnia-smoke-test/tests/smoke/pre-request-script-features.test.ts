@@ -26,13 +26,11 @@ test.describe('pre-request features tests', async () => {
         {
             name: 'environments setting and overriding',
             expectedBody: {
-                environmentName: '',
-                baseEnvironmentName: 'Base Environment',
-                collectionVariablesName: 'Base Environment',
-                fromBaseEnv: 'baseEnv',
+                // fallbackToGlobal: 'fallbackToGlobal',
+                fallbackToBase: 'fallbackToBase',
                 scriptValue: 'fromEnv',
                 preDefinedValue: 'fromScript',
-                customValue: 'fromFolder',
+                folderEnv: 'fromFolder',
             },
         },
         {
@@ -176,6 +174,12 @@ test.describe('pre-request features tests', async () => {
                 asyncTaskDone: true,
             },
         },
+        // {
+        //     name: 'can manipulate global envs',
+        //     expectedBody: {
+        //         setByScript: 'setByScript',
+        //     },
+        // },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
@@ -428,9 +432,10 @@ test.describe('pre-request features tests', async () => {
         const bodyJson = JSON.parse(rows.join(' '));
 
         expect(bodyJson).toEqual({
-            // no environment is selected so the environment value is not persisted
+            // no environment is selected so the environment value will be persisted to the base environment
             '__fromScript1': 'baseEnvironment',
             '__fromScript2': 'collection',
+            '__fromScript': 'environment',
         });
     });
 });

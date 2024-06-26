@@ -90,12 +90,21 @@ const runScript = async (
 
   return {
     ...context,
-    environment: mutatedContextObject.environment,
-    baseEnvironment: mutatedContextObject.baseEnvironment,
+    environment: {
+      id: context.environment.id,
+      name: context.environment.name,
+      data: mutatedContextObject.environment,
+    },
+    baseEnvironment: {
+      id: context.baseEnvironment.id,
+      name: context.baseEnvironment.name,
+      data: mutatedContextObject.baseEnvironment,
+    },
     request: updatedRequest,
     settings: updatedSettings,
     clientCertificates: updatedCertificates,
     cookieJar: updatedCookieJar,
+    globals: mutatedContextObject.globals,
   };
 };
 

@@ -31,7 +31,7 @@ export class InsomniaObject {
     private _test = test;
 
     // TODO: follows will be enabled after Insomnia supports them
-    private _globals: Environment;
+    private globals: Environment;
     private _iterationData: Environment;
     private _settings: Settings;
 
@@ -53,7 +53,7 @@ export class InsomniaObject {
         },
         log: (...msgs: any[]) => void,
     ) {
-        this._globals = rawObj.globals;
+        this.globals = rawObj.globals;
         this.environment = rawObj.environment;
         this.baseEnvironment = rawObj.baseEnvironment;
         this.collectionVariables = this.baseEnvironment; // collectionVariables is mapped to baseEnvironment
@@ -85,11 +85,6 @@ export class InsomniaObject {
         return this._expect(exp);
     }
 
-    // TODO: remove this after enabled globals
-    get globals() {
-        throw unsupportedError('globals', 'base environment');
-    }
-
     // TODO: remove this after enabled iterationData
     get iterationData() {
         throw unsupportedError('iterationData', 'environment');
@@ -102,7 +97,7 @@ export class InsomniaObject {
 
     toObject = () => {
         return {
-            globals: this._globals.toObject(),
+            globals: this.globals.toObject(),
             environment: this.environment.toObject(),
             baseEnvironment: this.baseEnvironment.toObject(),
             iterationData: this._iterationData.toObject(),
@@ -121,13 +116,26 @@ export async function initInsomniaObject(
     rawObj: RequestContext,
     log: (...args: any[]) => void,
 ) {
-    const globals = new Environment('globals', rawObj.globals);
-    const environment = new Environment(rawObj.environmentName || '', rawObj.environment);
-    const baseEnvironment = new Environment(rawObj.baseEnvironmentName || '', rawObj.baseEnvironment);
+    // Mapping rule for the global environment:
+    // - when one global environment is selected, `globals` points to the selected one
+    // Potential mapping rule for the future:
+    // - The base global environment could also be introduced
+    const globals = new Environment('globals', rawObj.globals || {}); // could be undefined
+    // Mapping rule for the environment and base environment:
+    // - If base environment is selected, both `baseEnvironment` and `environment` point to the selected one.
+    // - If one sub environment is selected,  `baseEnvironment` points to the base env and `environment` points to the selected one.
+    const baseEnvironment = new Environment(rawObj.baseEnvironment.name || '', rawObj.baseEnvironment.data);
+    // reuse baseEnvironment when the "selected envrionment" points to the base environment
+    const environment = rawObj.baseEnvironment.id === rawObj.environment.id ?
+        baseEnvironment :
+        new Environment(rawObj.environment.name || '', rawObj.environment.data);
+    if (rawObj.baseEnvironment.id === rawObj.environment.id) {
+        log('warning: No environment is selected, modification of insomnia.environment will be applied to the base environment.');
+    }
     // TODO: update "iterationData" name when it is supported
     const iterationData = new Environment('iterationData', rawObj.iterationData);
     const cookies = new CookieObject(rawObj.cookieJar);
-    // TODO: update follows when post-request script and iterating are introduced
+    // TODO: update follows when post-request script and iterationData are introduced
     const requestInfo = new RequestInfo({
         eventName: 'prerequest',
         iteration: 1,
