@@ -137,8 +137,9 @@ export const go = (args?: string[]) => {
     .option('--verbose', 'show additional logs while running the command')
     .option('--ci', 'run in CI, disables all prompts')
     .option('--config <path>', 'path to configuration file containing above options')
-    .option('--printOptions', 'print the loaded options')
-    .command('run')
+    .option('--printOptions', 'print the loaded options');
+
+  program.command('run')
     .description('Execution utilities')
     .command('test [identifier]')
     .description('Run Insomnia unit test suites')
@@ -166,8 +167,9 @@ export const go = (args?: string[]) => {
 
       return runInsomniaTests(identifier, options)
         .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
-    })
-    .command('lint')
+    });
+
+  program.command('lint')
     .description('Linting utilities')
     .command('spec [identifier]')
     .description('Lint an API Specification')
@@ -183,8 +185,9 @@ export const go = (args?: string[]) => {
       configureLogger(options.verbose, options.ci);
       return lintSpecification(identifier, options)
         .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
-    })
-    .command('export').description('Export data from insomnia models')
+    });
+
+  program.command('export').description('Export data from insomnia models')
     .command('spec [identifier]')
     .description('Export an API Specification to a file')
     .option('-o, --output <path>', 'save the generated config to a file')
