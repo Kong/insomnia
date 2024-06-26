@@ -1,14 +1,11 @@
 import commander from 'commander';
 import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consola';
-import { cosmiconfigSync } from 'cosmiconfig';
+import { cosmiconfig } from 'cosmiconfig';
 import { parseArgsStringToArgv } from 'string-argv';
 
 import packageJson from '../package.json';
-import type { ExportSpecificationOptions } from './commands/export-specification';
 import { exportSpecification } from './commands/export-specification';
-import type { LintSpecificationOptions } from './commands/lint-specification';
 import { lintSpecification } from './commands/lint-specification';
-import type { RunTestsOptions } from './commands/run-tests';
 import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
 
 interface ConfigFileOptions {
@@ -38,12 +35,13 @@ export const OptionsSupportedInConfigFile: (keyof GlobalOptions)[] = [
   'printOptions',
 ];
 
-export const loadCosmiConfig = (configFile?: string): Partial<ConfigFileOptions> => {
+export const loadCosmiConfig = async (configFile?: string) => {
   try {
-    const explorer = cosmiconfigSync('inso');
-    const results = configFile ? explorer.load(configFile) : explorer.search();
+    const explorer = await cosmiconfig('inso');
+    const results = configFile ? await explorer.load(configFile) : await explorer.search();
 
     if (results && !results?.isEmpty) {
+      console.log(`Found config file at ${results?.filepath}.`);
       const scripts = results.config?.scripts || {};
       const filePath = results.filepath;
       const options: GlobalOptions = OptionsSupportedInConfigFile.reduce((acc, key) => {
@@ -85,9 +83,9 @@ export const extractCommandOptions = <T extends GlobalOptions>(cmd: CommandObj):
   return opts;
 };
 
-export const getOptions = <T extends Partial<GlobalOptions>>(cmd: CommandObj, defaultOptions: Partial<T> = {}): Partial<T> => {
+export const getOptions = async (cmd: CommandObj, defaultOptions = {}) => {
   const commandOptions = extractCommandOptions(cmd);
-  const { __configFile } = loadCosmiConfig(commandOptions.config);
+  const { __configFile } = await loadCosmiConfig(commandOptions.config);
 
   if (__configFile) {
     return {
@@ -188,9 +186,9 @@ const addScriptCommand = (originalCommand: commander.Command) => {
     })
     .description('Run scripts defined in .insorc')
     .allowUnknownOption()
-    .action((scriptName: 'lint', cmd) => {
+    .action(async (scriptName: 'lint', cmd) => {
       // Load scripts
-      let options = getOptions(cmd);
+      let options = await getOptions(cmd);
       options = prepareCommand(options);
 
       // Ignore the first arg because that will be scriptName, get the rest
@@ -273,8 +271,8 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .option('-b, --bail', 'abort ("bail") after first test failure')
     .option('--keepFile', 'do not delete the generated test file')
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL')
-    .action((identifier, cmd) => {
-      let options = getOptions<RunTestsOptions>(cmd, {
+    .action(async (identifier, cmd) => {
+      let options = await getOptions(cmd, {
         reporter: defaultReporter,
       });
       options = prepareCommand(options);
@@ -285,8 +283,8 @@ export const go = (args?: string[], exitOverride?: boolean) => {
   lint
     .command('spec [identifier]')
     .description('Lint an API Specification')
-    .action((identifier, cmd) => {
-      let options = getOptions<LintSpecificationOptions>(cmd);
+    .action(async (identifier, cmd) => {
+      let options = await getOptions(cmd);
       options = prepareCommand(options);
       return exit(lintSpecification(identifier, options));
     });
@@ -297,8 +295,8 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .description('Export an API Specification to a file')
     .option('-o, --output <path>', 'save the generated config to a file')
     .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations ', false)
-    .action((identifier, cmd) => {
-      let options = getOptions<ExportSpecificationOptions>(cmd);
+    .action(async (identifier, cmd) => {
+      let options = await getOptions(cmd);
       options = prepareCommand(options);
       return exit(exportSpecification(identifier, options));
     });
