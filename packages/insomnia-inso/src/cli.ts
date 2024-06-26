@@ -1,4 +1,4 @@
-import commander from 'commander';
+import * as commander from 'commander';
 import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consola';
 import { cosmiconfig } from 'cosmiconfig';
 import { parseArgsStringToArgv } from 'string-argv';
@@ -152,7 +152,7 @@ export class InsoError extends Error {
   }
 }
 
-export const handleError = (err?: Error) => {
+export const logErrorAndExit = (err?: Error) => {
   if (err instanceof InsoError) {
     logger.fatal(err.message);
     err.cause && logger.fatal(err.cause);
@@ -161,15 +161,7 @@ export const handleError = (err?: Error) => {
   }
 
   logger.info('To view tracing information, re-run `inso` with `--verbose`');
-};
-
-export const logErrorExit1 = (err?: Error) => {
-  handleError(err);
   process.exit(1);
-};
-
-export const exit = async (result: Promise<boolean>): Promise<void> => {
-  return result.then(r => process.exit(r ? 0 : 1)).catch(logErrorExit1);
 };
 
 const prepareCommand = (options: Partial<GlobalOptions>) => {
@@ -181,7 +173,7 @@ const prepareCommand = (options: Partial<GlobalOptions>) => {
 const addScriptCommand = (originalCommand: commander.Command) => {
   // inso script
   originalCommand
-    .command('script <name>', {
+    .command('script <script-name>', {
       isDefault: true,
     })
     .description('Run scripts defined in .insorc')
@@ -199,12 +191,13 @@ const addScriptCommand = (originalCommand: commander.Command) => {
 
       if (!scriptTask) {
         logger.fatal(`Could not find inso script "${scriptName}" in the config file.`);
-        return exit(new Promise(resolve => resolve(false)));
+        return process.exit(1);
+
       }
 
       if (!scriptTask.startsWith('inso')) {
         logger.fatal('Tasks in a script should start with `inso`.');
-        return exit(new Promise(resolve => resolve(false)));
+        return process.exit(1);
       }
 
       // Collect args
@@ -215,7 +208,7 @@ const addScriptCommand = (originalCommand: commander.Command) => {
       // Print command
       logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`); // Run
 
-      originalCommand.parseAsync(scriptArgs).catch(logErrorExit1);
+      originalCommand.parseAsync(scriptArgs).catch(logErrorAndExit);
       return;
     });
 };
@@ -276,7 +269,8 @@ export const go = (args?: string[], exitOverride?: boolean) => {
         reporter: defaultReporter,
       });
       options = prepareCommand(options);
-      return exit(runInsomniaTests(identifier, options));
+      return runInsomniaTests(identifier, options)
+        .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
     });
 
   const lint = commandCreator('lint').description('Linting utilities');
@@ -286,7 +280,8 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .action(async (identifier, cmd) => {
       let options = await getOptions(cmd);
       options = prepareCommand(options);
-      return exit(lintSpecification(identifier, options));
+      return lintSpecification(identifier, options)
+        .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
     });
 
   const exportCmd = commandCreator('export').description('Export data from insomnia models');
@@ -298,7 +293,8 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .action(async (identifier, cmd) => {
       let options = await getOptions(cmd);
       options = prepareCommand(options);
-      return exit(exportSpecification(identifier, options));
+      return exportSpecification(identifier, options)
+        .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
     });
 
   cmd
@@ -308,5 +304,5 @@ export const go = (args?: string[], exitOverride?: boolean) => {
 
   // Add script base command
   addScriptCommand(cmd);
-  cmd.parseAsync(args || process.argv).catch(logErrorExit1);
+  cmd.parseAsync(args || process.argv).catch(logErrorAndExit);
 };
