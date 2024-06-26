@@ -2,6 +2,7 @@ options:
   # loading data from an git repo
   workingDir: packages/insomnia-inso/src/db/fixtures/git-repo
   ci: false
+  verbose: true
 scripts:
   lintSpecPrompt: inso lint spec
   lintSpecKey: inso lint spec spc_3b2850

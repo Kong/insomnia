@@ -126,13 +126,16 @@ export const go = (args?: string[]) => {
   program
     .version(version, '-v, --version')
     .description(`A CLI for Insomnia!
-  With this tool you can lint, test and export your Insomnia data.
-  It can read from three data sources, but will use local Insomnia application data as a default:
-    - Insomnia data directory (~/.config/Insomnia/)
-    - Insomnia export file (eg. export.json)
-    - Git repository (~/git/myproject)
+  With this tool you can test, lint, and export your Insomnia data.
+
+  Inso accepts 3 types of input:
+    Insomnia application data - will be automatically detected, or you can set --workingDir to an alternaitve application data path.
+    Insomnia export files - set --src to the file path.
+    Git repositories -  set --workingDir to the repository path.
+
+  Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
 `)
-    .option('-w, --workingDir <dir>', 'set working directory')
+    .option('-w, --workingDir <dir>', 'set working directory, defaults to current working directory, will detect a git repository or Insomnia data directory')
     .option('--src <file>', 'set the file read from, defaults to installed Insomnia data directory')
     .option('--verbose', 'show additional logs while running the command')
     .option('--ci', 'run in CI, disables all prompts')
