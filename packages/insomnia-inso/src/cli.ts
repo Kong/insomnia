@@ -204,12 +204,10 @@ export const go = (args?: string[]) => {
     });
 
   // Add script base command
-  program.command('script <script-name>', {
-    isDefault: true,
-  })
+  program.command('script <script-name>')
     .description('Run scripts defined in .insorc')
     .allowUnknownOption()
-    .action(async (scriptName: 'lint', cmd) => {
+    .action(async (scriptName: string, cmd) => {
       const commandOptions = { ...program.optsWithGlobals(), ...cmd };
       // TODO: getAbsolutePath to working directory and use it to check from config file
       const __configFile = await loadCosmiConfig(commandOptions.config);
@@ -223,9 +221,6 @@ export const go = (args?: string[]) => {
       options.ci && logger.setReporters([new BasicReporter()]);
       options.printOptions && logger.log('Loaded options', options, '\n');
 
-      // Ignore the first arg because that will be scriptName, get the rest
-      const passThroughArgs = program.args.slice(1);
-
       const scriptTask = options.__configFile?.scripts?.[scriptName];
 
       if (!scriptTask) {
@@ -238,6 +233,8 @@ export const go = (args?: string[]) => {
         return process.exit(1);
       }
 
+      // Get args after script name
+      const passThroughArgs = program.args.slice(program.args.indexOf(scriptName) + 1);
       const scriptArgs: string[] = parseArgsStringToArgv(
         `self ${scriptTask} ${passThroughArgs.join(' ')}`,
       );
@@ -245,7 +242,7 @@ export const go = (args?: string[]) => {
       logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`);
 
       program.parseAsync(scriptArgs).catch(logErrorAndExit);
-      return;
     });
+
   program.parseAsync(args || process.argv).catch(logErrorAndExit);
 };
