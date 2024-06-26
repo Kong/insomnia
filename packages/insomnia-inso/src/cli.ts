@@ -65,36 +65,6 @@ export const loadCosmiConfig = async (configFile?: string) => {
   return {};
 };
 
-interface CommandObj {
-  parent?: CommandObj;
-  opts: () => GlobalOptions;
-}
-
-export const extractCommandOptions = <T extends GlobalOptions>(cmd: CommandObj): Partial<T> => {
-  let opts: Partial<T> = {};
-  let command: CommandObj | undefined = cmd;
-
-  do {
-    // overwrite options with more specific ones
-    opts = { ...command.opts(), ...opts };
-    command = command.parent;
-  } while (command);
-
-  return opts;
-};
-
-export const getOptions = async (cmd: CommandObj, defaultOptions = {}) => {
-  const commandOptions = extractCommandOptions(cmd);
-  const { __configFile } = await loadCosmiConfig(commandOptions.config);
-
-    return {
-      ...defaultOptions,
-      ...__configFile?.options || {},
-      ...commandOptions,
-      ...(__configFile ? { __configFile } : {}),
-    };
-};
-
 export const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
   const oldConsoleLog = console.log;
 
@@ -166,9 +136,7 @@ const addScriptCommand = (originalCommand: commander.Command) => {
     .description('Run scripts defined in .insorc')
     .allowUnknownOption()
     .action(async (scriptName: 'lint', cmd) => {
-      // Load scripts
-
-      const commandOptions = extractCommandOptions(cmd);
+      const commandOptions = { ...originalCommand.optsWithGlobals(), ...cmd };
       const { __configFile } = await loadCosmiConfig(commandOptions.config);
 
       const options = {
@@ -180,7 +148,7 @@ const addScriptCommand = (originalCommand: commander.Command) => {
       options.printOptions && logger.log('Loaded options', options, '\n');
 
       // Ignore the first arg because that will be scriptName, get the rest
-      const passThroughArgs = cmd.args.slice(1);
+      const passThroughArgs = originalCommand.args.slice(1);
 
       // Find script
       const scriptTask = options.__configFile?.scripts?.[scriptName];
@@ -196,13 +164,11 @@ const addScriptCommand = (originalCommand: commander.Command) => {
         return process.exit(1);
       }
 
-      // Collect args
       const scriptArgs: string[] = parseArgsStringToArgv(
         `self ${scriptTask} ${passThroughArgs.join(' ')}`,
       );
 
-      // Print command
-      logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`); // Run
+      logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`);
 
       originalCommand.parseAsync(scriptArgs).catch(logErrorAndExit);
       return;
@@ -211,7 +177,7 @@ const addScriptCommand = (originalCommand: commander.Command) => {
 
 export const go = (args?: string[], exitOverride?: boolean) => {
   const commandCreator = (cmd?: string) => {
-    const command = new commander.Command(cmd).storeOptionsAsProperties(false);
+    const command = new commander.Command(cmd);
 
     if (exitOverride) {
       command.exitOverride();
@@ -222,12 +188,10 @@ export const go = (args?: string[], exitOverride?: boolean) => {
 
   configureLogger();
 
-  // inso
-  const cmd = commandCreator();
+  const program = commandCreator();
   const version = process.env.VERSION || packageJson.version;
 
-  // Version and description
-  cmd
+  program
     .version(version, '-v, --version')
     .description(`A CLI for Insomnia!
   With this tool you can lint, test and export your Insomnia data.
@@ -238,7 +202,7 @@ export const go = (args?: string[], exitOverride?: boolean) => {
 `);
 
   // Global options
-  cmd
+  program
     .option('-w, --workingDir <dir>', 'set working directory')
     .option('--src <file>', 'set the file read from, defaults to installed Insomnia data directory')
     .option('--verbose', 'show additional logs while running the command')
@@ -261,7 +225,7 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .option('--keepFile', 'do not delete the generated test file')
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL')
     .action(async (identifier, cmd) => {
-      const commandOptions = extractCommandOptions(cmd);
+      const commandOptions = { ...program.optsWithGlobals(), ...cmd };
       const { __configFile } = await loadCosmiConfig(commandOptions.config);
 
       const options = {
@@ -282,7 +246,7 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .command('spec [identifier]')
     .description('Lint an API Specification')
     .action(async (identifier, cmd) => {
-      const commandOptions = extractCommandOptions(cmd);
+      const commandOptions = { ...program.optsWithGlobals(), ...cmd };
       const { __configFile } = await loadCosmiConfig(commandOptions.config);
 
       const options = {
@@ -302,7 +266,7 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .option('-o, --output <path>', 'save the generated config to a file')
     .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations ', false)
     .action(async (identifier, cmd) => {
-      const commandOptions = extractCommandOptions(cmd);
+      const commandOptions = { ...program.optsWithGlobals(), ...cmd };
       const { __configFile } = await loadCosmiConfig(commandOptions.config);
 
       const options = {
@@ -315,12 +279,12 @@ export const go = (args?: string[], exitOverride?: boolean) => {
         .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
     });
 
-  cmd
+  program
     .addCommand(run)
     .addCommand(lint)
     .addCommand(exportCmd);
 
   // Add script base command
-  addScriptCommand(cmd);
-  cmd.parseAsync(args || process.argv).catch(logErrorAndExit);
+  addScriptCommand(program);
+  program.parseAsync(args || process.argv).catch(logErrorAndExit);
 };
