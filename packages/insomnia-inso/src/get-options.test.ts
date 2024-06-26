@@ -11,17 +11,15 @@ describe('loadCosmiConfig()', () => {
   it('should load .insorc-test.yaml config file in fixtures dir', async () => {
     const result = await loadCosmiConfig(path.join(fixturesDir, '.insorc-test.yaml'));
     expect(result).toEqual({
-      __configFile: {
-        options: {
-        },
-        scripts: {
-          exportSpec: 'inso export spec',
-          lintSpec: 'inso lint spec',
-        },
-        filePath: path.resolve(fixturesDir, '.insorc-test.yaml'),
+      options: {
       },
+      scripts: {
+        exportSpec: 'inso export spec',
+        lintSpec: 'inso lint spec',
+      },
+      filePath: path.resolve(fixturesDir, '.insorc-test.yaml'),
     });
-    expect(result.__configFile?.options?.shouldBeIgnored).toBe(undefined);
+    expect(result?.options?.shouldBeIgnored).toBe(undefined);
   });
 
   it('should return empty object and report error if specified config file not found', async () => {
@@ -41,11 +39,9 @@ describe('loadCosmiConfig()', () => {
   it('should return blank properties and ignore extra items if settings and scripts not found in file', async () => {
     const result = await loadCosmiConfig(path.join(fixturesDir, '.insorc-missing-properties.yaml'));
     expect(result).toEqual({
-      __configFile: {
-        options: {},
-        scripts: {},
-        filePath: path.resolve(fixturesDir, '.insorc-missing-properties.yaml'),
-      },
+      options: {},
+      scripts: {},
+      filePath: path.resolve(fixturesDir, '.insorc-missing-properties.yaml'),
     });
   });
 });

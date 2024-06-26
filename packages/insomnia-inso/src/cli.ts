@@ -38,6 +38,7 @@ export const OptionsSupportedInConfigFile: (keyof GlobalOptions)[] = [
 export const loadCosmiConfig = async (configFile?: string) => {
   try {
     const explorer = await cosmiconfig('inso');
+    // set or detect .insorc in cwd https://github.com/cosmiconfig/cosmiconfig?tab=readme-ov-file#explorersearch
     const results = configFile ? await explorer.load(configFile) : await explorer.search();
 
     if (results && !results?.isEmpty) {
@@ -52,7 +53,7 @@ export const loadCosmiConfig = async (configFile?: string) => {
         return acc;
       }, {});
 
-      return { __configFile: { options, scripts, filePath } };
+      return { options, scripts, filePath };
     }
   } catch (error) {
     // Report fatal error when loading from explicitly defined config file
@@ -152,7 +153,7 @@ export const go = (args?: string[]) => {
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL')
     .action(async (identifier, cmd) => {
       const commandOptions = { ...program.optsWithGlobals(), ...cmd };
-      const { __configFile } = await loadCosmiConfig(commandOptions.config);
+      const __configFile = await loadCosmiConfig(commandOptions.config);
 
       const options = {
         reporter: defaultReporter,
@@ -172,7 +173,7 @@ export const go = (args?: string[]) => {
     .description('Lint an API Specification')
     .action(async (identifier, cmd) => {
       const commandOptions = { ...program.optsWithGlobals(), ...cmd };
-      const { __configFile } = await loadCosmiConfig(commandOptions.config);
+      const __configFile = await loadCosmiConfig(commandOptions.config);
 
       const options = {
         ...__configFile?.options || {},
@@ -190,7 +191,7 @@ export const go = (args?: string[]) => {
     .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations ', false)
     .action(async (identifier, cmd) => {
       const commandOptions = { ...program.optsWithGlobals(), ...cmd };
-      const { __configFile } = await loadCosmiConfig(commandOptions.config);
+      const __configFile = await loadCosmiConfig(commandOptions.config);
 
       const options = {
         ...__configFile?.options || {},
@@ -211,7 +212,7 @@ export const go = (args?: string[]) => {
     .action(async (scriptName: 'lint', cmd) => {
       const commandOptions = { ...program.optsWithGlobals(), ...cmd };
       // TODO: getAbsolutePath to working directory and use it to check from config file
-      const { __configFile } = await loadCosmiConfig(commandOptions.config);
+      const __configFile = await loadCosmiConfig(commandOptions.config);
 
       const options = {
         ...__configFile?.options || {},
