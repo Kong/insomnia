@@ -166,10 +166,11 @@ jobs:
 
       - name: Upload to snapcraft (beta and stable only)
         if: ${{ !contains(github.event.inputs.version, 'alpha') }}
-        uses: snapcore/action-publish@7fe468c9de12396a9c8964af5d0dfd1d5b493bd7
+        uses: snapcore/action-publish@@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
         with:
           snap: artifacts/ubuntu-latest-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap
-          store_login: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
           release: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       - name: Upload .deb to pulp and/or cloudsmith (stable only)
