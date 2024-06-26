@@ -84,31 +84,35 @@ export const loadDb = async ({
   filterTypes,
   src,
 }: Options = {}) => {
-  let db: Database | null = null;
   const pathToSearch = getAbsolutePath({ workingDir, src });
-  // try load from git
-  db = await gitAdapter(pathToSearch, filterTypes);
-  db && logger.debug(`Data store configured from git repository at \`${pathToSearch}\``);
+  // if path to file is provided try to it is an insomnia export file
+  if (src) {
+    const exportDb = await insomniaExportAdapter(pathToSearch, filterTypes);
+    if (exportDb) {
+      logger.debug(`Data store configured from Insomnia export at \`${pathToSearch}\``);
+      return exportDb;
+    }
+  }
 
-  // try load from export file (higher priority)
-  if (!db) {
-    db = await insomniaExportAdapter(pathToSearch, filterTypes);
-    db && logger.debug(`Data store configured from Insomnia export file at \`${pathToSearch}\``);
+  // try load from git
+  const git = await gitAdapter(pathToSearch, filterTypes);
+  git && logger.debug(`Data store configured from git repository at \`${pathToSearch}\``);
+  if (git) {
+    logger.debug(`Data store configured from git repository at \`${pathToSearch}\``);
+    return git;
   }
 
   // try load from nedb
-  if (!db) {
-    db = await neDbAdapter(pathToSearch, filterTypes);
-    db && logger.debug(`Data store configured from app data directory at \`${pathToSearch}\``); // Try to load from the Designer data dir, if the Core data directory does not exist
-  } // return empty db
-
-  if (!db) {
-    logger.warn(
-      `No git, app data store or Insomnia V4 export file found at path "${pathToSearch}",
-      re-run --verbose to see tracing information`,
-    );
-    db = emptyDb();
+  const nedb = await neDbAdapter(pathToSearch, filterTypes);
+  if (nedb) {
+    logger.debug(`Data store configured from app data directory  at \`${pathToSearch}\``);
+    return nedb;
   }
 
-  return db;
+  logger.warn(
+    `No git, app data store or Insomnia V4 export file found at path "${pathToSearch}",
+      re-run --verbose to see tracing information`,
+  );
+
+  return emptyDb();
 };
