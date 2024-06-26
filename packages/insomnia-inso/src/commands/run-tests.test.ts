@@ -2,9 +2,8 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@j
 import { generate as _generate, runTestsCli as _runTestsCli } from 'insomnia-testing';
 import { MockedFunction } from 'jest-mock';
 
-import { GlobalOptions } from '../get-options';
+import { type GlobalOptions, logger } from '../cli';
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
-import { logger } from '../logger';
 import { runInsomniaTests, RunTestsOptions } from './run-tests';
 
 jest.mock('insomnia-testing');

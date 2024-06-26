@@ -1,4 +1,6 @@
 import commander from 'commander';
+import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consola';
+import { cosmiconfigSync } from 'cosmiconfig';
 import { parseArgsStringToArgv } from 'string-argv';
 
 import packageJson from '../package.json';
@@ -8,9 +10,144 @@ import type { LintSpecificationOptions } from './commands/lint-specification';
 import { lintSpecification } from './commands/lint-specification';
 import type { RunTestsOptions } from './commands/run-tests';
 import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
-import { getOptions, GlobalOptions } from './get-options';
-import { configureLogger, logger } from './logger';
 
+interface ConfigFileOptions {
+  __configFile?: {
+    options?: GlobalOptions;
+    scripts?: {
+      lint: string;
+    };
+    filePath: string;
+  };
+}
+
+export type GlobalOptions = {
+  workingDir?: string;
+  ci?: boolean;
+  verbose?: boolean;
+  printOptions?: boolean;
+  config?: string;
+  src?: string;
+} & ConfigFileOptions;
+
+export const OptionsSupportedInConfigFile: (keyof GlobalOptions)[] = [
+  'workingDir',
+  'ci',
+  'verbose',
+  'src',
+  'printOptions',
+];
+
+export const loadCosmiConfig = (configFile?: string): Partial<ConfigFileOptions> => {
+  try {
+    const explorer = cosmiconfigSync('inso');
+    const results = configFile ? explorer.load(configFile) : explorer.search();
+
+    if (results && !results?.isEmpty) {
+      const options: GlobalOptions = {};
+      OptionsSupportedInConfigFile.forEach(key => {
+        const value = results.config?.options?.[key];
+
+        if (value) {
+          options[key] = value;
+        }
+      });
+      return {
+        __configFile: {
+          options,
+          scripts: results.config?.scripts || {},
+          filePath: results.filepath,
+        },
+      };
+    }
+  } catch (error) {
+    // Report fatal error when loading from explicitly defined config file
+    if (configFile) {
+      console.log(`Could not find config file at ${configFile}.`);
+      console.error(error);
+    }
+  }
+
+  return {};
+};
+
+interface CommandObj {
+  parent?: CommandObj;
+  opts: () => GlobalOptions;
+}
+
+export const extractCommandOptions = <T extends GlobalOptions>(cmd: CommandObj): Partial<T> => {
+  let opts: Partial<T> = {};
+  let command: CommandObj | undefined = cmd;
+
+  do {
+    // overwrite options with more specific ones
+    opts = { ...command.opts(), ...opts };
+    command = command.parent;
+  } while (command);
+
+  return opts;
+};
+
+export const getOptions = <T extends Partial<GlobalOptions>>(cmd: CommandObj, defaultOptions: Partial<T> = {}): Partial<T> => {
+  const commandOptions = extractCommandOptions(cmd);
+  const { __configFile } = loadCosmiConfig(commandOptions.config);
+
+  if (__configFile) {
+    return {
+      ...defaultOptions,
+      ...(__configFile.options || {}),
+      ...commandOptions,
+      __configFile,
+    };
+  }
+
+  return {
+    ...defaultOptions,
+    ...commandOptions,
+  };
+};
+
+export const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
+  const oldConsoleLog = console.log;
+
+  console.log = () => { };
+
+  try {
+    return await callback();
+  } finally {
+    console.log = oldConsoleLog;
+  }
+};
+
+export type LogsByType = {
+  [t in logType]?: string[]
+};
+
+export type ModifiedConsola = ReturnType<typeof consola.create> & { __getLogs: () => LogsByType };
+
+const consolaLogger = consola.create({
+  reporters: [
+    new FancyReporter({
+      formatOptions: {
+        // @ts-expect-error something is wrong here, ultimately these types come from https://nodejs.org/api/util.html#util_util_inspect_object_options and `date` doesn't appear to be one of the options.
+        date: false,
+      },
+    }),
+  ],
+});
+
+(consolaLogger as ModifiedConsola).__getLogs = () => ({});
+
+export const logger = consolaLogger as ModifiedConsola;
+
+export const configureLogger = (verbose = false, ci = false) => {
+  logger.level = verbose ? LogLevel.Verbose : LogLevel.Info;
+
+  if (ci) {
+    logger.setReporters([new BasicReporter()]);
+  }
+};
 export class InsoError extends Error {
   cause?: Error | null;
 

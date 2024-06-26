@@ -1,6 +1,6 @@
 import { logType } from 'consola';
 
-import { logger, LogsByType } from '../logger';
+import { logger, LogsByType } from '../cli';
 
 // Taken from https://github.com/unjs/consola/blob/master/types/consola.d.ts#L16
 const logTypes: logType[] = [

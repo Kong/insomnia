@@ -6,11 +6,9 @@ import { DiagnosticSeverity } from '@stoplight/types';
 import fs from 'fs';
 import path from 'path';
 
+import { type GlobalOptions, InsoError, logger } from '../cli';
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
-import { InsoError } from '../errors';
-import type { GlobalOptions } from '../get-options';
-import { logger } from '../logger';
 
 export type LintSpecificationOptions = GlobalOptions;
 

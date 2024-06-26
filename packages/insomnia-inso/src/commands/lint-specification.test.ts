@@ -1,8 +1,8 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import path from 'path';
 
+import { logger } from '../cli';
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
-import { logger } from '../logger';
 import { lintSpecification } from './lint-specification';
 
 describe('lint specification', () => {

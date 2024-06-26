@@ -1,9 +1,8 @@
 import YAML from 'yaml';
 
+import { type GlobalOptions, logger } from '../cli';
 import { getAbsolutePath, loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
-import type { GlobalOptions } from '../get-options';
-import { logger } from '../logger';
 import { writeFileWithCliOptions } from '../write-file';
 
 export type ExportSpecificationOptions = GlobalOptions & {

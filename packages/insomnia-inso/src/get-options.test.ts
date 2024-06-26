@@ -2,7 +2,7 @@ import { describe, expect, it, jest } from '@jest/globals';
 import commander from 'commander';
 import path from 'path';
 
-import { extractCommandOptions, getOptions, loadCosmiConfig } from './get-options';
+import { extractCommandOptions, getOptions, loadCosmiConfig } from './cli';
 
 jest.unmock('cosmiconfig');
 

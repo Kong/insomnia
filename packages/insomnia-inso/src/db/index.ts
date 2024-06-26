@@ -1,7 +1,7 @@
 import { homedir } from 'os';
 import path from 'path';
 
-import { logger } from '../logger';
+import { logger } from '../cli';
 import gitAdapter from './adapters/git-adapter';
 import insomniaExportAdapter from './adapters/insomnia-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
