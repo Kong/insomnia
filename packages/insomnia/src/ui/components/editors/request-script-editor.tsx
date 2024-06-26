@@ -17,15 +17,15 @@ interface Props {
 }
 
 const getEnvVar = 'insomnia.environment.get("variable_name");';
-// const getGlbVar = 'insomnia.globals.get("variable_name");';
+const getGlbVar = 'insomnia.globals.get("variable_name");';
 const getVar = 'insomnia.variables.get("variable_name");';
 const getCollectionVar = 'insomnia.collectionVariables.get("variable_name");';
 const setEnvVar = 'insomnia.environment.set("variable_name", "variable_value");';
-// const setGlbVar = 'insomnia.globals.set("variable_name", "variable_value");';
+const setGlbVar = 'insomnia.globals.set("variable_name", "variable_value");';
 const setVar = 'insomnia.variables.set("variable_name", "variable_value");';
 const setCollectionVar = 'insomnia.collectionVariables.set("variable_name", "variable_value");';
 const unsetEnvVar = 'insomnia.environment.unset("variable_name");';
-// const unsetGlbVar = 'insomnia.globals.unset("variable_name");';
+const unsetGlbVar = 'insomnia.globals.unset("variable_name");';
 const unsetCollectionVar = 'insomnia.collectionVariables.unset("variable_name");';
 const sendReq =
   `const resp = await new Promise((resolve, reject) => {
@@ -172,11 +172,11 @@ const variableSnippetsMenu: SnippetMenuItem = {
           'name': 'Get an environment variable',
           'snippet': getEnvVar,
         },
-        // {
-        //   "id": "get-glb-var",
-        //   "name": "Get a global variable",
-        //   "snippet": getGlbVar,
-        // },
+        {
+          'id': 'get-glb-var',
+          'name': 'Get a global variable',
+          'snippet': getGlbVar,
+        },
         {
           'id': 'get-var',
           'name': 'Get a variable',
@@ -198,11 +198,11 @@ const variableSnippetsMenu: SnippetMenuItem = {
           'name': 'Set an environment variable',
           'snippet': setEnvVar,
         },
-        // {
-        //   "id": "set-glb-var",
-        //   "name": "Set a global variable",
-        //   "snippet": setGlbVar,
-        // },
+        {
+          'id': 'set-glb-var',
+          'name': 'Set a global variable',
+          'snippet': setGlbVar,
+        },
         {
           'id': 'set-var',
           'name': 'Set a variable',
@@ -224,11 +224,11 @@ const variableSnippetsMenu: SnippetMenuItem = {
           'name': 'Clear an environment variable',
           'snippet': unsetEnvVar,
         },
-        // {
-        //   "id": "unset-glb-var",
-        //   "name": "Clear a global variable",
-        //   "snippet": unsetGlbVar,
-        // },
+        {
+          'id': 'unset-glb-var',
+          'name': 'Clear a global variable',
+          'snippet': unsetGlbVar,
+        },
         {
           'id': 'unset-collection-var',
           'name': 'Clear a collection variable',
