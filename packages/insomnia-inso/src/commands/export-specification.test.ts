@@ -1,8 +1,8 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { MockedFunction } from 'jest-mock';
 
+import { logger } from '../cli';
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
-import { logger } from '../logger';
 import { writeFileWithCliOptions as _writeFileWithCliOptions } from '../write-file';
 import { exportSpecification } from './export-specification';
 
@@ -84,6 +84,7 @@ describe('exportSpecification()', () => {
       workingDir: 'src/db/fixtures/git-repo',
     });
     expect(result).toBe(false);
-    expect(logger.__getLogs().fatal).toEqual(['Specification not found.']);
+    const shouldStartWith = logger.__getLogs().fatal?.[0].startsWith('Specification not found at:');
+    expect(shouldStartWith).toBe(true);
   });
 });

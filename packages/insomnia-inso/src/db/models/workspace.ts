@@ -1,4 +1,4 @@
-import { logger } from '../../logger';
+import { logger } from '../../cli';
 import type { Database } from '../index';
 import { ensureSingleOrNone, matchIdIsh } from './util';
 

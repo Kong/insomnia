@@ -2,8 +2,7 @@ import { ProcessEnvOptions, spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
-import { getVersion } from '../util';
-
+import packageJson from '../../package.json';
 const prefixPkgArtifacts = (msg: string) => `[pkg-inso-artifacts] ${msg}`;
 
 const { platform } = process;
@@ -12,7 +11,7 @@ const isLinux = () => platform === 'linux';
 const isWindows = () => platform === 'win32';
 
 const getArchiveName = () => {
-  const version = getVersion();
+  const version = process.env.VERSION || packageJson.version;
   if (isMac()) {
     return `inso-macos-${version}.zip`;
   }

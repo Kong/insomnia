@@ -4,12 +4,18 @@ exports[`Snapshot for "inso --help" 1`] = `
 "Usage: inso [options] [command]
 
 A CLI for Insomnia!
+  With this tool you can lint, test and export your Insomnia data.
+  It can read from three data sources, but will use local Insomnia application data as a default:
+    - Insomnia data directory (~/.config/Insomnia/)
+    - Insomnia export file (eg. export.json)
+    - Git repository (~/git/myproject)
+
 
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  --src <file|dir>        set the target source file or directory (git path or
-                          insomnia db path)
+  --src <file>            set the file read from, defaults to installed
+                          Insomnia data directory
   --verbose               show additional logs while running the command
   --ci                    run in CI, disables all prompts
   --config <path>         path to configuration file containing above options
@@ -20,7 +26,7 @@ Commands:
   run                     Execution utilities
   lint                    Linting utilities
   export                  Export data from insomnia models
-  script <name>           Run scripts defined in .insorc
+  script <script-name>    Run scripts defined in .insorc
   help [command]          display help for command"
 `;
 
@@ -28,12 +34,18 @@ exports[`Snapshot for "inso -h" 1`] = `
 "Usage: inso [options] [command]
 
 A CLI for Insomnia!
+  With this tool you can lint, test and export your Insomnia data.
+  It can read from three data sources, but will use local Insomnia application data as a default:
+    - Insomnia data directory (~/.config/Insomnia/)
+    - Insomnia export file (eg. export.json)
+    - Git repository (~/git/myproject)
+
 
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  --src <file|dir>        set the target source file or directory (git path or
-                          insomnia db path)
+  --src <file>            set the file read from, defaults to installed
+                          Insomnia data directory
   --verbose               show additional logs while running the command
   --ci                    run in CI, disables all prompts
   --config <path>         path to configuration file containing above options
@@ -44,7 +56,7 @@ Commands:
   run                     Execution utilities
   lint                    Linting utilities
   export                  Export data from insomnia models
-  script <name>           Run scripts defined in .insorc
+  script <script-name>    Run scripts defined in .insorc
   help [command]          display help for command"
 `;
 
@@ -76,12 +88,18 @@ exports[`Snapshot for "inso generate -h" 1`] = `
 "Usage: inso [options] [command]
 
 A CLI for Insomnia!
+  With this tool you can lint, test and export your Insomnia data.
+  It can read from three data sources, but will use local Insomnia application data as a default:
+    - Insomnia data directory (~/.config/Insomnia/)
+    - Insomnia export file (eg. export.json)
+    - Git repository (~/git/myproject)
+
 
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  --src <file|dir>        set the target source file or directory (git path or
-                          insomnia db path)
+  --src <file>            set the file read from, defaults to installed
+                          Insomnia data directory
   --verbose               show additional logs while running the command
   --ci                    run in CI, disables all prompts
   --config <path>         path to configuration file containing above options
@@ -92,7 +110,7 @@ Commands:
   run                     Execution utilities
   lint                    Linting utilities
   export                  Export data from insomnia models
-  script <name>           Run scripts defined in .insorc
+  script <script-name>    Run scripts defined in .insorc
   help [command]          display help for command"
 `;
 
@@ -100,12 +118,18 @@ exports[`Snapshot for "inso help" 1`] = `
 "Usage: inso [options] [command]
 
 A CLI for Insomnia!
+  With this tool you can lint, test and export your Insomnia data.
+  It can read from three data sources, but will use local Insomnia application data as a default:
+    - Insomnia data directory (~/.config/Insomnia/)
+    - Insomnia export file (eg. export.json)
+    - Git repository (~/git/myproject)
+
 
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  --src <file|dir>        set the target source file or directory (git path or
-                          insomnia db path)
+  --src <file>            set the file read from, defaults to installed
+                          Insomnia data directory
   --verbose               show additional logs while running the command
   --ci                    run in CI, disables all prompts
   --config <path>         path to configuration file containing above options
@@ -116,7 +140,7 @@ Commands:
   run                     Execution utilities
   lint                    Linting utilities
   export                  Export data from insomnia models
-  script <name>           Run scripts defined in .insorc
+  script <script-name>    Run scripts defined in .insorc
   help [command]          display help for command"
 `;
 
