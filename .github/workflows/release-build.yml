@@ -66,6 +66,7 @@ jobs:
       - name: Install packages
         run: npm ci
 
+      # If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
       - name: Package app (MacOS only)
         if: matrix.os == 'macos-13'
         shell: bash

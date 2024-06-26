@@ -62,6 +62,7 @@ const config = {
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,
     },
+    // If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
     notarize: {
       teamId: 'FX44YY62GV',
     },
