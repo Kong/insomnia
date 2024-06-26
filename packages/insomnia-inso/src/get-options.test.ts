@@ -35,12 +35,10 @@ describe('loadCosmiConfig()', () => {
     expect(result).toEqual({
       __configFile: {
         options: {
-          src: 'configFile',
-          workingDir: 'workingDir',
-          ci: true,
+          src: 'packages/insomnia-inso/src/db/fixtures/git-repo-malformed-spec',
         },
         scripts: {
-          lint: 'inso lint spec',
+          lint2: 'inso lint spec',
         },
         filePath: path.resolve(fixturesDir, '.insorc.yaml'),
       },
@@ -118,19 +116,15 @@ describe('getOptions', () => {
     };
     const result = getOptions(commandOptions, defaultOptions);
     expect(result).toEqual({
-      src: 'configFile',
-      workingDir: 'workingDir',
-      ci: true,
+      src: 'packages/insomnia-inso/src/db/fixtures/git-repo-malformed-spec',
       anotherDefault: '0',
       config: path.join(fixturesDir, '.insorc.yaml'),
       __configFile: {
         options: {
-          src: 'configFile',
-          workingDir: 'workingDir',
-          ci: true,
+          src: 'packages/insomnia-inso/src/db/fixtures/git-repo-malformed-spec',
         },
         scripts: {
-          lint: 'inso lint spec',
+          lint2: 'inso lint spec',
         },
         filePath: path.resolve(fixturesDir, '.insorc.yaml'),
       },

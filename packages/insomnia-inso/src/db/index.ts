@@ -71,41 +71,40 @@ export const getDefaultProductName = (): string => {
 
   return name;
 };
-
+// Given a working Directory and src file, return the absolute path or fallback to insomnia app data directory
+export const getAbsolutePath = ({ workingDir, src }: { workingDir?: string; src?: string }) => {
+  const hasWorkingDirOrSrc = workingDir || src;
+  if (!hasWorkingDirOrSrc) {
+    return getAppDataDir(getDefaultProductName());
+  }
+  return workingDir ? path.resolve(workingDir, src || '') : path.resolve('.', src || '');
+};
 export const loadDb = async ({
   workingDir,
   filterTypes,
   src,
 }: Options = {}) => {
   let db: Database | null = null;
-  let resolvedDirectory;
-  if (workingDir) {
-    resolvedDirectory = path.resolve(workingDir, src || '');
-  }
-  if (!workingDir && src) {
-    resolvedDirectory = path.resolve('.', src);
-  }
-  const specifiedDirectory = resolvedDirectory || '.';
-  const fallbackDirectory = resolvedDirectory || getAppDataDir(getDefaultProductName());
+  const pathToSearch = getAbsolutePath({ workingDir, src });
   // try load from git
-  db = await gitAdapter(specifiedDirectory, filterTypes);
-  db && logger.debug(`Data store configured from git repository at \`${specifiedDirectory}\``);
+  db = await gitAdapter(pathToSearch, filterTypes);
+  db && logger.debug(`Data store configured from git repository at \`${pathToSearch}\``);
 
   // try load from export file (higher priority)
   if (!db) {
-    db = await insomniaExportAdapter(specifiedDirectory, filterTypes);
-    db && logger.debug(`Data store configured from Insomnia export file at \`${specifiedDirectory}\``);
+    db = await insomniaExportAdapter(pathToSearch, filterTypes);
+    db && logger.debug(`Data store configured from Insomnia export file at \`${pathToSearch}\``);
   }
 
   // try load from nedb
   if (!db) {
-    db = await neDbAdapter(fallbackDirectory, filterTypes);
-    db && logger.debug(`Data store configured from app data directory at \`${fallbackDirectory}\``); // Try to load from the Designer data dir, if the Core data directory does not exist
+    db = await neDbAdapter(pathToSearch, filterTypes);
+    db && logger.debug(`Data store configured from app data directory at \`${pathToSearch}\``); // Try to load from the Designer data dir, if the Core data directory does not exist
   } // return empty db
 
   if (!db) {
     logger.warn(
-      `No git, app data store or Insomnia V4 export file found at path "${specifiedDirectory} or ${fallbackDirectory}",
+      `No git, app data store or Insomnia V4 export file found at path "${pathToSearch}",
       re-run --verbose to see tracing information`,
     );
     db = emptyDb();

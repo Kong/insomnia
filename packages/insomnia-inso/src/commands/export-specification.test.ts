@@ -84,6 +84,7 @@ describe('exportSpecification()', () => {
       workingDir: 'src/db/fixtures/git-repo',
     });
     expect(result).toBe(false);
-    expect(logger.__getLogs().fatal).toEqual(['Specification not found.']);
+    const shouldStartWith = logger.__getLogs().fatal?.[0].startsWith('Specification not found at:');
+    expect(shouldStartWith).toBe(true);
   });
 });

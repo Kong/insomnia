@@ -119,6 +119,7 @@ const addScriptCommand = (originalCommand: commander.Command) => {
       logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`); // Run
 
       runWithArgs(originalCommand, scriptArgs);
+      return;
     });
 };
 

@@ -1,6 +1,6 @@
 import YAML from 'yaml';
 
-import { loadDb } from '../db';
+import { getAbsolutePath, loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
 import type { GlobalOptions } from '../get-options';
 import { logger } from '../logger';
@@ -33,7 +33,8 @@ export async function exportSpecification(
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
 
   if (!specFromDb) {
-    logger.fatal('Specification not found at ' + src + ',' + workingDir);
+    const pathToSearch = getAbsolutePath({ workingDir, src });
+    logger.fatal('Specification not found at: ' + pathToSearch);
     return false;
   }
 
