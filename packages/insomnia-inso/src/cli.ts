@@ -1,6 +1,7 @@
 import commander from 'commander';
 import { parseArgsStringToArgv } from 'string-argv';
 
+import packageJson from '../package.json';
 import type { ExportSpecificationOptions } from './commands/export-specification';
 import { exportSpecification } from './commands/export-specification';
 import type { LintSpecificationOptions } from './commands/lint-specification';
@@ -9,7 +10,36 @@ import type { RunTestsOptions } from './commands/run-tests';
 import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
 import { getOptions, GlobalOptions } from './get-options';
 import { configureLogger, logger } from './logger';
-import { exit, getVersion, logErrorExit1 } from './util';
+
+export class InsoError extends Error {
+  cause?: Error | null;
+
+  constructor(message: string, cause?: Error) {
+    super(message);
+    this.name = 'InsoError';
+    this.cause = cause;
+  }
+}
+
+export const handleError = (err?: Error) => {
+  if (err instanceof InsoError) {
+    logger.fatal(err.message);
+    err.cause && logger.fatal(err.cause);
+  } else if (err) {
+    logger.fatal(err);
+  }
+
+  logger.info('To view tracing information, re-run `inso` with `--verbose`');
+};
+
+export const logErrorExit1 = (err?: Error) => {
+  handleError(err);
+  process.exit(1);
+};
+
+export const exit = async (result: Promise<boolean>): Promise<void> => {
+  return result.then(r => process.exit(r ? 0 : 1)).catch(logErrorExit1);
+};
 
 const prepareCommand = (options: Partial<GlobalOptions>) => {
   configureLogger(options.verbose, options.ci);
@@ -138,10 +168,11 @@ export const go = (args?: string[], exitOverride?: boolean) => {
 
   // inso
   const cmd = commandCreator();
+  const version = process.env.VERSION || packageJson.version;
 
   // Version and description
   cmd
-    .version(getVersion(), '-v, --version')
+    .version(version, '-v, --version')
     .description(`A CLI for Insomnia!
   With this tool you can lint, test and export your Insomnia data.
   It can read from three data sources, but will use local Insomnia application data as a default:

@@ -3,7 +3,6 @@ import commander from 'commander';
 import path from 'path';
 
 import { extractCommandOptions, getOptions, loadCosmiConfig } from './get-options';
-import { noop } from './util';
 
 jest.unmock('cosmiconfig');
 
@@ -47,8 +46,8 @@ describe('loadCosmiConfig()', () => {
   });
 
   it('should return empty object and report error if specified config file not found', () => {
-    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(noop);
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(noop);
+    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
     const result = loadCosmiConfig('not-found.yaml');
     expect(result).toEqual({});
     expect(consoleLogSpy).toHaveBeenCalledWith('Could not find config file at not-found.yaml.');
@@ -132,8 +131,8 @@ describe('getOptions', () => {
   });
 
   it('should print error to console if config file not found', () => {
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(noop);
-    const errSpy = jest.spyOn(console, 'error').mockImplementation(noop);
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
+    const errSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
     const configFilePath = path.join(fixturesDir, '.insorc-not-found.yaml');
     // Will also load src/fixtures/.insorc.yaml
     const commandOptions = {
