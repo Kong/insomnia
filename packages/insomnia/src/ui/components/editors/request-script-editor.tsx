@@ -58,7 +58,7 @@ const updateRequestAuth =
   'bearer'
 );`;
 const requireAModule = "const atob = require('atob');";
-const delay = 'new Promise((resolve)=>setTimeout(resolve, 1000));';
+const delay = 'await new Promise((resolve) => setTimeout(resolve, 1000));';
 
 const getStatusCode = 'const statusCode = insomnia.response.code;';
 const getStatusMsg = 'const status = insomnia.response.status;';
