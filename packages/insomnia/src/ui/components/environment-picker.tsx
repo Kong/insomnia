@@ -46,7 +46,7 @@ export const EnvironmentPicker = ({
   const activeBaseEnvironment = baseEnvironment;
   const activeSubEnvironment = subEnvironments.find(e => e._id === activeEnvironment._id);
 
-  const selectedEnvironments = [activeGlobalBaseEnvironment, activeGlobalSubEnvironment, activeBaseEnvironment, activeSubEnvironment].filter(isNotNullOrUndefined).map((environment, index) => ({ ...environment, id: environment._id, level: index + 1 }));
+  const selectedEnvironments = [activeGlobalBaseEnvironment, activeGlobalSubEnvironment ? { ...activeGlobalSubEnvironment, workspaceName: activeGlobalBaseEnvironment?.workspaceName } : undefined, activeBaseEnvironment, activeSubEnvironment].filter(isNotNullOrUndefined).map((environment, index) => ({ ...environment, id: environment._id, level: index + 1 }));
 
   const navigate = useNavigate();
 
@@ -59,7 +59,7 @@ export const EnvironmentPicker = ({
         <span className='truncate'>{activeGlobalEnvironment?._id || activeEnvironment._id ? 'Manage' : 'Add'} Environments</span>
       </Button>
       <Popover className="min-w-max max-h-[90vh] flex flex-col !z-10" placement='bottom start' offset={8}>
-        <Dialog className="border h-full w-full grid grid-flow-col  auto-cols-[min(250px,calc(45vw))] overflow-hidden divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] bg-[--color-bg] shadow-lg rounded-md focus:outline-none">
+        <Dialog className="border h-full w-full grid grid-flow-col [grid-auto-columns:min(260px,calc(40vw))_min(340px,calc(50vw))] overflow-hidden divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] bg-[--color-bg] shadow-lg rounded-md focus:outline-none">
           <div className='relative w-full h-full flex flex-col overflow-hidden flex-1'>
             <div className='relative w-full h-full flex flex-col overflow-hidden flex-1'>
               <Heading className='text-sm flex-shrink-0 h-[--line-height-sm] font-bold text-[--hl] px-3 py-1 flex items-center gap-2 justify-between'>
@@ -165,16 +165,16 @@ export const EnvironmentPicker = ({
 
                   globalEnvironmentListBox.current?.focus();
                 }}
-                defaultInputValue={selectedGlobalBaseEnvironment?.workspaceName || selectedGlobalBaseEnvironment?.name || ''}
+                defaultInputValue={selectedGlobalBaseEnvironment?.workspaceName || selectedGlobalBaseEnvironment?.name || 'No Global Environment'}
                 selectedKey={selectedGlobalBaseEnvironmentId}
-                defaultItems={[...globalBaseEnvironments.map(baseEnv => {
+                defaultItems={[{ id: '', icon: 'cancel', name: 'No Global Environment', textValue: 'No Global Environment' }, ...globalBaseEnvironments.map(baseEnv => {
                   return {
                     id: baseEnv._id,
                     icon: 'code',
                     name: baseEnv.workspaceName || baseEnv.name,
                     textValue: baseEnv.workspaceName || baseEnv.name,
                   };
-                }), { id: '', icon: 'cancel', name: 'No Global Environment', textValue: 'No Global Environment' }]}
+                })]}
               >
                 <div className='px-2 mx-2 my-2 flex items-center gap-2 group rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors'>
                   <Input aria-label='Global Environment' placeholder='Choose a global environment' className="py-1 placeholder:italic w-full pl-2 pr-7 " />
@@ -256,7 +256,7 @@ export const EnvironmentPicker = ({
               <span>Current selections ({selectedEnvironments.length})</span>
             </Heading>
             <ListBox
-              aria-label='Select a Global Environment'
+              aria-label='Current selection of environments'
               selectionMode='none'
               disallowEmptySelection
               key={activeGlobalEnvironment?._id}
@@ -308,11 +308,11 @@ export const EnvironmentPicker = ({
                 }
 
               }}
-              className="select-none empty:p-0 text-sm min-w-max p-2 flex flex-col overflow-y-auto focus:outline-none"
+              className="select-none w-full empty:p-0 text-sm p-2 flex flex-col overflow-y-auto overflow-x-hidden focus:outline-none"
             >
               {item => (
                 <ListBoxItem
-                  className={'flex gap-2 pr-1 aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] rounded focus:bg-[--hl-xs] focus:outline-none transition-colors'}
+                  className={'flex gap-2 pr-1 overflow-hidden aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] rounded focus:bg-[--hl-xs] focus:outline-none transition-colors'}
                   style={{
                     paddingLeft: `${item.level * 8}px`,
                   }}
@@ -320,6 +320,7 @@ export const EnvironmentPicker = ({
                   {({ isDisabled }) => (
                     <Fragment>
                       <span
+                        className='flex-shrink-0'
                         style={{
                           borderColor: item.color ?? 'var(--color-font)',
                         }}
@@ -332,9 +333,12 @@ export const EnvironmentPicker = ({
                           }}
                         />
                       </span>
-                      <span className='flex-1 truncate'>
+                      <span title={item.name} className='flex-grow truncate'>
                         {item.name}
                       </span>
+                      {'workspaceName' in item && item.workspaceName && <span title={item.workspaceName} className='flex-shrink truncate text-xs text-[--hl]'>
+                        {item.workspaceName}
+                      </span>}
                       {!isDisabled && <div className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] outline-none hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                         <Icon icon="minus-circle" />
                       </div>}
