@@ -16,8 +16,9 @@ import { CodePromptModal } from '../modals/code-prompt-modal';
 
 function isCodeMirrorAutocompleteActive() {
   const codeMirrorAutocomplete = document.querySelector('.CodeMirror-hints');
+  const isFocusedElementInsideCodeMirrorAutoComplete = document.activeElement?.closest('.CodeMirror-hints');
 
-  return codeMirrorAutocomplete && document.body.contains(codeMirrorAutocomplete);
+  return isFocusedElementInsideCodeMirrorAutoComplete && codeMirrorAutocomplete && document.body.contains(codeMirrorAutocomplete);
 }
 
 const EditableOneLineEditorModal = ({
@@ -43,15 +44,14 @@ const EditableOneLineEditorModal = ({
   const [buttonDimensions, setButtonDimensions] = useState<{
     width: number;
     height: number;
-    top: number;
     left: number;
   } | null>(null);
 
   const onResize = useCallback(() => {
     if (buttonRef.current) {
-      const { top, left, height, width } = buttonRef.current.getBoundingClientRect();
+      const { left, height, width } = buttonRef.current.getBoundingClientRect();
 
-      setButtonDimensions({ width, height, top, left });
+      setButtonDimensions({ width, height, left });
     }
   }, [buttonRef]);
 
@@ -80,9 +80,6 @@ const EditableOneLineEditorModal = ({
     <DialogTrigger
       isOpen={isOpen}
       onOpenChange={(isOpen => {
-        if (isCodeMirrorAutocompleteActive()) {
-          return;
-        }
         setIsOpen(isOpen);
         if (!isOpen) {
           onChange(value);
@@ -106,13 +103,19 @@ const EditableOneLineEditorModal = ({
         isNonModal
         offset={0}
         placement='start top'
+        shouldCloseOnInteractOutside={() => {
+          if (isCodeMirrorAutocompleteActive()) {
+            return false;
+          }
+
+          return true;
+        }}
         style={{
           '--trigger-width': buttonDimensions?.width ? `${buttonDimensions.width}px` : '0',
           '--trigger-height': buttonDimensions?.height ? `${buttonDimensions.height}px` : '0',
-          '--trigger-top': buttonDimensions?.top ? `${buttonDimensions.top}px` : '0',
           '--trigger-left': buttonDimensions?.left ? `${buttonDimensions.left}px` : '0',
         } as React.CSSProperties}
-        className="transform text-[--color-font] px-2 !z-10 w-[--trigger-width] h-[--trigger-height] top-[--trigger-top] left-[--trigger-left] flex relative overflow-y-auto focus:outline-none"
+        className="transform text-[--color-font] px-2 !z-10 w-[--trigger-width] h-[--trigger-height] !left-[--trigger-left] flex relative overflow-y-auto focus:outline-none"
       >
         <Dialog className='w-full outline-none'>
           <FocusScope autoFocus>
