@@ -1,48 +1,25 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import commander from 'commander';
 import path from 'path';
 
-import { extractCommandOptions, getOptions, loadCosmiConfig } from './cli';
+import { loadCosmiConfig } from './cli';
 
 jest.unmock('cosmiconfig');
 
 const fixturesDir = path.join('src', 'fixtures');
 
-describe('extractCommandOptions()', () => {
-  it('should combine options from all commands into one object', () => {
-    const command = new commander.Command('command').exitOverride();
-    command
-      .command('subCommand')
-      .option('-s, --subCmd')
-      .action(cmd => {
-        expect(extractCommandOptions(cmd)).toEqual({
-          global: true,
-          subCmd: true,
-        });
-      });
-    const parent = new commander.Command()
-      .exitOverride()
-      .option('-g, --global')
-      .addCommand(command);
-    parent.parse('self inso command subCommand --global --subCmd'.split(' '));
-  });
-});
-
 describe('loadCosmiConfig()', () => {
   it('should load .insorc-test.yaml config file in fixtures dir', async () => {
     const result = await loadCosmiConfig(path.join(fixturesDir, '.insorc-test.yaml'));
     expect(result).toEqual({
-      __configFile: {
-        options: {
-        },
-        scripts: {
-          exportSpec: 'inso export spec',
-          lintSpec: 'inso lint spec',
-        },
-        filePath: path.resolve(fixturesDir, '.insorc-test.yaml'),
+      options: {
       },
+      scripts: {
+        exportSpec: 'inso export spec',
+        lintSpec: 'inso lint spec',
+      },
+      filePath: path.resolve(fixturesDir, '.insorc-test.yaml'),
     });
-    expect(result.__configFile?.options?.shouldBeIgnored).toBe(undefined);
+    expect(result?.options?.shouldBeIgnored).toBe(undefined);
   });
 
   it('should return empty object and report error if specified config file not found', async () => {
@@ -62,95 +39,9 @@ describe('loadCosmiConfig()', () => {
   it('should return blank properties and ignore extra items if settings and scripts not found in file', async () => {
     const result = await loadCosmiConfig(path.join(fixturesDir, '.insorc-missing-properties.yaml'));
     expect(result).toEqual({
-      __configFile: {
-        options: {},
-        scripts: {},
-        filePath: path.resolve(fixturesDir, '.insorc-missing-properties.yaml'),
-      },
+      options: {},
+      scripts: {},
+      filePath: path.resolve(fixturesDir, '.insorc-missing-properties.yaml'),
     });
-  });
-});
-
-describe('getOptions', () => {
-  it('should load default options', async () => {
-    const commandOptions = {
-      opts: () => ({}),
-    };
-    const defaultOptions = {
-      src: 'default',
-    };
-    const result = await getOptions(commandOptions, defaultOptions);
-    expect(result).toEqual({
-      src: 'default',
-    });
-  });
-
-  it('should combine default options with command options, favouring command', async () => {
-    const commandOptions = {
-      opts: () => ({
-        src: 'command',
-      }),
-    };
-    const defaultOptions = {
-      src: 'default',
-      anotherDefault: '0',
-    };
-    const result = await getOptions(commandOptions, defaultOptions);
-    expect(result).toEqual({
-      src: 'command',
-      anotherDefault: '0',
-    });
-  });
-
-  it('should combine config file options with default options, favouring config file', async () => {
-  // Will also load src/fixtures/.insorc-test.yaml
-    const commandOptions = {
-      opts: () => ({
-        config: path.join(fixturesDir, '.insorc-test.yaml'),
-      }),
-    };
-    const defaultOptions = {
-      src: 'defaultOption',
-      anotherDefault: '0',
-    };
-    const result = await getOptions(commandOptions, defaultOptions);
-    expect(result).toEqual({
-      src: 'defaultOption',
-      anotherDefault: '0',
-      config: path.join(fixturesDir, '.insorc-test.yaml'),
-      __configFile: {
-        options: {
-        },
-        scripts: {
-          exportSpec: 'inso export spec',
-          lintSpec: 'inso lint spec',
-        },
-        filePath: path.resolve(fixturesDir, '.insorc-test.yaml'),
-      },
-    });
-  });
-
-  it('should print error to console if config file not found', async () => {
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
-    const errSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
-    const configFilePath = path.join(fixturesDir, '.insorc-not-found.yaml');
-    // Will also load src/fixtures/.insorc-test.yaml
-    const commandOptions = {
-      opts: () => ({
-        config: configFilePath,
-      }),
-    };
-    const defaultOptions = {
-      src: 'default',
-      anotherDefault: '0',
-    };
-    const result = await getOptions(commandOptions, defaultOptions);
-    expect(result).toEqual({
-      src: 'default',
-      anotherDefault: '0',
-      config: configFilePath,
-    });
-    expect(logSpy).toHaveBeenCalledWith(`Could not find config file at ${configFilePath}.`);
-    expect(errSpy).toHaveBeenCalled();
   });
 });

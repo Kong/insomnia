@@ -3,6 +3,7 @@ options:
   workingDir: packages/insomnia-inso/src/db/fixtures/insomnia-v4
   src: insomnia_v4.json
   ci: false
+  verbose: true
 scripts:
   lintSpecPrompt: inso lint spec
   lintSpecKey: inso lint spec spc_3b2850

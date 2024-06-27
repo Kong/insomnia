@@ -10,16 +10,6 @@ export type ExportSpecificationOptions = GlobalOptions & {
   skipAnnotations?: boolean;
 };
 
-function  deleteField(obj: any, field: any): void {
-  Object.keys(obj).forEach(key => {
-    if (key.startsWith(field)) {
-      delete obj[key];
-    } else if (typeof obj[key] === 'object') {
-      deleteField(obj[key], field);
-    }
-  });
-}
-
 export async function exportSpecification(
   identifier: string | null | undefined,
   { output, skipAnnotations, workingDir, ci, src }: ExportSpecificationOptions,
@@ -37,19 +27,34 @@ export async function exportSpecification(
     return false;
   }
 
-  let contents = specFromDb.contents;
-  if (skipAnnotations) {
-    const yamlObj = YAML.parse(contents);
-    deleteField(yamlObj, 'x-kong-');
-    contents = YAML.stringify(yamlObj);
+  if (!skipAnnotations) {
+    if (!output) {
+      logger.log(specFromDb.contents);
+      return true;
+    }
+    const outputPath = await writeFileWithCliOptions(output, specFromDb.contents, workingDir);
+    logger.log(`Specification exported to "${outputPath}".`);
+    return true;
   }
 
-  if (output) {
-    const outputPath = await writeFileWithCliOptions(output, contents, workingDir);
-    logger.log(`Specification exported to "${outputPath}".`);
-  } else {
-    logger.log(contents);
+  const recursiveDeleteKey = (obj: any) => {
+    Object.keys(obj).forEach(key => {
+      if (key.startsWith('x-kong-')) {
+        delete obj[key];
+      } else if (typeof obj[key] === 'object') {
+        recursiveDeleteKey(obj[key]);
+      }
+    });
+    return obj;
+  };
+  const cleaned = YAML.stringify(recursiveDeleteKey(YAML.parse(specFromDb.contents)));
+  logger.debug('Removed keys starting with x-kong-');
+  if (!output) {
+    logger.log(cleaned);
+    return true;
   }
+  const outputPath = await writeFileWithCliOptions(output, cleaned, workingDir);
+  logger.log(`Specification exported to "${outputPath}".`);
 
   return true;
 }

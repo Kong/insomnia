@@ -77,7 +77,7 @@ export const getAbsolutePath = ({ workingDir, src }: { workingDir?: string; src?
   if (!hasWorkingDirOrSrc) {
     return getAppDataDir(getDefaultProductName());
   }
-  return workingDir ? path.resolve(workingDir, src || '') : path.resolve('.', src || '');
+  return workingDir ? path.resolve(workingDir, src || '') : path.resolve(process.cwd(), src || '');
 };
 export const loadDb = async ({
   workingDir,

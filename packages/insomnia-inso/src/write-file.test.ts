@@ -42,13 +42,13 @@ describe('writeFileWithCliOptions', () => {
     const contents = 'contents';
     const workingDir = 'working/dir';
     const promise = writeFileWithCliOptions(output, contents, workingDir);
-    await expect(promise).resolves.toBe(path.normalize('working/dir/file.yaml'));
+    await expect(promise).resolves.toBe(path.resolve(process.cwd(), 'working/dir/file.yaml'));
   });
   it('should ensure the output directory exists', async () => {
     const output = 'output/dir/file.yaml';
     const contents = 'contents';
     const workingDir = 'working/dir';
     const result = await writeFileWithCliOptions(output, contents, workingDir);
-    expect(result).toEqual(path.normalize('working/dir/output/dir/file.yaml'));
+    expect(result).toEqual(path.resolve(process.cwd(), 'working/dir/output/dir/file.yaml'));
   });
 });
