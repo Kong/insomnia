@@ -5,6 +5,7 @@ export enum SegmentEvent {
   dataImport = 'Data Imported',
   documentCreate = 'Document Created',
   mockCreate = 'Mock Created',
+  environmentWorkspaceCreate = 'Environment Workspace Created',
   loginSuccess = 'Login Success',
   inviteTrigger = 'Invite Triggered From App',
   exportAllCollections = 'Exported All Collections',
