@@ -1,0 +1,11 @@
+options:
+  # loading data from an git repo
+  workingDir: packages/insomnia-inso/src/db/fixtures/git-repo-malformed-spec
+  ci: false
+  verbose: true
+scripts:
+  lintSpecPrompt: inso lint spec
+  lintSpecKey: inso lint spec spc_3b2850
+  lintSpecName: inso lint spec "Imported Workspace"
+  exportSpec: inso export spec
+  runTest: inso run test

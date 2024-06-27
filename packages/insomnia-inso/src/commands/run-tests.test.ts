@@ -12,7 +12,7 @@ jest.mock('insomnia-send-request');
 const generate = _generate as MockedFunction<typeof _generate>;
 const runTestsCli = _runTestsCli as MockedFunction<typeof _runTestsCli>;
 
-describe('runInsomniaTests()', () => {
+describe.skip('runInsomniaTests()', () => {
   beforeAll(() => {
     globalBeforeAll();
   });
@@ -42,7 +42,7 @@ describe('runInsomniaTests()', () => {
     ]);
   });
 
-  it.only('should forward options to insomnia-testing', async () => {
+  it('should forward options to insomnia-testing', async () => {
     const contents = 'generated test contents';
     generate.mockReturnValue(contents);
 

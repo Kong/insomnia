@@ -1,12 +1,15 @@
 import * as commander from 'commander';
 import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consola';
 import { cosmiconfig } from 'cosmiconfig';
+import fs from 'fs';
 import { parseArgsStringToArgv } from 'string-argv';
 
 import packageJson from '../package.json';
-import { exportSpecification } from './commands/export-specification';
-import { lintSpecification } from './commands/lint-specification';
+import { exportSpecification, writeFileWithCliOptions } from './commands/export-specification';
+import { getRuleSetFileFromFolderByFilename, lintSpecification } from './commands/lint-specification';
 import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
+import { getAbsoluteFilePath, getAbsolutePathOrFallbackToAppDir, loadDb } from './db';
+import { loadApiSpec, promptApiSpec } from './db/models/api-spec';
 
 interface ConfigFileOptions {
   __configFile?: {
@@ -137,7 +140,7 @@ export const go = (args?: string[]) => {
   program.command('run')
     .description('Execution utilities')
     .command('test [identifier]')
-    .description('Run Insomnia unit test suites')
+    .description('Run Insomnia unit test suites, identifier can be a test suite id or a API Spec id')
     .option('-e, --env <identifier>', 'environment to use')
     .option('-t, --testNamePattern <regex>', 'run tests that match the regex')
     .option(
@@ -168,7 +171,7 @@ export const go = (args?: string[]) => {
   program.command('lint')
     .description('Linting utilities')
     .command('spec [identifier]')
-    .description('Lint an API Specification')
+    .description('Lint an API Specification, identifier can be an API Spec id or a file path')
     .action(async (identifier, cmd) => {
       const commandOptions = { ...program.optsWithGlobals(), ...cmd };
       const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
@@ -180,15 +183,40 @@ export const go = (args?: string[]) => {
       };
       logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
       options.ci && logger.setReporters([new BasicReporter()]);
-      return lintSpecification(identifier, options)
-        .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
+      const pathToSearch = getAbsolutePathOrFallbackToAppDir({ workingDir: options.workingDir, src: options.src });
+      const db = await loadDb({
+        pathToSearch,
+        filterTypes: ['ApiSpec'],
+      });
+      const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!options.ci);
+      let specContent = specFromDb?.contents;
+      let rulesetFileName;
+      if (!specContent) {
+        // try load as a file
+        const fileName = getAbsoluteFilePath({ workingDir: options.workingDir, file: identifier });
+        logger.trace(`Linting specification from file \`${fileName}\``);
+        specContent = await fs.promises.readFile(fileName, 'utf-8');
+        rulesetFileName = await getRuleSetFileFromFolderByFilename(fileName);
+      }
+      if (!specContent) {
+        logger.fatal('Specification not found at: ' + pathToSearch);
+        return false;
+      }
+
+      try {
+        const { isValid } = await lintSpecification({ specContent, rulesetFileName });
+        return isValid;
+      } catch (error) {
+        logErrorAndExit(error);
+      }
+      return false;
     });
 
   program.command('export').description('Export data from insomnia models')
     .command('spec [identifier]')
-    .description('Export an API Specification to a file')
+    .description('Export an API Specification to a file, identifier can be an API Spec id or a file path')
     .option('-o, --output <path>', 'save the generated config to a file')
-    .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations ', false)
+    .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations, defaults to false', false)
     .action(async (identifier, cmd) => {
       const commandOptions = { ...program.optsWithGlobals(), ...cmd };
       const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
@@ -199,8 +227,34 @@ export const go = (args?: string[]) => {
         ...(__configFile ? { __configFile } : {}),
       };
       options.printOptions && logger.log('Loaded options', options, '\n');
-      return exportSpecification(identifier, options)
-        .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
+      const pathToSearch = getAbsolutePathOrFallbackToAppDir({ workingDir: options.workingDir, src: options.src });
+      const db = await loadDb({
+        pathToSearch,
+        filterTypes: ['ApiSpec'],
+      });
+      const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!options.ci);
+
+      if (!specFromDb?.contents) {
+        logger.fatal('Specification not found at: ' + pathToSearch);
+        return false;
+      }
+      try {
+        const specContent = await exportSpecification({
+          specContent: specFromDb.contents,
+          skipAnnotations: options.skipAnnotations,
+        });
+        const outputPath = options.output && getAbsoluteFilePath({ workingDir: options.workingDir, output: options.output });
+        if (!outputPath) {
+          logger.log(specContent);
+          return true;
+        }
+        const filePath = await writeFileWithCliOptions(outputPath, specContent);
+        logger.log(`Specification exported to "${filePath}".`);
+        return true;
+      } catch (error) {
+        logErrorAndExit(error);
+      }
+      return false;
     });
 
   // Add script base command

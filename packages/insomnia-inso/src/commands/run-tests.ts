@@ -1,9 +1,8 @@
-import { generate, runTestsCli, TestSuite } from 'insomnia-testing';
+import { generate, runTestsCli } from 'insomnia-testing';
 
 import { type GlobalOptions, logger } from '../cli';
 import { loadDb } from '../db';
 import { loadEnvironment, promptEnvironment } from '../db/models/environment';
-import type { UnitTest, UnitTestSuite } from '../db/models/types';
 import { loadTestSuites, promptTestSuites } from '../db/models/unit-test-suite';
 
 export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress';
@@ -27,25 +26,6 @@ export type RunTestsOptions = GlobalOptions & {
   disableCertValidation?: boolean;
 };
 
-function validateOptions({ reporter }: Partial<RunTestsOptions>): boolean {
-  if (reporter && !reporterTypesSet.has(reporter)) {
-    logger.fatal(`Reporter "${reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
-    return false;
-  }
-
-  return true;
-}
-
-const createTestSuite = (dbSuite: UnitTestSuite, dbTests: UnitTest[]): TestSuite => ({
-  name: dbSuite.name,
-  suites: [],
-  tests: dbTests.map(({ name, code, requestId }) => ({
-    name,
-    code,
-    defaultRequestId: requestId,
-  })),
-});
-
 const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
   const oldConsoleLog = console.log;
   console.log = () => { };
@@ -61,7 +41,8 @@ export async function runInsomniaTests(
   identifier: string | null | undefined,
   options: Partial<RunTestsOptions>,
 ) {
-  if (!validateOptions(options)) {
+  if (options.reporter && !reporterTypesSet.has(options.reporter)) {
+    logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
     return false;
   }
 
@@ -82,29 +63,25 @@ export async function runInsomniaTests(
 
   // Find environment
   const workspaceId = suites[0].parentId;
-  const environment = env
-    ? loadEnvironment(db, workspaceId, env)
-    : await promptEnvironment(db, !!ci, workspaceId);
+  const environment = env ? loadEnvironment(db, workspaceId, env) : await promptEnvironment(db, !!ci, workspaceId);
 
   if (!environment) {
     logger.fatal('No environment identified; cannot run tests without a valid environment.');
     return false;
   }
 
-  // Generate test file
-  const testFileContents = generate(
-    suites.map(suite =>
-      createTestSuite(
-        suite,
-        db.UnitTest.filter(test => test.parentId === suite._id).sort((a, b) => a.metaSortKey - b.metaSortKey),
-      ),
-    ),
-  );
-
-  // eslint-disable-next-line @typescript-eslint/no-var-requires -- Load lazily when needed, otherwise this require slows down the entire CLI.
-  const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
-
+  // lazy import
+  const { getSendRequestCallbackMemDb } = await import('insomnia-send-request');
   const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !disableCertValidation });
+  // Generate test file
+  const testFileContents = generate(suites.map(suite => ({
+    name: suite.name,
+    suites: [],
+    tests: db.UnitTest.filter(test => test.parentId === suite._id)
+      .sort((a, b) => a.metaSortKey - b.metaSortKey)
+      .map(({ name, code, requestId }) => ({ name, code, defaultRequestId: requestId })),
+  })));
+
   const res = runTestsCli(testFileContents, {
     reporter,
     bail,

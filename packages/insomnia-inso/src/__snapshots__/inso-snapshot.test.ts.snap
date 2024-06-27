@@ -79,18 +79,21 @@ Options:
   -h, --help                   display help for command
 
 Commands:
-  spec [options] [identifier]  Export an API Specification to a file
+  spec [options] [identifier]  Export an API Specification to a file,
+                               identifier can be an API Spec id or a file path
   help [command]               display help for command"
 `;
 
 exports[`Snapshot for "inso export spec -h" 1`] = `
 "Usage: inso export spec [options] [identifier]
 
-Export an API Specification to a file
+Export an API Specification to a file, identifier can be an API Spec id or a
+file path
 
 Options:
   -o, --output <path>    save the generated config to a file
-  -s, --skipAnnotations  remove all "x-kong-" annotations  (default: false)
+  -s, --skipAnnotations  remove all "x-kong-" annotations, defaults to false
+                         (default: false)
   -h, --help             display help for command"
 `;
 
@@ -173,14 +176,15 @@ Options:
   -h, --help         display help for command
 
 Commands:
-  spec [identifier]  Lint an API Specification
+  spec [identifier]  Lint an API Specification, identifier can be an API Spec
+                     id or a file path
   help [command]     display help for command"
 `;
 
 exports[`Snapshot for "inso lint spec -h" 1`] = `
 "Usage: inso lint spec [options] [identifier]
 
-Lint an API Specification
+Lint an API Specification, identifier can be an API Spec id or a file path
 
 Options:
   -h, --help  display help for command"
@@ -195,14 +199,16 @@ Options:
   -h, --help                   display help for command
 
 Commands:
-  test [options] [identifier]  Run Insomnia unit test suites
+  test [options] [identifier]  Run Insomnia unit test suites, identifier can be
+                               a test suite id or a API Spec id
   help [command]               display help for command"
 `;
 
 exports[`Snapshot for "inso run test -h" 1`] = `
 "Usage: inso run test [options] [identifier]
 
-Run Insomnia unit test suites
+Run Insomnia unit test suites, identifier can be a test suite id or a API Spec
+id
 
 Options:
   -e, --env <identifier>         environment to use

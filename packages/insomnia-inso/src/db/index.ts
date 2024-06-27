@@ -1,3 +1,4 @@
+import { stat } from 'fs/promises';
 import { homedir } from 'os';
 import path from 'path';
 
@@ -40,9 +41,8 @@ export type DbAdapter = (
 ) => Promise<Database | null>;
 
 interface Options {
-  workingDir?: string;
+  pathToSearch: string;
   filterTypes?: (keyof Database)[];
-  src?: string;
 }
 
 /**
@@ -64,29 +64,36 @@ export function getAppDataDir(app: string): string {
 }
 export const getDefaultProductName = (): string => {
   const name = process.env.DEFAULT_APP_NAME;
-
   if (!name) {
     throw new Error('Environment variable DEFAULT_APP_NAME is not set.');
   }
-
   return name;
 };
 // Given a working Directory and src file, return the absolute path or fallback to insomnia app data directory
-export const getAbsolutePath = ({ workingDir, src }: { workingDir?: string; src?: string }) => {
+export const getAbsolutePathOrFallbackToAppDir = ({ workingDir, src }: { workingDir?: string; src?: string }) => {
   const hasWorkingDirOrSrc = workingDir || src;
   if (!hasWorkingDirOrSrc) {
     return getAppDataDir(getDefaultProductName());
   }
-  return workingDir ? path.resolve(workingDir, src || '') : path.resolve(process.cwd(), src || '');
+  return path.resolve(workingDir || process.cwd(), src || '');
+};
+export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string; file: string }) => {
+  return path.isAbsolute(file) ? file : path.resolve(workingDir || process.cwd(), file);
+};
+const isFile = async (path: string) => {
+  try {
+    return (await stat(path)).isFile();
+  } catch (error) {
+    return false;
+  }
 };
 export const loadDb = async ({
-  workingDir,
+  pathToSearch,
   filterTypes,
-  src,
-}: Options = {}) => {
-  const pathToSearch = getAbsolutePath({ workingDir, src });
+}: Options) => {
   // if path to file is provided try to it is an insomnia export file
-  if (src) {
+  const isFilePath = await isFile(pathToSearch);
+  if (isFilePath) {
     const exportDb = await insomniaExportAdapter(pathToSearch, filterTypes);
     if (exportDb) {
       logger.debug(`Data store configured from Insomnia export at \`${pathToSearch}\``);
