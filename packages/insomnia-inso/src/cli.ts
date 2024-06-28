@@ -133,7 +133,7 @@ export const go = (args?: string[]) => {
     .option('-w, --workingDir <dir>', 'set working directory, defaults to current working directory, will detect a git repository or Insomnia data directory')
     .option('--src <file>', 'set the file read from, defaults to installed Insomnia data directory')
     .option('--verbose', 'show additional logs while running the command')
-    .option('--ci', 'run in CI, disables all prompts')
+    .option('--ci', 'run in CI, disables all prompts, defaults to false', false)
     .option('--config <path>', 'path to configuration file containing above options')
     .option('--printOptions', 'print the loaded options');
 
@@ -163,7 +163,8 @@ export const go = (args?: string[]) => {
       logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
       options.ci && logger.setReporters([new BasicReporter()]);
       options.printOptions && logger.log('Loaded options', options, '\n');
-
+      const pathToSearch = getAbsolutePathOrFallbackToAppDir({ workingDir: options.workingDir, src: options.src });
+      options.pathToSearch = pathToSearch;
       return runInsomniaTests(identifier, options)
         .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
     });
@@ -188,28 +189,32 @@ export const go = (args?: string[]) => {
         pathToSearch,
         filterTypes: ['ApiSpec'],
       });
-      const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!options.ci);
+      if (!db.ApiSpec.length) {
+        logger.fatal(`Specification not found in data at: ${pathToSearch}`);
+        return process.exit(1);
+      }
+      const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, options.ci);
       let specContent = specFromDb?.contents;
       let rulesetFileName;
-      if (!specContent) {
+      if (!specContent && identifier) {
         // try load as a file
         const fileName = getAbsoluteFilePath({ workingDir: options.workingDir, file: identifier });
-        logger.trace(`Linting specification from file \`${fileName}\``);
+        logger.trace(`Linting specification from idenfitier: \`${fileName}\``);
         specContent = await fs.promises.readFile(fileName, 'utf-8');
         rulesetFileName = await getRuleSetFileFromFolderByFilename(fileName);
       }
       if (!specContent) {
-        logger.fatal('Specification not found at: ' + pathToSearch);
-        return false;
+        logger.fatal('Specification content not found at: ' + pathToSearch);
+        return process.exit(1);
       }
 
       try {
         const { isValid } = await lintSpecification({ specContent, rulesetFileName });
-        return isValid;
+        return process.exit(isValid ? 0 : 1);
       } catch (error) {
         logErrorAndExit(error);
       }
-      return false;
+      return process.exit(1);
     });
 
   program.command('export').description('Export data from insomnia models')
@@ -232,29 +237,32 @@ export const go = (args?: string[]) => {
         pathToSearch,
         filterTypes: ['ApiSpec'],
       });
+      if (db.ApiSpec.length > 0) {
+        logger.fatal(`Specification not found in data at: ${pathToSearch}`);
+        return process.exit(1);
+      }
       const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!options.ci);
-
       if (!specFromDb?.contents) {
-        logger.fatal('Specification not found at: ' + pathToSearch);
-        return false;
+        logger.fatal('Specification content not found at: ' + pathToSearch);
+        return process.exit(1);
       }
       try {
         const specContent = await exportSpecification({
           specContent: specFromDb.contents,
           skipAnnotations: options.skipAnnotations,
         });
-        const outputPath = options.output && getAbsoluteFilePath({ workingDir: options.workingDir, output: options.output });
+        const outputPath = options.output && getAbsoluteFilePath({ workingDir: options.workingDir, file: options.output });
         if (!outputPath) {
           logger.log(specContent);
-          return true;
+          return process.exit(0);
         }
         const filePath = await writeFileWithCliOptions(outputPath, specContent);
         logger.log(`Specification exported to "${filePath}".`);
-        return true;
+        return process.exit(0);
       } catch (error) {
         logErrorAndExit(error);
       }
-      return false;
+      return process.exit(1);
     });
 
   // Add script base command

@@ -39,18 +39,26 @@ const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
 // Identifier can be the id or name of a workspace, apiSpec, or unit test suite
 export async function runInsomniaTests(
   identifier: string | null | undefined,
-  options: Partial<RunTestsOptions>,
+  options: {
+    env?: string;
+    reporter: TestReporter;
+    bail?: boolean;
+    keepFile?: boolean;
+    testNamePattern?: string;
+    disableCertValidation?: boolean;
+    pathToSearch: string;
+    ci: boolean;
+  }
 ) {
   if (options.reporter && !reporterTypesSet.has(options.reporter)) {
     logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
     return false;
   }
 
-  const { reporter, bail, keepFile, workingDir, env, ci, testNamePattern, disableCertValidation, src } = options;
+  const { reporter, bail, keepFile, env, ci, testNamePattern, disableCertValidation, pathToSearch } = options;
   const db = await loadDb({
-    workingDir,
+    pathToSearch,
     filterTypes: [],
-    src,
   });
 
   // Find suites

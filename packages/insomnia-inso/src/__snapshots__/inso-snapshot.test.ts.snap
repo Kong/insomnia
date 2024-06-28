@@ -22,7 +22,8 @@ Options:
   --src <file>            set the file read from, defaults to installed
                           Insomnia data directory
   --verbose               show additional logs while running the command
-  --ci                    run in CI, disables all prompts
+  --ci                    run in CI, disables all prompts, defaults to false
+                          (default: false)
   --config <path>         path to configuration file containing above options
   --printOptions          print the loaded options
   -h, --help              display help for command
@@ -57,7 +58,8 @@ Options:
   --src <file>            set the file read from, defaults to installed
                           Insomnia data directory
   --verbose               show additional logs while running the command
-  --ci                    run in CI, disables all prompts
+  --ci                    run in CI, disables all prompts, defaults to false
+                          (default: false)
   --config <path>         path to configuration file containing above options
   --printOptions          print the loaded options
   -h, --help              display help for command
@@ -119,7 +121,8 @@ Options:
   --src <file>            set the file read from, defaults to installed
                           Insomnia data directory
   --verbose               show additional logs while running the command
-  --ci                    run in CI, disables all prompts
+  --ci                    run in CI, disables all prompts, defaults to false
+                          (default: false)
   --config <path>         path to configuration file containing above options
   --printOptions          print the loaded options
   -h, --help              display help for command
@@ -154,7 +157,8 @@ Options:
   --src <file>            set the file read from, defaults to installed
                           Insomnia data directory
   --verbose               show additional logs while running the command
-  --ci                    run in CI, disables all prompts
+  --ci                    run in CI, disables all prompts, defaults to false
+                          (default: false)
   --config <path>         path to configuration file containing above options
   --printOptions          print the loaded options
   -h, --help              display help for command
