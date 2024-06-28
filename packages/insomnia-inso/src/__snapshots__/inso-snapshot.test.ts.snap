@@ -19,8 +19,7 @@ Options:
   -w, --workingDir <dir>  set working directory, defaults to current working
                           directory, will detect a git repository or Insomnia
                           data directory
-  --src <file>            set the file read from, defaults to installed
-                          Insomnia data directory
+  --src <file>            set the Insomna export file read from
   --verbose               show additional logs while running the command
   --ci                    run in CI, disables all prompts, defaults to false
                           (default: false)
@@ -55,8 +54,7 @@ Options:
   -w, --workingDir <dir>  set working directory, defaults to current working
                           directory, will detect a git repository or Insomnia
                           data directory
-  --src <file>            set the file read from, defaults to installed
-                          Insomnia data directory
+  --src <file>            set the Insomna export file read from
   --verbose               show additional logs while running the command
   --ci                    run in CI, disables all prompts, defaults to false
                           (default: false)
@@ -118,8 +116,7 @@ Options:
   -w, --workingDir <dir>  set working directory, defaults to current working
                           directory, will detect a git repository or Insomnia
                           data directory
-  --src <file>            set the file read from, defaults to installed
-                          Insomnia data directory
+  --src <file>            set the Insomna export file read from
   --verbose               show additional logs while running the command
   --ci                    run in CI, disables all prompts, defaults to false
                           (default: false)
@@ -154,8 +151,7 @@ Options:
   -w, --workingDir <dir>  set working directory, defaults to current working
                           directory, will detect a git repository or Insomnia
                           data directory
-  --src <file>            set the file read from, defaults to installed
-                          Insomnia data directory
+  --src <file>            set the Insomna export file read from
   --verbose               show additional logs while running the command
   --ci                    run in CI, disables all prompts, defaults to false
                           (default: false)

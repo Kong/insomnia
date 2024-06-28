@@ -2,14 +2,17 @@ import * as commander from 'commander';
 import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consola';
 import { cosmiconfig } from 'cosmiconfig';
 import fs from 'fs';
+import { generate, runTestsCli } from 'insomnia-testing';
+import { env } from 'process';
 import { parseArgsStringToArgv } from 'string-argv';
 
 import packageJson from '../package.json';
 import { exportSpecification, writeFileWithCliOptions } from './commands/export-specification';
 import { getRuleSetFileFromFolderByFilename, lintSpecification } from './commands/lint-specification';
-import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
 import { getAbsoluteFilePath, getAbsolutePathOrFallbackToAppDir, loadDb } from './db';
 import { loadApiSpec, promptApiSpec } from './db/models/api-spec';
+import { loadEnvironment, promptEnvironment } from './db/models/environment';
+import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
 
 interface ConfigFileOptions {
   __configFile?: {
@@ -29,7 +32,17 @@ export type GlobalOptions = {
   config?: string;
   src?: string;
 } & ConfigFileOptions;
+export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress';
 
+export const reporterTypes: TestReporter[] = [
+  'dot',
+  'list',
+  'min',
+  'progress',
+  'spec',
+];
+
+export const reporterTypesSet = new Set(reporterTypes);
 export const OptionsSupportedInConfigFile: (keyof GlobalOptions)[] = [
   'workingDir',
   'ci',
@@ -111,6 +124,15 @@ export const logErrorAndExit = (err?: Error) => {
   logger.info('To view tracing information, re-run `inso` with `--verbose`');
   process.exit(1);
 };
+const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
+  const oldConsoleLog = console.log;
+  console.log = () => { };
+  try {
+    return await callback();
+  } finally {
+    console.log = oldConsoleLog;
+  }
+};
 
 export const go = (args?: string[]) => {
 
@@ -141,7 +163,7 @@ export const go = (args?: string[]) => {
   Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
 `)
     .option('-w, --workingDir <dir>', 'set working directory, defaults to current working directory, will detect a git repository or Insomnia data directory')
-    .option('--src <file>', 'set the file read from, defaults to installed Insomnia data directory')
+    .option('--src <file>', 'set the Insomna export file read from')
     .option('--verbose', 'show additional logs while running the command')
     .option('--ci', 'run in CI, disables all prompts, defaults to false', false)
     .option('--config <path>', 'path to configuration file containing above options')
@@ -160,8 +182,9 @@ export const go = (args?: string[]) => {
     .option('-b, --bail', 'abort ("bail") after first test failure')
     .option('--keepFile', 'do not delete the generated test file')
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL')
-    .action(async (identifier, cmd) => {
-      const commandOptions = { ...program.optsWithGlobals(), ...cmd };
+    .action(async (identifier, cmd: { env?: string; testNamePattern?: string; reporter?: TestReporter; bail?: true; keepFile?: true; disableCertValidation?: true }) => {
+      const globals: { config?: string; workingDir?: string; ci: boolean } = program.optsWithGlobals();
+      const commandOptions = { ...globals, ...cmd };
       const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
 
       const options = {
@@ -174,17 +197,70 @@ export const go = (args?: string[]) => {
       options.ci && logger.setReporters([new BasicReporter()]);
       options.printOptions && logger.log('Loaded options', options, '\n');
       const pathToSearch = getAbsolutePathOrFallbackToAppDir({ workingDir: options.workingDir, src: options.src });
-      options.pathToSearch = pathToSearch;
-      return runInsomniaTests(identifier, options)
-        .then(success => process.exit(success ? 0 : 1)).catch(logErrorAndExit);
+      if (options.reporter && !reporterTypesSet.has(options.reporter)) {
+        logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
+        return process.exit(1);;
+      }
+
+      const db = await loadDb({
+        pathToSearch,
+        filterTypes: [],
+      });
+
+      // Find suites
+      const suites = identifier ? loadTestSuites(db, identifier) : await promptTestSuites(db, !!options.ci);
+
+      if (!suites.length) {
+        logger.fatal('No test suites found; cannot run tests.');
+        return process.exit(1);;
+      }
+
+      // Find environment
+      const workspaceId = suites[0].parentId;
+      const environment = env ? loadEnvironment(db, workspaceId, options.env) : await promptEnvironment(db, !!options.ci, workspaceId);
+
+      if (!environment) {
+        logger.fatal('No environment identified; cannot run tests without a valid environment.');
+        return process.exit(1);;
+      }
+
+      try {
+        // lazy import
+        const { getSendRequestCallbackMemDb } = await import('insomnia-send-request');
+        const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation });
+        // Generate test file
+        const testFileContents = generate(suites.map(suite => ({
+          name: suite.name,
+          suites: [],
+          tests: db.UnitTest.filter(test => test.parentId === suite._id)
+            .sort((a, b) => a.metaSortKey - b.metaSortKey)
+            .map(({ name, code, requestId }) => ({ name, code, defaultRequestId: requestId })),
+        })));
+
+        const runTestPromise = runTestsCli(testFileContents, {
+          reporter: options.reporter,
+          bail: options.bail,
+          keepFile: options.keepFile,
+          sendRequest,
+          testFilter: options.testNamePattern,
+        });
+
+        // TODO: is this necessary?
+        const success = options.verbose ? await runTestPromise : await noConsoleLog(() => runTestPromise);
+        return process.exit(success ? 0 : 1);
+      } catch (error) {
+        logErrorAndExit(error);
+      }
+      return process.exit(1);
     });
 
   program.command('lint')
     .description('Linting utilities')
     .command('spec [identifier]')
     .description('Lint an API Specification, identifier can be an API Spec id or a file path')
-    .action(async (identifier, cmd) => {
-      const commandOptions = { ...program.optsWithGlobals(), ...cmd };
+    .action(async identifier => {
+      const globals: { config?: string; workingDir?: string; ci: boolean } = program.optsWithGlobals();
+      const commandOptions = globals;
       const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
 
       const options = {
@@ -232,8 +308,9 @@ export const go = (args?: string[]) => {
     .description('Export an API Specification to a file, identifier can be an API Spec id or a file path')
     .option('-o, --output <path>', 'save the generated config to a file')
     .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations, defaults to false', false)
-    .action(async (identifier, cmd) => {
-      const commandOptions = { ...program.optsWithGlobals(), ...cmd };
+    .action(async (identifier, cmd: { output?: string; skipAnnotations: boolean }) => {
+      const globals: { config?: string; workingDir?: string; ci: boolean } = program.optsWithGlobals();
+      const commandOptions = { ...globals, ...cmd };
       const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
 
       const options = {
