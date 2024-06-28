@@ -20,7 +20,7 @@ import { isRequestGroupMeta } from '../../models/request-group-meta';
 import { UnitTest } from '../../models/unit-test';
 import { UnitTestSuite } from '../../models/unit-test-suite';
 import { WebSocketRequest } from '../../models/websocket-request';
-import { isCollection, isMockServer, scopeToActivity, Workspace } from '../../models/workspace';
+import { isCollection, isEnvironment, scopeToActivity, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
@@ -370,7 +370,9 @@ export const createNewWorkspaceAction: ActionFunction = async ({
         workspace,
       });
     }
-
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.mockCreate,
+    });
     return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
   }
 
@@ -398,8 +400,8 @@ export const createNewWorkspaceAction: ActionFunction = async ({
 
   if (isCollection(workspace)) {
     event = SegmentEvent.collectionCreate;
-  } else if (isMockServer(workspace)) {
-    event = SegmentEvent.mockCreate;
+  } else if (isEnvironment(workspace)) {
+    event = SegmentEvent.environmentWorkspaceCreate;
   }
 
   window.main.trackSegmentEvent({
