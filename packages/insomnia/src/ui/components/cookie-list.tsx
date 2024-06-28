@@ -1,3 +1,4 @@
+import { isValid } from 'date-fns';
 import React, { FC, useCallback, useState } from 'react';
 import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,6 +27,10 @@ const CookieRow: FC<{
   deleteCookie: (cookie: Cookie) => void;
 }> = ({ cookie, deleteCookie }) => {
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
+  if (cookie.expires && !isValid(new Date(cookie.expires))) {
+    cookie.expires = null;
+  }
+
   const c = ToughCookie.fromJSON(cookie);
   const cookieString = c ? cookieToString(c) : '';
   return <tr className="selectable" key={cookie.id}>

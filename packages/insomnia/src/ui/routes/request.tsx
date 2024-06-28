@@ -374,7 +374,8 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       return null;
     }
     // disable after-response script here to avoiding rendering it
-    const afterResponseScript = `${mutatedContext.request.afterResponseScript}`;
+    // @TODO This should be handled in a better way. Maybe remove the key from the request object we pass in tryToInterpolateRequest
+    const afterResponseScript = mutatedContext.request.afterResponseScript ? `${mutatedContext.request.afterResponseScript}` : undefined;
     mutatedContext.request.afterResponseScript = '';
 
     window.main.addExecutionStep({ requestId, stepName: 'Rendering request' });

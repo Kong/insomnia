@@ -254,6 +254,9 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         globals: globals?.data || undefined,
       },
     });
+    // @TODO This looks overly complicated and could be simplified.
+    // If the timeout promise finishes first the execution promise is still running while it should be cancelled.
+    // Since the execution promise is cancellable and uses an abort controller we should add the timeout to the controller instead
     const output = await Promise.race([timeoutPromise, executionPromise]) as {
       request: Request;
       environment: Record<string, any>;
