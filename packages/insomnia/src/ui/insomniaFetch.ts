@@ -1,5 +1,6 @@
 
 import { getApiBaseURL, getClientString, INSOMNIA_FETCH_TIME_OUT, PLAYWRIGHT } from '../common/constants';
+import { generateId } from '../common/misc';
 
 interface FetchConfig {
   method: 'POST' | 'PUT' | 'GET' | 'DELETE' | 'PATCH';
@@ -19,6 +20,7 @@ export async function insomniaFetch<T = void>({ method, path, data, sessionId, o
     headers: {
       ...headers,
       'X-Insomnia-Client': getClientString(),
+      'insomnia-request-id': generateId('desk'),
       'X-Origin': origin || getApiBaseURL(),
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
       ...(data ? { 'Content-Type': 'application/json' } : {}),
