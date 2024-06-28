@@ -8,7 +8,7 @@ export interface CookieOptions {
     id?: string;
     key: string;
     value: string;
-    expires?: Date | string;
+    expires?: Date | string | null;
     maxAge?: string | 'Infinity' | '-Infinity';
     domain?: string;
     path?: string;
@@ -180,8 +180,8 @@ export class CookieObject extends CookieList {
     constructor(cookieJar: InsomniaCookieJar | null) {
         const cookies = cookieJar
             ? cookieJar.cookies.map((cookie: InsomniaCookie): Cookie => {
-                let expires: string | Date = '';
-                if (cookie.expires) {
+                let expires: string | Date | null = null;
+                if (cookie.expires || cookie.expires === 0) {
                     if (typeof cookie.expires === 'number') {
                         expires = new Date(cookie.expires);
                     } else {

@@ -63,6 +63,7 @@ export const CookieModifyModal = ((props: ModalProps & CookieModifyModalOptions)
   if (cookie && cookie.expires && isValid(new Date(cookie.expires))) {
     localDateTime = new Date(cookie.expires).toISOString().slice(0, 16);
   }
+
   let rawDefaultValue;
   if (!cookie) {
     rawDefaultValue = '';
