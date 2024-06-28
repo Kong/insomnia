@@ -20,7 +20,7 @@ import { isRequestGroupMeta } from '../../models/request-group-meta';
 import { UnitTest } from '../../models/unit-test';
 import { UnitTestSuite } from '../../models/unit-test-suite';
 import { WebSocketRequest } from '../../models/websocket-request';
-import { isCollection, isEnvironment, isMockServer, scopeToActivity, Workspace } from '../../models/workspace';
+import { isCollection, isEnvironment, scopeToActivity, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
