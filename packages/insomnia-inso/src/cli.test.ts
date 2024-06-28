@@ -1,6 +1,9 @@
 import { exec } from 'child_process';
 import path from 'path';
 
+// should be each to copy and run in local js debug terminal
+// and also print which one fails when running all tests
+// TODO: move all fixtures to the same folder, and name valid or invalid or whatever
 const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso -h',
   // from db
