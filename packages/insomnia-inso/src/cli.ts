@@ -118,15 +118,25 @@ export const go = (args?: string[]) => {
   const version = process.env.VERSION || packageJson.version;
   const defaultReporter: TestReporter = 'spec';
 
+  // export and lint logic
+  // Provide a path to a file which looks like an insomnia db
+  // it may contain multiple workspaces, and specs.
+  // you can also just provide a spec file
+  // things get confusing when you might have a workingDir a src and an identifier, since they can all be paths to a spec file
+
+  // differences
+  // lint can read a .spectral.yml from the folder provided
+  // export can remove annotations and output to a file
+
   program
     .version(version, '-v, --version')
     .description(`A CLI for Insomnia!
   With this tool you can test, lint, and export your Insomnia data.
-
-  Inso accepts 3 types of input:
+  
+  Testing: Inso accepts 3 types of input:
     Insomnia application data - will be automatically detected, or you can set --workingDir to an alternaitve application data path.
     Insomnia export files - set --src to the file path.
-    Git repositories -  set --workingDir to the repository path.
+    Git repositories - set --workingDir to the repository path.
 
   Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
 `)
