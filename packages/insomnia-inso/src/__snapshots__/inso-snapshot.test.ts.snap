@@ -18,13 +18,15 @@ Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory, defaults to current working
                           directory, will detect a git repository or Insomnia
-                          data directory
-  --src <file>            set the Insomna export file read from
+                          data directory (default: "")
+  --src <file>            set the Insomna export file read from (default: "")
   --verbose               show additional logs while running the command
+                          (default: false)
   --ci                    run in CI, disables all prompts, defaults to false
                           (default: false)
   --config <path>         path to configuration file containing above options
-  --printOptions          print the loaded options
+                          (default: "")
+  --printOptions          print the loaded options (default: false)
   -h, --help              display help for command
 
 Commands:
@@ -53,13 +55,15 @@ Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory, defaults to current working
                           directory, will detect a git repository or Insomnia
-                          data directory
-  --src <file>            set the Insomna export file read from
+                          data directory (default: "")
+  --src <file>            set the Insomna export file read from (default: "")
   --verbose               show additional logs while running the command
+                          (default: false)
   --ci                    run in CI, disables all prompts, defaults to false
                           (default: false)
   --config <path>         path to configuration file containing above options
-  --printOptions          print the loaded options
+                          (default: "")
+  --printOptions          print the loaded options (default: false)
   -h, --help              display help for command
 
 Commands:
@@ -91,7 +95,7 @@ Export an API Specification to a file, identifier can be an API Spec id or a
 file path
 
 Options:
-  -o, --output <path>    save the generated config to a file
+  -o, --output <path>    save the generated config to a file (default: "")
   -s, --skipAnnotations  remove all "x-kong-" annotations, defaults to false
                          (default: false)
   -h, --help             display help for command"
@@ -115,13 +119,15 @@ Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory, defaults to current working
                           directory, will detect a git repository or Insomnia
-                          data directory
-  --src <file>            set the Insomna export file read from
+                          data directory (default: "")
+  --src <file>            set the Insomna export file read from (default: "")
   --verbose               show additional logs while running the command
+                          (default: false)
   --ci                    run in CI, disables all prompts, defaults to false
                           (default: false)
   --config <path>         path to configuration file containing above options
-  --printOptions          print the loaded options
+                          (default: "")
+  --printOptions          print the loaded options (default: false)
   -h, --help              display help for command
 
 Commands:
@@ -150,13 +156,15 @@ Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory, defaults to current working
                           directory, will detect a git repository or Insomnia
-                          data directory
-  --src <file>            set the Insomna export file read from
+                          data directory (default: "")
+  --src <file>            set the Insomna export file read from (default: "")
   --verbose               show additional logs while running the command
+                          (default: false)
   --ci                    run in CI, disables all prompts, defaults to false
                           (default: false)
   --config <path>         path to configuration file containing above options
-  --printOptions          print the loaded options
+                          (default: "")
+  --printOptions          print the loaded options (default: false)
   -h, --help              display help for command
 
 Commands:
@@ -201,8 +209,9 @@ Options:
 Commands:
   test [options] [identifier]        Run Insomnia unit test suites, identifier
                                      can be a test suite id or a API Spec id
-  collection [options] [identifier]  Run Insomnia request, identifier can be a
-                                     workspace id
+  collection [options] [identifier]  Run Insomnia request collection,
+                                     identifier can be a workspace id or
+                                     request group id
   help [command]                     display help for command"
 `;
 
@@ -213,13 +222,16 @@ Run Insomnia unit test suites, identifier can be a test suite id or a API Spec
 id
 
 Options:
-  -e, --env <identifier>         environment to use
-  -t, --testNamePattern <regex>  run tests that match the regex
+  -e, --env <identifier>         environment to use (default: "")
+  -t, --testNamePattern <regex>  run tests that match the regex (default: "")
   -r, --reporter <reporter>      reporter to use, options are [dot, list, min,
-                                 progress, spec] (default: spec)
+                                 progress, spec] (default: spec) (default:
+                                 "spec")
   -b, --bail                     abort ("bail") after first test failure
+                                 (default: false)
   --keepFile                     do not delete the generated test file
+                                 (default: false)
   --disableCertValidation        disable certificate validation for requests
-                                 with SSL
+                                 with SSL (default: false)
   -h, --help                     display help for command"
 `;

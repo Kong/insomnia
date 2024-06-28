@@ -146,9 +146,10 @@ export const go = (args?: string[]) => {
 
   Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
 `)
-    .option('-w, --workingDir <dir>', 'set working directory, defaults to current working directory, will detect a git repository or Insomnia data directory', process.cwd())
+    // TODO: make fallback dir clearer
+    .option('-w, --workingDir <dir>', 'set working directory, defaults to current working directory, will detect a git repository or Insomnia data directory', '')
     // TODO: figure out how to remove this option
-    .option('--src <file>', 'set the Insomna export file read from')
+    .option('--src <file>', 'set the Insomna export file read from', '')
     .option('--verbose', 'show additional logs while running the command', false)
     .option('--ci', 'run in CI, disables all prompts, defaults to false', false)
     .option('--config <path>', 'path to configuration file containing above options', '')
@@ -241,7 +242,7 @@ export const go = (args?: string[]) => {
     });
 
   run.command('collection [identifier]')
-    .description('Run Insomnia request, identifier can be a workspace id')
+    .description('Run Insomnia request collection, identifier can be a workspace id or request group id')
     .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
     .option('-e, --env <identifier>', 'environment to use', '')
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
@@ -308,7 +309,8 @@ export const go = (args?: string[]) => {
           }
           logger.log(`Running request: ${req.name} ${req._id}`);
           const res = await sendRequest(req._id);
-          logger.info(res);
+          // TODO: use logging levels
+          options.verbose && logger.info(res);
           if (res.status !== 200) {
             success = false;
             logger.error(`Request failed with status ${res.status}`);
