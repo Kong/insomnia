@@ -5,11 +5,11 @@ exports[`Snapshot for "inso --help" 1`] = `
 
 A CLI for Insomnia!
   With this tool you can test, lint, and export your Insomnia data.
-
-  Inso accepts 3 types of input:
+  
+  Testing: Inso accepts 3 types of input:
     Insomnia application data - will be automatically detected, or you can set --workingDir to an alternaitve application data path.
     Insomnia export files - set --src to the file path.
-    Git repositories -  set --workingDir to the repository path.
+    Git repositories - set --workingDir to the repository path.
 
   Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
 
@@ -41,11 +41,11 @@ exports[`Snapshot for "inso -h" 1`] = `
 
 A CLI for Insomnia!
   With this tool you can test, lint, and export your Insomnia data.
-
-  Inso accepts 3 types of input:
+  
+  Testing: Inso accepts 3 types of input:
     Insomnia application data - will be automatically detected, or you can set --workingDir to an alternaitve application data path.
     Insomnia export files - set --src to the file path.
-    Git repositories -  set --workingDir to the repository path.
+    Git repositories - set --workingDir to the repository path.
 
   Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
 
@@ -104,11 +104,11 @@ exports[`Snapshot for "inso generate -h" 1`] = `
 
 A CLI for Insomnia!
   With this tool you can test, lint, and export your Insomnia data.
-
-  Inso accepts 3 types of input:
+  
+  Testing: Inso accepts 3 types of input:
     Insomnia application data - will be automatically detected, or you can set --workingDir to an alternaitve application data path.
     Insomnia export files - set --src to the file path.
-    Git repositories -  set --workingDir to the repository path.
+    Git repositories - set --workingDir to the repository path.
 
   Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
 
@@ -140,11 +140,11 @@ exports[`Snapshot for "inso help" 1`] = `
 
 A CLI for Insomnia!
   With this tool you can test, lint, and export your Insomnia data.
-
-  Inso accepts 3 types of input:
+  
+  Testing: Inso accepts 3 types of input:
     Insomnia application data - will be automatically detected, or you can set --workingDir to an alternaitve application data path.
     Insomnia export files - set --src to the file path.
-    Git repositories -  set --workingDir to the repository path.
+    Git repositories - set --workingDir to the repository path.
 
   Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
 

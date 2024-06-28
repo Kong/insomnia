@@ -247,7 +247,7 @@ export const go = (args?: string[]) => {
         pathToSearch,
         filterTypes: ['ApiSpec'],
       });
-      if (db.ApiSpec.length > 0) {
+      if (!db.ApiSpec.length) {
         logger.fatal(`Specification not found in data at: ${pathToSearch}`);
         return process.exit(1);
       }
