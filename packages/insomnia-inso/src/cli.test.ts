@@ -1,4 +1,5 @@
-import { exec } from 'child_process';
+import { expect, test } from '@jest/globals';
+import { exec, ExecException } from 'child_process';
 import path from 'path';
 
 // should be each to copy and run in local js debug terminal
@@ -10,21 +11,37 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso lint spec packages/insomnia-inso/src/commands/fixtures/openapi-spec.yaml',
   // identifier filepath with spectral.yaml
   '$PWD/packages/insomnia-inso/bin/inso lint spec packages/insomnia-inso/src/commands/fixtures/with-ruleset/path-plugin.yaml',
-  // from db
+  // lint from db
   '$PWD/packages/insomnia-inso/bin/inso lint spec -w packages/insomnia-inso/src/db/fixtures/nedb spc_46c5a4',
   '$PWD/packages/insomnia-inso/bin/inso lint spec -w packages/insomnia-inso/src/db/fixtures/git-repo spc_46c5a4',
   '$PWD/packages/insomnia-inso/bin/inso lint spec -w packages/insomnia-inso/src/db/fixtures/insomnia-v4/insomnia_v4.yaml spc_3b2850',
-  // from db
+  // export from db
   '$PWD/packages/insomnia-inso/bin/inso export spec -w packages/insomnia-inso/src/db/fixtures/nedb spc_46c5a4',
   '$PWD/packages/insomnia-inso/bin/inso export spec -w packages/insomnia-inso/src/db/fixtures/git-repo spc_46c5a4',
   '$PWD/packages/insomnia-inso/bin/inso export spec -w packages/insomnia-inso/src/db/fixtures/insomnia-v4/insomnia_v4.yaml spc_3b2850',
+  // test from db
+  '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/nedb -e env_env_ca046a uts_fe901c',
+  '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/git-repo -e env_env_ca046a uts_fe901c',
+  '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/insomnia-v4/insomnia_v4.yaml spc_3b2850 -e env_env_0e4670',
+];
+
+const shouldReturnErrorCode = [
+  '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/nedb -e env_env_ca046a uts_7f0f85',
+  '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/git-repo -e env_env_ca046a uts_7f0f85',
+  '$PWD/packages/insomnia-inso/bin/inso lint spec -w packages/insomnia-inso/src/db/fixtures/git-repo-malformed-spec spc_46c5a4',
+  '$PWD/packages/insomnia-inso/bin/inso lint spec packages/insomnia-inso/src/db/fixtures/insomnia-v4/malformed.yaml',
 ];
 test.each(shouldReturnSuccessCode)('Code should be 0: %p', async input => {
   const result = await cli(input);
   expect(result.code).toBe(0);
 });
 
-function cli(input) {
+test.each(shouldReturnErrorCode)('Code should be 1: %p', async input => {
+  const result = await cli(input);
+  expect(result.code).toBe(1);
+});
+
+const cli = (input: string): Promise<{ code: number; error: ExecException | null; stdout: string; stderr: string }> => {
   return new Promise(resolve => {
     exec(input,
       {
@@ -39,4 +56,4 @@ function cli(input) {
         });
       });
   });
-}
+};
