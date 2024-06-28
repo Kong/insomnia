@@ -196,12 +196,14 @@ exports[`Snapshot for "inso run -h" 1`] = `
 Execution utilities
 
 Options:
-  -h, --help                   display help for command
+  -h, --help                         display help for command
 
 Commands:
-  test [options] [identifier]  Run Insomnia unit test suites, identifier can be
-                               a test suite id or a API Spec id
-  help [command]               display help for command"
+  test [options] [identifier]        Run Insomnia unit test suites, identifier
+                                     can be a test suite id or a API Spec id
+  collection [options] [identifier]  Run Insomnia request, identifier can be a
+                                     workspace id
+  help [command]                     display help for command"
 `;
 
 exports[`Snapshot for "inso run test -h" 1`] = `

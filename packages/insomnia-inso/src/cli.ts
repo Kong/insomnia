@@ -3,7 +3,6 @@ import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consol
 import { cosmiconfig } from 'cosmiconfig';
 import fs from 'fs';
 import { generate, runTestsCli } from 'insomnia-testing';
-import { env } from 'process';
 import { parseArgsStringToArgv } from 'string-argv';
 
 import packageJson from '../package.json';
@@ -13,6 +12,7 @@ import { getAbsoluteFilePath, getAbsolutePathOrFallbackToAppDir, loadDb } from '
 import { loadApiSpec, promptApiSpec } from './db/models/api-spec';
 import { loadEnvironment, promptEnvironment } from './db/models/environment';
 import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
+import { loadWorkspace, promptWorkspace } from './db/models/workspace';
 
 interface ConfigFileOptions {
   __configFile?: {
@@ -33,23 +33,8 @@ export type GlobalOptions = {
   src?: string;
 } & ConfigFileOptions;
 export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress';
-
-export const reporterTypes: TestReporter[] = [
-  'dot',
-  'list',
-  'min',
-  'progress',
-  'spec',
-];
-
+export const reporterTypes: TestReporter[] = ['dot', 'list', 'min', 'progress', 'spec'];
 export const reporterTypesSet = new Set(reporterTypes);
-export const OptionsSupportedInConfigFile: (keyof GlobalOptions)[] = [
-  'workingDir',
-  'ci',
-  'verbose',
-  'src',
-  'printOptions',
-];
 
 export const loadCosmiConfig = async (configFile?: string, workingDir?: string) => {
   try {
@@ -61,7 +46,7 @@ export const loadCosmiConfig = async (configFile?: string, workingDir?: string) 
       logger.debug(`Found config file at ${results?.filepath}.`);
       const scripts = results.config?.scripts || {};
       const filePath = results.filepath;
-      const options: GlobalOptions = OptionsSupportedInConfigFile.reduce((acc, key) => {
+      const options = ['workingDir', 'ci', 'verbose', 'src', 'printOptions'].reduce((acc, key) => {
         const value = results.config?.options?.[key];
         if (value) {
           return { ...acc, [key]: value };
@@ -138,7 +123,6 @@ export const go = (args?: string[]) => {
 
   const program = new commander.Command();
   const version = process.env.VERSION || packageJson.version;
-  const defaultReporter: TestReporter = 'spec';
 
   // export and lint logic
   // Provide a path to a file which looks like an insomnia db
@@ -162,33 +146,35 @@ export const go = (args?: string[]) => {
 
   Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
 `)
-    .option('-w, --workingDir <dir>', 'set working directory, defaults to current working directory, will detect a git repository or Insomnia data directory')
+    .option('-w, --workingDir <dir>', 'set working directory, defaults to current working directory, will detect a git repository or Insomnia data directory', process.cwd())
+    // TODO: figure out how to remove this option
     .option('--src <file>', 'set the Insomna export file read from')
-    .option('--verbose', 'show additional logs while running the command')
+    .option('--verbose', 'show additional logs while running the command', false)
     .option('--ci', 'run in CI, disables all prompts, defaults to false', false)
-    .option('--config <path>', 'path to configuration file containing above options')
-    .option('--printOptions', 'print the loaded options');
+    .option('--config <path>', 'path to configuration file containing above options', '')
+    .option('--printOptions', 'print the loaded options', false);
 
-  program.command('run')
-    .description('Execution utilities')
-    .command('test [identifier]')
+  const run = program.command('run')
+    .description('Execution utilities');
+
+  const defaultReporter: TestReporter = 'spec';
+  run.command('test [identifier]')
     .description('Run Insomnia unit test suites, identifier can be a test suite id or a API Spec id')
-    .option('-e, --env <identifier>', 'environment to use')
-    .option('-t, --testNamePattern <regex>', 'run tests that match the regex')
+    .option('-e, --env <identifier>', 'environment to use', '')
+    .option('-t, --testNamePattern <regex>', 'run tests that match the regex', '')
     .option(
       '-r, --reporter <reporter>',
-      `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`,
+      `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`, defaultReporter
     )
-    .option('-b, --bail', 'abort ("bail") after first test failure')
-    .option('--keepFile', 'do not delete the generated test file')
-    .option('--disableCertValidation', 'disable certificate validation for requests with SSL')
-    .action(async (identifier, cmd: { env?: string; testNamePattern?: string; reporter?: TestReporter; bail?: true; keepFile?: true; disableCertValidation?: true }) => {
-      const globals: { config?: string; workingDir?: string; ci: boolean } = program.optsWithGlobals();
+    .option('-b, --bail', 'abort ("bail") after first test failure', false)
+    .option('--keepFile', 'do not delete the generated test file', false)
+    .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
+    .action(async (identifier, cmd: { env: string; testNamePattern: string; reporter: TestReporter; bail: true; keepFile: true; disableCertValidation: true }) => {
+      const globals: { config: string; workingDir: string; src: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
       const commandOptions = { ...globals, ...cmd };
       const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
 
       const options = {
-        reporter: defaultReporter,
         ...__configFile?.options || {},
         ...commandOptions,
         ...(__configFile ? { __configFile } : {}),
@@ -217,7 +203,7 @@ export const go = (args?: string[]) => {
 
       // Find environment
       const workspaceId = suites[0].parentId;
-      const environment = env ? loadEnvironment(db, workspaceId, options.env) : await promptEnvironment(db, !!options.ci, workspaceId);
+      const environment = options.env ? loadEnvironment(db, workspaceId, options.env) : await promptEnvironment(db, !!options.ci, workspaceId);
 
       if (!environment) {
         logger.fatal('No environment identified; cannot run tests without a valid environment.');
@@ -254,12 +240,94 @@ export const go = (args?: string[]) => {
       return process.exit(1);
     });
 
+  run.command('collection [identifier]')
+    .description('Run Insomnia request, identifier can be a workspace id')
+    .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
+    .option('-e, --env <identifier>', 'environment to use', '')
+    .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
+    .action(async (identifier, cmd: { env: string; disableCertValidation: true; requestNamePattern: string }) => {
+      const globals: { config: string; workingDir: string; src: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
+
+      const commandOptions = { ...globals, ...cmd };
+      const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
+
+      const options = {
+        reporter: defaultReporter,
+        ...__configFile?.options || {},
+        ...commandOptions,
+        ...(__configFile ? { __configFile } : {}),
+      };
+      logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
+      options.ci && logger.setReporters([new BasicReporter()]);
+      options.printOptions && logger.log('Loaded options', options, '\n');
+      const pathToSearch = getAbsolutePathOrFallbackToAppDir({ workingDir: options.workingDir, src: options.src });
+      if (options.reporter && !reporterTypesSet.has(options.reporter)) {
+        logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
+        return process.exit(1);
+      }
+
+      const db = await loadDb({
+        pathToSearch,
+        filterTypes: [],
+      });
+
+      // Find suites
+      const workspace = identifier ? loadWorkspace(db, identifier) : await promptWorkspace(db, !!options.ci);
+
+      if (!workspace) {
+        logger.fatal('No workspace found; cannot run requests.');
+        return process.exit(1);
+      }
+
+      // Find environment
+      const workspaceId = workspace._id;
+      const environment = options.env ? loadEnvironment(db, workspaceId, options.env) : await promptEnvironment(db, !!options.ci, workspaceId);
+
+      if (!environment) {
+        logger.fatal('No environment identified; cannot run requests without a valid environment.');
+        return process.exit(1);
+      }
+
+      let requests = db.Request.filter(req => req.parentId === workspaceId);
+      if (options.requestNamePattern) {
+        requests = requests.filter(req => req.name.match(new RegExp(options.requestNamePattern)));
+      }
+      if (!requests.length) {
+        logger.fatal('No requests identified; nothing to run.');
+        return process.exit(1);
+      }
+
+      try {
+        // lazy import
+        const { getSendRequestCallbackMemDb } = await import('insomnia-send-request');
+        const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation });
+        let success = true;
+        for (const req of requests) {
+          if (!success) {
+            return;
+          }
+          logger.log(`Running request: ${req.name} ${req._id}`);
+          const res = await sendRequest(req._id);
+          logger.info(res);
+          if (res.status !== 200) {
+            success = false;
+            logger.error(`Request failed with status ${res.status}`);
+          }
+        }
+        return process.exit(success ? 0 : 1);
+      } catch (error) {
+        logErrorAndExit(error);
+      }
+      return process.exit(1);
+    });
+
   program.command('lint')
     .description('Linting utilities')
     .command('spec [identifier]')
     .description('Lint an API Specification, identifier can be an API Spec id or a file path')
     .action(async identifier => {
-      const globals: { config?: string; workingDir?: string; ci: boolean } = program.optsWithGlobals();
+      const globals: { config: string; workingDir: string; src: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
+
       const commandOptions = globals;
       const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
 
@@ -306,10 +374,11 @@ export const go = (args?: string[]) => {
   program.command('export').description('Export data from insomnia models')
     .command('spec [identifier]')
     .description('Export an API Specification to a file, identifier can be an API Spec id or a file path')
-    .option('-o, --output <path>', 'save the generated config to a file')
+    .option('-o, --output <path>', 'save the generated config to a file', '')
     .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations, defaults to false', false)
-    .action(async (identifier, cmd: { output?: string; skipAnnotations: boolean }) => {
-      const globals: { config?: string; workingDir?: string; ci: boolean } = program.optsWithGlobals();
+    .action(async (identifier, cmd: { output: string; skipAnnotations: boolean }) => {
+      const globals: { config: string; workingDir: string; src: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
+
       const commandOptions = { ...globals, ...cmd };
       const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
 
