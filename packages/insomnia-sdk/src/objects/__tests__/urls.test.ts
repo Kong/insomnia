@@ -154,6 +154,14 @@ describe('test Url object', () => {
             url: '{{ baseUrl }}/tom@any.com',
         },
         {
+            testName: '@ is used in auth and path',
+            url: 'user:pass@a.com/tom@any.com',
+        },
+        {
+            testName: '@ is used in auth',
+            url: 'user:pass@a.com/',
+        },
+        {
             testName: '@ is used in path with path params, targs and hash',
             url: '{{ baseUrl }}/:path__{{ _.pathSuffix }}/tom@any.com#hash',
         },

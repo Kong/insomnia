@@ -197,7 +197,8 @@ export class Url extends PropertyBase {
         const potentialStartOfAuth = protocol === '' ? 0 : endOfProto + 3;
         let endOfAuth = urlStr.indexOf('@', potentialStartOfAuth);
         const startOfPathname = urlStr.indexOf('/', endOfProto >= 0 ? endOfProto + 3 : 0);
-        if (endOfAuth < startOfPathname) {
+        const atCharIsBeforePath = endOfAuth < startOfPathname;
+        if (atCharIsBeforePath) { // this checks if unencoded '@' appears in path
             if (endOfAuth >= 0 && potentialStartOfAuth < endOfAuth) { // e.g., '@insomnia.com' will be ignored
                 const authStr = endOfAuth >= 0 ? urlStr.slice(potentialStartOfAuth, endOfAuth) : '';
                 const authParts = authStr?.split(':');
@@ -207,6 +208,7 @@ export class Url extends PropertyBase {
                 auth = { username: authParts[0], password: authParts[1] };
             }
         } else {
+            // don't do anything if @ appears in path
             endOfAuth = -1;
         }
 
