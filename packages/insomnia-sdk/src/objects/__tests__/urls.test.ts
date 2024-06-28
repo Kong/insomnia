@@ -149,6 +149,14 @@ describe('test Url object', () => {
             testName: 'hybrid of path params and tags',
             url: '{{ baseUrl }}/:path_{{ _.pathSuffix }}',
         },
+        {
+            testName: '@ is used in path',
+            url: '{{ baseUrl }}/tom@any.com',
+        },
+        {
+            testName: '@ is used in path with path params, targs and hash',
+            url: '{{ baseUrl }}/:path__{{ _.pathSuffix }}/tom@any.com#hash',
+        },
     ];
 
     urlParsingTests.forEach(testCase => {
