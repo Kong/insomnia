@@ -577,7 +577,7 @@ export const GraphQLEditor: FC<Props> = ({
           </DropdownSection>
         </Dropdown>
       </Toolbar>
-      <PanelGroup direction={'vertical'}>
+      <PanelGroup direction={'vertical'} autoSaveId='graphql-variables'>
         <Panel id="GraphQL Editor" minSize={20} defaultSize={60}>
           <CodeEditor
             id="graphql-editor"
