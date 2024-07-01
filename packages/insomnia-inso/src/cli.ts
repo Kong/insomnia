@@ -1,3 +1,6 @@
+import { homedir } from 'node:os';
+import path from 'node:path';
+
 import * as commander from 'commander';
 import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consola';
 import { cosmiconfig } from 'cosmiconfig';
@@ -8,7 +11,7 @@ import { parseArgsStringToArgv } from 'string-argv';
 import packageJson from '../package.json';
 import { exportSpecification, writeFileWithCliOptions } from './commands/export-specification';
 import { getRuleSetFileFromFolderByFilename, lintSpecification } from './commands/lint-specification';
-import { getAbsoluteFilePath, getAbsolutePathOrFallbackToAppDir, loadDb } from './db';
+import { loadDb } from './db';
 import { loadApiSpec, promptApiSpec } from './db/models/api-spec';
 import { loadEnvironment, promptEnvironment } from './db/models/environment';
 import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
@@ -30,7 +33,7 @@ export type GlobalOptions = {
   verbose?: boolean;
   printOptions?: boolean;
   config?: string;
-  src?: string;
+  exportFile?: string;
 } & ConfigFileOptions;
 export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress';
 export const reporterTypes: TestReporter[] = ['dot', 'list', 'min', 'progress', 'spec'];
@@ -46,7 +49,7 @@ export const loadCosmiConfig = async (configFile?: string, workingDir?: string) 
       logger.debug(`Found config file at ${results?.filepath}.`);
       const scripts = results.config?.scripts || {};
       const filePath = results.filepath;
-      const options = ['workingDir', 'ci', 'verbose', 'src', 'printOptions'].reduce((acc, key) => {
+      const options = ['workingDir', 'ci', 'verbose', 'exportFile', 'printOptions'].reduce((acc, key) => {
         const value = results.config?.options?.[key];
         if (value) {
           return { ...acc, [key]: value };
@@ -98,6 +101,34 @@ export class InsoError extends Error {
   }
 }
 
+/**
+ * getAppDataDir returns the data directory for an Electron app,
+ * it is equivalent to the app.getPath('userData') API in Electron.
+ * https://www.electronjs.org/docs/api/app#appgetpathname
+*/
+export function getAppDataDir(app: string): string {
+  switch (process.platform) {
+    case 'darwin':
+      return path.join(homedir(), 'Library', 'Application Support', app);
+    case 'win32':
+      return path.join(process.env.APPDATA || path.join(homedir(), 'AppData', 'Roaming'), app);
+    case 'linux':
+      return path.join(process.env.XDG_DATA_HOME || path.join(homedir(), '.config'), app);
+    default:
+      throw new Error('Unsupported platform');
+  }
+}
+export const getDefaultProductName = (): string => {
+  const name = process.env.DEFAULT_APP_NAME;
+  if (!name) {
+    throw new Error('Environment variable DEFAULT_APP_NAME is not set.');
+  }
+  return name;
+};
+
+export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string; file: string }) => {
+  return path.isAbsolute(file) ? file : path.resolve(workingDir || process.cwd(), file);
+};
 export const logErrorAndExit = (err?: Error) => {
   if (err instanceof InsoError) {
     logger.fatal(err.message);
@@ -119,6 +150,8 @@ const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
   }
 };
 
+const localAppDir = getAppDataDir(getDefaultProductName());
+
 export const go = (args?: string[]) => {
 
   const program = new commander.Command();
@@ -128,7 +161,7 @@ export const go = (args?: string[]) => {
   // Provide a path to a file which looks like an insomnia db
   // it may contain multiple workspaces, and specs.
   // you can also just provide a spec file
-  // things get confusing when you might have a workingDir a src and an identifier, since they can all be paths to a spec file
+  // things get confusing when you might have a workingDir a exportFile and an identifier, since they can all be paths to a spec file
 
   // differences
   // lint can read a .spectral.yml from the folder provided
@@ -138,18 +171,22 @@ export const go = (args?: string[]) => {
     .version(version, '-v, --version')
     .description(`A CLI for Insomnia!
   With this tool you can test, lint, and export your Insomnia data.
-  
-  Testing: Inso accepts 3 types of input:
-    Insomnia application data - will be automatically detected, or you can set --workingDir to an alternaitve application data path.
-    Insomnia export files - set --src to the file path.
-    Git repositories - set --workingDir to the repository path.
+  Inso will try to detect your locally installed Insomnia data.
+  You can also point it at a git repository folder, or an Insomnia export file.
 
-  Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
+  Examples:
+  $ inso run test
+  $ inso lint spec
+  $ inso export spec
+
+
+  Inso also supports configuration files, by default it will look for .insorc in the current/provided working directory.
+  $ inso export spec --config /some/path/.insorc
 `)
     // TODO: make fallback dir clearer
-    .option('-w, --workingDir <dir>', 'set working directory, defaults to current working directory, will detect a git repository or Insomnia data directory', '')
+    .option('-w, --workingDir <dir>', 'set working directory, to look for files: .insorc, .insomnia folder, *.db.json', '')
     // TODO: figure out how to remove this option
-    .option('--src <file>', 'set the Insomna export file read from', '')
+    .option('--exportFile <file>', 'set the Insomna export file read from', '')
     .option('--verbose', 'show additional logs while running the command', false)
     .option('--ci', 'run in CI, disables all prompts, defaults to false', false)
     .option('--config <path>', 'path to configuration file containing above options', '')
@@ -171,7 +208,7 @@ export const go = (args?: string[]) => {
     .option('--keepFile', 'do not delete the generated test file', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
     .action(async (identifier, cmd: { env: string; testNamePattern: string; reporter: TestReporter; bail: true; keepFile: true; disableCertValidation: true }) => {
-      const globals: { config: string; workingDir: string; src: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
+      const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
       const commandOptions = { ...globals, ...cmd };
       const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
 
@@ -183,7 +220,14 @@ export const go = (args?: string[]) => {
       logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
       options.ci && logger.setReporters([new BasicReporter()]);
       options.printOptions && logger.log('Loaded options', options, '\n');
-      const pathToSearch = getAbsolutePathOrFallbackToAppDir({ workingDir: options.workingDir, src: options.src });
+      const useLocalAppData = !options.workingDir && !options.exportFile;
+      let pathToSearch = '';
+      if (useLocalAppData) {
+        logger.warn('No working directory or export file provided, using local app data directory.');
+        pathToSearch = localAppDir;
+      } else {
+        pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
+      }
       if (options.reporter && !reporterTypesSet.has(options.reporter)) {
         logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
         return process.exit(1);;
@@ -247,7 +291,7 @@ export const go = (args?: string[]) => {
     .option('-e, --env <identifier>', 'environment to use', '')
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
     .action(async (identifier, cmd: { env: string; disableCertValidation: true; requestNamePattern: string }) => {
-      const globals: { config: string; workingDir: string; src: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
+      const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
 
       const commandOptions = { ...globals, ...cmd };
       const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
@@ -261,7 +305,14 @@ export const go = (args?: string[]) => {
       logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
       options.ci && logger.setReporters([new BasicReporter()]);
       options.printOptions && logger.log('Loaded options', options, '\n');
-      const pathToSearch = getAbsolutePathOrFallbackToAppDir({ workingDir: options.workingDir, src: options.src });
+      let pathToSearch = '';
+      const useLocalAppData = !options.workingDir && !options.exportFile;
+      if (useLocalAppData) {
+        logger.warn('No working directory or export file provided, using local app data directory.');
+        pathToSearch = localAppDir;
+      } else {
+        pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
+      }
       if (options.reporter && !reporterTypesSet.has(options.reporter)) {
         logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
         return process.exit(1);
@@ -328,7 +379,7 @@ export const go = (args?: string[]) => {
     .command('spec [identifier]')
     .description('Lint an API Specification, identifier can be an API Spec id or a file path')
     .action(async identifier => {
-      const globals: { config: string; workingDir: string; src: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
+      const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
 
       const commandOptions = globals;
       const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
@@ -340,7 +391,14 @@ export const go = (args?: string[]) => {
       };
       logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
       options.ci && logger.setReporters([new BasicReporter()]);
-      const pathToSearch = getAbsolutePathOrFallbackToAppDir({ workingDir: options.workingDir, src: options.src });
+      let pathToSearch = '';
+      const useLocalAppData = !options.workingDir && !options.exportFile;
+      if (useLocalAppData) {
+        logger.warn('No working directory or export file provided, using local app data directory.');
+        pathToSearch = localAppDir;
+      } else {
+        pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
+      }
       const db = await loadDb({
         pathToSearch,
         filterTypes: ['ApiSpec'],
@@ -379,7 +437,7 @@ export const go = (args?: string[]) => {
     .option('-o, --output <path>', 'save the generated config to a file', '')
     .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations, defaults to false', false)
     .action(async (identifier, cmd: { output: string; skipAnnotations: boolean }) => {
-      const globals: { config: string; workingDir: string; src: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
+      const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
 
       const commandOptions = { ...globals, ...cmd };
       const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
@@ -390,7 +448,14 @@ export const go = (args?: string[]) => {
         ...(__configFile ? { __configFile } : {}),
       };
       options.printOptions && logger.log('Loaded options', options, '\n');
-      const pathToSearch = getAbsolutePathOrFallbackToAppDir({ workingDir: options.workingDir, src: options.src });
+      let pathToSearch = '';
+      const useLocalAppData = !options.workingDir && !options.exportFile;
+      if (useLocalAppData) {
+        logger.warn('No working directory or export file provided, using local app data directory.');
+        pathToSearch = localAppDir;
+      } else {
+        pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
+      }
       const db = await loadDb({
         pathToSearch,
         filterTypes: ['ApiSpec'],

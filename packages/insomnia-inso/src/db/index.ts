@@ -1,6 +1,4 @@
 import { stat } from 'fs/promises';
-import { homedir } from 'os';
-import path from 'path';
 
 import { logger } from '../cli';
 import gitAdapter from './adapters/git-adapter';
@@ -45,41 +43,6 @@ interface Options {
   filterTypes?: (keyof Database)[];
 }
 
-/**
- * getAppDataDir returns the data directory for an Electron app,
- * it is equivalent to the app.getPath('userData') API in Electron.
- * https://www.electronjs.org/docs/api/app#appgetpathname
-*/
-export function getAppDataDir(app: string): string {
-  switch (process.platform) {
-    case 'darwin':
-      return path.join(homedir(), 'Library', 'Application Support', app);
-    case 'win32':
-      return path.join(process.env.APPDATA || path.join(homedir(), 'AppData', 'Roaming'), app);
-    case 'linux':
-      return path.join(process.env.XDG_DATA_HOME || path.join(homedir(), '.config'), app);
-    default:
-      throw new Error('Unsupported platform');
-  }
-}
-export const getDefaultProductName = (): string => {
-  const name = process.env.DEFAULT_APP_NAME;
-  if (!name) {
-    throw new Error('Environment variable DEFAULT_APP_NAME is not set.');
-  }
-  return name;
-};
-// Given a working Directory and src file, return the absolute path or fallback to insomnia app data directory
-export const getAbsolutePathOrFallbackToAppDir = ({ workingDir, src }: { workingDir?: string; src?: string }) => {
-  const hasWorkingDirOrSrc = workingDir || src;
-  if (!hasWorkingDirOrSrc) {
-    return getAppDataDir(getDefaultProductName());
-  }
-  return path.resolve(workingDir || process.cwd(), src || '');
-};
-export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string; file: string }) => {
-  return path.isAbsolute(file) ? file : path.resolve(workingDir || process.cwd(), file);
-};
 const isFile = async (path: string) => {
   try {
     return (await stat(path)).isFile();

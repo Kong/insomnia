@@ -5,11 +5,13 @@ exports[`Snapshot for "inso --help" 1`] = `
 
 A CLI for Insomnia!
   With this tool you can test, lint, and export your Insomnia data.
-  
+
   Testing: Inso accepts 3 types of input:
-    Insomnia application data - will be automatically detected, or you can set --workingDir to an alternaitve application data path.
-    Insomnia export files - set --src to the file path.
-    Git repositories - set --workingDir to the repository path.
+    Insomnia application data: will be automatically detected, or you can set --workingDir to an alternaitve application data path.
+    Git repositories: set --workingDir to the repository path.
+    Insomnia export files: set --exportFile to the file path.
+
+  Linting: Inso can lint an API specification from the Insomnia application data, a git repository, insomnia export file, or a file path.
 
   Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
 
@@ -19,7 +21,7 @@ Options:
   -w, --workingDir <dir>  set working directory, defaults to current working
                           directory, will detect a git repository or Insomnia
                           data directory (default: "")
-  --src <file>            set the Insomna export file read from (default: "")
+  --exportFile <file>     set the Insomna export file read from (default: "")
   --verbose               show additional logs while running the command
                           (default: false)
   --ci                    run in CI, disables all prompts, defaults to false
@@ -42,11 +44,13 @@ exports[`Snapshot for "inso -h" 1`] = `
 
 A CLI for Insomnia!
   With this tool you can test, lint, and export your Insomnia data.
-  
+
   Testing: Inso accepts 3 types of input:
-    Insomnia application data - will be automatically detected, or you can set --workingDir to an alternaitve application data path.
-    Insomnia export files - set --src to the file path.
-    Git repositories - set --workingDir to the repository path.
+    Insomnia application data: will be automatically detected, or you can set --workingDir to an alternaitve application data path.
+    Git repositories: set --workingDir to the repository path.
+    Insomnia export files: set --exportFile to the file path.
+
+  Linting: Inso can lint an API specification from the Insomnia application data, a git repository, insomnia export file, or a file path.
 
   Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
 
@@ -56,7 +60,7 @@ Options:
   -w, --workingDir <dir>  set working directory, defaults to current working
                           directory, will detect a git repository or Insomnia
                           data directory (default: "")
-  --src <file>            set the Insomna export file read from (default: "")
+  --exportFile <file>     set the Insomna export file read from (default: "")
   --verbose               show additional logs while running the command
                           (default: false)
   --ci                    run in CI, disables all prompts, defaults to false
@@ -106,11 +110,13 @@ exports[`Snapshot for "inso generate -h" 1`] = `
 
 A CLI for Insomnia!
   With this tool you can test, lint, and export your Insomnia data.
-  
+
   Testing: Inso accepts 3 types of input:
-    Insomnia application data - will be automatically detected, or you can set --workingDir to an alternaitve application data path.
-    Insomnia export files - set --src to the file path.
-    Git repositories - set --workingDir to the repository path.
+    Insomnia application data: will be automatically detected, or you can set --workingDir to an alternaitve application data path.
+    Git repositories: set --workingDir to the repository path.
+    Insomnia export files: set --exportFile to the file path.
+
+  Linting: Inso can lint an API specification from the Insomnia application data, a git repository, insomnia export file, or a file path.
 
   Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
 
@@ -120,7 +126,7 @@ Options:
   -w, --workingDir <dir>  set working directory, defaults to current working
                           directory, will detect a git repository or Insomnia
                           data directory (default: "")
-  --src <file>            set the Insomna export file read from (default: "")
+  --exportFile <file>     set the Insomna export file read from (default: "")
   --verbose               show additional logs while running the command
                           (default: false)
   --ci                    run in CI, disables all prompts, defaults to false
@@ -143,11 +149,13 @@ exports[`Snapshot for "inso help" 1`] = `
 
 A CLI for Insomnia!
   With this tool you can test, lint, and export your Insomnia data.
-  
+
   Testing: Inso accepts 3 types of input:
-    Insomnia application data - will be automatically detected, or you can set --workingDir to an alternaitve application data path.
-    Insomnia export files - set --src to the file path.
-    Git repositories - set --workingDir to the repository path.
+    Insomnia application data: will be automatically detected, or you can set --workingDir to an alternaitve application data path.
+    Git repositories: set --workingDir to the repository path.
+    Insomnia export files: set --exportFile to the file path.
+
+  Linting: Inso can lint an API specification from the Insomnia application data, a git repository, insomnia export file, or a file path.
 
   Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
 
@@ -157,7 +165,7 @@ Options:
   -w, --workingDir <dir>  set working directory, defaults to current working
                           directory, will detect a git repository or Insomnia
                           data directory (default: "")
-  --src <file>            set the Insomna export file read from (default: "")
+  --exportFile <file>     set the Insomna export file read from (default: "")
   --verbose               show additional logs while running the command
                           (default: false)
   --ci                    run in CI, disables all prompts, defaults to false
