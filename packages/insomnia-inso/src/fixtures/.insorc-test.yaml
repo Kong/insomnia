@@ -1,0 +1,6 @@
+options:
+  ci: false
+  shouldBeIgnored: this should be ignored because it is not a global option
+scripts:
+  lintSpec: inso lint spec
+  exportSpec: inso export spec

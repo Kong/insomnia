@@ -116,10 +116,10 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
           items={sections}
           className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
         >
-          {item => (
-            <Section key={item.id}>
-              <Header className='flex px-[--padding-md] items-center gap-2 text-[--hl-md]'><span>{item.display_name}</span><span className='bg-[--hl-md] h-[1px] flex-1' /></Header>
-              {item.items.map(grpcMethod => (
+          {section => (
+            <Section key={section.id}>
+              <Header className='flex px-[--padding-md] items-center gap-2 text-[--hl-md]'><span>{section.display_name}</span><span className='bg-[--hl-md] h-[1px] flex-1' /></Header>
+              {section.items.map(grpcMethod => (
                 <ListBoxItem
                   id={grpcMethod.id}
                   key={grpcMethod.id}

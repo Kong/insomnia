@@ -48,7 +48,7 @@ const features = [
     icon: 'search',
     title: 'Global search',
     description:
-      'You can now search for documents an collections across one or more organizations from one place, simply by using the new global search.',
+      'You can now search for documents and collections across one or more organizations from one place, simply by using the new global search.',
     image: global_search,
   },
   {

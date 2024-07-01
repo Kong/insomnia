@@ -8,7 +8,6 @@ import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
-import { Workspace } from '../../../models/workspace';
 import { Child, WorkspaceLoaderData } from '../../routes/workspace';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
@@ -170,7 +169,7 @@ export const Tree: FC<{
   );
 };
 
-export const ExportRequestsModal = ({ workspace, onClose }: { workspace: Workspace; onClose: () => void }) => {
+export const ExportRequestsModal = ({ workspaceIdToExport, onClose }: { workspaceIdToExport: string; onClose: () => void }) => {
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
   const workspaceFetcher = useFetcher();
   const [state, setState] = useState<{
@@ -180,9 +179,9 @@ export const ExportRequestsModal = ({ workspace, onClose }: { workspace: Workspa
   useEffect(() => {
     const isIdleAndUninitialized = workspaceFetcher.state === 'idle' && !workspaceFetcher.data;
     if (isIdleAndUninitialized) {
-      workspaceFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}`);
+      workspaceFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceIdToExport}`);
     }
-  }, [organizationId, projectId, workspaceFetcher, workspace._id]);
+  }, [organizationId, projectId, workspaceFetcher, workspaceIdToExport]);
   const workspaceLoaderData = workspaceFetcher?.data as WorkspaceLoaderData;
 
   useEffect(() => {
@@ -312,7 +311,7 @@ export const ExportRequestsModal = ({ workspace, onClose }: { workspace: Workspa
                 </Button>
                 <Button
                   onPress={() => {
-                    state?.treeRoot && exportRequestsToFile(workspace._id, getSelectedRequestIds(state.treeRoot));
+                    state?.treeRoot && exportRequestsToFile(workspaceIdToExport, getSelectedRequestIds(state.treeRoot));
                     close();
                   }}
                   isDisabled={isExportDisabled}

@@ -51,9 +51,6 @@ jobs:
       - name: Test Insomnia Testing
         run: npm test -w packages/insomnia-testing
 
-      - name: Test O2K
-        run: npm test -w packages/openapi-2-kong
-
       - name: Build app for smoke tests
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
 

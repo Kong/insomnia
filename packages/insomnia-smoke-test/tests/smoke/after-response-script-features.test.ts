@@ -46,15 +46,17 @@ test.describe('after-response script features tests', async () => {
         await expect(statusTag).toContainText('200 OK');
 
         // verify persisted environment
-        await page.getByLabel('Manage Environments').click();
+        await page.getByRole('button', { name: 'Manage Environments' }).click();
+        await page.getByRole('button', { name: 'Manage collection environments' }).click();
         const responseBody = page.getByRole('dialog').getByTestId('CodeEditor').locator('.CodeMirror-line');
         const rows = await responseBody.allInnerTexts();
         const bodyJson = JSON.parse(rows.join(' '));
 
         expect(bodyJson).toEqual({
-            // no environment is selected so the environment value is not persisted
+            // no environment is selected so the environment value will be persisted to the base environment
             '__fromAfterScript1': 'baseEnvironment',
             '__fromAfterScript2': 'collection',
+            '__fromAfterScript': 'environment',
         });
     });
 });

@@ -27,6 +27,7 @@ import { MockServer } from '../models/mock-server';
 import type { Request, RequestAuthentication, RequestHeader, RequestParameter } from '../models/request';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
 import type { Settings } from '../models/settings';
+import { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
@@ -41,7 +42,7 @@ import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
-export const getOrInheritAuthentication = ({ request, requestGroups }: { request: Request; requestGroups: RequestGroup[] }): RequestAuthentication | {} => {
+export const getOrInheritAuthentication = ({ request, requestGroups }: { request: Request | WebSocketRequest; requestGroups: RequestGroup[] }): RequestAuthentication | {} => {
   const hasValidAuth = getAuthObjectOrNull(request.authentication) && isAuthEnabled(request.authentication);
   if (hasValidAuth) {
     return request.authentication;
@@ -115,6 +116,12 @@ export const getPreRequestScriptOutput = async ({
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  let activeGlobalEnvironment: Environment | undefined = undefined;
+  if (workspaceMeta?.activeGlobalEnvironmentId) {
+    activeGlobalEnvironment = await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId) || undefined;
+  }
+
   if (!request.preRequestScript) {
     return {
       request,
@@ -132,6 +139,7 @@ export const getPreRequestScriptOutput = async ({
     baseEnvironment,
     clientCertificates,
     cookieJar,
+    globals: activeGlobalEnvironment,
   });
   if (!mutatedContext?.request) {
     // exiy early if there was a problem with the pre-request script
@@ -139,20 +147,26 @@ export const getPreRequestScriptOutput = async ({
     return null;
   }
 
-  await savePatchesMadeByScript(mutatedContext, environment, baseEnvironment);
+  await savePatchesMadeByScript(mutatedContext, environment, baseEnvironment, activeGlobalEnvironment);
   return {
     request: mutatedContext.request,
     environment: mutatedContext.environment,
     baseEnvironment: mutatedContext.baseEnvironment || baseEnvironment,
     clientCertificates: mutatedContext.clientCertificates || clientCertificates,
     settings: mutatedContext.settings || settings,
+    globals: mutatedContext.globals,
   };
 };
 
+// savePatchesMadeByScript persists entities
+// The rule for the global environment:
+//  - If no global environment is seleted, no operation
+//  - If one global environment is selected, it persists content to the selected global environment (base or sub).
 export async function savePatchesMadeByScript(
   mutatedContext: Awaited<ReturnType<typeof tryToExecutePreRequestScript>>,
   environment: Environment,
   baseEnvironment: Environment,
+  activeGlobalEnvironment: Environment | undefined,
 ) {
   if (!mutatedContext) {
     return;
@@ -186,9 +200,21 @@ export async function savePatchesMadeByScript(
       }
     );
   }
+
+  if (activeGlobalEnvironment && mutatedContext) {
+    invariant(mutatedContext.globals, 'globals must be defined when there is selected one');
+    await models.environment.update(
+      activeGlobalEnvironment,
+      {
+        data: mutatedContext.globals.data,
+        dataPropertyOrder: mutatedContext.globals.dataPropertyOrder,
+      }
+    );
+  }
 }
+
 export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
-  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response } = context;
+  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response, globals } = context;
   invariant(script, 'script must be provided');
 
   const settings = await models.settings.get();
@@ -202,29 +228,35 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         // TODO: restart the hidden browser window
       }, timeout + 2000);
     });
-    // const isBaseEnvironmentSelected = environment._id === baseEnvironment._id;
-    // if (isBaseEnvironmentSelected) {
-    //   // postman models base env as no env and does not persist, so we could handle that case better, but for now we throw
-    //   throw new Error('Base environment cannot be selected for script execution. Please select an environment.');
-    // }
+
     const executionPromise = cancellableRunScript({
       script,
       context: {
         request,
         timelinePath,
         timeout: settings.timeout,
-        // it inputs empty environment data when active environment is the base environment
-        // this is more deterministic and avoids that script accidently manipulates baseEnvironment instead of environment
-        environment: environment._id === baseEnvironment._id ? {} : (environment?.data || {}),
-        environmentName: environment._id === baseEnvironment._id ? '' : (environment?.name || ''),
-        baseEnvironment: baseEnvironment?.data || {},
-        baseEnvironmentName: baseEnvironment?.name || '',
+        // if the selected environment points to the base environment
+        // script operations on the environment will be applied on the base environment
+        environment: {
+          id: environment._id,
+          name: environment.name,
+          data: environment.data || {},
+        },
+        baseEnvironment: {
+          id: baseEnvironment._id,
+          name: baseEnvironment.name,
+          data: baseEnvironment.data || {},
+        },
         clientCertificates,
         settings,
         cookieJar,
         response,
+        globals: globals?.data || undefined,
       },
     });
+    // @TODO This looks overly complicated and could be simplified.
+    // If the timeout promise finishes first the execution promise is still running while it should be cancelled.
+    // Since the execution promise is cancellable and uses an abort controller we should add the timeout to the controller instead
     const output = await Promise.race([timeoutPromise, executionPromise]) as {
       request: Request;
       environment: Record<string, any>;
@@ -232,24 +264,35 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       settings: Settings;
       clientCertificates: ClientCertificate[];
       cookieJar: CookieJar;
+      globals: Record<string, any>;
     };
     console.log('[network] script execution succeeded', output);
 
     const envPropertyOrder = orderedJSON.parse(
-      JSON.stringify(output.environment),
+      JSON.stringify(output.environment.data),
       JSON_ORDER_PREFIX,
       JSON_ORDER_SEPARATOR,
     );
-    environment.data = output.environment;
+    environment.data = output.environment.data;
     environment.dataPropertyOrder = envPropertyOrder.map;
 
     const baseEnvPropertyOrder = orderedJSON.parse(
-      JSON.stringify(output.baseEnvironment),
+      JSON.stringify(output.baseEnvironment.data),
       JSON_ORDER_PREFIX,
       JSON_ORDER_SEPARATOR,
     );
-    baseEnvironment.data = output.baseEnvironment;
+    baseEnvironment.data = output.baseEnvironment.data;
     baseEnvironment.dataPropertyOrder = baseEnvPropertyOrder.map;
+
+    if (globals) {
+      const globalEnvPropertyOrder = orderedJSON.parse(
+        JSON.stringify(output.globals || {}),
+        JSON_ORDER_PREFIX,
+        JSON_ORDER_SEPARATOR,
+      );
+      globals.data = output.globals;
+      globals.dataPropertyOrder = globalEnvPropertyOrder.map;
+    }
 
     return {
       request: output.request,
@@ -258,6 +301,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       settings: output.settings,
       clientCertificates: output.clientCertificates,
       cookieJar: output.cookieJar,
+      globals,
     };
   } catch (err) {
     await fs.promises.appendFile(
@@ -288,6 +332,7 @@ interface RequestContextForScript {
   baseEnvironment: Environment;
   clientCertificates: ClientCertificate[];
   cookieJar: CookieJar;
+  globals?: Environment; // there could be no global environment
 }
 type RequestAndContextAndResponse = RequestContextForScript & {
   response: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
@@ -297,11 +342,37 @@ type RequestAndContextAndOptionalResponse = RequestContextForScript & {
   response?: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
 };
 export async function tryToExecutePreRequestScript(context: RequestContextForScript) {
-  return tryToExecuteScript({ script: context.request.preRequestScript, ...context });
+  const requestGroups = await db.withAncestors<Request | RequestGroup>(context.request, [
+    models.requestGroup.type,
+  ]) as (Request | RequestGroup)[];
+
+  const folderScripts = requestGroups.reverse()
+    .filter(group => group?.preRequestScript)
+    .map((group, i) => `const fn${i} = async ()=>{
+        ${group.preRequestScript}
+      }
+      await fn${i}();
+  `);
+  const joinedScript = [...folderScripts].join('\n');
+
+  return tryToExecuteScript({ script: joinedScript, ...context });
 };
 
 export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
-  return tryToExecuteScript({ script: context.request.afterResponseScript, ...context });
+  const requestGroups = await db.withAncestors<Request | RequestGroup>(context.request, [
+    models.requestGroup.type,
+  ]) as (Request | RequestGroup)[];
+
+  const folderScripts = requestGroups.reverse()
+    .filter(group => group?.afterResponseScript)
+    .map((group, i) => `const fn${i} = async ()=>{
+        ${group.afterResponseScript}
+      }
+      await fn${i}();
+  `);
+  const joinedScript = [...folderScripts].join('\n');
+
+  return tryToExecuteScript({ script: joinedScript, ...context });
 }
 
 export const tryToInterpolateRequest = async (

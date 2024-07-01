@@ -1,3 +1,5 @@
+import { AuthTypeOAuth2 } from '../../../models/request';
+import { forceBracketNotation } from '../../../templating/utils';
 import { fakerFunctions } from '../../../ui/components/templating/faker-functions';
 import { Converter, ImportRequest, Parameter } from '../entities';
 import {
@@ -11,7 +13,6 @@ import {
   Request1 as V200Request1,
   Url,
   UrlEncodedParameter as V200UrlEncodedParameter,
-  Variable2 as V200Variable2,
 } from './postman-2.0.types';
 import {
   Auth as V210Auth,
@@ -25,7 +26,6 @@ import {
   QueryParam,
   Request1 as V210Request1,
   UrlEncodedParameter as V210UrlEncodedParameter,
-  Variable2 as V210Variable2,
 } from './postman-2.1.types';
 
 export const id = 'postman';
@@ -34,7 +34,6 @@ export const description = 'Importer for Postman collections';
 
 type PostmanCollection = V200Schema | V210Schema;
 type EventList = V200EventList | V210EventList;
-type Variable = V200Variable2 | V210Variable2;
 
 type Authetication = V200Auth | V210Auth;
 
@@ -63,10 +62,31 @@ export const transformPostmanToNunjucksString = (inputString?: string | null) =>
   if (!inputString) {
     return '';
   }
-
-  return postmanTagRegexs.reduce((transformedString, { tag, regex }) => {
+  if (typeof inputString !== 'string') {
+    return inputString;
+  }
+  const replaceFaker = postmanTagRegexs.reduce((transformedString, { tag, regex }) => {
     return transformedString.replace(regex, postmanToNunjucksLookup[tag]);
   }, inputString);
+  return normaliseJsonPath(replaceFaker);
+};
+
+// old: {{ arr-name-with-dash }}
+// new: {{ _['arr-name-with-dash'] }}
+export const normaliseJsonPath = (input?: string) => {
+  if (!input) {
+    return '';
+  }
+  if (!input.includes('-')) {
+    return input;
+  }
+  // Use a regular expression to find and replace the pattern
+  return input.replace(/{{\s*([^ }]+)\s*[^}]*\s*}}/g, (_, match) => {
+    // Replace hyphens with underscores within the match
+    const replaced = forceBracketNotation('_', match);
+    // Return the replaced pattern within the curly braces
+    return `{{${replaced}}}`;
+  });
 };
 
 const POSTMAN_SCHEMA_V2_0 =
@@ -83,7 +103,7 @@ const mapGrantTypeToInsomniaGrantType = (grantType: string) => {
     return 'password';
   }
 
-  return grantType;
+  return grantType || 'authorization_code';
 };
 
 export function translateHandlersInScript(scriptContent: string): string {
@@ -111,18 +131,18 @@ export class ImportPostman {
     this.collection = collection;
   }
 
-  importVariable = (variables: Variable[]) => {
+  importVariable = (variables: { [key: string]: string }[]) => {
     if (variables?.length === 0) {
       return null;
     }
 
-    const variable: { [key: string]: Variable['value'] } = {};
+    const variable: { [key: string]: string } = {};
     for (let i = 0; i < variables.length; i++) {
-      const key = variables[i].key;
+      const { key, value } = variables[i];
       if (key === undefined) {
         continue;
       }
-      variable[key] = variables[i].value;
+      variable[key] = transformPostmanToNunjucksString(value);
     }
     return variable;
   };
@@ -243,13 +263,19 @@ export class ImportPostman {
     }) as Parameter);
   };
 
-  importFolderItem = ({ name, description }: Folder, parentId: string) => {
+  importFolderItem = ({ name, description, event, auth }: Folder, parentId: string) => {
+    const { authentication } = this.importAuthentication(auth);
+    const preRequestScript = this.importPreRequestScript(event);
+    const afterResponseScript = this.importAfterResponseScript(event);
     return {
       parentId,
       _id: `__GRP_${requestGroupCount++}__`,
       _type: 'request_group',
       name,
       description: description || '',
+      preRequestScript,
+      afterResponseScript,
+      authentication,
     };
   };
 
@@ -258,15 +284,24 @@ export class ImportPostman {
       item,
       info: { name, description },
       variable,
+      auth,
+      event,
     } = this.collection;
 
-    const postmanVariable = this.importVariable(variable || []);
+    const postmanVariable = this.importVariable((variable as { [key: string]: string }[]) || []);
+    const { authentication } = this.importAuthentication(auth);
+    const preRequestScript = this.importPreRequestScript(event);
+    const afterResponseScript = this.importAfterResponseScript(event);
+
     const collectionFolder: ImportRequest = {
       parentId: '__WORKSPACE_ID__',
       _id: `__GRP_${requestGroupCount++}__`,
       _type: 'request_group',
       name,
       description: typeof description === 'string' ? description : '',
+      authentication,
+      preRequestScript,
+      afterResponseScript,
     };
 
     if (postmanVariable) {
@@ -792,7 +827,7 @@ export class ImportPostman {
       disabled: false,
     };
   };
-  importOauth2Authentication = (auth: Authetication) => {
+  importOauth2Authentication = (auth: Authetication): AuthTypeOAuth2 | {} => {
     if (!auth.oauth2) {
       return {};
     }

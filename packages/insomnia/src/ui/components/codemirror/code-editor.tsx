@@ -91,7 +91,7 @@ export interface CodeEditorProps {
   noLint?: boolean;
   noMatchBrackets?: boolean;
   noStyleActiveLine?: boolean;
-  // used only for saving env editor state
+  // used only for saving env editor state, focusEvent doesn't work well
   onBlur?: (e: FocusEvent) => void;
   onChange?: (value: string) => void;
   onPaste?: (value: string) => string;
@@ -103,7 +103,6 @@ export interface CodeEditorProps {
   // NOTE: for caching scroll and marks
   uniquenessKey?: string;
   updateFilter?: (filter: string) => void;
-  disableContextMenu?: boolean;
 }
 
 const normalizeMimeType = (mode?: string) => {
@@ -172,7 +171,6 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
   style,
   uniquenessKey,
   updateFilter,
-  disableContextMenu,
 }, ref) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -266,6 +264,27 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
     },
   });
+
+  // NOTE: maybe we don't need this anymore? Maybe not.
+  const persistState = useCallback(() => {
+    if (uniquenessKey && codeMirror.current) {
+      editorStates[uniquenessKey] = {
+        scroll: codeMirror.current.getScrollInfo(),
+        selections: codeMirror.current.listSelections(),
+        cursor: codeMirror.current.getCursor(),
+        history: codeMirror.current.getHistory(),
+        marks: codeMirror.current.getAllMarks()
+          .filter(mark => mark.__isFold)
+          .map((mark): Partial<CodeMirror.MarkerRange> => {
+            const markerRange = mark.find();
+            return markerRange && 'from' in markerRange ? markerRange : {
+              from: undefined,
+              to: undefined,
+            };
+          }),
+      };
+    }
+  }, [uniquenessKey, codeMirror]);
 
   const initEditor = useCallback(() => {
     if (!textAreaRef.current) {
@@ -369,6 +388,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
         meta: event.metaKey,
         keyCode: event.keyCode,
       };
+
       const isUserDefinedKeyboardShortcut = isKeyCombinationInRegistry(pressedKeyComb, settings.hotKeyRegistry);
       const isAutoCompleteBinding = isKeyCombinationInRegistry(pressedKeyComb, {
         'showAutocomplete': settings.hotKeyRegistry.showAutocomplete,
@@ -401,26 +421,6 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
         }
       }
     });
-    // NOTE: maybe we don't need this anymore?
-    const persistState = () => {
-      if (uniquenessKey && codeMirror.current) {
-        editorStates[uniquenessKey] = {
-          scroll: codeMirror.current.getScrollInfo(),
-          selections: codeMirror.current.listSelections(),
-          cursor: codeMirror.current.getCursor(),
-          history: codeMirror.current.getHistory(),
-          marks: codeMirror.current.getAllMarks()
-            .filter(mark => mark.__isFold)
-            .map((mark): Partial<CodeMirror.MarkerRange> => {
-              const markerRange = mark.find();
-              return markerRange && 'from' in markerRange ? markerRange : {
-                from: undefined,
-                to: undefined,
-              };
-            }),
-        };
-      }
-    };
 
     codeMirror.current.on('scroll', persistState);
     codeMirror.current.on('fold', persistState);
@@ -458,7 +458,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
         codeMirror.current.foldCode(from, to);
       }
     }
-  }, [defaultValue, dynamicHeight, extraKeys, filter, getAutocompleteConstants, getAutocompleteSnippets, handleGetRenderContext, handleRender, hideGutters, hideLineNumbers, hintOptions, indentSize, indentWithTabs, infoOptions, jumpOptions, maybePrettifyAndSetValue, mode, noLint, noMatchBrackets, noStyleActiveLine, onClickLink, pinToBottom, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.editorLineWrapping, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, uniquenessKey, onPaste]);
+  }, [defaultValue, dynamicHeight, extraKeys, filter, getAutocompleteConstants, getAutocompleteSnippets, handleGetRenderContext, handleRender, hideGutters, hideLineNumbers, hintOptions, indentSize, indentWithTabs, infoOptions, jumpOptions, maybePrettifyAndSetValue, mode, noLint, noMatchBrackets, noStyleActiveLine, onClickLink, pinToBottom, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.editorLineWrapping, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, uniquenessKey, onPaste, persistState]);
 
   const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();
@@ -470,6 +470,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     initEditor();
   });
   useUnmount(() => {
+    persistState();
     cleanUpEditor();
   });
 
@@ -495,7 +496,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
             tryToSetOption('lint', newValue);
           }
         } catch (err) {
-          console.log('Failed to set CodeMirror option', err.message);
+          console.log('[codemirror] Failed to set CodeMirror option', err.message);
         }
         onChange(doc.getValue() || '');
         setOriginalCode(doc.getValue() || '');
@@ -516,7 +517,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     try {
       codeMirror.current?.setOption(key, value);
     } catch (err) {
-      console.log('Failed to set CodeMirror option', err.message, { key, value });
+      console.log('[codemirror] Failed to set CodeMirror option', err.message, { key, value });
     }
   };
   useEffect(() => {
@@ -572,7 +573,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
       data-editor-type="text"
       data-testid="CodeEditor"
       onContextMenu={event => {
-        if (readOnly || disableContextMenu) {
+        if (readOnly || !enableNunjucks) {
           return;
         }
         event.preventDefault();

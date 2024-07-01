@@ -32,7 +32,7 @@ export class SpectralRunner {
           return;
         }
         if (diagnostics) {
-          console.log('Received diagnostics for old task, ignoring');
+          console.log('[spectral] Received diagnostics for old task, ignoring');
         } else {
           console.error('Error while running diagnostics:', e.data);
         }

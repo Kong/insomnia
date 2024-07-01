@@ -186,7 +186,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     // Clear history so we can't undo the initial set
     codeMirror.current?.clearHistory();
     // Setup nunjucks listeners
-    if (!readOnly && handleRender && !settings.nunjucksPowerUserMode) {
+    if (handleRender && !settings.nunjucksPowerUserMode) {
       codeMirror.current?.enableNunjucksTags(
         handleRender,
         handleGetRenderContext,

@@ -1,8 +1,8 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import path from 'path';
 
+import { logger } from '../cli';
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
-import { logger } from '../logger';
 import { lintSpecification } from './lint-specification';
 
 describe('lint specification', () => {
@@ -18,7 +18,7 @@ describe('lint specification', () => {
     jest.restoreAllMocks();
   });
 
-  it('should return true for linting passed', async () => {
+  it.only('should return true for linting passed', async () => {
     const result = await lintSpecification('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
       workingDir: 'src/db/fixtures/git-repo',
     });

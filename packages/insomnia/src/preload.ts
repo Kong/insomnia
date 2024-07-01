@@ -41,6 +41,10 @@ const grpc: gRPCBridgeAPI = {
   loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
 };
 const main: Window['main'] = {
+  startExecution: options => ipcRenderer.send('startExecution', options),
+  addExecutionStep: options => ipcRenderer.send('addExecutionStep', options),
+  completeExecutionStep: options => ipcRenderer.send('completeExecutionStep', options),
+  getExecution: options => ipcRenderer.invoke('getExecution', options),
   loginStateChange: () => ipcRenderer.send('loginStateChange'),
   restart: () => ipcRenderer.send('restart'),
   openInBrowser: options => ipcRenderer.send('openInBrowser', options),
@@ -79,7 +83,7 @@ const main: Window['main'] = {
       invariant(port, 'hiddenWindowPort is undefined');
 
       port.onmessage = event => {
-        console.log('received result:', event.data);
+        console.log('[preload] received result:', event.data);
         if (event.data.error) {
           reject(new Error(event.data.error));
         }

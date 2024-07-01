@@ -170,7 +170,7 @@ async function _traversePluginPath(
       } catch (err) {
         showError({
           title: 'Plugin Error',
-          message: 'Failed to load plugin ' + filename,
+          message: 'Failed to load plugin ' + filename + '. Please contact the plugin author sharing the below stack trace to help them to ensure compatibility with the latest Insomnia.',
           error: err,
         });
       }

@@ -15,6 +15,7 @@ import { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { jsonPrettify } from '../../../utils/prettify/json';
+import { useExecutionState } from '../../hooks/use-execution-state';
 import { MockRouteLoaderData } from '../../routes/mock-route';
 import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -54,6 +55,7 @@ export const MockResponsePane = () => {
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [previewMode, setPreviewMode] = useState<PreviewMode>(PREVIEW_MODE_FRIENDLY);
   const requestFetcher = useFetcher({ key: 'mock-request-fetcher' });
+  const { steps } = useExecutionState({ requestId: activeResponse?.parentId });
 
   useEffect(() => {
     const fn = async () => {
@@ -69,6 +71,8 @@ export const MockResponsePane = () => {
       <PlaceholderResponsePane>
         {<ResponseTimer
           handleCancel={() => activeResponse && cancelRequestById(activeResponse.parentId)}
+          activeRequestId={mockRoute._id}
+          steps={steps}
         />}
       </PlaceholderResponsePane>
     );
@@ -79,7 +83,7 @@ export const MockResponsePane = () => {
         <PaneHeader className="row-spaced">
           <div aria-atomic="true" aria-live="polite" className="no-wrap scrollable scrollable--no-bars pad-left">
             <StatusTag statusCode={activeResponse.statusCode} statusMessage={activeResponse.statusMessage} />
-            <TimeTag milliseconds={activeResponse.elapsedTime} />
+            <TimeTag milliseconds={activeResponse.elapsedTime} steps={[]} />
             <SizeTag bytesRead={activeResponse.bytesRead} bytesContent={activeResponse.bytesContent} />
           </div>
         </PaneHeader>
@@ -150,7 +154,7 @@ const HistoryViewWrapperComponentFactory = ({ mockServer, mockRoute }: { mockSer
         setLogs(res);
         return;
       }
-      console.log('Error: fetching logs from remote', { mockbinUrl, res });
+      console.log('[mock] Error: fetching logs from remote', { mockbinUrl, res });
     } catch (e) {
       // network erros will be managed by the upsert trigger, so we can ignore them here
       console.log({ mockbinUrl, e });

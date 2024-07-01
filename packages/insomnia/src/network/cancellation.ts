@@ -7,6 +7,7 @@ import { Request } from '../models/request';
 const cancelRequestFunctionMap = new Map<string, () => void>();
 
 export async function cancelRequestById(requestId: string) {
+  window.main.completeExecutionStep({ requestId });
   const cancel = cancelRequestFunctionMap.get(requestId);
   if (cancel) {
     return cancel();

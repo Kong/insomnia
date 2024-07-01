@@ -10,14 +10,17 @@ import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
+import { GrpcRequest } from '../../models/grpc-request';
 import { getById, update } from '../../models/helpers/request-operations';
 import { MockServer } from '../../models/mock-server';
 import { isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
-import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
+import { isRequestGroup, isRequestGroupId, RequestGroup } from '../../models/request-group';
+import { isRequestGroupMeta } from '../../models/request-group-meta';
 import { UnitTest } from '../../models/unit-test';
 import { UnitTestSuite } from '../../models/unit-test-suite';
-import { isCollection, isMockServer, scopeToActivity, Workspace } from '../../models/workspace';
+import { WebSocketRequest } from '../../models/websocket-request';
+import { isCollection, isEnvironment, scopeToActivity, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
@@ -324,7 +327,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   invariant(typeof name === 'string', 'Name is required');
 
   const scope = formData.get('scope');
-  invariant(scope === 'design' || scope === 'collection' || scope === 'mock-server', 'Scope is required');
+  invariant(scope === 'design' || scope === 'collection' || scope === 'mock-server' || scope === 'environment', 'Scope is required');
 
   const flushId = await database.bufferChanges();
 
@@ -367,7 +370,9 @@ export const createNewWorkspaceAction: ActionFunction = async ({
         workspace,
       });
     }
-
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.mockCreate,
+    });
     return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
   }
 
@@ -395,8 +400,8 @@ export const createNewWorkspaceAction: ActionFunction = async ({
 
   if (isCollection(workspace)) {
     event = SegmentEvent.collectionCreate;
-  } else if (isMockServer(workspace)) {
-    event = SegmentEvent.mockCreate;
+  } else if (isEnvironment(workspace)) {
+    event = SegmentEvent.environmentWorkspaceCreate;
   }
 
   window.main.trackSegmentEvent({
@@ -1177,6 +1182,27 @@ export const setActiveEnvironmentAction: ActionFunction = async ({
   return null;
 };
 
+export const setActiveGlobalEnvironmentAction: ActionFunction = async ({
+  request, params,
+}) => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+
+  const formData = await request.formData();
+
+  const environmentId = formData.get('environmentId');
+
+  invariant(typeof environmentId === 'string', 'Environment ID is required');
+
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+
+  invariant(workspaceMeta, 'Workspace meta not found');
+
+  await models.workspaceMeta.update(workspaceMeta, { activeGlobalEnvironmentId: environmentId || null });
+
+  return null;
+};
+
 export const updateCookieJarAction: ActionFunction = async ({
   request, params,
 }) => {
@@ -1348,4 +1374,53 @@ export const updateMockServerAction: ActionFunction = async ({ request, params }
   invariant(mockServer, 'Mock server not found');
   await models.mockServer.update(mockServer, patch);
   return null;
+};
+
+export const toggleExpandAllRequestGroupsAction: ActionFunction = async ({ params, request }) => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
+  const data = await request.json() as {
+    toggle: 'collapse-all' | 'expand-all';
+  };
+  const isCollapsed = data.toggle === 'collapse-all';
+
+  const descendants = await database.withDescendants(workspace);
+  const requestGroups = descendants.filter(isRequestGroup);
+  const requestGroupMetas = descendants.filter(isRequestGroupMeta);
+  await Promise.all(requestGroups.map(requestGroup => {
+    const requestGroupMeta = requestGroupMetas.find(meta => meta.parentId === requestGroup._id);
+
+    if (requestGroupMeta) {
+      return models.requestGroupMeta.update(requestGroupMeta, { collapsed: isCollapsed });
+    }
+    return models.requestGroupMeta.create({ parentId: requestGroup._id, collapsed: isCollapsed });
+  }));
+  return null;
+};
+
+export const expandAllForRequest: ActionFunction = async ({ params, request }) => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+  const data = await request.json() as {
+    requestId: string;
+  };
+  const activeRequest = await getById(data.requestId);
+  invariant(request, 'Request not found');
+
+  const ancestors = await database.withAncestors<RequestGroup | Request | WebSocketRequest | GrpcRequest>(activeRequest, [models.requestGroup.type]);
+
+  const requestGroups = ancestors.filter(isRequestGroup);
+
+  await Promise.all(requestGroups.map(async requestGroup => {
+    const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroup._id);
+
+    if (requestGroupMeta) {
+      return models.requestGroupMeta.update(requestGroupMeta, { collapsed: false });
+    }
+    return models.requestGroupMeta.create({ parentId: requestGroup._id, collapsed: false });
+  }));
+
+  return { success: true };
 };

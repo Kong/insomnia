@@ -116,7 +116,7 @@ export async function duplicate(request: GrpcRequest, patch: Partial<GrpcRequest
       $gt: request.metaSortKey,
     },
   };
-  // @ts-expect-error -- TSCONVERSION
+
   const [nextRequest] = await db.find<GrpcRequest>(type, q, {
     metaSortKey: 1,
   });

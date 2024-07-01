@@ -14,6 +14,7 @@ export type HandleChannels =
   | 'curl.readyState'
   | 'curlRequest'
   | 'database.caCertificate.create'
+  | 'getExecution'
   | 'grpc.loadMethods'
   | 'grpc.loadMethodsFromReflection'
   | 'installPlugin'
@@ -63,7 +64,10 @@ export type MainOnChannels =
   | 'trackSegmentEvent'
   | 'webSocket.close'
   | 'webSocket.closeAll'
-  | 'writeText';
+  | 'writeText'
+  | 'addExecutionStep'
+  | 'completeExecutionStep'
+  | 'startExecution';
 export type RendererOnChannels =
   'clear-all-models'
   | 'clear-model'

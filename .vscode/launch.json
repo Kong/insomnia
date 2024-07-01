@@ -68,9 +68,6 @@
       "type": "pickString",
       "options": [
         {
-          "value": "generate config"
-        },
-        {
           "value": "run test"
         },
         {

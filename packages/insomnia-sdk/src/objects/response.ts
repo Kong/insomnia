@@ -1,3 +1,4 @@
+import Ajv from 'ajv';
 import deepEqual from 'deep-equal';
 import { RESPONSE_CODE_REASONS } from 'insomnia/src/common/constants';
 import { sendCurlAndWriteTimelineError, type sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
@@ -186,34 +187,68 @@ export class Response extends Property {
 
     // Besides chai.expect, "to" is extended to support cases like:
     // insomnia.response.to.have.status(200);
+    // insomnia.response.to.not.have.status(200);
     get to() {
         type valueType = boolean | number | string | object | undefined;
-        const verify = (got: valueType, expected: valueType) => {
-            if (['boolean', 'number', 'string', 'undefined'].includes(typeof got) && expected === got) {
-                return;
-            } else if (deepEqual(got, expected, { strict: true })) {
+
+        const verify = (got: valueType, expected: valueType, checkEquality: boolean = true) => {
+            if (['boolean', 'number', 'string', 'undefined'].includes(typeof got)) {
+                if ((checkEquality && expected === got) || (!checkEquality && expected !== got)) {
+                    return;
+                }
+            } else if (
+                (checkEquality && deepEqual(got, expected, { strict: true })) ||
+                (!checkEquality && !deepEqual(got, expected, { strict: true }))
+            ) {
                 return;
             }
             throw Error(`"${got}" is not equal to the expected value: "${expected}"`);
+        };
+        const haveStatus = (expected: number | string, checkEquality: boolean) => {
+            if (typeof expected === 'string') {
+                verify(this.status, expected, checkEquality);
+            } else {
+                verify(this.code, expected, checkEquality);
+            }
+        };
+        const haveHeader = (expected: string, checkEquality: boolean) => verify(
+            this.headers.toObject().find(header => header.key === expected) !== undefined,
+            checkEquality,
+        );
+        const haveBody = (expected: string, checkEquality: boolean) => verify(this.text(), expected, checkEquality);
+        const haveJsonBody = (expected: object, checkEquality: boolean) => verify(this.json(), expected, checkEquality);
+        const haveJsonSchema = (expected: object, checkEquality: boolean) => {
+            const ajv = new Ajv();
+
+            try {
+                const jsonBody = JSON.parse(this.body);
+                const schemaMatched = ajv.validate(expected, jsonBody);
+                if ((schemaMatched && checkEquality) || (!schemaMatched && !checkEquality)) {
+                    return;
+                }
+            } catch (e) {
+                throw Error(`Failed to verify response body schema, response could not be a valid json: "${e}"`);
+            }
+            throw Error("Response's schema is not equal to the expected value");
         };
 
         return {
             // follows extend chai's chains for compatibility
             have: {
-                status: (expected: number | string) => {
-                    if (typeof expected === 'string') {
-                        verify(this.status, expected);
-                    } else {
-                        verify(this.code, expected);
-                    }
+                status: (expected: number | string) => haveStatus(expected, true),
+                header: (expected: string) => haveHeader(expected, true),
+                body: (expected: string) => haveBody(expected, true),
+                jsonBody: (expected: object) => haveJsonBody(expected, true),
+                jsonSchema: (expected: object) => haveJsonSchema(expected, true),
+            },
+            not: {
+                have: {
+                    status: (expected: number | string) => haveStatus(expected, false),
+                    header: (expected: string) => haveHeader(expected, false),
+                    body: (expected: string) => haveBody(expected, false),
+                    jsonBody: (expected: object) => haveJsonBody(expected, false),
+                    jsonSchema: (expected: object) => haveJsonSchema(expected, false),
                 },
-                header: (expected: string) => verify(
-                    this.headers.toObject().find(header => header.key === expected) !== undefined,
-                    true,
-                ),
-
-                body: (expected: string) => verify(this.text(), expected),
-                jsonBody: (expected: object) => verify(this.json(), expected),
             },
         };
     }

@@ -468,10 +468,11 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
 
             const responseType = ((): OAuth2ResponseType => {
                 const inputResponseType = findValueInOauth2Options('response_type', authObj.oauth2);
-                if (['code', 'id_token', 'id_token token', 'none', 'token'].includes(inputResponseType)) {
+                // responseType is currently always set to '' in our request auth model, this should be investigated what is correct to be set
+                if (['code', 'id_token', 'id_token token', 'none', 'token', ''].includes(inputResponseType)) {
                     return inputResponseType as OAuth2ResponseType;
                 };
-                throw Error(`unknown response type for oauth2: "${inputResponseType}", it could be: 'code' | 'id_token' | 'id_token token' | 'none' | 'token'`);
+                throw Error(`unknown response type for oauth2: "${inputResponseType}", it could be: 'code' | 'id_token' | 'id_token token' | 'none' | 'token' | ''`);
             })();
 
             return {

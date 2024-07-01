@@ -133,7 +133,7 @@ export const MockRouteRoute = () => {
       if (typeof res === 'string') {
         return '';
       }
-      console.log('Error: invalid response from remote', { res, mockbinUrl });
+      console.log('[mock] Error: invalid response from remote', { res, mockbinUrl });
       return 'Unexpected response, see console for details';
     } catch (e) {
       console.log(e);
@@ -247,7 +247,6 @@ export const MockRouteRoute = () => {
                 key={mockRoute._id}
                 showPrettifyButton
                 defaultValue={mockRoute.body}
-                enableNunjucks
                 onChange={body => patchMockRoute(mockRoute._id, { body })}
                 onBlur={onBlurTriggerUpsert}
                 mode={mockRoute.mimeType}

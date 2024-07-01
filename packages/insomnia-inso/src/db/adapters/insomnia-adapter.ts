@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import YAML from 'yaml';
 
-import { InsoError } from '../../errors';
+import { InsoError } from '../../cli';
 import { DbAdapter } from '../index';
 import { emptyDb } from '../index';
 import { BaseModel } from '../models/types';

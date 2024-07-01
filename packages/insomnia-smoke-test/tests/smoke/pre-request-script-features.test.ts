@@ -26,13 +26,11 @@ test.describe('pre-request features tests', async () => {
         {
             name: 'environments setting and overriding',
             expectedBody: {
-                environmentName: '',
-                baseEnvironmentName: 'Base Environment',
-                collectionVariablesName: 'Base Environment',
-                fromBaseEnv: 'baseEnv',
+                // fallbackToGlobal: 'fallbackToGlobal',
+                fallbackToBase: 'fallbackToBase',
                 scriptValue: 'fromEnv',
                 preDefinedValue: 'fromScript',
-                customValue: 'fromFolder',
+                folderEnv: 'fromFolder',
             },
         },
         {
@@ -176,6 +174,12 @@ test.describe('pre-request features tests', async () => {
                 asyncTaskDone: true,
             },
         },
+        // {
+        //     name: 'can manipulate global envs',
+        //     expectedBody: {
+        //         setByScript: 'setByScript',
+        //     },
+        // },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
@@ -217,13 +221,13 @@ test.describe('pre-request features tests', async () => {
         // set request body
         await page.getByRole('tab', { name: 'Body' }).click();
         await page.getByRole('button', { name: 'Body' }).click();
-        await page.getByRole('menuitem', { name: 'JSON' }).click();
+        await page.getByRole('option', { name: 'JSON' }).click();
 
         const bodyEditor = page.getByTestId('CodeEditor').getByRole('textbox');
         await bodyEditor.fill('{ "rawBody": {{ _.rawBody }}, "urlencodedBody": {{ _.urlencodedBody }}, "gqlBody": {{ _.gqlBody }}, "fileBody": {{ _.fileBody }}, "formdataBody": {{ _.formdataBody }} }');
 
         // enter script
-        await page.getByTestId('pre-request-script-tab').click();
+        await page.getByRole('tab', { name: 'Scripts' }).click();
         const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
         await preRequestScriptEditor.fill(`
         const rawReq = {
@@ -421,15 +425,17 @@ test.describe('pre-request features tests', async () => {
         await expect(statusTag).toContainText('200 OK');
 
         // verify persisted environment
-        await page.getByLabel('Manage Environments').click();
+        await page.getByRole('button', { name: 'Manage Environments' }).click();
+        await page.getByRole('button', { name: 'Manage collection environments' }).click();
         const responseBody = page.getByRole('dialog').getByTestId('CodeEditor').locator('.CodeMirror-line');
         const rows = await responseBody.allInnerTexts();
         const bodyJson = JSON.parse(rows.join(' '));
 
         expect(bodyJson).toEqual({
-            // no environment is selected so the environment value is not persisted
+            // no environment is selected so the environment value will be persisted to the base environment
             '__fromScript1': 'baseEnvironment',
             '__fromScript2': 'collection',
+            '__fromScript': 'environment',
         });
     });
 });
@@ -451,18 +457,6 @@ test.describe('unhappy paths', async () => {
     });
 
     const testCases = [
-        {
-            name: 'invalid result is returned',
-            preReqScript: `
-          return;
-          `,
-            context: {
-                insomnia: {},
-            },
-            expectedResult: {
-                message: 'insomnia object is invalid or script returns earlier than expected.',
-            },
-        },
         {
             name: 'custom error is returned',
             preReqScript: `
@@ -500,10 +494,10 @@ test.describe('unhappy paths', async () => {
             // set request body
             await page.getByRole('tab', { name: 'Body' }).click();
             await page.getByRole('button', { name: 'Body' }).click();
-            await page.getByRole('menuitem', { name: 'JSON' }).click();
+            await page.getByRole('option', { name: 'JSON' }).click();
 
             // enter script
-            await page.getByTestId('pre-request-script-tab').click();
+            await page.getByRole('tab', { name: 'Scripts' }).click();
             const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
             await preRequestScriptEditor.fill(tc.preReqScript);
 

@@ -1,11 +1,10 @@
 import { generate, runTestsCli, TestSuite } from 'insomnia-testing';
 
+import { type GlobalOptions, logger } from '../cli';
 import { loadDb } from '../db';
 import { loadEnvironment, promptEnvironment } from '../db/models/environment';
 import type { UnitTest, UnitTestSuite } from '../db/models/types';
 import { loadTestSuites, promptTestSuites } from '../db/models/unit-test-suite';
-import type { GlobalOptions } from '../get-options';
-import { logger, noConsoleLog } from '../logger';
 
 export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress';
 
@@ -47,6 +46,16 @@ const createTestSuite = (dbSuite: UnitTestSuite, dbTests: UnitTest[]): TestSuite
   })),
 });
 
+const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
+  const oldConsoleLog = console.log;
+  console.log = () => { };
+  try {
+    return await callback();
+  } finally {
+    console.log = oldConsoleLog;
+  }
+};
+
 // Identifier can be the id or name of a workspace, apiSpec, or unit test suite
 export async function runInsomniaTests(
   identifier: string | null | undefined,
@@ -56,10 +65,9 @@ export async function runInsomniaTests(
     return false;
   }
 
-  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci, testNamePattern, disableCertValidation, src } = options;
+  const { reporter, bail, keepFile, workingDir, env, ci, testNamePattern, disableCertValidation, src } = options;
   const db = await loadDb({
     workingDir,
-    appDataDir,
     filterTypes: [],
     src,
   });

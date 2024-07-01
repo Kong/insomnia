@@ -1,38 +1,76 @@
 import React, { FC } from 'react';
+import { Button, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT } from '../../../common/constants';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
+import { Icon } from '../icon';
 
 interface Props {
   previewMode: string;
-  onClick: (previewMode: string) => void;
+  onSelect: (previewMode: string) => void;
 }
-export const WebSocketPreviewMode: FC<Props> = ({ previewMode, onClick }) => {
+
+const contentTypes: {
+  id: string;
+  name: string;
+}[] = [
+    {
+      id: CONTENT_TYPE_JSON,
+      name: 'JSON',
+    },
+    {
+      id: CONTENT_TYPE_PLAINTEXT,
+      name: 'Raw',
+    },
+  ];
+
+export const WebSocketPreviewMode: FC<Props> = ({ previewMode, onSelect }) => {
   return (
-    <Dropdown
-      aria-label="Websocket Preview Mode Dropdown"
-      triggerButton={
-        <DropdownButton className="tall !text-[--hl]">
-          {{
-            [CONTENT_TYPE_JSON]: 'JSON',
-            [CONTENT_TYPE_PLAINTEXT]: 'Raw',
-          }[previewMode]}
-          <i className="fa fa-caret-down space-left" />
-        </DropdownButton>
-      }
+    <Select
+      aria-label="Change Body Type"
+      name="body-type"
+      onSelectionChange={contentType => {
+        onSelect(contentType.toString());
+      }}
+      selectedKey={previewMode}
     >
-      <DropdownItem aria-label='JSON'>
-        <ItemContent
-          label="JSON"
-          onClick={() => onClick(CONTENT_TYPE_JSON)}
-        />
-      </DropdownItem>
-      <DropdownItem aria-label='Raw'>
-        <ItemContent
-          label="Raw"
-          onClick={() => onClick(CONTENT_TYPE_PLAINTEXT)}
-        />
-      </DropdownItem>
-    </Dropdown>
+      <Button className="px-4 min-w-[12ch] py-1 font-bold flex flex-1 items-center justify-between gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+        <SelectValue<{ id: string; name: string }>
+          className="flex truncate items-center justify-center gap-2"
+        >
+          {({ selectedText }) => (
+            <div className='flex items-center gap-2 text-[--hl]'>
+              {selectedText}
+            </div>
+          )}
+        </SelectValue>
+        <Icon icon="caret-down" />
+      </Button>
+      <Popover className="min-w-max">
+        <ListBox
+          items={contentTypes}
+          className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+        >
+          {item => (
+            <ListBoxItem
+              className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+              aria-label={item.name}
+              textValue={item.name}
+            >
+              {({ isSelected }) => (
+                <>
+                  <span>{item.name}</span>
+                  {isSelected && (
+                    <Icon
+                      icon="check"
+                      className="text-[--color-success] justify-self-end"
+                    />
+                  )}
+                </>
+              )}
+            </ListBoxItem>
+          )}
+        </ListBox>
+      </Popover>
+    </Select>
   );
 };

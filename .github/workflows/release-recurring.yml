@@ -53,6 +53,17 @@ jobs:
       - name: Package
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+      
+      # - name: Set publish metadata # Checksum for provenance must be calculated before moving artifacts temporarily
+      #   id: metadata
+      #   run: |
+      #     INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)
+      #     echo "INSO_VERSION=${INSO_VERSION}" >> $GITHUB_ENV
+      #     ./.github/scripts/generate-binary-digest.sh
+      #   env:
+      #     ARTIFACT_PATH: "packages"
+      #     CLI_ARTIFACT_SHAFILE: ${{runner.temp}}/cli.sha256
+      #     ELECTRON_ARTIFACT_SHAFILE: ${{runner.temp}}/electron.sha256
 
       - name: Test critical path on packaged electron app
         run: npm run test:package -w packages/insomnia-smoke-test -- --project=Critical

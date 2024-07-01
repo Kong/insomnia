@@ -41,7 +41,7 @@ const loadRuleset = async (rulesetPath: string) => {
       cachedRuleset.path = rulesetPath;
       cachedRuleset.ruleset = ruleset;
     } catch (err) {
-      console.log('Error while parsing ruleset:', err);
+      console.log('[spectral] Error while parsing ruleset:', err);
     }
   }
 

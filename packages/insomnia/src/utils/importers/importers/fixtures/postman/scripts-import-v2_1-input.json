@@ -46,5 +46,37 @@
 			},
 			"response": []
 		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"console.log('pre')"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"console.log('after')"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "dssx",
+			"value": "{{env-var-in-global}}"
+		},
+		{
+			"key": "bob",
+			"value": "something"
+		}
 	]
 }

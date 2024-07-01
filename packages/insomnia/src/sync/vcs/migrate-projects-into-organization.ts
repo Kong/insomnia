@@ -18,11 +18,11 @@ import { Project, RemoteProject } from '../../models/project';
 
 export const shouldMigrateProjectUnderOrganization = async () => {
   const [localProjectCount, legacyRemoteProjectCount] = await Promise.all([
-    database.count(models.project.type, {
+    database.count<Project>(models.project.type, {
       remoteId: null,
       parentId: null,
     }),
-    database.count(models.project.type, {
+    database.count<Project>(models.project.type, {
       remoteId: { $ne: null },
       parentId: null,
     }),

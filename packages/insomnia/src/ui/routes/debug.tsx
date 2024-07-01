@@ -6,9 +6,11 @@ import {
   Breadcrumb,
   Breadcrumbs,
   Button,
+  Collection,
   DropIndicator,
   GridList,
   GridListItem,
+  Header,
   Input,
   ListBox,
   ListBoxItem,
@@ -17,8 +19,11 @@ import {
   MenuTrigger,
   Popover,
   SearchField,
+  Section,
   Select,
-  SelectValue,
+  ToggleButton,
+  Tooltip,
+  TooltipTrigger,
   useDragAndDrop,
 } from 'react-aria-components';
 import { ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -33,13 +38,12 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import { DEFAULT_SIDEBAR_SIZE, SORT_ORDERS, SortOrder, sortOrderName } from '../../common/constants';
+import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, SortOrder, sortOrderName } from '../../common/constants';
 import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
 import { PlatformKeyCombinations } from '../../common/settings';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
-import { Environment } from '../../models/environment';
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import {
@@ -56,11 +60,13 @@ import {
   WebSocketRequest,
 } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
+import { DropdownHint } from '../components/base/dropdown/dropdown-hint';
 import { RequestActionsDropdown } from '../components/dropdowns/request-actions-dropdown';
 import { RequestGroupActionsDropdown } from '../components/dropdowns/request-group-actions-dropdown';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { EditableInput } from '../components/editable-input';
+import { EnvironmentPicker } from '../components/environment-picker';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
@@ -68,6 +74,7 @@ import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
+import { ImportModal } from '../components/modals/import-modal';
 import { PasteCurlModal } from '../components/modals/paste-curl-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
@@ -83,6 +90,7 @@ import { getMethodShortHand } from '../components/tags/method-tag';
 import { ConnectionCircle } from '../components/websockets/action-bar';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
+import { useExecutionState } from '../hooks/use-execution-state';
 import { useReadyState } from '../hooks/use-ready-state';
 import {
   CreateRequestType,
@@ -156,6 +164,11 @@ const getRequestNameOrFallback = (doc: Request | RequestGroup | GrpcRequest | We
   return !isRequestGroup(doc) ? doc.name || doc.url || 'Untitled request' : doc.name || 'Untitled folder';
 };
 
+const RequestTiming = ({ requestId }: { requestId: string }) => {
+  const { isExecuting } = useExecutionState({ requestId });
+  return isExecuting ? <ConnectionCircle className='flex-shrink-0' data-testid="WebSocketSpinner__Connected" /> : null;
+};
+
 export const Debug: FC = () => {
   const {
     activeWorkspace,
@@ -165,8 +178,6 @@ export const Debug: FC = () => {
     caCertificate,
     clientCertificates,
     grpcRequests,
-    subEnvironments,
-    baseEnvironment,
     collection,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const requestData = useRouteLoaderData('request/:requestId') as
@@ -197,7 +208,8 @@ export const Debug: FC = () => {
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
     useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
-  const [isEnvironmentSelectOpen, setIsEnvironmentSelectOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
   const patchRequest = useRequestPatcher();
@@ -218,18 +230,6 @@ export const Debug: FC = () => {
   }, []);
 
   const { settings } = useRootLoaderData();
-  const [runningRequests, setRunningRequests] = useState<
-    Record<string, boolean>
-  >({});
-  const setLoading = (isLoading: boolean) => {
-    invariant(requestId, 'No active request');
-    if (Boolean(runningRequests?.[requestId]) !== isLoading) {
-      setRunningRequests({
-        ...runningRequests,
-        [requestId]: isLoading ? true : false,
-      });
-    }
-  };
 
   const grpcState = grpcStates.find(s => s.requestId === requestId);
   const setGrpcState = (newState: GrpcRequestState) =>
@@ -415,7 +415,7 @@ export const Debug: FC = () => {
       });
     },
     environment_showEditor: () => setEnvironmentModalOpen(true),
-    environment_showSwitchMenu: () => setIsEnvironmentSelectOpen(true),
+    environment_showSwitchMenu: () => setIsEnvironmentPickerOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
     request_showGenerateCodeEditor: () => {
       if (activeRequest && isRequest(activeRequest)) {
@@ -430,11 +430,11 @@ export const Debug: FC = () => {
       window.main.grpc.closeAll();
     };
   }, [activeEnvironment?._id]);
+
   const isRealtimeRequest =
     activeRequest &&
     (isWebSocketRequest(activeRequest) || isEventStreamRequest(activeRequest));
 
-  const setActiveEnvironmentFetcher = useFetcher();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const sortOrder = searchParams.get('sortOrder') as SortOrder || 'type-manual';
@@ -560,96 +560,118 @@ export const Debug: FC = () => {
   });
 
   const createInCollectionActionList: {
-    id: string;
     name: string;
+    id: string;
     icon: IconName;
-    hint?: PlatformKeyCombinations;
-    action: () => void;
-  }[] = [
+    items: {
+      id: string;
+      name: string;
+      icon: IconName;
+      hint?: PlatformKeyCombinations;
+      action: () => void;
+    }[];
+  }[] =
+    [
       {
-        id: 'HTTP',
-        name: 'HTTP Request',
-        icon: 'plus-circle',
-        hint: hotKeyRegistry.request_createHTTP,
-        action: () =>
-          createRequest({
-            requestType: 'HTTP',
-            parentId: workspaceId,
-          }),
+        name: 'Create',
+        id: 'create',
+        icon: 'plus',
+        items: [
+          {
+            id: 'New Folder',
+            name: 'New Folder',
+            icon: 'folder',
+            hint: hotKeyRegistry.request_showCreateFolder,
+            action: () => showPrompt({
+              title: 'New Folder',
+              defaultValue: 'My Folder',
+              submitName: 'Create',
+              label: 'Name',
+              selectText: true,
+              onComplete: name =>
+                requestFetcher.submit(
+                  { parentId: workspaceId, name },
+                  {
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+                    method: 'post',
+                  }
+                ),
+            }),
+          },
+          {
+            id: 'HTTP',
+            name: 'HTTP Request',
+            icon: 'plus-circle',
+            hint: hotKeyRegistry.request_createHTTP,
+            action: () =>
+              createRequest({
+                requestType: 'HTTP',
+                parentId: workspaceId,
+              }),
+          },
+          {
+            id: 'Event Stream',
+            name: 'Event Stream Request (SSE)',
+            icon: 'plus-circle',
+            action: () =>
+              createRequest({
+                requestType: 'Event Stream',
+                parentId: workspaceId,
+              }),
+          },
+          {
+            id: 'GraphQL Request',
+            name: 'GraphQL Request',
+            icon: 'plus-circle',
+            action: () =>
+              createRequest({
+                requestType: 'GraphQL',
+                parentId: workspaceId,
+              }),
+          },
+          {
+            id: 'gRPC Request',
+            name: 'gRPC Request',
+            icon: 'plus-circle',
+            action: () =>
+              createRequest({
+                requestType: 'gRPC',
+                parentId: workspaceId,
+              }),
+          },
+          {
+            id: 'WebSocket Request',
+            name: 'WebSocket Request',
+            icon: 'plus-circle',
+            action: () =>
+              createRequest({
+                requestType: 'WebSocket',
+                parentId: workspaceId,
+              }),
+          }],
       },
       {
-        id: 'Event Stream',
-        name: 'Event Stream Request',
-        icon: 'plus-circle',
-        action: () =>
-          createRequest({
-            requestType: 'Event Stream',
-            parentId: workspaceId,
-          }),
-      },
-      {
-        id: 'GraphQL Request',
-        name: 'GraphQL Request',
-        icon: 'plus-circle',
-        action: () =>
-          createRequest({
-            requestType: 'GraphQL',
-            parentId: workspaceId,
-          }),
-      },
-      {
-        id: 'gRPC Request',
-        name: 'gRPC Request',
-        icon: 'plus-circle',
-        action: () =>
-          createRequest({
-            requestType: 'gRPC',
-            parentId: workspaceId,
-          }),
-      },
-      {
-        id: 'WebSocket Request',
-        name: 'WebSocket Request',
-        icon: 'plus-circle',
-        action: () =>
-          createRequest({
-            requestType: 'WebSocket',
-            parentId: workspaceId,
-          }),
-      },
-      {
-        id: 'From Curl',
-        name: 'From Curl',
-        icon: 'terminal',
-        action: () => setPasteCurlModalOpen(true),
-      },
-      {
-        id: 'New Folder',
-        name: 'New Folder',
-        icon: 'folder',
-        action: () =>
-          showPrompt({
-            title: 'New Folder',
-            defaultValue: 'My Folder',
-            submitName: 'Create',
-            label: 'Name',
-            selectText: true,
-            onComplete: name =>
-              requestFetcher.submit(
-                { parentId: workspaceId, name },
-                {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
-                  method: 'post',
-                }
-              ),
-          }),
-      },
-    ];
+        name: 'Import',
+        id: 'import',
+        icon: 'file-import',
+        items: [{
+          id: 'From Curl',
+          name: 'From Curl',
+          icon: 'terminal',
+          action: () => setPasteCurlModalOpen(true),
+        },
+          {
+            id: 'from-file',
+            name: 'From File',
+            icon: 'file-import',
+            action: () => setIsImportModalOpen(true),
+        }],
+      }];
 
-  const environmentsList = [baseEnvironment, ...subEnvironments].map(environment => ({
-    id: environment._id,
-    ...environment,
-  }));
+  // const allCollapsed = collection.every(item => item.hidden);
+  const [allExpanded, setAllExpanded] = useState(false);
+
+  const toggleExpandAllFetcher = useFetcher();
 
   const visibleCollection = collection.filter(item => !item.hidden);
 
@@ -662,8 +684,19 @@ export const Debug: FC = () => {
     getItemKey: index => visibleCollection[index].doc._id,
   });
 
-  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
+  const expandAllForRequestFetcher = useFetcher();
+
   useLayoutEffect(() => {
+    if (expandAllForRequestFetcher.state !== 'idle' && expandAllForRequestFetcher.data && requestId) {
+      setTimeout(() => {
+        const activeIndex = collection.findIndex(item => item.doc._id === requestId);
+        activeIndex && virtualizer.scrollToIndex(activeIndex);
+      }, 100);
+    }
+  }, [collection, expandAllForRequestFetcher.data, expandAllForRequestFetcher.state, requestId, virtualizer]);
+
+  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
+  useEffect(() => {
     if (settings.forceVerticalLayout) {
       setDirection('vertical');
       return () => { };
@@ -706,126 +739,11 @@ export const Debug: FC = () => {
             </Breadcrumbs>
             <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
               <div className="flex w-full items-center gap-2 justify-between">
-                <Select
-                  aria-label="Select an environment"
-                  className="overflow-hidden"
-                  onOpenChange={setIsEnvironmentSelectOpen}
-                  isOpen={isEnvironmentSelectOpen}
-                  onSelectionChange={environmentId => {
-                    setActiveEnvironmentFetcher.submit(
-                      {
-                        environmentId,
-                      },
-                      {
-                        method: 'POST',
-                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
-                      }
-                    );
-                  }}
-                  selectedKey={activeEnvironment._id}
-                >
-                  <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden w-full">
-                    <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
-                      {({ isPlaceholder, selectedItem }) => {
-                        if (
-                          isPlaceholder ||
-                          (selectedItem &&
-                            selectedItem._id === baseEnvironment._id) ||
-                          !selectedItem
-                        ) {
-                          return (
-                            <Fragment>
-                              <span
-                                style={{
-                                  borderColor: 'var(--color-font)',
-                                }}
-                              >
-                                <Icon className='text-xs w-5' icon="globe-americas" />
-                              </span>
-                              <span className='truncate'>
-                                {baseEnvironment.name}
-                              </span>
-                            </Fragment>
-                          );
-                        }
-
-                        return (
-                          <Fragment>
-                            <span
-                              style={{
-                                borderColor: selectedItem.color ?? 'var(--color-font)',
-                              }}
-                            >
-                              <Icon
-                                icon={selectedItem.isPrivate ? 'laptop-code' : 'globe-americas'}
-                                style={{
-                                  color: selectedItem.color ?? 'var(--color-font)',
-                                }}
-                                className='text-xs w-5'
-                              />
-                            </span>
-                            {selectedItem.name}
-                          </Fragment>
-                        );
-                      }}
-                    </SelectValue>
-                    <Icon icon="caret-down" />
-                  </Button>
-                  <Popover className="min-w-max">
-                    <ListBox
-                      key={activeEnvironment._id}
-                      items={environmentsList}
-                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                    >
-                      {item => (
-                        <ListBoxItem
-                          id={item._id}
-                          key={item._id}
-                          className={
-                            `flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item._id === baseEnvironment._id ? '' : 'pl-8'}`
-                          }
-                          aria-label={item.name}
-                          textValue={item.name}
-                          value={item}
-                        >
-                          {({ isSelected }) => (
-                            <Fragment>
-                              <span
-                                style={{
-                                  borderColor: item.color ?? 'var(--color-font)',
-                                }}
-                              >
-                                <Icon
-                                  icon={item.isPrivate ? 'laptop-code' : 'globe-americas'}
-                                  className='text-xs w-5'
-                                  style={{
-                                    color: item.color ?? 'var(--color-font)',
-                                  }}
-                                />
-                              </span>
-                              <span className='flex-1 truncate'>
-                                {item.name}
-                              </span>
-                              {isSelected && (
-                                <Icon
-                                  icon="check"
-                                  className="text-[--color-success] justify-self-end"
-                                />
-                              )}
-                            </Fragment>
-                          )}
-                        </ListBoxItem>
-                      )}
-                    </ListBox>
-                  </Popover>
-                </Select>
-                <Button
-                  aria-label='Manage Environments'
-                  onPress={() => setEnvironmentModalOpen(true)}
-                  className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                >
-                  <Icon icon="gear" />
-                </Button>
+                <EnvironmentPicker
+                  isOpen={isEnvironmentPickerOpen}
+                  onOpenChange={setIsEnvironmentPickerOpen}
+                  onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
+                />
               </div>
               <Button
                 onPress={() => setIsCookieModalOpen(true)}
@@ -920,6 +838,34 @@ export const Debug: FC = () => {
                 </Popover>
               </Select>
 
+              <TooltipTrigger>
+                <ToggleButton
+                  aria-label="Expand All/Collapse all"
+                  defaultSelected={allExpanded}
+                  onChange={() => {
+                    setAllExpanded(!allExpanded);
+                    toggleExpandAllFetcher.submit({
+                      toggle: allExpanded ? 'collapse-all' : 'expand-all',
+                    }, {
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/toggle-expand-all`,
+                      method: 'POST',
+                      encType: 'application/json',
+                    });
+                  }}
+                  className="flex items-center justify-center h-full aspect-square rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                >
+                  {({ isSelected }) => (
+                    <Icon icon={isSelected ? 'down-left-and-up-right-to-center' : 'up-right-and-down-left-from-center'} />
+                  )}
+                </ToggleButton>
+                <Tooltip
+                  offset={8}
+                  className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                >
+                  <span>{allExpanded ? 'Collapse all' : 'Expand all'}</span>
+                </Tooltip>
+              </TooltipTrigger>
+
               <MenuTrigger>
                 <Button
                   aria-label="Create in collection"
@@ -931,25 +877,30 @@ export const Debug: FC = () => {
                   <Menu
                     aria-label="Create a new request"
                     selectionMode="single"
-                    onAction={key => {
-                      const item = createInCollectionActionList.find(item => item.id === key);
-                      if (item) {
-                        item.action();
-                      }
-                    }}
+                    onAction={key => createInCollectionActionList.find(i => i.items.find(a => a.id === key))?.items.find(a => a.id === key)?.action()}
                     items={createInCollectionActionList}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
-                    {item => (
-                      <MenuItem
-                        key={item.id}
-                        id={item.id}
-                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                        aria-label={item.name}
-                      >
-                        <Icon icon={item.icon} />
-                        <span>{item.name}</span>
-                      </MenuItem>
+                    {section => (
+                      <Section className='flex-1 flex flex-col'>
+                        <Header className='pl-2 py-1 flex items-center gap-2 text-[--hl] text-xs uppercase'>
+                          <Icon icon={section.icon} /> <span>{section.name}</span>
+                        </Header>
+                        <Collection items={section.items}>
+                          {item => (
+                            <MenuItem
+                              key={item.id}
+                              id={item.id}
+                              className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                              aria-label={item.name}
+                            >
+                              <Icon icon={item.icon} />
+                              <span>{item.name}</span>
+                              {item.hint && (<DropdownHint keyBindings={item.hint} />)}
+                            </MenuItem>
+                          )}
+                        </Collection>
+                      </Section>
                     )}
                   </Menu>
                 </Popover>
@@ -1172,6 +1123,7 @@ export const Debug: FC = () => {
                           }}
                         />
                         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+                        {isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
                         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
                         {item.pinned && (
                           <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
@@ -1203,6 +1155,17 @@ export const Debug: FC = () => {
               onClose={() => setEnvironmentModalOpen(false)}
             />
           )}
+          {isImportModalOpen && (
+            <ImportModal
+              onHide={() => setIsImportModalOpen(false)}
+              from={{ type: 'file' }}
+              projectName={activeProject.name ?? getProductName()}
+              workspaceName={activeWorkspace.name}
+              organizationId={organizationId}
+              defaultProjectId={projectId}
+              defaultWorkspaceId={workspaceId}
+            />
+          )}
           {isCookieModalOpen && (
             <CookiesModal onHide={() => setIsCookieModalOpen(false)} />
           )}
@@ -1225,7 +1188,17 @@ export const Debug: FC = () => {
         </div>
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
-      <Panel>
+      <Panel
+        onFocus={() => {
+          requestId && expandAllForRequestFetcher.submit({
+            requestId,
+          }, {
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/expand-all-for-request`,
+            method: 'POST',
+            encType: 'application/json',
+          });
+        }}
+      >
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" className='pane-one theme--pane'>
             {workspaceId ? (
@@ -1247,7 +1220,6 @@ export const Debug: FC = () => {
                   <RequestPane
                     environmentId={activeEnvironment ? activeEnvironment._id : ''}
                     settings={settings}
-                    setLoading={setLoading}
                     onPaste={text => {
                       setPastedCurl(text);
                       setPasteCurlModalOpen(true);
@@ -1275,7 +1247,7 @@ export const Debug: FC = () => {
                   <RealtimeResponsePane requestId={activeRequest._id} />
                 )}
                 {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
-                  <ResponsePane runningRequests={runningRequests} />
+                  <ResponsePane activeRequestId={activeRequest._id} />
                 )}
               </ErrorBoundary>
             </Panel>

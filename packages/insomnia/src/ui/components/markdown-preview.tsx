@@ -1,4 +1,3 @@
-import classnames from 'classnames';
 import highlight from 'highlight.js/lib/common';
 import React, { FC, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
@@ -12,7 +11,7 @@ interface Props {
   heading?: string;
 }
 
-export const MarkdownPreview: FC<Props> = ({ markdown, className, heading }) => {
+export const MarkdownPreview: FC<Props> = ({ markdown, heading }) => {
   const divRef = useRef<HTMLDivElement>(null);
   const [compiled, setCompiled] = useState('');
   const [error, setError] = useState('');
@@ -55,7 +54,7 @@ export const MarkdownPreview: FC<Props> = ({ markdown, className, heading }) => 
   };
 
   return (
-    <div ref={divRef} className={classnames('markdown-preview', className)}>
+    <div ref={divRef}>
       {error ? <p className="notice error no-margin">Failed to render: {error}</p> : null}
       <div className="selectable">
         {heading ? <h1 className="markdown-preview__content-title">{heading}</h1> : null}

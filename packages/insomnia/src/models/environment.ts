@@ -111,7 +111,6 @@ export async function duplicate(environment: Environment) {
       $gt: environment.metaSortKey,
     },
   };
-  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   const [nextEnvironment] = await db.find<Environment>(type, q, { metaSortKey: 1 });
   const nextSortKey = nextEnvironment ? nextEnvironment.metaSortKey : environment.metaSortKey + 100;
   // Calculate new sort key

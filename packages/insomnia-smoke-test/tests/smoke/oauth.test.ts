@@ -47,7 +47,8 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await expect(responseBody).toContainText('"sub": "admin"');
 
   // Navigate to the OAuth2 Tab and refresh the token from there
-  await page.getByRole('tab', { name: 'OAuth 2' }).click();
+  await page.getByRole('tab', { name: 'Auth' }).click();
+  await expect(page.getByRole('button', { name: 'OAuth 2.0' })).toBeVisible();
 
   const tokenInput = page.locator('[for="Access-Token"] > input');
   const prevToken = await tokenInput.inputValue();

@@ -1,6 +1,7 @@
 import classnames from 'classnames';
 import React, { FC, memo } from 'react';
 
+import { TimingStep } from '../../../main/network/request-timing';
 import { Tooltip } from '../tooltip';
 
 interface Props {
@@ -8,9 +9,9 @@ interface Props {
   small?: boolean;
   className?: string;
   tooltipDelay?: number;
+  steps?: TimingStep[];
 }
-
-export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, tooltipDelay }) => {
+const getTimeAndUnit = (milliseconds: number) => {
   let unit = 'ms';
   let number = milliseconds;
 
@@ -31,7 +32,15 @@ export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, toolti
     number = Math.round(number * 100) / 100;
   }
 
-  const description = `${milliseconds.toFixed(3)} milliseconds`;
+  return { number, unit };
+};
+export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, tooltipDelay, steps }) => {
+  const totalMs = steps?.reduce((acc, step) => acc + (step.duration || 0), 0) || milliseconds;
+  const { number, unit } = getTimeAndUnit(totalMs);
+  const timesandunits = steps?.map(step => {
+    const { number, unit } = getTimeAndUnit(step.duration || 0);
+    return { stepName: step.stepName, number, unit };
+  });
   return (
     <div
       className={classnames(
@@ -42,7 +51,21 @@ export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, toolti
         className,
       )}
     >
-      <Tooltip message={description} position="bottom" delay={tooltipDelay}>
+      <Tooltip
+        message={(
+          <div>
+            {timesandunits?.map(step =>
+            (<div key={step.stepName} className='flex justify-between'>
+              <div className='mr-5'>{step.stepName} </div><div>{step.number} {step.unit}</div>
+            </div>)
+            )}
+            <div key="total" className='flex justify-between'>
+              <div className='mr-5'>Total </div><div>{number} {unit}</div>
+            </div>
+          </div>)}
+        position="bottom"
+        delay={tooltipDelay}
+      >
         {number}&nbsp;{unit}
       </Tooltip>
     </div>

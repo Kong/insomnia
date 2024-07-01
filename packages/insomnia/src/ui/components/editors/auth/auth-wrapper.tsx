@@ -1,4 +1,5 @@
 import React, { FC, ReactNode } from 'react';
+import { Toolbar } from 'react-aria-components';
 
 import {
   AUTH_API_KEY,
@@ -13,8 +14,9 @@ import {
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
 } from '../../../../common/constants';
-import { RequestAuthentication } from '../../../../models/request';
+import { AuthTypes, RequestAuthentication } from '../../../../models/request';
 import { getAuthObjectOrNull } from '../../../../network/authentication';
+import { AuthDropdown } from '../../dropdowns/auth-dropdown';
 import { ApiKeyAuth } from './api-key-auth';
 import { AsapAuth } from './asap-auth';
 import { AWSAuth } from './aws-auth';
@@ -27,7 +29,7 @@ import { NTLMAuth } from './ntlm-auth';
 import { OAuth1Auth } from './o-auth-1-auth';
 import { OAuth2Auth } from './o-auth-2-auth';
 
-export const AuthWrapper: FC<{ authentication?: RequestAuthentication | {}; disabled?: boolean }> = ({ authentication, disabled = false }) => {
+export const AuthWrapper: FC<{ authentication?: RequestAuthentication | {}; disabled?: boolean; authTypes?: AuthTypes[] }> = ({ authentication, disabled = false, authTypes }) => {
   const type = getAuthObjectOrNull(authentication)?.type || '';
   let authBody: ReactNode = null;
 
@@ -55,8 +57,8 @@ export const AuthWrapper: FC<{ authentication?: RequestAuthentication | {}; disa
     authBody = <AsapAuth />;
   } else {
     authBody = (
-      <div className="vertically-center text-center">
-        <p className="pad super-faint text-sm text-center">
+      <div className="flex w-full h-full select-none items-center justify-center">
+        <p className="text-sm text-center p-4 text-[--hl]">
           <i
             className="fa fa-unlock-alt"
             style={{
@@ -72,5 +74,12 @@ export const AuthWrapper: FC<{ authentication?: RequestAuthentication | {}; disa
     );
   }
 
-  return <div>{authBody}</div>;
+  return <>
+    <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
+      <AuthDropdown authentication={authentication} authTypes={authTypes} />
+    </Toolbar>
+    <div className='flex-1 overflow-y-auto '>
+    {authBody}
+    </div>
+  </>;
 };

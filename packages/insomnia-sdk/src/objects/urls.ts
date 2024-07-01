@@ -188,20 +188,28 @@ export class Url extends PropertyBase {
     static parse(urlStr: string): UrlOptions | undefined {
         // the URL API (for web) is not leveraged here because the input string could contain tags for interpolation
         // which will be encoded, then it would introduce confusion for users in manipulation
+        // TODO: but it still would be better to rely on the URL API
 
         const endOfProto = urlStr.indexOf('://');
         const protocol = endOfProto >= 0 ? urlStr.slice(0, endOfProto + 1) : '';
 
+        let auth: undefined | { username: string; password: string } = undefined;
         const potentialStartOfAuth = protocol === '' ? 0 : endOfProto + 3;
-        const endOfAuth = urlStr.indexOf('@', potentialStartOfAuth);
-        let auth = undefined;
-        if (endOfAuth >= 0 && potentialStartOfAuth < endOfAuth) { // e.g., '@insomnia.com' will be ignored
-            const authStr = endOfAuth >= 0 ? urlStr.slice(potentialStartOfAuth, endOfAuth) : '';
-            const authParts = authStr?.split(':');
-            if (authParts.length < 2) {
-                throw Error('new Url(): failed to parse auth in url ${urlStr}');
+        let endOfAuth = urlStr.indexOf('@', potentialStartOfAuth);
+        const startOfPathname = urlStr.indexOf('/', endOfProto >= 0 ? endOfProto + 3 : 0);
+        const atCharIsBeforePath = endOfAuth < startOfPathname;
+        if (atCharIsBeforePath) { // this checks if unencoded '@' appears in path
+            if (endOfAuth >= 0 && potentialStartOfAuth < endOfAuth) { // e.g., '@insomnia.com' will be ignored
+                const authStr = endOfAuth >= 0 ? urlStr.slice(potentialStartOfAuth, endOfAuth) : '';
+                const authParts = authStr?.split(':');
+                if (authParts.length < 2) {
+                    throw Error(`new Url(): failed to parse auth in url ${urlStr}`);
+                }
+                auth = { username: authParts[0], password: authParts[1] };
             }
-            auth = { username: authParts[0], password: authParts[1] };
+        } else {
+            // don't do anything if @ appears in path
+            endOfAuth = -1;
         }
 
         const startOfHash = urlStr.indexOf('#');
@@ -224,7 +232,6 @@ export class Url extends PropertyBase {
             );
         }
 
-        const startOfPathname = urlStr.indexOf('/', endOfProto >= 0 ? endOfProto + 3 : 0);
         const path = new Array<string>();
         if (startOfPathname >= 0) {
             let endOfPathname = urlStr.length;

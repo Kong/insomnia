@@ -221,7 +221,7 @@ function getThemeBlockCSS(block?: ThemeBlock) {
       addVar(variable, rgb.string());
       addVar(`${variable}-rgb`, rgb.array().join(', '));
     } catch (err) {
-      console.log('Failed to parse theme color', value);
+      console.log('[theme] Failed to parse theme color', value);
     }
   };
 

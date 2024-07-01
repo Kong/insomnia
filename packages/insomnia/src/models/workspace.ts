@@ -17,7 +17,7 @@ export interface BaseWorkspace {
   name: string;
   description: string;
   certificates?: any; // deprecated
-  scope: 'design' | 'collection' | 'mock-server';
+  scope: 'design' | 'collection' | 'mock-server' | 'environment';
 }
 
 export type WorkspaceScope = BaseWorkspace['scope'];
@@ -26,6 +26,7 @@ export const WorkspaceScopeKeys = {
   design: 'design',
   collection: 'collection',
   mockServer: 'mock-server',
+  environment: 'environment',
 } as const;
 
 export type Workspace = BaseModel & BaseWorkspace;
@@ -44,6 +45,10 @@ export const isCollection = (workspace: Pick<Workspace, 'scope'>) => (
 
 export const isMockServer = (workspace: Pick<Workspace, 'scope'>) => (
   workspace.scope === WorkspaceScopeKeys.mockServer
+);
+
+export const isEnvironment = (workspace: Pick<Workspace, 'scope'>) => (
+  workspace.scope === WorkspaceScopeKeys.environment
 );
 
 export const init = (): BaseWorkspace => ({
@@ -143,7 +148,8 @@ type MigrationWorkspace = Merge<Workspace, { scope: OldScopeTypes | Workspace['s
 function _migrateScope(workspace: MigrationWorkspace) {
   if (workspace.scope === WorkspaceScopeKeys.design
     || workspace.scope === WorkspaceScopeKeys.collection
-    || workspace.scope === WorkspaceScopeKeys.mockServer) {
+    || workspace.scope === WorkspaceScopeKeys.mockServer
+    || workspace.scope === WorkspaceScopeKeys.environment) {
     return workspace as Workspace;
   }
   // designer and spec => design, unset => collection
@@ -163,8 +169,8 @@ function expectParentToBeProject(parentId?: string | null) {
 
 export const SCRATCHPAD_WORKSPACE_ID = 'wrk_scratchpad';
 
-export function isScratchpad(workspace: Workspace) {
-  return workspace._id === SCRATCHPAD_WORKSPACE_ID;
+export function isScratchpad(workspace?: Workspace) {
+  return workspace?._id === SCRATCHPAD_WORKSPACE_ID;
 }
 
 export const scopeToActivity = (scope: WorkspaceScope) => {
@@ -175,6 +181,8 @@ export const scopeToActivity = (scope: WorkspaceScope) => {
       return ACTIVITY_SPEC;
     case WorkspaceScopeKeys.mockServer:
       return 'mock-server';
+    case WorkspaceScopeKeys.environment:
+      return 'environment';
     default:
       return ACTIVITY_DEBUG;
   }

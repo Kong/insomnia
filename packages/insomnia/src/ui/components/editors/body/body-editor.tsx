@@ -1,6 +1,7 @@
 import clone from 'clone';
 import { lookup } from 'mime-types';
 import React, { FC, useCallback } from 'react';
+import { Toolbar } from 'react-aria-components';
 import { useParams } from 'react-router-dom';
 
 import {
@@ -19,6 +20,7 @@ import {
 } from '../../../../models/request';
 import { NunjucksEnabledProvider } from '../../../context/nunjucks/nunjucks-enabled-context';
 import { useRequestPatcher } from '../../../hooks/use-request';
+import { ContentTypeDropdown } from '../../dropdowns/content-type-dropdown';
 import { AskModal } from '../../modals/ask-modal';
 import { showModal } from '../../modals/index';
 import { EmptyStatePane } from '../../panes/empty-state-pane';
@@ -108,7 +110,7 @@ export const BodyEditor: FC<Props> = ({
   const mimeType = request.body.mimeType;
   const isBodyEmpty = typeof mimeType !== 'string' && !request.body.text;
 
-  const _render = () => {
+  function renderBodyEditor() {
     if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
       return <UrlEncodedEditor key={uniqueKey} onChange={handleFormUrlEncodedChange} parameters={request.body.params || []} />;
     } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
@@ -121,14 +123,31 @@ export const BodyEditor: FC<Props> = ({
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return <RawEditor uniquenessKey={uniqueKey} contentType={contentType || 'text/plain'} content={request.body.text || ''} onChange={handleRawChange} />;
     } else if (isEventStreamRequest(request)) {
-      return <EmptyStatePane
-        icon={<i className="fa fa-paper-plane" />}
-        documentationLinks={[]}
-        title="Enter a URL and connect to start receiving event stream data"
-      />;
+      return (
+        <EmptyStatePane
+          icon={<i className="fa fa-paper-plane" />}
+          documentationLinks={[]}
+          title="Enter a URL and connect to start receiving event stream data"
+        />
+      );
+    } else {
+      return (
+        <EmptyStatePane
+          icon={<SvgIcon icon="bug" />}
+          documentationLinks={[documentationLinks.introductionToInsomnia]}
+          secondaryAction="Select a body type from above to send data in the body of a request"
+          title="Enter a URL and send to get a response"
+        />
+      );
     }
-    return <EmptyStatePane icon={<SvgIcon icon="bug" />} documentationLinks={[documentationLinks.introductionToInsomnia]} secondaryAction="Select a body type from above to send data in the body of a request" title="Enter a URL and send to get a response" />;
-  };
+  }
 
-  return <NunjucksEnabledProvider disable={noRender}>{_render()}</NunjucksEnabledProvider>;
+  return (
+    <NunjucksEnabledProvider disable={noRender}>
+      <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
+        <ContentTypeDropdown />
+      </Toolbar>
+      {renderBodyEditor()}
+    </NunjucksEnabledProvider>
+  );
 };

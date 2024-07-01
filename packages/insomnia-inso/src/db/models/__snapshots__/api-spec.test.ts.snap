@@ -1,15 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`apiSpec promptApiSpec() should match snapshot of autocomplete config 1`] = `
-Object {
-  "choices": Array [
-    Object {
+{
+  "choices": [
+    {
       "hint": "spc_123456",
       "message": "fileName",
       "name": "spc_123456",
       "value": "fileName - spc_123456",
     },
-    Object {
+    {
       "hint": "spc_dummy",
       "message": "dummy spec",
       "name": "spc_dummy",

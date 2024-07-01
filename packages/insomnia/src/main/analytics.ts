@@ -12,7 +12,19 @@ import {
 } from '../common/constants';
 import * as models from '../models/index';
 
-const analytics = new Analytics({ writeKey: getSegmentWriteKey() });
+const analytics = new Analytics({
+  writeKey: getSegmentWriteKey(),
+  httpClient: {
+    makeRequest(_options) {
+      return net.fetch(_options.url, {
+        method: _options.method,
+        headers: _options.headers,
+        body: _options.body,
+        signal: AbortSignal.timeout(_options.httpRequestTimeout),
+      });
+    },
+  },
+});
 
 const getDeviceId = async () => {
   const settings = await models.settings.get();
@@ -24,6 +36,7 @@ export enum SegmentEvent {
   collectionCreate = 'Collection Created',
   dataExport = 'Data Exported',
   dataImport = 'Data Imported',
+  loginSuccess = 'Login Success',
   documentCreate = 'Document Created',
   kongConnected = 'Kong Connected',
   kongSync = 'Kong Synced',
@@ -48,10 +61,9 @@ export async function trackSegmentEvent(
   event: SegmentEvent,
   properties?: Record<string, any>,
 ) {
-  const settings = await models.settings.get();
-  const userSession = await models.userSession.get();
-
-  const allowAnalytics = settings.enableAnalytics || userSession.accountId;
+  const settings = await models.settings.getOrCreate();
+  const userSession = await models.userSession.getOrCreate();
+  const allowAnalytics = settings.enableAnalytics || userSession?.accountId;
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
@@ -59,6 +71,7 @@ export async function trackSegmentEvent(
         app: { name: getProductName(), version: getAppVersion() },
         os: { name: _getOsName(), version: process.getSystemVersion() },
       };
+
       analytics.track({
         event,
         properties,
@@ -77,9 +90,10 @@ export async function trackSegmentEvent(
 }
 
 export async function trackPageView(name: string) {
-  const settings = await models.settings.get();
-  const { id: sessionId, accountId } = await models.userSession.get();
-  const allowAnalytics = settings.enableAnalytics || accountId;
+  const settings = await models.settings.getOrCreate();
+  const userSession = await models.userSession.getOrCreate();
+
+  const allowAnalytics = settings.enableAnalytics || userSession?.accountId;
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
@@ -87,17 +101,18 @@ export async function trackPageView(name: string) {
         app: { name: getProductName(), version: getAppVersion() },
         os: { name: _getOsName(), version: process.getSystemVersion() },
       };
-      analytics.page({ name, context, anonymousId, userId: accountId }, error => {
+
+      analytics.page({ name, context, anonymousId, userId: userSession?.accountId }, error => {
         if (error) {
           console.warn('[analytics] Error sending segment event', error);
         }
       });
 
-      if (sessionId) {
+      if (userSession?.id) {
         net.fetch(getApiBaseURL() + '/v1/telemetry/', {
           method: 'POST',
           headers: new Headers({
-            'X-Session-Id': sessionId,
+            'X-Session-Id': userSession?.id,
             'X-Insomnia-Client': getClientString(),
           }),
         });

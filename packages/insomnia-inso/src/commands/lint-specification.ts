@@ -6,24 +6,26 @@ import { DiagnosticSeverity } from '@stoplight/types';
 import fs from 'fs';
 import path from 'path';
 
+import { type GlobalOptions, InsoError, logger } from '../cli';
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
-import { InsoError } from '../errors';
-import type { GlobalOptions } from '../get-options';
-import { logger } from '../logger';
 
 export type LintSpecificationOptions = GlobalOptions;
 
 export async function lintSpecification(
   identifier: string | null | undefined,
-  { workingDir, appDataDir, ci, src }: LintSpecificationOptions,
+  { workingDir, ci, src }: LintSpecificationOptions,
 ) {
   const db = await loadDb({
     workingDir,
-    appDataDir,
     filterTypes: ['ApiSpec'],
     src,
   });
+
+  if (!identifier && ci) {
+    logger.fatal('Identifier is required in CI mode');
+    return false;
+  }
 
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
   let specContent = '';
@@ -54,7 +56,7 @@ export async function lintSpecification(
         throw new InsoError(`Failed to read "${fileName}"`, error);
       }
     } else {
-      logger.fatal('Specification not found.');
+      logger.fatal('Specification not found at ' + src + ',' + workingDir);
       return false;
     }
   } catch (error) {

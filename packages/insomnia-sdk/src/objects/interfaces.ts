@@ -7,10 +7,16 @@ import { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 
 export interface RequestContext {
     request: Request;
     timelinePath: string;
-    environment?: object;
-    environmentName?: string;
-    baseEnvironment?: object;
-    baseEnvironmentName?: string;
+    environment: {
+        id: string;
+        name: string;
+        data: object;
+    };
+    baseEnvironment: {
+        id: string;
+        name: string;
+        data: object;
+    };
     collectionVariables?: object;
     globals?: object;
     iterationData?: object;
