@@ -54,7 +54,7 @@ export const EnvironmentPicker = ({
 
   return (
     <DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
-      <Button className="py-1 px-4 max-w-full items-start gap-2 truncate flex flex-col aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+      <Button aria-label='Manage Environments' className="py-1 px-4 max-w-full items-start gap-2 truncate flex flex-col aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
         {activeGlobalEnvironment && activeGlobalBaseEnvironment && (
           <div className='flex flex-col w-full'>
             <div className='flex items-center gap-2 w-full'>
