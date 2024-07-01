@@ -230,7 +230,7 @@ export const go = (args?: string[]) => {
       }
       if (options.reporter && !reporterTypesSet.has(options.reporter)) {
         logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
-        return process.exit(1);;
+        return process.exit(1);
       }
 
       const db = await loadDb({
@@ -242,8 +242,8 @@ export const go = (args?: string[]) => {
       const suites = identifier ? loadTestSuites(db, identifier) : await promptTestSuites(db, !!options.ci);
 
       if (!suites.length) {
-        logger.fatal('No test suites found; cannot run tests.');
-        return process.exit(1);;
+        logger.fatal('No test suites found; cannot run tests.', identifier);
+        return process.exit(1);
       }
 
       // Find environment
@@ -252,7 +252,7 @@ export const go = (args?: string[]) => {
 
       if (!environment) {
         logger.fatal('No environment identified; cannot run tests without a valid environment.');
-        return process.exit(1);;
+        return process.exit(1);
       }
 
       try {
@@ -289,8 +289,9 @@ export const go = (args?: string[]) => {
     .description('Run Insomnia request collection, identifier can be a workspace id or request group id')
     .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
     .option('-e, --env <identifier>', 'environment to use', '')
+    .option('-b, --bail', 'abort ("bail") after first test failure', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
-    .action(async (identifier, cmd: { env: string; disableCertValidation: true; requestNamePattern: string }) => {
+    .action(async (identifier, cmd: { env: string; disableCertValidation: true; requestNamePattern: string; bail: boolean }) => {
       const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
 
       const commandOptions = { ...globals, ...cmd };
@@ -327,7 +328,7 @@ export const go = (args?: string[]) => {
       const workspace = identifier ? loadWorkspace(db, identifier) : await promptWorkspace(db, !!options.ci);
 
       if (!workspace) {
-        logger.fatal('No workspace found; cannot run requests.');
+        logger.fatal('No workspace found; cannot run requests.', identifier);
         return process.exit(1);
       }
 
@@ -355,13 +356,13 @@ export const go = (args?: string[]) => {
         const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation });
         let success = true;
         for (const req of requests) {
-          if (!success) {
+          if (options.bail && !success) {
             return;
           }
           logger.log(`Running request: ${req.name} ${req._id}`);
           const res = await sendRequest(req._id);
           // TODO: use logging levels
-          options.verbose && logger.info(res);
+          logger.trace(res);
           if (res.status !== 200) {
             success = false;
             logger.error(`Request failed with status ${res.status}`);
@@ -375,7 +376,7 @@ export const go = (args?: string[]) => {
     });
 
   program.command('lint')
-    .description('Linting utilities')
+    .description('Will attempt to detect a .spectral.yml file in the workingDir or the provided file path')
     .command('spec [identifier]')
     .description('Lint an API Specification, identifier can be an API Spec id or a file path')
     .action(async identifier => {
@@ -413,7 +414,7 @@ export const go = (args?: string[]) => {
       if (!specContent && identifier) {
         // try load as a file
         const fileName = getAbsoluteFilePath({ workingDir: options.workingDir, file: identifier });
-        logger.trace(`Linting specification from idenfitier: \`${fileName}\``);
+        logger.trace(`Linting specification from identifier: \`${fileName}\``);
         specContent = await fs.promises.readFile(fileName, 'utf-8');
         rulesetFileName = await getRuleSetFileFromFolderByFilename(fileName);
       }
