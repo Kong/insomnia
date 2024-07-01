@@ -341,7 +341,7 @@ export const RequestPane: FC<Props> = ({
                 errorClassName="tall wide vertically-align font-error pad text-center"
               >
                 <RequestScriptEditor
-                  uniquenessKey={uniqueKey}
+                  uniquenessKey={`${activeRequest._id}:pre-request-script`}
                   defaultValue={activeRequest.preRequestScript || ''}
                   onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
                   settings={settings}
@@ -354,7 +354,7 @@ export const RequestPane: FC<Props> = ({
                 errorClassName="tall wide vertically-align font-error pad text-center"
               >
                 <RequestScriptEditor
-                  uniquenessKey={uniqueKey}
+                  uniquenessKey={`${activeRequest._id}:after-response-script`}
                   defaultValue={activeRequest.afterResponseScript || ''}
                   onChange={afterResponseScript => patchRequest(requestId, { afterResponseScript })}
                   settings={settings}
