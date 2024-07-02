@@ -148,7 +148,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
                 errorClassName="tall wide vertically-align font-error pad text-center"
               >
                 <RequestScriptEditor
-                  uniquenessKey={uniqueKey}
+                  uniquenessKey={`${activeRequestGroup._id}:pre-request-script`}
                   defaultValue={activeRequestGroup.preRequestScript || ''}
                   onChange={preRequestScript => patchRequestGroup(activeRequestGroup._id, { preRequestScript })}
                   settings={settings}
@@ -161,7 +161,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
                 errorClassName="tall wide vertically-align font-error pad text-center"
               >
                 <RequestScriptEditor
-                  uniquenessKey={uniqueKey}
+                  uniquenessKey={`${activeRequestGroup._id}:after-response-script`}
                   defaultValue={activeRequestGroup.afterResponseScript || ''}
                   onChange={afterResponseScript => patchRequestGroup(activeRequestGroup._id, { afterResponseScript })}
                   settings={settings}
