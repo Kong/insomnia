@@ -474,6 +474,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
         </TabPanel>
         <TabPanel className='w-full flex-1 overflow-y-auto' id='docs'>
           <MarkdownEditor
+            key={uniqueKey}
             placeholder="Write a description"
             defaultValue={activeRequest.description}
             onChange={(description: string) => patchRequest(requestId, { description })}
