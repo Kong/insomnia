@@ -312,9 +312,9 @@ export interface StorageRule {
 }
 
 export interface OrganizationFeatureLoaderData {
-  features: FeatureList;
-  billing: Billing;
-  storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
+  featuresPromise: Promise<FeatureList>;
+  billingPromise: Promise<Billing>;
+  storagePromise: Promise<'cloud_plus_local' | 'cloud_only' | 'local_only'>;
 }
 
 export const organizationPermissionsLoader: LoaderFunction = async ({ params }): Promise<OrganizationFeatureLoaderData> => {
@@ -334,9 +334,9 @@ export const organizationPermissionsLoader: LoaderFunction = async ({ params }):
 
   if (isScratchpadOrganizationId(organizationId)) {
     return {
-      features: fallbackFeatures,
-      billing: fallbackBilling,
-      storage: fallbackStorage,
+      featuresPromise: Promise.resolve(fallbackFeatures),
+      billingPromise: Promise.resolve(fallbackBilling),
+      storagePromise: Promise.resolve(fallbackStorage),
     };
   }
 
@@ -348,28 +348,27 @@ export const organizationPermissionsLoader: LoaderFunction = async ({ params }):
   }
 
   try {
-    const response = await insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
+    const featuresResponse = insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
       method: 'GET',
       path: `/v1/organizations/${organizationId}/features`,
       sessionId,
     });
 
-    const ruleResponse = await insomniaFetch<StorageRule | undefined>({
+    const ruleResponse = insomniaFetch<StorageRule | undefined>({
       method: 'GET',
       path: `/v1/organizations/${organizationId}/storage-rule`,
       sessionId,
     });
-    const storage = ruleResponse?.storage || fallbackStorage;
     return {
-      features: response?.features || fallbackFeatures,
-      billing: response?.billing || fallbackBilling,
-      storage,
+      featuresPromise: featuresResponse.then(res => res?.features || fallbackFeatures),
+      billingPromise: featuresResponse.then(res => res?.billing || fallbackBilling),
+      storagePromise: ruleResponse.then(res => res?.storage || fallbackStorage),
     };
   } catch (err) {
     return {
-      features: fallbackFeatures,
-      billing: fallbackBilling,
-      storage: fallbackStorage,
+      featuresPromise: Promise.resolve(fallbackFeatures),
+      billingPromise: Promise.resolve(fallbackBilling),
+      storagePromise: Promise.resolve(fallbackStorage),
     };
   }
 };

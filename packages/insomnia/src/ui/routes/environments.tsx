@@ -15,6 +15,7 @@ import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo }
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showAlert } from '../components/modals';
+import { useLoaderDeferData } from '../hooks/use-loader-defer-data';
 import type { OrganizationFeatureLoaderData } from './organization';
 import type { WorkspaceLoaderData } from './workspace';
 
@@ -34,11 +35,10 @@ const Environments = () => {
     }
   }, [organizationId, permissionsFetcher]);
 
-  const { features } = permissionsFetcher.data || {
-    features: {
-      gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
-    },
-  };
+  const { featuresPromise } = permissionsFetcher.data || {};
+  const [features = {
+    gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
+  }] = useLoaderDeferData(featuresPromise);
 
   const createEnvironmentFetcher = useFetcher();
   const deleteEnvironmentFetcher = useFetcher();
