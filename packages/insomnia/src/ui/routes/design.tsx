@@ -47,7 +47,7 @@ import YAMLSourceMap from 'yaml-source-map';
 
 import { parseApiSpec } from '../../common/api-specs';
 import { ACTIVITY_SPEC, DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
-import { debounce } from '../../common/misc';
+import { debounce, isNotNullOrUndefined } from '../../common/misc';
 import { ApiSpec } from '../../models/api-spec';
 import * as models from '../../models/index';
 import { invariant } from '../../utils/invariant';
@@ -483,14 +483,14 @@ const Design: FC = () => {
               className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             >
                 <Icon icon="cookie-bite" className='w-5 flex-shrink-0' />
-              <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies</span>
+                <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}</span>
             </Button>
             <Button
               onPress={() => setCertificatesModalOpen(true)}
               className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             >
                 <Icon icon="file-contract" className='w-5 flex-shrink-0' />
-              <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates</span>
+                <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length > 0 ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})` : ''}</span>
             </Button>
           </div>
           </div>

@@ -54,9 +54,29 @@ export const EnvironmentPicker = ({
 
   return (
     <DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
-      <Button className="py-1 px-4 max-w-full gap-2 truncate flex items-center justify-center aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-        <Icon icon="code" className='w-5 flex-shrink-0' />
-        <span className='truncate'>{activeGlobalEnvironment?._id || activeEnvironment._id ? 'Manage' : 'Add'} Environments</span>
+      <Button aria-label='Manage Environments' className="py-1 px-4 max-w-full items-start gap-2 truncate flex flex-col aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+        {activeGlobalEnvironment && activeGlobalBaseEnvironment && (
+          <div className='flex flex-col w-full'>
+            <div className='flex items-center gap-2 w-full'>
+              <Icon icon={activeGlobalEnvironment.isPrivate ? 'laptop-code' : 'globe-americas'} style={{ color: activeGlobalEnvironment.color || '' }} className='w-5 flex-shrink-0' />
+              <span className='truncate'>
+                {activeGlobalEnvironment.name}
+              </span>
+            </div>
+            <div className='flex items-center gap-2 w-full'>
+              <Icon icon="0" className='w-5 flex-shrink-0 invisible' />
+              <span className='flex-shrink truncate text-xs text-[--hl]'>
+                {activeGlobalBaseEnvironment.workspaceName}
+              </span>
+            </div>
+          </div>
+        )}
+        <div className='flex flex-1 items-center gap-2 w-full'>
+          <Icon icon={activeEnvironment.isPrivate ? 'laptop-code' : 'globe-americas'} style={{ color: activeEnvironment.color || '' }} className='w-5 flex-shrink-0' />
+          <span className='truncate'>
+            {activeSubEnvironment ? activeSubEnvironment.name : activeBaseEnvironment.name}
+          </span>
+        </div>
       </Button>
       <Popover className="min-w-max max-h-[90vh] flex flex-col !z-10" placement='bottom start' offset={8}>
         <Dialog className="border h-full w-full grid grid-flow-col [grid-auto-columns:min(260px,calc(40vw))_min(340px,calc(50vw))] overflow-hidden divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] bg-[--color-bg] shadow-lg rounded-md focus:outline-none">

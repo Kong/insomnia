@@ -707,7 +707,27 @@ const ProjectRoute: FC = () => {
       loading: loadingBackendProjects.includes(file.remoteId) || pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.remoteId,
       presence: workspacePresence,
     };
-  });
+  }).map(file => ({
+    ...file,
+    action: () => {
+      // hack to workaround gridlist not have access to workspace scope
+      if (file.scope === 'unsynced') {
+        if (activeProject?.remoteId && file.remoteId) {
+          return pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: activeProject.remoteId }, {
+            method: 'POST',
+            action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
+          });
+        }
+
+        return;
+      }
+
+      const activity = scopeToActivity(file.scope);
+      navigate(
+        `/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${activity}`
+      );
+    },
+  }));
 
   const projectsWithPresence = projects.filter(p =>
     projectListFilter ? p.name?.toLowerCase().includes(projectListFilter.toLowerCase()) : true
@@ -1322,26 +1342,6 @@ const ProjectRoute: FC = () => {
                     aria-label="Files"
                     className="data-[empty]:flex data-[empty]:justify-center grid [grid-template-columns:repeat(auto-fit,200px)] [grid-template-rows:repeat(auto-fit,200px)] gap-4 p-[--padding-md]"
                     items={filesWithPresence}
-                    onAction={id => {
-                      // hack to workaround gridlist not have access to workspace scope
-                      const file = files.find(f => f.id === id);
-                      invariant(file, 'File not found');
-                      if (file.scope === 'unsynced') {
-                        if (activeProject?.remoteId && file.remoteId) {
-                          return pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: activeProject.remoteId }, {
-                            method: 'POST',
-                            action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
-                          });
-                        }
-
-                        return;
-                      }
-
-                      const activity = scopeToActivity(file.scope);
-                      navigate(
-                        `/organization/${organizationId}/project/${projectId}/workspace/${id}/${activity}`
-                      );
-                    }}
                     renderEmptyState={() => {
                       if (workspaceListFilter) {
                         return (
@@ -1372,6 +1372,7 @@ const ProjectRoute: FC = () => {
                           key={item.id}
                           id={item.id}
                           textValue={item.name}
+                          onAction={item.action}
                           className={`flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-md hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all ${item.loading ? 'animate-pulse' : ''}`}
                         >
                           <div className="flex gap-2 h-[20px]">
@@ -1399,7 +1400,10 @@ const ProjectRoute: FC = () => {
                             )}
                           </div>
                           <TooltipTrigger>
-                            <Link onPress={e => e.continuePropagation()} className="pt-4 text-base font-bold line-clamp-4">
+                            <Link
+                              onPress={item.action}
+                              className="pt-4 text-base font-bold line-clamp-4 outline-none"
+                            >
                               {item.name}
                             </Link>
                             <Tooltip
