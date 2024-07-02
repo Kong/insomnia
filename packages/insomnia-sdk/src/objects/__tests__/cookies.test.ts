@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { Cookie, CookieJar, CookieList } from '../cookies';
+import { Cookie, CookieJar, CookieList, CookieObject, mergeCookieJar } from '../cookies';
 
 describe('test Cookie object', () => {
     it('test basic operations', () => {
@@ -13,7 +13,7 @@ describe('test Cookie object', () => {
             value: 'value',
             domain: 'inso.com',
             expires: new Date('2015-10-21T07:28:00.000Z'),
-            maxAge: '0',
+            maxAge: 0,
             path: '/',
             secure: true,
             httpOnly: true,
@@ -26,7 +26,7 @@ describe('test Cookie object', () => {
             key: 'myCookie',
             value: 'myCookie',
             expires: '01 Jan 1970 00:00:01 GMT',
-            maxAge: '7',
+            maxAge: 7,
             domain: 'domain.com',
             path: '/',
             secure: true,
@@ -49,12 +49,12 @@ describe('test Cookie object', () => {
         const c1 = new Cookie({
             key: 'c1',
             value: 'c1',
-            maxAge: '1',
+            maxAge: 1,
         });
         const c2 = new Cookie({
             key: 'c2',
             value: 'c2',
-            maxAge: '2',
+            maxAge: 2,
         });
         const CookieListStr = Cookie.unparse([c1, c2]);
         expect(CookieListStr).toEqual(
@@ -65,6 +65,64 @@ describe('test Cookie object', () => {
             Cookie.unparseSingle(cookie1Opt)
         ).toEqual(expectedCookieString);
     });
+
+    it('test cookie transforming', () => {
+        const fakeBaseModel = {
+            _id: '',
+            type: '',
+            parentId: '',
+            modified: 0,
+            created: 0,
+            isPrivate: false,
+            name: '',
+        };
+        const cookieJars = [
+            {
+                cookies: [
+                    {
+                        id: '1',
+                        key: 'c1',
+                        value: 'v1',
+                        expires: null,
+                        domain: 'inso.com',
+                        path: '/',
+                        secure: true,
+                        httpOnly: true,
+                        extensions: [],
+                        creation: new Date(),
+                        creationIndex: 0,
+                        hostOnly: true,
+                        pathIsDefault: true,
+                        lastAccessed: new Date(),
+                    },
+                    {
+                        id: '2',
+                        key: 'c2',
+                        value: 'v2',
+                        expires: new Date('08 Aug 1988 08:08:08 GMT'),
+                        domain: 'inso.com',
+                        path: '/',
+                        secure: true,
+                        httpOnly: true,
+                        extensions: [],
+                        creation: new Date(),
+                        creationIndex: 0,
+                        hostOnly: true,
+                        pathIsDefault: true,
+                        lastAccessed: new Date(),
+                    },
+                ],
+            },
+        ];
+
+        cookieJars.forEach(jar => {
+            const originalJar = { ...fakeBaseModel, ...jar };
+            const sdkJar = new CookieObject(originalJar);
+            const convertedJar = mergeCookieJar(originalJar, sdkJar.jar().toInsomniaCookieJar());
+
+            expect(convertedJar).toEqual(originalJar);
+        });
+    });
 });
 
 describe('test CookieJar', () => {
@@ -73,7 +131,7 @@ describe('test CookieJar', () => {
             key: 'myCookie',
             value: 'myCookie',
             expires: '01 Jan 1970 00:00:01 GMT',
-            maxAge: '7',
+            maxAge: 7,
             domain: 'domain.com',
             path: '/',
             secure: true,
