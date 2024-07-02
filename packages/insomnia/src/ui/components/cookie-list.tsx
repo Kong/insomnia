@@ -7,6 +7,7 @@ import { cookieToString } from '../../common/cookies';
 import { Cookie } from '../../models/cookie-jar';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
 import { PromptButton } from './base/prompt-button';
+import { Icon } from './icon';
 import { CookieModifyModal } from './modals/cookie-modify-modal';
 import { RenderedText } from './rendered-text';
 
@@ -152,9 +153,9 @@ export const CookieList: FC<CookieListProps> = ({
     </table>
     {cookies.length === 0 && <div className="pad faint italic text-center">
       <p>I couldn't find any cookies for you.</p>
-      <p>
+      <p className='pt-4'>
         <button className="btn btn--clicky" onClick={addCookie}>
-          Add Cookie <i className="fa fa-plus-circle" />
+          <Icon icon="plus" /> Add Cookie
         </button>
       </p>
     </div>}
