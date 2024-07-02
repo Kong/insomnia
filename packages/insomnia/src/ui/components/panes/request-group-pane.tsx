@@ -188,6 +188,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
         </TabPanel>
         <TabPanel className='w-full flex-1 overflow-y-auto' id='docs'>
           <MarkdownEditor
+            key={uniqueKey}
             className="margin-top"
             placeholder="Write a description"
             defaultValue={activeRequestGroup.description}
