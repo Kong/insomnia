@@ -574,7 +574,10 @@ export async function getRenderedRequestAndContext(
   const renderedRequest = renderResult._request;
   const renderedCookieJar = renderResult._cookieJar;
   renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
-  const suppressUserAgent = request.headers.some(h => h.name.toLowerCase() === 'user-agent' && h.disabled === true);
+  const userAgentHeaders = request.headers.filter(h => h.name.toLowerCase() === 'user-agent');
+  const noUserAgents = userAgentHeaders.length === 0;
+  const allUserAgentHeadersDisabled = userAgentHeaders.every(h => h.disabled === true);
+  const suppressUserAgent = noUserAgents || allUserAgentHeadersDisabled;
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);
   // Remove disabled headers

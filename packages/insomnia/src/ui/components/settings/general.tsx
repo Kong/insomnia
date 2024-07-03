@@ -188,6 +188,12 @@ export const General: FC = () => {
             label="Disable links in response viewer"
             setting="disableResponsePreviewLinks"
           />
+
+          <BooleanSetting
+            label="Disable default User-Agent on new requests"
+            setting="disableAppVersionUserAgent"
+            help="If checked, disables adding the default User-Agent header on newly created requests."
+          />
         </div>
       </div>
 
