@@ -501,8 +501,7 @@ const exportGlobalEnvironment = async (workspace: Workspace, selectedFormat: 'js
     __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
     resources: [],
   };
-  const mockServer = await models.mockServer.getByParentId(workspace._id);
-  invariant(mockServer, 'expected mock server to be defined');
+
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspace._id);
   const subEnvironments = await models.environment.findByParentId(baseEnvironment._id);
 

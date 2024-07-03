@@ -195,9 +195,17 @@ export const WorkspaceDropdown: FC = () => {
             id: 'export',
             name: 'Export',
             icon: <Icon icon='file-export' />,
-            action: () => activeWorkspace.scope !== 'mock-server'
-              ? setIsExportModalOpen(true)
-              : exportMockServerToFile(activeWorkspace),
+            action: () => {
+              if (activeWorkspace.scope === 'mock-server') {
+                return exportMockServerToFile(activeWorkspace);
+              }
+
+              if (activeWorkspace.scope === 'environment') {
+                return exportGlobalEnvironmentToFile(activeWorkspace);
+              }
+
+              return setIsExportModalOpen(true);
+            },
           },
           {
             id: 'settings',
