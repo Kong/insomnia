@@ -87,7 +87,7 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '../hooks/use-loader-defer-data';
-import { type OrganizationFeatureLoaderData, type OrganizationLoaderData, useOrganizationLoaderData } from './organization';
+import { DefaultStorage, type OrganizationFeatureLoaderData, type OrganizationLoaderData, type OrganizationStorageLoaderData, useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
 interface TeamProject {
@@ -603,6 +603,7 @@ const ProjectRoute: FC = () => {
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
   const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
+  const storageRuleFetcher = useFetcher<OrganizationStorageLoaderData>({ key: `storage-rule:${organizationId}` });
 
   useEffect(() => {
     if (!isScratchpadOrganizationId(organizationId)) {
@@ -611,9 +612,17 @@ const ProjectRoute: FC = () => {
     }
   }, [organizationId, permissionsFetcher.load]);
 
+  useEffect(() => {
+    const isIdleAndUninitialized = storageRuleFetcher.state === 'idle' && !storageRuleFetcher.data && !isScratchpadOrganizationId(organizationId);
+
+    if (isIdleAndUninitialized) {
+      storageRuleFetcher.load(`/organization/${organizationId}/storage-rule`);
+    }
+  }, [organizationId, storageRuleFetcher]);
+
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
 
-  const { featuresPromise, billingPromise, storagePromise } = permissionsFetcher.data || {};
+  const { featuresPromise, billingPromise } = permissionsFetcher.data || {};
   const [features = {
     gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
@@ -621,7 +630,13 @@ const ProjectRoute: FC = () => {
   const [billing = {
     isActive: true,
   }] = useLoaderDeferData(billingPromise);
-  const [storage = 'cloud_plus_local'] = useLoaderDeferData(storagePromise);
+
+  const { storage } = storageRuleFetcher.data || {
+    storage: DefaultStorage,
+  };
+
+  console.log('[project] Loaded', { storage });
+
   const [projectListFilter, setProjectListFilter] = useLocalStorage(`${organizationId}:project-list-filter`, '');
   const [workspaceListFilter, setWorkspaceListFilter] = useLocalStorage(`${projectId}:workspace-list-filter`, '');
   const [workspaceListScope, setWorkspaceListScope] = useLocalStorage(`${projectId}:workspace-list-scope`, 'all');
