@@ -256,10 +256,18 @@ async function syncStorageRule(sessionId: string, organizationId: string) {
       }),
     ]);
 
-    console.log('[storageRule] Storage rule', { storageRule });
     invariant(storageRule, 'Failed to load storageRule');
 
-    localStorage.setItem(`${organizationId}:storage-rule`, JSON.stringify(storageRule));
+    const cacheName = 'organization-storage-rules';
+    const cacheKey = `${organizationId}:storage-rule`;
+
+    // Open cache
+    const cache = await caches.open(cacheName);
+
+    // Cache the fetched response
+    const response = new Response(JSON.stringify(storageRule));
+    await cache.put(cacheKey, response.clone());
+
   } catch (error) {
     console.log('[storageRule] Failed to load storage rules', error);
   }
@@ -303,7 +311,7 @@ export const syncOrganizationsAction: ActionFunction = async () => {
 
 export const syncOrganizationStorageRuleAction: ActionFunction = async ({ params }) => {
   const { organizationId } = params;
-  console.log('[storageRule] Syncing storage rule for organization', { organizationId });
+
   invariant(organizationId, 'Organization ID is required');
 
   const { id: sessionId } = await userSession.getOrCreate();
@@ -375,13 +383,21 @@ export const organizationStorageLoader: LoaderFunction = async ({ params }): Pro
   const { organizationId } = params as { organizationId: string };
   const { id: sessionId } = await userSession.getOrCreate();
 
-  // Load from cache
-  const { storage } = JSON.parse(localStorage.getItem(`${organizationId}:storage-rule`) || '[]') as StorageRule || {};
-  console.log('from cache storage', { storage, organizationId });
-  // If we have a cached value return it
-  if (storage) {
+  // Create a cache key and name
+  const cacheName = 'organization-storage-rules';
+  const cacheKey = `${organizationId}:storage-rule`;
+
+  // Open cache
+  const cache = await caches.open(cacheName);
+
+  // Try to load from cache
+  const cachedResponse = await cache.match(cacheKey);
+
+  if (cachedResponse) {
+    const storageRule = await cachedResponse.json();
+
     return {
-      storage,
+      storage: storageRule.storage,
     };
   }
 
@@ -395,8 +411,9 @@ export const organizationStorageLoader: LoaderFunction = async ({ params }): Pro
 
     invariant(storageRule, 'Failed to load storageRule');
 
-    // Cache the value
-    localStorage.setItem(`${organizationId}:storage-rule`, JSON.stringify(storageRule));
+    // Cache the fetched response
+    const response = new Response(JSON.stringify(storageRule));
+    await cache.put(cacheKey, response.clone());
 
     // Return the value
     return {
