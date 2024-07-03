@@ -5,7 +5,7 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import { exportMockServerToFile } from '../../../common/export';
+import { exportGlobalEnvironmentToFile, exportMockServerToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import { PlatformKeyCombinations } from '../../../common/settings';
@@ -122,9 +122,17 @@ export const WorkspaceDropdown: FC = () => {
       id: 'Export',
       name: 'Export',
       icon: <Icon icon='file-export' />,
-      action: () => activeWorkspace.scope !== 'mock-server'
-        ? setIsExportModalOpen(true)
-        : exportMockServerToFile(activeWorkspace),
+      action: () => {
+        if (activeWorkspace.scope === 'mock-server') {
+          return exportMockServerToFile(activeWorkspace);
+        }
+
+        if (activeWorkspace.scope === 'environment') {
+          return exportGlobalEnvironmentToFile(activeWorkspace);
+        }
+
+        return setIsExportModalOpen(true);
+      },
     }],
   }];
 
@@ -187,9 +195,17 @@ export const WorkspaceDropdown: FC = () => {
             id: 'export',
             name: 'Export',
             icon: <Icon icon='file-export' />,
-            action: () => activeWorkspace.scope !== 'mock-server'
-              ? setIsExportModalOpen(true)
-              : exportMockServerToFile(activeWorkspace),
+            action: () => {
+              if (activeWorkspace.scope === 'mock-server') {
+                return exportMockServerToFile(activeWorkspace);
+              }
+
+              if (activeWorkspace.scope === 'environment') {
+                return exportGlobalEnvironmentToFile(activeWorkspace);
+              }
+
+              return setIsExportModalOpen(true);
+            },
           },
           {
             id: 'settings',

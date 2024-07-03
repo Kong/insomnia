@@ -4,7 +4,7 @@ import { useFetcher, useParams } from 'react-router-dom';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
-import { exportMockServerToFile } from '../../../common/export';
+import { exportGlobalEnvironmentToFile, exportMockServerToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
@@ -153,9 +153,15 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
             <ItemContent
               label="Export"
               icon="file-export"
-              onClick={() => workspace.scope !== 'mock-server'
-                ? setIsExportModalOpen(true)
-                : exportMockServerToFile(workspace)}
+              onClick={() => {
+                if (workspace.scope === 'mock-server') {
+                  return exportMockServerToFile(workspace);
+                }
+                if (workspace.scope === 'environment') {
+                  return exportGlobalEnvironmentToFile(workspace);
+                }
+                return setIsExportModalOpen(true);
+              }}
             />
           </DropdownItem>
           <DropdownItem aria-label='Settings'>

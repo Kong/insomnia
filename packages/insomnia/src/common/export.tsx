@@ -455,6 +455,7 @@ const exportMockServer = async (workspace: Workspace, selectedFormat: 'json' | '
   }
   return JSON.stringify(data);
 };
+
 export const exportMockServerToFile = async (workspace: Workspace) => {
   const options = [{ name: 'Insomnia v4 (JSON)', value: VALUE_JSON }, { name: 'Insomnia v4 (YAML)', value: VALUE_YAML }];
   const lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
@@ -490,8 +491,67 @@ export const exportMockServerToFile = async (workspace: Workspace) => {
       }
     },
   });
-
 };
+
+const exportGlobalEnvironment = async (workspace: Workspace, selectedFormat: 'json' | 'yaml') => {
+  const data: Insomnia4Data = {
+    _type: 'export',
+    __export_format: EXPORT_FORMAT,
+    __export_date: new Date(),
+    __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
+    resources: [],
+  };
+
+  const baseEnvironment = await models.environment.getOrCreateForParentId(workspace._id);
+  const subEnvironments = await models.environment.findByParentId(baseEnvironment._id);
+
+  data.resources.push({ ...workspace, _type: 'workspace' });
+  data.resources.push({ ...baseEnvironment, _type: 'environment' });
+  subEnvironments.map(environment => data.resources.push({ ...environment, _type: 'environment' }));
+
+  if (selectedFormat === 'yaml') {
+    return YAML.stringify(data);
+  }
+  return JSON.stringify(data);
+};
+
+export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
+  const options = [{ name: 'Insomnia v4 (JSON)', value: VALUE_JSON }, { name: 'Insomnia v4 (YAML)', value: VALUE_YAML }];
+  const lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
+  const defaultValue = options.find(({ value }) => value === lastFormat) ? lastFormat : VALUE_JSON;
+
+  showModal(SelectModal, {
+    title: 'Select Export Type',
+    value: defaultValue,
+    options,
+    message: 'Which format would you like to export as?',
+    onDone: async selectedFormat => {
+      invariant(selectedFormat, 'expected selected format to be defined');
+      invariant(selectedFormat === 'json' || selectedFormat === 'yaml', 'unexpected selected format');
+      window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
+      const fileName = await showSaveExportedFileDialog({
+        exportedFileNamePrefix: workspace.name,
+        selectedFormat,
+      });
+      if (!fileName) {
+        return;
+      }
+      try {
+        const stringifiedExport = await exportGlobalEnvironment(workspace, selectedFormat);
+        writeExportedFileToFileSystem(fileName, stringifiedExport, err => err && console.warn('Export failed', err));
+        window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat, scope: 'environment' } });
+      } catch (err) {
+        showError({
+          title: 'Export Failed',
+          error: err,
+          message: 'Export failed due to an unexpected error',
+        });
+        return;
+      }
+    },
+  });
+};
+
 export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) => {
   showSelectExportTypeModal({
     onDone: async selectedFormat => {
