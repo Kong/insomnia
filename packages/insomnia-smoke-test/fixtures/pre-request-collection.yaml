@@ -205,6 +205,8 @@ resources:
     environmentPropertyOrder: null
     metaSortKey: -1668533312225
     _type: request_group
+    preRequestScript: |-
+      insomnia.environment.set('onlySetByFolderPreScript', 888);
   - _id: req_89dade2ee9ee42fbb22d588783a9df3c
     parentId: fld_01de564274824ecaad272330339ea6b2
     modified: 1636707449231
@@ -1215,12 +1217,11 @@ resources:
     settingEncodeUrl: true
     settingRebuildPath: true
     settingFollowRedirects: global
-    preRequestScript: |-
-      insomnia.environment.set('onlySetByFolderScript', 888);
+    preRequestScript: ''
     body:
       mimeType: "application/json"
       text: |-
         {
-          "onlySetByFolderScript": {{ onlySetByFolderScript }}
+          "onlySetByFolderPreScript": {{ onlySetByFolderPreScript }}
         }
     _type: request

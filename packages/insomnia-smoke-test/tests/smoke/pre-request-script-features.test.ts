@@ -177,7 +177,7 @@ test.describe('pre-request features tests', async () => {
         {
             name: 'run parent scripts only',
             expectedBody: {
-                'onlySetByFolderScript': 888,
+                'onlySetByFolderPreScript': 888,
             },
         },
     ];
