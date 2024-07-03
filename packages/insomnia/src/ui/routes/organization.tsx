@@ -246,6 +246,25 @@ async function migrateProjectsUnderOrganization(personalOrganizationId: string, 
   }
 };
 
+async function syncStorageRule(sessionId: string, organizationId: string) {
+  try {
+    const [storageRule] = await Promise.all([
+      insomniaFetch<StorageRule | undefined>({
+        method: 'GET',
+        path: `/v1/organizations/${organizationId}/storage-rule`,
+        sessionId,
+      }),
+    ]);
+
+    console.log('[storageRule] Storage rule', { storageRule });
+    invariant(storageRule, 'Failed to load storageRule');
+
+    localStorage.setItem(`${organizationId}:storage-rule`, JSON.stringify(storageRule));
+  } catch (error) {
+    console.log('[storageRule] Failed to load storage rules', error);
+  }
+}
+
 export const indexLoader: LoaderFunction = async () => {
   const { id: sessionId, accountId } = await userSession.getOrCreate();
   if (sessionId) {
@@ -277,6 +296,20 @@ export const syncOrganizationsAction: ActionFunction = async () => {
 
   if (sessionId) {
     await syncOrganizations(sessionId, accountId);
+  }
+
+  return null;
+};
+
+export const syncOrganizationStorageRuleAction: ActionFunction = async ({ params }) => {
+  const { organizationId } = params;
+  console.log('[storageRule] Syncing storage rule for organization', { organizationId });
+  invariant(organizationId, 'Organization ID is required');
+
+  const { id: sessionId } = await userSession.getOrCreate();
+
+  if (sessionId) {
+    await syncStorageRule(sessionId, organizationId);
   }
 
   return null;
@@ -324,6 +357,7 @@ export interface Billing {
   isActive: boolean;
 }
 
+export const DefaultStorage = 'cloud_plus_local';
 export interface StorageRule {
   storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
   isOverridden: boolean;
@@ -332,8 +366,48 @@ export interface StorageRule {
 export interface OrganizationFeatureLoaderData {
   featuresPromise: Promise<FeatureList>;
   billingPromise: Promise<Billing>;
-  storagePromise: Promise<'cloud_plus_local' | 'cloud_only' | 'local_only'>;
 }
+export interface OrganizationStorageLoaderData {
+  storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
+}
+
+export const organizationStorageLoader: LoaderFunction = async ({ params }): Promise<OrganizationStorageLoaderData> => {
+  const { organizationId } = params as { organizationId: string };
+  const { id: sessionId } = await userSession.getOrCreate();
+
+  // Load from cache
+  const { storage } = JSON.parse(localStorage.getItem(`${organizationId}:storage-rule`) || '[]') as StorageRule || {};
+  console.log('from cache storage', { storage, organizationId });
+  // If we have a cached value return it
+  if (storage) {
+    return {
+      storage,
+    };
+  }
+
+  // Otherwise fetch from the API
+  try {
+    const storageRule = await insomniaFetch<StorageRule | undefined>({
+      method: 'GET',
+      path: `/v1/organizations/${organizationId}/storage-rule`,
+      sessionId,
+    });
+
+    invariant(storageRule, 'Failed to load storageRule');
+
+    // Cache the value
+    localStorage.setItem(`${organizationId}:storage-rule`, JSON.stringify(storageRule));
+
+    // Return the value
+    return {
+      storage: storageRule?.storage || DefaultStorage,
+    };
+  } catch (err) {
+    return {
+      storage: DefaultStorage,
+    };
+  }
+};
 
 export const organizationPermissionsLoader: LoaderFunction = async ({ params }): Promise<OrganizationFeatureLoaderData> => {
   const { organizationId } = params as { organizationId: string };
@@ -348,13 +422,10 @@ export const organizationPermissionsLoader: LoaderFunction = async ({ params }):
     isActive: true,
   };
 
-  const fallbackStorage = 'cloud_plus_local';
-
   if (isScratchpadOrganizationId(organizationId)) {
     return {
       featuresPromise: Promise.resolve(fallbackFeatures),
       billingPromise: Promise.resolve(fallbackBilling),
-      storagePromise: Promise.resolve(fallbackStorage),
     };
   }
 
@@ -372,21 +443,14 @@ export const organizationPermissionsLoader: LoaderFunction = async ({ params }):
       sessionId,
     });
 
-    const ruleResponse = insomniaFetch<StorageRule | undefined>({
-      method: 'GET',
-      path: `/v1/organizations/${organizationId}/storage-rule`,
-      sessionId,
-    });
     return {
       featuresPromise: featuresResponse.then(res => res?.features || fallbackFeatures),
       billingPromise: featuresResponse.then(res => res?.billing || fallbackBilling),
-      storagePromise: ruleResponse.then(res => res?.storage || fallbackStorage),
     };
   } catch (err) {
     return {
       featuresPromise: Promise.resolve(fallbackFeatures),
       billingPromise: Promise.resolve(fallbackBilling),
-      storagePromise: Promise.resolve(fallbackStorage),
     };
   }
 };
