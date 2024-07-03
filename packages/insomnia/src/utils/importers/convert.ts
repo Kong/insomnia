@@ -26,7 +26,7 @@ export const convert = async (rawData: string) => {
     if (!resources) {
       continue;
     }
-    checkInvalidPeriod(resources);
+    dotInKeyNameInvariant(resources);
 
     if (resources.length > 0 && resources[0].variable) {
       resources[0].environment = resources[0].variable;
