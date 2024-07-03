@@ -1,11 +1,13 @@
 import fs from 'fs/promises';
-// Based on node-graceful-fs and vs-code's take on renaming files in a way that is more resilient to Windows locking renames
 
+import { isWindows } from '../../../common/constants';
+// Based on node-graceful-fs and vs-code's take on renaming files in a way that is more resilient to Windows locking renames
+// https://github.com/microsoft/vscode/pull/188899/files#diff-2bf233effbb62ea789bb7c4739d222a43ccd97ed9f1219f75bb07e9dee91c1a7R529
 // On Windows, A/V software can lock the directory, causing this
 // to fail with an EACCES or EPERM if the directory contains newly
 // created files.
 
-const GRACEFUL_RENAME_TIMEOUT = 60000;
+const WINDOWS_RENAME_TIMEOUT = 60000; // 1 minute
 
 function wait(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -54,5 +56,9 @@ export async function gracefulRename(
   from: string,
   to: string,
 ) {
-  return renameWithRetry(from, to, Date.now(), GRACEFUL_RENAME_TIMEOUT);
+  if (isWindows()) {
+    return renameWithRetry(from, to, Date.now(), WINDOWS_RENAME_TIMEOUT);
+  }
+
+  return fs.rename(from, to);
 }
