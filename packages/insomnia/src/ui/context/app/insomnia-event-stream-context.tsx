@@ -62,7 +62,7 @@ export interface UserPresence {
 }
 
 interface UserPresenceEvent extends UserPresence {
-  type: 'PresentUserLeave' | 'PresentStateChanged' | 'OrganizationChanged';
+  type: 'PresentUserLeave' | 'PresentStateChanged' | 'OrganizationChanged' | 'StorageRuleChanged';
 }
 
 export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children }) => {
@@ -83,6 +83,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
   const syncOrganizationsFetcher = useFetcher();
+  const syncStorageRuleFetcher = useFetcher();
   const syncProjectsFetcher = useFetcher();
   const syncDataFetcher = useFetcher();
   const { revalidate } = useRevalidator();
@@ -147,6 +148,13 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                 action: '/organization/sync',
                 method: 'POST',
               });
+            } else if (event.type === 'StorageRuleChanged' && event.team && event.team.includes('org_')) {
+              const orgId = event.team;
+
+              syncStorageRuleFetcher.submit({}, {
+                action: `/organization/${orgId}/sync-storage-rule`,
+                method: 'POST',
+              });
             } else if (event.type === 'TeamProjectChanged' && event.team === organizationId) {
               syncProjectsFetcher.submit({}, {
                 action: `/organization/${organizationId}/sync-projects`,
@@ -176,7 +184,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
       }
     }
     return;
-  }, [organizationId, projectId, remoteId, revalidate, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, userSession.id, workspaceId]);
+  }, [organizationId, projectId, remoteId, revalidate, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, syncStorageRuleFetcher, userSession.id, workspaceId]);
 
   return (
     <InsomniaEventStreamContext.Provider
