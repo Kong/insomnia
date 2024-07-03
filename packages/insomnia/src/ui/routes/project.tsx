@@ -816,9 +816,15 @@ const ProjectRoute: FC = () => {
     key: `${organizationId}-create-new-project`,
   });
 
+  const [createNewProjectFetcherData, setCreateNewProjectFetcherData] = useState(createNewProjectFetcher.data);
+
   useEffect(() => {
-    if (createNewProjectFetcher.data && createNewProjectFetcher.data.error && createNewProjectFetcher.state === 'idle') {
-      if (createNewProjectFetcher.data.error === 'NEEDS_TO_UPGRADE') {
+    setCreateNewProjectFetcherData(createNewProjectFetcher.data);
+  }, [createNewProjectFetcher.data]);
+
+  useEffect(() => {
+    if (createNewProjectFetcherData && createNewProjectFetcherData.error && createNewProjectFetcher.state === 'idle') {
+      if (createNewProjectFetcherData.error === 'NEEDS_TO_UPGRADE') {
         showModal(AskModal, {
           title: 'Upgrade your plan',
           message: 'You are currently on the Free plan where you can invite as many collaborators as you want as long as you don\'t have more than one project. Since you have more than one project, you need to upgrade to "Individual" or above to continue.',
@@ -830,7 +836,7 @@ const ProjectRoute: FC = () => {
             }
           },
         });
-      } else if (createNewProjectFetcher.data.error === 'FORBIDDEN') {
+      } else if (createNewProjectFetcherData.error === 'FORBIDDEN') {
         showAlert({
           title: 'Could not create project.',
           message: 'You do not have permission to create a project in this organization.',
@@ -838,11 +844,14 @@ const ProjectRoute: FC = () => {
       } else {
         showAlert({
           title: 'Could not create project.',
-          message: createNewProjectFetcher.data.error,
+          message: createNewProjectFetcherData.error,
         });
       }
+
+      // Reset the local state to clear the error
+      setCreateNewProjectFetcherData(null);
     }
-  }, [createNewProjectFetcher.data, createNewProjectFetcher.state]);
+  }, [createNewProjectFetcher.state, createNewProjectFetcherData]);
 
   const isGitSyncEnabled = features.gitSync.enabled;
 
@@ -984,6 +993,8 @@ const ProjectRoute: FC = () => {
   const isRemoteProjectInconsistent = activeProject && isRemoteProject(activeProject) && storage === 'local_only';
   const isLocalProjectInconsistent = activeProject && !isRemoteProject(activeProject) && storage === 'cloud_only';
   const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent;
+  const showStorageRestrictionMessage = storage !== 'cloud_plus_local';
+
   return (
     <ErrorBoundary>
       <Fragment>
@@ -1456,11 +1467,11 @@ const ProjectRoute: FC = () => {
         )}
         <ModalOverlay isOpen={isNewProjectModalOpen} onOpenChange={isOpen => setIsNewProjectModalOpen(isOpen)} isDismissable className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30">
           <Modal className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
-            <Dialog className="outline-none">
+            <Dialog className="outline-none" aria-label='Create or update dialog'>
               {({ close }) => (
                 <div className='flex flex-col gap-4'>
                   <div className='flex gap-2 items-center justify-between'>
-                    <Heading className='text-2xl'>Create a new project</Heading>
+                    <Heading slot="title" className='text-2xl'>Create a new project</Heading>
                     <Button
                       className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                       onPress={close}
@@ -1530,7 +1541,7 @@ const ProjectRoute: FC = () => {
                       <div className="flex items-center gap-2 text-sm">
                         <Icon icon="info-circle" />
                         <span>
-                          {isProjectInconsistent && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`} You can optionally enable Git Sync
+                          {showStorageRestrictionMessage && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`} You can optionally enable Git Sync
                         </span>
                       </div>
                       <div className='flex items-center gap-2'>
