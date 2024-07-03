@@ -4,7 +4,6 @@ import electron from 'electron';
 import fs from 'fs';
 import { join as pathJoin, resolve as pathResolve } from 'path';
 
-import { version } from '../../../package.json';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import {
   AUTH_AWS_IAM,
