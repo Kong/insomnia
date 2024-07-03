@@ -104,7 +104,6 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
     }
   }, [updateProjectFetcher.data, updateProjectFetcher.state]);
 
-  const defaultStorageSelection = storage === 'local_only' ? 'local' : 'remote';
   return (
     <Fragment>
       {isProjectInconsistent &&
@@ -228,7 +227,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
                         className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                       />
                     </TextField>
-                    <RadioGroup name="type" defaultValue={defaultStorageSelection} className="flex flex-col gap-2">
+                    <RadioGroup name="type" defaultValue={project.remoteId ? 'remote' : 'local'} className="flex flex-col gap-2">
                       <Label className="text-sm text-[--hl]">
                         Project type
                       </Label>
