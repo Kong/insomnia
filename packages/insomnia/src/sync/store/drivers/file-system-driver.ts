@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 import type { BaseDriver } from './base';
+import { gracefulRename } from './graceful-rename';
 
 export default class FileSystemDriver implements BaseDriver {
   _directory: string;
@@ -43,7 +44,7 @@ export default class FileSystemDriver implements BaseDriver {
       // file (non-atomic) then renaming the file to the final value (atomic)
     try {
       await fs.writeFile(tmpPath, value, 'utf8');
-      await fs.rename(tmpPath, finalPath);
+      await gracefulRename(tmpPath, finalPath);
     } catch (err) {
       console.error(`[FileSystemDriver] Failed to write to ${tmpPath} then rename to ${finalPath}`, err);
       throw err;
