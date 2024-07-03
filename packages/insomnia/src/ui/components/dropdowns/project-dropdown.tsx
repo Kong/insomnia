@@ -52,6 +52,8 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
   const isRemoteProjectInconsistent = isRemoteProject(project) && storage === 'local_only';
   const isLocalProjectInconsistent = !isRemoteProject(project) && storage === 'cloud_only';
   const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent;
+  const showStorageRestrictionMessage = storage !== 'cloud_plus_local';
+
   const projectActionList: ProjectActionItem[] = [
     {
       id: 'settings',
@@ -304,7 +306,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
                     <div className="flex items-center gap-2 text-sm">
                       <Icon icon="info-circle" />
                       <span>
-                        {isProjectInconsistent && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`} You can optionally enable Git Sync
+                        {showStorageRestrictionMessage && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`} You can optionally enable Git Sync
                       </span>
                     </div>
                     <div className='flex items-center gap-2'>
