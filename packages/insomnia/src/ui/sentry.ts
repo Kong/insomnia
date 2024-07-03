@@ -7,9 +7,9 @@ import { SENTRY_OPTIONS } from '../common/sentry';
 async function sentryConfigureUserInfo() {
   const id = await getAccountId();
   if (id) {
-    Sentry.setUser({ id });
+    Sentry.getCurrentScope().setUser({ id });
   } else {
-    Sentry.setUser(null);
+    Sentry.getCurrentScope().setUser(null);
   }
 }
 

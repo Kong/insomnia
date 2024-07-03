@@ -45,7 +45,6 @@
     "@jest/globals": "^29.7.0",
     "@seald-io/nedb": "^4.0.4",
     "@segment/analytics-node": "2.1.0",
-    "@sentry/electron": "^5.1.0",
     "apiconnect-wsdl": "1.8.31",
     "aws4": "^1.12.0",
     "chai": "^4.3.4",
@@ -185,7 +184,8 @@
     "vkbeautify": "^0.99.3",
     "ws": "^8.17.1",
     "xmldom": "^0.6.0",
-    "xpath": "0.0.34"
+    "xpath": "0.0.34",
+    "@sentry/electron": "^5.1.0"
   },
   "dev": {
     "dev-server-port": 3334
