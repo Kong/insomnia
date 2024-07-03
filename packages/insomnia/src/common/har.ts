@@ -258,9 +258,11 @@ export async function exportHarWithRenderedRequest(
 }
 
 function getRequestCookies(renderedRequest: RenderedRequest) {
-  // sanitize null expires property or getCookiesSync will throw error
+  // filter out invalid cookies to avoid getCookiesSync complaining
   const sanitized = renderedRequest.cookieJar.cookies.map(cookie => {
     if (!cookie.expires) {
+      // TODO: null will make getCookiesSync unhappy
+      // probably it should be `undefined` when types of tough cookie is updated
       cookie.expires = 'Infinity';
     }
     return cookie;
