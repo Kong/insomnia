@@ -973,7 +973,6 @@ export const Debug: FC = () => {
                         className="px-1 flex-1"
                         onSingleClick={() => {
                           if (item && isRequestGroup(item.doc)) {
-                            groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
                             navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}?${searchParams.toString()}`);
                           } else {
                             navigate(
@@ -1019,20 +1018,15 @@ export const Debug: FC = () => {
                 selectedKeys={requestId && [requestId] || requestGroupId && [requestGroupId]}
                 selectionMode="single"
                 onSelectionChange={keys => {
-                  if (keys !== 'all') {
-                    const value = keys.values().next().value;
-
-                    const item = collection.find(
-                      item => item.doc._id === value
-                    );
-                    if (item && isRequestGroup(item.doc)) {
-                      groupMetaPatcher(value, { collapsed: !item.collapsed });
-                    } else {
-                      navigate(
-                        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`
-                      );
-                    }
+                  if (keys === 'all') {
+                    return;
                   }
+                  const value = keys.values().next().value;
+                  if (isRequestGroupId(value)) {
+                    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${value}?${searchParams.toString()}`);
+                    return;
+                  }
+                  navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`);
                 }}
               >
                 {virtualItem => {
@@ -1095,10 +1089,14 @@ export const Debug: FC = () => {
                           </span>
                         )}
                         {isRequestGroup(item.doc) && (
-                          <Icon
-                            className="w-6 flex-shrink-0"
-                            icon={item.collapsed ? 'folder' : 'folder-open'}
-                          />
+                          <Button
+                            onPress={() => groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed })}
+                          >
+                            <Icon
+                              className="w-6 flex-shrink-0"
+                              icon={item.collapsed ? 'folder' : 'folder-open'}
+                            />
+                          </Button>
                         )}
                         <EditableInput
                           value={getRequestNameOrFallback(item.doc)}
