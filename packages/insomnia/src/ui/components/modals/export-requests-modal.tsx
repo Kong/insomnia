@@ -256,6 +256,8 @@ export const ExportRequestsModal = ({ workspaceIdToExport, onClose }: { workspac
     return !!node.children.find(child => setRequestGroupCollapsed(child, isCollapsed, requestGroupId));
   };
 
+  const isExportDisabled = state?.treeRoot?.selectedRequests === 0 || false;
+
   return (
     <ModalOverlay
       isOpen
@@ -312,6 +314,7 @@ export const ExportRequestsModal = ({ workspaceIdToExport, onClose }: { workspac
                     state?.treeRoot && exportRequestsToFile(workspaceIdToExport, getSelectedRequestIds(state.treeRoot));
                     close();
                   }}
+                  isDisabled={isExportDisabled}
                   className="hover:no-underline flex items-center gap-2 bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                 >
                   <Icon icon="save" /> Export
