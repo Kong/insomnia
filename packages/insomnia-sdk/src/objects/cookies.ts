@@ -310,7 +310,7 @@ export class CookieJar {
                         id: cookieObj.id,
                         key: cookieObj.key,
                         value: cookieObj.value,
-                        expires: cookieObj.expires,
+                        expires: cookieObj.expires || 'Infinity', // transform it back to 'Infinity', avoid edge cases
                         domain: cookieObj.domain || undefined,
                         path: cookieObj.path || undefined,
                         secure: cookieObj.secure,
