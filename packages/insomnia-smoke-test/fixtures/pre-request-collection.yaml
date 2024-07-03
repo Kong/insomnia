@@ -207,6 +207,8 @@ resources:
     _type: request_group
     preRequestScript: |-
       insomnia.environment.set('onlySetByFolderPreScript', 888);
+    afterResponseScript: |-
+      insomnia.environment.unset('onlySetByFolderPreScript');
   - _id: req_89dade2ee9ee42fbb22d588783a9df3c
     parentId: fld_01de564274824ecaad272330339ea6b2
     modified: 1636707449231
