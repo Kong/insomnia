@@ -68,10 +68,43 @@ export function getOrInheritHeaders({ request, requestGroups }: { request: Reque
   // if parent has foo: bar and child has foo: baz, request will have foo: bar, baz
   return [...headers, ...request.headers];
 }
+// (only used for getOAuth2 token) Intended to gather all required database objects and initialize ids
+export const fetchRequestGroupData = async (requestGroupId: string) => {
+  const requestGroup = await models.requestGroup.getById(requestGroupId);
+  invariant(requestGroup, 'failed to find requestGroup ' + requestGroupId);
+  const ancestors = await db.withAncestors<RequestGroup | Workspace | MockRoute | MockServer>(requestGroup, [
+    models.requestGroup.type,
+    models.workspace.type,
+    models.mockRoute.type,
+    models.mockServer.type,
+  ]);
+  const workspaceDoc = ancestors.find(isWorkspace);
+  invariant(workspaceDoc?._id, 'failed to find workspace');
+  const workspaceId = workspaceDoc._id;
 
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'failed to find workspace');
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  // NOTE: parent folders wont be checked in here since we only use it for oauth2 requests right now, so they are discarded in that code path
+  // fallback to base environment
+  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const activeEnvironment = activeEnvironmentId && await models.environment.getById(activeEnvironmentId);
+  const environment = activeEnvironment || await models.environment.getOrCreateForParentId(workspace._id);
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
+
+  const settings = await models.settings.get();
+  invariant(settings, 'failed to create settings');
+  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const caCert = await models.caCertificate.findByParentId(workspaceId);
+  const responseId = generateId('res');
+  const responsesDir = pathJoin((process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
+  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+  return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
+};
+// Intended to gather all required database objects and initialize ids
 export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
-  invariant(request, 'failed to find request');
+  invariant(request, 'failed to find request ' + requestId);
   const ancestors = await db.withAncestors<Request | RequestGroup | Workspace | MockRoute | MockServer>(request, [
     models.request.type,
     models.requestGroup.type,
