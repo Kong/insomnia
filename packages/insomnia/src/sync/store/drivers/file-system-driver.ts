@@ -44,11 +44,7 @@ export default class FileSystemDriver implements BaseDriver {
       // file (non-atomic) then renaming the file to the final value (atomic)
     try {
       await fs.writeFile(tmpPath, value, 'utf8');
-      gracefulRename(tmpPath, finalPath, err => {
-        if (err) {
-          throw err;
-        }
-      });
+      await gracefulRename(tmpPath, finalPath);
     } catch (err) {
       console.error(`[FileSystemDriver] Failed to write to ${tmpPath} then rename to ${finalPath}`, err);
       throw err;
