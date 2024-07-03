@@ -393,7 +393,7 @@ export const organizationStorageLoader: LoaderFunction = async ({ params }): Pro
   // Try to load from cache
   const cachedResponse = await cache.match(cacheKey);
 
-  if (cachedResponse) {
+  if (cachedResponse && Object.keys(cachedResponse).length > 0) {
     const storageRule = await cachedResponse.json();
 
     return {
