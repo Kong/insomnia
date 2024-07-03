@@ -174,12 +174,12 @@ test.describe('pre-request features tests', async () => {
                 asyncTaskDone: true,
             },
         },
-        // {
-        //     name: 'can manipulate global envs',
-        //     expectedBody: {
-        //         setByScript: 'setByScript',
-        //     },
-        // },
+        {
+            name: 'run parent scripts only',
+            expectedBody: {
+                'onlySetByFolderPreScript': 888,
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {

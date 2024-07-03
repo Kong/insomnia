@@ -26,7 +26,7 @@ import { Response } from '../../models/response';
 import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
-import { fetchRequestData, getPreRequestScriptOutput, responseTransform, savePatchesMadeByScript, sendCurlAndWriteTimeline, tryToExecuteAfterResponseScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecuteAfterResponseScript, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import { RenderErrorSubType } from '../../templating';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
@@ -367,8 +367,9 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   try {
     window.main.startExecution({ requestId });
     const requestData = await fetchRequestData(requestId);
+
     window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
-    const mutatedContext = await getPreRequestScriptOutput(requestData, workspaceId);
+    const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId);
     window.main.completeExecutionStep({ requestId });
     if (mutatedContext === null) {
       return null;
@@ -421,29 +422,14 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
 
     mutatedContext.request.afterResponseScript = afterResponseScript;
-    if (requestData.request.afterResponseScript) {
-      const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
-      const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-      const globals = mutatedContext.globals;
+    window.main.addExecutionStep({ requestId, stepName: 'Executing after-response script' });
+    await tryToExecuteAfterResponseScript({
+      ...requestData,
+      ...mutatedContext,
+      response,
+    });
+    window.main.completeExecutionStep({ requestId });
 
-      window.main.addExecutionStep({ requestId, stepName: 'Executing after-response script' });
-
-      const postMutatedContext = await tryToExecuteAfterResponseScript({
-        ...requestData,
-        ...mutatedContext,
-        baseEnvironment,
-        cookieJar,
-        response,
-        globals,
-      });
-      window.main.completeExecutionStep({ requestId });
-      if (!postMutatedContext?.request) {
-        // exiy early if there was a problem with the pre-request script
-        // TODO: improve error message?
-        return null;
-      }
-      await savePatchesMadeByScript(postMutatedContext, requestData.environment, baseEnvironment, globals);
-    }
     if (!shouldWriteToFile) {
       const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
       await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
