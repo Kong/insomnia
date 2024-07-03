@@ -258,7 +258,15 @@ export async function exportHarWithRenderedRequest(
 }
 
 function getRequestCookies(renderedRequest: RenderedRequest) {
-  const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
+  // sanitize null expires property or getCookiesSync will throw error
+  const sanitized = renderedRequest.cookieJar.cookies.map(cookie => {
+    if (!cookie.expires) {
+      cookie.expires = 'Infinity';
+    }
+    return cookie;
+  });
+
+  const jar = jarFromCookies(sanitized);
   const domainCookies = renderedRequest.url ? jar.getCookiesSync(renderedRequest.url) : [];
   const harCookies: Har.Cookie[] = domainCookies.map(mapCookie);
   return harCookies;
