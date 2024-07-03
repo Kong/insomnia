@@ -197,6 +197,20 @@ async function renderApp() {
                     shouldRevalidate: data => data.currentParams.organizationId !== data.nextParams.organizationId,
                   },
                   {
+                    path: 'storage-rule',
+                    loader: async (...args) =>
+                      (
+                        await import('./routes/organization')
+                      ).organizationStorageLoader(...args),
+                  },
+                  {
+                    path: 'sync-storage-rule',
+                    action: async (...args) =>
+                      (
+                        await import('./routes/organization')
+                      ).syncOrganizationStorageRuleAction(...args),
+                  },
+                  {
                     path: 'sync-projects',
                     action: async (...args) =>
                       (
