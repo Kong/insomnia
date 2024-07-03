@@ -635,8 +635,6 @@ const ProjectRoute: FC = () => {
     storage: DefaultStorage,
   };
 
-  console.log('[project] Loaded', { storage });
-
   const [projectListFilter, setProjectListFilter] = useLocalStorage(`${organizationId}:project-list-filter`, '');
   const [workspaceListFilter, setWorkspaceListFilter] = useLocalStorage(`${projectId}:workspace-list-filter`, '');
   const [workspaceListScope, setWorkspaceListScope] = useLocalStorage(`${projectId}:workspace-list-scope`, 'all');
