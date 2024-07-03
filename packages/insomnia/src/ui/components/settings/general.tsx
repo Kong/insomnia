@@ -190,9 +190,9 @@ export const General: FC = () => {
           />
 
           <BooleanSetting
-            label="Disable adding default User-Agent on new requests"
+            label="Disable default User-Agent on new requests"
             setting="disableAppVersionUserAgent"
-            help="If checked, disables adding the default User-Agent header."
+            help="If checked, disables adding the default User-Agent header on newly created requests."
           />
         </div>
       </div>
