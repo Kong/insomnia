@@ -1,11 +1,8 @@
-import React, { FC, ReactNode, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-interface Props {
-  children: ReactNode;
-  className?: string | null;
-}
+import { Icon } from './icon';
 
-export const CheckForUpdatesButton: FC<Props> = ({ children, className }) => {
+export const CheckForUpdatesButton = () => {
   const [disabled, setDisabled] = useState(false);
   const [status, setStatus] = useState('');
 
@@ -16,9 +13,10 @@ export const CheckForUpdatesButton: FC<Props> = ({ children, className }) => {
       unsubscribe();
     };
   });
+
   return (
     <button
-      className={className ?? ''}
+      className="flex items-center gap-2 btn btn--outlined btn--super-compact"
       disabled={disabled}
       onClick={() => {
         window.main.manualUpdateCheck();
@@ -27,7 +25,8 @@ export const CheckForUpdatesButton: FC<Props> = ({ children, className }) => {
         setDisabled(true);
       }}
     >
-      {status || children}
+      <Icon className={status && 'animate-spin'} icon="refresh" />
+      {status || 'Check now'}
     </button>
   );
 };
