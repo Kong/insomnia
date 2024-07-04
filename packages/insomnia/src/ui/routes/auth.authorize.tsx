@@ -6,7 +6,6 @@ import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { getLoginUrl, submitAuthCode } from '../auth-session-provider';
 import { Icon } from '../components/icon';
-import { showSettingsModal } from '../components/modals/settings-modal';
 import { Button } from '../components/themed-button';
 
 export const action: ActionFunction = async ({
@@ -152,13 +151,6 @@ const Authorize = () => {
         >
           <Icon icon="arrow-left" />
           <span>Go Back</span>
-        </Button>
-        <Button
-          data-testid="settings-button-auth-authorize"
-          className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-          onClick={showSettingsModal}
-        >
-          <Icon icon="gear" /> Preferences
         </Button>
       </div>
     </div>
