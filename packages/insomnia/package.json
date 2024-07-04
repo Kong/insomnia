@@ -45,7 +45,6 @@
     "@jest/globals": "^29.7.0",
     "@seald-io/nedb": "^4.0.4",
     "@segment/analytics-node": "2.1.0",
-    "@sentry/electron": "^3.0.7",
     "apiconnect-wsdl": "1.8.31",
     "aws4": "^1.12.0",
     "chai": "^4.3.4",
@@ -83,10 +82,6 @@
     "yaml-source-map": "^2.1.1"
   },
   "devDependencies": {
-    "@stoplight/spectral-core": "^1.18.3",
-    "@stoplight/spectral-formats": "^1.6.0",
-    "@stoplight/spectral-rulesets": "^1.18.1",
-    "@stoplight/spectral-ruleset-bundler": "1.5.2",
     "@develohpanda/fluent-builder": "^2.1.2",
     "@faker-js/faker": "8.4.1",
     "@fortawesome/fontawesome-svg-core": "^6.5.2",
@@ -95,6 +90,10 @@
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@fortawesome/react-fontawesome": "^0.2.0",
     "@getinsomnia/api-client": "0.0.4",
+    "@stoplight/spectral-core": "^1.18.3",
+    "@stoplight/spectral-formats": "^1.6.0",
+    "@stoplight/spectral-ruleset-bundler": "1.5.2",
+    "@stoplight/spectral-rulesets": "^1.18.1",
     "@tailwindcss/typography": "^0.5.12",
     "@tanstack/react-virtual": "3.2.0",
     "@testing-library/dom": "^9.3.4",
@@ -185,7 +184,8 @@
     "vkbeautify": "^0.99.3",
     "ws": "^8.17.1",
     "xmldom": "^0.6.0",
-    "xpath": "0.0.34"
+    "xpath": "0.0.34",
+    "@sentry/electron": "^5.1.0"
   },
   "dev": {
     "dev-server-port": 3334
