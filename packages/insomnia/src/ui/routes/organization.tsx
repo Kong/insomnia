@@ -400,7 +400,6 @@ const OrganizationRoute = () => {
     projectId?: string;
     workspaceId?: string;
   };
-  const [status, setStatus] = useState<'online' | 'offline'>('online');
 
   useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
@@ -412,7 +411,7 @@ const OrganizationRoute = () => {
   const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
   const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
   const hasUntrackedData = untrackedProjects.length > 0 || untrackedWorkspaces.length > 0;
-
+  const [status, setStatus] = useState<'online' | 'offline'>('online');
   useEffect(() => {
     const handleOnline = () => setStatus('online');
     const handleOffline = () => setStatus('offline');
@@ -737,7 +736,7 @@ const OrganizationRoute = () => {
                   <Button
                     data-testid="settings-button"
                     className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                    onPress={showSettingsModal}
+                    onPress={() => showSettingsModal()}
                   >
                     <Icon icon="gear" /> Preferences
                   </Button>
@@ -799,6 +798,11 @@ const OrganizationRoute = () => {
                     className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
                     onPress={() => {
                       !user && navigate('/auth/login');
+                      if (settings.proxyEnabled) {
+                        showSettingsModal({
+                          tab: 'proxy',
+                        });
+                      }
                     }}
                   >
                     <Icon
@@ -814,6 +818,7 @@ const OrganizationRoute = () => {
                     {user
                       ? status.charAt(0).toUpperCase() + status.slice(1)
                       : 'Log in to see your projects'}
+                    {status === 'online' && settings.proxyEnabled ? ' via proxy' : ''}
                   </Button>
                   <Tooltip
                     placement="top"
@@ -821,11 +826,9 @@ const OrganizationRoute = () => {
                     className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
                     {user
-                      ? `You are ${status === 'online'
-                        ? 'securely connected to Insomnia Cloud.'
-                        : 'offline. Connect to sync your data.'
-                      }`
-                      : 'Log in to Insomnia to sync your data.'}
+                      ? status === 'online' ? 'You have connectivity to the Internet' + (settings.proxyEnabled ? ' via the configured proxy' : '') + '.'
+                        : 'You are offline. Connect to sync your data.'
+                      : 'Log in to Insomnia to unlock the full product experience.'}
                   </Tooltip>
                 </TooltipTrigger>
                 <span className='w-[1px] h-full bg-[--hl-sm]' />

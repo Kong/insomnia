@@ -18,7 +18,6 @@ import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { BooleanSetting } from './boolean-setting';
 import { EnumSetting } from './enum-setting';
-import { MaskedSetting } from './masked-setting';
 import { NumberSetting } from './number-setting';
 import { TextSetting } from './text-setting';
 
@@ -30,8 +29,10 @@ export const General: FC = () => {
   const isLoggedIn = Boolean(userSession.id);
 
   return (
-    <div className="pad-bottom">
-      <div className="row-fill row-fill--top">
+    <div className="relative p-4">
+      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Application</h2>
+
+      <div className="">
         <div>
           <BooleanSetting
             label="Use bulk header editor"
@@ -77,8 +78,7 @@ export const General: FC = () => {
         />
       </div>
 
-      <hr className="pad-top" />
-      <h2>Font</h2>
+      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Font</h2>
 
       <div className="row-fill row-fill--top">
         <div>
@@ -158,9 +158,7 @@ export const General: FC = () => {
         />
       </div>
 
-      <hr className="pad-top" />
-
-      <h2>Request / Response</h2>
+      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Request / Response</h2>
 
       <div className="row-fill row-fill--top">
         <div>
@@ -246,9 +244,7 @@ export const General: FC = () => {
         />
       </div>
 
-      <hr className="pad-top" />
-
-      <h2>Security</h2>
+      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Security</h2>
       <div className="form-row pad-top-sm">
         <BooleanSetting
           label="Clear OAuth 2 session on start"
@@ -273,50 +269,11 @@ export const General: FC = () => {
         />
       </div>
 
-      <hr className="pad-top" />
-
-      <h2>Network Proxy</h2>
-
-      <BooleanSetting
-        label="Enable proxy"
-        setting="proxyEnabled"
-        help="If checked, enables a global network proxy on all requests sent through Insomnia. This proxy supports Basic Auth, digest, and NTLM authentication."
-      />
-
-      <div className="form-row pad-top-sm">
-        <MaskedSetting
-          label='Proxy for HTTP'
-          setting='httpProxy'
-          help="Enter a HTTP or SOCKS4/5 proxy starting with appropriate prefix from the following (http://, socks4://, socks5://)"
-          placeholder="localhost:8005"
-          disabled={!settings.proxyEnabled}
-        />
-        <MaskedSetting
-          label='Proxy for HTTPS'
-          setting='httpsProxy'
-          help="Enter a HTTPS or SOCKS4/5 proxy starting with appropriate prefix from the following (https://, socks4://, socks5://)"
-          placeholder="localhost:8005"
-          disabled={!settings.proxyEnabled}
-        />
-        <TextSetting
-          label="No proxy"
-          setting="noProxy"
-          help="Enter a comma-separated list of hostnames that don’t require a proxy."
-          placeholder="localhost,127.0.0.1"
-          disabled={!settings.proxyEnabled}
-        />
-      </div>
-
       {updatesSupported() && (
         <Fragment>
-          <hr className="pad-top" />
-          <div>
-            <div className="pull-right">
-              <CheckForUpdatesButton className="btn btn--outlined btn--super-duper-compact">
-                Check now
-              </CheckForUpdatesButton>
-            </div>
-            <h2>Software Updates</h2>
+          <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Software Updates</h2>
+          <div className="w-full">
+            <CheckForUpdatesButton />
           </div>
           <BooleanSetting
             label="Automatically download and install updates"
@@ -346,8 +303,7 @@ export const General: FC = () => {
           /></>
       )}
 
-      <hr className="pad-top" />
-      <h2>Plugins</h2>
+      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Plugins</h2>
       <TextSetting
         label="Additional Plugin Path"
         setting="pluginPath"
