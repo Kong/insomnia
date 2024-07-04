@@ -7,18 +7,18 @@ import fs from 'fs';
 import path from 'path';
 
 import { InsoError, logger } from '../cli';
-export const getRuleSetFileFromFolderByFilename = async (fileName: string) => {
+export const getRuleSetFileFromFolderByFilename = async (filePath: string) => {
   try {
-    const filesInSpecFolder = await fs.promises.readdir(path.dirname(fileName));
+    const filesInSpecFolder = await fs.promises.readdir(path.dirname(filePath));
     const rulesetFileName = filesInSpecFolder.find(file => file.startsWith('.spectral'));
     if (rulesetFileName) {
       logger.trace(`Loading ruleset from \`${rulesetFileName}\``);
-      return path.resolve(path.dirname(fileName), rulesetFileName);
+      return path.resolve(path.dirname(filePath), rulesetFileName);
     }
     logger.info(`Using ruleset: oas, see ${oas.documentationUrl}`);
     return;
   } catch (error) {
-    throw new InsoError(`Failed to read "${fileName}"`, error);
+    throw new InsoError(`Failed to read "${filePath}"`, error);
   }
 };
 export async function lintSpecification({ specContent, rulesetFileName }: { specContent: string; rulesetFileName?: string },) {
