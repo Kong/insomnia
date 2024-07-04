@@ -5,22 +5,23 @@ exports[`Snapshot for "inso --help" 1`] = `
 
 A CLI for Insomnia!
   With this tool you can test, lint, and export your Insomnia data.
+  Inso will try to detect your locally installed Insomnia data.
+  You can also point it at a git repository folder, or an Insomnia export file.
 
-  Testing: Inso accepts 3 types of input:
-    Insomnia application data: will be automatically detected, or you can set --workingDir to an alternaitve application data path.
-    Git repositories: set --workingDir to the repository path.
-    Insomnia export files: set --exportFile to the file path.
+  Examples:
+  $ inso run test
+  $ inso lint spec
+  $ inso export spec
 
-  Linting: Inso can lint an API specification from the Insomnia application data, a git repository, insomnia export file, or a file path.
 
-  Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
+  Inso also supports configuration files, by default it will look for .insorc in the current/provided working directory.
+  $ inso export spec --config /some/path/.insorc
 
 
 Options:
   -v, --version           output the version number
-  -w, --workingDir <dir>  set working directory, defaults to current working
-                          directory, will detect a git repository or Insomnia
-                          data directory (default: "")
+  -w, --workingDir <dir>  set working directory, to look for files: .insorc,
+                          .insomnia folder, *.db.json (default: "")
   --exportFile <file>     set the Insomna export file read from (default: "")
   --verbose               show additional logs while running the command
                           (default: false)
@@ -33,7 +34,9 @@ Options:
 
 Commands:
   run                     Execution utilities
-  lint                    Linting utilities
+  lint                    Lint a yaml file in the workingDir or the provided
+                          file path (with  .spectral.yml) or a spec in an
+                          Insomnia database directory
   export                  Export data from insomnia models
   script <script-name>    Run scripts defined in .insorc
   help [command]          display help for command"
@@ -44,22 +47,23 @@ exports[`Snapshot for "inso -h" 1`] = `
 
 A CLI for Insomnia!
   With this tool you can test, lint, and export your Insomnia data.
+  Inso will try to detect your locally installed Insomnia data.
+  You can also point it at a git repository folder, or an Insomnia export file.
 
-  Testing: Inso accepts 3 types of input:
-    Insomnia application data: will be automatically detected, or you can set --workingDir to an alternaitve application data path.
-    Git repositories: set --workingDir to the repository path.
-    Insomnia export files: set --exportFile to the file path.
+  Examples:
+  $ inso run test
+  $ inso lint spec
+  $ inso export spec
 
-  Linting: Inso can lint an API specification from the Insomnia application data, a git repository, insomnia export file, or a file path.
 
-  Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
+  Inso also supports configuration files, by default it will look for .insorc in the current/provided working directory.
+  $ inso export spec --config /some/path/.insorc
 
 
 Options:
   -v, --version           output the version number
-  -w, --workingDir <dir>  set working directory, defaults to current working
-                          directory, will detect a git repository or Insomnia
-                          data directory (default: "")
+  -w, --workingDir <dir>  set working directory, to look for files: .insorc,
+                          .insomnia folder, *.db.json (default: "")
   --exportFile <file>     set the Insomna export file read from (default: "")
   --verbose               show additional logs while running the command
                           (default: false)
@@ -72,7 +76,9 @@ Options:
 
 Commands:
   run                     Execution utilities
-  lint                    Linting utilities
+  lint                    Lint a yaml file in the workingDir or the provided
+                          file path (with  .spectral.yml) or a spec in an
+                          Insomnia database directory
   export                  Export data from insomnia models
   script <script-name>    Run scripts defined in .insorc
   help [command]          display help for command"
@@ -88,15 +94,14 @@ Options:
 
 Commands:
   spec [options] [identifier]  Export an API Specification to a file,
-                               identifier can be an API Spec id or a file path
+                               identifier can be an API Spec id
   help [command]               display help for command"
 `;
 
 exports[`Snapshot for "inso export spec -h" 1`] = `
 "Usage: inso export spec [options] [identifier]
 
-Export an API Specification to a file, identifier can be an API Spec id or a
-file path
+Export an API Specification to a file, identifier can be an API Spec id
 
 Options:
   -o, --output <path>    save the generated config to a file (default: "")
@@ -110,22 +115,23 @@ exports[`Snapshot for "inso generate -h" 1`] = `
 
 A CLI for Insomnia!
   With this tool you can test, lint, and export your Insomnia data.
+  Inso will try to detect your locally installed Insomnia data.
+  You can also point it at a git repository folder, or an Insomnia export file.
 
-  Testing: Inso accepts 3 types of input:
-    Insomnia application data: will be automatically detected, or you can set --workingDir to an alternaitve application data path.
-    Git repositories: set --workingDir to the repository path.
-    Insomnia export files: set --exportFile to the file path.
+  Examples:
+  $ inso run test
+  $ inso lint spec
+  $ inso export spec
 
-  Linting: Inso can lint an API specification from the Insomnia application data, a git repository, insomnia export file, or a file path.
 
-  Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
+  Inso also supports configuration files, by default it will look for .insorc in the current/provided working directory.
+  $ inso export spec --config /some/path/.insorc
 
 
 Options:
   -v, --version           output the version number
-  -w, --workingDir <dir>  set working directory, defaults to current working
-                          directory, will detect a git repository or Insomnia
-                          data directory (default: "")
+  -w, --workingDir <dir>  set working directory, to look for files: .insorc,
+                          .insomnia folder, *.db.json (default: "")
   --exportFile <file>     set the Insomna export file read from (default: "")
   --verbose               show additional logs while running the command
                           (default: false)
@@ -138,7 +144,9 @@ Options:
 
 Commands:
   run                     Execution utilities
-  lint                    Linting utilities
+  lint                    Lint a yaml file in the workingDir or the provided
+                          file path (with  .spectral.yml) or a spec in an
+                          Insomnia database directory
   export                  Export data from insomnia models
   script <script-name>    Run scripts defined in .insorc
   help [command]          display help for command"
@@ -149,22 +157,23 @@ exports[`Snapshot for "inso help" 1`] = `
 
 A CLI for Insomnia!
   With this tool you can test, lint, and export your Insomnia data.
+  Inso will try to detect your locally installed Insomnia data.
+  You can also point it at a git repository folder, or an Insomnia export file.
 
-  Testing: Inso accepts 3 types of input:
-    Insomnia application data: will be automatically detected, or you can set --workingDir to an alternaitve application data path.
-    Git repositories: set --workingDir to the repository path.
-    Insomnia export files: set --exportFile to the file path.
+  Examples:
+  $ inso run test
+  $ inso lint spec
+  $ inso export spec
 
-  Linting: Inso can lint an API specification from the Insomnia application data, a git repository, insomnia export file, or a file path.
 
-  Inso also supports configuration files, by default it will look for .insorc in the current working directory or --workingDir.
+  Inso also supports configuration files, by default it will look for .insorc in the current/provided working directory.
+  $ inso export spec --config /some/path/.insorc
 
 
 Options:
   -v, --version           output the version number
-  -w, --workingDir <dir>  set working directory, defaults to current working
-                          directory, will detect a git repository or Insomnia
-                          data directory (default: "")
+  -w, --workingDir <dir>  set working directory, to look for files: .insorc,
+                          .insomnia folder, *.db.json (default: "")
   --exportFile <file>     set the Insomna export file read from (default: "")
   --verbose               show additional logs while running the command
                           (default: false)
@@ -177,7 +186,9 @@ Options:
 
 Commands:
   run                     Execution utilities
-  lint                    Linting utilities
+  lint                    Lint a yaml file in the workingDir or the provided
+                          file path (with  .spectral.yml) or a spec in an
+                          Insomnia database directory
   export                  Export data from insomnia models
   script <script-name>    Run scripts defined in .insorc
   help [command]          display help for command"
@@ -186,7 +197,8 @@ Commands:
 exports[`Snapshot for "inso lint -h" 1`] = `
 "Usage: inso lint [options] [command]
 
-Linting utilities
+Lint a yaml file in the workingDir or the provided file path (with
+.spectral.yml) or a spec in an Insomnia database directory
 
 Options:
   -h, --help         display help for command
@@ -212,15 +224,12 @@ exports[`Snapshot for "inso run -h" 1`] = `
 Execution utilities
 
 Options:
-  -h, --help                         display help for command
+  -h, --help                   display help for command
 
 Commands:
-  test [options] [identifier]        Run Insomnia unit test suites, identifier
-                                     can be a test suite id or a API Spec id
-  collection [options] [identifier]  Run Insomnia request collection,
-                                     identifier can be a workspace id or
-                                     request group id
-  help [command]                     display help for command"
+  test [options] [identifier]  Run Insomnia unit test suites, identifier can be
+                               a test suite id or a API Spec id
+  help [command]               display help for command"
 `;
 
 exports[`Snapshot for "inso run test -h" 1`] = `

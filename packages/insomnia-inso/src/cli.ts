@@ -15,26 +15,16 @@ import { loadDb } from './db';
 import { loadApiSpec, promptApiSpec } from './db/models/api-spec';
 import { loadEnvironment, promptEnvironment } from './db/models/environment';
 import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
-import { loadWorkspace, promptWorkspace } from './db/models/workspace';
 
-interface ConfigFileOptions {
-  __configFile?: {
-    options: GlobalOptions;
-    scripts?: {
-      lint: string;
-    };
-    filePath: string;
-  };
-}
+export interface GlobalOptions {
+  ci: boolean;
+  config: string;
+  exportFile: string;
+  printOptions: boolean;
+  verbose: boolean;
+  workingDir: string;
+};
 
-export type GlobalOptions = {
-  workingDir?: string;
-  ci?: boolean;
-  verbose?: boolean;
-  printOptions?: boolean;
-  config?: string;
-  exportFile?: string;
-} & ConfigFileOptions;
 export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress';
 export const reporterTypes: TestReporter[] = ['dot', 'list', 'min', 'progress', 'spec'];
 export const reporterTypesSet = new Set(reporterTypes);
@@ -127,7 +117,7 @@ export const getDefaultProductName = (): string => {
 };
 
 export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string; file: string }) => {
-  return path.isAbsolute(file) ? file : path.resolve(workingDir || process.cwd(), file);
+  return file && path.resolve(workingDir || process.cwd(), file);
 };
 export const logErrorAndExit = (err?: Error) => {
   if (err instanceof InsoError) {
@@ -148,6 +138,26 @@ const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
   } finally {
     console.log = oldConsoleLog;
   }
+};
+
+const resolveSpecInDatabase = async (identifier: string, options: GlobalOptions) => {
+  let pathToSearch = '';
+  const useLocalAppData = !options.workingDir && !options.exportFile;
+  if (useLocalAppData) {
+    logger.warn('No working directory or export file provided, using local app data directory.');
+    pathToSearch = localAppDir;
+  } else {
+    pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
+  }
+  const db = await loadDb({ pathToSearch, filterTypes: ['ApiSpec'] });
+  if (!db.ApiSpec.length) {
+    throw new InsoError(`Specification content not found using API spec id: "${identifier}" in "${pathToSearch}"`);
+  }
+  const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, options.ci);
+  if (!specFromDb?.contents) {
+    throw new InsoError(`Specification content not found using API spec id: "${identifier}" in "${pathToSearch}"`);
+  }
+  return specFromDb.contents;
 };
 
 const localAppDir = getAppDataDir(getDefaultProductName());
@@ -208,7 +218,7 @@ export const go = (args?: string[]) => {
     .option('--keepFile', 'do not delete the generated test file', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
     .action(async (identifier, cmd: { env: string; testNamePattern: string; reporter: TestReporter; bail: true; keepFile: true; disableCertValidation: true }) => {
-      const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
+      const globals: GlobalOptions = program.optsWithGlobals();
       const commandOptions = { ...globals, ...cmd };
       const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
 
@@ -285,106 +295,105 @@ export const go = (args?: string[]) => {
       return process.exit(1);
     });
 
-  run.command('collection [identifier]')
-    .description('Run Insomnia request collection, identifier can be a workspace id or request group id')
-    .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
-    .option('-e, --env <identifier>', 'environment to use', '')
-    .option('-b, --bail', 'abort ("bail") after first test failure', false)
-    .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
-    .action(async (identifier, cmd: { env: string; disableCertValidation: true; requestNamePattern: string; bail: boolean }) => {
-      const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
+  // WIP
+  // run.command('collection [identifier]')
+  //   .description('Run Insomnia request collection, identifier can be a workspace id or request group id')
+  //   .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
+  //   .option('-e, --env <identifier>', 'environment to use', '')
+  //   .option('-b, --bail', 'abort ("bail") after first test failure', false)
+  //   .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
+  //   .action(async (identifier, cmd: { env: string; disableCertValidation: true; requestNamePattern: string; bail: boolean }) => {
+  //     const globals: GlobalOptions = program.optsWithGlobals();
 
-      const commandOptions = { ...globals, ...cmd };
-      const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
+  //     const commandOptions = { ...globals, ...cmd };
+  //     const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
 
-      const options = {
-        reporter: defaultReporter,
-        ...__configFile?.options || {},
-        ...commandOptions,
-        ...(__configFile ? { __configFile } : {}),
-      };
-      logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
-      options.ci && logger.setReporters([new BasicReporter()]);
-      options.printOptions && logger.log('Loaded options', options, '\n');
-      let pathToSearch = '';
-      const useLocalAppData = !options.workingDir && !options.exportFile;
-      if (useLocalAppData) {
-        logger.warn('No working directory or export file provided, using local app data directory.');
-        pathToSearch = localAppDir;
-      } else {
-        pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
-      }
-      if (options.reporter && !reporterTypesSet.has(options.reporter)) {
-        logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
-        return process.exit(1);
-      }
+  //     const options = {
+  //       reporter: defaultReporter,
+  //       ...__configFile?.options || {},
+  //       ...commandOptions,
+  //       ...(__configFile ? { __configFile } : {}),
+  //     };
+  //     logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
+  //     options.ci && logger.setReporters([new BasicReporter()]);
+  //     options.printOptions && logger.log('Loaded options', options, '\n');
+  //     let pathToSearch = '';
+  //     const useLocalAppData = !options.workingDir && !options.exportFile;
+  //     if (useLocalAppData) {
+  //       logger.warn('No working directory or export file provided, using local app data directory.');
+  //       pathToSearch = localAppDir;
+  //     } else {
+  //       pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
+  //     }
+  //     if (options.reporter && !reporterTypesSet.has(options.reporter)) {
+  //       logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
+  //       return process.exit(1);
+  //     }
 
-      const db = await loadDb({
-        pathToSearch,
-        filterTypes: [],
-      });
+  //     const db = await loadDb({
+  //       pathToSearch,
+  //       filterTypes: [],
+  //     });
 
-      // Find suites
-      const workspace = identifier ? loadWorkspace(db, identifier) : await promptWorkspace(db, !!options.ci);
+  //     // Find suites
+  //     const workspace = identifier ? loadWorkspace(db, identifier) : await promptWorkspace(db, !!options.ci);
 
-      if (!workspace) {
-        logger.fatal('No workspace found; cannot run requests.', identifier);
-        return process.exit(1);
-      }
+  //     if (!workspace) {
+  //       logger.fatal('No workspace found; cannot run requests.', identifier);
+  //       return process.exit(1);
+  //     }
 
-      // Find environment
-      const workspaceId = workspace._id;
-      const environment = options.env ? loadEnvironment(db, workspaceId, options.env) : await promptEnvironment(db, !!options.ci, workspaceId);
+  //     // Find environment
+  //     const workspaceId = workspace._id;
+  //     const environment = options.env ? loadEnvironment(db, workspaceId, options.env) : await promptEnvironment(db, !!options.ci, workspaceId);
 
-      if (!environment) {
-        logger.fatal('No environment identified; cannot run requests without a valid environment.');
-        return process.exit(1);
-      }
+  //     if (!environment) {
+  //       logger.fatal('No environment identified; cannot run requests without a valid environment.');
+  //       return process.exit(1);
+  //     }
 
-      let requests = db.Request.filter(req => req.parentId === workspaceId);
-      if (options.requestNamePattern) {
-        requests = requests.filter(req => req.name.match(new RegExp(options.requestNamePattern)));
-      }
-      if (!requests.length) {
-        logger.fatal('No requests identified; nothing to run.');
-        return process.exit(1);
-      }
+  //     let requests = db.Request.filter(req => req.parentId === workspaceId);
+  //     if (options.requestNamePattern) {
+  //       requests = requests.filter(req => req.name.match(new RegExp(options.requestNamePattern)));
+  //     }
+  //     if (!requests.length) {
+  //       logger.fatal('No requests identified; nothing to run.');
+  //       return process.exit(1);
+  //     }
 
-      try {
-        // lazy import
-        const { getSendRequestCallbackMemDb } = await import('insomnia-send-request');
-        const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation });
-        let success = true;
-        for (const req of requests) {
-          if (options.bail && !success) {
-            return;
-          }
-          logger.log(`Running request: ${req.name} ${req._id}`);
-          const res = await sendRequest(req._id);
-          // TODO: use logging levels
-          logger.trace(res);
-          if (res.status !== 200) {
-            success = false;
-            logger.error(`Request failed with status ${res.status}`);
-          }
-        }
-        return process.exit(success ? 0 : 1);
-      } catch (error) {
-        logErrorAndExit(error);
-      }
-      return process.exit(1);
-    });
+  //     try {
+  //       // lazy import
+  //       const { getSendRequestCallbackMemDb } = await import('insomnia-send-request');
+  //       const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation });
+  //       let success = true;
+  //       for (const req of requests) {
+  //         if (options.bail && !success) {
+  //           return;
+  //         }
+  //         logger.log(`Running request: ${req.name} ${req._id}`);
+  //         const res = await sendRequest(req._id);
+  //         // TODO: use logging levels
+  //         logger.trace(res);
+  //         if (res.status !== 200) {
+  //           success = false;
+  //           logger.error(`Request failed with status ${res.status}`);
+  //         }
+  //       }
+  //       return process.exit(success ? 0 : 1);
+  //     } catch (error) {
+  //       logErrorAndExit(error);
+  //     }
+  //     return process.exit(1);
+  //   });
 
   program.command('lint')
-    .description('Will attempt to detect a .spectral.yml file in the workingDir or the provided file path')
+    .description('Lint a yaml file in the workingDir or the provided file path (with  .spectral.yml) or a spec in an Insomnia database directory')
     .command('spec [identifier]')
     .description('Lint an API Specification, identifier can be an API Spec id or a file path')
     .action(async identifier => {
-      const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
-
+      const globals: GlobalOptions = program.optsWithGlobals();
       const commandOptions = globals;
       const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
-
       const options = {
         ...__configFile?.options || {},
         ...commandOptions,
@@ -392,32 +401,33 @@ export const go = (args?: string[]) => {
       };
       logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
       options.ci && logger.setReporters([new BasicReporter()]);
-      let pathToSearch = '';
-      const useLocalAppData = !options.workingDir && !options.exportFile;
-      if (useLocalAppData) {
-        logger.warn('No working directory or export file provided, using local app data directory.');
-        pathToSearch = localAppDir;
-      } else {
-        pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
-      }
-      const db = await loadDb({
-        pathToSearch,
-        filterTypes: ['ApiSpec'],
-      });
-      if (!db.ApiSpec.length) {
-        logger.fatal(`Specification not found in data at: ${pathToSearch}`);
-        return process.exit(1);
-      }
-      const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, options.ci);
-      let specContent = specFromDb?.contents;
+      // Assert identifier is a file
+      const identifierAsAbsPath = identifier && getAbsoluteFilePath({ workingDir: options.workingDir, file: identifier });
+      let isIdentiferAFile = false;
+      try {
+        isIdentiferAFile = identifier && (await fs.promises.stat(identifierAsAbsPath)).isFile();
+      } catch (err) { }
+      const pathToSearch = '';
+      let specContent;
       let rulesetFileName;
-      if (!specContent && identifier) {
+      if (isIdentiferAFile) {
         // try load as a file
-        const fileName = getAbsoluteFilePath({ workingDir: options.workingDir, file: identifier });
-        logger.trace(`Linting specification from identifier: \`${fileName}\``);
-        specContent = await fs.promises.readFile(fileName, 'utf-8');
-        rulesetFileName = await getRuleSetFileFromFolderByFilename(fileName);
+        logger.trace(`Linting specification file from identifier: \`${identifierAsAbsPath}\``);
+        specContent = await fs.promises.readFile(identifierAsAbsPath, 'utf-8');
+        rulesetFileName = await getRuleSetFileFromFolderByFilename(identifierAsAbsPath);
+        if (!specContent) {
+          logger.fatal(`Specification content not found using path: ${identifier} in ${identifierAsAbsPath}`);
+          return process.exit(1);
+        }
       }
+      if (!isIdentiferAFile) {
+        try {
+          specContent = await resolveSpecInDatabase(identifier, options);
+        } catch (err) {
+          logErrorAndExit(err);
+        }
+      }
+
       if (!specContent) {
         logger.fatal('Specification content not found at: ' + pathToSearch);
         return process.exit(1);
@@ -434,53 +444,36 @@ export const go = (args?: string[]) => {
 
   program.command('export').description('Export data from insomnia models')
     .command('spec [identifier]')
-    .description('Export an API Specification to a file, identifier can be an API Spec id or a file path')
+    .description('Export an API Specification to a file, identifier can be an API Spec id')
     .option('-o, --output <path>', 'save the generated config to a file', '')
     .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations, defaults to false', false)
     .action(async (identifier, cmd: { output: string; skipAnnotations: boolean }) => {
-      const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
-
+      const globals: GlobalOptions = program.optsWithGlobals();
       const commandOptions = { ...globals, ...cmd };
       const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
-
       const options = {
         ...__configFile?.options || {},
         ...commandOptions,
         ...(__configFile ? { __configFile } : {}),
       };
       options.printOptions && logger.log('Loaded options', options, '\n');
-      let pathToSearch = '';
-      const useLocalAppData = !options.workingDir && !options.exportFile;
-      if (useLocalAppData) {
-        logger.warn('No working directory or export file provided, using local app data directory.');
-        pathToSearch = localAppDir;
-      } else {
-        pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
-      }
-      const db = await loadDb({
-        pathToSearch,
-        filterTypes: ['ApiSpec'],
-      });
-      if (!db.ApiSpec.length) {
-        logger.fatal(`Specification not found in data at: ${pathToSearch}`);
-        return process.exit(1);
-      }
-      const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!options.ci);
-      if (!specFromDb?.contents) {
-        logger.fatal('Specification content not found at: ' + pathToSearch);
-        return process.exit(1);
+      let specContent = '';
+      try {
+        specContent = await resolveSpecInDatabase(identifier, options);
+      } catch (err) {
+        logErrorAndExit(err);
       }
       try {
-        const specContent = await exportSpecification({
-          specContent: specFromDb.contents,
+        const toExport = await exportSpecification({
+          specContent,
           skipAnnotations: options.skipAnnotations,
         });
         const outputPath = options.output && getAbsoluteFilePath({ workingDir: options.workingDir, file: options.output });
         if (!outputPath) {
-          logger.log(specContent);
+          logger.log(toExport);
           return process.exit(0);
         }
-        const filePath = await writeFileWithCliOptions(outputPath, specContent);
+        const filePath = await writeFileWithCliOptions(outputPath, toExport);
         logger.log(`Specification exported to "${filePath}".`);
         return process.exit(0);
       } catch (error) {
