@@ -355,6 +355,7 @@ test.describe('pre-request features tests', async () => {
         // update proxy configuration
         await page.locator('[data-testid="settings-button"]').click();
         await page.locator('text=Insomnia Preferences').first().click();
+        await page.getByRole('tab', { name: 'Proxy' }).click();
         await page.locator('text=Enable proxy').click();
         await page.locator('[name="httpProxy"]').fill('localhost:1111');
         await page.locator('[name="httpsProxy"]').fill('localhost:2222');
