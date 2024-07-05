@@ -4,6 +4,8 @@ import type { Request } from 'insomnia/src/models/request';
 import type { Settings } from 'insomnia/src/models/settings';
 import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
 
+import { RequestTestResult } from './test';
+
 export interface RequestContext {
     request: Request;
     timelinePath: string;
@@ -26,4 +28,5 @@ export interface RequestContext {
     cookieJar: InsomniaCookieJar;
     // only for the after-response script
     response?: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError;
+    requestTestResults?: RequestTestResult[];
 }

@@ -1,5 +1,6 @@
 import clone from 'clone';
 import fs from 'fs';
+import { RequestTestResult } from 'insomnia-sdk';
 import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
 
@@ -316,6 +317,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       clientCertificates: ClientCertificate[];
       cookieJar: CookieJar;
       globals: Record<string, any>;
+      requestTestResults: RequestTestResult[];
     };
     console.log('[network] script execution succeeded', output);
 
@@ -353,6 +355,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       clientCertificates: output.clientCertificates,
       cookieJar: output.cookieJar,
       globals,
+      requestTestResults: output.requestTestResults,
     };
   } catch (err) {
     await fs.promises.appendFile(

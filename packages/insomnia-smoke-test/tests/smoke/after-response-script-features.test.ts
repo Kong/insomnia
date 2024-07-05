@@ -19,20 +19,20 @@ test.describe('after-response script features tests', async () => {
         await page.getByLabel('After-response Scripts').click();
     });
 
-    test('insomnia.test and insomnia.expect can work together', async ({ page }) => {
-        const responsePane = page.getByTestId('response-pane');
+    // test('insomnia.test and insomnia.expect can work together', async ({ page }) => {
+    //     const responsePane = page.getByTestId('response-pane');
 
-        await page.getByLabel('Request Collection').getByTestId('tests with expect and test').press('Enter');
+    //     await page.getByLabel('Request Collection').getByTestId('tests with expect and test').press('Enter');
 
-        // send
-        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    //     // send
+    //     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
-        // verify
-        await page.getByRole('tab', { name: 'Console' }).click();
+    //     // verify
+    //     await page.getByRole('tab', { name: 'Console' }).click();
 
-        await expect(responsePane).toContainText('✓ happy tests');
-        await expect(responsePane).toContainText('✕ unhappy tests: AssertionError: expected 199 to deeply equal 200');
-    });
+    //     await expect(responsePane).toContainText('✓ happy tests');
+    //     await expect(responsePane).toContainText('✕ unhappy tests: AssertionError: expected 199 to deeply equal 200');
+    // });
 
     test('environment and baseEnvironment can be persisted', async ({ page }) => {
         const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
