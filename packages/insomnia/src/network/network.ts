@@ -68,10 +68,43 @@ export function getOrInheritHeaders({ request, requestGroups }: { request: Reque
   // if parent has foo: bar and child has foo: baz, request will have foo: bar, baz
   return [...headers, ...request.headers];
 }
+// (only used for getOAuth2 token) Intended to gather all required database objects and initialize ids
+export const fetchRequestGroupData = async (requestGroupId: string) => {
+  const requestGroup = await models.requestGroup.getById(requestGroupId);
+  invariant(requestGroup, 'failed to find requestGroup ' + requestGroupId);
+  const ancestors = await db.withAncestors<RequestGroup | Workspace | MockRoute | MockServer>(requestGroup, [
+    models.requestGroup.type,
+    models.workspace.type,
+    models.mockRoute.type,
+    models.mockServer.type,
+  ]);
+  const workspaceDoc = ancestors.find(isWorkspace);
+  invariant(workspaceDoc?._id, 'failed to find workspace');
+  const workspaceId = workspaceDoc._id;
 
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'failed to find workspace');
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  // NOTE: parent folders wont be checked in here since we only use it for oauth2 requests right now, so they are discarded in that code path
+  // fallback to base environment
+  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const activeEnvironment = activeEnvironmentId && await models.environment.getById(activeEnvironmentId);
+  const environment = activeEnvironment || await models.environment.getOrCreateForParentId(workspace._id);
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
+
+  const settings = await models.settings.get();
+  invariant(settings, 'failed to create settings');
+  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const caCert = await models.caCertificate.findByParentId(workspaceId);
+  const responseId = generateId('res');
+  const responsesDir = pathJoin((process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
+  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+  return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
+};
+// Intended to gather all required database objects and initialize ids
 export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
-  invariant(request, 'failed to find request');
+  invariant(request, 'failed to find request ' + requestId);
   const ancestors = await db.withAncestors<Request | RequestGroup | Workspace | MockRoute | MockServer>(request, [
     models.request.type,
     models.requestGroup.type,
@@ -105,7 +138,8 @@ export const fetchRequestData = async (requestId: string) => {
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
   return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
-export const getPreRequestScriptOutput = async ({
+
+export const tryToExecutePreRequestScript = async ({
   request,
   environment,
   settings,
@@ -122,16 +156,32 @@ export const getPreRequestScriptOutput = async ({
     activeGlobalEnvironment = await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId) || undefined;
   }
 
-  if (!request.preRequestScript) {
+  const requestGroups = await db.withAncestors<Request | RequestGroup>(request, [
+    models.requestGroup.type,
+  ]) as (Request | RequestGroup)[];
+
+  const folderScripts = requestGroups.reverse()
+    .filter(group => group?.preRequestScript)
+    .map((group, i) => `const fn${i} = async ()=>{
+        ${group.preRequestScript}
+      }
+      await fn${i}();
+  `);
+  if (folderScripts.length === 0) {
     return {
       request,
       environment,
       baseEnvironment,
       clientCertificates,
       settings,
+      cookieJar,
+      globals: activeGlobalEnvironment,
     };
   }
-  const mutatedContext = await tryToExecutePreRequestScript({
+  const joinedScript = [...folderScripts].join('\n');
+
+  const mutatedContext = await tryToExecuteScript({
+    script: joinedScript,
     request,
     environment,
     timelinePath,
@@ -155,6 +205,7 @@ export const getPreRequestScriptOutput = async ({
     clientCertificates: mutatedContext.clientCertificates || clientCertificates,
     settings: mutatedContext.settings || settings,
     globals: mutatedContext.globals,
+    cookieJar: mutatedContext.cookieJar,
   };
 };
 
@@ -163,7 +214,7 @@ export const getPreRequestScriptOutput = async ({
 //  - If no global environment is seleted, no operation
 //  - If one global environment is selected, it persists content to the selected global environment (base or sub).
 export async function savePatchesMadeByScript(
-  mutatedContext: Awaited<ReturnType<typeof tryToExecutePreRequestScript>>,
+  mutatedContext: Awaited<ReturnType<typeof tryToExecuteScript>>,
   environment: Environment,
   baseEnvironment: Environment,
   activeGlobalEnvironment: Environment | undefined,
@@ -334,28 +385,14 @@ interface RequestContextForScript {
   cookieJar: CookieJar;
   globals?: Environment; // there could be no global environment
 }
+
 type RequestAndContextAndResponse = RequestContextForScript & {
   response: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
 };
+
 type RequestAndContextAndOptionalResponse = RequestContextForScript & {
   script: string;
   response?: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
-};
-export async function tryToExecutePreRequestScript(context: RequestContextForScript) {
-  const requestGroups = await db.withAncestors<Request | RequestGroup>(context.request, [
-    models.requestGroup.type,
-  ]) as (Request | RequestGroup)[];
-
-  const folderScripts = requestGroups.reverse()
-    .filter(group => group?.preRequestScript)
-    .map((group, i) => `const fn${i} = async ()=>{
-        ${group.preRequestScript}
-      }
-      await fn${i}();
-  `);
-  const joinedScript = [...folderScripts].join('\n');
-
-  return tryToExecuteScript({ script: joinedScript, ...context });
 };
 
 export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
@@ -370,9 +407,18 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
       }
       await fn${i}();
   `);
+  if (folderScripts.length === 0) {
+    return context;
+  }
   const joinedScript = [...folderScripts].join('\n');
 
-  return tryToExecuteScript({ script: joinedScript, ...context });
+  const postMutatedContext = await tryToExecuteScript({ script: joinedScript, ...context });
+  if (!postMutatedContext?.request) {
+    return null;
+  }
+  await savePatchesMadeByScript(postMutatedContext, context.environment, context.baseEnvironment, context.globals);
+
+  return postMutatedContext;
 }
 
 export const tryToInterpolateRequest = async (

@@ -26,7 +26,7 @@ import { Response } from '../../models/response';
 import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
-import { fetchRequestData, getPreRequestScriptOutput, responseTransform, savePatchesMadeByScript, sendCurlAndWriteTimeline, tryToExecuteAfterResponseScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecuteAfterResponseScript, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import { RenderErrorSubType } from '../../templating';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
@@ -114,13 +114,16 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   const { requestType, parentId, req } = await request.json() as { requestType: CreateRequestType; parentId?: string; req?: Request };
 
+  const settings = await models.settings.getOrCreate();
+  const defaultHeaders = settings.disableAppVersionUserAgent ? [] : [{ name: 'User-Agent', value: `insomnia/${version}` }];
+
   let activeRequestId;
   if (requestType === 'HTTP') {
     activeRequestId = (await models.request.create({
       parentId: parentId || workspaceId,
       method: METHOD_GET,
       name: 'New Request',
-      headers: [{ name: 'User-Agent', value: `insomnia/${version}` }],
+      headers: defaultHeaders,
     }))._id;
   }
   if (requestType === 'gRPC') {
@@ -130,11 +133,12 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
     }))._id;
   }
   if (requestType === 'GraphQL') {
+
     activeRequestId = (await models.request.create({
       parentId: parentId || workspaceId,
       method: METHOD_POST,
       headers: [
-        { name: 'User-Agent', value: `insomnia/${version}` },
+        ...defaultHeaders,
         { name: 'Content-Type', value: CONTENT_TYPE_JSON },
       ],
       body: {
@@ -150,7 +154,7 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
       method: METHOD_GET,
       url: '',
       headers: [
-        { name: 'User-Agent', value: `insomnia/${version}` },
+        ...defaultHeaders,
         { name: 'Accept', value: CONTENT_TYPE_EVENT_STREAM },
       ],
       name: 'New Event Stream',
@@ -160,7 +164,7 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
     activeRequestId = (await models.webSocketRequest.create({
       parentId: parentId || workspaceId,
       name: 'New WebSocket Request',
-      headers: [{ name: 'User-Agent', value: `insomnia/${version}` }],
+      headers: defaultHeaders,
     }))._id;
   }
   if (requestType === 'From Curl') {
@@ -367,8 +371,9 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   try {
     window.main.startExecution({ requestId });
     const requestData = await fetchRequestData(requestId);
+
     window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
-    const mutatedContext = await getPreRequestScriptOutput(requestData, workspaceId);
+    const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId);
     window.main.completeExecutionStep({ requestId });
     if (mutatedContext === null) {
       return null;
@@ -421,29 +426,14 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
 
     mutatedContext.request.afterResponseScript = afterResponseScript;
-    if (requestData.request.afterResponseScript) {
-      const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
-      const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-      const globals = mutatedContext.globals;
+    window.main.addExecutionStep({ requestId, stepName: 'Executing after-response script' });
+    await tryToExecuteAfterResponseScript({
+      ...requestData,
+      ...mutatedContext,
+      response,
+    });
+    window.main.completeExecutionStep({ requestId });
 
-      window.main.addExecutionStep({ requestId, stepName: 'Executing after-response script' });
-
-      const postMutatedContext = await tryToExecuteAfterResponseScript({
-        ...requestData,
-        ...mutatedContext,
-        baseEnvironment,
-        cookieJar,
-        response,
-        globals,
-      });
-      window.main.completeExecutionStep({ requestId });
-      if (!postMutatedContext?.request) {
-        // exiy early if there was a problem with the pre-request script
-        // TODO: improve error message?
-        return null;
-      }
-      await savePatchesMadeByScript(postMutatedContext, requestData.environment, baseEnvironment, globals);
-    }
     if (!shouldWriteToFile) {
       const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
       await models.requestMeta.update(requestMeta, { activeResponseId: response._id });

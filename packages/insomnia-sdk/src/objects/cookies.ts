@@ -4,12 +4,19 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Property, PropertyList } from './properties';
 
-export interface CookieOptions {
+export interface InsomniaCookieExtensions {
+    creation?: Date;
+    creationIndex?: number;
+    lastAccessed?: Date;
+    pathIsDefault?: boolean;
+};
+
+export interface CookieOptions extends InsomniaCookieExtensions {
     id?: string;
     key: string;
     value: string;
     expires?: Date | string | null;
-    maxAge?: string | 'Infinity' | '-Infinity';
+    maxAge?: number | 'Infinity' | '-Infinity';
     domain?: string;
     path?: string;
     secure?: boolean;
@@ -23,6 +30,7 @@ export class Cookie extends Property {
     readonly _kind: string = 'Cookie';
     protected cookie: ToughCookie;
     private extensions?: { key: string; value: string }[];
+    private insoExtensions: InsomniaCookieExtensions = {};
 
     constructor(cookieDef: CookieOptions | string) {
         super();
@@ -46,6 +54,12 @@ export class Cookie extends Property {
 
         this.id = cookieDef.id || '';
         this.cookie = cookie;
+        this.insoExtensions = {
+            creation: cookieDef.creation,
+            creationIndex: cookieDef.creationIndex,
+            lastAccessed: cookieDef.lastAccessed,
+            pathIsDefault: cookieDef.pathIsDefault,
+        };
     }
 
     static _index = 'key';
@@ -94,7 +108,7 @@ export class Cookie extends Property {
             key: cookieObj.key,
             value: cookieObj.value,
             expires: cookieObj.expires || undefined,
-            maxAge: `${cookieObj.maxAge}` || undefined,
+            maxAge: cookieObj.maxAge,
             domain: cookieObj.domain || undefined,
             path: cookieObj.path || undefined,
             secure: cookieObj.secure || false,
@@ -154,6 +168,11 @@ export class Cookie extends Property {
             hostOnly: this.cookie.hostOnly,
             session: this.cookie.extensions?.includes('session'),
             extensions: this.extensions,
+            // extra fields from Insomnia
+            creation: this.insoExtensions.creation,
+            creationIndex: this.insoExtensions.creationIndex,
+            lastAccessed: this.insoExtensions.lastAccessed,
+            pathIsDefault: this.insoExtensions.pathIsDefault,
         };
     };
 }
@@ -202,6 +221,11 @@ export class CookieObject extends CookieList {
                     hostOnly: cookie.hostOnly,
                     session: undefined, // not supported in Insomnia
                     extensions: undefined, // TODO: its format from Insomnia is unknown
+                    // follows are properties from Insomnia
+                    creation: cookie.creation,
+                    creationIndex: cookie.creationIndex,
+                    lastAccessed: cookie.lastAccessed,
+                    pathIsDefault: cookie.pathIsDefault,
                 });
             })
             : [];
@@ -310,17 +334,17 @@ export class CookieJar {
                         id: cookieObj.id,
                         key: cookieObj.key,
                         value: cookieObj.value,
-                        expires: cookieObj.expires,
+                        expires: cookieObj.expires || 'Infinity', // transform it back to 'Infinity', avoid edge cases
                         domain: cookieObj.domain || undefined,
                         path: cookieObj.path || undefined,
                         secure: cookieObj.secure,
                         httpOnly: cookieObj.httpOnly,
                         extensions: cookieObj.extensions || undefined,
-                        creation: undefined,
-                        creationIndex: undefined,
+                        creation: cookieObj.creation,
+                        creationIndex: cookieObj.creationIndex,
                         hostOnly: cookieObj.hostOnly || undefined,
-                        pathIsDefault: undefined,
-                        lastAccessed: undefined,
+                        pathIsDefault: cookieObj.pathIsDefault,
+                        lastAccessed: cookieObj.lastAccessed,
                     });
                 });
             });

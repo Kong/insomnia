@@ -7,11 +7,12 @@ import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { AuthTypeOAuth2, OAuth2ResponseType, RequestHeader, RequestParameter } from '../../models/request';
 import type { Request } from '../../models/request';
+import { isRequestGroupId } from '../../models/request-group';
 import type { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
-import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../network';
+import { fetchRequestData, fetchRequestGroupData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../network';
 import {
   AuthKeys,
   GRANT_TYPE_AUTHORIZATION_CODE,
@@ -288,11 +289,14 @@ const transformNewAccessTokenToOauthModel = (accessToken: Partial<Record<AuthKey
   };
 };
 
-const sendAccessTokenRequest = async (requestId: string, authentication: AuthTypeOAuth2, params: RequestParameter[], headers: RequestHeader[]) => {
+// This can be sent from a folder
+const sendAccessTokenRequest = async (requestOrGroupId: string, authentication: AuthTypeOAuth2, params: RequestParameter[], headers: RequestHeader[]) => {
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
-  console.log(`[network] Sending with settings req=${requestId}`);
+  console.log(`[network] Sending with settings req=${requestOrGroupId}`);
   // @TODO unpack oauth into regular timeline and remove oauth timeine dialog
-  const { request,
+  const initializedData = isRequestGroupId(requestOrGroupId) ? await fetchRequestGroupData(requestOrGroupId) : await fetchRequestData(requestOrGroupId);
+
+  const {
     environment,
     settings,
     clientCertificates,
@@ -300,7 +304,7 @@ const sendAccessTokenRequest = async (requestId: string, authentication: AuthTyp
     activeEnvironmentId,
     timelinePath,
     responseId,
-  } = await fetchRequestData(requestId);
+  } = initializedData;
 
   const newRequest: Request = await models.initModel(models.request.type, {
     headers: [
@@ -315,8 +319,8 @@ const sendAccessTokenRequest = async (requestId: string, authentication: AuthTyp
       params,
     },
   }, {
-    _id: request._id + '.other',
-    parentId: request._id,
+    _id: requestOrGroupId + '.other',
+    parentId: requestOrGroupId,
   });
 
   const renderResult = await tryToInterpolateRequest(newRequest, environment._id);

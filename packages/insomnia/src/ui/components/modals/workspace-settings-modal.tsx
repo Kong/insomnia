@@ -96,6 +96,7 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                       Description
                     </Label>
                     <MarkdownEditor
+                      key={workspace._id}
                       placeholder="Write a description"
                       defaultValue={workspace.description}
                       onChange={(description: string) => {

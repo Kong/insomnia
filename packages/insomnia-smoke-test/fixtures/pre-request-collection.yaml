@@ -205,6 +205,10 @@ resources:
     environmentPropertyOrder: null
     metaSortKey: -1668533312225
     _type: request_group
+    preRequestScript: |-
+      insomnia.environment.set('onlySetByFolderPreScript', 888);
+    afterResponseScript: |-
+      insomnia.environment.unset('onlySetByFolderPreScript');
   - _id: req_89dade2ee9ee42fbb22d588783a9df3c
     parentId: fld_01de564274824ecaad272330339ea6b2
     modified: 1636707449231
@@ -1192,5 +1196,34 @@ resources:
       text: |-
         {
           "setByScript": "{{ setByScript }}"
+        }
+    _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9df20
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: run parent scripts only
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: ''
+    body:
+      mimeType: "application/json"
+      text: |-
+        {
+          "onlySetByFolderPreScript": {{ onlySetByFolderPreScript }}
         }
     _type: request
