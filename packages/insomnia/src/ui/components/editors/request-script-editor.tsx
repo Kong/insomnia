@@ -507,10 +507,7 @@ export const RequestScriptEditor: FC<Props> = ({
         requestName: '',
         requestId: '',
       }),
-    },
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      (_msg: string, _fn: () => void) => { }
-    ),
+    }),
     'insomnia',
   );
 
