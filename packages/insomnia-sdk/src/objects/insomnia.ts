@@ -13,7 +13,7 @@ import { RequestInfo } from './request-info';
 import { Response as ScriptResponse } from './response';
 import { readBodyFromPath, toScriptResponse } from './response';
 import { sendRequest } from './send-request';
-import { test } from './test';
+import { RequestTestResult, skip, test, type TestHandler } from './test';
 import { toUrlObject } from './urls';
 
 export class InsomniaObject {
@@ -29,13 +29,14 @@ export class InsomniaObject {
     private clientCertificates: ClientCertificate[];
     private _expect = expect;
     private _test = test;
+    private _skip = skip;
 
     // TODO: follows will be enabled after Insomnia supports them
     private globals: Environment;
     private _iterationData: Environment;
     private _settings: Settings;
 
-    private _log: (...msgs: any[]) => void;
+    private requestTestResults: RequestTestResult[];
 
     constructor(
         rawObj: {
@@ -51,7 +52,6 @@ export class InsomniaObject {
             requestInfo: RequestInfo;
             response?: ScriptResponse;
         },
-        log: (...msgs: any[]) => void,
     ) {
         this.globals = rawObj.globals;
         this.environment = rawObj.environment;
@@ -67,7 +67,7 @@ export class InsomniaObject {
         this._settings = rawObj.settings;
         this.clientCertificates = rawObj.clientCertificates;
 
-        this._log = log;
+        this.requestTestResults = new Array<RequestTestResult>();
     }
 
     sendRequest(
@@ -77,9 +77,20 @@ export class InsomniaObject {
         return sendRequest(request, cb, this._settings);
     }
 
-    test(msg: string, fn: () => void) {
-        this._test(msg, fn, this._log);
+    get test() {
+        const testHandler: TestHandler = (msg: string, fn: () => void) => {
+            this._test(msg, fn, this.pushRequestTestResult);
+        };
+        testHandler.skip = (msg: string, fn: () => void) => {
+            this._skip(msg, fn, this.pushRequestTestResult);
+        };
+
+        return testHandler;
     }
+
+    private pushRequestTestResult = (testResult: RequestTestResult) => {
+        this.requestTestResults = [...this.requestTestResults, testResult];
+    };
 
     expect(exp: boolean | number | string | object) {
         return this._expect(exp);
@@ -108,6 +119,7 @@ export class InsomniaObject {
             cookieJar: this.cookies.jar().toInsomniaCookieJar(),
             info: this.info.toObject(),
             response: this.response ? this.response.toObject() : undefined,
+            requestTestResults: this.requestTestResults,
         };
     };
 }
@@ -221,8 +233,7 @@ export async function initInsomniaObject(
     const responseBody = await readBodyFromPath(rawObj.response);
     const response = rawObj.response ? toScriptResponse(request, rawObj.response, responseBody) : undefined;
 
-    return new InsomniaObject(
-        {
+    return new InsomniaObject({
             globals,
             environment,
             baseEnvironment,
@@ -234,7 +245,5 @@ export async function initInsomniaObject(
             cookies,
             requestInfo,
             response,
-        },
-        log,
-    );
+    });
 };
