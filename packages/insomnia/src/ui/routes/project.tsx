@@ -234,7 +234,6 @@ export const syncProjectsAction: ActionFunction = async ({ params }) => {
 };
 
 export const indexLoader: LoaderFunction = async ({ params }) => {
-  console.log('org id index loader(/organization/:organizationId)');
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
 
@@ -457,7 +456,6 @@ export const listWorkspacesLoader: LoaderFunction = async ({ params }): Promise<
 };
 
 export const projectIdLoader: LoaderFunction = async ({ params }): Promise<ProjectIdLoaderData> => {
-  console.log('project id loader');
   const { projectId } = params;
   invariant(projectId, 'Project ID is required');
 
@@ -502,8 +500,7 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
 
 export const loader: LoaderFunction = async ({
   params,
-}): Promise<ProjectLoaderData> => {
-  console.log('project id index loader');
+}) => {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   const { id: sessionId } = await userSession.getOrCreate();
@@ -1310,26 +1307,6 @@ const ProjectRoute: FC = () => {
                     aria-label="Files"
                     className="data-[empty]:flex data-[empty]:justify-center grid [grid-template-columns:repeat(auto-fit,200px)] [grid-template-rows:repeat(auto-fit,200px)] gap-4 p-[--padding-md]"
                     items={filesWithPresence}
-                    onAction={id => {
-                      // hack to workaround gridlist not have access to workspace scope
-                      const file = finalFiles.find(f => f.id === id);
-                      invariant(file, 'File not found');
-                      if (file.scope === 'unsynced') {
-                        if (activeProject?.remoteId && file.remoteId) {
-                          return pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: activeProject.remoteId }, {
-                            method: 'POST',
-                            action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
-                          });
-                        }
-
-                        return;
-                      }
-
-                      const activity = scopeToActivity(file.scope);
-                      navigate(
-                        `/organization/${organizationId}/project/${projectId}/workspace/${id}/${activity}`
-                      );
-                    }}
                     renderEmptyState={() => {
                       if (workspaceListFilter) {
                         return (

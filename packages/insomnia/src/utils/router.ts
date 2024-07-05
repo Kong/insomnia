@@ -34,7 +34,7 @@ export const findBestRoute = async (orgId: string) => {
       }
     }
   }
-  // 2. if no history, redirect to the first project (TODO: can be a loop?)
+  // 2. if no history, redirect to the first project
   const firstProject = await database.getWhere<Project>(models.project.type, { parentId: orgId });
 
   if (firstProject?._id) {
@@ -69,7 +69,7 @@ export const getInitialEntry = async () => {
       return {
         pathname: await findBestRoute(personalOrganizationId),
         state: {
-          // async task need to excute when fisrt entry
+          // async task need to excute when first entry
           asyncTaskList: [AsyncTask.SyncOrganization, AsyncTask.MigrateProjects, AsyncTask.SyncProjects],
         },
       };

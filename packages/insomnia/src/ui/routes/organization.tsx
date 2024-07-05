@@ -229,7 +229,6 @@ async function migrateProjectsUnderOrganization(personalOrganizationId: string, 
 };
 
 export const indexLoader: LoaderFunction = async () => {
-  console.log('org index loader');
   const { id: sessionId, accountId } = await userSession.getOrCreate();
   if (sessionId) {
     await syncOrganizations(sessionId, accountId);
@@ -272,7 +271,6 @@ export interface OrganizationLoaderData {
 }
 
 export const loader: LoaderFunction = async () => {
-  console.log('org loader');
   const { id, accountId } = await userSession.getOrCreate();
   if (id) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
@@ -440,18 +438,7 @@ const OrganizationRoute = () => {
     projectId?: string;
     workspaceId?: string;
   };
-  const [status, setStatus] = useState<'online' | 'offline'>('online');
   const syncOrgsAndProjects = useFetcher();
-  // TODO: This could run more than once
-  // controlling useEffect execution
-  // use fetcher history state to avoid running the same task multiple times
-  // ideas:
-  // 1. useEffect with controlled execution
-  // 2. use fetcher history state to avoid running the same task multiple times
-  // 3. create an event after logged in user is detected in initial entry and listen.once in this component
-
-  // other note:
-  // submit existing actions rather than this new action
 
   useEffect(() => {
     console.log('run async task in useEffect');
