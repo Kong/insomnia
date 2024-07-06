@@ -1054,7 +1054,9 @@ export const Debug: FC = () => {
                         className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         style={{
                           paddingLeft: `${item.level + 1}rem`,
+                          cursor: isRequestGroup(item.doc) ? 'pointer' : 'default',
                         }}
+                        onClick={() => groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed })}
                       >
                         <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                         <Button slot="drag" className="hidden" />
@@ -1111,6 +1113,7 @@ export const Debug: FC = () => {
                                 `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}?${searchParams.toString()}`
                               );
                             }
+                            groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
                           }}
                           onSubmit={name => {
                             if (isRequestGroup(item.doc)) {
