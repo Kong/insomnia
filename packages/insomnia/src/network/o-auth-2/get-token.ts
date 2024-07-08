@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import querystring from 'querystring';
 import { v4 as uuidv4 } from 'uuid';
 
+import { version } from '../../../package.json';
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
@@ -161,6 +162,12 @@ export const getOAuth2Token = async (
     ];
   } else {
     headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
+  }
+
+  // fix for #7672
+  const settings = await models.settings.getOrCreate();
+  if (!settings.disableAppVersionUserAgent) {
+    headers.push({ name: 'User-Agent', value: `insomnia/${version}` });
   }
 
   const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
