@@ -3,7 +3,7 @@ name: "Update Changelog"
 
 on:
   release:
-    types: [released]
+    types: [published]
 
 
 jobs:
