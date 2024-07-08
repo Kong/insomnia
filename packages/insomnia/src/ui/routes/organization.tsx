@@ -256,16 +256,9 @@ async function syncStorageRule(sessionId: string, organizationId: string) {
 
     invariant(storageRule, 'Failed to load storageRule');
 
-    const cacheName = 'organization-storage-rules';
     const cacheKey = `${organizationId}:storage-rule`;
 
-    // Open cache
-    const cache = await caches.open(cacheName);
-
-    // Cache the fetched response
-    const response = new Response(JSON.stringify(storageRule));
-    await cache.put(cacheKey, response.clone());
-
+    inMemoryStorageRuleCache.set(cacheKey, storageRule);
   } catch (error) {
     console.log('[storageRule] Failed to load storage rules', error);
   }
@@ -377,23 +370,18 @@ export interface OrganizationStorageLoaderData {
   storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
 }
 
+// Create an in-memory storage to store the storage rules
+export const inMemoryStorageRuleCache: Map<string, StorageRule> = new Map<string, StorageRule>();
+
 export const organizationStorageLoader: LoaderFunction = async ({ params }): Promise<OrganizationStorageLoaderData> => {
   const { organizationId } = params as { organizationId: string };
   const { id: sessionId } = await userSession.getOrCreate();
 
-  // Create a cache key and name
-  const cacheName = 'organization-storage-rules';
   const cacheKey = `${organizationId}:storage-rule`;
 
-  // Open cache
-  const cache = await caches.open(cacheName);
+  const storageRule = inMemoryStorageRuleCache.get(cacheKey);
 
-  // Try to load from cache
-  const cachedResponse = await cache.match(cacheKey);
-
-  if (cachedResponse && Object.keys(cachedResponse).length > 0) {
-    const storageRule = await cachedResponse.json();
-
+  if (storageRule) {
     return {
       storage: storageRule.storage,
     };
@@ -409,9 +397,7 @@ export const organizationStorageLoader: LoaderFunction = async ({ params }): Pro
 
     invariant(storageRule, 'Failed to load storageRule');
 
-    // Cache the fetched response
-    const response = new Response(JSON.stringify(storageRule));
-    await cache.put(cacheKey, response.clone());
+    inMemoryStorageRuleCache.set(cacheKey, storageRule);
 
     // Return the value
     return {
