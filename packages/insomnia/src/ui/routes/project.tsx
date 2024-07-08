@@ -813,18 +813,12 @@ const ProjectRoute: FC = () => {
   };
 
   const createNewProjectFetcher = useFetcher({
-    key: `${organizationId}-create-new-project`,
+    key: `${organizationId}-${projectId}-create-new-project`,
   });
 
-  const [createNewProjectFetcherData, setCreateNewProjectFetcherData] = useState(createNewProjectFetcher.data);
-
   useEffect(() => {
-    setCreateNewProjectFetcherData(createNewProjectFetcher.data);
-  }, [createNewProjectFetcher.data]);
-
-  useEffect(() => {
-    if (createNewProjectFetcherData && createNewProjectFetcherData.error && createNewProjectFetcher.state === 'idle') {
-      if (createNewProjectFetcherData.error === 'NEEDS_TO_UPGRADE') {
+    if (createNewProjectFetcher.data && createNewProjectFetcher.data.error && createNewProjectFetcher.state === 'idle') {
+      if (createNewProjectFetcher.data.error === 'NEEDS_TO_UPGRADE') {
         showModal(AskModal, {
           title: 'Upgrade your plan',
           message: 'You are currently on the Free plan where you can invite as many collaborators as you want as long as you don\'t have more than one project. Since you have more than one project, you need to upgrade to "Individual" or above to continue.',
@@ -836,7 +830,7 @@ const ProjectRoute: FC = () => {
             }
           },
         });
-      } else if (createNewProjectFetcherData.error === 'FORBIDDEN') {
+      } else if (createNewProjectFetcher.data.error === 'FORBIDDEN') {
         showAlert({
           title: 'Could not create project.',
           message: 'You do not have permission to create a project in this organization.',
@@ -844,14 +838,11 @@ const ProjectRoute: FC = () => {
       } else {
         showAlert({
           title: 'Could not create project.',
-          message: createNewProjectFetcherData.error,
+          message: createNewProjectFetcher.data.error,
         });
       }
-
-      // Reset the local state to clear the error
-      setCreateNewProjectFetcherData(null);
     }
-  }, [createNewProjectFetcher.state, createNewProjectFetcherData]);
+  }, [createNewProjectFetcher.state, createNewProjectFetcher.data]);
 
   const isGitSyncEnabled = features.gitSync.enabled;
 
