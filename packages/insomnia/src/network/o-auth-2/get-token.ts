@@ -164,12 +164,6 @@ export const getOAuth2Token = async (
     headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
   }
 
-  // fix for #7672
-  const settings = await models.settings.getOrCreate();
-  if (!settings.disableAppVersionUserAgent) {
-    headers.push({ name: 'User-Agent', value: `insomnia/${version}` });
-  }
-
   const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
   const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
   return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(
@@ -313,10 +307,18 @@ const sendAccessTokenRequest = async (requestOrGroupId: string, authentication: 
     responseId,
   } = initializedData;
 
+  const defaultUserAgentHeader: RequestHeader = { name: 'User-Agent', value: `insomnia/${version}` };
+  const defaultHeaders: RequestHeader[] = [
+    { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
+    { name: 'Accept', value: 'application/x-www-form-urlencoded, application/json' },
+  ];
+
+  if (!settings.disableAppVersionUserAgent) {
+    defaultHeaders.push(defaultUserAgentHeader);
+  }
   const newRequest: Request = await models.initModel(models.request.type, {
     headers: [
-      { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
-      { name: 'Accept', value: 'application/x-www-form-urlencoded, application/json' },
+      ...defaultHeaders,
       ...headers,
     ],
     url: setDefaultProtocol(authentication.accessTokenUrl),
