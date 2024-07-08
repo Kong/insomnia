@@ -10,7 +10,7 @@ export const enum AsyncTask {
   MigrateProjects,
   SyncProjects,
 }
-export const findBestRoute = async (orgId: string) => {
+export const getInitialRouteForOrganization = async (orgId: string) => {
   // 1. assuming we have history, try to redirect to the last visited project
   const prevOrganizationLocation = localStorage.getItem(
     `locationHistoryEntry:${orgId}`
@@ -67,7 +67,7 @@ export const getInitialEntry = async () => {
       }
       const personalOrganizationId = personalOrganization.id;
       return {
-        pathname: await findBestRoute(personalOrganizationId),
+        pathname: await getInitialRouteForOrganization(personalOrganizationId),
         state: {
           // async task need to excute when first entry
           asyncTaskList: [AsyncTask.SyncOrganization, AsyncTask.MigrateProjects, AsyncTask.SyncProjects],

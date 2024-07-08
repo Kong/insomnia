@@ -441,7 +441,6 @@ const OrganizationRoute = () => {
   const syncOrgsAndProjects = useFetcher();
 
   useEffect(() => {
-    console.log('run async task in useEffect');
     const isIdleAndUninitialized = syncOrgsAndProjects.state === 'idle' && !syncOrgsAndProjects.data;
     if (isIdleAndUninitialized) {
       syncOrgsAndProjects.submit({

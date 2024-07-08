@@ -72,7 +72,7 @@ import { showModal } from '../../ui/components/modals';
 import { AskModal } from '../../ui/components/modals/ask-modal';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
-import { findBestRoute } from '../../utils/router';
+import { getInitialRouteForOrganization } from '../../utils/router';
 import { AvatarGroup } from '../components/avatar';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
@@ -242,8 +242,8 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   } catch (err) {
     console.log('[project] Could not fetch remote projects.');
   }
-  const bestRoute = await findBestRoute(organizationId);
-  return redirect(bestRoute);
+  const initialOrganizationRoute = await getInitialRouteForOrganization(organizationId);
+  return redirect(initialOrganizationRoute);
 };
 
 export interface InsomniaFile {
@@ -592,8 +592,7 @@ const ProjectRoute: FC = () => {
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
   const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise);
 
-  const finalFiles = useMemo(() => {
-    console.log(remoteFiles, 'remoteFiles');
+  const allFiles = useMemo(() => {
     return remoteFiles ? [...localFiles, ...remoteFiles] : localFiles;
   }, [localFiles, remoteFiles]);
 
@@ -633,7 +632,7 @@ const ProjectRoute: FC = () => {
   const isUserOwner = organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && isPersonalOrganization(organization);
 
-  const filteredFiles = finalFiles
+  const filteredFiles = allFiles
     .filter(w => (workspaceListScope !== 'all' ? w.scope === workspaceListScope : true))
     .filter(workspace =>
       workspaceListFilter
