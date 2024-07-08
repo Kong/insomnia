@@ -1,5 +1,7 @@
 import { test } from '../../playwright/test';
 test('Clone from github', async ({ page }) => {
+  // waitting for the /features api request to finish
+  await page.waitForSelector('[data-test-git-enable="true"]');
   await page.getByLabel('Clone git repository').click();
   await page.getByRole('tab', { name: ' Git' }).click();
   await page.getByPlaceholder('https://github.com/org/repo.git').fill('https://github.com/jackkav/insomnia-git-example.git');
