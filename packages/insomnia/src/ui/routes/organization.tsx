@@ -248,13 +248,11 @@ async function migrateProjectsUnderOrganization(personalOrganizationId: string, 
 
 async function syncStorageRule(sessionId: string, organizationId: string) {
   try {
-    const [storageRule] = await Promise.all([
-      insomniaFetch<StorageRule | undefined>({
+    const storageRule = await insomniaFetch<StorageRule | undefined>({
         method: 'GET',
         path: `/v1/organizations/${organizationId}/storage-rule`,
         sessionId,
-      }),
-    ]);
+    });
 
     invariant(storageRule, 'Failed to load storageRule');
 
