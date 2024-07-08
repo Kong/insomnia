@@ -217,6 +217,7 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
         </AlmostSquareButton>
         <AlmostSquareButton
           aria-label='Clone git repository'
+          data-test-git-enable={isGitSyncEnabled}
           onClick={
             () => {
               isGitSyncEnabled ?
