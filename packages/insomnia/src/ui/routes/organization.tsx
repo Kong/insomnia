@@ -30,7 +30,7 @@ import { getAppWebsiteBaseURL } from '../../common/constants';
 import { database } from '../../common/database';
 import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
-import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
+import { findPersonalOrganization, isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
 import { Project } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
@@ -53,6 +53,7 @@ import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
 import { useAIContext } from '../context/app/ai-context';
 import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-stream-context';
+import { syncProjects } from './project';
 import { useRootLoaderData } from './root';
 import { UntrackedProjectsLoaderData } from './untracked-projects';
 import { WorkspaceLoaderData } from './workspace';
@@ -128,7 +129,7 @@ function sortOrganizations(accountId: string, organizations: Organization[]): Or
   ];
 }
 
-async function syncOrganization(sessionId: string, accountId: string) {
+async function syncOrganizations(sessionId: string, accountId: string) {
   try {
     const [organizationsResult, user, currentPlan] = await Promise.all([
       insomniaFetch<OrganizationsResponse | void>({
@@ -164,52 +165,89 @@ async function syncOrganization(sessionId: string, accountId: string) {
   }
 }
 
+interface SyncOrgsAndProjectsActionRequest {
+  sessionId: string;
+  accountId: string;
+  personalOrganizationId?: string;
+  organizationId: string;
+}
+
+// this action is used to run task that we dont want to block the UI
+export const syncOrgsAndProjectsAction: ActionFunction = async ({ request }) => {
+  try {
+    const { organizationId } = await request.json() as SyncOrgsAndProjectsActionRequest;
+    const { id: sessionId, accountId } = await userSession.getOrCreate();
+
+    invariant(sessionId, 'sessionId is required');
+    invariant(accountId, 'accountId is required');
+    const taskPromiseList = [];
+    taskPromiseList.push(syncOrganizations(sessionId, accountId));
+    const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+    invariant(organizations, 'Failed to fetch organizations.');
+    const personalOrganization = findPersonalOrganization(organizations, accountId);
+    invariant(personalOrganization, 'personalOrganization is required');
+    invariant(personalOrganization.id, 'personalOrganizationId is required');
+    taskPromiseList.push(migrateProjectsUnderOrganization(personalOrganization.id, sessionId));
+    invariant(organizationId, 'organizationId is required');
+    taskPromiseList.push(syncProjects(organizationId));
+
+    await Promise.all(taskPromiseList);
+
+    return {};
+  } catch (error) {
+    console.log('Failed to run async task', error);
+    return {
+      error: error.message,
+    };
+  }
+};
+
+async function migrateProjectsUnderOrganization(personalOrganizationId: string, sessionId: string) {
+  if (await shouldMigrateProjectUnderOrganization()) {
+    await migrateProjectsIntoOrganization({
+      personalOrganizationId,
+    });
+
+    const preferredProjectType = localStorage.getItem('prefers-project-type');
+    if (preferredProjectType === 'remote') {
+      const localProjects = await database.find<Project>('Project', {
+        parentId: personalOrganizationId,
+        remoteId: null,
+      });
+
+      // If any of those fail projects will still be under the organization as local projects
+      for (const project of localProjects) {
+        updateLocalProjectToRemote({
+          project,
+          organizationId: personalOrganizationId,
+          sessionId,
+          vcs: VCSInstance(),
+        });
+      }
+    }
+  }
+};
+
 export const indexLoader: LoaderFunction = async () => {
   const { id: sessionId, accountId } = await userSession.getOrCreate();
   if (sessionId) {
-    await syncOrganization(sessionId, accountId);
+    await syncOrganizations(sessionId, accountId);
 
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
     invariant(organizations, 'Failed to fetch organizations.');
 
-    const personalOrganization = organizations.filter(isPersonalOrganization)
-        .find(organization =>
-          isOwnerOfOrganization({
-            organization,
-            accountId,
-          }));
-      invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
-      if (await shouldMigrateProjectUnderOrganization()) {
-        await migrateProjectsIntoOrganization({
-          personalOrganization,
-        });
+    const personalOrganization = findPersonalOrganization(organizations, accountId);
+    invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
+    const personalOrganizationId = personalOrganization.id;
+    await migrateProjectsUnderOrganization(personalOrganizationId, sessionId);
 
-        const preferredProjectType = localStorage.getItem('prefers-project-type');
-        if (preferredProjectType === 'remote') {
-          const localProjects = await database.find<Project>('Project', {
-            parentId: personalOrganization.id,
-            remoteId: null,
-          });
+    if (personalOrganization) {
+      return redirect(`/organization/${personalOrganizationId}`);
+    }
 
-          // If any of those fail projects will still be under the organization as local projects
-          for (const project of localProjects) {
-            updateLocalProjectToRemote({
-              project,
-              organizationId: personalOrganization.id,
-              sessionId,
-              vcs: VCSInstance(),
-            });
-          }
-        }
-      }
-
-      if (personalOrganization) {
-        return redirect(`/organization/${personalOrganization.id}`);
-      }
-
-      if (organizations.length > 0) {
-        return redirect(`/organization/${organizations[0].id}`);
-      }
+    if (organizations.length > 0) {
+      return redirect(`/organization/${organizations[0].id}`);
+    }
   }
 
   await session.logout();
@@ -220,7 +258,7 @@ export const syncOrganizationsAction: ActionFunction = async () => {
   const { id: sessionId, accountId } = await userSession.getOrCreate();
 
   if (sessionId) {
-    await syncOrganization(sessionId, accountId);
+    await syncOrganizations(sessionId, accountId);
   }
 
   return null;
@@ -400,6 +438,20 @@ const OrganizationRoute = () => {
     projectId?: string;
     workspaceId?: string;
   };
+  const syncOrgsAndProjects = useFetcher();
+
+  useEffect(() => {
+    const isIdleAndUninitialized = syncOrgsAndProjects.state === 'idle' && !syncOrgsAndProjects.data;
+    if (isIdleAndUninitialized) {
+      syncOrgsAndProjects.submit({
+        organizationId,
+      }, {
+        action: '/organization/syncOrgsAndProjectsAction',
+        method: 'POST',
+        encType: 'application/json',
+      });
+    }
+  }, [userSession.id, organizationId, userSession.accountId, syncOrgsAndProjects]);
 
   useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;

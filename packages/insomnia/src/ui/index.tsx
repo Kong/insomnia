@@ -25,6 +25,7 @@ import { initNewOAuthSession } from '../network/o-auth-2/get-token';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
 import { invariant } from '../utils/invariant';
+import { getInitialEntry } from '../utils/router';
 import { AppLoadingIndicator } from './components/app-loading-indicator';
 import Auth from './routes/auth';
 import Authorize from './routes/auth.authorize';
@@ -60,34 +61,6 @@ try {
   }
 } catch (e) {
   console.log('[onboarding] Failed to parse session data', e);
-}
-
-async function getInitialEntry() {
-  // If the user has not seen the onboarding, then show it
-  // Otherwise if the user is not logged in and has not logged in before, then show the login
-  // Otherwise if the user is logged in, then show the organization
-  try {
-    const hasSeenOnboardingV9 = Boolean(window.localStorage.getItem('hasSeenOnboardingV9'));
-
-    if (!hasSeenOnboardingV9) {
-      return '/onboarding';
-    }
-
-    const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
-
-    const user = await models.userSession.getOrCreate();
-    if (user.id) {
-      return '/organization';
-    }
-
-    if (hasUserLoggedInBefore) {
-      return '/auth/login';
-    }
-
-    return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
-  } catch (e) {
-    return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
-  }
 }
 
 async function renderApp() {
@@ -201,6 +174,10 @@ async function renderApp() {
               {
                 path: 'sync',
                 action: async (...args) => (await import('./routes/organization')).syncOrganizationsAction(...args),
+              },
+              {
+                path: 'syncOrgsAndProjectsAction',
+                action: async (...args) => (await import('./routes/organization')).syncOrgsAndProjectsAction(...args),
               },
               {
                 path: ':organizationId',
