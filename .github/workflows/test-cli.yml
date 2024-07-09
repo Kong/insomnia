@@ -17,8 +17,8 @@ concurrency:
 
 jobs:
   Test:
-    timeout-minutes: 25
-    runs-on: ubuntu-latest
+    timeout-minutes: 10s
+    runs-on: ubuntu-lastest
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -53,7 +53,7 @@ jobs:
           PKG_NAME="inso-ubuntu-latest-$INSO_VERSION"
           echo "pkg-name=$PKG_NAME" >> $GITHUB_OUTPUT
           echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
-          
+
       - name: Package Inso CLI binary
         run: npm run inso-package
         env:
