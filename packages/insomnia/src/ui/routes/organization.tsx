@@ -256,9 +256,7 @@ async function syncStorageRule(sessionId: string, organizationId: string) {
 
     invariant(storageRule, 'Failed to load storageRule');
 
-    const cacheKey = `${organizationId}:storage-rule`;
-
-    inMemoryStorageRuleCache.set(cacheKey, storageRule);
+    inMemoryStorageRuleCache.set(organizationId, storageRule);
   } catch (error) {
     console.log('[storageRule] Failed to load storage rules', error);
   }
@@ -377,9 +375,7 @@ export const organizationStorageLoader: LoaderFunction = async ({ params }): Pro
   const { organizationId } = params as { organizationId: string };
   const { id: sessionId } = await userSession.getOrCreate();
 
-  const cacheKey = `${organizationId}:storage-rule`;
-
-  const storageRule = inMemoryStorageRuleCache.get(cacheKey);
+  const storageRule = inMemoryStorageRuleCache.get(organizationId);
 
   if (storageRule) {
     return {
@@ -397,7 +393,7 @@ export const organizationStorageLoader: LoaderFunction = async ({ params }): Pro
 
     invariant(storageRule, 'Failed to load storageRule');
 
-    inMemoryStorageRuleCache.set(cacheKey, storageRule);
+    inMemoryStorageRuleCache.set(organizationId, storageRule);
 
     // Return the value
     return {
