@@ -32,6 +32,7 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/nedb -e env_env_ca046a --reporter min uts_fe901c',
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/git-repo -e env_env_ca046a uts_fe901c',
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/insomnia-v4/insomnia_v4.yaml -e env_env_0e4670 spc_3b2850',
+  '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/examples/folder-inheritance-document.yml spc_a8144e --verbose',
   // workspace - request from db
   // '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/insomnia-v4/insomnia_v4.yaml -e env_env_0e4670 --requestNamePattern "Example 1" wrk_8ee1e0',
   // TODO: request group - request from db, add simple export file pointing at local server
@@ -48,14 +49,14 @@ describe('inso dev bundle', () => {
   it.each(shouldReturnSuccessCode)('exit code should be 0: %p', async input => {
     const result = await cli(input);
     if (result.code !== 0) {
-      console.log(result.stderr);
+      console.log(result);
     }
     expect(result.code).toBe(0);
   });
   it.each(shouldReturnErrorCode)('exit code should be 1: %p', async input => {
     const result = await cli(input);
     if (result.code !== 1) {
-      console.log(result.stdout);
+      console.log(result);
     }
     expect(result.code).toBe(1);
   });
@@ -68,14 +69,14 @@ describe('inso packaged binary', () => {
   it.each(packagedSuccessCodes)('exit code should be 0: %p', async input => {
     const result = await cli(input);
     if (result.code !== 0) {
-      console.log(result.stderr);
+      console.log(result);
     }
     expect(result.code).toBe(0);
   });
   it.each(packagedErrorCodes)('exit code should be 1: %p', async input => {
     const result = await cli(input);
     if (result.code !== 1) {
-      console.log(result.stdout);
+      console.log(result);
     }
     expect(result.code).toBe(1);
   });
