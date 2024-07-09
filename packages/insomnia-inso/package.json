@@ -24,6 +24,8 @@
     "test": "esr esbuild.ts && jest",
     "test:watch": "npm run test -- --watch",
     "test:bundled-inso": "cross-env ./bin/inso run test \"Another suite\" -e \"OpenAPI env\" --src src/db/fixtures/nedb",
+    "test:inso-bin": "jest cli.test.ts -t \"inso dev bundle\"",
+    "test:inso-binary": "jest cli.test.ts -t \"inso packaged binary\"",
     "type-check": "tsc --noEmit --project tsconfig.json",
     "build": "esr esbuild.ts",
     "build:production": "cross-env NODE_ENV=production esr esbuild.ts",

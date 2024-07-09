@@ -1,6 +1,13 @@
-import { expect, test } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import { exec, ExecException } from 'child_process';
 import path from 'path';
+
+// dev experience
+// goals: it should be quick and run in  ci and should be easy to debug
+// ideas: create a second test.yml easier to reason about the state of node-libcurl it can parallel
+
+// issues: no immeidate feedback as the test is running
+//               run the test, do you need to know about the libcurl thing or should i be automated?
 
 // should be each to copy and run in local js debug terminal
 // and also print which one fails when running all tests
@@ -37,14 +44,41 @@ const shouldReturnErrorCode = [
   '$PWD/packages/insomnia-inso/bin/inso lint spec -w packages/insomnia-inso/src/db/fixtures/git-repo-malformed-spec spc_46c5a4',
   '$PWD/packages/insomnia-inso/bin/inso lint spec packages/insomnia-inso/src/db/fixtures/insomnia-v4/malformed.yaml',
 ];
-test.each(shouldReturnSuccessCode)('Code should be 0: %p', async input => {
-  const result = await cli(input);
-  expect(result.code).toBe(0);
+describe('inso dev bundle', () => {
+  it.each(shouldReturnSuccessCode)('exit code should be 0: %p', async input => {
+    const result = await cli(input);
+    if (result.code !== 0) {
+      console.log(result.stderr);
+    }
+    expect(result.code).toBe(0);
+  });
+  it.each(shouldReturnErrorCode)('exit code should be 1: %p', async input => {
+    const result = await cli(input);
+    if (result.code !== 1) {
+      console.log(result.stdout);
+    }
+    expect(result.code).toBe(1);
+  });
 });
 
-test.each(shouldReturnErrorCode)('Code should be 1: %p', async input => {
-  const result = await cli(input);
-  expect(result.code).toBe(1);
+const packagedSuccessCodes = shouldReturnSuccessCode.map(x => x.replace('$PWD/packages/insomnia-inso/bin/inso', '$PWD/packages/insomnia-inso/binaries/inso'));
+const packagedErrorCodes = shouldReturnErrorCode.map(x => x.replace('$PWD/packages/insomnia-inso/bin/inso', '$PWD/packages/insomnia-inso/binaries/inso'));
+
+describe('inso packaged binary', () => {
+  it.each(packagedSuccessCodes)('exit code should be 0: %p', async input => {
+    const result = await cli(input);
+    if (result.code !== 0) {
+      console.log(result.stderr);
+    }
+    expect(result.code).toBe(0);
+  });
+  it.each(packagedErrorCodes)('exit code should be 1: %p', async input => {
+    const result = await cli(input);
+    if (result.code !== 1) {
+      console.log(result.stdout);
+    }
+    expect(result.code).toBe(1);
+  });
 });
 
 const cli = (input: string): Promise<{ code: number; error: ExecException | null; stdout: string; stderr: string }> => {

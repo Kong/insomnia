@@ -16,14 +16,13 @@ $PWD/packages/insomnia-inso/bin/inso -w packages/insomnia-inso/src/db/fixtures/g
 npm install will download the electron version of libcurl but for inso we need the node version
 
 ```shell
-node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+node_modules/.bin/node-pre-gyp install --directory node_modules/@getinsomnia/node-libcurl --update-binary
 ```
 
-to download the electron version of node-libcurl you should remove the module and npm install again
+to download the electron version of node-libcurl run the following
 
 ```shell
-rm -rf node_modules/@getinsomnia/
-npm install
+npm run install-libcurl-electron
 ```
 
 ## Run CLI Smoke Tests

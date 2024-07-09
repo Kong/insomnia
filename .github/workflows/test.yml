@@ -73,16 +73,19 @@ jobs:
           echo "pkg-name=$PKG_NAME" >> $GITHUB_OUTPUT
           echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Run Inso NPM package tests
-        run: npm run test:bundled-inso
+      - name: Install node version of node-libcurl for inso tests
+        run: node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+
+      - name: Run Inso bin tests
+        run: npm run test:inso-bin
 
       - name: Package Inso CLI binary
-        run: |
-          echo "Replacing node-libcurl electron binary with node binary"
-          node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
-          npm run inso-package
+        run: npm run inso-package
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
+
+      - name: Run Inso binary tests
+        run: npm run test:inso-binary
 
       - name: Create Inso CLI artifacts
         run: npm run inso-package:artifacts
