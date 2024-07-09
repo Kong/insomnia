@@ -76,7 +76,7 @@ jobs:
       - name: Install node version of node-libcurl for inso tests
         run: node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
 
-      - name : Build insomnia-inso
+      - name : Build Inso
         run: npm run build -w insomnia-inso
 
       - name: Run Inso bundle tests
@@ -101,9 +101,6 @@ jobs:
           if-no-files-found: ignore
           name: ${{ steps.inso-variables.outputs.pkg-name }}
           path: packages/insomnia-inso/artifacts
-
-      - name: Smoke test Inso CLI
-        run: npm run test:smoke:cli
 
       # This step should always run even when previous steps fail
       - name: Upload smoke test traces

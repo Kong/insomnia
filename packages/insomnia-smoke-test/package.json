@@ -16,9 +16,7 @@
     "test:dev": "xvfb-maybe cross-env BUNDLE=dev playwright test",
     "test:build": "xvfb-maybe cross-env BUNDLE=build playwright test",
     "test:package": "xvfb-maybe cross-env BUNDLE=package playwright test",
-    "cli": "jest --detectOpenHandles --testPathPattern cli",
-    "serve": "esr server/index.ts",
-    "test:cli": "concurrently --names server,cli --success first --kill-others \"esr server/index.ts\" \"npm run cli\""
+    "serve": "esr server/index.ts"
   },
   "devDependencies": {
     "@grpc/grpc-js": "^1.10.10",

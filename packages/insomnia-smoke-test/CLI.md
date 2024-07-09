@@ -28,11 +28,11 @@ npm run install-libcurl-electron
 ## Run CLI Smoke Tests
 
 ```shell
+# Run CLI tests
+npm run test:bundle -w insomnia-inso
 # Package the Inso CLI binaries
 npm run inso-package
-
-# Run CLI tests
-npm run test:smoke:cli
+npm run test:binary -w insomnia-inso
 ```
 
 ## Debugging CLI tests using watcher
