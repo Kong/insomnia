@@ -33,6 +33,18 @@ jobs:
       - name: Install packages
         run: npm ci
 
+      - name: Install node version of node-libcurl for inso tests
+        run: node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+
+      - name : Build Send Request abstraction
+        run: npm run build:sr -w insomnia
+        
+      - name : Build Inso
+        run: npm run build -w insomnia-inso
+
+      - name: Run Inso bundle tests
+        run: npm run test:bundle -w insomnia-inso
+
       - name: Set Inso CLI variables
         id: inso-variables
         shell: bash
@@ -41,16 +53,7 @@ jobs:
           PKG_NAME="inso-ubuntu-latest-$INSO_VERSION"
           echo "pkg-name=$PKG_NAME" >> $GITHUB_OUTPUT
           echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Install node version of node-libcurl for inso tests
-        run: node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
-
-      - name : Build Inso
-        run: npm run build -w insomnia-inso
-
-      - name: Run Inso bundle tests
-        run: npm run test:bundle -w insomnia-inso
-
+          
       - name: Package Inso CLI binary
         run: npm run inso-package
         env:
