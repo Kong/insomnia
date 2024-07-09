@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import querystring from 'querystring';
 import { v4 as uuidv4 } from 'uuid';
 
+import { version } from '../../../package.json';
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
@@ -306,10 +307,18 @@ const sendAccessTokenRequest = async (requestOrGroupId: string, authentication: 
     responseId,
   } = initializedData;
 
+  const defaultUserAgentHeader: RequestHeader = { name: 'User-Agent', value: `insomnia/${version}` };
+  const defaultHeaders: RequestHeader[] = [
+    { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
+    { name: 'Accept', value: 'application/x-www-form-urlencoded, application/json' },
+  ];
+
+  if (!settings.disableAppVersionUserAgent) {
+    defaultHeaders.push(defaultUserAgentHeader);
+  }
   const newRequest: Request = await models.initModel(models.request.type, {
     headers: [
-      { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
-      { name: 'Accept', value: 'application/x-www-form-urlencoded, application/json' },
+      ...defaultHeaders,
       ...headers,
     ],
     url: setDefaultProtocol(authentication.accessTokenUrl),

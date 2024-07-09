@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [core@9.3.3-beta.0] - 2024-07-08
+## What's Changed
+* :rocket: 9.3.2 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7665
+* perf: App start improvement [INS-3957] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7492
+
+
+**Full Changelog**: https://github.com/Kong/insomnia/compare/core@9.3.2...core@9.3.3-beta.0
+
 ## [core@9.3.0-beta.0] - 2024-05-23
 
 ## What's Changed
