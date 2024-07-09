@@ -189,9 +189,6 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
                     <Icon icon="x" />
                   </Button>
                 </div>
-                {isDefaultOrganizationProject(project) && <p>
-                  <Icon icon="info-circle" /> This is the default project for your organization. You can not delete it or change its type.
-                </p>}
                 <form
                   className='flex flex-col gap-4'
                   onSubmit={e => {
@@ -229,7 +226,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
                         className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                       />
                     </TextField>
-                    <RadioGroup name="type" defaultValue={project.remoteId ? 'remote' : 'local'} className="flex flex-col gap-2">
+                    <RadioGroup name="type" defaultValue={storage === 'cloud_plus_local' ? project.remoteId ? 'remote' : 'local' : storage !== 'cloud_only' ? 'local' : 'remote'} className="flex flex-col gap-2">
                       <Label className="text-sm text-[--hl]">
                         Project type
                       </Label>
