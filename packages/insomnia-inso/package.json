@@ -21,9 +21,10 @@
   },
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "test": "esr esbuild.ts && jest",
+    "test": "esr esbuild.ts && jest --testPathIgnorePatterns=cli.test.ts",
     "test:watch": "npm run test -- --watch",
-    "test:bundled-inso": "cross-env ./bin/inso run test \"Another suite\" -e \"OpenAPI env\" --src src/db/fixtures/nedb",
+    "test:bundle": "jest cli.test.ts -t \"inso dev bundle\"",
+    "test:binary": "jest cli.test.ts -t \"inso packaged binary\"",
     "type-check": "tsc --noEmit --project tsconfig.json",
     "build": "esr esbuild.ts",
     "build:production": "cross-env NODE_ENV=production esr esbuild.ts",

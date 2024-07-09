@@ -73,16 +73,22 @@ jobs:
           echo "pkg-name=$PKG_NAME" >> $GITHUB_OUTPUT
           echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Run Inso NPM package tests
-        run: npm run test:bundled-inso
+      - name: Install node version of node-libcurl for inso tests
+        run: node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+
+      - name : Build Inso
+        run: npm run build -w insomnia-inso
+
+      - name: Run Inso bundle tests
+        run: npm run test:bundle -w insomnia-inso
 
       - name: Package Inso CLI binary
-        run: |
-          echo "Replacing node-libcurl electron binary with node binary"
-          node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
-          npm run inso-package
+        run: npm run inso-package
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
+
+      - name: Run Inso binary tests
+        run: npm run test:binary -w insomnia-inso
 
       - name: Create Inso CLI artifacts
         run: npm run inso-package:artifacts
@@ -95,9 +101,6 @@ jobs:
           if-no-files-found: ignore
           name: ${{ steps.inso-variables.outputs.pkg-name }}
           path: packages/insomnia-inso/artifacts
-
-      - name: Smoke test Inso CLI
-        run: npm run test:smoke:cli
 
       # This step should always run even when previous steps fail
       - name: Upload smoke test traces

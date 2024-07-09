@@ -1,40 +1,27 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+
+import path from 'path';
 import YAML from 'yaml';
 
-import { type GlobalOptions, logger } from '../cli';
-import { getAbsolutePath, loadDb } from '../db';
-import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
-import { writeFileWithCliOptions } from '../write-file';
+import { InsoError } from '../cli';
 
-export type ExportSpecificationOptions = GlobalOptions & {
-  output?: string;
-  skipAnnotations?: boolean;
-};
-
-export async function exportSpecification(
-  identifier: string | null | undefined,
-  { output, skipAnnotations, workingDir, ci, src }: ExportSpecificationOptions,
-) {
-  const db = await loadDb({
-    workingDir,
-    filterTypes: ['ApiSpec'],
-    src,
-  });
-  const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
-
-  if (!specFromDb) {
-    const pathToSearch = getAbsolutePath({ workingDir, src });
-    logger.fatal('Specification not found at: ' + pathToSearch);
-    return false;
+export async function writeFileWithCliOptions(
+  outputPath: string,
+  contents: string,
+): Promise<string> {
+  try {
+    await mkdir(path.dirname(outputPath), { recursive: true });
+    await writeFile(outputPath, contents);
+    return outputPath;
+  } catch (error) {
+    console.error(error);
+    throw new InsoError(`Failed to write to "${outputPath}"`, error);
   }
+}
 
+export async function exportSpecification({ specContent, skipAnnotations }: { specContent: string; skipAnnotations: boolean }) {
   if (!skipAnnotations) {
-    if (!output) {
-      logger.log(specFromDb.contents);
-      return true;
-    }
-    const outputPath = await writeFileWithCliOptions(output, specFromDb.contents, workingDir);
-    logger.log(`Specification exported to "${outputPath}".`);
-    return true;
+    return specContent;
   }
 
   const recursiveDeleteKey = (obj: any) => {
@@ -47,14 +34,5 @@ export async function exportSpecification(
     });
     return obj;
   };
-  const cleaned = YAML.stringify(recursiveDeleteKey(YAML.parse(specFromDb.contents)));
-  logger.debug('Removed keys starting with x-kong-');
-  if (!output) {
-    logger.log(cleaned);
-    return true;
-  }
-  const outputPath = await writeFileWithCliOptions(output, cleaned, workingDir);
-  logger.log(`Specification exported to "${outputPath}".`);
-
-  return true;
+  return YAML.stringify(recursiveDeleteKey(YAML.parse(specContent)));
 }
