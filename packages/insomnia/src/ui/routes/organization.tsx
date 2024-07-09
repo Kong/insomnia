@@ -19,6 +19,7 @@ import {
   redirect,
   useFetcher,
   useLoaderData,
+  useLocation,
   useNavigate,
   useParams,
   useRouteLoaderData,
@@ -37,6 +38,7 @@ import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
+import { AsyncTask, getInitialRouteForOrganization } from '../../utils/router';
 import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
@@ -166,30 +168,37 @@ async function syncOrganizations(sessionId: string, accountId: string) {
 }
 
 interface SyncOrgsAndProjectsActionRequest {
-  sessionId: string;
-  accountId: string;
-  personalOrganizationId?: string;
   organizationId: string;
+  asyncTaskList: AsyncTask[];
 }
 
 // this action is used to run task that we dont want to block the UI
 export const syncOrgsAndProjectsAction: ActionFunction = async ({ request }) => {
   try {
-    const { organizationId } = await request.json() as SyncOrgsAndProjectsActionRequest;
+    const { organizationId, asyncTaskList } = await request.json() as SyncOrgsAndProjectsActionRequest;
     const { id: sessionId, accountId } = await userSession.getOrCreate();
 
-    invariant(sessionId, 'sessionId is required');
-    invariant(accountId, 'accountId is required');
     const taskPromiseList = [];
-    taskPromiseList.push(syncOrganizations(sessionId, accountId));
-    const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
-    invariant(organizations, 'Failed to fetch organizations.');
-    const personalOrganization = findPersonalOrganization(organizations, accountId);
-    invariant(personalOrganization, 'personalOrganization is required');
-    invariant(personalOrganization.id, 'personalOrganizationId is required');
-    taskPromiseList.push(migrateProjectsUnderOrganization(personalOrganization.id, sessionId));
-    invariant(organizationId, 'organizationId is required');
-    taskPromiseList.push(syncProjects(organizationId));
+    if (asyncTaskList.includes(AsyncTask.SyncOrganization)) {
+      invariant(sessionId, 'sessionId is required');
+      invariant(accountId, 'accountId is required');
+      taskPromiseList.push(syncOrganizations(sessionId, accountId));
+    }
+
+    if (asyncTaskList.includes(AsyncTask.MigrateProjects)) {
+      const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+      invariant(organizations, 'Failed to fetch organizations.');
+      const personalOrganization = findPersonalOrganization(organizations, accountId);
+      invariant(personalOrganization, 'personalOrganization is required');
+      invariant(personalOrganization.id, 'personalOrganizationId is required');
+      invariant(sessionId, 'sessionId is required');
+      taskPromiseList.push(migrateProjectsUnderOrganization(personalOrganization.id, sessionId));
+    }
+
+    if (asyncTaskList.includes(AsyncTask.SyncProjects)) {
+      invariant(organizationId, 'organizationId is required');
+      taskPromiseList.push(syncProjects(organizationId));
+    }
 
     await Promise.all(taskPromiseList);
 
@@ -438,20 +447,29 @@ const OrganizationRoute = () => {
     projectId?: string;
     workspaceId?: string;
   };
-  const syncOrgsAndProjects = useFetcher();
+
+  const location = useLocation();
+  const asyncTaskList = location.state?.asyncTaskList as AsyncTask[];
+
+  const syncOrgsAndProjectsFetcher = useFetcher();
 
   useEffect(() => {
-    const isIdleAndUninitialized = syncOrgsAndProjects.state === 'idle' && !syncOrgsAndProjects.data;
-    if (isIdleAndUninitialized) {
-      syncOrgsAndProjects.submit({
+    const submit = syncOrgsAndProjectsFetcher.submit;
+    // each route navigation will change history state, only submit this action when the asyncTaskList state is not empty
+    // currently we have 2 cases that will set the asyncTaskList state
+    // 1. first entry
+    // 2. when user switch to another organization
+    if (asyncTaskList?.length) {
+      submit({
         organizationId,
+        asyncTaskList,
       }, {
         action: '/organization/syncOrgsAndProjectsAction',
         method: 'POST',
         encType: 'application/json',
       });
     }
-  }, [userSession.id, organizationId, userSession.accountId, syncOrgsAndProjects]);
+  }, [userSession.id, organizationId, userSession.accountId, syncOrgsAndProjectsFetcher.submit, asyncTaskList]);
 
   useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
@@ -659,40 +677,50 @@ const OrganizationRoute = () => {
           ) : null}
           {isOrganizationSidebarOpen && <div className={`[grid-area:Navbar] overflow-hidden ${isOrganizationSidebarOpen ? '' : 'hidden'}`}>
             <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
-              {organizations.map(organization => (
-                <TooltipTrigger key={organization.id}>
-                  <Link className="outline-none">
-                    <NavLink
-                      className={({ isActive, isPending }) =>
-                        `select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${isActive
+              {organizations.map(organization => {
+                const isActive = organization.id === organizationId;
+                return (
+                  <TooltipTrigger key={organization.id}>
+                    <Link className="outline-none">
+                      <div
+                        className={`select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${isActive
                           ? 'outline-[--color-font]'
                           : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
-                        } ${isPending ? 'animate-pulse' : ''}`
-                      }
-                      to={`/organization/${organization.id}`}
+                          }`}
+                        onClick={async () => {
+                          const routeForOrganization = await getInitialRouteForOrganization(organization.id);
+                          navigate(routeForOrganization, {
+                            state: {
+                              asyncTaskList: [
+                                AsyncTask.SyncProjects,
+                              ],
+                            },
+                          });
+                        }}
+                      >
+                        {isPersonalOrganization(organization) && isOwnerOfOrganization({
+                          organization,
+                          accountId: userSession.accountId || '',
+                        }) ? (
+                          <Icon icon="home" />
+                        ) : (
+                          <OrganizationAvatar
+                            alt={organization.display_name}
+                            src={organization.branding?.logo_url || ''}
+                          />
+                        )}
+                      </div>
+                    </Link>
+                    <Tooltip
+                      placement="right"
+                      offset={8}
+                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                     >
-                      {isPersonalOrganization(organization) && isOwnerOfOrganization({
-                        organization,
-                        accountId: userSession.accountId || '',
-                      }) ? (
-                        <Icon icon="home" />
-                      ) : (
-                        <OrganizationAvatar
-                          alt={organization.display_name}
-                          src={organization.branding?.logo_url || ''}
-                        />
-                      )}
-                    </NavLink>
-                  </Link>
-                  <Tooltip
-                    placement="right"
-                    offset={8}
-                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                  >
-                    <span>{organization.display_name}</span>
-                  </Tooltip>
-                </TooltipTrigger>
-              ))}
+                      <span>{organization.display_name}</span>
+                    </Tooltip>
+                  </TooltipTrigger>
+                );
+              })}
               <MenuTrigger>
                 <Button className="select-none text-[--color-font] hover:no-underline transition-all duration-150 box-border p-[--padding-sm] font-bold outline-none rounded-md w-[28px] h-[28px] flex items-center justify-center overflow-hidden">
                   <Icon icon="plus" />
