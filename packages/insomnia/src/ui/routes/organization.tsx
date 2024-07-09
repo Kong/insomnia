@@ -692,6 +692,7 @@ const OrganizationRoute = () => {
                           navigate(routeForOrganization, {
                             state: {
                               asyncTaskList: [
+                                // we only need sync projects when user switch to another organization
                                 AsyncTask.SyncProjects,
                               ],
                             },
