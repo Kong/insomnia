@@ -1,0 +1,116 @@
+_type: export
+__export_format: 4
+__export_date: 2024-07-09T14:04:25.996Z
+__export_source: insomnia.desktop.app:v9.3.3-beta.0
+resources:
+  - _id: req_f5428f9d9aa34dbe9bc757ddbf98cd13
+    parentId: fld_7ca9aeafb2714bc287e33f643299c271
+    modified: 1720533313731
+    created: 1720531712225
+    url: httpbin.org/anything
+    name: New Request
+    description: ""
+    method: GET
+    body:
+      mimeType: text/plain
+      text: "{{foo}}"
+    parameters: []
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/9.3.3-beta.0
+    authentication: {}
+    preRequestScript: ""
+    metaSortKey: -1720531712226
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: fld_7ca9aeafb2714bc287e33f643299c271
+    parentId: wrk_b216792ae69e468aa46ddbf7783c7c76
+    modified: 1720533498913
+    created: 1720531708748
+    name: My Folder
+    description: ""
+    environment:
+      foo: bar
+    environmentPropertyOrder:
+      "&":
+        - foo
+    metaSortKey: -1720531708748
+    authentication:
+      type: basic
+      useISO88591: false
+      disabled: false
+      username: admin
+      password: password
+    headers:
+      - id: pair_74f3158279464c9c9827dd2be66762ca
+        name: customheader
+        value: jack
+        description: ""
+        disabled: false
+    _type: request_group
+  - _id: wrk_b216792ae69e468aa46ddbf7783c7c76
+    parentId: null
+    modified: 1720533288412
+    created: 1720533288412
+    name: folder-inheritance-doc.yaml
+    description: ""
+    scope: design
+    _type: workspace
+  - _id: env_9e44ac71d3a51fc6a8951b8968e45c44c5236355
+    parentId: wrk_b216792ae69e468aa46ddbf7783c7c76
+    modified: 1720533288414
+    created: 1720533288414
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1720533288414
+    _type: environment
+  - _id: jar_9e44ac71d3a51fc6a8951b8968e45c44c5236355
+    parentId: wrk_b216792ae69e468aa46ddbf7783c7c76
+    modified: 1720533288415
+    created: 1720533288415
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: spc_a8144e389c024784a3d13d789a3ef6c5
+    parentId: wrk_b216792ae69e468aa46ddbf7783c7c76
+    modified: 1720533288413
+    created: 1720533288413
+    fileName: New Document
+    contents: ""
+    contentType: yaml
+    _type: api_spec
+  - _id: uts_412db4d4943a4baeb1319b3bd37fa4bc
+    parentId: wrk_b216792ae69e468aa46ddbf7783c7c76
+    modified: 1720533326161
+    created: 1720533326161
+    name: New Suite
+    metaSortKey: -1720533326161
+    _type: unit_test_suite
+  - _id: ut_3fde7054f11a416cb61738d8aacad537
+    parentId: uts_412db4d4943a4baeb1319b3bd37fa4bc
+    modified: 1720533776518
+    created: 1720533328458
+    requestId: req_f5428f9d9aa34dbe9bc757ddbf98cd13
+    name: Returns 200
+    code: |-
+      const response1 = await insomnia.send();
+      // console.log(response1.data)
+      const body = JSON.parse(response1.data)
+      expect(response1.status).to.equal(200);
+      expect(body.data).to.equal('bar')
+      expect(body.headers.Customheader).to.equal('jack')
+      expect(body.headers.Authorization).to.equal('Basic YWRtaW46cGFzc3dvcmQ=')
+    metaSortKey: -1720533328458
+    _type: unit_test
