@@ -266,8 +266,8 @@ export const go = (args?: string[]) => {
       }
 
       try {
-        // lazy import
-        const { getSendRequestCallbackMemDb } = await import('insomnia-send-request');
+        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Load lazily when needed, otherwise this require slows down the entire CLI.
+        const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
         const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation });
         // Generate test file
         const testFileContents = generate(suites.map(suite => ({
