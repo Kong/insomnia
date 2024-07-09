@@ -21,9 +21,8 @@
   },
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "test": "esr esbuild.ts && jest",
+    "test": "esr esbuild.ts && jest --testPathIgnorePatterns=cli.test.ts",
     "test:watch": "npm run test -- --watch",
-    "test:bundled-inso": "cross-env ./bin/inso run test \"Another suite\" -e \"OpenAPI env\" --src src/db/fixtures/nedb",
     "test:inso-bin": "jest cli.test.ts -t \"inso dev bundle\"",
     "test:inso-binary": "jest cli.test.ts -t \"inso packaged binary\"",
     "type-check": "tsc --noEmit --project tsconfig.json",
