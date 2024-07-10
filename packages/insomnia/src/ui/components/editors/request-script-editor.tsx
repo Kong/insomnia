@@ -72,6 +72,25 @@ const findHeader =
 );`;
 const getCookies = 'const cookies = insomnia.response.cookies.toObject();';
 
+const checkStatus200 =
+  `insomnia.test('Check if status is 200', () => {
+    insomnia.expect(insomnia.response.status).to.eql(200);
+});`;
+
+const expectToEqual = 'insomnia.expect(200).to.eql(200);';
+const expectToBeA = "insomnia.expect('uname').to.be.a('string');";
+const expectToHaveLength = "insomnia.expect('a').to.have.lengthOf(1);";
+const expectToInclude = "insomnia.expect('xxx_customer_id_yyy').to.include('customer_id');";
+const expectToBeOneOf = 'insomnia.expect(201).to.be.oneOf([201,202]);';
+const expectToBeBelow = 'insomnia.expect(199).to.be.below(200);';
+
+const expectToHaveAllKeys = "insomnia.expect({a: 1, b: 2}).to.have.all.keys('a', 'b');";
+const expectToHaveAnyKeys = "insomnia.expect({a: 1, b: 2}).to.have.any.keys('a', 'b');";
+const expectToNotHaveAnyKeys = "insomnia.expect({a: 1, b: 2}).to.not.have.any.keys('c', 'd');";
+const expectToHaveProperty = "insomnia.expect({a: 1}).to.have.property('a');";
+const expectToBeAnObjectThatHasAllKeys =
+  "insomnia.expect({a: 1, b: 2}).to.be.an('object').that.has.all.keys('a', 'b');";
+
 const lintOptions = {
   globals: {
     // https://jshint.com/docs/options/
@@ -345,7 +364,86 @@ const miscMenu: SnippetMenuItem = {
   ],
 };
 
-const snippetsMenus: SnippetMenuItem[] = [variableSnippetsMenu, requestManipulationMenu, responseHandlingMenu, miscMenu];
+const testMenu: SnippetMenuItem = {
+  id: 'test-snippets',
+  name: 'Test Utils',
+  items: [
+    {
+      'id': 'test-examples',
+      'name': 'Test Examples',
+      items: [
+        {
+          'id': 'check-status-200',
+          'name': 'Check if status is 200',
+          'snippet': checkStatus200,
+        },
+      ],
+    },
+    {
+      'id': 'expect-examples',
+      'name': 'Expect Examples',
+      items: [
+        {
+          'id': 'expect-to-equal',
+          'name': 'expectToEqual',
+          'snippet': expectToEqual,
+        },
+        {
+          'id': 'expect-to-be-a',
+          'name': 'expectToBeA',
+          'snippet': expectToBeA,
+        },
+        {
+          'id': 'expect-to-have-length',
+          'name': 'expectToHaveLength',
+          'snippet': expectToHaveLength,
+        },
+        {
+          'id': 'expect-to-include',
+          'name': 'expectToInclude',
+          'snippet': expectToInclude,
+        },
+        {
+          'id': 'expect-to-be-one-of',
+          'name': 'expectToBeOneOf',
+          'snippet': expectToBeOneOf,
+        },
+        {
+          'id': 'expect-to-be-below',
+          'name': 'expectToBeBelow',
+          'snippet': expectToBeBelow,
+        },
+        {
+          'id': 'expect-to-have-all-keys',
+          'name': 'expectToHaveAllKeys',
+          'snippet': expectToHaveAllKeys,
+        },
+        {
+          'id': 'expect-to-have-any-keys',
+          'name': 'expectToHaveAnyKeys',
+          'snippet': expectToHaveAnyKeys,
+        },
+        {
+          'id': 'expect-to-not-have-any-keys',
+          'name': 'expectToNotHaveAnyKeys',
+          'snippet': expectToNotHaveAnyKeys,
+        },
+        {
+          'id': 'expect-to-have-property',
+          'name': 'expectToHaveProperty',
+          'snippet': expectToHaveProperty,
+        },
+        {
+          'id': 'expect-to-be-an-object-that-has-all-keys',
+          'name': 'expectToBeAnObjectThatHasAllKeys',
+          'snippet': expectToBeAnObjectThatHasAllKeys,
+        },
+      ],
+    },
+  ],
+};
+
+const snippetsMenus: SnippetMenuItem[] = [variableSnippetsMenu, requestManipulationMenu, responseHandlingMenu, testMenu, miscMenu];
 
 export const RequestScriptEditor: FC<Props> = ({
   className,
