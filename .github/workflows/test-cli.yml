@@ -1,0 +1,75 @@
+name: Test CLI
+
+on:
+  merge_group:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  Test:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Install node version of node-libcurl for inso tests
+        run: node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+
+      - name : Build Send Request abstraction
+        run: npm run build:sr -w insomnia
+        
+      - name : Build Inso
+        run: npm run build -w insomnia-inso
+
+      - name: Run Inso bundle tests
+        run: npm run test:bundle -w insomnia-inso
+
+      - name: Set Inso CLI variables
+        id: inso-variables
+        shell: bash
+        run: |
+          INSO_VERSION="$(jq .version packages/insomnia-inso/package.json -rj)-run.${{ github.run_number }}"
+          PKG_NAME="inso-ubuntu-latest-$INSO_VERSION"
+          echo "pkg-name=$PKG_NAME" >> $GITHUB_OUTPUT
+          echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Package Inso CLI binary
+        run: npm run inso-package
+        env:
+          VERSION: ${{ steps.inso-variables.outputs.inso-version }}
+
+      - name: Run Inso binary tests
+        run: npm run test:binary -w insomnia-inso
+
+      - name: Create Inso CLI artifacts
+        run: npm run inso-package:artifacts
+        env:
+          VERSION: ${{ steps.inso-variables.outputs.inso-version }}
+
+      - name: Upload Inso CLI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: ignore
+          name: ${{ steps.inso-variables.outputs.pkg-name }}
+          path: packages/insomnia-inso/artifacts

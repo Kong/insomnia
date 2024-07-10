@@ -83,7 +83,7 @@ describe('test Cookie object', () => {
                         id: '1',
                         key: 'c1',
                         value: 'v1',
-                        expires: null,
+                        expires: 'Infinity',
                         domain: 'inso.com',
                         path: '/',
                         secure: true,

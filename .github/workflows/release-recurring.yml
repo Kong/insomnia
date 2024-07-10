@@ -17,7 +17,7 @@ env:
   PR_NUMBER: ${{ github.event.number }}
 jobs:
   build-and-upload-artifacts:
-    timeout-minutes: 25
+    timeout-minutes: 15
     # Skip jobs for release PRs
     # windows on recurring should be portable
     if: ${{ !startsWith(github.head_ref, 'release/') }}

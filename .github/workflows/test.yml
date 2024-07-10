@@ -1,4 +1,4 @@
-name: Test
+name: Test App
 
 on:
   merge_group:
@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   Test:
-    timeout-minutes: 25
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -42,14 +42,8 @@ jobs:
       - name: Type checks
         run: npm run type-check
 
-      - name: Test Insomnia
-        run: npm test -w packages/insomnia
-
-      - name: Test Inso
-        run: npm test -w packages/insomnia-inso
-
-      - name: Test Insomnia Testing
-        run: npm test -w packages/insomnia-testing
+      - name: Unit Tests
+        run: npm test
 
       - name: Build app for smoke tests
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
@@ -63,44 +57,6 @@ jobs:
         # Full Smoke test run, for Release PRs
         if: ${{ startsWith(github.head_ref, 'release/') }}
         run: npm run test:build -w packages/insomnia-smoke-test -- --project=Default
-
-      - name: Set Inso CLI variables
-        id: inso-variables
-        shell: bash
-        run: |
-          INSO_VERSION="$(jq .version packages/insomnia-inso/package.json -rj)-run.${{ github.run_number }}"
-          PKG_NAME="inso-ubuntu-latest-$INSO_VERSION"
-          echo "pkg-name=$PKG_NAME" >> $GITHUB_OUTPUT
-          echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Install node version of node-libcurl for inso tests
-        run: node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
-
-      - name : Build Inso
-        run: npm run build -w insomnia-inso
-
-      - name: Run Inso bundle tests
-        run: npm run test:bundle -w insomnia-inso
-
-      - name: Package Inso CLI binary
-        run: npm run inso-package
-        env:
-          VERSION: ${{ steps.inso-variables.outputs.inso-version }}
-
-      - name: Run Inso binary tests
-        run: npm run test:binary -w insomnia-inso
-
-      - name: Create Inso CLI artifacts
-        run: npm run inso-package:artifacts
-        env:
-          VERSION: ${{ steps.inso-variables.outputs.inso-version }}
-
-      - name: Upload Inso CLI artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          if-no-files-found: ignore
-          name: ${{ steps.inso-variables.outputs.pkg-name }}
-          path: packages/insomnia-inso/artifacts
 
       # This step should always run even when previous steps fail
       - name: Upload smoke test traces
