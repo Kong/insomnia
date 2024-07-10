@@ -202,6 +202,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
                     } else if (type === 'local' && project.remoteId && !projectType) {
                       setProjectType('local');
                     } else {
+                      console.log('submitting form data', type);
                       updateProjectFetcher.submit(formData, {
                         action: `/organization/${organizationId}/project/${project._id}/update`,
                         method: 'post',
