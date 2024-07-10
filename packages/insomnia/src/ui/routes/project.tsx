@@ -605,7 +605,7 @@ const ProjectRoute: FC = () => {
   const { presence } = useInsomniaEventStreamContext();
   const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
   const storageRuleFetcher = useFetcher<OrganizationStorageLoaderData>({ key: `storage-rule:${organizationId}` });
-  // const [lastLoadedOrganizationId, setLastLoadedOrganizationId] = useState('');
+  const [lastLoadedOrganizationId, setLastLoadedOrganizationId] = useState('');
 
   useEffect(() => {
     if (!isScratchpadOrganizationId(organizationId)) {
@@ -617,12 +617,12 @@ const ProjectRoute: FC = () => {
   useEffect(() => {
     const isIdleAndUninitialized = storageRuleFetcher.state === 'idle' && !storageRuleFetcher.data && !isScratchpadOrganizationId(organizationId);
 
-    if (isIdleAndUninitialized) {
+    if (isIdleAndUninitialized || lastLoadedOrganizationId !== organizationId) {
       storageRuleFetcher.load(`/organization/${organizationId}/storage-rule`);
       // Update the state tracking the last loaded organization ID
-      // setLastLoadedOrganizationId(organizationId);
+      setLastLoadedOrganizationId(organizationId);
     }
-  }, [organizationId, storageRuleFetcher]);
+  }, [lastLoadedOrganizationId, organizationId, storageRuleFetcher]);
 
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
 
