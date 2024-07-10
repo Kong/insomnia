@@ -87,13 +87,17 @@ const Environments = () => {
             addCancel: true,
             okLabel: 'Delete',
             onConfirm: async () => {
-              deleteEnvironmentFetcher.submit({
-                environmentId: environment._id,
-              },
+              deleteEnvironmentFetcher.submit(
+                {
+                  environmentId: environment._id,
+                },
                 {
                   method: 'post',
                   action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/delete`,
-                });
+                }
+              );
+
+              setSelectedEnvironmentId(baseEnvironment._id);
             },
           });
         },
