@@ -1,4 +1,4 @@
-import { Settings } from 'insomnia/src//models/settings';
+import { Settings } from 'insomnia/src/models/settings';
 import { ClientCertificate, init as initClientCertificate } from 'insomnia/src/models/client-certificate';
 import { Request as InsomniaRequest, RequestBody as InsomniaRequestBody, RequestBodyParameter, RequestPathParameter } from 'insomnia/src/models/request';
 
