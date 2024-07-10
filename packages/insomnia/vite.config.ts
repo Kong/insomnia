@@ -43,6 +43,7 @@ export default defineConfig(({ mode }) => {
       // these packages are only used in web worker, Vite won't be able to discover the import on the initial scan，so we need to include them here to let vite pre-bundle them
       // https://vitejs.dev/guide/dep-pre-bundling.html#customizing-the-behavior
       include: ['@stoplight/spectral-core', '@stoplight/spectral-ruleset-bundler/with-loader', '@stoplight/spectral-rulesets'],
+      force: true,
     },
     plugins: [
       // Allows us to import modules that will be resolved by Node's require() function.
