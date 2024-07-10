@@ -1162,6 +1162,11 @@ button {
   --color-bg: rgba(5, 5, 5, 0.7);
   --color-font: #ddd;
 }
+*[theme] .theme--transparent-overlay-darker,
+*[subtheme] .theme--transparent-overlay-darker {
+  --color-bg: rgba(5, 5, 5, 0.8);
+  --color-font: #ddd;
+}
 [class^='http-method-'],
 [class*=' http-method-'] {
   color: var(--color-font);
