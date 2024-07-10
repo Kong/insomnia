@@ -1606,6 +1606,14 @@ const ProjectRoute: FC = () => {
                       } else if (type === 'local' && activeProject?.remoteId && !projectType) {
                         setProjectType('local');
                       } else {
+                        if (!type) {
+                          showAlert({
+                            title: 'Project type not selected',
+                            message: 'Please select a project type before continuing',
+                          });
+                          return;
+                        }
+
                         updateProjectFetcher.submit(formData, {
                           action: `/organization/${organizationId}/project/${projectId}/update`,
                           method: 'post',
