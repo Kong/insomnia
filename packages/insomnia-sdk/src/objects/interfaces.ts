@@ -1,4 +1,4 @@
-import { CookieJar as InsomniaCookieJar } from 'insomnia/src//models/cookie-jar';
+import { CookieJar as InsomniaCookieJar } from 'insomnia/src/models/cookie-jar';
 import { ClientCertificate } from 'insomnia/src/models/client-certificate';
 import type { Request } from 'insomnia/src/models/request';
 import { Settings } from 'insomnia/src/models/settings';
