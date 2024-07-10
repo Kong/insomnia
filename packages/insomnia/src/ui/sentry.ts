@@ -20,6 +20,11 @@ function sentryWatchUserInfo() {
 }
 
 export function initializeSentry() {
-  Sentry.init(SENTRY_OPTIONS);
+  Sentry.init({
+    ...SENTRY_OPTIONS,
+    // enable sentry tracing
+    integrations: [Sentry.browserTracingIntegration()],
+    tracesSampleRate: 0.5,
+  });
   sentryWatchUserInfo();
 }
