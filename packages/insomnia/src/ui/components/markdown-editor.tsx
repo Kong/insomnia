@@ -34,7 +34,6 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
       className="w-full h-full flex flex-col overflow-hidden"
       aria-label="Markdown editor tabs"
       defaultSelectedKey={defaultValue ? 'preview' : 'write'}
-      disabledKeys={[defaultValue ? '' : 'preview']}
     >
       <TabList className="w-full flex-shrink-0 overflow-x-auto border-solid border-b border-b-[--hl-md] px-2 bg-[--color-bg] flex items-center gap-2 h-[--line-height-sm]" aria-label="Request scripts tabs">
         <Tab
