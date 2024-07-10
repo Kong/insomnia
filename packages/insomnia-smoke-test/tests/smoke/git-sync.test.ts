@@ -1,10 +1,11 @@
 import { test } from '../../playwright/test';
+
 test('Clone from github', async ({ page }) => {
   // waitting for the /features api request to finish
   await page.waitForSelector('[data-test-git-enable="true"]');
   await page.getByLabel('Clone git repository').click();
   await page.getByRole('tab', { name: ' Git' }).click();
-  await page.getByPlaceholder('https://github.com/org/repo.git').fill('https://github.com/jackkav/insomnia-git-example.git');
+  await page.getByPlaceholder('https://github.com/org/repo.git').fill('https://github.com/Kong/insomnia-git-example.git');
   await page.getByPlaceholder('Name').fill('J');
   await page.getByPlaceholder('Email').fill('J');
   await page.getByPlaceholder('MyUser').fill('J');
@@ -12,6 +13,7 @@ test('Clone from github', async ({ page }) => {
   await page.getByTestId('git-repository-settings-modal__sync-btn').click();
   await page.getByLabel('Toggle preview').click();
 });
+
 test('Sign in with GitHub', async ({ app, page }) => {
   await page.getByRole('button', { name: 'New Document' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
