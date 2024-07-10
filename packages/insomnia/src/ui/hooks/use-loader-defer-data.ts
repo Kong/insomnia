@@ -14,8 +14,8 @@ export const useLoaderDeferData = <T>(deferedDataPromise?: Promise<T>, keepStale
     (async () => {
       try {
         // use keepStaleDataKey to let us know if we should keep the stale data or not
-        // sometimes we want to keep the stale data if we are fetching the same data again
-        // sometimes we want to clear the stale data if we are fetching different data
+        // sometimes we want to keep the stale data (rename a collection -> action submit -> run loader)
+        // sometimes we want to clear the stale data if we are fetching different data (switch to another project -> navigate -> run loader)
         if (keepStaleDataKeyRef.current !== keepStaleDataKey) {
           setData(undefined);
         }
