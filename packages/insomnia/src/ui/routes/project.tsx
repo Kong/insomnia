@@ -474,6 +474,12 @@ interface LearningFeature {
   cta: string;
   url: string;
 }
+
+interface OrgAndProjectData {
+  organizationId: string;
+  projectId: string;
+}
+
 const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   let learningFeature = fallbackLearningFeature;
   const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
@@ -605,7 +611,7 @@ const ProjectRoute: FC = () => {
   const { presence } = useInsomniaEventStreamContext();
   const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
   const storageRuleFetcher = useFetcher<OrganizationStorageLoaderData>({ key: `storage-rule:${organizationId}` });
-  const [lastLoadedOrganizationId, setLastLoadedOrganizationId] = useState('');
+  const [lastLoadedOrgIdAndProjectId, setLastLoadedOrgIdAndProjectId] = useState<OrgAndProjectData>();
 
   useEffect(() => {
     if (!isScratchpadOrganizationId(organizationId)) {
@@ -617,12 +623,12 @@ const ProjectRoute: FC = () => {
   useEffect(() => {
     const isIdleAndUninitialized = storageRuleFetcher.state === 'idle' && !storageRuleFetcher.data && !isScratchpadOrganizationId(organizationId);
 
-    if (isIdleAndUninitialized || lastLoadedOrganizationId !== organizationId) {
+    if (isIdleAndUninitialized || lastLoadedOrgIdAndProjectId?.organizationId !== organizationId || lastLoadedOrgIdAndProjectId?.projectId !== projectId) {
       storageRuleFetcher.load(`/organization/${organizationId}/storage-rule`);
       // Update the state tracking the last loaded organization ID
-      setLastLoadedOrganizationId(organizationId);
+      setLastLoadedOrgIdAndProjectId({ organizationId, projectId });
     }
-  }, [lastLoadedOrganizationId, organizationId, storageRuleFetcher]);
+  }, [lastLoadedOrgIdAndProjectId, organizationId, projectId, storageRuleFetcher]);
 
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
 
