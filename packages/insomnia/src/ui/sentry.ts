@@ -24,9 +24,9 @@ export function initializeSentry() {
     ...SENTRY_OPTIONS,
     // enable sentry tracing
     integrations: [Sentry.browserTracingIntegration()],
-    // set 0.5 sample rate for traces, and check whether the limit is exceeded
+    // set 0.1 sample rate for traces, only send 10% of traces, and check whether the limit is exceeded
     // https://konghq.sentry.io/settings/billing/overview/?category=transactions
-    tracesSampleRate: 0.5,
+    tracesSampleRate: 0.1,
   });
   sentryWatchUserInfo();
 }
