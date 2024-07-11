@@ -112,7 +112,7 @@ export const Row: FC<Props> = ({
             />
           ) : isMultiline ? (
             <button
-                className="btn btn--outlined btn--super-super-compact wide ellipsis"
+              className="btn btn--outlined btn--super-super-compact wide ellipsis"
               onClick={() => showModal(CodePromptModal, {
                 submitName: 'Done',
                 title: `Edit ${pair.name}`,
