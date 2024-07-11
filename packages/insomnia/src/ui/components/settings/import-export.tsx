@@ -275,7 +275,46 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const hasUntrackedProjects = untrackedProjects.length > 0;
   const showImportToProject = !isScratchPadWorkspace;
   if (!isScratchPadWorkspace && !isLoggedIn) {
-    return <p>There is no active project. Create a new project to import or export data.</p>;
+    return <Button
+      className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+      onPress={async () => {
+        const { filePaths, canceled } = await window.dialog.showOpenDialog({
+          properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
+          buttonLabel: 'Select',
+          title: 'Export All Insomnia Data',
+        });
+
+        if (canceled) {
+          return;
+        }
+
+        const [dirPath] = filePaths;
+
+        try {
+          dirPath && await exportAllData({
+            dirPath,
+          });
+        } catch (e) {
+          showAlert({
+            title: 'Export Failed',
+            message: 'An error occurred while exporting data. Please try again.',
+          });
+          console.error(e);
+        }
+
+        showAlert({
+          title: 'Export Complete',
+          message: 'All your data have been successfully exported',
+        });
+        window.main.trackSegmentEvent({
+          event: SegmentEvent.exportAllCollections,
+        });
+      }}
+      aria-label='Export all data'
+    >
+      <Icon icon="file-export" />
+      <span>Export all data {`(${workspaceCount} files)`}</span>
+    </Button>;
   }
 
   return (
