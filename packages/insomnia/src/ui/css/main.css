@@ -1023,7 +1023,7 @@ strong {
   padding: 0 var(--padding-md);
   height: var(--line-height-xs);
 }
-.btn.btn--super-duper-compact {
+.btn.btn--super-super-compact {
   padding: var(--padding-xxs) var(--padding-sm);
   height: auto;
 }

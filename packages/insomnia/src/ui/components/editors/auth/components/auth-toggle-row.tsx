@@ -45,7 +45,7 @@ export const AuthToggleRow: FC<Props> = ({
   return (
     <AuthRow labelFor={toKebabCase(label)} label={label} help={help} disabled={disabled}>
       <button
-        className="btn btn--super-duper-compact"
+        className="btn btn--super-super-compact"
         id={toKebabCase(label)}
         onClick={() => onChange(!databaseValue)}
         title={isActuallyOn ? onTitle : offTitle}
