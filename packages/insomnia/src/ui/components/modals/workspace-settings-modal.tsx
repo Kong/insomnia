@@ -26,6 +26,8 @@ interface Props {
 export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props) => {
   const isScratchpadWorkspace = isScratchpad(workspace);
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  const isEnterprise = currentPlan?.type.includes('enterprise');
+  const isSelfHostedDisabled = !isEnterprise;
 
   const activeWorkspaceName = workspace.name;
 
@@ -129,7 +131,6 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                       name="mockServerType"
                       defaultValue={mockServer?.useInsomniaCloud ? 'cloud' : 'self-hosted'}
                       onChange={value => {
-                        const isEnterprise = currentPlan?.type.includes('enterprise');
                         if (!isEnterprise && value === 'self-hosted') {
                           showModal(AlertModal, {
                             title: 'Upgrade required',
@@ -177,22 +178,24 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                         To learn more about self hosting. <Link href="https://docs.insomnia.rest/insomnia/api-mocking" className='underline'>Click here</Link>
                       </span>
                     </div>
-                    <TextField
-                      autoFocus
-                      name="name"
-                      defaultValue={mockServer?.url || ''}
-                      className={`group relative flex-1 flex flex-col gap-2 ${mockServer?.useInsomniaCloud ? 'disabled' : ''}`}
-                    >
-                      <Label className='text-sm text-[--hl]'>
-                        Self-hosted mock server URL
-                      </Label>
-                      <Input
-                        disabled={mockServer?.useInsomniaCloud}
-                        placeholder={mockServer?.useInsomniaCloud ? '' : 'https://example.com'}
-                        onChange={e => mockServer && mockServerPatcher(mockServer._id, { url: e.target.value })}
-                        className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
-                      />
-                    </TextField>
+                    {!isSelfHostedDisabled && (
+                      <TextField
+                        autoFocus
+                        name="name"
+                        defaultValue={mockServer?.url || ''}
+                        className={`group relative flex-1 flex flex-col gap-2 ${mockServer?.useInsomniaCloud ? 'disabled' : ''}`}
+                      >
+                        <Label className='text-sm text-[--hl]'>
+                          Self-hosted mock server URL
+                        </Label>
+                        <Input
+                          disabled={mockServer?.useInsomniaCloud}
+                          placeholder={mockServer?.useInsomniaCloud ? '' : 'https://example.com'}
+                          onChange={e => mockServer && mockServerPatcher(mockServer._id, { url: e.target.value })}
+                          className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                        />
+                      </TextField>
+                    )}
                   </>
                 )}
               </div>
