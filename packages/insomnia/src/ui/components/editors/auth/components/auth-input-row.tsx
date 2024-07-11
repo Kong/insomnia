@@ -51,7 +51,7 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
       />
       {canBeMasked ? (
         <button
-          className="btn btn--super-duper-compact pointer"
+          className="btn btn--super-super-compact pointer"
           onClick={toggleMask}
           disabled={disabled}
         >

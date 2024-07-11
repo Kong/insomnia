@@ -123,7 +123,7 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
 
   if (Array.isArray(hints)) {
     sanitizedHints = hints.slice(0, 15).map(hint =>
-      (<div key={hint} className="btn btn--outlined btn--super-duper-compact margin-right-sm margin-top-sm inline-block">
+    (<div key={hint} className="btn btn--outlined btn--super-super-compact margin-right-sm margin-top-sm inline-block">
         <button
           className="tall"
           onClick={() => {
