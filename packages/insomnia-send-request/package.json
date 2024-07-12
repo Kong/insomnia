@@ -19,7 +19,7 @@
     "hawk": "9.0.2",
     "hkdf": "0.0.2",
     "html-entities": "^2.5.2",
-    "httpsnippet": "^2.0.0",
+    "httpsnippet": "^3.0.6",
     "isomorphic-git": "^1.25.7",
     "jshint": "^2.13.6",
     "jsonlint-mod-fixed": "1.7.7",

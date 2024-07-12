@@ -1,4 +1,4 @@
-import type { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
+import { availableTargets, Client, HTTPSnippet, Target } from 'httpsnippet';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
 import { exportHarWithRequest } from '../../../common/har';
@@ -32,9 +32,9 @@ export interface GenerateCodeModalOptions {
 }
 export interface State {
   request?: Request;
-  target?: HTTPSnippetTarget;
-  client?: HTTPSnippetClient;
-  targets: HTTPSnippetTarget[];
+  target?: Target;
+  client?: Client;
+  targets: Target[];
 }
 export interface GenerateCodeModalHandle {
   show: (options: GenerateCodeModalOptions) => void;
@@ -44,14 +44,14 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
   const modalRef = useRef<ModalHandle>(null);
   const editorRef = useRef<CodeEditorHandle>(null);
 
-  let storedTarget: HTTPSnippetTarget | undefined;
-  let storedClient: HTTPSnippetClient | undefined;
+  let storedTarget: Target | undefined;
+  let storedClient: Client | undefined;
   try {
-    storedTarget = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target') || '') as HTTPSnippetTarget;
+    storedTarget = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target') || '') as Target;
   } catch (error) { }
 
   try {
-    storedClient = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client') || '') as HTTPSnippetClient;
+    storedClient = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client') || '') as Client;
   } catch (error) { }
   const [state, setState] = useState<State>({
     request: undefined,
@@ -62,12 +62,11 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
 
   const [snippet, setSnippet] = useState<string>('');
 
-  const generateCode = useCallback(async (request: Request, target?: HTTPSnippetTarget, client?: HTTPSnippetClient) => {
-    const HTTPSnippet = (await import('httpsnippet')).default;
-
-    const targets = HTTPSnippet.availableTargets();
-    const targetOrFallback = target || targets.find(t => t.key === 'shell') as HTTPSnippetTarget;
-    const clientOrFallback = client || targetOrFallback.clients.find(t => t.key === 'curl') as HTTPSnippetClient;
+  const generateCode = useCallback(async (request: Request, target?: Target, client?: Client) => {
+    const targets = availableTargets();
+    console.log('targets', targets);
+    const targetOrFallback = target || targets.find(t => t.key === 'shell');
+    const clientOrFallback = client || targetOrFallback.clients.find(t => t.key === 'curl') as Client;
 
     setState({
       request,
@@ -104,7 +103,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
 
   const { target, targets, client, request } = state;
   // NOTE: Just some extra precautions in case the target is messed up
-  let clients: HTTPSnippetClient[] = [];
+  let clients: Client[] = [];
   if (target && Array.isArray(target.clients)) {
     clients = target.clients;
   }
