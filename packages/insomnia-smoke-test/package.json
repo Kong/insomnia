@@ -21,7 +21,6 @@
   "devDependencies": {
     "@grpc/grpc-js": "^1.10.10",
     "@grpc/proto-loader": "^0.7.13",
-    "@jest/globals": "^29.7.0",
     "@playwright/test": "1.43.0",
     "@ravanallc/grpc-server-reflection": "^0.1.6",
     "@types/concurrently": "^6.4.0",
@@ -38,7 +37,6 @@
     "graphql-http": "^1.22.0",
     "faker": "^5.1.0",
     "graphql": "^16.8.1",
-    "jest": "^29.7.0",
     "oidc-provider": "^8.4.5",
     "uuid": "^9.0.1",
     "ws": "^8.16.0",
