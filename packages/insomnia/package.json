@@ -112,6 +112,7 @@
     "@types/hosted-git-info": "3.0.5",
     "@types/js-yaml": "^4.0.9",
     "@types/jshint": "^2.12.4",
+    "@types/jsonpath-plus": "^5.0.5",
     "@types/license-checker": "^25.0.6",
     "@types/marked": "^5.0.2",
     "@types/mime-types": "^2.1.4",

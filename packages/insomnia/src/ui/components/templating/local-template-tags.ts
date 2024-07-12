@@ -197,7 +197,8 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         if (JSONPath && ['userInfo', 'cpus'].includes(fnName)) {
           try {
-            value = JSONPath({ json: value, path: filter })[0];
+            const results = JSONPath({ json: value, path: filter });
+            value = Array.isArray(results) ? results[0] : results;
           } catch (err) { }
         }
 
@@ -303,6 +304,9 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         let results;
         try {
           results = JSONPath({ json: body, path: filter });
+          if (!Array.isArray(results)) {
+            results = [results];
+          }
         } catch (err) {
           throw new Error(`Invalid JSONPath query: ${filter}`);
         }
@@ -715,6 +719,9 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
             try {
               results = JSONPath({ json: bodyJSON, path: sanitizedFilter });
+              if (!Array.isArray(results)) {
+                results = [results];
+              }
             } catch (err) {
               throw new Error(`Invalid JSONPath query: ${sanitizedFilter}`);
             }
