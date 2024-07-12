@@ -9,6 +9,7 @@ import * as models from '../../../models';
 import { Environment } from '../../../models/environment';
 import { AuthTypes, getCombinedPathParametersFromUrl, RequestPathParameter } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
+import { getAuthObjectOrNull } from '../../../network/authentication';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, deconstructQueryStringToParams, extractQueryStringFromUrl, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { useReadyState } from '../../hooks/use-ready-state';
@@ -280,6 +281,8 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta.activeResponseId}`;
+  const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
+  const isNoneOrInherited = requestAuth?.type === 'none' || requestAuth === null;
 
   return (
     <Pane type="request">
@@ -311,12 +314,20 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             id='content-type'
           >
             <span>Body</span>
+            <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
+              <span className='w-2 h-2 bg-green-500 rounded-full' />
+            </span>
           </Tab>
           <Tab
             className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
             id='auth'
           >
             <span>Auth</span>
+            {!isNoneOrInherited && (
+              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
+                <span className='w-2 h-2 bg-green-500 rounded-full' />
+              </span>
+            )}
           </Tab>
           <Tab
             className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'

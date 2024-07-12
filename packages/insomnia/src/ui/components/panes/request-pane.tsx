@@ -8,6 +8,7 @@ import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { getCombinedPathParametersFromUrl, RequestParameter } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
+import { getAuthObjectOrNull } from '../../../network/authentication';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
@@ -93,6 +94,9 @@ export const RequestPane: FC<Props> = ({
   const contentType =
     getContentTypeFromHeaders(activeRequest.headers) ||
     activeRequest.body.mimeType;
+  const isBodyEmpty = Boolean(typeof activeRequest.body.mimeType !== 'string' && !activeRequest.body.text);
+  const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
+  const isNoneOrInherited = requestAuth?.type === 'none' || requestAuth === null;
 
   return (
     <Pane type="request">
@@ -125,12 +129,23 @@ export const RequestPane: FC<Props> = ({
             id='content-type'
           >
             <span>Body</span>
+            {!isBodyEmpty && (
+              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
+                <span className='w-2 h-2 bg-green-500 rounded-full' />
+              </span>
+            )}
           </Tab>
           <Tab
             className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
             id='auth'
           >
             <span>Auth</span>
+
+            {!isNoneOrInherited && (
+              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
+                <span className='w-2 h-2 bg-green-500 rounded-full' />
+              </span>
+            )}
           </Tab>
           <Tab
             className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
