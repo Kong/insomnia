@@ -1,11 +1,9 @@
 /** @type { import('@jest/types').Config.InitialOptions } */
 module.exports = {
-  collectCoverage: false,
   moduleFileExtensions: [
     'js',
     'json',
     'jsx',
-    'node',
     'ts',
     'tsx',
   ],
