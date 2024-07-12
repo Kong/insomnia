@@ -605,11 +605,11 @@ const ProjectRoute: FC = () => {
   const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
 
   useEffect(() => {
-    const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data && !isScratchpadOrganizationId(organizationId);
-    if (isIdleAndUninitialized) {
-      permissionsFetcher.load(`/organization/${organizationId}/permissions`);
+    if (!isScratchpadOrganizationId(organizationId)) {
+      const load = permissionsFetcher.load;
+      load(`/organization/${organizationId}/permissions`);
     }
-  }, [organizationId, permissionsFetcher]);
+  }, [organizationId, permissionsFetcher.load]);
 
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { features, billing, storage } = permissionsFetcher.data || {
