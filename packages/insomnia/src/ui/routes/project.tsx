@@ -590,7 +590,7 @@ const ProjectRoute: FC = () => {
     projectId: string;
   };
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
-  const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise);
+  const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
 
   const allFiles = useMemo(() => {
     return remoteFiles ? [...localFiles, ...remoteFiles] : localFiles;
