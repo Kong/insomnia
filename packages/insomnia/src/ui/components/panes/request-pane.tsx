@@ -95,7 +95,8 @@ export const RequestPane: FC<Props> = ({
     getContentTypeFromHeaders(activeRequest.headers) ||
     activeRequest.body.mimeType;
   const isBodyEmpty = Boolean(typeof activeRequest.body.mimeType !== 'string' && !activeRequest.body.text);
-  const hasAuthentication = getAuthObjectOrNull(activeRequest.authentication)?.type !== 'none';
+  const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
+  const isNoneOrInherited = requestAuth?.type === 'none' || requestAuth === null;
 
   return (
     <Pane type="request">
@@ -140,7 +141,7 @@ export const RequestPane: FC<Props> = ({
           >
             <span>Auth</span>
 
-            {hasAuthentication && (
+            {!isNoneOrInherited && (
               <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
                 <span className='w-2 h-2 bg-green-500 rounded-full' />
               </span>

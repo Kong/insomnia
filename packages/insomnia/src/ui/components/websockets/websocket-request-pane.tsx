@@ -281,7 +281,8 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta.activeResponseId}`;
-  const hasAuthentication = getAuthObjectOrNull(activeRequest.authentication)?.type !== 'none';
+  const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
+  const isNoneOrInherited = requestAuth?.type === 'none' || requestAuth === null;
 
   return (
     <Pane type="request">
@@ -322,7 +323,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             id='auth'
           >
             <span>Auth</span>
-            {hasAuthentication && (
+            {!isNoneOrInherited && (
               <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
                 <span className='w-2 h-2 bg-green-500 rounded-full' />
               </span>
