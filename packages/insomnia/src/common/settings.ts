@@ -34,8 +34,6 @@ export type KeyboardShortcut =
   | 'preferences_showKeyboardShortcuts'
   | 'preferences_showGeneral'
   | 'request_quickSwitch'
-  | 'request_showRecent'
-  | 'request_showRecentPrevious'
   | 'plugin_reload'
   | 'showAutocomplete'
   | 'request_send'
@@ -103,6 +101,8 @@ export interface Settings {
   disableHtmlPreviewJs: boolean;
 
   disableResponsePreviewLinks: boolean;
+
+  disableAppVersionUserAgent: boolean;
 
   /** If true, Insomnia won’t show a notification when new updates are available. Users can still check for updates in Preferences. */
   disableUpdateNotification: boolean;

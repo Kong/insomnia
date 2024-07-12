@@ -3,6 +3,71 @@ __export_format: 4
 __export_date: 2022-02-24T01:02:16.537Z
 __export_source: insomnia.desktop.app:v2022.1.0-beta.0
 resources:
+  - _id: req_8f029a22e56341748fa92ad14851a7be
+    parentId: fld_9fd59e794fe5455692a3c33af67f7668
+    modified: 1715935264320
+    created: 1715935207910
+    url: "http://127.0.0.1:4010/oidc/me"
+    name: Request with Inherited Auth
+    description: ""
+    method: GET
+    body: {}
+    preRequestScript: ""
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/9.2.0
+    authentication: {}
+    metaSortKey: -1715935264244
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: fld_9fd59e794fe5455692a3c33af67f7668
+    parentId: fld_e45987966c224b63b68b09b34687209c
+    modified: 1715935256495
+    created: 1715935256495
+    name: Inherit Auth Folder
+    description: ""
+    environment: {}
+    environmentPropertyOrder: null
+    metaSortKey: -1715935256495
+    preRequestScript: ""
+    afterResponseScript: ""
+    authentication: {}
+    _type: request_group
+  - _id: fld_e45987966c224b63b68b09b34687209c
+    parentId: wrk_392055e2aa29457b9d2904396cd7631f
+    modified: 1715935142556
+    created: 1715935030239
+    name: Folder Level Auth Code
+    description: ""
+    environment: {}
+    environmentPropertyOrder: null
+    metaSortKey: -1715935030239
+    preRequestScript: ""
+    afterResponseScript: ""
+    authentication:
+      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
+      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
+      clientId: "authorization_code"
+      clientSecret: "secret"
+      disabled: false
+      grantType: authorization_code
+      redirectUrl: "http://127.0.0.1:4010/callback"
+      responseType: id_token
+      scope: openid offline_access
+      state: ""
+      type: oauth2
+      usePkce: false
+      credentialsInBody: "false"
+      tokenPrefix: ""
+    _type: request_group
   - _id: req_54f2824040c847ebaf3ed6d080111b4e
     parentId: fld_0e50ba4426bb4540ade91e0525ea1f29
     modified: 1645664215605

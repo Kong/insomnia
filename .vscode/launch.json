@@ -13,14 +13,14 @@
         "order": 1
       },
       "cwd": "${workspaceFolder}/packages/insomnia",
-      "runtimeExecutable": "${workspaceFolder}/packages/insomnia/node_modules/.bin/electron",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
       "runtimeArgs": ["--remote-debugging-port=9222", "."],
       "outputCapture": "std",
       "windows": {
         "type": "node",
         "request": "launch",
         "name": "Electron: main",
-        "runtimeExecutable": "${workspaceFolder}/packages/insomnia/node_modules/.bin/electron.cmd"
+        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
       },
       "env": {
         "NODE_ENV": "development",
@@ -67,9 +67,6 @@
       "description": "Pick an inso command to run",
       "type": "pickString",
       "options": [
-        {
-          "value": "generate config"
-        },
         {
           "value": "run test"
         },

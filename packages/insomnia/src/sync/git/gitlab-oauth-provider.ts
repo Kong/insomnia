@@ -1,15 +1,12 @@
 import { createHash, randomBytes } from 'crypto';
 import { v4 as uuid } from 'uuid';
 
-import { getApiBaseURL } from '../../common/constants';
-
-const env = process['env'];
+import { INSOMNIA_GITLAB_API_URL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI } from '../../common/constants';
+import { insomniaFetch } from '../../ui/insomniaFetch';
 
 // Warning: As this is a global fetch we need to handle errors, retries and caching
 // GitLab API config
 const getGitLabConfig = async () => {
-  const { INSOMNIA_GITLAB_REDIRECT_URI, INSOMNIA_GITLAB_CLIENT_ID } = env;
-
   // Validate and use the environment variables if provided
   if (
     (INSOMNIA_GITLAB_REDIRECT_URI && !INSOMNIA_GITLAB_CLIENT_ID) ||
@@ -25,12 +22,11 @@ const getGitLabConfig = async () => {
     };
   }
 
-  const apiURL = getApiBaseURL();
-  // Otherwise fetch the config for the GitLab API
-  return window.main.axiosRequest({
-    url: apiURL + '/v1/oauth/gitlab/config',
+  return insomniaFetch<{ applicationId: string; redirectUri: string }>({
+    path: '/v1/oauth/gitlab/config',
     method: 'GET',
-  }).then(({ data }) => {
+    sessionId: '',
+  }).then(data => {
     return {
       clientId: data.applicationId,
       redirectUri: data.redirectUri,
@@ -38,8 +34,7 @@ const getGitLabConfig = async () => {
   });
 };
 
-export const getGitLabOauthApiURL = () =>
-  env.INSOMNIA_GITLAB_API_URL || 'https://gitlab.com';
+export const getGitLabOauthApiURL = () => INSOMNIA_GITLAB_API_URL || 'https://gitlab.com';
 const GITLAB_TOKEN_STORAGE_KEY = 'gitlab-oauth-token';
 const GITLAB_REFRESH_TOKEN_STORAGE_KEY = 'gitlab-oauth-refresh-token';
 
@@ -116,16 +111,15 @@ export async function exchangeCodeForGitLabToken(input: {
     code_verifier: verifier,
   }).toString();
 
-  return window.main.axiosRequest({
-    url: url.toString(),
+  return insomniaFetch<{ access_token: string; refresh_token: string }>({
+    path: url.pathname + url.search,
+    origin: getGitLabOauthApiURL(),
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).then(result => {
+    sessionId: '',
+  }).then(data => {
     statesCache.delete(state);
 
-    setAccessToken(result.data.access_token, result.data.refresh_token);
+    setAccessToken(data.access_token, data.refresh_token);
   });
 }
 
@@ -144,16 +138,15 @@ export async function refreshToken() {
     client_id: clientId,
   }).toString();
 
-  return window.main.axiosRequest({
-    url: url.toString(),
+  return insomniaFetch<{ access_token: string; refresh_token: string }>({
+    path: url.pathname + url.search,
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).then(result => {
-    setAccessToken(result.data.access_token, result.data.refresh_token);
+    origin: getGitLabOauthApiURL(),
+    sessionId: '',
+  }).then(data => {
+    setAccessToken(data.access_token, data.refresh_token);
 
-    return result.data.access_token;
+    return data.access_token;
   });
 }
 

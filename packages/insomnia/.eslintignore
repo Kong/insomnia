@@ -2,7 +2,7 @@ build
 bin
 send-request
 coverage
-src/main.min.js
-src/preload.js
+src/*.js
+src/*.js.map
 **/svgr
 svgr.config.js

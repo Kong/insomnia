@@ -33,3 +33,4 @@ packages/insomnia-smoke-test/traces
 *.tsbuildinfo
 dist
 .history
+*.node

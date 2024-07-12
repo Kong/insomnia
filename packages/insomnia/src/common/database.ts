@@ -11,19 +11,11 @@ import { GitRepository } from '../models/git-repository';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
 import type { Workspace } from '../models/workspace';
-import { DB_PERSIST_INTERVAL } from './constants';
 import { generateId } from './misc';
 
-export interface Query {
-  _id?: string | SpecificQuery;
-  parentId?: string | SpecificQuery | null;
-  remoteId?: string | SpecificQuery | null;
-  plugin?: string;
-  key?: string;
-  environmentId?: string | null;
-  protoFileId?: string;
-  name?: string | SpecificQuery;
-}
+export type Query<T extends BaseModel = BaseModel> = {
+  [key in keyof T]?: string | SpecificQuery | null | undefined;
+};
 
 type Sort = Record<string, any>;
 
@@ -39,7 +31,6 @@ export interface SpecificQuery {
   $ne?: string | null;
 }
 
-export type ModelQuery<T extends BaseModel> = Partial<Record<keyof T, SpecificQuery>>;
 export type ChangeType = 'insert' | 'update' | 'remove';
 export const database = {
   all: async function<T extends BaseModel>(type: string) {
@@ -81,7 +72,7 @@ export const database = {
     return ++bufferChangesId;
   },
 
-  count: async function<T extends BaseModel>(type: string, query: Query = {}) {
+  count: async function <T extends BaseModel>(type: string, query: Query<T> = {}) {
     if (db._empty) {
       return _send<number>('count', ...arguments);
     }
@@ -169,7 +160,7 @@ export const database = {
 
   find: async function<T extends BaseModel>(
     type: string,
-    query: Query | string = {},
+    query: Query<T> | string = {},
     sort: Sort = { created: 1 },
   ) {
     if (db._empty) {
@@ -198,7 +189,7 @@ export const database = {
 
   findMostRecentlyModified: async function<T extends BaseModel>(
     type: string,
-    query: Query = {},
+    query: Query<T> = {},
     limit: number | null = null,
   ) {
     if (db._empty) {
@@ -281,7 +272,7 @@ export const database = {
     }
   },
 
-  getMostRecentlyModified: async function<T extends BaseModel>(type: string, query: Query = {}) {
+  getMostRecentlyModified: async function <T extends BaseModel>(type: string, query: Query<T> = {}) {
     if (db._empty) {
       return _send<T>('getMostRecentlyModified', ...arguments);
     }
@@ -289,7 +280,7 @@ export const database = {
     return docs.length ? docs[0] : null;
   },
 
-  getWhere: async function<T extends BaseModel>(type: string, query: ModelQuery<T> | Query) {
+  getWhere: async function <T extends BaseModel>(type: string, query: Query<T>) {
     if (db._empty) {
       return _send<T>('getWhere', ...arguments);
     }
@@ -333,9 +324,7 @@ export const database = {
           config,
         ),
       );
-      if (!config.inMemoryOnly) {
-        collection.persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
-      }
+
       db[modelType] = collection;
     }
 
@@ -482,7 +471,7 @@ export const database = {
     await database.flushChanges(flushId);
   },
 
-  removeWhere: async function<T extends BaseModel>(type: string, query: Query) {
+  removeWhere: async function <T extends BaseModel>(type: string, query: Query<T>) {
     if (db._empty) {
       return _send<void>('removeWhere', ...arguments);
     }
@@ -568,7 +557,7 @@ export const database = {
     }
   },
 
-  withAncestors: async function<T extends BaseModel>(doc: T | null, types: string[] = allTypes()) {
+  withAncestors: async function <T extends BaseModel>(doc: T | null, types: string[] = allTypes()) {
     if (db._empty) {
       return _send<T[]>('withAncestors', ...arguments);
     }

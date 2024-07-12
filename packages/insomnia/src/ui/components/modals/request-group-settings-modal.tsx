@@ -2,48 +2,40 @@ import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useNavigate, useParams } from 'react-router-dom';
 
+import { isNotNullOrUndefined } from '../../../common/misc';
 import type { RequestGroup } from '../../../models/request-group';
 import { invariant } from '../../../utils/invariant';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
-import { ProjectLoaderData } from '../../routes/project';
+import { ListWorkspacesLoaderData } from '../../routes/project';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import { CodeEditorHandle } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
-import { MarkdownEditor } from '../markdown-editor';
 
 export interface RequestGroupSettingsModalOptions {
   requestGroup: RequestGroup;
 }
-interface State {
-  defaultPreviewMode: boolean;
-  activeWorkspaceIdToCopyTo: string;
-}
+
 export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps & {
   requestGroup: RequestGroup;
 }) => {
   const modalRef = useRef<ModalHandle>(null);
-  const editorRef = useRef<CodeEditorHandle>(null);
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
-  const workspacesFetcher = useFetcher();
+  const workspacesFetcher = useFetcher<ListWorkspacesLoaderData>();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
     if (isIdleAndUninitialized) {
-      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}`);
+      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}/list-workspaces`);
     }
   }, [organizationId, projectId, workspacesFetcher]);
-  const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData;
-  const workspacesForActiveProject = projectLoaderData?.workspaces.map(w => w.workspace) || [];
-  const [state, setState] = useState<State>({
-    activeWorkspaceIdToCopyTo: '',
-    defaultPreviewMode: !!requestGroup.description,
-  });
+  const projectLoaderData = workspacesFetcher?.data;
+  const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined).filter(w => w.scope !== 'mock-server') || [];
+  const [workspaceToCopyTo, setWorkspaceToCopyTo] = useState('');
   const patchRequestGroup = useRequestGroupPatcher();
   const requestFetcher = useFetcher();
 
   const duplicateRequestGroup = (r: Partial<RequestGroup>) => {
-    requestFetcher.submit(r,
+    requestFetcher.submit(JSON.stringify(r),
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/duplicate`,
         method: 'post',
@@ -55,25 +47,21 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
   }, []);
   const navigate = useNavigate();
   const handleMoveToWorkspace = async () => {
-    invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
-    patchRequestGroup(requestGroup._id, { parentId: state.activeWorkspaceIdToCopyTo });
+    invariant(workspaceToCopyTo, 'Workspace ID is required');
+    patchRequestGroup(requestGroup._id, { parentId: workspaceToCopyTo });
     modalRef.current?.hide();
-    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${state.activeWorkspaceIdToCopyTo}/debug`);
+    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceToCopyTo}/debug`);
   };
 
   const handleCopyToWorkspace = async () => {
-    invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
+    invariant(workspaceToCopyTo, 'Workspace ID is required');
     duplicateRequestGroup({
       _id: requestGroup._id,
       name: requestGroup.name, // Because duplicate will add (Copy) suffix if name is not provided in patch
-      parentId: state.activeWorkspaceIdToCopyTo,
+      parentId: workspaceToCopyTo,
     });
   };
 
-  const {
-    defaultPreviewMode,
-    activeWorkspaceIdToCopyTo,
-  } = state;
   return (
     <OverlayContainer onClick={e => e.stopPropagation()}>
       <Modal ref={modalRef} onHide={onHide}>
@@ -98,18 +86,6 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
               />
             </label>
           </div>
-          <MarkdownEditor
-            ref={editorRef}
-            className="margin-top"
-            defaultPreviewMode={defaultPreviewMode}
-            placeholder="Write a description"
-            defaultValue={requestGroup?.description || ''}
-            onChange={async (description: string) => {
-              invariant(requestGroup, 'No request group');
-              patchRequestGroup(requestGroup._id, { description });
-            }}
-          />
-          <hr />
           <div className="form-row">
             <div className="form-control form-control--outlined">
               <label>
@@ -119,13 +95,9 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
                   placed at the root of the new workspace's folder structure.
                 </HelpTooltip>
                 <select
-                  value={activeWorkspaceIdToCopyTo}
+                  value={workspaceToCopyTo}
                   onChange={event => {
-                    const activeWorkspaceIdToCopyTo = event.currentTarget.value;
-                    setState(state => ({
-                      ...state,
-                      activeWorkspaceIdToCopyTo,
-                    }));
+                    setWorkspaceToCopyTo(event.currentTarget.value);
                   }}
                 >
                   <option value="">-- Select Workspace --</option>
@@ -142,7 +114,7 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
             </div>
             <div className="form-control form-control--no-label width-auto">
               <button
-                disabled={!activeWorkspaceIdToCopyTo}
+                disabled={!workspaceToCopyTo}
                 className="btn btn--clicky"
                 onClick={handleCopyToWorkspace}
               >
@@ -151,7 +123,7 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
             </div>
             <div className="form-control form-control--no-label width-auto">
               <button
-                disabled={!activeWorkspaceIdToCopyTo}
+                disabled={!workspaceToCopyTo}
                 className="btn btn--clicky"
                 onClick={handleMoveToWorkspace}
               >

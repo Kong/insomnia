@@ -55,10 +55,12 @@ export default async function(lookupName: string) {
       await mkdir(pluginDir, { recursive: true });
 
       // Download the module
-      const request = electron.net.request(info.dist.tarball);
-      request.on('error', err => {
+      try {
+        await electron.net.fetch(info.dist.tarball);
+      } catch (err) {
         reject(new Error(`Failed to make plugin request ${info?.dist.tarball}: ${err.message}`));
-      });
+        return;
+      }
 
       const { tmpDir } = await _installPluginToTmpDir(lookupName);
       console.log(`[plugins] Moving plugin from ${tmpDir} to ${pluginDir}`);

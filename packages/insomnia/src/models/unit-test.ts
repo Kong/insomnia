@@ -14,6 +14,7 @@ interface BaseUnitTest {
   name: string;
   code: string;
   requestId: string | null;
+  metaSortKey: number;
 }
 
 export type UnitTest = BaseModel & BaseUnitTest;
@@ -27,6 +28,7 @@ export function init() {
     requestId: null,
     name: 'My Test',
     code: '',
+    metaSortKey: -1 * Date.now(),
   };
 }
 

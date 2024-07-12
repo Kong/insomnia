@@ -1,29 +1,47 @@
 import React, { FC, useCallback } from 'react';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
+import { generateId } from '../../../common/misc';
 import type { RequestHeader } from '../../../models/request';
-import { isWebSocketRequest } from '../../../models/websocket-request';
-import { useRequestPatcher } from '../../hooks/use-request';
-import { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';
+import { invariant } from '../../../utils/invariant';
+import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
+  headers: RequestHeader[];
   bulk: boolean;
   isDisabled?: boolean;
+  requestType: 'Request' | 'RequestGroup' | 'WebSocketRequest';
 }
+export const readOnlyWebsocketPairs = [
+  { name: 'Connection', value: 'Upgrade' },
+  { name: 'Upgrade', value: 'websocket' },
+  { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>' },
+  { name: 'Sec-WebSocket-Version', value: '13' },
+  { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits' },
+].map(pair => ({ ...pair, id: generateId('pair') }));
+export const readOnlyHttpPairs = [
+  { name: 'Accept', value: '*/*' },
+  { name: 'Host', value: '<calculated at runtime>' },
+].map(pair => ({ ...pair, id: generateId('pair') }));
 
 export const RequestHeadersEditor: FC<Props> = ({
+  headers,
   bulk,
   isDisabled,
+  requestType,
 }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData | WebSocketRequestLoaderData;
   const patchRequest = useRequestPatcher();
-  const { requestId } = useParams() as { requestId: string };
-
+  const patchRequestGroup = useRequestGroupPatcher();
+  const patcher = requestType === 'RequestGroup' ? patchRequestGroup : patchRequest;
+  const isWebSocketRequest = requestType === 'WebSocketRequest';
+  const { requestId, requestGroupId } = useParams() as { requestId?: string; requestGroupId?: string };
+  const id = requestType === 'RequestGroup' ? requestGroupId : requestId;
+  invariant(id, 'Request or RequestGroup ID is required');
   const handleBulkUpdate = useCallback((headersString: string) => {
-    const headers: {
+    const headersArray: {
       name: string;
       value: string;
     }[] = [];
@@ -38,16 +56,16 @@ export const RequestHeadersEditor: FC<Props> = ({
         continue;
       }
 
-      headers.push({
+      headersArray.push({
         name,
         value,
       });
     }
-    patchRequest(requestId, { headers });
-  }, [patchRequest, requestId]);
+    patcher(id, { headers: headersArray });
+  }, [patcher, id]);
 
   let headersString = '';
-  for (const header of activeRequest.headers) {
+  for (const header of headers) {
     // Make sure it's not disabled
     if (header.disabled) {
       continue;
@@ -59,10 +77,6 @@ export const RequestHeadersEditor: FC<Props> = ({
 
     headersString += `${header.name}: ${header.value}\n`;
   }
-
-  const onChangeHeaders = useCallback((headers: RequestHeader[]) => {
-    patchRequest(requestId, { headers });
-  }, [patchRequest, requestId]);
 
   if (bulk) {
     return (
@@ -82,12 +96,12 @@ export const RequestHeadersEditor: FC<Props> = ({
       namePlaceholder="header"
       valuePlaceholder="value"
       descriptionPlaceholder="description"
-      pairs={activeRequest.headers}
+      pairs={headers}
       handleGetAutocompleteNameConstants={getCommonHeaderNames}
       handleGetAutocompleteValueConstants={getCommonHeaderValues}
-      onChange={onChangeHeaders}
+      onChange={headers => patcher(id, { headers })}
       isDisabled={isDisabled}
-      isWebSocketRequest={isWebSocketRequest(activeRequest)}
+      readOnlyPairs={isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs}
     />
   );
 };

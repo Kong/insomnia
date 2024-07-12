@@ -6,9 +6,7 @@ import { test } from '../../playwright/test';
 test('can send requests', async ({ app, page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-  const responseBody = page.locator('[data-testid="CodeEditor"]:visible', {
-    has: page.locator('.CodeMirror-activeline'),
-  });
+  const responseBody = page.getByTestId('response-pane');
 
   const text = await loadFixture('smoke-test-collection.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
@@ -25,7 +23,7 @@ test('can send requests', async ({ app, page }) => {
   await page.getByText('Which format would you like to export as?').click();
   await page.locator('.app').press('Escape');
 
-  await page.getByText('CollectionSmoke testsjust now').click();
+  await page.getByLabel('Smoke tests').click();
 
   await page.getByLabel('Create in collection').click();
   await page.getByRole('menuitemradio', { name: 'From Curl' }).click();
@@ -95,7 +93,7 @@ test('can cancel requests', async ({ app, page }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByText('CollectionSmoke testsjust now').click();
+  await page.getByLabel('Smoke tests').click();
 
   await page.getByLabel('Request Collection').getByTestId('delayed request').press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();

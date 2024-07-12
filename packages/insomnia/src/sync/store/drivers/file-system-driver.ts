@@ -1,7 +1,8 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 import type { BaseDriver } from './base';
+import { gracefulRename } from './graceful-rename';
 
 export default class FileSystemDriver implements BaseDriver {
   _directory: string;
@@ -17,86 +18,62 @@ export default class FileSystemDriver implements BaseDriver {
   }
 
   async hasItem(key: string) {
-    return new Promise<boolean>((resolve, reject) => {
-      fs.stat(this._getKeyPath(key), err => {
-        if (err && err.code === 'ENOENT') {
-          resolve(false);
-        } else if (err) {
-          reject(err);
-        } else {
-          resolve(true);
-        }
-      });
-    });
+    try {
+      const stats = await fs.stat(await this._getKeyPath(key));
+      const result = stats.isFile() || stats.isDirectory() || stats.isSymbolicLink();
+
+      return result;
+    } catch (err) {
+      if (err && 'code' in err && err.code === 'ENOENT') {
+        return false;
+      }
+
+      throw err;
+    }
   }
 
-  setItem(key: string, value: Buffer) {
-    return new Promise<void>((resolve, reject) => {
-      const finalPath = this._getKeyPath(key);
-
+  async setItem(key: string, value: Buffer) {
+    console.log(`[FileSystemDriver] Writing to ${key}`);
+    const finalPath = await this._getKeyPath(key);
       // Temp path contains randomness to avoid race-condition collisions. This
       // doesn't actually avoid race conditions but at least it won't fail.
-      const tmpPath = `${finalPath}.${Math.random()}.tmp`;
+
+    const tmpPath = `${finalPath}.${crypto.randomUUID()}.tmp`;
+    console.log(`[FileSystemDriver] Writing to ${tmpPath} then renaming to ${finalPath}`);
       // This method implements atomic writes by first writing to a temporary
       // file (non-atomic) then renaming the file to the final value (atomic)
-      fs.writeFile(tmpPath, value, 'utf8', err => {
-        if (err) {
-          return reject(err);
-        }
-
-        fs.rename(tmpPath, finalPath, err => {
-          if (err) {
-            return reject(err);
-          }
-
-          resolve();
-        });
-      });
-    });
+    try {
+      await fs.writeFile(tmpPath, value, 'utf8');
+      await gracefulRename(tmpPath, finalPath);
+    } catch (err) {
+      console.error(`[FileSystemDriver] Failed to write to ${tmpPath} then rename to ${finalPath}`, err);
+      throw err;
+    }
   }
 
-  getItem(key: string) {
-    return new Promise<Buffer | null>((resolve, reject) => {
-      fs.readFile(this._getKeyPath(key), (err, data) => {
-        if (err && err.code === 'ENOENT') {
-          resolve(null);
-        } else if (err) {
-          reject(err);
-        } else {
-          resolve(data);
-        }
-      });
-    });
+  async getItem(key: string) {
+    try {
+      const file = await fs.readFile(await this._getKeyPath(key));
+      return file;
+    } catch (err) {
+      if (err && 'code' in err && err.code === 'ENOENT') {
+        return null;
+      }
+
+      throw err;
+    }
   }
 
-  removeItem(key: string) {
-    return new Promise<void>((resolve, reject) => {
-      fs.unlink(this._getKeyPath(key), err => {
-        if (err && err.code === 'ENOENT') {
-          resolve();
-        } else if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
+  async removeItem(key: string) {
+    await fs.unlink(await this._getKeyPath(key));
   }
 
-  clear() {
-    return new Promise<void>((resolve, reject) => {
-      fs.readdir(this._directory, (err, names) => {
-        if (err) {
-          return reject(err);
-        }
+  async clear() {
+    const files = await fs.readdir(this._directory);
 
-        for (const name of names) {
-          fs.unlinkSync(this._getKeyPath(name));
-        }
-
-        resolve();
-      });
-    });
+    for (const fileName of files) {
+      await fs.unlink(await this._getKeyPath(fileName));
+    }
   }
 
   async keys(prefix: string, recursive: boolean) {
@@ -106,7 +83,7 @@ export default class FileSystemDriver implements BaseDriver {
         let names: string[] = [];
 
         try {
-          names = fs.readdirSync(dir);
+          names = await fs.readdir(dir);
         } catch (err) {
           if (err.code !== 'ENOENT') {
             reject(err);
@@ -120,7 +97,7 @@ export default class FileSystemDriver implements BaseDriver {
           }
 
           const p = path.join(dir, name);
-          const isDir = fs.statSync(p).isDirectory();
+          const isDir = (await fs.stat(p)).isDirectory();
 
           if (isDir && recursive) {
             const more = await next(p);
@@ -136,7 +113,7 @@ export default class FileSystemDriver implements BaseDriver {
       });
     };
 
-    const rawKeys = await next(this._getKeyPath(prefix));
+    const rawKeys = await next(await this._getKeyPath(prefix));
     const keys: string[] = [];
 
     for (const rawKey of rawKeys) {
@@ -146,11 +123,10 @@ export default class FileSystemDriver implements BaseDriver {
     return keys;
   }
 
-  _getKeyPath(key: string) {
+  async _getKeyPath(key: string) {
     const p = path.join(this._directory, key);
     // Create base directory
-    fs.mkdirSync(path.dirname(p), { recursive: true });
-
+    await fs.mkdir(path.dirname(p), { recursive: true });
     return p;
   }
 }

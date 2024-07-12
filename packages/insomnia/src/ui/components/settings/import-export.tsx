@@ -3,22 +3,21 @@ import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } f
 import { useFetcher, useParams } from 'react-router-dom';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { isLoggedIn } from '../../../account/session';
 import { getProductName } from '../../../common/constants';
 import { exportProjectToFile } from '../../../common/export';
 import { exportAllData } from '../../../common/export-all-data';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import { isNotNullOrUndefined } from '../../../common/misc';
 import { strings } from '../../../common/strings';
 import { isScratchpadOrganizationId, Organization } from '../../../models/organization';
 import { Project } from '../../../models/project';
 import { isScratchpad, Workspace } from '../../../models/workspace';
 import { SegmentEvent } from '../../analytics';
 import { useOrganizationLoaderData } from '../../routes/organization';
-import { ProjectLoaderData } from '../../routes/project';
+import { ListWorkspacesLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
 import { UntrackedProjectsLoaderData } from '../../routes/untracked-projects';
 import { WorkspaceLoaderData } from '../../routes/workspace';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
 import { showAlert } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
@@ -250,17 +249,17 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
 
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
-  const { workspaceCount } = useRootLoaderData();
-  const workspacesFetcher = useFetcher();
+  const { workspaceCount, userSession } = useRootLoaderData();
+  const workspacesFetcher = useFetcher<ListWorkspacesLoaderData>();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized && organizationId && !isScratchpadOrganizationId(organizationId)) {
-      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}`);
+    if (isIdleAndUninitialized && organizationId && projectId && !isScratchpadOrganizationId(organizationId)) {
+      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}/list-workspaces`);
     }
   }, [organizationId, projectId, workspacesFetcher]);
-  const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData | undefined;
-  const workspacesForActiveProject = projectLoaderData?.workspaces.map(w => w.workspace) || [];
-  const projectName = projectLoaderData?.activeProject.name ?? getProductName();
+  const projectLoaderData = workspacesFetcher?.data;
+  const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined) || [];
+  const projectName = projectLoaderData?.activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -270,9 +269,52 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     exportProjectToFile(projectName, workspacesForActiveProject);
     hideSettingsModal();
   };
+  const isLoggedIn = userSession.id || organizationId || projectLoaderData?.activeProject;
+  const isScratchPadWorkspace = isScratchpad(workspaceData?.activeWorkspace);
+  const hasUntrackedWorkspaces = untrackedWorkspaces.length > 0;
+  const hasUntrackedProjects = untrackedProjects.length > 0;
+  const showImportToProject = !isScratchPadWorkspace;
+  if (!isScratchPadWorkspace && !isLoggedIn) {
+    return <Button
+      className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+      onPress={async () => {
+        const { filePaths, canceled } = await window.dialog.showOpenDialog({
+          properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
+          buttonLabel: 'Select',
+          title: 'Export All Insomnia Data',
+        });
 
-  if (!organizationId) {
-    return null;
+        if (canceled) {
+          return;
+        }
+
+        const [dirPath] = filePaths;
+
+        try {
+          dirPath && await exportAllData({
+            dirPath,
+          });
+        } catch (e) {
+          showAlert({
+            title: 'Export Failed',
+            message: 'An error occurred while exporting data. Please try again.',
+          });
+          console.error(e);
+        }
+
+        showAlert({
+          title: 'Export Complete',
+          message: 'All your data have been successfully exported',
+        });
+        window.main.trackSegmentEvent({
+          event: SegmentEvent.exportAllCollections,
+        });
+      }}
+      aria-label='Export all data'
+    >
+      <Icon icon="file-export" />
+      <span>Export all data {`(${workspaceCount} files)`}</span>
+    </Button>;
   }
 
   return (
@@ -281,48 +323,19 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
           <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="file-export" /> Export</Heading>
           <div className="flex gap-2 flex-wrap">
-            {workspaceData?.activeWorkspace ?
-              isScratchpad(workspaceData.activeWorkspace) ?
-                <Button className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm" onPress={() => setIsExportModalOpen(true)}>Export the "{activeWorkspaceName}" {getWorkspaceLabel(workspaceData.activeWorkspace).singular}</Button>
-                :
-                (
-                  <Dropdown
-                    aria-label='Export Data Dropdown'
-                    triggerButton={
-                      <Button className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                        Export Data <i className="fa fa-caret-down" />
-                      </Button>
-                    }
-                  >
-                    <DropdownSection
-                      aria-label="Choose Export Type"
-                      title="Choose Export Type"
-                    >
-                      <DropdownItem aria-label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(workspaceData.activeWorkspace).singular}`}>
-                        <ItemContent
-                          icon="home"
-                          label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(workspaceData.activeWorkspace).singular}`}
-                          onClick={() => setIsExportModalOpen(true)}
-                        />
-                      </DropdownItem>
-                      <DropdownItem aria-label={`Export files from the "${projectName}" ${strings.project.singular}`}>
-                        <ItemContent
-                          icon="empty"
-                          label={`Export files from the "${projectName}" ${strings.project.singular}`}
-                          onClick={handleExportProjectToFile}
-                        />
-                      </DropdownItem>
-                    </DropdownSection>
-                  </Dropdown>
-                ) : (
-                <Button
-                  className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                  onPress={handleExportProjectToFile}
-                >
-                  {`Export files from the "${projectName}" ${strings.project.singular}`}
-                </Button>
-              )
-            }
+            {workspaceData?.activeWorkspace ? (
+              <ExportSection
+                workspace={workspaceData.activeWorkspace}
+                projectName={projectName}
+                setIsExportModalOpen={setIsExportModalOpen}
+                handleExportProjectToFile={handleExportProjectToFile}
+              />) : (
+              <Button
+                className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                onPress={handleExportProjectToFile}
+              >
+                {`Export files from the "${projectName}" ${strings.project.singular}`}
+              </Button>)}
             <Button
               className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
               onPress={async () => {
@@ -366,7 +379,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
 
             <Button
               className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-              isDisabled={!isLoggedIn()}
+              isDisabled={!userSession.id}
               onPress={() => window.main.openInBrowser('https://insomnia.rest/create-run-button')}
             >
               <i className="fa fa-file-import" />
@@ -374,7 +387,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
             </Button>
           </div>
         </div>
-        <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
+        {showImportToProject && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
           <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="file-import" /> Import</Heading>
           <div className="flex gap-2 flex-wrap">
             <Button
@@ -386,8 +399,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
               {`Import to the "${projectName}" ${strings.project.singular}`}
             </Button>
           </div>
-        </div>
-        {untrackedProjects.length > 0 && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
+        </div>}
+        {hasUntrackedProjects && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
           <div className='flex flex-col gap-1'>
             <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="cancel" /> Untracked projects ({untrackedProjects.length})</Heading>
             <p className='text-[--hl] text-sm'>
@@ -405,7 +418,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
             ))}
           </div>
         </div>}
-        {untrackedWorkspaces.length > 0 && projects.length > 0 && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
+        {hasUntrackedWorkspaces && projects.length > 0 && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
           <div className='flex flex-col gap-1'>
             <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="cancel" /> Untracked files ({untrackedWorkspaces.length})</Heading>
             <p className='text-[--hl] text-sm'>
@@ -437,10 +450,52 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       )}
       {isExportModalOpen && workspaceData?.activeWorkspace && (
         <ExportRequestsModal
-          workspace={workspaceData.activeWorkspace}
+          workspaceIdToExport={workspaceData.activeWorkspace._id}
           onClose={() => setIsExportModalOpen(false)}
         />
       )}
     </Fragment>
   );
+};
+
+const ExportSection = ({
+  workspace,
+  projectName,
+  setIsExportModalOpen,
+  handleExportProjectToFile,
+}: {
+  workspace: Workspace;
+  projectName: string;
+  setIsExportModalOpen: (value: boolean) => void;
+  handleExportProjectToFile: () => void;
+}) => {
+
+  if (isScratchpad(workspace)) {
+    return (
+      <Button
+        className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        onPress={() => setIsExportModalOpen(true)}
+      >
+        Export the "{workspace.name}" {getWorkspaceLabel(workspace).singular}
+      </Button>
+    );
+  }
+
+  return (
+    <>
+      <Button
+        className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        onPress={() => setIsExportModalOpen(true)}
+      >
+        Export the "{workspace.name}" {getWorkspaceLabel(workspace).singular}
+      </Button>
+      <Button
+        className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        onPress={handleExportProjectToFile}
+      >
+        Export the "{projectName}" ${strings.project.singular}
+      </Button>
+    </>
+  );
+
 };

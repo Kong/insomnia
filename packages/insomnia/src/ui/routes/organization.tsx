@@ -6,6 +6,8 @@ import {
   MenuItem,
   MenuTrigger,
   Popover,
+  ProgressBar,
+  ToggleButton,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -15,7 +17,6 @@ import {
   NavLink,
   Outlet,
   redirect,
-  ShouldRevalidateFunction,
   useFetcher,
   useLoaderData,
   useNavigate,
@@ -25,32 +26,34 @@ import {
 import { useLocalStorage } from 'react-use';
 
 import * as session from '../../account/session';
-import {
-  getAccountId,
-  getCurrentSessionId,
-} from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { database } from '../../common/database';
+import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
-import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
+import { findPersonalOrganization, isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
 import { Project } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
+import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
+import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
 import { CommandPalette } from '../components/command-palette';
 import { GitHubStarsButton } from '../components/github-stars-button';
 import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';
-import { InsomniaAILogo } from '../components/insomnia-icon';
+import { InsomniaAI } from '../components/insomnia-ai-icon';
+import { InsomniaLogo } from '../components/insomnia-icon';
 import { showAlert, showModal } from '../components/modals';
 import { SettingsModal, showSettingsModal } from '../components/modals/settings-modal';
 import { OrganizationAvatar } from '../components/organization-avatar';
 import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
+import { useAIContext } from '../context/app/ai-context';
 import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-stream-context';
+import { syncProjects } from './project';
 import { useRootLoaderData } from './root';
 import { UntrackedProjectsLoaderData } from './untracked-projects';
 import { WorkspaceLoaderData } from './workspace';
@@ -106,12 +109,6 @@ interface CurrentPlan {
   type: PersonalPlanType;
 };
 
-export const organizationsData: OrganizationLoaderData = {
-  organizations: [],
-  user: undefined,
-  currentPlan: undefined,
-};
-
 function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
   const home = organizations.find(organization => isPersonalOrganization(organization) && isOwnerOfOrganization({
     organization,
@@ -132,81 +129,124 @@ function sortOrganizations(accountId: string, organizations: Organization[]): Or
   ];
 }
 
-export const indexLoader: LoaderFunction = async () => {
-  const sessionId = getCurrentSessionId();
-  if (sessionId) {
-    try {
-      const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
+async function syncOrganizations(sessionId: string, accountId: string) {
+  try {
+    const [organizationsResult, user, currentPlan] = await Promise.all([
+      insomniaFetch<OrganizationsResponse | void>({
         method: 'GET',
         path: '/v1/organizations',
         sessionId,
-      });
-
-      const user = await window.main.insomniaFetch<UserProfileResponse | void>({
+      }),
+      insomniaFetch<UserProfileResponse | void>({
         method: 'GET',
         path: '/v1/user/profile',
         sessionId,
-      });
-
-      const currentPlan = await window.main.insomniaFetch<CurrentPlan | void>({
+      }),
+      insomniaFetch<CurrentPlan | void>({
         method: 'GET',
         path: '/v1/billing/current-plan',
         sessionId,
+      }),
+    ]);
+
+    invariant(organizationsResult && organizationsResult.organizations, 'Failed to load organizations');
+    invariant(user && user.id, 'Failed to load user');
+    invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
+
+    const { organizations } = organizationsResult;
+
+    invariant(accountId, 'Account ID is not defined');
+
+    localStorage.setItem(`${accountId}:organizations`, JSON.stringify(sortOrganizations(accountId, organizations)));
+    localStorage.setItem(`${accountId}:user`, JSON.stringify(user));
+    localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlan));
+  } catch (error) {
+    console.log('[organization] Failed to load Organizations', error);
+  }
+}
+
+interface SyncOrgsAndProjectsActionRequest {
+  sessionId: string;
+  accountId: string;
+  personalOrganizationId?: string;
+  organizationId: string;
+}
+
+// this action is used to run task that we dont want to block the UI
+export const syncOrgsAndProjectsAction: ActionFunction = async ({ request }) => {
+  try {
+    const { organizationId } = await request.json() as SyncOrgsAndProjectsActionRequest;
+    const { id: sessionId, accountId } = await userSession.getOrCreate();
+
+    invariant(sessionId, 'sessionId is required');
+    invariant(accountId, 'accountId is required');
+    const taskPromiseList = [];
+    taskPromiseList.push(syncOrganizations(sessionId, accountId));
+    const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+    invariant(organizations, 'Failed to fetch organizations.');
+    const personalOrganization = findPersonalOrganization(organizations, accountId);
+    invariant(personalOrganization, 'personalOrganization is required');
+    invariant(personalOrganization.id, 'personalOrganizationId is required');
+    taskPromiseList.push(migrateProjectsUnderOrganization(personalOrganization.id, sessionId));
+    invariant(organizationId, 'organizationId is required');
+    taskPromiseList.push(syncProjects(organizationId));
+
+    await Promise.all(taskPromiseList);
+
+    return {};
+  } catch (error) {
+    console.log('Failed to run async task', error);
+    return {
+      error: error.message,
+    };
+  }
+};
+
+async function migrateProjectsUnderOrganization(personalOrganizationId: string, sessionId: string) {
+  if (await shouldMigrateProjectUnderOrganization()) {
+    await migrateProjectsIntoOrganization({
+      personalOrganizationId,
+    });
+
+    const preferredProjectType = localStorage.getItem('prefers-project-type');
+    if (preferredProjectType === 'remote') {
+      const localProjects = await database.find<Project>('Project', {
+        parentId: personalOrganizationId,
+        remoteId: null,
       });
 
-      invariant(organizationsResult && organizationsResult.organizations, 'Failed to load organizations');
-      invariant(user && user.id, 'Failed to load user');
-      invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
-
-      const { organizations } = organizationsResult;
-
-      const accountId = getAccountId();
-      invariant(accountId, 'Account ID is not defined');
-      organizationsData.organizations = sortOrganizations(accountId, organizations);
-      organizationsData.user = user;
-      organizationsData.currentPlan = currentPlan;
-      const personalOrganization = organizations.filter(isPersonalOrganization)
-        .find(organization =>
-          isOwnerOfOrganization({
-            organization,
-            accountId,
-          }));
-      invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
-      if (await shouldMigrateProjectUnderOrganization()) {
-        await migrateProjectsIntoOrganization({
-          personalOrganization,
+      // If any of those fail projects will still be under the organization as local projects
+      for (const project of localProjects) {
+        updateLocalProjectToRemote({
+          project,
+          organizationId: personalOrganizationId,
+          sessionId,
+          vcs: VCSInstance(),
         });
-
-        const preferredProjectType = localStorage.getItem('prefers-project-type');
-        if (preferredProjectType === 'remote') {
-          const localProjects = await database.find<Project>('Project', {
-            parentId: personalOrganization.id,
-            remoteId: null,
-          });
-
-          // If any of those fail projects will still be under the organization as local projects
-          for (const project of localProjects) {
-            updateLocalProjectToRemote({
-              project,
-              organizationId: personalOrganization.id,
-              sessionId,
-              vcs: VCSInstance(),
-            });
-          }
-        }
       }
+    }
+  }
+};
 
-      if (personalOrganization) {
-        return redirect(`/organization/${personalOrganization.id}`);
-      }
+export const indexLoader: LoaderFunction = async () => {
+  const { id: sessionId, accountId } = await userSession.getOrCreate();
+  if (sessionId) {
+    await syncOrganizations(sessionId, accountId);
 
-      if (organizations.length > 0) {
-        return redirect(`/organization/${organizations[0].id}`);
-      }
-    } catch (error) {
-      console.log('Failed to load Organizations', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Network connectivity issue: Failed to load Organizations. ${errorMessage}`);
+    const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+    invariant(organizations, 'Failed to fetch organizations.');
+
+    const personalOrganization = findPersonalOrganization(organizations, accountId);
+    invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
+    const personalOrganizationId = personalOrganization.id;
+    await migrateProjectsUnderOrganization(personalOrganizationId, sessionId);
+
+    if (personalOrganization) {
+      return redirect(`/organization/${personalOrganizationId}`);
+    }
+
+    if (organizations.length > 0) {
+      return redirect(`/organization/${organizations[0].id}`);
     }
   }
 
@@ -215,39 +255,10 @@ export const indexLoader: LoaderFunction = async () => {
 };
 
 export const syncOrganizationsAction: ActionFunction = async () => {
-  const sessionId = getCurrentSessionId();
+  const { id: sessionId, accountId } = await userSession.getOrCreate();
+
   if (sessionId) {
-    try {
-
-      const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
-        method: 'GET',
-        path: '/v1/organizations',
-        sessionId,
-      });
-
-      const user = await window.main.insomniaFetch<UserProfileResponse | void>({
-        method: 'GET',
-        path: '/v1/user/profile',
-        sessionId,
-      });
-
-      const currentPlan = await window.main.insomniaFetch<CurrentPlan | void>({
-        method: 'GET',
-        path: '/v1/billing/current-plan',
-        sessionId,
-      });
-
-      invariant(organizationsResult, 'Failed to load organizations');
-      invariant(user, 'Failed to load user');
-      invariant(currentPlan, 'Failed to load current plan');
-      const accountId = getAccountId();
-      invariant(accountId, 'Account ID is not defined');
-      organizationsData.organizations = sortOrganizations(accountId, organizationsResult.organizations);
-      organizationsData.user = user;
-      organizationsData.currentPlan = currentPlan;
-    } catch (error) {
-      console.log('Failed to load Organizations', error);
-    }
+    await syncOrganizations(sessionId, accountId);
   }
 
   return null;
@@ -260,8 +271,17 @@ export interface OrganizationLoaderData {
 }
 
 export const loader: LoaderFunction = async () => {
-  if (session.isLoggedIn()) {
-    return organizationsData;
+  const { id, accountId } = await userSession.getOrCreate();
+  if (id) {
+    const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+    const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as UserProfileResponse;
+    const currentPlan = JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan;
+
+    return {
+      organizations: sortOrganizations(accountId, organizations),
+      user,
+      currentPlan,
+    };
   } else {
     return {
       organizations: [],
@@ -286,9 +306,20 @@ export interface Billing {
   isActive: boolean;
 }
 
-export const singleOrgLoader: LoaderFunction = async ({ params }) => {
-  const { organizationId } = params as { organizationId: string };
+export interface StorageRule {
+  storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
+  isOverridden: boolean;
+}
 
+export interface OrganizationFeatureLoaderData {
+  features: FeatureList;
+  billing: Billing;
+  storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
+}
+
+export const organizationPermissionsLoader: LoaderFunction = async ({ params }): Promise<OrganizationFeatureLoaderData> => {
+  const { organizationId } = params as { organizationId: string };
+  const { id: sessionId, accountId } = await userSession.getOrCreate();
   const fallbackFeatures = {
     gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
@@ -299,49 +330,52 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
     isActive: true,
   };
 
+  const fallbackStorage = 'cloud_plus_local';
+
   if (isScratchpadOrganizationId(organizationId)) {
     return {
       features: fallbackFeatures,
       billing: fallbackBilling,
+      storage: fallbackStorage,
     };
   }
 
-  const organization = organizationsData.organizations.find(o => o.id === organizationId);
+  const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+  const organization = organizations.find(o => o.id === organizationId);
 
   if (!organization) {
-    return redirect('/organization');
+    throw redirect('/organization');
   }
 
   try {
-    const response = await window.main.insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
+    const response = await insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
       method: 'GET',
       path: `/v1/organizations/${organizationId}/features`,
-      sessionId: session.getCurrentSessionId(),
+      sessionId,
     });
 
+    const ruleResponse = await insomniaFetch<StorageRule | undefined>({
+      method: 'GET',
+      path: `/v1/organizations/${organizationId}/storage-rule`,
+      sessionId,
+    });
+    const storage = ruleResponse?.storage || fallbackStorage;
     return {
       features: response?.features || fallbackFeatures,
       billing: response?.billing || fallbackBilling,
+      storage,
     };
   } catch (err) {
     return {
       features: fallbackFeatures,
       billing: fallbackBilling,
+      storage: fallbackStorage,
     };
   }
 };
 
 export const useOrganizationLoaderData = () => {
   return useRouteLoaderData('/organization') as OrganizationLoaderData;
-};
-
-export const shouldOrganizationsRevalidate: ShouldRevalidateFunction = ({
-  currentParams,
-  nextParams,
-}) => {
-  const isSwitchingBetweenOrganizations = currentParams.organizationId !== nextParams.organizationId;
-
-  return isSwitchingBetweenOrganizations;
 };
 
 const UpgradeButton = ({
@@ -384,7 +418,7 @@ const UpgradeButton = ({
 };
 
 const OrganizationRoute = () => {
-  const { settings } = useRootLoaderData();
+  const { userSession, settings } = useRootLoaderData();
 
   const { organizations, user, currentPlan } =
     useLoaderData() as OrganizationLoaderData;
@@ -404,7 +438,20 @@ const OrganizationRoute = () => {
     projectId?: string;
     workspaceId?: string;
   };
-  const [status, setStatus] = useState<'online' | 'offline'>('online');
+  const syncOrgsAndProjects = useFetcher();
+
+  useEffect(() => {
+    const isIdleAndUninitialized = syncOrgsAndProjects.state === 'idle' && !syncOrgsAndProjects.data;
+    if (isIdleAndUninitialized) {
+      syncOrgsAndProjects.submit({
+        organizationId,
+      }, {
+        action: '/organization/syncOrgsAndProjectsAction',
+        method: 'POST',
+        encType: 'application/json',
+      });
+    }
+  }, [userSession.id, organizationId, userSession.accountId, syncOrgsAndProjects]);
 
   useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
@@ -416,7 +463,7 @@ const OrganizationRoute = () => {
   const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
   const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
   const hasUntrackedData = untrackedProjects.length > 0 || untrackedWorkspaces.length > 0;
-
+  const [status, setStatus] = useState<'online' | 'offline'>('online');
   useEffect(() => {
     const handleOnline = () => setStatus('online');
     const handleOffline = () => setStatus('offline');
@@ -429,15 +476,23 @@ const OrganizationRoute = () => {
     };
   }, []);
 
+  const [isOrganizationSidebarOpen, setIsOganizationSidebarOpen] = useLocalStorage('organizationSidebarOpen', true);
+
+  const {
+    generating: loadingAI,
+    progress: loadingAIProgress,
+  } = useAIContext();
+
   return (
     <InsomniaEventStreamProvider>
       <div className="w-full h-full">
-        <div className={`w-full h-full divide-x divide-solid divide-y divide-[--hl-md] ${isScratchPadBannerVisible ? 'grid-template-app-layout-with-banner' : 'grid-template-app-layout'} grid relative bg-[--color-bg]`}>
-          <header className="[grid-area:Header] grid grid-cols-3 items-center">
-            <div className="flex items-center">
-              <div className="flex w-[50px] py-2">
-                <InsomniaAILogo />
+        <div className={`w-full h-full divide-x divide-solid divide-[--hl-md] ${isOrganizationSidebarOpen ? 'with-navbar' : ''} ${isScratchPadBannerVisible ? 'with-banner' : ''} grid-template-app-layout grid relative bg-[--color-bg]`}>
+          <header className="[grid-area:Header] grid grid-cols-3 items-center border-b border-solid border-[--hl-md]">
+            <div className="flex items-center gap-2">
+              <div className="flex shrink-0 w-[50px] justify-center py-2">
+                <InsomniaLogo loading={loadingAI} />
               </div>
+              <CommandPalette />
               {!user ? <GitHubStarsButton /> : null}
             </div>
             <div className="flex place-content-stretch gap-2 flex-nowrap items-center justify-center">
@@ -471,18 +526,19 @@ const OrganizationRoute = () => {
                   <PresentUsers />
                   <Button
                     aria-label="Invite collaborators"
-                    className="px-4 text-[--color-font-surprise] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    className="px-4 text-[--color-font-surprise] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-2 h-full font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-md hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                     onPress={() => {
                       window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/organizations/${organizationId}/collaborators`);
+                      window.main.trackSegmentEvent({ event: SegmentEvent.inviteTrigger });
                     }}
                   >
                     <Icon icon="user-plus" />
                     <span className="truncate">
-                      Share
+                      Invite
                     </span>
                   </Button>
                   <MenuTrigger>
-                    <Button data-testid='user-dropdown' className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                    <Button data-testid='user-dropdown' className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                       <Avatar
                         src={user.picture}
                         alt={user.name}
@@ -565,7 +621,7 @@ const OrganizationRoute = () => {
                     className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)] focus:bg-[rgba(var(--color-surprise-rgb),0.9)] bg-[--color-surprise] font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                     to="/auth/login"
                   >
-                    Sign Up
+                      Sign up for free
                   </NavLink>
                 </Fragment>
               )}
@@ -601,7 +657,7 @@ const OrganizationRoute = () => {
               </Button>
             </div>
           ) : null}
-          <div className="[grid-area:Navbar]">
+          {isOrganizationSidebarOpen && <div className={`[grid-area:Navbar] overflow-hidden ${isOrganizationSidebarOpen ? '' : 'hidden'}`}>
             <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
               {organizations.map(organization => (
                 <TooltipTrigger key={organization.id}>
@@ -617,7 +673,7 @@ const OrganizationRoute = () => {
                     >
                       {isPersonalOrganization(organization) && isOwnerOfOrganization({
                         organization,
-                        accountId: getAccountId() || '',
+                        accountId: userSession.accountId || '',
                       }) ? (
                         <Icon icon="home" />
                       ) : (
@@ -685,92 +741,165 @@ const OrganizationRoute = () => {
                 </Popover>
               </MenuTrigger>
             </nav>
+          </div>}
+          <div className='[grid-area:Content] overflow-hidden border-b border-[--hl-md]'>
+            <Outlet />
           </div>
-          <Outlet />
-          <div className="relative [grid-area:Statusbar] flex items-center justify-between overflow-hidden">
-            <div className="flex h-full">
-              <TooltipTrigger>
-                <Button
-                  data-testid="settings-button"
-                  className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                  onPress={showSettingsModal}
-                >
-                  <Icon icon="gear" /> Preferences
-                </Button>
-                <Tooltip
-                  placement="top"
-                  offset={8}
-                  className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                >
-                  Preferences
-                  <Hotkey
-                    keyBindings={
-                      settings.hotKeyRegistry.preferences_showGeneral
-                    }
-                  />
-                </Tooltip>
-              </TooltipTrigger>
-              {hasUntrackedData ? <div>
-                <Button
-                  className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                  onPress={() => showModal(SettingsModal, { tab: 'data' })}
-                >
-                  <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click here to view them.
-                </Button>
-              </div> : null}
-            </div>
-            <div className='flex items-center gap-2 divide divide-y-[--hl-sm]'>
-              <TooltipTrigger>
-                <Button
-                  className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                  onPress={() => {
-                    !user && navigate('/auth/login');
-                  }}
-                >
-                  <Icon
-                    icon="circle"
-                    className={
-                      user
-                        ? status === 'online'
-                          ? 'text-[--color-success]'
-                          : 'text-[--color-danger]'
-                        : ''
-                    }
-                  />{' '}
-                  {user
-                    ? status.charAt(0).toUpperCase() + status.slice(1)
-                    : 'Log in to see your projects'}
-                </Button>
-                <Tooltip
-                  placement="top"
-                  offset={8}
-                  className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                >
-                  {user
-                    ? `You are ${status === 'online'
-                      ? 'securely connected to Insomnia Cloud.'
-                      : 'offline. Connect to sync your data.'
-                    }`
-                    : 'Log in to Insomnia to sync your data.'}
-                </Tooltip>
-              </TooltipTrigger>
-              <span className='w-[1px] h-full bg-[--hl-sm]' />
-              <Link>
-                <a
-                  className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
-                  href="https://konghq.com/"
-                >
-                  Made with
-                  <Icon className="text-[--color-surprise-font]" icon="heart" /> by
-                  Kong
-                </a>
-              </Link>
+          <div className="relative [grid-area:Statusbar] flex items-center overflow-hidden">
+            <TooltipTrigger>
+              <ToggleButton
+                className="w-[50px] flex-shrink-0 px-4 py-1 border-solid border-r border-r-[--hl-md] h-full flex items-center justify-center gap-2 text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                onChange={setIsOganizationSidebarOpen}
+                isSelected={isOrganizationSidebarOpen}
+              >
+                {({ isSelected }) => {
+                  return (
+                    <svg
+                      width={10}
+                      height={10}
+                      viewBox="0 0 16 16"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="currentColor"
+                    >
+                      {isSelected ? (
+                        <path
+                          fillRule="evenodd"
+                          clipRule="evenodd"
+                          d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm12 13H7V2h7v12z"
+                        />
+                      ) : (
+                        <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
+                      )}
+                    </svg>
+                  );
+                }}
+              </ToggleButton>
+              <Tooltip
+                placement="top"
+                offset={8}
+                className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+              >
+                Toggle organizations sidebar
+              </Tooltip>
+            </TooltipTrigger>
+            <div className='flex w-full h-full items-center justify-between'>
+              <div className="flex h-full">
+                <TooltipTrigger>
+                  <Button
+                    data-testid="settings-button"
+                    className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                    onPress={() => showSettingsModal()}
+                  >
+                    <Icon icon="gear" /> Preferences
+                  </Button>
+                  <Tooltip
+                    placement="top"
+                    offset={8}
+                    className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                  >
+                    Preferences
+                    <Hotkey
+                      keyBindings={
+                        settings.hotKeyRegistry.preferences_showGeneral
+                      }
+                    />
+                  </Tooltip>
+                </TooltipTrigger>
+                {hasUntrackedData ? <div>
+                  <Button
+                    className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                    onPress={() => showModal(SettingsModal, { tab: 'data' })}
+                  >
+                    <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click here to view them.
+                  </Button>
+                </div> : null}
+              </div>
+              <div className='flex items-center gap-2 divide divide-y-[--hl-sm]'>
+                {loadingAI && (
+                  <ProgressBar
+                    className="flex items-center gap-2 h-full"
+                    value={loadingAIProgress.progress}
+                    maxValue={loadingAIProgress.total}
+                    minValue={0}
+                    aria-label='AI generation'
+                  >
+                    {({ percentage }) => (
+                      <TooltipTrigger>
+                        <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">
+                          <InsomniaAI className='w-4 text-[--color-font] animate-pulse' />
+                          <div className="h-1 w-32 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-40">
+                            <div
+                              className="h-1 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100"
+                              style={{ width: percentage + '%' }}
+                            />
+                          </div>
+                        </Button>
+                        <Tooltip
+                          placement="top"
+                          offset={8}
+                          className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                        >
+                          Generating tests with Insomnia AI
+                        </Tooltip>
+                      </TooltipTrigger>
+                    )}
+                  </ProgressBar>
+                )}
+                <TooltipTrigger>
+                  <Button
+                    className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                    onPress={() => {
+                      !user && navigate('/auth/login');
+                      if (settings.proxyEnabled) {
+                        showSettingsModal({
+                          tab: 'proxy',
+                        });
+                      }
+                    }}
+                  >
+                    <Icon
+                      icon="circle"
+                      className={
+                        user
+                          ? status === 'online'
+                            ? 'text-[--color-success]'
+                            : 'text-[--color-danger]'
+                          : ''
+                      }
+                    />{' '}
+                    {user
+                      ? status.charAt(0).toUpperCase() + status.slice(1)
+                      : 'Log in to see your projects'}
+                    {status === 'online' && settings.proxyEnabled ? ' via proxy' : ''}
+                  </Button>
+                  <Tooltip
+                    placement="top"
+                    offset={8}
+                    className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                  >
+                    {user
+                      ? status === 'online' ? 'You have connectivity to the Internet' + (settings.proxyEnabled ? ' via the configured proxy' : '') + '.'
+                        : 'You are offline. Connect to sync your data.'
+                      : 'Log in to Insomnia to unlock the full product experience.'}
+                  </Tooltip>
+                </TooltipTrigger>
+                <span className='w-[1px] h-full bg-[--hl-sm]' />
+                <Link>
+                  <a
+                    className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
+                    href="https://konghq.com/"
+                  >
+                    Made with
+                    <Icon className="text-[--color-surprise-font]" icon="heart" /> by
+                    Kong
+                  </a>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
         <Toast />
       </div>
-      {workspaceId && <CommandPalette />}
     </InsomniaEventStreamProvider>
   );
 };

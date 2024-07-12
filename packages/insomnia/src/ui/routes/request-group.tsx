@@ -1,9 +1,27 @@
-import { ActionFunction } from 'react-router-dom';
+import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 
 import * as models from '../../models';
 import { RequestGroup } from '../../models/request-group';
 import { RequestGroupMeta } from '../../models/request-group-meta';
 import { invariant } from '../../utils/invariant';
+
+export interface RequestGroupLoaderData {
+  activeRequestGroup: RequestGroup;
+}
+export const loader: LoaderFunction = async ({ params }): Promise<RequestGroupLoaderData> => {
+  const { organizationId, projectId, requestGroupId, workspaceId } = params;
+  invariant(requestGroupId, 'Request ID is required');
+  invariant(workspaceId, 'Workspace ID is required');
+  invariant(projectId, 'Project ID is required');
+  const activeRequestGroup = await models.requestGroup.getById(requestGroupId);
+  if (!activeRequestGroup) {
+    throw redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
+  }
+
+  return {
+    activeRequestGroup,
+  };
+};
 
 export const createRequestGroupAction: ActionFunction = async ({ request, params }) => {
   const { workspaceId } = params;

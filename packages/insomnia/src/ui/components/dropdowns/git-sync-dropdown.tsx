@@ -34,11 +34,10 @@ import { Tooltip } from '../tooltip';
 
 interface Props {
   gitRepository: GitRepository | null;
-  className?: string;
   isInsomniaSyncEnabled: boolean;
 }
 
-export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomniaSyncEnabled }) => {
+export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnabled }) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -246,10 +245,9 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
 
   if (isSynced) {
     dropdown = (
-      <div className={className}>
         <Dropdown
           dataTestId='git-dropdown'
-          className="wide tall"
+          className="w-full h-[--line-height-sm]"
           ref={dropdownRef}
           triggerButton={
             <DropdownButton
@@ -263,6 +261,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
                 borderRadius: '0',
                 justifyContent: 'flex-start !important',
                 height: 'var(--line-height-sm)',
+                boxSizing: 'border-box',
               }}
               disabled={isLoading}
             >
@@ -419,15 +418,13 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
               </DropdownItem>
             )}
           </DropdownSection>
-        </Dropdown>
-      </div>
+      </Dropdown>
     );
   } else {
     dropdown = (
-      <div className={className}>
         <Dropdown
           dataTestId='git-dropdown'
-          className="wide tall"
+          className="w-full h-[--line-height-sm]"
           ref={dropdownRef}
           triggerButton={
             <DropdownButton
@@ -441,6 +438,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
                 borderRadius: '0',
                 justifyContent: 'flex-start !important',
                 height: 'var(--line-height-sm)',
+                border: 'none',
               }}
               disabled={isLoading}
             >
@@ -522,8 +520,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
               />
             </DropdownItem>
           </DropdownSection>
-        </Dropdown>
-      </div>
+      </Dropdown>
     );
   }
 

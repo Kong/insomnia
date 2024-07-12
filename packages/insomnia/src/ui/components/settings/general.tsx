@@ -1,6 +1,5 @@
 import React, { FC, Fragment } from 'react';
 
-import * as session from '../../../account/session';
 import {
   EditorKeyMap,
   isMac,
@@ -17,35 +16,23 @@ import { initNewOAuthSession } from '../../../network/o-auth-2/get-token';
 import { useRootLoaderData } from '../../routes/root';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
-import { Tooltip } from '../tooltip';
 import { BooleanSetting } from './boolean-setting';
 import { EnumSetting } from './enum-setting';
-import { MaskedSetting } from './masked-setting';
 import { NumberSetting } from './number-setting';
 import { TextSetting } from './text-setting';
-
-/**
- * We are attempting to move the app away from needing settings changes to restart the app.
- * For now, this component is a holdover until such a time as we are able to fix the underlying cases. (INS-1245)
- */
-const RestartTooltip: FC<{ message: string }> = ({ message }) => (
-  <Fragment>
-    {message}{' '}
-    <Tooltip message="Will restart the app" className="space-left">
-      <i className="fa fa-refresh super-duper-faint" />
-    </Tooltip>
-  </Fragment>
-);
 
 export const General: FC = () => {
   const {
     settings,
+    userSession,
   } = useRootLoaderData();
-  const isLoggedIn = session.isLoggedIn();
+  const isLoggedIn = Boolean(userSession.id);
 
   return (
-    <div className="pad-bottom">
-      <div className="row-fill row-fill--top">
+    <div className="relative p-4">
+      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Application</h2>
+
+      <div className="">
         <div>
           <BooleanSetting
             label="Use bulk header editor"
@@ -54,10 +41,10 @@ export const General: FC = () => {
           <BooleanSetting
             label="Use vertical layout"
             setting="forceVerticalLayout"
-            help="If checked, stack request and response panels vertically. Otherwise they will be side-by-side above 1200px."
+            help="If checked, stack request and response panels vertically. Otherwise they will be side-by-side above 880px."
           />
           <BooleanSetting
-            label={<RestartTooltip message="Show variable source and value" />}
+            label="Show variable source and value"
             help="If checked, reveals the environment variable source and value in the template tag. Otherwise, hover over the template tag to see the source and value."
             setting="showVariableSourceAndValue"
           />
@@ -74,7 +61,7 @@ export const General: FC = () => {
             />
           )}
           <BooleanSetting
-            label={<RestartTooltip message="Raw template syntax" />}
+            label="Raw template syntax"
             setting="nunjucksPowerUserMode"
           />
         </div>
@@ -91,8 +78,7 @@ export const General: FC = () => {
         />
       </div>
 
-      <hr className="pad-top" />
-      <h2>Font</h2>
+      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Font</h2>
 
       <div className="row-fill row-fill--top">
         <div>
@@ -172,9 +158,7 @@ export const General: FC = () => {
         />
       </div>
 
-      <hr className="pad-top" />
-
-      <h2>Request / Response</h2>
+      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Request / Response</h2>
 
       <div className="row-fill row-fill--top">
         <div>
@@ -201,6 +185,12 @@ export const General: FC = () => {
           <BooleanSetting
             label="Disable links in response viewer"
             setting="disableResponsePreviewLinks"
+          />
+
+          <BooleanSetting
+            label="Disable default User-Agent on new requests"
+            setting="disableAppVersionUserAgent"
+            help="If checked, disables adding the default User-Agent header on newly created requests."
           />
         </div>
       </div>
@@ -254,9 +244,7 @@ export const General: FC = () => {
         />
       </div>
 
-      <hr className="pad-top" />
-
-      <h2>Security</h2>
+      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Security</h2>
       <div className="form-row pad-top-sm">
         <BooleanSetting
           label="Clear OAuth 2 session on start"
@@ -281,50 +269,11 @@ export const General: FC = () => {
         />
       </div>
 
-      <hr className="pad-top" />
-
-      <h2>Network Proxy</h2>
-
-      <BooleanSetting
-        label="Enable proxy"
-        setting="proxyEnabled"
-        help="If checked, enables a global network proxy on all requests sent through Insomnia. This proxy supports Basic Auth, digest, and NTLM authentication."
-      />
-
-      <div className="form-row pad-top-sm">
-        <MaskedSetting
-          label='Proxy for HTTP'
-          setting='httpProxy'
-          help="Enter a HTTP or SOCKS4/5 proxy starting with appropriate prefix from the following (http://, socks4://, socks5://)"
-          placeholder="localhost:8005"
-          disabled={!settings.proxyEnabled}
-        />
-        <MaskedSetting
-          label='Proxy for HTTPS'
-          setting='httpsProxy'
-          help="Enter a HTTPS or SOCKS4/5 proxy starting with appropriate prefix from the following (https://, socks4://, socks5://)"
-          placeholder="localhost:8005"
-          disabled={!settings.proxyEnabled}
-        />
-        <TextSetting
-          label="No proxy"
-          setting="noProxy"
-          help="Enter a comma-separated list of hostnames that don’t require a proxy."
-          placeholder="localhost,127.0.0.1"
-          disabled={!settings.proxyEnabled}
-        />
-      </div>
-
       {updatesSupported() && (
         <Fragment>
-          <hr className="pad-top" />
-          <div>
-            <div className="pull-right">
-              <CheckForUpdatesButton className="btn btn--outlined btn--super-duper-compact">
-                Check now
-              </CheckForUpdatesButton>
-            </div>
-            <h2>Software Updates</h2>
+          <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Software Updates</h2>
+          <div className="w-full">
+            <CheckForUpdatesButton />
           </div>
           <BooleanSetting
             label="Automatically download and install updates"
@@ -354,8 +303,7 @@ export const General: FC = () => {
           /></>
       )}
 
-      <hr className="pad-top" />
-      <h2>Plugins</h2>
+      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Plugins</h2>
       <TextSetting
         label="Additional Plugin Path"
         setting="pluginPath"

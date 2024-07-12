@@ -153,7 +153,7 @@ async function _findRecentForRequest(
   environmentId: string | null,
   limit: number,
 ) {
-  const query: Query = {
+  const query: Query<WebSocketResponse> = {
     parentId: requestId,
   };
 

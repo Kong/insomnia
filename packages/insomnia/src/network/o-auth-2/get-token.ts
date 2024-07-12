@@ -2,16 +2,18 @@ import crypto from 'crypto';
 import querystring from 'querystring';
 import { v4 as uuidv4 } from 'uuid';
 
+import { version } from '../../../package.json';
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { AuthTypeOAuth2, OAuth2ResponseType, RequestHeader, RequestParameter } from '../../models/request';
 import type { Request } from '../../models/request';
+import { isRequestGroupId } from '../../models/request-group';
 import type { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
-import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../network';
+import { fetchRequestData, fetchRequestGroupData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../network';
 import {
   AuthKeys,
   GRANT_TYPE_AUTHORIZATION_CODE,
@@ -288,21 +290,35 @@ const transformNewAccessTokenToOauthModel = (accessToken: Partial<Record<AuthKey
   };
 };
 
-const sendAccessTokenRequest = async (requestId: string, authentication: AuthTypeOAuth2, params: RequestParameter[], headers: RequestHeader[]) => {
+// This can be sent from a folder
+const sendAccessTokenRequest = async (requestOrGroupId: string, authentication: AuthTypeOAuth2, params: RequestParameter[], headers: RequestHeader[]) => {
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
-  console.log(`[network] Sending with settings req=${requestId}`);
+  console.log(`[network] Sending with settings req=${requestOrGroupId}`);
   // @TODO unpack oauth into regular timeline and remove oauth timeine dialog
-  const { request,
+  const initializedData = isRequestGroupId(requestOrGroupId) ? await fetchRequestGroupData(requestOrGroupId) : await fetchRequestData(requestOrGroupId);
+
+  const {
     environment,
     settings,
     clientCertificates,
     caCert,
-    activeEnvironmentId } = await fetchRequestData(requestId);
+    activeEnvironmentId,
+    timelinePath,
+    responseId,
+  } = initializedData;
 
+  const defaultUserAgentHeader: RequestHeader = { name: 'User-Agent', value: `insomnia/${version}` };
+  const defaultHeaders: RequestHeader[] = [
+    { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
+    { name: 'Accept', value: 'application/x-www-form-urlencoded, application/json' },
+  ];
+
+  if (!settings.disableAppVersionUserAgent) {
+    defaultHeaders.push(defaultUserAgentHeader);
+  }
   const newRequest: Request = await models.initModel(models.request.type, {
     headers: [
-      { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
-      { name: 'Accept', value: 'application/x-www-form-urlencoded, application/json' },
+      ...defaultHeaders,
       ...headers,
     ],
     url: setDefaultProtocol(authentication.accessTokenUrl),
@@ -312,8 +328,8 @@ const sendAccessTokenRequest = async (requestId: string, authentication: AuthTyp
       params,
     },
   }, {
-    _id: request._id + '.other',
-    parentId: request._id,
+    _id: requestOrGroupId + '.other',
+    parentId: requestOrGroupId,
   });
 
   const renderResult = await tryToInterpolateRequest(newRequest, environment._id);
@@ -324,6 +340,8 @@ const sendAccessTokenRequest = async (requestId: string, authentication: AuthTyp
     clientCertificates,
     caCert,
     { ...settings, validateSSL: settings.validateAuthSSL },
+    timelinePath,
+    responseId,
   );
   const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
 

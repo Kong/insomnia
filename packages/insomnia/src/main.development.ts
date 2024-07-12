@@ -1,22 +1,23 @@
-
-import electron, { app, ipcMain, session } from 'electron';
+import electron, { app, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { userDataFolder } from '../config/config.json';
-import { changelogUrl, getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
+import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
 import log, { initializeLogging } from './common/log';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
-import { registerInsomniaStreamProtocol } from './main/api.protocol';
+import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
-import { registerElectronHandlers } from './main/ipc/electron';
+import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
 import { registerCurlHandlers } from './main/network/curl';
 import { registerWebSocketHandlers } from './main/network/websocket';
+import { watchProxySettings } from './main/proxy';
 import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
@@ -26,9 +27,16 @@ import { Project, RemoteProject } from './models/project';
 import type { Stats } from './models/stats';
 import type { ToastNotification } from './ui/components/toast';
 
+// Override the Electron userData path
+// This makes Chromium use this folder for eg localStorage
+// ensure userData dir change is made before configure sentry SDK (https://docs.sentry.io/platforms/javascript/guides/electron/#app-userdata-directory)
+const dataPath = process.env.INSOMNIA_DATA_PATH || path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
+app.setPath('userData', dataPath);
+
 initializeSentry();
 
-registerInsomniaStreamProtocol();
+registerInsomniaProtocols();
+
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
   process.exit(0);
@@ -36,18 +44,6 @@ if (checkIfRestartNeeded()) {
 
 initializeLogging();
 log.info(`Running version ${getAppVersion()}`);
-
-// Override the Electron userData path
-// This makes Chromium use this folder for eg localStorage
-const envDataPath = process.env.INSOMNIA_DATA_PATH;
-if (envDataPath) {
-  app.setPath('userData', envDataPath);
-} else {
-  // Explicitly set userData folder from config because it's sketchy to rely on electron-builder to use productName, which could be changed by accident.
-  const defaultPath = app.getPath('userData');
-  const newPath = path.join(defaultPath, '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
-  app.setPath('userData', newPath);
-}
 
 // So if (window) checks don't throw
 global.window = global.window || undefined;
@@ -97,11 +93,14 @@ app.on('ready', async () => {
   await database.init(models.types());
   await _createModelInstances();
   sentryWatchAnalyticsEnabled();
+  watchProxySettings();
   windowUtils.init();
   await _launchApp();
 
   // Init the rest
   await updates.init();
+  // recursive = ignore already exists error
+  await fs.mkdir(path.join(dataPath, 'responses'), { recursive: true });
 });
 
 // Set as default protocol
@@ -153,11 +152,12 @@ const _launchApp = async () => {
   await _trackStats();
   let window: BrowserWindow;
   // Handle URLs sent via command line args
-  ipcMain.once('halfSecondAfterAppStart', () => {
+  ipcMainOnce('halfSecondAfterAppStart', () => {
     console.log('[main] Window ready, handling command line arguments', process.argv);
     const args = process.argv.slice(1).filter(a => a !== '.');
+    console.log('[main] Check args and create windows', args);
     if (args.length) {
-      window = windowUtils.getOrCreateWindow();
+      window = windowUtils.createWindowsAndReturnMain();
       window.webContents.send('shell:open', args.join());
     }
   });
@@ -171,8 +171,8 @@ const _launchApp = async () => {
     } else {
       // Called when second instance launched with args (Windows/Linux)
       app.on('second-instance', (_1, args) => {
-        console.log('Second instance listener received:', args.join('||'));
-        window = windowUtils.getOrCreateWindow();
+        console.log('[main] Second instance listener received:', args.join('||'));
+        window = windowUtils.createWindowsAndReturnMain();
         if (window) {
           if (window.isMinimized()) {
             window.restore();
@@ -183,24 +183,29 @@ const _launchApp = async () => {
         console.log('[main] Open Deep Link URL sent from second instance', lastArg);
         window.webContents.send('shell:open', lastArg);
       });
-      window = windowUtils.getOrCreateWindow();
-
-      app.on('open-url', (_event, url) => {
+      window = windowUtils.createWindowsAndReturnMain();
+      const openDeepLinkUrl = (url: string) => {
         console.log('[main] Open Deep Link URL', url);
-        window = windowUtils.getOrCreateWindow();
+        window = windowUtils.createWindowsAndReturnMain();
         if (window) {
           if (window.isMinimized()) {
             window.restore();
           }
           window.focus();
         } else {
-          window = windowUtils.getOrCreateWindow();
+          window = windowUtils.createWindowsAndReturnMain();
         }
         window.webContents.send('shell:open', url);
+      };
+      app.on('open-url', (_event, url) => {
+        openDeepLinkUrl(url);
+      });
+      ipcMainOn('openDeepLink', (_event, url) => {
+        openDeepLinkUrl(url);
       });
     }
   } else {
-    window = windowUtils.getOrCreateWindow();
+    window = windowUtils.createWindowsAndReturnMain();
   }
 
   // Don't send origin header from Insomnia because we're not technically using CORS
@@ -225,16 +230,16 @@ async function _createModelInstances() {
     const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
     const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
-      console.log('Initializing Scratch Pad Project');
+      console.log('[main] Initializing Scratch Pad Project');
       await models.project.create({ _id: models.project.SCRATCHPAD_PROJECT_ID, name: getProductName(), remoteId: null, parentId: models.organization.SCRATCHPAD_ORGANIZATION_ID });
     }
 
     if (!scratchPad) {
-      console.log('Initializing Scratch Pad');
+      console.log('[main] Initializing Scratch Pad');
       await models.workspace.create({ _id: models.workspace.SCRATCHPAD_WORKSPACE_ID, name: 'Scratch Pad', parentId: models.project.SCRATCHPAD_PROJECT_ID, scope: 'collection' });
     }
   } catch (err) {
-    console.warn('Failed to create default project. It probably already exists', err);
+    console.warn('[main] Failed to create default project. It probably already exists', err);
   }
 }
 
@@ -268,7 +273,7 @@ async function _trackStats() {
     executedRequests: stats.executedRequests,
   });
 
-  ipcMain.once('halfSecondAfterAppStart', async () => {
+  ipcMainOnce('halfSecondAfterAppStart', async () => {
     backupIfNewerVersionAvailable();
     const { currentVersion, launches, lastVersion } = stats;
 
@@ -280,7 +285,7 @@ async function _trackStats() {
     console.log('[main] App update detected', currentVersion, lastVersion);
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
-      url: changelogUrl(),
+      url: 'https://github.com/Kong/insomnia/releases',
       cta: "See What's New",
       message: `Updated to ${currentVersion}`,
     };

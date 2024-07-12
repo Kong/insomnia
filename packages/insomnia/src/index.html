@@ -1,10 +1,47 @@
 <!DOCTYPE html>
-<html lang="en-US" class="w-full h-full">
+<html lang="en-US" class="w-full h-full overflow-hidden">
   <head>
     <meta charset="utf-8" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="font-src 'self' data:; connect-src * data: api: insomnia-event-source:; default-src * insomnia://*; img-src blob: data: * insomnia://*; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src blob: data: mediastream: * insomnia://*;"
+      content="
+      font-src
+            'self'
+            data:
+      ;
+      connect-src
+            'self'
+            data:
+            insomnia-event-source:
+            https:
+            http:
+      ;
+      default-src
+            *
+            insomnia://*
+      ;
+      img-src
+            blob:
+            data:
+            *
+            insomnia://*
+      ;
+      script-src
+            'self'
+            'unsafe-eval'
+      ;
+      style-src
+            'self'
+            'unsafe-inline'
+      ;
+      media-src
+            blob:
+            data:
+            mediastream:
+            *
+            insomnia://*
+      ;
+      "
     />
     <link rel="stylesheet" href="./ui/css/styles.css" />
   </head>
@@ -99,17 +136,7 @@
       </div>
     </div>
     <div id="graphql-explorer-container"></div>
-    <div
-      id="dropdowns-container"
-      style="
-        z-index: 99999;
-        position: fixed;
-        right: -90000px;
-        top: -90000px;
-        width: 100vw;
-        height: 100vh;
-      "
-    ></div>
+    <div id="hints-container" class="theme--dropdown__menu"></div>
     <script src="./renderer.ts" type="module"></script>
   </body>
 </html>

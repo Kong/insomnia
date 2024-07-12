@@ -1,5 +1,4 @@
 import * as Sentry from '@sentry/electron/main';
-import type { SentryRequestType } from '@sentry/types';
 
 import * as session from '../account/session';
 import { ChangeBufferEvent, database as db } from '../common/database';
@@ -13,15 +12,15 @@ let enabled = false;
  * Watch setting for changes. This must be called after the DB is initialized.
  */
 export function sentryWatchAnalyticsEnabled() {
-  models.settings.get().then(settings => {
-    enabled = settings.enableAnalytics || session.isLoggedIn();
+  models.settings.get().then(async settings => {
+    enabled = settings.enableAnalytics || await session.isLoggedIn();
   });
 
   db.onChange(async (changes: ChangeBufferEvent[]) => {
     for (const change of changes) {
       const [event, doc] = change;
       if (isSettings(doc) && event === 'update') {
-        enabled = doc.enableAnalytics || session.isLoggedIn();
+        enabled = doc.enableAnalytics || await session.isLoggedIn();
       }
 
       if (event === 'insert' || event === 'update') {
@@ -33,21 +32,27 @@ export function sentryWatchAnalyticsEnabled() {
   });
 }
 
-// TODO(johnwchadwick): We are vendoring ElectronOfflineNetTransport just to be able to control whether or not sending is allowed, because we don't have a choice right now. We should work with the upstream library to get similar functionality upstream. See getsentry/sentry-electron#489.
+// some historical context:
+// At beginning We are vendoring ElectronOfflineNetTransport just to be able to control whether or not sending is allowed
 // https://github.com/getsentry/sentry-electron/issues/489
-class ElectronSwitchableTransport extends Sentry.ElectronOfflineNetTransport {
-  protected _isRateLimited(requestType: SentryRequestType) {
-    if (!enabled) {
-      return true;
-    }
-
-    return super._isRateLimited(requestType);
-  }
-}
-
+// After the official support. Now we could use the transportOptions.shouldSend to control whether or not sending is allowed
+// https://github.com/getsentry/sentry-electron/pull/889
+// docs: https://docs.sentry.io/platforms/javascript/guides/electron/
 export function initializeSentry() {
   Sentry.init({
     ...SENTRY_OPTIONS,
-    transport: ElectronSwitchableTransport,
+    transportOptions: {
+      /**
+       * Called before we attempt to send an envelope to Sentry.
+       *
+       * If this function returns false, `shouldStore` will be called to determine if the envelope should be stored.
+       *
+       * Default: () => true
+       *
+       * @param envelope The envelope that will be sent.
+       * @returns Whether we should attempt to send the envelope
+       */
+      shouldSend: () => enabled,
+    },
   });
 }

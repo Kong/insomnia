@@ -20,6 +20,7 @@ export function useReadyState({ requestId, protocol }: { requestId: string; prot
   // listen for readyState changes
   useEffect(() => {
     let isMounted = true;
+    // @ts-expect-error -- we use a dynamic channel here
     const unsubscribe = window.main.on(`${protocol}.${requestId}.readyState`,
       (_, incomingReadyState: boolean) => {
         isMounted && setReadyState(incomingReadyState);

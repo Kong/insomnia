@@ -6,7 +6,6 @@ import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas
 import { projectSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { BackendProject } from '../../types';
-import * as paths from '../paths';
 import { describeChanges } from '../util';
 import { VCS } from '../vcs';
 
@@ -48,10 +47,9 @@ describe('VCS', () => {
             document: newDoc('qux'),
           },
         ],
-        {},
       );
       expect(status).toEqual({
-        key: 'a156b75bc8fd5ad4e0e3da036c30667af631cf2b',
+        key: '6dbc95d09d310cf9d8561bc46da440d8197c3bf1',
         stage: {},
         unstaged: {
           foo: {
@@ -60,6 +58,7 @@ describe('VCS', () => {
             blobContent: '{"_id":"bar","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
             blobId: 'f084c7823f01300890d0d6539cfaffa5e2398da1',
             name: 'Foo',
+            previousBlobContent: 'null',
           },
           baz: {
             added: true,
@@ -67,6 +66,7 @@ describe('VCS', () => {
             blobContent: '{"_id":"qux","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
             blobId: 'aee296597cedfbfe6c961b0c48a5e05c6acb1da3',
             name: 'Baz',
+            previousBlobContent: 'null',
           },
         },
       });
@@ -95,8 +95,8 @@ describe('VCS', () => {
         {},
       );
       expect(Object.keys(status1.unstaged)).toEqual(['a', 'b', 'c']);
-      const stageResult = await v.stage(status1.stage, [status1.unstaged.a, status1.unstaged.b, status1.unstaged.c]);
-      await v.takeSnapshot(stageResult, 'Add a/b/c');
+      await v.stage([status1.unstaged.a, status1.unstaged.b, status1.unstaged.c]);
+      await v.takeSnapshot('Add a/b/c');
       const history = await v.getHistory();
       expect(history.length).toBe(1);
       expect(history).toEqual([
@@ -153,7 +153,7 @@ describe('VCS', () => {
         {},
       );
       expect(status).toEqual({
-        key: 'dc9ac9680eabf62d94d63c862d5b863453c4fc72',
+        key: '3314d88d8a8c307083414ca93b2e35bc5233e292',
         stage: {},
         unstaged: {
           a: {
@@ -161,6 +161,7 @@ describe('VCS', () => {
             blobId: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
             key: 'a',
             name: 'A',
+            previousBlobContent: '{\"_id\":\"aaa\",\"created\":1234,\"isPrivate\":false,\"name\":\"name\",\"parentId\":\"\",\"type\":\"base\"}',
           },
           notA: {
             added: true,
@@ -168,6 +169,7 @@ describe('VCS', () => {
             name: 'Not A',
             blobId: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
             blobContent: '{"_id":"aaa","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            previousBlobContent: 'null',
           },
           c: {
             modified: true,
@@ -175,6 +177,7 @@ describe('VCS', () => {
             name: 'C',
             blobId: '87a13a793c6bc2137732ba4f8dc8d877fc143bad',
             blobContent: '{"_id":"modified","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            previousBlobContent: '{\"_id\":\"ccc\",\"created\":1234,\"isPrivate\":false,\"name\":\"name\",\"parentId\":\"\",\"type\":\"base\"}',
           },
           d: {
             added: true,
@@ -182,10 +185,11 @@ describe('VCS', () => {
             name: 'D',
             blobId: 'cb6c7a2814104ff614133076245ae32fe9a62c8f',
             blobContent: '{"_id":"ddd","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            previousBlobContent: 'null',
           },
         },
       });
-      const newStage = await v.stage(status.stage, [
+      await v.stage([
         status.unstaged.a,
         status.unstaged.notA,
         status.unstaged.c,
@@ -213,17 +217,17 @@ describe('VCS', () => {
             name: 'D',
             document: newDoc('ddd'),
           },
-        ],
-        newStage,
+        ]
       );
       expect(status2).toEqual({
-        key: 'fa7e77538196bd6c337d9271b2a3af87abde3e15',
+        key: '872dd92bb678f7e26b8610e4d37c0438f2f04beb',
         stage: {
           a: {
             deleted: true,
             blobId: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
             key: 'a',
             name: 'A',
+            previousBlobContent: '{\"_id\":\"aaa\",\"created\":1234,\"isPrivate\":false,\"name\":\"name\",\"parentId\":\"\",\"type\":\"base\"}',
           },
           notA: {
             added: true,
@@ -231,6 +235,7 @@ describe('VCS', () => {
             key: 'notA',
             name: 'Not A',
             blobContent: '{"_id":"aaa","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            previousBlobContent: 'null',
           },
           c: {
             modified: true,
@@ -238,6 +243,7 @@ describe('VCS', () => {
             key: 'c',
             name: 'C',
             blobContent: '{"_id":"modified","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            previousBlobContent: '{\"_id\":\"ccc\",\"created\":1234,\"isPrivate\":false,\"name\":\"name\",\"parentId\":\"\",\"type\":\"base\"}',
           },
           d: {
             added: true,
@@ -245,6 +251,7 @@ describe('VCS', () => {
             key: 'd',
             name: 'D',
             blobContent: '{"_id":"ddd","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            previousBlobContent: 'null',
           },
         },
         unstaged: {},
@@ -268,7 +275,7 @@ describe('VCS', () => {
         ],
         {},
       );
-      const stage = await v.stage(status.stage, [status.unstaged.a]);
+      await v.stage([status.unstaged.a]);
       const status2 = await v.status(
         [
           {
@@ -282,10 +289,9 @@ describe('VCS', () => {
             document: newDoc('bbb'),
           },
         ],
-        stage,
       );
       expect(status2).toEqual({
-        key: 'f92908bb0e471e61e0903b8c669f9d20e8d7c8f0',
+        key: '7e7b488b9010839218f8e8c7d1d48b0e0e6b5f8c',
         stage: {
           a: {
             added: true,
@@ -293,6 +299,7 @@ describe('VCS', () => {
             name: 'A',
             key: 'a',
             blobContent: '{"_id":"aaa","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            previousBlobContent: 'null',
           },
         },
         unstaged: {
@@ -302,6 +309,7 @@ describe('VCS', () => {
             key: 'a',
             name: 'A',
             blobContent: '{"_id":"modified","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            previousBlobContent: '{\"_id\":\"aaa\",\"created\":1234,\"isPrivate\":false,\"name\":\"name\",\"parentId\":\"\",\"type\":\"base\"}',
           },
           b: {
             added: true,
@@ -309,6 +317,7 @@ describe('VCS', () => {
             name: 'B',
             key: 'b',
             blobContent: '{"_id":"bbb","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            previousBlobContent: 'null',
           },
         },
       });
@@ -326,8 +335,8 @@ describe('VCS', () => {
         ],
         {},
       );
-      const stage2 = await v.stage(status.stage, [status.unstaged.foo]);
-      await v.takeSnapshot(stage2, 'Add foo');
+      await v.stage([status.unstaged.foo]);
+      await v.takeSnapshot('Add foo');
       const status2 = await v.status(
         [
           {
@@ -364,7 +373,7 @@ describe('VCS', () => {
         ],
         {},
       );
-      const stage = await v.stage(status.stage, [status.unstaged.foo]);
+      const stage = await v.stage([status.unstaged.foo]);
       expect(stage).toEqual({
         foo: {
           key: 'foo',
@@ -372,6 +381,7 @@ describe('VCS', () => {
           blobContent: '{"_id":"bar","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
           blobId: 'f084c7823f01300890d0d6539cfaffa5e2398da1',
           added: true,
+          previousBlobContent: 'null',
         },
       });
       const status2 = await v.status(
@@ -387,10 +397,9 @@ describe('VCS', () => {
             document: newDoc('qux'),
           },
         ],
-        stage,
       );
       expect(status2).toEqual({
-        key: '83dfd47a77c5015169d611f6559b18ea588ad89a',
+        key: 'cfd47b8a7d50f39dfa1ca956ac2ab60427d6351b',
         stage: {
           foo: {
             name: 'Foo',
@@ -398,6 +407,7 @@ describe('VCS', () => {
             blobContent: '{"_id":"bar","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
             blobId: 'f084c7823f01300890d0d6539cfaffa5e2398da1',
             added: true,
+            previousBlobContent: 'null',
           },
         },
         unstaged: {
@@ -407,6 +417,7 @@ describe('VCS', () => {
             blobContent: '{"_id":"qux","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
             blobId: 'aee296597cedfbfe6c961b0c48a5e05c6acb1da3',
             added: true,
+            previousBlobContent: 'null',
           },
         },
       });
@@ -426,8 +437,8 @@ describe('VCS', () => {
         ],
         {},
       );
-      const stage = await v.stage(status.stage, [status.unstaged.foo]);
-      await v.takeSnapshot(stage, 'Add foo');
+      await v.stage([status.unstaged.foo]);
+      await v.takeSnapshot('Add foo');
       const history = await v.getHistory();
       expect(history).toEqual([
         {
@@ -458,10 +469,9 @@ describe('VCS', () => {
             document: newDoc('bar'),
           },
         ],
-        {},
       );
-      const stage = await v.stage(status.stage, [status.unstaged.foo]);
-      await v.takeSnapshot(stage, 'Add foo');
+      await v.stage([status.unstaged.foo]);
+      await v.takeSnapshot('Add foo');
       const history = await v.getHistory();
       expect(history).toEqual([
         {
@@ -480,9 +490,9 @@ describe('VCS', () => {
           ],
         },
       ]);
-      const status2 = await v.status([], {});
-      const stage2 = await v.stage(status2.stage, [status2.unstaged.foo]);
-      await v.takeSnapshot(stage2, 'Delete foo');
+      const status2 = await v.status([]);
+      await v.stage([status2.unstaged.foo]);
+      await v.takeSnapshot('Delete foo');
       const history2 = await v.getHistory();
       expect(history2).toEqual([
         {
@@ -513,12 +523,12 @@ describe('VCS', () => {
     });
   });
 
-  describe('getBranches()', () => {
+  describe('getBranchNames()', () => {
     it('lists branches', async () => {
       const v = await vcs('master');
       await v.checkout([], 'branch-1');
       await v.checkout([], 'branch-2');
-      const branches = await v.getBranches();
+      const branches = await v.getBranchNames();
       expect(branches).toEqual(['master', 'branch-1', 'branch-2']);
     });
   });
@@ -562,17 +572,16 @@ describe('VCS', () => {
             document: newDoc('bar'),
           },
         ],
-        {},
       );
-      const stage1 = await v.stage(status1.stage, [status1.unstaged.foo]);
-      await v.takeSnapshot(stage1, 'Add foo');
+      await v.stage([status1.unstaged.foo]);
+      await v.takeSnapshot('Add foo');
       // Checkout branch
       await v.checkout([], 'new-branch');
-      expect(await v.getBranches()).toEqual(['master', 'new-branch']);
+      expect(await v.getBranchNames()).toEqual(['master', 'new-branch']);
       // Back to master and delete other branch
       await v.checkout([], 'master');
       await v.removeBranch('new-branch');
-      expect(await v.getBranches()).toEqual(['master']);
+      expect(await v.getBranchNames()).toEqual(['master']);
     });
   });
 
@@ -590,13 +599,13 @@ describe('VCS', () => {
         ],
         {},
       );
-      const stage1 = await v.stage(status1.stage, [status1.unstaged.foo]);
-      await v.takeSnapshot(stage1, 'Add foo');
+      await v.stage([status1.unstaged.foo]);
+      await v.takeSnapshot('Add foo');
       // Checkout branch
       await v.fork('new-branch');
       await v.checkout([], 'new-branch');
       const history = await v.getHistory();
-      expect(await v.getBranch()).toBe('new-branch');
+      expect(await v.getCurrentBranchName()).toBe('new-branch');
       expect(history).toEqual([
         {
           created: expect.any(Date),
@@ -635,8 +644,8 @@ describe('VCS', () => {
         ],
         {},
       );
-      const stage1 = await v.stage(status1.stage, [status1.unstaged.a, status1.unstaged.b]);
-      await v.takeSnapshot(stage1, 'Add A and B');
+      await v.stage([status1.unstaged.a, status1.unstaged.b]);
+      await v.takeSnapshot('Add A and B');
       expect((await v.getHistory())[0].state).toEqual([
         expect.objectContaining({
           key: 'a',
@@ -664,11 +673,10 @@ describe('VCS', () => {
             name: 'C',
             document: newDoc('ccc'),
           },
-        ],
-        status1.stage,
+        ]
       );
-      const stage2 = await v.stage(status2.stage, [status2.unstaged.b, status2.unstaged.c]);
-      await v.takeSnapshot(stage2, 'Add C, modify B');
+      await v.stage([status2.unstaged.b, status2.unstaged.c]);
+      await v.takeSnapshot('Add C, modify B');
       expect((await v.getHistory())[1].state).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -701,14 +709,14 @@ describe('VCS', () => {
         ],
         {},
       );
-      const stage1 = await v.stage(status1.stage, [status1.unstaged.a, status1.unstaged.b]);
-      await v.takeSnapshot(stage1, 'message');
+      await v.stage([status1.unstaged.a, status1.unstaged.b]);
+      await v.takeSnapshot('message');
     });
 
     it('does something', async () => {
       const v = await vcs('master');
       // Add a file to master
-      expect(await v.getBranch()).toBe('master');
+      expect(await v.getCurrentBranchName()).toBe('master');
       const status1 = await v.status(
         [
           {
@@ -719,8 +727,8 @@ describe('VCS', () => {
         ],
         {},
       );
-      const stage = await v.stage(status1.stage, [status1.unstaged.a]);
-      await v.takeSnapshot(stage, 'Add A');
+      await v.stage([status1.unstaged.a]);
+      await v.takeSnapshot('Add A');
       expect(await v.getHistory()).toEqual([
         {
           id: '03ac0d9058614e1cafc6c53553bd0924b03f0b53',
@@ -741,7 +749,7 @@ describe('VCS', () => {
       // Checkout new branch and add file
       await v.fork('new-branch');
       await v.checkout([], 'new-branch');
-      expect(await v.getBranch()).toBe('new-branch');
+      expect(await v.getCurrentBranchName()).toBe('new-branch');
       const status2 = await v.status(
         [
           {
@@ -752,8 +760,8 @@ describe('VCS', () => {
         ],
         {},
       );
-      const stage2 = await v.stage(status2.stage, [status2.unstaged.b]);
-      await v.takeSnapshot(stage2, 'Add B');
+      await v.stage([status2.unstaged.b]);
+      await v.takeSnapshot('Add B');
       expect(await v.getHistory()).toEqual([
         {
           id: '03ac0d9058614e1cafc6c53553bd0924b03f0b53',
@@ -793,7 +801,7 @@ describe('VCS', () => {
       ]);
       // Merge new branch back into master
       await v.checkout([], 'master');
-      expect(await v.getBranch()).toBe('master');
+      expect(await v.getCurrentBranchName()).toBe('master');
       await v.merge([], 'new-branch');
       expect(await v.getHistory()).toEqual([
         {
@@ -870,8 +878,8 @@ describe('VCS', () => {
         ],
         {},
       );
-      const stage1 = await v.stage(status1.stage, [status1.unstaged.foo]);
-      await v.takeSnapshot(stage1, 'Add foo');
+      await v.stage([status1.unstaged.foo]);
+      await v.takeSnapshot('Add foo');
       const status2 = await v.status(
         [
           {
@@ -882,8 +890,8 @@ describe('VCS', () => {
         ],
         {},
       );
-      const stage2 = await v.stage(status2.stage, [status2.unstaged.bar]);
-      await v.takeSnapshot(stage2, 'Add bar');
+      await v.stage([status2.unstaged.bar]);
+      await v.takeSnapshot('Add bar');
     });
 
     it('returns all history', async () => {
@@ -950,9 +958,9 @@ describe('VCS', () => {
       const driver = new MemoryDriver();
       vcs = new VCS(driver);
 
-      driver.setItem(paths.projects(), Buffer.from(JSON.stringify([backendProject])));
-      driver.setItem(paths.projectBase(backendProject.id), Buffer.from(''));
-      driver.setItem(paths.project(backendProject.id), Buffer.from(JSON.stringify(backendProject)));
+      driver.setItem('/projects/', Buffer.from(JSON.stringify([backendProject])));
+      driver.setItem(`/projects/${backendProject.id}/`, Buffer.from(''));
+      driver.setItem(`/projects/${backendProject.id}/meta.json`, Buffer.from(JSON.stringify(backendProject)));
     });
 
     it('should return true if has project', async () => {

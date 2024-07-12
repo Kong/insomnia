@@ -31,7 +31,9 @@ export const mergeConflictSchema: Schema<MergeConflict> = {
   key: () => 'key',
   choose: () => null,
   mineBlob: () => null,
+  mineBlobContent: () => null,
   theirsBlob: () => null,
+  theirsBlobContent: () => null,
   message: () => 'message',
   name: () => 'name',
 };

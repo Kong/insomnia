@@ -1,6 +1,10 @@
+import { AuthTypeOAuth2 } from '../../../models/request';
+import { forceBracketNotation } from '../../../templating/utils';
+import { fakerFunctions } from '../../../ui/components/templating/faker-functions';
 import { Converter, ImportRequest, Parameter } from '../entities';
 import {
   Auth as V200Auth,
+  EventList as V200EventList,
   Folder as V200Folder,
   FormParameter as V200FormParameter,
   Header as V200Header,
@@ -9,11 +13,11 @@ import {
   Request1 as V200Request1,
   Url,
   UrlEncodedParameter as V200UrlEncodedParameter,
-  Variable2 as V200Variable2,
 } from './postman-2.0.types';
 import {
   Auth as V210Auth,
   Auth1 as V210Auth1,
+  EventList as V210EventList,
   Folder as V210Folder,
   FormParameter as V210FormParameter,
   Header as V210Header,
@@ -22,7 +26,6 @@ import {
   QueryParam,
   Request1 as V210Request1,
   UrlEncodedParameter as V210UrlEncodedParameter,
-  Variable2 as V210Variable2,
 } from './postman-2.1.types';
 
 export const id = 'postman';
@@ -30,8 +33,7 @@ export const name = 'Postman';
 export const description = 'Importer for Postman collections';
 
 type PostmanCollection = V200Schema | V210Schema;
-
-type Variable = V200Variable2 | V210Variable2;
+type EventList = V200EventList | V210EventList;
 
 type Authetication = V200Auth | V210Auth;
 
@@ -49,6 +51,43 @@ type Header = V200Header | V210Header;
 
 let requestCount = 1;
 let requestGroupCount = 1;
+const fakerTags = Object.keys(fakerFunctions);
+const postmanTagRegexs = fakerTags.map(tag => ({ tag, regex: new RegExp(`\\{\\{\\$${tag}\\}\\}`, 'g') }));
+// example: { 'guid' : '{% faker 'guid' %}' }
+const postmanToNunjucksLookup = fakerTags
+  .map(tag => ({ [tag]: `{% faker '${tag}' %}` }))
+  .reduce((acc, obj) => ({ ...acc, ...obj }), {});
+
+export const transformPostmanToNunjucksString = (inputString?: string | null) => {
+  if (!inputString) {
+    return '';
+  }
+  if (typeof inputString !== 'string') {
+    return inputString;
+  }
+  const replaceFaker = postmanTagRegexs.reduce((transformedString, { tag, regex }) => {
+    return transformedString.replace(regex, postmanToNunjucksLookup[tag]);
+  }, inputString);
+  return normaliseJsonPath(replaceFaker);
+};
+
+// old: {{ arr-name-with-dash }}
+// new: {{ _['arr-name-with-dash'] }}
+export const normaliseJsonPath = (input?: string) => {
+  if (!input) {
+    return '';
+  }
+  if (!input.includes('-')) {
+    return input;
+  }
+  // Use a regular expression to find and replace the pattern
+  return input.replace(/{{\s*([^ }]+)\s*[^}]*\s*}}/g, (_, match) => {
+    // Replace hyphens with underscores within the match
+    const replaced = forceBracketNotation('_', match);
+    // Return the replaced pattern within the curly braces
+    return `{{${replaced}}}`;
+  });
+};
 
 const POSTMAN_SCHEMA_V2_0 =
   'https://schema.getpostman.com/json/collection/v2.0.0/collection.json';
@@ -64,8 +103,26 @@ const mapGrantTypeToInsomniaGrantType = (grantType: string) => {
     return 'password';
   }
 
-  return grantType;
+  return grantType || 'authorization_code';
 };
+
+export function translateHandlersInScript(scriptContent: string): string {
+  let translated = scriptContent;
+
+  // Replace pm.* with insomnia.*
+  // This is a simple implementation that only replaces the first instance of pm.* in the script
+  let offset = 0;
+  for (let i = 0; i < scriptContent.length - 2; i++) {
+    const isPM = scriptContent.slice(i, i + 3) === 'pm.';
+    const isPrevCharacterAlphaNumeric = i - 1 >= 0 && /[0-9a-zA-Z\_\$]/.test(scriptContent[i - 1]);
+    if (isPM && !isPrevCharacterAlphaNumeric) {
+      translated = translated.slice(0, i + offset) + 'insomnia.' + translated.slice(i + 3 + offset);
+      offset += 6;
+    }
+  }
+
+  return translated;
+}
 
 export class ImportPostman {
   collection;
@@ -74,18 +131,18 @@ export class ImportPostman {
     this.collection = collection;
   }
 
-  importVariable = (variables: Variable[]) => {
+  importVariable = (variables: { [key: string]: string }[]) => {
     if (variables?.length === 0) {
       return null;
     }
 
-    const variable: { [key: string]: Variable['value'] } = {};
+    const variable: { [key: string]: string } = {};
     for (let i = 0; i < variables.length; i++) {
-      const key = variables[i].key;
+      const { key, value } = variables[i];
       if (key === undefined) {
         continue;
       }
-      variable[key] = variables[i].value;
+      variable[key] = transformPostmanToNunjucksString(value);
     }
     return variable;
   };
@@ -112,8 +169,50 @@ export class ImportPostman {
     }, []);
   };
 
+  importPreRequestScript = (events: EventList | undefined): string => {
+    if (events == null) {
+      return '';
+    }
+
+    const preRequestEvent = events.find(
+      event => event.listen === 'prerequest'
+    );
+
+    const scriptOrRows = preRequestEvent != null ? preRequestEvent.script : '';
+    if (scriptOrRows == null || scriptOrRows === '') {
+      return '';
+    }
+
+    const scriptContent = scriptOrRows.exec != null ?
+      (Array.isArray(scriptOrRows.exec) ? scriptOrRows.exec.join('\n') : scriptOrRows.exec) :
+      '';
+
+    return translateHandlersInScript(scriptContent);
+  };
+
+  importAfterResponseScript = (events: EventList | undefined): string => {
+    if (events == null) {
+      return '';
+    }
+
+    const afterResponseEvent = events.find(
+      event => event.listen === 'test'
+    );
+
+    const scriptOrRows = afterResponseEvent ? afterResponseEvent.script : '';
+    if (!scriptOrRows) {
+      return '';
+    }
+
+    const scriptContent = scriptOrRows.exec ?
+      (Array.isArray(scriptOrRows.exec) ? scriptOrRows.exec.join('\n') : scriptOrRows.exec) :
+      '';
+
+    return translateHandlersInScript(scriptContent);
+  };
+
   importRequestItem = (
-    { request, name = '' }: Item,
+    { request, name = '', event }: Item,
     parentId: string,
   ): ImportRequest => {
     if (typeof request === 'string') {
@@ -124,26 +223,32 @@ export class ImportPostman {
 
     let parameters = [] as Parameter[];
 
-    if (typeof request.url === 'object' && request.url.query) {
+    if (typeof request.url === 'object' && request.url?.query) {
       parameters = this.importParameters(request.url?.query);
     }
+
+    const preRequestScript = this.importPreRequestScript(event);
+    const afterResponseScript = this.importAfterResponseScript(event);
+
     return {
       parentId,
       _id: `__REQ_${requestCount++}__`,
       _type: 'request',
       name,
       description: (request.description as string) || '',
-      url: this.importUrl(request.url),
+      url: transformPostmanToNunjucksString(this.importUrl(request.url)),
       parameters: parameters,
       method: request.method || 'GET',
       headers: headers.map(({ key, value, disabled, description }) => ({
-        name: key,
-        value,
+        name: transformPostmanToNunjucksString(key),
+        value: transformPostmanToNunjucksString(value),
         ...(typeof disabled !== 'undefined' ? { disabled } : {}),
         ...(typeof description !== 'undefined' ? { description } : {}),
       })),
       body: this.importBody(request.body, headers.find(({ key }) => key === 'Content-Type')?.value),
       authentication,
+      preRequestScript,
+      afterResponseScript,
     };
   };
 
@@ -152,19 +257,25 @@ export class ImportPostman {
       return [];
     }
     return parameters.map(({ key, value, disabled }) => ({
-      name: key,
-      value,
+      name: transformPostmanToNunjucksString(key),
+      value: transformPostmanToNunjucksString(value),
       disabled: disabled || false,
     }) as Parameter);
   };
 
-  importFolderItem = ({ name, description }: Folder, parentId: string) => {
+  importFolderItem = ({ name, description, event, auth }: Folder, parentId: string) => {
+    const { authentication } = this.importAuthentication(auth);
+    const preRequestScript = this.importPreRequestScript(event);
+    const afterResponseScript = this.importAfterResponseScript(event);
     return {
       parentId,
       _id: `__GRP_${requestGroupCount++}__`,
       _type: 'request_group',
       name,
       description: description || '',
+      preRequestScript,
+      afterResponseScript,
+      authentication,
     };
   };
 
@@ -173,15 +284,24 @@ export class ImportPostman {
       item,
       info: { name, description },
       variable,
+      auth,
+      event,
     } = this.collection;
 
-    const postmanVariable = this.importVariable(variable || []);
+    const postmanVariable = this.importVariable((variable as { [key: string]: string }[]) || []);
+    const { authentication } = this.importAuthentication(auth);
+    const preRequestScript = this.importPreRequestScript(event);
+    const afterResponseScript = this.importAfterResponseScript(event);
+
     const collectionFolder: ImportRequest = {
       parentId: '__WORKSPACE_ID__',
       _id: `__GRP_${requestGroupCount++}__`,
       _type: 'request_group',
       name,
       description: typeof description === 'string' ? description : '',
+      authentication,
+      preRequestScript,
+      afterResponseScript,
     };
 
     if (postmanVariable) {
@@ -242,7 +362,7 @@ export class ImportPostman {
       ({ key, value, type, enabled, disabled, src }) => {
         const item: Parameter = {
           type,
-          name: key,
+          name: transformPostmanToNunjucksString(key),
         };
 
         if (schema === POSTMAN_SCHEMA_V2_0) {
@@ -253,6 +373,8 @@ export class ImportPostman {
 
         if (type === 'file') {
           item.fileName = src as string;
+        } else if (typeof value === 'string') {
+          item.value = transformPostmanToNunjucksString(value);
         } else {
           item.value = value as string;
         }
@@ -274,8 +396,8 @@ export class ImportPostman {
 
     const params = urlEncoded?.map(({ key, value, enabled, disabled }) => {
       const item: Parameter = {
-        value,
-        name: key,
+        value: transformPostmanToNunjucksString(value),
+        name: transformPostmanToNunjucksString(key),
       };
 
       if (schema === POSTMAN_SCHEMA_V2_0) {
@@ -300,7 +422,7 @@ export class ImportPostman {
 
     return {
       mimeType,
-      text: raw,
+      text: transformPostmanToNunjucksString(raw),
     };
   };
 
@@ -311,7 +433,7 @@ export class ImportPostman {
 
     return {
       mimeType: 'application/graphql',
-      text: JSON.stringify(graphql),
+      text: transformPostmanToNunjucksString(JSON.stringify(graphql)),
     };
   };
 
@@ -528,6 +650,8 @@ export class ImportPostman {
       username: RegExp(/.+?(?=\:)/).exec(authString)?.[0],
       password: RegExp(/(?<=\:).*/).exec(authString)?.[0],
     };
+    item.username = transformPostmanToNunjucksString(item.username);
+    item.password = transformPostmanToNunjucksString(item.password);
 
     return item;
   };
@@ -555,7 +679,7 @@ export class ImportPostman {
         'token',
       );
     }
-
+    item.token = transformPostmanToNunjucksString(item.token);
     return item;
   };
 
@@ -563,7 +687,7 @@ export class ImportPostman {
     if (!authHeader) {
       return {};
     }
-    const authHeader2 = authHeader.replace(/\s+/, ' ');
+    const authHeader2 = transformPostmanToNunjucksString(authHeader.replace(/\s+/, ' '));
     const tokenIndex = authHeader.indexOf(' ');
     return {
       type: 'bearer',
@@ -703,7 +827,7 @@ export class ImportPostman {
       disabled: false,
     };
   };
-  importOauth2Authentication = (auth: Authetication) => {
+  importOauth2Authentication = (auth: Authetication): AuthTypeOAuth2 | {} => {
     if (!auth.oauth2) {
       return {};
     }
@@ -775,7 +899,11 @@ export const convert: Converter = rawData => {
       collection.info.schema === POSTMAN_SCHEMA_V2_0 ||
       collection.info.schema === POSTMAN_SCHEMA_V2_1
     ) {
-      return new ImportPostman(collection).importCollection();
+      const list = new ImportPostman(collection).importCollection();
+      // make import order play nice with existing pattern of descending negavitve numbers (technically ascending) eg. -3, -2, -1
+      const now = Date.now();
+      const ordered = list.map((item, index) => ({ ...item, metaSortKey: -1 * (now - index) }));
+      return ordered;
     }
   } catch (error) {
     // Nothing

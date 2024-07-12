@@ -1,11 +1,12 @@
 import React, { FC } from 'react';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getAccountId } from '../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { isOwnerOfOrganization } from '../../../models/organization';
-import { type FeatureList, useOrganizationLoaderData } from '../../../ui/routes/organization';
+import { useOrganizationLoaderData } from '../../../ui/routes/organization';
+import { useRootLoaderData } from '../../routes/root';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
@@ -74,17 +75,18 @@ interface Props {
   createRequestCollection: () => void;
   createDesignDocument: () => void;
   createMockServer: () => void;
+  createEnvironment: () => void;
   importFrom: () => void;
   cloneFromGit: () => void;
+  isGitSyncEnabled: boolean;
 }
 
-export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, createMockServer, importFrom, cloneFromGit }) => {
+export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, createMockServer, createEnvironment, importFrom, cloneFromGit, isGitSyncEnabled }) => {
   const { organizationId } = useParams<{ organizationId: string }>();
   const { organizations } = useOrganizationLoaderData();
+  const { userSession } = useRootLoaderData();
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
-  const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
 
-  const isGitSyncEnabled = features.gitSync.enabled;
   const accountId = getAccountId();
 
   const showUpgradePlanModal = () => {
@@ -93,7 +95,7 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
     }
     const isOwner = isOwnerOfOrganization({
       organization: currentOrg,
-      accountId,
+      accountId: userSession.accountId,
     });
 
     isOwner ?
@@ -155,6 +157,16 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
             }}
           /> New Mock Server
         </SquareButton>
+        <SquareButton
+          onClick={createEnvironment}
+        >
+          <i
+            className='fa fa-code'
+            style={{
+              fontSize: 'var(--font-size-xl)',
+            }}
+          /> New Environment
+        </SquareButton>
       </div>
       <Divider
         style={{
@@ -205,6 +217,7 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
         </AlmostSquareButton>
         <AlmostSquareButton
           aria-label='Clone git repository'
+          data-test-git-enable={isGitSyncEnabled}
           onClick={
             () => {
               isGitSyncEnabled ?

@@ -1,4 +1,4 @@
-import electron, { BrowserWindow, ipcMain } from 'electron';
+import electron, { BrowserWindow } from 'electron';
 import fs from 'fs';
 import { IncomingMessage } from 'http';
 import path from 'path';
@@ -24,11 +24,11 @@ import type { WebSocketResponse } from '../../models/websocket-response';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
+import { filterClientCertificates } from '../../network/certificate';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
-import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
 import { invariant } from '../../utils/invariant';
-import { setDefaultProtocol } from '../../utils/url/protocol';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
+import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 
 export interface WebSocketConnection extends WebSocket {
   _id: string;
@@ -118,7 +118,6 @@ const openWebSocketConnection = async (
   }
 
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
-  fs.mkdirSync(responsesDir, { recursive: true });
 
   const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
@@ -156,7 +155,7 @@ const openWebSocketConnection = async (
         headers.push(getBasicAuthHeader(username, password, encoding));
       }
       if (options.authentication.type === AUTH_API_KEY) {
-        const { key, value, addTo } = options.authentication;
+        const { key = '', value = '', addTo } = options.authentication;  // Ensure key is not undefined
         if (addTo === HEADER) {
           headers.push({ name: key, value: value });
         } else if (addTo === COOKIE) {
@@ -170,7 +169,7 @@ const openWebSocketConnection = async (
           url = joinUrlAndQueryString(options.url, qs);
         }
       }
-      if (options.authentication.type === AUTH_BEARER) {
+      if (options.authentication.type === AUTH_BEARER && options.authentication.token) {
         const { token, prefix } = options.authentication;
         headers.push(getBearerAuthHeader(token, prefix));
       }
@@ -183,7 +182,7 @@ const openWebSocketConnection = async (
     const start = performance.now();
 
     const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
-    const filteredClientCertificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'wss:'), options.url));
+    const filteredClientCertificates = filterClientCertificates(clientCertificates, options.url, 'wss:');
     const pemCertificates: string[] = [];
     const pemCertificateKeys: KeyObject[] = [];
     const pfxCertificates: PxfObject[] = [];
@@ -221,7 +220,7 @@ const openWebSocketConnection = async (
       'on': true,
       'global': settings.followRedirects,
     }[request.settingFollowRedirects] ?? true;
-    const protocols = lowerCasedEnabledHeaders['sec-websocket-protocol'];
+    const protocols = lowerCasedEnabledHeaders['sec-websocket-protocol']?.split(',').map(p => p.trim());
     const ws = new WebSocket(url, protocols, {
       headers: lowerCasedEnabledHeaders,
       ca: caCertificate,
@@ -421,7 +420,7 @@ const sendPayload = async (ws: WebSocket, options: { payload: string; requestId:
     if (error) {
       console.error(error);
     } else {
-      console.log('Message sent');
+      console.log('[main] Message sent');
     }
   });
 
@@ -495,12 +494,12 @@ export interface WebSocketBridgeAPI {
   };
 }
 export const registerWebSocketHandlers = () => {
-  ipcMain.handle('webSocket.open', openWebSocketConnection);
-  ipcMain.handle('webSocket.event.send', (_, options: Parameters<typeof sendWebSocketEvent>[0]) => sendWebSocketEvent(options));
-  ipcMain.on('webSocket.close', (_, options: Parameters<typeof closeWebSocketConnection>[0]) => closeWebSocketConnection(options));
-  ipcMain.on('webSocket.closeAll', closeAllWebSocketConnections);
-  ipcMain.handle('webSocket.readyState', (_, options: Parameters<typeof getWebSocketReadyState>[0]) => getWebSocketReadyState(options));
-  ipcMain.handle('webSocket.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
+  ipcMainHandle('webSocket.open', openWebSocketConnection);
+  ipcMainHandle('webSocket.event.send', (_, options: Parameters<typeof sendWebSocketEvent>[0]) => sendWebSocketEvent(options));
+  ipcMainOn('webSocket.close', (_, options: Parameters<typeof closeWebSocketConnection>[0]) => closeWebSocketConnection(options));
+  ipcMainOn('webSocket.closeAll', closeAllWebSocketConnections);
+  ipcMainHandle('webSocket.readyState', (_, options: Parameters<typeof getWebSocketReadyState>[0]) => getWebSocketReadyState(options));
+  ipcMainHandle('webSocket.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
 };
 
 electron.app.on('window-all-closed', closeAllWebSocketConnections);

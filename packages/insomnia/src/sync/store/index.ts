@@ -56,7 +56,7 @@ export default class Store {
       // Without the `await` here, the catch won't get called
       value = await this._deserialize(ext, rawValue);
     } catch (err) {
-      console.log('Failed to deserialize', rawValue.toString('base64'));
+      console.log('[sync] Failed to deserialize', rawValue.toString('base64'));
       throw new Error(`Failed to deserialize key=${key} err=${err}`);
     }
 

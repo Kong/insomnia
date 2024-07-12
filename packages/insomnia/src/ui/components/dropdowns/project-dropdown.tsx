@@ -15,11 +15,14 @@ import {
   Radio,
   RadioGroup,
   TextField,
+  Tooltip,
+  TooltipTrigger,
 } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 
 import {
   isDefaultOrganizationProject,
+  isRemoteProject,
   Project,
 } from '../../../models/project';
 import { Icon } from '../icon';
@@ -29,6 +32,7 @@ import { AskModal } from '../modals/ask-modal';
 interface Props {
   project: Project;
   organizationId: string;
+  storage: 'cloud_only' | 'local_only' | 'cloud_plus_local';
 }
 
 interface ProjectActionItem {
@@ -38,13 +42,16 @@ interface ProjectActionItem {
   action: (projectId: string, projectName: string) => void;
 }
 
-export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
+export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage }) => {
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] =
     useState(false);
   const deleteProjectFetcher = useFetcher();
   const updateProjectFetcher = useFetcher();
   const [projectType, setProjectType] = useState<'local' | 'remote' | ''>('');
 
+  const isRemoteProjectInconsistent = isRemoteProject(project) && storage === 'local_only';
+  const isLocalProjectInconsistent = !isRemoteProject(project) && storage === 'cloud_only';
+  const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent;
   const projectActionList: ProjectActionItem[] = [
     {
       id: 'settings',
@@ -88,8 +95,37 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
     }
   }, [deleteProjectFetcher.data, deleteProjectFetcher.state]);
 
+  useEffect(() => {
+    if (updateProjectFetcher.data && updateProjectFetcher.data.error && updateProjectFetcher.state === 'idle') {
+      showAlert({
+        title: 'Could not update project',
+        message: updateProjectFetcher.data.error,
+      });
+    }
+  }, [updateProjectFetcher.data, updateProjectFetcher.state]);
+
   return (
     <Fragment>
+      {isProjectInconsistent &&
+        <TooltipTrigger>
+          <Button
+            onPress={() => setIsProjectSettingsModalOpen(true)}
+            className="opacity-80 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          >
+            <Icon
+              icon='triangle-exclamation'
+              color="var(--color-warning)"
+            />
+          </Button>
+          <Tooltip
+            placement="top"
+            offset={4}
+            className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+          >
+            {`This project type is not allowed by the organization owner. You can manually convert it to use ${storage === 'cloud_only' ? 'Cloud Sync' : 'Local Vault'}.`}
+          </Tooltip>
+        </TooltipTrigger>
+      }
       <MenuTrigger>
         <Button
           aria-label="Project Actions"
@@ -197,22 +233,27 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
                       </Label>
                       <div className="flex gap-2">
                         <Radio
+                          isDisabled={storage === 'local_only'}
                           value="remote"
-                          className="data-[selected]:border-[--color-surprise] flex-1 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                          className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
-                          <Icon icon="globe" />
-                          <Heading className="text-lg font-bold">Secure Cloud</Heading>
+                          <div className='flex items-center gap-2'>
+                            <Icon icon="globe" />
+                            <Heading className="text-lg font-bold">Cloud Sync</Heading>
+                          </div>
                           <p className='pt-2'>
-                            End-to-end encrypted (E2EE) and synced securely to the cloud, ideal for collaboration.
+                            Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
                           </p>
                         </Radio>
                         <Radio
-                          isDisabled={isDefaultOrganizationProject(project)}
+                          isDisabled={storage === 'cloud_only'}
                           value="local"
                           className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
-                          <Icon icon="laptop" />
-                          <Heading className="text-lg font-bold">Local Vault</Heading>
+                          <div className='flex items-center gap-2'>
+                            <Icon icon="laptop" />
+                            <Heading className="text-lg font-bold">Local Vault</Heading>
+                          </div>
                           <p className="pt-2">
                             Stored locally only with no cloud. Ideal when collaboration is not needed.
                           </p>
@@ -246,10 +287,10 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
                     <div className='text-[--color-font] flex flex-col gap-4'>
                       <div className='flex flex-col gap-4'>
                         <p>
-                          We will be synchronizing your local project to Insomnia's Cloud in a secure end-to-end encrypted format (E2EE) which will enable cloud collaboration.
+                          We will be synchronizing your local project to Insomnia's Cloud in a secure encrypted format which will enable cloud collaboration.
                         </p>
                         <ul className='text-left flex flex-col gap-2'>
-                          <li><i className="fa fa-check text-emerald-600" /> Your data in the cloud is end-to-end encrypted (E2EE) and secure.</li>
+                          <li><i className="fa fa-check text-emerald-600" /> Your data in the cloud is encrypted and secure.</li>
                           <li><i className="fa fa-check text-emerald-600" /> You can now collaborate with any amount of users and use cloud features.</li>
                           <li><i className="fa fa-check text-emerald-600" /> Your project will be always available on any client after logging in.</li>
                         </ul>
@@ -263,7 +304,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
                     <div className="flex items-center gap-2 text-sm">
                       <Icon icon="info-circle" />
                       <span>
-                        For both project types you can optionally enable Git Sync
+                        {isProjectInconsistent && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`} You can optionally enable Git Sync
                       </span>
                     </div>
                     <div className='flex items-center gap-2'>

@@ -1,5 +1,6 @@
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
+import { RequestAuthentication, RequestHeader } from './request';
 
 export const name = 'Folder';
 
@@ -16,6 +17,10 @@ interface BaseRequestGroup {
   environment: Record<string, any>;
   environmentPropertyOrder: Record<string, any> | null;
   metaSortKey: number;
+  preRequestScript?: string;
+  afterResponseScript?: string;
+  authentication?: RequestAuthentication | {};
+  headers?: RequestHeader[];
 }
 
 export type RequestGroup = BaseModel & BaseRequestGroup;
@@ -31,6 +36,10 @@ export function init(): BaseRequestGroup {
     environment: {},
     environmentPropertyOrder: null,
     metaSortKey: -1 * Date.now(),
+    preRequestScript: undefined,
+    afterResponseScript: undefined,
+    authentication: undefined,
+    headers: undefined,
   };
 }
 
@@ -78,7 +87,6 @@ export async function duplicate(requestGroup: RequestGroup, patch: Partial<Reque
     },
   };
 
-  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   const [nextRequestGroup] = await db.find<RequestGroup>(type, q, {
     metaSortKey: 1,
   });
@@ -96,4 +104,4 @@ export async function duplicate(requestGroup: RequestGroup, patch: Partial<Reque
   });
 }
 
-export const isRequestGroupId = (id: string) => id.startsWith(prefix);
+export const isRequestGroupId = (id?: string | null) => id?.startsWith(prefix);

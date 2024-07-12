@@ -18,9 +18,9 @@ export interface BaseWebSocketRequest {
   url: string;
   metaSortKey: number;
   headers: RequestHeader[];
-  authentication: RequestAuthentication;
+  authentication: RequestAuthentication | {};
   parameters: RequestParameter[];
-  pathParameters: RequestPathParameter[];
+  pathParameters?: RequestPathParameter[];
   settingEncodeUrl: boolean;
   settingStoreCookies: boolean;
   settingSendCookies: boolean;
@@ -33,7 +33,7 @@ export const isWebSocketRequest = (model: Pick<BaseModel, 'type'>): model is Web
   model.type === type
 );
 
-export const isWebSocketRequestId = (id: string | null) => (
+export const isWebSocketRequestId = (id?: string | null) => (
   id?.startsWith(`${prefix}_`)
 );
 
@@ -44,7 +44,7 @@ export const init = (): BaseWebSocketRequest => ({
   headers: [],
   authentication: {},
   parameters: [],
-  pathParameters: [],
+  pathParameters: undefined,
   settingEncodeUrl: true,
   settingStoreCookies: true,
   settingSendCookies: true,
@@ -85,7 +85,7 @@ export async function duplicate(request: WebSocketRequest, patch: Partial<WebSoc
       $gt: request.metaSortKey,
     },
   };
-  // @ts-expect-error -- Database TSCONVERSION
+
   const [nextRequest] = await database.find<WebSocketRequest>(type, q, {
     metaSortKey: 1,
   });

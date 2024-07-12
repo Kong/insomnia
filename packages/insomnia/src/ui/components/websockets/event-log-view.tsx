@@ -1,8 +1,7 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import React, { FC, useRef } from 'react';
-import { useMeasure } from 'react-use';
-import styled from 'styled-components';
+import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
 
 import { CurlEvent } from '../../../main/network/curl';
 import { WebSocketEvent } from '../../../main/network/websocket';
@@ -18,67 +17,6 @@ interface Props {
   selectionId?: string;
   onSelect: (event: WebSocketEvent | CurlEvent) => void;
 }
-
-const Divider = styled('div')({
-  height: '100%',
-  width: '1px',
-  backgroundColor: 'var(--hl-md)',
-});
-
-const AutoSize = styled.div({
-  flex: '1 0',
-  overflow: 'hidden',
-});
-
-const Scrollable = styled.div({
-  overflowY: 'scroll',
-});
-
-const HeadingRow = styled('div')({
-  flex: '0 0 30px',
-  display: 'flex',
-  width: '100%',
-  alignItems: 'center',
-  borderBottom: '1px solid var(--hl-md)',
-  paddingRight: 'var(--scrollbar-width)',
-  boxSizing: 'border-box',
-});
-
-const Row = styled('div')<{ isActive: boolean }>(({ isActive }) => ({
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  height: '30px',
-  display: 'flex',
-  width: '100%',
-  alignItems: 'center',
-  borderBottom: '1px solid var(--hl-md)',
-  boxSizing: 'border-box',
-  backgroundColor: isActive ? 'var(--hl-lg)' : 'transparent',
-}));
-
-const List = styled('div')({
-  width: '100%',
-  position: 'relative',
-});
-
-const EventLog = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
-  width: '100%',
-  height: '100%',
-  overflow: 'hidden',
-  borderTop: '1px solid var(--hl-md)',
-});
-
-const EventIconCell = styled('div')({
-  flex: '0 0 15px',
-  height: '100%',
-  display: 'flex',
-  alignItems: 'center',
-  boxSizing: 'border-box',
-  padding: 'var(--padding-xs)',
-});
 
 function getIcon(event: WebSocketEvent | CurlEvent): SvgIconProps['icon'] {
   switch (event.type) {
@@ -104,14 +42,6 @@ function getIcon(event: WebSocketEvent | CurlEvent): SvgIconProps['icon'] {
   }
 }
 
-const EventMessageCell = styled('div')({
-  flex: '1 0',
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  padding: 'var(--padding-xs)',
-});
-
 const getMessage = (event: WebSocketEvent | CurlEvent): string => {
   switch (event.type) {
     case 'message': {
@@ -135,13 +65,8 @@ const getMessage = (event: WebSocketEvent | CurlEvent): string => {
   }
 };
 
-const EventTimestampCell = styled('div')({
-  flex: '0 0 80px',
-  padding: 'var(--padding-xs)',
-});
-
 export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
-  const parentRef = useRef<HTMLDivElement>(null);
+  const parentRef = useRef<HTMLTableSectionElement>(null);
   const virtualizer = useVirtualizer({
     getScrollElement: () => parentRef.current,
     count: events.length,
@@ -150,55 +75,63 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
     getItemKey: index => events[index]._id,
   });
 
-  const [autoSizeRef, { height }] = useMeasure<HTMLDivElement>();
-
   return (
-    <EventLog>
-      <HeadingRow>
-        <EventIconCell>
-          <div style={{ width: '13px' }} />
-        </EventIconCell>
-        <Divider />
-        <EventMessageCell>Data</EventMessageCell>
-        <Divider />
-        <EventTimestampCell>Time</EventTimestampCell>
-      </HeadingRow>
-      <AutoSize ref={autoSizeRef}>
-        <Scrollable style={{ height }} ref={parentRef}>
-          <List
-            style={{
-              height: `${virtualizer.getTotalSize()}px`,
-            }}
+    <>
+      <div className='w-full flex-1 overflow-hidden border border-solid border-[--hl-sm] select-none overflow-y-auto max-h-96'>
+        <Table
+          selectionMode='single'
+          selectedKeys={selectionId ? [selectionId] : []}
+          selectionBehavior='replace'
+          onSelectionChange={keys => {
+            if (keys !== 'all') {
+              const key = keys.values().next().value;
+
+              const event = events.find(e => e._id === key);
+
+              if (event) {
+                onSelect(event);
+              }
+            }
+          }}
+          aria-label='Modified objects'
+          className="border-separate border-spacing-0 w-full"
+        >
+          <TableHeader className='sticky top-0 z-10 backdrop-blur backdrop-filter bg-[--hl-xs]'>
+            <Column isRowHeader className="p-3 text-left text-xs font-semibold  focus:outline-none">
+              <span />
+            </Column>
+            <Column className="p-3 text-left text-xs font-semibold focus:outline-none">
+              Data
+            </Column>
+            <Column className="p-3 text-left text-xs font-semibold focus:outline-none">
+              Time
+            </Column>
+          </TableHeader>
+          <TableBody
+            style={{ height: virtualizer.getTotalSize() }}
+            ref={parentRef}
+            className="divide divide-[--hl-sm] divide-solid"
+            items={virtualizer.getVirtualItems()}
           >
-            {virtualizer.getVirtualItems().map(item => {
+            {item => {
               const event = events[item.index];
-
               return (
-                <Row
-                  key={item.key}
-                  onClick={() => onSelect(event)}
-                  isActive={event._id === selectionId}
-                  style={{
-                    height: `${item.size}px`,
-                    transform: `translateY(${item.start}px)`,
-                  }}
-                >
-                  <EventIconCell>
+                <Row className="group focus:outline-none focus-within:bg-[--hl-sm] transition-colors">
+                  <Cell className="p-2 whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
                     <SvgIcon icon={getIcon(event)} />
-                  </EventIconCell>
-                  <Divider />
-
-                  <EventMessageCell>{getMessage(event)}</EventMessageCell>
-                  <Divider />
-                  <EventTimestampCell>
+                  </Cell>
+                  <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                    {getMessage(event)}
+                  </Cell>
+                  <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
                     <Timestamp time={event.timestamp} />
-                  </EventTimestampCell>
+                  </Cell>
                 </Row>
               );
-            })}
-          </List>
-        </Scrollable>
-      </AutoSize>
-    </EventLog>
+            }}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 };

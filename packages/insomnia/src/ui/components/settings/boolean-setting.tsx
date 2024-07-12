@@ -39,10 +39,8 @@ export const BooleanSetting: FC<{
 
   return (
     <>
-      <div className="form-control form-control--thin">
-        <label className="inline-block">
-          {label}
-          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
+      <div className="">
+        <label className="flex items-center gap-2">
           <input
             checked={Boolean(settings[setting])}
             name={setting}
@@ -50,6 +48,8 @@ export const BooleanSetting: FC<{
             type="checkbox"
             disabled={disabled}
           />
+          {label}
+          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
         </label>
       </div>
 

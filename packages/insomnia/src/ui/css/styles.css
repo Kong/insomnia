@@ -12,25 +12,46 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-  font-size: 11px;
+* {
+  scrollbar-width: thin;
 }
 
-.grid-template-app-layout-with-banner {
-  grid-template: 
-    'Header Header' auto
-    'Banner Banner' 30px
-    'Navbar Content' 1fr
-    'Statusbar Statusbar' 30px [row-end]
-    / 50px 1fr;
+html {
+  font-size: 11px;
 }
 
 .grid-template-app-layout {
   grid-template:
     'Header Header' auto
+    'Content Content' 1fr
+    'Statusbar Statusbar' 30px [row-end]
+    / 50px 1fr;
+
+  &.with-banner {
+    grid-template: 
+    'Header Header' auto
+    'Banner Banner' 30px
+    'Content Content' 1fr
+    'Statusbar Statusbar' 30px [row-end]
+    / 50px 1fr;
+
+    &.with-navbar {
+      grid-template: 
+      'Header Header' auto
+      'Banner Banner' 30px
+      'Navbar Content' 1fr
+      'Statusbar Statusbar' 30px [row-end]
+      / 50px 1fr;
+    }
+  }
+
+  &.with-navbar {
+    grid-template: 
+    'Header Header' auto
     'Navbar Content' 1fr
     'Statusbar Statusbar' 30px [row-end]
     / 50px 1fr;
+  }
 }
 
 input[type="search"]::-webkit-search-cancel-button {
@@ -62,4 +83,82 @@ input[type="color"]::-webkit-color-swatch {
   background-color: var(--color-bg);
   color: var(--color-font);
   overflow: hidden;
+}
+
+table.json-diff-viewer {
+  colgroup {
+    width: 100%;
+
+    col {
+      width: 50%
+    }
+  }
+
+  td {
+    padding: 1px 4px;
+    font-size: 0;
+  }
+  
+  tr {
+    vertical-align: top;
+
+    .line-remove {
+      background: rgba(var(--color-danger-rgb), 0.2);
+      color: var(--color-font)
+    }
+
+    .line-add {
+      background: rgba(var(--color-success-rgb), 0.2);
+      color: var(--color-font);
+    }
+
+    .line-modify {
+      background: rgba(var(--color-warning-rgb), 0.2);
+      color: var(--color-font);
+    }
+
+    &.expand-line {
+      text-align: center;
+
+      button {
+        margin: 0 0.5em;
+        padding: 0;
+        color: var(--color-font);
+        font-size: 12px;
+        border: none;
+        background: transparent;
+        user-select: none;
+        cursor: pointer;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  pre {
+    margin: 0;
+    font-size: 12px;
+    line-height: 16px;
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+} 
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.9);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.bounce-in {
+  animation: bounceIn 350ms ease-in;
 }

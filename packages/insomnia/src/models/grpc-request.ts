@@ -28,6 +28,12 @@ interface BaseGrpcRequest {
   metadata: GrpcRequestHeader[];
   metaSortKey: number;
   isPrivate: boolean;
+  reflectionApi: {
+    enabled: boolean;
+    url: string;
+    apiKey: string;
+    module: string;
+  };
 }
 
 export type GrpcRequest = BaseModel & BaseGrpcRequest;
@@ -36,7 +42,7 @@ export const isGrpcRequest = (model: Pick<BaseModel, 'type'>): model is GrpcRequ
   model.type === type
 );
 
-export const isGrpcRequestId = (id: string | null) => (
+export const isGrpcRequestId = (id?: string | null) => (
   id?.startsWith(`${prefix}_`)
 );
 
@@ -53,6 +59,12 @@ export function init(): BaseGrpcRequest {
     },
     metaSortKey: -1 * Date.now(),
     isPrivate: false,
+    reflectionApi: {
+      enabled: false,
+      url: 'https://buf.build',
+      apiKey: '',
+      module: 'buf.build/connectrpc/eliza',
+    },
   };
 }
 
@@ -104,7 +116,7 @@ export async function duplicate(request: GrpcRequest, patch: Partial<GrpcRequest
       $gt: request.metaSortKey,
     },
   };
-  // @ts-expect-error -- TSCONVERSION
+
   const [nextRequest] = await db.find<GrpcRequest>(type, q, {
     metaSortKey: 1,
   });

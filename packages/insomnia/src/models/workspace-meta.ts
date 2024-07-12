@@ -1,8 +1,3 @@
-import {
-  DEFAULT_PANE_HEIGHT,
-  DEFAULT_PANE_WIDTH,
-  DEFAULT_SIDEBAR_WIDTH,
-} from '../common/constants';
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
@@ -15,19 +10,14 @@ export const canSync = false;
 export interface BaseWorkspaceMeta {
   activeActivity: string | null;
   activeEnvironmentId: string | null;
+  activeGlobalEnvironmentId: string | null;
   activeRequestId: string | null;
   activeUnitTestSuiteId: string | null;
   cachedGitLastAuthor: string | null;
   cachedGitLastCommitTime: number | null;
   cachedGitRepositoryBranch: string | null;
   gitRepositoryId: string | null;
-  hasSeen: boolean;
-  paneHeight: number;
-  paneWidth: number;
   parentId: string | null;
-  sidebarFilter: string;
-  sidebarHidden: boolean;
-  sidebarWidth: number;
   pushSnapshotOnInitialize: boolean;
 }
 
@@ -41,19 +31,14 @@ export function init(): BaseWorkspaceMeta {
   return {
     activeActivity: null,
     activeEnvironmentId: null,
+    activeGlobalEnvironmentId: null,
     activeRequestId: null,
     activeUnitTestSuiteId: null,
     cachedGitLastAuthor: null,
     cachedGitLastCommitTime: null,
     cachedGitRepositoryBranch: null,
     gitRepositoryId: null,
-    hasSeen: true,
-    paneHeight: DEFAULT_PANE_HEIGHT,
-    paneWidth: DEFAULT_PANE_WIDTH,
     parentId: null,
-    sidebarFilter: '',
-    sidebarHidden: false,
-    sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
     pushSnapshotOnInitialize: false,
   };
 }
@@ -85,7 +70,6 @@ export async function getByParentId(parentId: string) {
 }
 
 export async function getByGitRepositoryId(gitRepositoryId: string) {
-  // @ts-expect-error -- TSCONVERSION needs generic for query
   return db.getWhere<WorkspaceMeta>(type, { gitRepositoryId });
 }
 

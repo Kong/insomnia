@@ -1,7 +1,7 @@
 options:
-  appDataDir: configFile
-  workingDir: workingDir
-  ci: true
+  ci: false
   shouldBeIgnored: this should be ignored because it is not a global option
+  verbose: true
 scripts:
-  lint: inso lint spec
+  lintSpec: inso lint spec
+  exportSpec: inso export spec

@@ -1,12 +1,13 @@
 import React, { ChangeEvent, FC, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
+import { AUTH_OAUTH_2 } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
 import * as models from '../../../../models';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
-import type { AuthTypeOAuth2, OAuth2ResponseType, Request } from '../../../../models/request';
+import type { AuthTypeOAuth2, OAuth2ResponseType, RequestAuthentication } from '../../../../models/request';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,
@@ -19,6 +20,7 @@ import { getOAuth2Token } from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/get-token';
 import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
 import { RequestLoaderData } from '../../../routes/request';
+import { RequestGroupLoaderData } from '../../../routes/request-group';
 import { Link } from '../../base/link';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
@@ -88,7 +90,7 @@ const credentialsInBodyOptions = [
   },
 ];
 
-const getFields = (authentication: Request['authentication']) => {
+const getFields = (authentication: Extract<RequestAuthentication, { type: typeof AUTH_OAUTH_2 }>) => {
   const clientId = <AuthInputRow label='Client ID' property='clientId' key='clientId' />;
   const clientSecret = <AuthInputRow label='Client Secret' property='clientSecret' key='clientSecret' />;
   const usePkce = <AuthToggleRow label='Use PKCE' property='usePkce' key='usePkce' onTitle='Disable PKCE' offTitle='Enable PKCE' />;
@@ -146,7 +148,7 @@ const getFields = (authentication: Request['authentication']) => {
   };
 };
 
-const getFieldsForGrantType = (authentication: Request['authentication']) => {
+const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { type: typeof AUTH_OAUTH_2 }>) => {
   const {
     clientId,
     clientSecret,
@@ -244,9 +246,11 @@ const getFieldsForGrantType = (authentication: Request['authentication']) => {
 };
 
 export const OAuth2Auth: FC = () => {
-  const { activeRequest: { authentication } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const { authentication } = reqData?.activeRequest || groupData.activeRequestGroup;
 
-  const { basic, advanced } = getFieldsForGrantType(authentication);
+  const { basic, advanced } = getFieldsForGrantType(authentication as AuthTypeOAuth2);
 
   return (
     <>
@@ -338,13 +342,14 @@ const renderAccessTokenExpiry = (token?: Pick<OAuth2Token, 'accessToken' | 'expi
 };
 
 const OAuth2TokenInput: FC<{ token: OAuth2Token | null; label: string; property: keyof Pick<OAuth2Token, 'accessToken' | 'refreshToken' | 'identityToken'> }> = ({ token, label, property }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-
+  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const { _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   const onChange = async ({ currentTarget: { value } }: ChangeEvent<HTMLInputElement>) => {
     if (token) {
       await models.oAuth2Token.update(token, { [property]: value });
     } else {
-      await models.oAuth2Token.create({ [property]: value, parentId: activeRequest._id });
+      await models.oAuth2Token.create({ [property]: value, parentId: _id });
     }
   };
 
@@ -421,15 +426,17 @@ const OAuth2Error: FC<{ token: OAuth2Token | null }> = ({ token }) => {
 };
 
 const OAuth2Tokens: FC = () => {
-  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   const [token, setToken] = useState<OAuth2Token | null>(null);
   useEffect(() => {
     const fn = async () => {
-      const token = await models.oAuth2Token.getByParentId(requestId);
+      const token = await models.oAuth2Token.getByParentId(_id);
       setToken(token);
     };
     fn();
-  }, [requestId]);
+  }, [_id]);
   const { handleRender } = useNunjucks();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -469,7 +476,7 @@ const OAuth2Tokens: FC = () => {
 
             try {
               const renderedAuthentication = await handleRender(authentication) as AuthTypeOAuth2;
-              const t = await getOAuth2Token(requestId, renderedAuthentication, true);
+              const t = await getOAuth2Token(_id, renderedAuthentication, true);
               setToken(t);
               setLoading(false);
             } catch (err) {

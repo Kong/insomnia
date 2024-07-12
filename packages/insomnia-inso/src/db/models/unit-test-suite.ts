@@ -1,7 +1,7 @@
 // @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
 import { AutoComplete } from 'enquirer';
 
-import { logger } from '../../logger';
+import { logger } from '../../cli';
 import type { Database } from '../index';
 import { loadApiSpec } from './api-spec';
 import type { UnitTestSuite } from './types';
@@ -36,7 +36,7 @@ export const loadTestSuites = (
   const workspace = loadWorkspace(db, apiSpec?.parentId || identifier); // if identifier is for an apiSpec or a workspace, return all suites for that workspace
 
   if (workspace) {
-    return db.UnitTestSuite.filter(s => s.parentId === workspace._id);
+    return db.UnitTestSuite.filter(s => s.parentId === workspace._id).sort((a, b) => a.metaSortKey - b.metaSortKey);
   } // load particular suite
 
   const result = loadUnitTestSuite(db, identifier);

@@ -1,3 +1,4 @@
+import { isValid } from 'date-fns';
 import React, { FC, useCallback, useState } from 'react';
 import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
@@ -6,6 +7,7 @@ import { cookieToString } from '../../common/cookies';
 import { Cookie } from '../../models/cookie-jar';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
 import { PromptButton } from './base/prompt-button';
+import { Icon } from './icon';
 import { CookieModifyModal } from './modals/cookie-modify-modal';
 import { RenderedText } from './rendered-text';
 
@@ -26,6 +28,10 @@ const CookieRow: FC<{
   deleteCookie: (cookie: Cookie) => void;
 }> = ({ cookie, deleteCookie }) => {
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
+  if (cookie.expires && !isValid(new Date(cookie.expires))) {
+    cookie.expires = null;
+  }
+
   const c = ToughCookie.fromJSON(cookie);
   const cookieString = c ? cookieToString(c) : '';
   return <tr className="selectable" key={cookie.id}>
@@ -109,7 +115,7 @@ export const CookieList: FC<CookieListProps> = ({
               triggerButton={
                 <DropdownButton
                   title="Add cookie"
-                  className="btn btn--super-duper-compact btn--outlined txt-md"
+                  className="btn btn--super-super-compact btn--outlined txt-md"
                   disableHoverBehavior={false}
                 >
                   Actions <i className="fa fa-caret-down" />
@@ -147,9 +153,9 @@ export const CookieList: FC<CookieListProps> = ({
     </table>
     {cookies.length === 0 && <div className="pad faint italic text-center">
       <p>I couldn't find any cookies for you.</p>
-      <p>
+      <p className='pt-4'>
         <button className="btn btn--clicky" onClick={addCookie}>
-          Add Cookie <i className="fa fa-plus-circle" />
+          <Icon icon="plus" /> Add Cookie
         </button>
       </p>
     </div>}

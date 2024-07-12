@@ -5,22 +5,21 @@ import electron from 'electron';
 
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
-import { getUpdatesBaseURL } from '../common/constants';
+import { getClientString, getUpdatesBaseURL } from '../common/constants';
 import * as models from '../models';
-import { insomniaFetch } from './insomniaFetch';
 
 export async function backupIfNewerVersionAvailable() {
   try {
     const settings = await models.settings.get();
     console.log('[main] Checking for newer version than ', version);
-    const response = await insomniaFetch<{ url: string }>({
+    const response = await electron.net.fetch(`${getUpdatesBaseURL()}/builds/check/mac?v=${version}&app=${appConfig.appId}&channel=${settings.updateChannel}`, {
       method: 'GET',
-      origin: getUpdatesBaseURL(),
-      path: `/builds/check/mac?v=${version}&app=${appConfig.appId}&channel=${settings.updateChannel}`,
-      sessionId: null,
+      headers: new Headers({
+        'X-Insomnia-Client': getClientString(),
+      }),
     });
     if (response) {
-      console.log('[main] Found newer version', response);
+      console.log('[main] Found newer version');
       backup();
       return;
     }
@@ -38,7 +37,7 @@ export async function backup() {
     // skip if backup already exists at version path
     const backupFiles = await readdir(versionPath);
     if (backupFiles.length) {
-      console.log('Backup found at:', versionPath);
+      console.log('[main] Backup found at:', versionPath);
       return;
     }
     const files = await readdir(dataPath);
@@ -47,9 +46,9 @@ export async function backup() {
         await copyFile(path.join(dataPath, file), path.join(versionPath, file));
       }
     });
-    console.log('Exported backup to:', versionPath);
+    console.log('[main] Exported backup to:', versionPath);
   } catch (err) {
-    console.log('Error exporting backup:', err);
+    console.log('[main] Error exporting backup:', err);
   }
 }
 
@@ -59,7 +58,7 @@ export async function restoreBackup(version: string) {
     const versionPath = path.join(dataPath, 'backups', version);
     const files = await readdir(versionPath);
     if (!files.length) {
-      console.log('No backup found at:', versionPath);
+      console.log('[main] No backup found at:', versionPath);
       return;
     }
     files.forEach(async (file: string) => {
@@ -67,9 +66,9 @@ export async function restoreBackup(version: string) {
         await copyFile(path.join(versionPath, file), path.join(dataPath, file));
       }
     });
-    console.log('Restored backup from:', versionPath);
+    console.log('[main] Restored backup from:', versionPath);
   } catch (err) {
-    console.log('Error restoring backup:', err);
+    console.log('[main] Error restoring backup:', err);
   }
   electron.app.relaunch();
   electron.app.exit();

@@ -1,5 +1,7 @@
 import crypto from 'node:crypto';
 
+import * as bodyParser from 'body-parser';
+import * as cookieParser from 'cookie-parser';
 import express from 'express';
 import { readFileSync } from 'fs';
 import { createHandler } from 'graphql-http/lib/use/http';
@@ -16,9 +18,14 @@ import { oauthRoutes } from './oauth';
 import { startWebSocketServer } from './websocket';
 
 const app = express();
+app.use(cookieParser.default());
 const port = 4010;
 const httpsPort = 4011;
 const grpcPort = 50051;
+const rawParser = bodyParser.raw({
+  inflate: true,
+  type: '*/*',
+});
 
 app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
@@ -30,6 +37,18 @@ app.get('/builds/check/*', (_req, res) => {
     name: '2099.1.0',
   });
 });
+
+async function echoHandler(req: any, res: any) {
+  res.status(200).send({
+    method: req.method,
+    headers: req.headers,
+    data: req.body.toString(),
+    cookies: req.cookies,
+  });
+};
+
+app.get('/echo', rawParser, echoHandler);
+app.post('/echo', rawParser, echoHandler);
 
 app.get('/sleep', (_req, res) => {
   res.status(200).send({ sleep: true });
@@ -57,7 +76,7 @@ app.get('/delay/seconds/:duration', (req, res) => {
   }, delaySec * 1000);
 });
 
-app.use('/oidc', oauthRoutes(port));
+oauthRoutes(port).then(router => app.use('/oidc', router));
 
 app.get('/', (_req, res) => {
   res.status(200).send();

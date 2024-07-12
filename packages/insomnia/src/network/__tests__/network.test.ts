@@ -4,7 +4,6 @@ import electron from 'electron';
 import fs from 'fs';
 import { join as pathJoin, resolve as pathResolve } from 'path';
 
-import { version } from '../../../package.json';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import {
   AUTH_AWS_IAM,
@@ -106,6 +105,8 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      '/tmp/res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -138,7 +139,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         TIMEOUT_MS: 30000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
-        USERAGENT: `insomnia/${version}`,
+        USERAGENT: '',
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -183,6 +184,8 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      '/tmp/res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -209,7 +212,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         TIMEOUT_MS: 30000,
         URL: 'http://localhost/',
-        USERAGENT: `insomnia/${version}`,
+        USERAGENT: '',
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
      },
@@ -285,6 +288,8 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      '/tmp/res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -311,7 +316,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         TIMEOUT_MS: 30000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
-        USERAGENT: `insomnia/${version}`,
+        USERAGENT: '',
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -347,6 +352,8 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      '/tmp/res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -376,7 +383,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         TIMEOUT_MS: 30000,
         UPLOAD: 1,
         URL: 'http://localhost/',
-        USERAGENT: `insomnia/${version}`,
+        USERAGENT: '',
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -429,6 +436,8 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      '/tmp/res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -470,7 +479,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         TIMEOUT_MS: 30000,
         URL: 'http://localhost/',
         UPLOAD: 1,
-        USERAGENT: `insomnia/${version}`,
+        USERAGENT: '',
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -492,6 +501,8 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      '/tmp/res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -512,7 +523,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         TIMEOUT_MS: 30000,
         URL: 'http://my/path',
         UNIX_SOCKET_PATH: '/my/socket',
-        USERAGENT: `insomnia/${version}`,
+        USERAGENT: '',
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -534,6 +545,8 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      '/tmp/res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -553,7 +566,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         TIMEOUT_MS: 30000,
         URL: 'http://localhost:3000/foo/bar',
-        USERAGENT: `insomnia/${version}`,
+        USERAGENT: '',
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -575,6 +588,8 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      '/tmp/res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -594,7 +609,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         TIMEOUT_MS: 30000,
         URL: 'http://unix:3000/my/path',
-        USERAGENT: `insomnia/${version}`,
+        USERAGENT: '',
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -617,6 +632,8 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       settings,
+      '/tmp/res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -637,7 +654,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         TIMEOUT_MS: 30000,
         NETRC: CurlNetrc.Required,
         URL: '',
-        USERAGENT: `insomnia/${version}`,
+        USERAGENT: '',
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -720,6 +737,8 @@ describe('sendCurlAndWriteTimeline()', () => {
       [],
       null,
       { ...settings, validateSSL: false },
+      '/tmp/res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -754,7 +773,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         SSL_VERIFYPEER: 0, // should disable SSL
         TIMEOUT_MS: 30000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
-        USERAGENT: `insomnia/${version}`,
+        USERAGENT: '',
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -772,7 +791,9 @@ describe('sendCurlAndWriteTimeline()', () => {
     const responseV1 = await networkUtils.sendCurlAndWriteTimeline(renderedRequest, [], null, {
       ...settings,
       preferredHttpVersion: HttpVersions.V1_0,
-    });
+    },
+      '/tmp/res_id',
+      'res_id');
     expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
     expect(getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
     expect(getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);

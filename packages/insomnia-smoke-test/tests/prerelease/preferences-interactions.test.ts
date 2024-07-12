@@ -24,7 +24,7 @@ test('Check filter responses by environment preference', async ({ app, page }) =
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByText('Collectionsimplejust now').click();
+  await page.getByLabel('simple').click();
 
   // Send a request
   await page.getByLabel('Request Collection').getByTestId('example http').press('Enter');

@@ -2,14 +2,14 @@
   "id": "fd5ae82a-d4c3-fa38-b53f-cddafb084535",
   "values": [
     {
-      "key": "foo",
-      "value": "production",
+      "key": "foo-and-bar",
+      "value": "production-env",
       "type": "text",
       "enabled": true
     },
     {
-      "key": "bar",
-      "value": "hahah",
+      "key": "disabled-key",
+      "value": "hahah-haha",
       "type": "text",
       "enabled": false
     }

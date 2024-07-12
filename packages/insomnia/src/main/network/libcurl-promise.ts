@@ -4,6 +4,7 @@ import { invariant } from '../../utils/invariant';
 invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
 
 import { Curl, CurlAuth, CurlCode, CurlFeature, CurlHttpVersion, CurlInfoDebug, CurlNetrc, CurlSslOpt } from '@getinsomnia/node-libcurl';
+import { isValid } from 'date-fns';
 import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
@@ -96,8 +97,8 @@ export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]()
 export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequestOutput>(async resolve => {
   try {
     const responsesDir = path.join(getDataDirectory(), 'responses');
-    fs.mkdirSync(responsesDir, { recursive: true });
-
+    // TODO: remove this check, its only used for network.test.ts
+    await fs.promises.mkdir(responsesDir, { recursive: true });
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
 
     const { requestId, req, finalUrl, settings, certificates, caCertficatePath, socketPath, authHeader } = options;
@@ -143,6 +144,11 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       curl.on('error', () => closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath));
     } else if (requestBody !== undefined) {
       curl.setOpt(Curl.option.POSTFIELDS, requestBody);
+    }
+
+    // NOTE: temporary workaround for testing mockbin api
+    if (process.env.PLAYWRIGHT) {
+      req.headers = [...req.headers, { name: 'X-Mockbin-Test', value: 'true' }];
     }
 
     const headerStrings = parseHeaderStrings({ req, requestBody, requestBodyPath, finalUrl, authHeader });
@@ -366,7 +372,7 @@ export const createConfiguredCurlInstance = ({
           cookie.hostOnly ? 'FALSE' : 'TRUE',
           cookie.path,
           cookie.secure ? 'TRUE' : 'FALSE',
-          cookie.expires ? Math.round(new Date(cookie.expires).getTime() / 1000) : 0,
+          cookie.expires && isValid(new Date(cookie.expires)) ? Math.round(new Date(cookie.expires).getTime() / 1000) : 0,
           cookie.key,
           cookie.value,
         ].join('\t');

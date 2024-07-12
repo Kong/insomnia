@@ -8,7 +8,6 @@ import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
-import { Workspace } from '../../../models/workspace';
 import { Child, WorkspaceLoaderData } from '../../routes/workspace';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
@@ -44,7 +43,7 @@ export const RequestGroupRow: FC<{
     return (
       <li key={requestGroup._id} className="flex flex-col">
         <div className="flex items-center gap-2 p-2">
-          <Checkbox isIndeterminate={isIndeterminate} slot={null} isSelected={isSelected} onChange={isSelected => handleSetItemSelected(requestGroup._id, isSelected)} className="group p-0 flex items-center h-full">
+          <Checkbox aria-label={requestGroup.name} isIndeterminate={isIndeterminate} slot={null} isSelected={isSelected} onChange={isSelected => handleSetItemSelected(requestGroup._id, isSelected)} className="group p-0 flex items-center h-full">
             <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
               <Icon icon={isIndeterminate ? 'minus' : 'check'} className='opacity-0 group-data-[selected]:opacity-100 group-data-[indeterminate]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
             </div>
@@ -78,6 +77,7 @@ export const RequestRow: FC<{
       <li className="flex items-center gap-2 p-2">
         <Checkbox
           slot={null}
+          aria-label={request.name}
           isSelected={isSelected}
           onChange={isSelected => {
             handleSetItemSelected(request._id, isSelected);
@@ -169,7 +169,7 @@ export const Tree: FC<{
   );
 };
 
-export const ExportRequestsModal = ({ workspace, onClose }: { workspace: Workspace; onClose: () => void }) => {
+export const ExportRequestsModal = ({ workspaceIdToExport, onClose }: { workspaceIdToExport: string; onClose: () => void }) => {
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
   const workspaceFetcher = useFetcher();
   const [state, setState] = useState<{
@@ -179,9 +179,9 @@ export const ExportRequestsModal = ({ workspace, onClose }: { workspace: Workspa
   useEffect(() => {
     const isIdleAndUninitialized = workspaceFetcher.state === 'idle' && !workspaceFetcher.data;
     if (isIdleAndUninitialized) {
-      workspaceFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}`);
+      workspaceFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceIdToExport}`);
     }
-  }, [organizationId, projectId, workspaceFetcher, workspace._id]);
+  }, [organizationId, projectId, workspaceFetcher, workspaceIdToExport]);
   const workspaceLoaderData = workspaceFetcher?.data as WorkspaceLoaderData;
 
   useEffect(() => {
@@ -311,7 +311,7 @@ export const ExportRequestsModal = ({ workspace, onClose }: { workspace: Workspa
                 </Button>
                 <Button
                   onPress={() => {
-                    state?.treeRoot && exportRequestsToFile(getSelectedRequestIds(state.treeRoot));
+                    state?.treeRoot && exportRequestsToFile(workspaceIdToExport, getSelectedRequestIds(state.treeRoot));
                     close();
                   }}
                   isDisabled={isExportDisabled}

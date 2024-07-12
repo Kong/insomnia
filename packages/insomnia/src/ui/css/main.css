@@ -1023,7 +1023,7 @@ strong {
   padding: 0 var(--padding-md);
   height: var(--line-height-xs);
 }
-.btn.btn--super-duper-compact {
+.btn.btn--super-super-compact {
   padding: var(--padding-xxs) var(--padding-sm);
   height: auto;
 }
@@ -1162,6 +1162,11 @@ button {
   --color-bg: rgba(5, 5, 5, 0.7);
   --color-font: #ddd;
 }
+*[theme] .theme--transparent-overlay-darker,
+*[subtheme] .theme--transparent-overlay-darker {
+  --color-bg: rgba(5, 5, 5, 0.8);
+  --color-font: #ddd;
+}
 [class^='http-method-'],
 [class*=' http-method-'] {
   color: var(--color-font);
@@ -1279,7 +1284,6 @@ html {
   --modal-width-skinny: calc(var(--font-size) * 30);
   /* Other */
   --drag-width: calc(var(--font-size) * 0.5);
-  --height-nav: var(--line-height-sm);
 }
 .txt-xxs {
   font-size: var(--font-size-xxs) !important;
@@ -1480,6 +1484,12 @@ html {
   flex-direction: row;
   align-items: center;
 }
+
+/* Get the child div element that is inside .Codemirror-scroll, between the elements with class .CodeMirror-sizer and CodeMirror-gutters */
+.editor.editor--single-line .CodeMirror-scroll > div:has(+ .CodeMirror-gutters, + .CodeMirror-sizer) {
+  height: 0!important;
+}
+
 .editor.editor--single-line .nunjucks-tag {
   font-size: 0.8em !important;
   padding-top: 0.3em;
@@ -1492,23 +1502,35 @@ html {
   border-color: var(--hl-md);
   box-sizing: border-box;
   width: 100%;
-  padding: 0 var(--padding-xs);
   box-shadow: 0 0 1em rgba(0, 0, 0, 0.1);
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  overflow: hidden;
   align-items: center;
   white-space: nowrap;
 }
-.editor .CodeMirror-dialog input {
-  font-family: var(--font-monospace) !important;
-  border: 0 !important;
-  height: 1em !important;
-  padding: 0 !important;
-  display: block;
-  width: 100% !important;
+.editor .CodeMirror-dialog .CodeMirror-search-label {
+  font-family: var(--font-monospace);
+  border: 0;
+  height: 1em;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   color: var(--color-font);
   min-height: 1.5em;
 }
+
+.editor .CodeMirror-dialog .CodeMirror-search-label .CodeMirror-search-field {
+  flex: 1;
+}
+
+.editor .CodeMirror-dialog .CodeMirror-search-hint {
+  font-size: var(--font-size-xxs);
+  width: 100%;
+}
+
 .editor .CodeMirror-dialog * {
   margin-left: 0.25em;
   margin-right: 0.25em;
@@ -2025,7 +2047,7 @@ html {
   overflow: hidden;
   border-bottom: 1px solid var(--hl-md);
   box-sizing: border-box;
-  height: var(--height-nav);
+  height: var(--line-height-sm);
   line-height: var(--line-height-md);
   color: var(--color-font);
   display: flex;
@@ -2464,7 +2486,7 @@ input.editable {
   height: 100%;
 }
 .modal.modal--wide .modal__content__wrapper {
-  width: var(--modal-width) wide;
+  width: var(--modal-width);
 }
 .modal.modal--skinny .modal__content__wrapper {
   width: var(--modal-width-skinny);
@@ -2588,7 +2610,7 @@ input.editable {
 }
 .pane {
   display: grid;
-  grid-template-rows: var(--height-nav) minmax(0, 1fr);
+  grid-template-rows: var(--line-height-sm) minmax(0, 1fr);
   grid-template-columns: 100%;
 }
 .pane .pane__header {
@@ -2894,6 +2916,10 @@ input.editable {
 .response-pane .overlay i.fa {
   font-size: 4rem;
 }
+.response-pane .overlay .timer-list i.fa {
+  font-size: 1.2rem;
+  line-height: 2rem;
+}
 .response-pane .response-pane__notify {
   display: flex;
   flex-direction: column;
@@ -3001,7 +3027,7 @@ input.editable {
   color: var(--hl);
   padding-left: var(--padding-xs);
   padding-right: var(--padding-xs);
-  height: var(--height-nav);
+  height: var(--line-height-sm);
   overflow: auto;
 }
 .sidebar .sidebar__menu--insomnia-HACK {
@@ -3383,7 +3409,7 @@ input.editable {
 }
 .urlbar > .dropdown > button,
 .urlbar > .dropdown > button > i.fa {
-  line-height: var(--height-nav);
+  line-height: var(--line-height-sm);
 }
 .urlbar .urlbar__send-btn {
   padding-right: var(--padding-md);

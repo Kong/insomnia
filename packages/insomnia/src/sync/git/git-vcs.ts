@@ -201,7 +201,7 @@ export class GitVCS {
     return insomniaFiles;
   }
 
-  async getBranch() {
+  async getCurrentBranch() {
     const branch = await git.currentBranch({ ...this._baseOpts });
 
     if (typeof branch !== 'string') {
@@ -212,7 +212,7 @@ export class GitVCS {
   }
 
   async listBranches() {
-    const branch = await this.getBranch();
+    const branch = await this.getCurrentBranch();
     const branches = await git.listBranches({ ...this._baseOpts });
 
     // For some reason, master isn't in branches on fresh repo (no commits)
@@ -337,7 +337,7 @@ export class GitVCS {
    * @returns {Promise<boolean>}
    */
   async canPush(gitCredentials?: GitCredentials | null): Promise<boolean> {
-    const branch = await this.getBranch();
+    const branch = await this.getCurrentBranch();
     const remote = await this.getRemote('origin');
 
     if (!remote) {
@@ -385,7 +385,7 @@ export class GitVCS {
   }
 
   async pull(gitCredentials?: GitCredentials | null) {
-    console.log('[git] Pull remote=origin', await this.getBranch());
+    console.log('[git] Pull remote=origin', await this.getCurrentBranch());
     return git.pull({
       ...this._baseOpts,
       ...gitCallbacks(gitCredentials),
@@ -395,7 +395,7 @@ export class GitVCS {
   }
 
   async merge(theirBranch: string) {
-    const ours = await this.getBranch();
+    const ours = await this.getCurrentBranch();
     console.log(`[git] Merge ${ours} <-- ${theirBranch}`);
     return git.merge({
       ...this._baseOpts,
@@ -516,7 +516,7 @@ export class GitVCS {
     console.log('[git] Undo pending changes');
     await git.checkout({
       ...this._baseOpts,
-      ref: await this.getBranch(),
+      ref: await this.getCurrentBranch(),
       remote: 'origin',
       force: true,
       filepaths: fileFilter?.map(convertToPosixSep),

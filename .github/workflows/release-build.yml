@@ -10,13 +10,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # shared kong github action for security checking
+  generate-sbom-and-upload-assets:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write # publish sbom to GH releases/tag assets
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Perform SCA / SBOM analysis for the entire monorepo code repository
+      # Produces SCA(SBOM and CVE) report
+      # Helps understand vulnerabilities / license compliance across third party dependencies
+      # Automatically uploads to workflow assets
+      # (TODO): Produce workspace/package specific SBOM. Current limitation: https://github.com/anchore/syft/issues/2574
+      # (TODO): needs check (block) further steps if SCA fails
+      - id: sca-project
+        uses: Kong/public-shared-actions/security-actions/sca@62643b74f79f6a697b9add1a2f9c069bf9ca1250 # v2.3.0
+        with:
+          dir: .
+          upload-sbom-release-assets: false
   build-and-upload-release-artifacts:
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
+    env:
+      INSO_PACKAGE_NAME: insomnia-inso
+      INSO_DOCKER_TAR: inso-docker-image.tar
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
+          # macos-13 supports both intel and apple silicon on inso cli properly
+          # macos-latest is defaulting to apple silicon and breaks inso cli retrocompatibility
+          - os: macos-13
             csc_link_secret: DESIGNER_MAC_CSC_LINK
             csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
           - os: windows-latest
@@ -27,10 +54,10 @@ jobs:
             csc_key_password_secret: ''
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -39,19 +66,20 @@ jobs:
       - name: Install packages
         run: npm ci
 
+      # If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
       - name: Package app (MacOS only)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-13'
         shell: bash
         run: npm run app-package
         env:
           NODE_OPTIONS: '--max_old_space_size=6144'
-          APPLE_ID: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID || '' }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
+          APPLE_ID: ${{ matrix.os == 'macos-13' && secrets.DESIGNER_APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.os == 'macos-13' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
           CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
           CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
 
       - name: Package app (Windows and Linux)
-        if: matrix.os != 'macos-latest'
+        if: matrix.os != 'macos-13'
         shell: bash
         run: npm run app-package
         env:
@@ -59,7 +87,7 @@ jobs:
 
       - name: Setup Inso CLI version env var
         run:
-          echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
+          echo "INSO_VERSION=$(jq .version ./packages/${{ env.INSO_PACKAGE_NAME }}/package.json -rj)" >> $GITHUB_ENV
 
       - name: Package inso
         run: |
@@ -70,10 +98,10 @@ jobs:
           VERSION: ${{ env.INSO_VERSION }}
 
       - name: Code-sign & create Inso CLI installer (macOS only)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-13'
         run: ./src/scripts/macos-pkg.sh
         shell: bash
-        working-directory: packages/insomnia-inso
+        working-directory: ./packages/${{ env.INSO_PACKAGE_NAME }}
         continue-on-error: false
         env:
           MACOS_CERTIFICATE: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
@@ -83,26 +111,27 @@ jobs:
           VERSION: ${{ env.INSO_VERSION }}
 
       - name: Notarize Inso CLI installer (macOS only)
-        if: matrix.os == 'macos-latest'
+        if:  matrix.os == 'macos-13'
         uses: lando/notarize-action@v2
         with:
-          product-path: packages/insomnia-inso/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
+          product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
           primary-bundle-id: com.insomnia.inso
           appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
           appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
           appstore-connect-team-id: FX44YY62GV
+          verbose: true
 
       - name: Staple Inso CLI installer (macOS only)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-13'
         uses: BoundfoxStudios/action-xcode-staple@v1
         with:
-          product-path: packages/insomnia-inso/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
+          product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
 
       - name: Notarize Inso CLI binary (macOS only)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-13'
         uses: lando/notarize-action@v2
         with:
-          product-path: packages/insomnia-inso/binaries/inso
+          product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/binaries/inso
           primary-bundle-id: com.insomnia.inso-binary
           appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
           appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
@@ -111,14 +140,27 @@ jobs:
       - name: Create inso artifacts
         run: npm run inso-package:artifacts
 
-      - name: Create Docker Image artifacts
+      - name: Create inso Docker Image artifacts
         if: matrix.os == 'ubuntu-latest'
         run: |
-          DOCKER_BUILDKIT=1 docker build --tag insomnia-inso:temp ./packages/insomnia-inso/
-          docker save insomnia-inso:temp -o ./packages/insomnia-inso/artifacts/inso-docker-image.tar
+          DOCKER_BUILDKIT=1 docker build --tag ${{ env.INSO_PACKAGE_NAME }}:temp ./packages/${{ env.INSO_PACKAGE_NAME }}
+          docker save ${{ env.INSO_PACKAGE_NAME }}:temp -o ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/${{ env.INSO_DOCKER_TAR }}
+
+      # Produce Docker SBOM for Inso Image
+      # Automatically uploads to workflow assets
+      - name: Scan inso docker artifacts
+        id: sbom_action
+        if: matrix.os == 'ubuntu-latest'
+        uses: Kong/public-shared-actions/security-actions/scan-docker-image@62643b74f79f6a697b9add1a2f9c069bf9ca1250 # v2.3.0
+        with:
+          asset_prefix: image-inso-${{ runner.os }}
+          image: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/${{ env.INSO_DOCKER_TAR }}
+          upload-sbom-release-assets: false # No release is publushed yet. Uploads as workflow assets
+        env:
+          SYFT_SOURCE_NAME: ${{ env.INSO_DOCKER_TAR }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-artifacts
@@ -135,7 +177,7 @@ jobs:
             packages/insomnia-inso/artifacts/*
 
       - name: Upload source assets for Sentry
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-sentry
           path: |
@@ -144,6 +186,7 @@ jobs:
             !packages/insomnia/build/yarn-standalone.js
 
   update-pull-request:
+    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     needs: build-and-upload-release-artifacts
     runs-on: ubuntu-latest
     steps:
@@ -159,9 +202,16 @@ jobs:
         uses: kt3k/update-pr-description@v2.0.0
         with:
           pr_body: |
+            **WARNING: Do not merge this PR. This is an automated release PR. It should be released using the "Publish" workflow.**
+
             Download release artifacts [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
             ## Steps for Publish:
+
+            You can update the changelog.md in this branch, run git log to get the latest changes:
+            ```bash
+            git log --no-merges --oneline --pretty=format:'* %s by @%an' --since="<last release tag>" --until="release/${{ steps.release_version.outputs.version }}"
+            ```
 
             When ready to publish, trigger [Publish](https://github.com/${{ github.repository }}/actions/workflows/release-publish.yml) workflow with these variables:
             - Release version (`version`): `${{ steps.release_version.outputs.version }}`
@@ -170,6 +220,8 @@ jobs:
             ```bash
             gh workflow run release-publish.yml -f version=${{ steps.release_version.outputs.version }} --repo ${{ github.repository }}
             ```
+
+            Release notes will be generated automatically based on the commit messages during publish. Remove any unwanted notes manually afterwards.
 
             <details>
             <summary>Conflicts? Merge branch step failed on the publish workflow? Try this...</summary>

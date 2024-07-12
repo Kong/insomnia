@@ -1,6 +1,6 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useRef, useState } from 'react';
-import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
+import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Section } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { toKebabCase } from '../../../common/misc';
@@ -16,10 +16,10 @@ import { CreateRequestType, useRequestGroupPatcher } from '../../hooks/use-reque
 import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
+import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
 import { AskModal } from '../modals/ask-modal';
-import { EnvironmentEditModal } from '../modals/environment-edit-modal';
 import { PasteCurlModal } from '../modals/paste-curl-modal';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 interface Props extends Partial<DropdownProps> {
@@ -142,167 +142,201 @@ export const RequestGroupActionsDropdown = ({
   const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
 
   const requestGroupActionItems: ({
-    id: string;
     name: string;
+    id: string;
     icon: IconName;
-    hint?: PlatformKeyCombinations;
-    action: () => void;
-  })[] = [
+    items: {
+      id: string;
+      name: string;
+      icon: IconName;
+      hint?: PlatformKeyCombinations;
+      action: () => void;
+    }[];
+  })[] =
+    [
       {
-        id: 'HTTP',
-        name: 'HTTP Request',
-        icon: 'plus-circle',
-        hint: hotKeyRegistry.request_createHTTP,
-      action: () => createRequest({
-        requestType: 'HTTP',
-        parentId: requestGroup._id,
-      }),
-      },
-      {
-        id: 'Event Stream',
-        name: 'Event Stream Request',
-        icon: 'plus-circle',
-        action: () => createRequest({
-          requestType: 'Event Stream',
-          parentId: requestGroup._id,
-        }),
-      },
-      {
-        id: 'GraphQL Request',
-        name: 'GraphQL Request',
-        icon: 'plus-circle',
-        action: () => createRequest({
-          requestType: 'GraphQL',
-          parentId: requestGroup._id,
-        }),
-      },
-      {
-        id: 'gRPC Request',
-        name: 'gRPC Request',
-        icon: 'plus-circle',
-        action: () => createRequest({
-          requestType: 'gRPC',
-          parentId: requestGroup._id,
-        }),
-      },
-      {
-        id: 'WebSocket Request',
-        name: 'WebSocket Request',
-        icon: 'plus-circle',
-        action: () => createRequest({
-          requestType: 'WebSocket',
-          parentId: requestGroup._id,
-        }),
-      },
-      {
-        id: 'From Curl',
-        name: 'From Curl',
-        icon: 'terminal',
-        action: () => setPasteCurlModalOpen(true),
-
-      },
-      {
-        id: 'New Folder',
-        name: 'New Folder',
-        icon: 'folder',
-        action: () =>
-          showPrompt({
-            title: 'New Folder',
-            defaultValue: 'My Folder',
-            submitName: 'Create',
-            label: 'Name',
-            selectText: true,
-            onComplete: name => requestFetcher.submit({ parentId: requestGroup._id, name },
-              {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
-                method: 'post',
+        name: 'Create',
+        id: 'create',
+        icon: 'plus',
+        items: [
+          {
+            id: 'HTTP',
+            name: 'HTTP Request',
+            icon: 'plus-circle',
+            hint: hotKeyRegistry.request_createHTTP,
+            action: () => createRequest({
+              requestType: 'HTTP',
+              parentId: requestGroup._id,
+            }),
+          },
+          {
+            id: 'Event Stream',
+            name: 'Event Stream Request (SSE)',
+            icon: 'plus-circle',
+            action: () => createRequest({
+              requestType: 'Event Stream',
+              parentId: requestGroup._id,
+            }),
+          },
+          {
+            id: 'GraphQL Request',
+            name: 'GraphQL Request',
+            icon: 'plus-circle',
+            action: () => createRequest({
+              requestType: 'GraphQL',
+              parentId: requestGroup._id,
+            }),
+          },
+          {
+            id: 'gRPC Request',
+            name: 'gRPC Request',
+            icon: 'plus-circle',
+            action: () => createRequest({
+              requestType: 'gRPC',
+              parentId: requestGroup._id,
+            }),
+          },
+          {
+            id: 'WebSocket Request',
+            name: 'WebSocket Request',
+            icon: 'plus-circle',
+            action: () => createRequest({
+              requestType: 'WebSocket',
+              parentId: requestGroup._id,
+            }),
+          },
+          {
+            id: 'New Folder',
+            name: 'New Folder',
+            icon: 'folder',
+            action: () =>
+              showPrompt({
+                title: 'New Folder',
+                defaultValue: 'My Folder',
+                submitName: 'Create',
+                label: 'Name',
+                selectText: true,
+                onComplete: name => requestFetcher.submit({ parentId: requestGroup._id, name },
+                  {
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+                    method: 'post',
+                  }),
               }),
-          }),
+          }],
       },
       {
-        id: 'Duplicate',
-        name: 'Duplicate',
-        icon: 'copy',
-        hint: hotKeyRegistry.request_createHTTP,
-        action: () => handleRequestGroupDuplicate(),
+        name: 'Import',
+        id: 'import',
+        icon: 'file-import',
+        items: [
+          {
+            id: 'From Curl',
+            name: 'From Curl',
+            icon: 'terminal',
+            action: () => setPasteCurlModalOpen(true),
+          },
+        ],
       },
       {
-        id: 'Environment',
-        name: 'Environment',
-        icon: 'code',
-        action: () => showModal(EnvironmentEditModal, { requestGroup }),
+        name: 'Actions',
+        id: 'actions',
+        icon: 'cog',
+        items: [
+          {
+            id: 'Duplicate',
+            name: 'Duplicate',
+            icon: 'copy',
+            action: () => handleRequestGroupDuplicate(),
+          },
+          {
+            id: 'Rename',
+            name: 'Rename',
+            icon: 'edit',
+            action: () =>
+              handleRename(),
+          },
+          {
+            id: 'Settings',
+            name: 'Settings',
+            icon: 'wrench',
+            action: () =>
+              setIsSettingsModalOpen(true),
+          },
+          {
+            id: 'Delete',
+            name: 'Delete',
+            icon: 'trash',
+            action: () =>
+              handleDeleteFolder(),
+          },
+        ],
       },
-      {
-        id: 'Rename',
-        name: 'Rename',
-        icon: 'edit',
-        action: () =>
-          handleRename(),
-      },
-      {
-        id: 'Delete',
-        name: 'Delete',
-        icon: 'trash',
-        action: () =>
-          handleDeleteFolder(),
-      },
-      ...actionPlugins.map(plugin => ({
-        id: plugin.label,
-        name: plugin.label,
-        icon: plugin.icon as IconName || 'plug',
-        action: () =>
-          handlePluginClick(plugin),
-      })),
-      {
-        id: 'Settings',
-        name: 'Settings',
-        icon: 'wrench',
-        action: () =>
-          setIsSettingsModalOpen(true),
-      },
+      ...(actionPlugins.length > 0 ? [
+        {
+          name: 'Plugins',
+          id: 'plugins',
+          icon: 'plug' as IconName,
+          items: actionPlugins.map(plugin => ({
+            id: plugin.label,
+            name: plugin.label,
+            icon: plugin.icon as IconName || 'plug',
+            action: () =>
+              handlePluginClick(plugin),
+          })),
+        },
+      ] : []),
     ];
 
   return (
     <Fragment>
-    <MenuTrigger onOpenChange={isOpen => isOpen && onOpen()}>
-      <Button
-        data-testid={`Dropdown-${toKebabCase(requestGroup.name)}`}
-        aria-label="Request Group Actions"
-        className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-      >
-        <Icon icon="caret-down" />
-      </Button>
-      <Popover className="min-w-max">
-        <Menu
-          aria-label="Request Group Actions Menu"
-          selectionMode="single"
-          onAction={key => {
-            const item = requestGroupActionItems.find(a => a.id === key);
-            item && item.action();
-          }}
-          items={requestGroupActionItems}
-          className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+      <MenuTrigger onOpenChange={isOpen => isOpen && onOpen()}>
+        <Button
+          data-testid={`Dropdown-${toKebabCase(requestGroup.name)}`}
+          aria-label="Request Group Actions"
+          className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
         >
-          {item => (
-            <MenuItem
-              key={item.id}
-              id={item.id}
-              className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-              aria-label={item.name}
-            >
-              <Icon icon={item.icon} />
-              <span>{item.name}</span>
-            </MenuItem>
-          )}
-        </Menu>
-      </Popover>
-    </MenuTrigger>
-    {isSettingsModalOpen && (
-      <RequestGroupSettingsModal
-        requestGroup={requestGroup}
-        onHide={() => setIsSettingsModalOpen(false)}
-      />
-    )}
+          <Icon icon="caret-down" />
+        </Button>
+        <Popover className="min-w-max">
+          <Menu
+            aria-label="Request Group Actions Menu"
+            selectionMode="single"
+            onAction={key => requestGroupActionItems.find(i => i.items.find(a => a.id === key))?.items.find(a => a.id === key)?.action()}
+            items={requestGroupActionItems}
+            className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+          >
+            {section => (
+              <Section className='flex-1 flex flex-col'>
+                <Header className='pl-2 py-1 flex items-center gap-2 text-[--hl] text-xs uppercase'>
+                  <Icon icon={section.icon} /> <span>{section.name}</span>
+                </Header>
+                <Collection items={section.items}>
+                  {item => (
+                    <MenuItem
+                      key={item.id}
+                      id={item.id}
+                      className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                      aria-label={item.name}
+                    >
+                      <Icon icon={item.icon} />
+                      <span>{item.name}</span>
+                      {item.hint && (<DropdownHint keyBindings={item.hint} />)}
+                    </MenuItem>
+                  )}
+                </Collection>
+              </Section>
+            )}
+          </Menu>
+        </Popover>
+      </MenuTrigger>
+      {
+        isSettingsModalOpen && (
+          <RequestGroupSettingsModal
+            requestGroup={requestGroup}
+            onHide={() => setIsSettingsModalOpen(false)}
+          />
+        )
+      }
       {isPasteCurlModalOpen && (
         <PasteCurlModal
           onImport={req => {

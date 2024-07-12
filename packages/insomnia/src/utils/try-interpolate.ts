@@ -8,7 +8,7 @@ import { RequestRenderErrorModal } from '../ui/components/modals/request-render-
 // NOTE: template interpolation is tightly coupled with modal implementation
 export const tryToInterpolateRequestOrShowRenderErrorModal = async ({ request, environmentId, payload }: { request: Request | WebSocketRequest | GrpcRequest; environmentId: string; payload: any }): Promise<any> => {
   try {
-    const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
+    const renderContext = await getRenderContext({ request, environment: environmentId, purpose: RENDER_PURPOSE_SEND });
     return await render(payload, renderContext);
   } catch (error) {
     if (error.type === 'render') {

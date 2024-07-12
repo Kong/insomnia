@@ -1,8 +1,9 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useFetcher, useParams, useRevalidator, useRouteLoaderData } from 'react-router-dom';
 
-import { getCurrentSessionId } from '../../../account/session';
-import { ProjectLoaderData } from '../../routes/project';
+import { insomniaFetch } from '../../../ui/insomniaFetch';
+import { ProjectIdLoaderData } from '../../routes/project';
+import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 
 const InsomniaEventStreamContext = createContext<{
@@ -75,9 +76,10 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
       workspaceId: string;
   };
 
-  const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
+  const { userSession } = useRootLoaderData();
+  const projectData = useRouteLoaderData('/project/:projectId') as ProjectIdLoaderData | null;
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
-  const remoteId = projectData?.activeProject.remoteId || workspaceData?.activeProject.remoteId;
+  const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
   const syncOrganizationsFetcher = useFetcher();
@@ -88,10 +90,10 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   // Update presence when the user switches org, projects, workspaces
   useEffect(() => {
     async function updatePresence() {
-      const sessionId = getCurrentSessionId();
+      const sessionId = userSession.id;
       if (sessionId && remoteId) {
         try {
-          const response = await window.main.insomniaFetch<{
+          const response = await insomniaFetch<{
             data?: UserPresence[];
             }>({
               path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,
@@ -108,16 +110,16 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
             setPresence(rows);
           }
         } catch (e) {
-          console.log('Error parsing response', e);
+          console.log('[sse] Error parsing response', e);
         }
       }
     }
 
     updatePresence();
-  }, [organizationId, remoteId, workspaceId]);
+  }, [organizationId, remoteId, userSession.id, workspaceId]);
 
   useEffect(() => {
-    const sessionId = getCurrentSessionId();
+    const sessionId = userSession.id;
     if (sessionId && remoteId) {
       try {
         const source = new EventSource(`insomnia-event-source://v1/teams/${sanitizeTeamId(organizationId)}/streams?sessionId=${sessionId}`);
@@ -162,19 +164,19 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               });
             }
           } catch (e) {
-            console.log('Error parsing response from SSE', e);
+            console.log('[sse] Error parsing response from SSE', e);
           }
         });
         return () => {
           source.close();
         };
       } catch (e) {
-        console.log('ERROR', e);
+        console.log('[sse] ERROR', e);
         return;
       }
     }
     return;
-  }, [organizationId, projectId, remoteId, revalidate, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, workspaceId]);
+  }, [organizationId, projectId, remoteId, revalidate, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, userSession.id, workspaceId]);
 
   return (
     <InsomniaEventStreamContext.Provider

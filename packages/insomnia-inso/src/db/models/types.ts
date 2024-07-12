@@ -3,6 +3,7 @@ import { Database } from '../index';
 
 export interface BaseModel {
     _id: string;
+    name: string;
     type: keyof Database;
     parentId: string;
 }
@@ -17,6 +18,7 @@ export type ApiSpec = BaseModel & BaseApiSpec;
 
 interface BaseUnitTestSuite {
     name: string;
+    metaSortKey: number;
 }
 
 export type UnitTestSuite = BaseModel & BaseUnitTestSuite;
@@ -25,6 +27,7 @@ interface BaseUnitTest {
     name: string;
     code: string;
     requestId: string | null;
+    metaSortKey: number;
 }
 
 export type UnitTest = BaseModel & BaseUnitTest;
@@ -42,3 +45,13 @@ interface BaseWorkspace {
 }
 
 export type Workspace = BaseModel & BaseWorkspace;
+
+export type InsomniaRequest = BaseModel & {
+    name: string;
+    description: string;
+    method: string;
+    url: string;
+    headers: Record<string, string>;
+    body: string;
+    metaSortKey: number;
+};

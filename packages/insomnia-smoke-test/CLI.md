@@ -1,28 +1,38 @@
 # CLI
 
+## Getting started
+
+```shell
+npm run inso-start
+npm run test -w insomnia-inso
+# will default to insomnia app database
+$PWD/packages/insomnia-inso/bin/inso run test
+# will use config, useful for testing with fewer args
+$PWD/packages/insomnia-inso/bin/inso -w packages/insomnia-inso/src/db/fixtures/git-repo script runTest
+```
+
 ## install node version of libcurl
 
 npm install will download the electron version of libcurl but for inso we need the node version
 
 ```shell
-node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+node_modules/.bin/node-pre-gyp install --directory node_modules/@getinsomnia/node-libcurl --update-binary
 ```
 
-to download the electron version of node-libcurl you should remove the module and npm install again
+to download the electron version of node-libcurl run the following
 
 ```shell
-rm -rf node_modules/@getinsomnia/
-npm install
+npm run install-libcurl-electron
 ```
 
 ## Run CLI Smoke Tests
 
 ```shell
+# Run CLI tests
+npm run test:bundle -w insomnia-inso
 # Package the Inso CLI binaries
 npm run inso-package
-
-# Run CLI tests
-npm run test:smoke:cli
+npm run test:binary -w insomnia-inso
 ```
 
 ## Debugging CLI tests using watcher

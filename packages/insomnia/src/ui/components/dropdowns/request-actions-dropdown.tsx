@@ -1,6 +1,6 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useCallback, useState } from 'react';
-import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
+import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Section } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { exportHarRequest } from '../../../common/har';
@@ -20,6 +20,7 @@ import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { useRequestMetaPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
+import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
@@ -48,7 +49,6 @@ export const RequestActionsDropdown = ({
   const patchRequest = useRequestPatcher();
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
-  const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
@@ -79,9 +79,7 @@ export const RequestActionsDropdown = ({
     });
   };
 
-  const handlePluginClick = async ({ plugin, action, label }: RequestAction) => {
-    setLoadingActions({ ...loadingActions, [label]: true });
-
+  const handlePluginClick = async ({ plugin, action }: RequestAction) => {
     try {
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER)),
@@ -98,7 +96,6 @@ export const RequestActionsDropdown = ({
         error,
       });
     }
-    setLoadingActions({ ...loadingActions, [label]: false });
   };
 
   const generateCode = () => {
@@ -164,113 +161,160 @@ export const RequestActionsDropdown = ({
   const canGenerateCode = isRequest(request);
 
   const codeGenerationActions: {
-    id: string;
     name: string;
+    id: string;
     icon: IconName;
-    hint?: PlatformKeyCombinations;
-    action: () => void;
-  }[] = canGenerateCode ? [{
-    id: 'GenerateCode',
-    name: 'Generate Code',
-    action: generateCode,
-    icon: 'code',
-    hint: hotKeyRegistry.request_showGenerateCodeEditor,
-  }, {
-    id: 'CopyAsCurl',
-    name: 'Copy as cURL',
-    action: copyAsCurl,
-    icon: 'copy',
-  }] : [];
+    items: {
+      id: string;
+      name: string;
+      icon: IconName;
+      hint?: PlatformKeyCombinations;
+      action: () => void;
+    }[];
+  }[] = !canGenerateCode ? [] :
+      [{
+        name: 'Export',
+        id: 'export',
+        icon: 'file-export',
+        items: [
+          {
+            id: 'GenerateCode',
+            name: 'Generate Code',
+            action: generateCode,
+            icon: 'code',
+            hint: hotKeyRegistry.request_showGenerateCodeEditor,
+          },
+          {
+            id: 'CopyAsCurl',
+            name: 'Copy as cURL',
+            action: copyAsCurl,
+            icon: 'copy',
+          },
+        ],
+      }];
 
   const requestActionList: {
-    id: string;
     name: string;
+    id: string;
     icon: IconName;
-    hint?: PlatformKeyCombinations;
-    action: () => void;
+    items: {
+      id: string;
+      name: string;
+      icon: IconName;
+      hint?: PlatformKeyCombinations;
+      action: () => void;
+    }[];
   }[] = [
-      {
-        id: 'Duplicate',
-        name: 'Duplicate',
-      action: handleDuplicateRequest,
-        icon: 'copy',
-      },
-      {
-        id: 'Rename',
-        name: 'Rename',
-        action: handleRename,
-        icon: 'edit',
-      },
-      {
-        id: 'Delete',
-        name: 'Delete',
-        action: deleteRequest,
-        icon: 'trash',
-      },
-      {
-        id: 'Pin',
-        name: isPinned ? 'Unpin' : 'Pin',
-        action: togglePin,
-        icon: 'thumbtack',
-      },
       ...codeGenerationActions,
-      ...actionPlugins.map((plugin: RequestAction) => ({
-        id: plugin.label,
-        name: plugin.label,
-        icon: loadingActions[plugin.label] ? 'refresh' : plugin.icon as IconName || 'plug',
-        action: () => handlePluginClick(plugin),
-      })),
       {
-        id: 'Settings',
-        name: 'Settings',
-        icon: 'gear',
-        hint: hotKeyRegistry.request_showSettings,
-        action: () => {
-          setIsSettingsModalOpen(true);
-        },
+        name: 'Actions',
+        id: 'actions',
+        icon: 'cog',
+        items: [
+          {
+            id: 'Pin',
+            name: isPinned ? 'Unpin' : 'Pin',
+            action: togglePin,
+            icon: 'thumbtack',
+            hint: hotKeyRegistry.request_togglePin,
+          },
+          {
+            id: 'Duplicate',
+            name: 'Duplicate',
+            action: handleDuplicateRequest,
+            icon: 'copy',
+            hint: hotKeyRegistry.request_showDuplicate,
+          },
+          {
+            id: 'Rename',
+            name: 'Rename',
+            action: handleRename,
+            icon: 'edit',
+          },
+          {
+            id: 'Delete',
+            name: 'Delete',
+            action: deleteRequest,
+            icon: 'trash',
+            hint: hotKeyRegistry.request_showDelete,
+          },
+          {
+            id: 'Settings',
+            name: 'Settings',
+            icon: 'gear',
+            hint: hotKeyRegistry.request_showSettings,
+            action: () => {
+              setIsSettingsModalOpen(true);
+            },
+          },
+        ],
       },
+      ...(actionPlugins.length > 0 ? [
+        {
+          name: 'Plugins',
+          id: 'plugins',
+          icon: 'plug' as IconName,
+          items: actionPlugins.map(plugin => ({
+            id: plugin.label,
+            name: plugin.label,
+            icon: plugin.icon as IconName || 'plug',
+            action: () =>
+              handlePluginClick(plugin),
+          })),
+        },
+      ] : []),
     ];
 
   return (
     <Fragment>
-    <MenuTrigger onOpenChange={isOpen => isOpen && onOpen()}>
-      <Button
-        data-testid={`Dropdown-${toKebabCase(request.name)}`}
-        aria-label="Request Actions"
-        className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-      >
-        <Icon icon="caret-down" />
-      </Button>
-      <Popover className="min-w-max">
-        <Menu
-          aria-label="Request Actions Menu"
-          selectionMode="single"
-          onAction={key =>
-            requestActionList.find(({ id }) => key === id)?.action()
-          }
-          items={requestActionList}
-          className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+      <MenuTrigger onOpenChange={isOpen => isOpen && onOpen()}>
+        <Button
+          data-testid={`Dropdown-${toKebabCase(request.name)}`}
+          aria-label="Request Actions"
+          className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
         >
-          {item => (
-            <MenuItem
-              key={item.id}
-              id={item.id}
-              className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-              aria-label={item.name}
-            >
-              <Icon icon={item.icon} />
-              <span>{item.name}</span>
-            </MenuItem>
-          )}
-        </Menu>
-      </Popover>
-    </MenuTrigger>
-    {isSettingsModalOpen && (
-      <RequestSettingsModal
-        request={request}
-        onHide={() => setIsSettingsModalOpen(false)}
-      />
-    )}
-    </Fragment>
+          <Icon icon="caret-down" />
+        </Button>
+        <Popover className="min-w-max">
+          <Menu
+            aria-label="Request Actions Menu"
+            selectionMode="single"
+            onAction={key => requestActionList.find(i => i.items.find(a => a.id === key))?.items.find(a => a.id === key)?.action()}
+            items={requestActionList}
+            className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+          >
+            {section => (
+              <Section className='flex-1 flex flex-col'>
+                <Header className='pl-2 py-1 flex items-center gap-2 text-[--hl] text-xs uppercase'>
+                  <Icon icon={section.icon} /> <span>{section.name}</span>
+                </Header>
+                <Collection items={section.items}>
+                  {item => (
+                    <MenuItem
+                      key={item.id}
+                      id={item.id}
+                      className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                      aria-label={item.name}
+                    >
+                      <Icon icon={item.icon} />
+                      <span>{item.name}</span>
+                      {item.hint && (<DropdownHint keyBindings={item.hint} />)}
+                    </MenuItem>
+                  )}
+                </Collection>
+              </Section>
+            )}
+          </Menu>
+        </Popover>
+      </MenuTrigger>
+      {
+        isSettingsModalOpen && (
+          <RequestSettingsModal
+            request={request}
+            onHide={() => setIsSettingsModalOpen(false)}
+          />
+        )
+      }
+    </Fragment >
   );
 };

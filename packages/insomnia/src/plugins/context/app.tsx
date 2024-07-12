@@ -60,7 +60,6 @@ export interface AppContext {
 }
 
 export interface PrivateProperties {
-  axios: any;
   loadRendererModules: () => Promise<{
     ReactDOM: typeof ReactDOM;
     React: typeof React;
@@ -211,7 +210,6 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
       },
     },
     __private: {
-      axios: process.type === 'renderer' ? window.main.axiosRequest : () => { },
       // Provide modules that can be used in the renderer process
       async loadRendererModules() {
         if (typeof globalThis.document === 'undefined') {

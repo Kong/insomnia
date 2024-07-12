@@ -1,10 +1,10 @@
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import React from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { isLoggedIn } from '../../../account/session';
 import { isRemoteProject } from '../../../models/project';
-import { FeatureList } from '../../routes/organization';
+import { OrganizationFeatureLoaderData } from '../../routes/organization';
+import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { GitSyncDropdown } from './git-sync-dropdown';
 import { SyncDropdown } from './sync-dropdown';
@@ -19,13 +19,30 @@ export const WorkspaceSyncDropdown: FC = () => {
     ':workspaceId'
   ) as WorkspaceLoaderData;
 
-  const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
+  const { userSession } = useRootLoaderData();
+  const { organizationId } = useParams() as { organizationId: string };
+  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
 
-  if (!isLoggedIn()) {
+  useEffect(() => {
+    const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
+    if (isIdleAndUninitialized) {
+      permissionsFetcher.load(`/organization/${organizationId}/permissions`);
+    }
+  }, [organizationId, permissionsFetcher]);
+
+  const { features } = permissionsFetcher.data || {
+    features: {
+      gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
+    },
+  };
+  if (!userSession.id) {
     return null;
   }
 
-  if (isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId) {
+  const shouldShowCloudSyncDropdown = isRemoteProject(activeProject)
+    && !activeWorkspaceMeta?.gitRepositoryId;
+
+  if (shouldShowCloudSyncDropdown) {
     return (
       <SyncDropdown
         key={activeWorkspace?._id}
@@ -36,7 +53,8 @@ export const WorkspaceSyncDropdown: FC = () => {
     );
   }
 
-  if (features.gitSync.enabled && (activeWorkspaceMeta?.gitRepositoryId || !isRemoteProject(activeProject))) {
+  const shouldShowGitSyncDropdown = features.gitSync.enabled && (activeWorkspaceMeta?.gitRepositoryId || !isRemoteProject(activeProject));
+  if (shouldShowGitSyncDropdown) {
     return <GitSyncDropdown isInsomniaSyncEnabled={isRemoteProject(activeProject)} gitRepository={gitRepository} />;
   }
 

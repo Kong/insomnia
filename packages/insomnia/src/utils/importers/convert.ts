@@ -26,6 +26,7 @@ export const convert = async (rawData: string) => {
     if (!resources) {
       continue;
     }
+    dotInKeyNameInvariant(resources);
 
     if (resources.length > 0 && resources[0].variable) {
       resources[0].environment = resources[0].variable;
@@ -51,3 +52,14 @@ export const convert = async (rawData: string) => {
 
   throw new Error('No importers found for file');
 };
+
+// this checks invalid keys ahead, or nedb would return an error in importing.
+export function dotInKeyNameInvariant(entity: object) {
+  JSON.stringify(entity, (key, value) => {
+    if (key.includes('.')) {
+      throw new Error(`Detected invalid key "${key}", which contains '.'. Please update it in the original tool and re-import it.`);
+    }
+
+    return value;
+  });
+}

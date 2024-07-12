@@ -1,10 +1,10 @@
 import { LoaderFunction } from 'react-router-dom';
 
 import { database } from '../../common/database';
-import { SCRATCHPAD_ORGANIZATION_ID } from '../../models/organization';
+import { userSession } from '../../models';
+import { Organization, SCRATCHPAD_ORGANIZATION_ID } from '../../models/organization';
 import { Project } from '../../models/project';
 import { Workspace } from '../../models/workspace';
-import { organizationsData } from './organization';
 
 export interface UntrackedProjectsLoaderData {
   untrackedProjects: (Project & { workspacesCount: number })[];
@@ -12,7 +12,8 @@ export interface UntrackedProjectsLoaderData {
 }
 
 export const loader: LoaderFunction = async () => {
-  const { organizations } = organizationsData;
+  const { accountId } = await userSession.getOrCreate();
+  const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
   const listOfOrganizationIds = [...organizations.map(o => o.id), SCRATCHPAD_ORGANIZATION_ID];
 
   const projects = await database.find<Project>('Project', {

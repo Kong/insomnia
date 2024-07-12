@@ -3,15 +3,16 @@ import './base-imports';
 import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { EditorConfiguration } from 'codemirror';
-import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import { useMount, useUnmount } from 'react-use';
 
-import { DEBOUNCE_MILLIS } from '../../../common/constants';
+import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
 import * as misc from '../../../common/misc';
 import { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
+import { useEditorRefresh } from '../../hooks/use-editor-refresh';
 import { useRootLoaderData } from '../../routes/root';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 export interface OneLineEditorProps {
@@ -50,7 +51,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   } = useRootLoaderData();
   const { handleRender, handleGetRenderContext } = useNunjucks();
 
-  useMount(() => {
+  const initEditor = useCallback(() => {
     if (!textAreaRef.current) {
       return;
     }
@@ -91,6 +92,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       keyMap: !readOnly && settings.editorKeyMap ? settings.editorKeyMap : 'default',
       extraKeys: CodeMirror.normalizeKeyMap({
         'Ctrl-Space': 'autocomplete',
+        [isMac() ? 'Cmd-F' : 'Ctrl-F']: () => { },
       }),
       gutters: [],
       mode: !handleRender ? 'text/plain' : {
@@ -109,7 +111,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     codeMirror.current.on('beforeChange', (_: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
       const isPaste = change.text && change.text.length > 1;
       if (isPaste) {
-        if (change.text[0].startsWith('curl')) {
+        const startsWithCurl = change.text[0].startsWith('curl');
+        const isWhitespace = change.text.join('').trim();
+        if (startsWithCurl || !isWhitespace) {
           change.cancel();
           return;
         }
@@ -182,19 +186,33 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     // Clear history so we can't undo the initial set
     codeMirror.current?.clearHistory();
     // Setup nunjucks listeners
-    if (!readOnly && handleRender && !settings.nunjucksPowerUserMode) {
+    if (handleRender && !settings.nunjucksPowerUserMode) {
       codeMirror.current?.enableNunjucksTags(
         handleRender,
         handleGetRenderContext,
         settings.showVariableSourceAndValue,
       );
     }
-  });
-  useUnmount(() => {
+  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, type]);
+
+  const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();
     codeMirror.current?.closeHintDropdown();
     codeMirror.current = null;
+  }, []);
+  useMount(() => {
+    initEditor();
   });
+  useUnmount(() => {
+    cleanUpEditor();
+  });
+
+  const reinitialize = useCallback(() => {
+    cleanUpEditor();
+    initEditor();
+  }, [cleanUpEditor, initEditor]);
+
+  useEditorRefresh(reinitialize);
 
   useEffect(() => {
     const fn = misc.debounce((doc: CodeMirror.Editor) => {
@@ -206,8 +224,13 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     return () => codeMirror.current?.off('changes', fn);
   }, [onChange]);
 
-  useEffect(() => window.main.on('context-menu-command', (_, { key, tag }) =>
-    id === key && codeMirror.current?.replaceSelection(tag)), [id]);
+  useEffect(() => {
+    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag }) =>
+      id === key && codeMirror.current?.replaceSelection(tag));
+    return () => {
+      unsubscribe();
+    };
+  }, [id]);
 
   useImperativeHandle(ref, () => ({
     selectAll: () => codeMirror.current?.setSelection({ line: 0, ch: 0 }, { line: codeMirror.current.lineCount(), ch: 0 }),

@@ -9,7 +9,7 @@ import { version } from '../../../package.json';
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import { ChangeBufferEvent, database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
-import { RENDER_PURPOSE_SEND } from '../../common/render';
+import { RENDER_PURPOSE_SEND, RenderedRequest } from '../../common/render';
 import { ResponsePatch } from '../../main/network/libcurl-promise';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
@@ -25,7 +25,9 @@ import { RequestVersion } from '../../models/request-version';
 import { Response } from '../../models/response';
 import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
-import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { getAuthHeader } from '../../network/authentication';
+import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecuteAfterResponseScript, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { RenderErrorSubType } from '../../templating';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
@@ -112,13 +114,16 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   const { requestType, parentId, req } = await request.json() as { requestType: CreateRequestType; parentId?: string; req?: Request };
 
+  const settings = await models.settings.getOrCreate();
+  const defaultHeaders = settings.disableAppVersionUserAgent ? [] : [{ name: 'User-Agent', value: `insomnia/${version}` }];
+
   let activeRequestId;
   if (requestType === 'HTTP') {
     activeRequestId = (await models.request.create({
       parentId: parentId || workspaceId,
       method: METHOD_GET,
       name: 'New Request',
-      headers: [{ name: 'User-Agent', value: `insomnia/${version}` }],
+      headers: defaultHeaders,
     }))._id;
   }
   if (requestType === 'gRPC') {
@@ -128,11 +133,12 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
     }))._id;
   }
   if (requestType === 'GraphQL') {
+
     activeRequestId = (await models.request.create({
       parentId: parentId || workspaceId,
       method: METHOD_POST,
       headers: [
-        { name: 'User-Agent', value: `insomnia/${version}` },
+        ...defaultHeaders,
         { name: 'Content-Type', value: CONTENT_TYPE_JSON },
       ],
       body: {
@@ -148,7 +154,7 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
       method: METHOD_GET,
       url: '',
       headers: [
-        { name: 'User-Agent', value: `insomnia/${version}` },
+        ...defaultHeaders,
         { name: 'Accept', value: CONTENT_TYPE_EVENT_STREAM },
       ],
       name: 'New Event Stream',
@@ -158,7 +164,7 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
     activeRequestId = (await models.webSocketRequest.create({
       parentId: parentId || workspaceId,
       name: 'New WebSocket Request',
-      headers: [{ name: 'User-Agent', value: `insomnia/${version}` }],
+      headers: defaultHeaders,
     }))._id;
   }
   if (requestType === 'From Curl') {
@@ -287,6 +293,7 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
   invariant(req, 'Request not found');
   invariant(workspaceId, 'Workspace ID is required');
   const rendered = await request.json() as ConnectActionParams;
+
   if (isWebSocketRequestId(requestId)) {
     window.main.webSocket.open({
       requestId,
@@ -298,11 +305,14 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
     });
   }
   if (isEventStreamRequest(req)) {
+    const renderedRequest = { ...req, ...rendered } as RenderedRequest;
+    const authHeader = await getAuthHeader(renderedRequest, rendered.url);
     window.main.curl.open({
       requestId,
       workspaceId,
       url: rendered.url,
       headers: rendered.headers,
+      authHeader,
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
       suppressUserAgent: rendered.suppressUserAgent,
@@ -346,29 +356,44 @@ const writeToDownloadPath = (downloadPathAndName: string, responsePatch: Respons
   });
 
 };
+
 export interface SendActionParams {
   requestId: string;
   shouldPromptForPathAfterResponse?: boolean;
+  ignoreUndefinedEnvVariable?: boolean;
 }
+
 export const sendAction: ActionFunction = async ({ request, params }) => {
   const { requestId, workspaceId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
   invariant(workspaceId, 'Workspace ID is required');
-
-  const req = await requestOperations.getById(requestId) as Request;
-  invariant(req, 'Request not found');
-
-  const {
-    environment,
-    settings,
-    clientCertificates,
-    caCert,
-    activeEnvironmentId,
-  } = await fetchRequestData(requestId);
+  const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
   try {
-    const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
-    const renderedResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
+    window.main.startExecution({ requestId });
+    const requestData = await fetchRequestData(requestId);
+
+    window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
+    const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId);
+    window.main.completeExecutionStep({ requestId });
+    if (mutatedContext === null) {
+      return null;
+    }
+    // disable after-response script here to avoiding rendering it
+    // @TODO This should be handled in a better way. Maybe remove the key from the request object we pass in tryToInterpolateRequest
+    const afterResponseScript = mutatedContext.request.afterResponseScript ? `${mutatedContext.request.afterResponseScript}` : undefined;
+    mutatedContext.request.afterResponseScript = '';
+
+    window.main.addExecutionStep({ requestId, stepName: 'Rendering request' });
+    const renderedResult = await tryToInterpolateRequest(
+      mutatedContext.request,
+      mutatedContext.environment,
+      RENDER_PURPOSE_SEND,
+      undefined,
+      mutatedContext.baseEnvironment,
+      ignoreUndefinedEnvVariable,
+    );
     const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
+    window.main.completeExecutionStep({ requestId });
 
     // TODO: remove this temporary hack to support GraphQL variables in the request body properly
     if (renderedRequest && renderedRequest.body?.text && renderedRequest.body?.mimeType === 'application/graphql') {
@@ -383,30 +408,44 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       }
     }
 
+    window.main.addExecutionStep({ requestId, stepName: 'Sending request' });
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
-      clientCertificates,
-      caCert,
-      settings,
+      mutatedContext.clientCertificates,
+      requestData.caCert,
+      mutatedContext.settings,
+      requestData.timelinePath,
+      requestData.responseId
     );
+    window.main.completeExecutionStep({ requestId });
 
     const requestMeta = await models.requestMeta.getByParentId(requestId);
     invariant(requestMeta, 'RequestMeta not found');
-    const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderedResult.context);
+    const responsePatch = await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context);
     const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
     const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
+
+    mutatedContext.request.afterResponseScript = afterResponseScript;
+    window.main.addExecutionStep({ requestId, stepName: 'Executing after-response script' });
+    await tryToExecuteAfterResponseScript({
+      ...requestData,
+      ...mutatedContext,
+      response,
+    });
+    window.main.completeExecutionStep({ requestId });
+
     if (!shouldWriteToFile) {
-      const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
+      const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
       await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-      // setLoading(false);
       return null;
     }
+
     if (requestMeta.downloadPath) {
       const header = getContentDispositionHeader(responsePatch.headers || []);
       const name = header
         ? contentDisposition.parse(header.value).parameters.filename
-        : `${req.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
-      return writeToDownloadPath(path.join(requestMeta.downloadPath, name), responsePatch, requestMeta, settings.maxHistoryResponses);
+        : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
+      return writeToDownloadPath(path.join(requestMeta.downloadPath, name), responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
     } else {
       const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
       const { filePath } = await window.dialog.showSaveDialog({
@@ -416,18 +455,24 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
         ...(defaultPath ? { defaultPath } : {}),
       });
       if (!filePath) {
-        // setLoading(false);
         return null;
       }
       window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-      return writeToDownloadPath(filePath, responsePatch, requestMeta, settings.maxHistoryResponses);
+      return writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
     }
   } catch (e) {
+    console.log('[request] Failed to send request', e);
+    window.main.completeExecutionStep({ requestId });
     const url = new URL(request.url);
     url.searchParams.set('error', e);
+    if (e?.extraInfo && e?.extraInfo?.subType === RenderErrorSubType.EnvironmentVariable) {
+      url.searchParams.set('envVariableMissing', '1');
+      url.searchParams.set('missingKey', e?.extraInfo?.missingKey);
+    }
     return redirect(`${url.pathname}?${url.searchParams}`);
   }
 };
+
 export const createAndSendToMockbinAction: ActionFunction = async ({ request }) => {
   const patch = await request.json() as Partial<Request>;
   invariant(typeof patch.url === 'string', 'URL is required');
@@ -446,18 +491,38 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
     settings,
     clientCertificates,
     caCert,
-    activeEnvironmentId } = await fetchRequestData(req._id);
+    activeEnvironmentId,
+    timelinePath,
+    responseId,
+  } = await fetchRequestData(req._id);
+  window.main.startExecution({ requestId: req._id });
+  window.main.addExecutionStep({
+    requestId: req._id,
+    stepName: 'Rendering request',
+  }
+  );
 
   const renderResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+
+  window.main.completeExecutionStep({ requestId: req._id });
+  window.main.addExecutionStep({
+    requestId: req._id,
+    stepName: 'Sending request',
+  });
+
   const res = await sendCurlAndWriteTimeline(
     renderedRequest,
     clientCertificates,
     caCert,
     settings,
+    timelinePath,
+    responseId,
   );
+
   const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
   await models.response.create(response);
+  window.main.completeExecutionStep({ requestId: req._id });
   return null;
 };
 export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {

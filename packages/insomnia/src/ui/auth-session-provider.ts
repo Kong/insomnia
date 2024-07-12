@@ -1,4 +1,3 @@
-import { decodeBase64, encodeBase64 } from '@getinsomnia/api-client/base64';
 import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
 
 import * as session from '../account/session';
@@ -29,6 +28,43 @@ encodeBase64(sessionKeyPair.secretKey).then(res => {
  * Keypair used for the login handshake.
  * This keypair can be re-used for the entire session.
  */
+
+export async function decodeBase64(base64: string): Promise<Uint8Array> {
+  try {
+    let uri = 'data:application/octet-binary;base64,';
+    uri += base64;
+    const res = await fetch(uri);
+    const buffer = await res.arrayBuffer();
+    return new Uint8Array(buffer);
+
+  } catch (error) {
+    console.error(error);
+    throw new Error('Failed to decode base64');
+  }
+}
+
+export async function encodeBase64(data: Uint8Array): Promise<string> {
+  const dataUri = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+      } else {
+        reject();
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(new Blob([data]));
+  });
+
+  const dataAt = dataUri.indexOf(',');
+  if (dataAt === -1) {
+    throw new Error(`unexpected data uri output: ${dataUri}`);
+  }
+
+  return dataUri.slice(dataAt + 1);
+}
+
 export async function submitAuthCode(code: string) {
   try {
     const rawBox = await decodeBase64(code.trim());
@@ -41,14 +77,15 @@ export async function submitAuthCode(code: string) {
     const box: AuthBox = JSON.parse(decoder.decode(boxData));
     await session.absorbKey(box.token, box.key);
   } catch (error) {
-    return error.message;
+    console.error(error);
+    return error;
   }
 }
 
 export function getLoginUrl() {
   const publicKey = window.localStorage.getItem('insomnia.publicKey');
   if (!publicKey) {
-    console.log('No public key found');
+    console.log('[auth] No public key found');
     return '';
   }
 

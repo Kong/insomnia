@@ -3,6 +3,9 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { gRPCBridgeAPI } from './main/ipc/grpc';
 import { CurlBridgeAPI } from './main/network/curl';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
+import { invariant } from './utils/invariant';
+
+const ports = new Map<'hiddenWindowPort', MessagePort>();
 
 const webSocket: WebSocketBridgeAPI = {
   open: options => ipcRenderer.invoke('webSocket.open', options),
@@ -38,15 +41,19 @@ const grpc: gRPCBridgeAPI = {
   loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
 };
 const main: Window['main'] = {
+  startExecution: options => ipcRenderer.send('startExecution', options),
+  addExecutionStep: options => ipcRenderer.send('addExecutionStep', options),
+  completeExecutionStep: options => ipcRenderer.send('completeExecutionStep', options),
+  getExecution: options => ipcRenderer.invoke('getExecution', options),
   loginStateChange: () => ipcRenderer.send('loginStateChange'),
   restart: () => ipcRenderer.send('restart'),
   openInBrowser: options => ipcRenderer.send('openInBrowser', options),
+  openDeepLink: options => ipcRenderer.send('openDeepLink', options),
   halfSecondAfterAppStart: () => ipcRenderer.send('halfSecondAfterAppStart'),
   manualUpdateCheck: () => ipcRenderer.send('manualUpdateCheck'),
   backup: () => ipcRenderer.invoke('backup'),
   restoreBackup: options => ipcRenderer.invoke('restoreBackup', options),
   authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
-  spectralRun: options => ipcRenderer.invoke('spectralRun', options),
   setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
   installPlugin: options => ipcRenderer.invoke('installPlugin', options),
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
@@ -61,15 +68,39 @@ const main: Window['main'] = {
   curl,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
-  axiosRequest: options => ipcRenderer.invoke('axiosRequest', options),
-  insomniaFetch: options => ipcRenderer.invoke('insomniaFetch', options),
   showContextMenu: options => ipcRenderer.send('show-context-menu', options),
   database: {
     caCertificate: {
       create: options => ipcRenderer.invoke('database.caCertificate.create', options),
     },
   },
+  hiddenBrowserWindow: {
+    runScript: options => new Promise(async (resolve, reject) => {
+      const isPortAlive = ports.get('hiddenWindowPort') !== undefined;
+      await ipcRenderer.invoke('open-channel-to-hidden-browser-window', isPortAlive);
+
+      const port = ports.get('hiddenWindowPort');
+      invariant(port, 'hiddenWindowPort is undefined');
+
+      port.onmessage = event => {
+        console.log('[preload] received result:', event.data);
+        if (event.data.error) {
+          reject(new Error(event.data.error));
+        }
+        resolve(event.data);
+      };
+
+      port.postMessage({ ...options, type: 'runPreRequestScript' });
+    }),
+  },
 };
+
+ipcRenderer.on('hidden-browser-window-response-listener', event => {
+  const [port] = event.ports;
+  ports.set('hiddenWindowPort', port);
+  ipcRenderer.invoke('main-window-script-port-ready');
+});
+
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),
   showSaveDialog: options => ipcRenderer.invoke('showSaveDialog', options),

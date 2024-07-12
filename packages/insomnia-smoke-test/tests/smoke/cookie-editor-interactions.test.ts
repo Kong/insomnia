@@ -11,7 +11,7 @@ test.describe('Cookie editor', async () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByText('Collectionsimplejust now').click();
+    await page.getByLabel('simple').click();
   });
 
   test('create and send a cookie', async ({ page }) => {

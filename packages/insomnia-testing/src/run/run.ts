@@ -78,7 +78,7 @@ const writeTempFile = (sourceCode: string) => {
   const root = join(tmpdir(), 'insomnia-testing');
   fs.mkdirSync(root, { recursive: true });
 
-  const path = join(root, `${Math.random()}-test.ts`);
+  const path = join(root, `${crypto.randomUUID()}-test.ts`);
   writeFileSync(path, sourceCode);
   return path;
 };

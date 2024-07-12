@@ -75,14 +75,11 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.Editor,
       return;
     }
 
-    let hintsContainer = document.querySelector<HTMLElement>('#hints-container');
+    const hintsContainer = document.querySelector<HTMLElement>('#hints-container');
 
     if (!hintsContainer) {
-      const el = document.createElement('div');
-      el.id = 'hints-container';
-      el.className = 'theme--dropdown__menu';
-      document.body.appendChild(el);
-      hintsContainer = el;
+      console.warn('Hints container not found');
+      throw new Error('Hints container not found');
     }
 
     const constants = options.getConstants ? await options.getConstants() : null;

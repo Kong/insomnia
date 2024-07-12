@@ -3,7 +3,6 @@ import type { IpcRendererEvent } from 'electron';
 import React, { FC, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
-import * as session from '../../account/session';
 import {
   getAppId,
   getAppPlatform,
@@ -12,7 +11,9 @@ import {
   updatesSupported,
 } from '../../common/constants';
 import * as models from '../../models/index';
+import { insomniaFetch } from '../../ui/insomniaFetch';
 import imgSrcCore from '../images/insomnia-logo.svg';
+import { useRootLoaderData } from '../routes/root';
 import { Link } from './base/link';
 
 const INSOMNIA_NOTIFICATIONS_SEEN = 'insomnia::notifications::seen';
@@ -52,6 +53,7 @@ const StyledFooter = styled.footer`
 type SeenNotifications = Record<string, boolean>;
 
 export const Toast: FC = () => {
+  const { userSession } = useRootLoaderData();
   const [notification, setNotification] = useState<ToastNotification | null>(null);
   const [visible, setVisible] = useState(false);
   const handleNotification = (notification: ToastNotification | null | undefined) => {
@@ -104,11 +106,11 @@ export const Toast: FC = () => {
         updatesNotSupported: !updatesSupported(),
         version: getAppVersion(),
       };
-      const notificationOrEmpty = await window.main.insomniaFetch<ToastNotification>({
+      const notificationOrEmpty = await insomniaFetch<ToastNotification>({
         method: 'POST',
         path: '/notification',
         data,
-        sessionId: session.getCurrentSessionId(),
+        sessionId: userSession.id,
       });
       if (notificationOrEmpty && typeof notificationOrEmpty !== 'string') {
         updatedNotification = notificationOrEmpty;
@@ -138,7 +140,7 @@ export const Toast: FC = () => {
         <p>{notification?.message || 'Unknown'}</p>
         <StyledFooter>
           <button
-            className="btn btn--super-duper-compact btn--outlined"
+            className="btn btn--super-super-compact btn--outlined"
             onClick={() => {
               if (notification) {
                 // Hide the currently showing notification
@@ -156,7 +158,7 @@ export const Toast: FC = () => {
           &nbsp;&nbsp;
           <Link
             button
-            className="btn btn--super-duper-compact btn--outlined no-wrap"
+            className="btn btn--super-super-compact btn--outlined no-wrap"
             onClick={() => {
               if (notification) {
                 // Hide the currently showing notification

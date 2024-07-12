@@ -1,7 +1,6 @@
 import React from 'react';
 import { LoaderFunction, Outlet } from 'react-router-dom';
 
-import { isLoggedIn } from '../../account/session';
 import { SortOrder } from '../../common/constants';
 import { database } from '../../common/database';
 import { fuzzyMatchAll } from '../../common/misc';
@@ -31,7 +30,7 @@ import { pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-proj
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { invariant } from '../../utils/invariant';
 
-type Collection = Child[];
+export type Collection = Child[];
 
 export interface WorkspaceLoaderData {
   workspaces: Workspace[];
@@ -40,11 +39,14 @@ export interface WorkspaceLoaderData {
   activeProject: Project;
   gitRepository: GitRepository | null;
   activeEnvironment: Environment;
+  activeGlobalEnvironment?: Environment | null;
   activeCookieJar: CookieJar;
   baseEnvironment: Environment;
   subEnvironments: Environment[];
+  globalBaseEnvironments: (Environment & { workspaceName: string })[];
+  globalSubEnvironments: Environment[];
   activeApiSpec: ApiSpec | null;
-  activeMockServer: MockServer | null;
+  activeMockServer?: MockServer | null;
   clientCertificates: ClientCertificate[];
   caCertificate: CaCertificate | null;
   projects: Project[];
@@ -97,10 +99,38 @@ export const workspaceLoader: LoaderFunction = async ({
     await models.environment.findByParentId(baseEnvironment._id)
   ).sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
 
-  const activeEnvironment =
-    subEnvironments.find(
-      ({ _id }) => activeWorkspaceMeta.activeEnvironmentId === _id,
-    ) || baseEnvironment;
+  const globalEnvironmentWorkspaces = await database.find<Workspace>(models.workspace.type, {
+    parentId: projectId,
+    scope: 'environment',
+  });
+
+  const globalBaseEnvironments = await database.find<Environment>(models.environment.type, {
+    parentId: {
+      $in: globalEnvironmentWorkspaces.map(w => w._id),
+    },
+  });
+
+  const globalSubEnvironments = await database.find<Environment>(models.environment.type, {
+    parentId: {
+      $in: globalBaseEnvironments.map(e => e._id),
+    },
+  });
+
+  const globalBaseEnvironmentsWithWorkspaceName = globalBaseEnvironments.map(e => {
+    const workspace = globalEnvironmentWorkspaces.find(w => w._id === e.parentId);
+    return {
+      ...e,
+      workspaceName: workspace?.name || '',
+    };
+  });
+
+  const activeEnvironment = (await database.getWhere<Environment>(models.environment.type, {
+    _id: activeWorkspaceMeta.activeEnvironmentId,
+  })) || baseEnvironment;
+
+  const activeGlobalEnvironment = (await database.getWhere<Environment>(models.environment.type, {
+    _id: activeWorkspaceMeta.activeGlobalEnvironmentId,
+  }));
 
   const activeCookieJar = await models.cookieJar.getOrCreateForParentId(
     workspaceId,
@@ -145,7 +175,6 @@ export const workspaceLoader: LoaderFunction = async ({
   const grpcRequestMetas = await database.find(models.grpcRequestMeta.type, { parentId: { $in: grpcReqs.map(r => r._id) } });
   const grpcAndRequestMetas = [...requestMetas, ...grpcRequestMetas] as (RequestMeta | GrpcRequestMeta)[];
   const requestGroupMetas = await database.find(models.requestGroupMeta.type, { parentId: { $in: listOfParentIds } }) as RequestGroupMeta[];
-
   // second recursion to build the tree
   const getCollectionTree = async ({
     parentId,
@@ -227,7 +256,8 @@ export const workspaceLoader: LoaderFunction = async ({
     return collection;
   }
 
-  if (isLoggedIn() && !gitRepository) {
+  const userSession = await models.userSession.getOrCreate();
+  if (userSession.id && !gitRepository) {
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
@@ -266,8 +296,11 @@ export const workspaceLoader: LoaderFunction = async ({
     activeWorkspaceMeta,
     activeCookieJar,
     activeEnvironment,
+    activeGlobalEnvironment,
     subEnvironments,
     baseEnvironment,
+    globalSubEnvironments,
+    globalBaseEnvironments: globalBaseEnvironmentsWithWorkspaceName,
     activeApiSpec,
     activeMockServer,
     clientCertificates,

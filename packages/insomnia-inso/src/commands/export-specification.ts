@@ -1,56 +1,38 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+
+import path from 'path';
 import YAML from 'yaml';
 
-import { loadDb } from '../db';
-import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
-import type { GlobalOptions } from '../get-options';
-import { logger } from '../logger';
-import { writeFileWithCliOptions } from '../write-file';
+import { InsoError } from '../cli';
 
-export type ExportSpecificationOptions = GlobalOptions & {
-  output?: string;
-  skipAnnotations?: boolean;
-};
-
-function  deleteField(obj: any, field: any): void {
-  Object.keys(obj).forEach(key => {
-    if (key.startsWith(field)) {
-      delete obj[key];
-    } else if (typeof obj[key] === 'object') {
-      deleteField(obj[key], field);
-    }
-  });
+export async function writeFileWithCliOptions(
+  outputPath: string,
+  contents: string,
+): Promise<string> {
+  try {
+    await mkdir(path.dirname(outputPath), { recursive: true });
+    await writeFile(outputPath, contents);
+    return outputPath;
+  } catch (error) {
+    console.error(error);
+    throw new InsoError(`Failed to write to "${outputPath}"`, error);
+  }
 }
 
-export async function exportSpecification(
-  identifier: string | null | undefined,
-  { output, skipAnnotations, workingDir, appDataDir, ci, src }: ExportSpecificationOptions,
-) {
-  const db = await loadDb({
-    workingDir,
-    appDataDir,
-    filterTypes: ['ApiSpec'],
-    src,
-  });
-  const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
-
-  if (!specFromDb) {
-    logger.fatal('Specification not found.');
-    return false;
+export async function exportSpecification({ specContent, skipAnnotations }: { specContent: string; skipAnnotations: boolean }) {
+  if (!skipAnnotations) {
+    return specContent;
   }
 
-  let contents = specFromDb.contents;
-  if (skipAnnotations) {
-    const yamlObj = YAML.parse(contents);
-    deleteField(yamlObj, 'x-kong-');
-    contents = YAML.stringify(yamlObj);
-  }
-
-  if (output) {
-    const outputPath = await writeFileWithCliOptions(output, contents, workingDir);
-    logger.log(`Specification exported to "${outputPath}".`);
-  } else {
-    logger.log(contents);
-  }
-
-  return true;
+  const recursiveDeleteKey = (obj: any) => {
+    Object.keys(obj).forEach(key => {
+      if (key.startsWith('x-kong-')) {
+        delete obj[key];
+      } else if (typeof obj[key] === 'object') {
+        recursiveDeleteKey(obj[key]);
+      }
+    });
+    return obj;
+  };
+  return YAML.stringify(recursiveDeleteKey(YAML.parse(specContent)));
 }

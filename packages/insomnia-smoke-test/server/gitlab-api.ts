@@ -13,7 +13,7 @@ export default (app: Application) => {
     });
   });
 
-  app.get('/api/v1/oauth/gitlab/config', (_req, res) => {
+  app.get('/v1/oauth/gitlab/config', (_req, res) => {
     res.status(200).send({
       applicationId: 'gitlab-oauth-client-id',
       redirectUri: 'http://localhost:3000/not-implemented',

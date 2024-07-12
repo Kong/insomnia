@@ -18,6 +18,12 @@ describe('init()', () => {
       body: {
         text: '{}',
       },
+      reflectionApi: {
+        enabled: false,
+        apiKey: '',
+        module: 'buf.build/connectrpc/eliza',
+        url: 'https://buf.build',
+      },
       metaSortKey: -1478795580200,
       isPrivate: false,
     });
@@ -46,6 +52,12 @@ describe('create()', () => {
       metadata: [],
       body: {
         text: '{}',
+      },
+      reflectionApi: {
+        enabled: false,
+        apiKey: '',
+        module: 'buf.build/connectrpc/eliza',
+        url: 'https://buf.build',
       },
       metaSortKey: -1478795580200,
       isPrivate: false,

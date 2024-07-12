@@ -1,6 +1,7 @@
 import { database } from '../../common/database';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
 import { VCS } from '../../sync/vcs/vcs';
+import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { isDefaultOrganizationProject, Project, update as updateProject } from '../project';
 import { Workspace } from '../workspace';
@@ -23,7 +24,7 @@ export async function updateLocalProjectToRemote({
   sessionId: string;
   organizationId: string;
 }) {
-  const newCloudProject = await window.main.insomniaFetch<{
+  const newCloudProject = await insomniaFetch<{
     id: string;
     name: string;
   } | {

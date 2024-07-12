@@ -106,13 +106,13 @@ export const Row: FC<Props> = ({
             <FileInputButton
               showFileName
               showFileIcon
-              className="btn btn--outlined btn--super-duper-compact wide ellipsis"
+              className="btn btn--outlined btn--super-super-compact wide ellipsis"
               path={pair.fileName || ''}
               onChange={fileName => onChange({ ...pair, fileName })}
             />
           ) : isMultiline ? (
             <button
-              className="btn btn--outlined btn--super-duper-compact wide ellipsis"
+              className="btn btn--outlined btn--super-super-compact wide ellipsis"
               onClick={() => showModal(CodePromptModal, {
                 submitName: 'Done',
                 title: `Edit ${pair.name}`,

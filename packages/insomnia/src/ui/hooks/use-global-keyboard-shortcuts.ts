@@ -1,20 +1,15 @@
-import { useRouteLoaderData } from 'react-router-dom';
-
 import * as plugins from '../../plugins';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal } from '../components/modals';
 import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
 import { useRootLoaderData } from '../routes/root';
-import { WorkspaceLoaderData } from '../routes/workspace';
-import { useSettingsPatcher, useWorkspaceMetaPatcher } from './use-request';
+import { useSettingsPatcher } from './use-request';
+
 export const useGlobalKeyboardShortcuts = () => {
-  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const {
     settings,
   } = useRootLoaderData();
-  const { activeWorkspaceMeta } = workspaceData || {};
   const patchSettings = useSettingsPatcher();
-  const patchWorkspaceMeta = useWorkspaceMetaPatcher();
 
   useDocBodyKeyboardShortcuts({
     plugin_reload:
@@ -27,8 +22,5 @@ export const useGlobalKeyboardShortcuts = () => {
       () => showModal(SettingsModal),
     preferences_showKeyboardShortcuts:
       () => showModal(SettingsModal, { tab: TAB_INDEX_SHORTCUTS }),
-    // TODO: move this to workspace route
-    sidebar_toggle:
-      () => activeWorkspaceMeta && patchWorkspaceMeta(activeWorkspaceMeta.parentId, { sidebarHidden: !activeWorkspaceMeta.sidebarHidden }),
   });
 };

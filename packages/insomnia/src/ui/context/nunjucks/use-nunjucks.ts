@@ -25,7 +25,7 @@ export const useNunjucks = () => {
     const ancestors = await getRenderContextAncestors(requestData?.activeRequest || workspaceData?.activeWorkspace);
     return getRenderContext({
       request: requestData?.activeRequest || undefined,
-      environmentId: workspaceData?.activeEnvironment._id,
+      environment: workspaceData?.activeEnvironment._id,
       ancestors,
     });
   }, [requestData?.activeRequest, workspaceData?.activeWorkspace, workspaceData?.activeEnvironment._id]);

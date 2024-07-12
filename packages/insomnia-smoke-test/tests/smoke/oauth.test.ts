@@ -26,7 +26,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByText('CollectionOAuth Testingjust now').click();
+  await page.getByLabel('OAuth Testing').click();
 
   // No PKCE
   await projectView.getByLabel('Request Collection').getByTestId('No PKCE').press('Enter');
@@ -47,7 +47,8 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await expect(responseBody).toContainText('"sub": "admin"');
 
   // Navigate to the OAuth2 Tab and refresh the token from there
-  await page.getByRole('tab', { name: 'OAuth 2' }).click();
+  await page.getByRole('tab', { name: 'Auth' }).click();
+  await expect(page.getByRole('button', { name: 'OAuth 2.0' })).toBeVisible();
 
   const tokenInput = page.locator('[for="Access-Token"] > input');
   const prevToken = await tokenInput.inputValue();
@@ -87,6 +88,13 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
   await expect(page.locator('#Grant-Type')).toHaveValue('authorization_code');
   await expect(page.locator('#Code-Challenge-Method')).toHaveValue('plain');
+  await sendButton.click();
+  await expect(statusTag).toContainText('200 OK');
+  await expect(responseBody).toContainText('"sub": "admin"');
+
+  // Inherited Auth from folder
+  await page.getByLabel('Request Collection').getByTestId('Request with Inherited Auth').press('Enter');
+  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
   await sendButton.click();
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "admin"');

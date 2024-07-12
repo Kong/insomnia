@@ -1,67 +1,54 @@
+import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { FC, useCallback } from 'react';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { Button, Collection, Header, ListBox, ListBoxItem, Popover, Section, Select, SelectValue } from 'react-aria-components';
+import { useParams } from 'react-router-dom';
 
 import {
-  AuthType,
-  getAuthTypeName,
   HAWK_ALGORITHM_SHA256,
 } from '../../../common/constants';
-import { RequestAuthentication } from '../../../models/request';
+import type { AuthTypeAPIKey, AuthTypeAwsIam, AuthTypeBasic, AuthTypeNTLM, AuthTypes, RequestAuthentication } from '../../../models/request';
+import { getAuthObjectOrNull } from '../../../network/authentication';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
-import { useRequestPatcher } from '../../hooks/use-request';
-import { RequestLoaderData } from '../../routes/request';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import { showModal } from '../modals';
-import { AlertModal } from '../modals/alert-modal';
+import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
+import { Icon } from '../icon';
 
-const defaultTypes: AuthType[] = [
-  'apikey',
-  'basic',
-  'digest',
-  'oauth1',
-  'oauth2',
-  'ntlm',
-  'iam',
-  'bearer',
-  'hawk',
-  'asap',
-  'netrc',
-];
-
-function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): RequestAuthentication {
+function castOneAuthTypeToAnother(type: AuthTypes, oldAuth: RequestAuthentication | {}): RequestAuthentication {
   switch (type) {
     // No Auth
     case 'none':
-      return {};
+      return { type: 'none' };
 
     // API Key Authentication
     case 'apikey':
+      const oldApikey = oldAuth as AuthTypeAPIKey;
       return {
         type,
-        disabled: oldAuth.disabled || false,
-        key: oldAuth.key || '',
-        value: oldAuth.value || '',
-        addTo: oldAuth.addTo || 'header',
+        disabled: oldApikey.disabled || false,
+        key: oldApikey.key || '',
+        value: oldApikey.value || '',
+        addTo: oldApikey.addTo || 'header',
       };
 
     // HTTP Basic Authentication
     case 'basic':
+      const oldBasic = oldAuth as AuthTypeBasic;
       return {
         type,
-        useISO88591: oldAuth.useISO88591 || false,
-        disabled: oldAuth.disabled || false,
-        username: oldAuth.username || '',
-        password: oldAuth.password || '',
+        useISO88591: oldBasic.useISO88591 || false,
+        disabled: oldBasic.disabled || false,
+        username: oldBasic.username || '',
+        password: oldBasic.password || '',
       };
 
     case 'digest':
     case 'ntlm':
+      const oldNtlm = oldAuth as AuthTypeNTLM;
       return {
         type,
-        disabled: oldAuth.disabled || false,
-        username: oldAuth.username || '',
-        password: oldAuth.password || '',
+        disabled: oldNtlm.disabled || false,
+        username: oldNtlm.username || '',
+        password: oldNtlm.password || '',
       };
 
     case 'oauth1':
@@ -89,12 +76,13 @@ function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): Request
 
     // Aws IAM
     case 'iam':
+      const oldIam = oldAuth as AuthTypeAwsIam;
       return {
         type,
-        disabled: oldAuth.disabled || false,
-        accessKeyId: oldAuth.accessKeyId || '',
-        secretAccessKey: oldAuth.secretAccessKey || '',
-        sessionToken: oldAuth.sessionToken || '',
+        disabled: oldIam.disabled || false,
+        accessKeyId: oldIam.accessKeyId || '',
+        secretAccessKey: oldIam.secretAccessKey || '',
+        sessionToken: oldIam.sessionToken || '',
       };
 
     // Hawk
@@ -102,6 +90,8 @@ function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): Request
       return {
         type,
         algorithm: HAWK_ALGORITHM_SHA256,
+        id: '',
+        key: '',
       };
 
     // Atlassian ASAP
@@ -124,101 +114,181 @@ function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): Request
       };
   }
 }
+
+const defaultTypes: AuthTypes[] = [
+  'apikey',
+  'basic',
+  'digest',
+  'oauth1',
+  'oauth2',
+  'ntlm',
+  'iam',
+  'bearer',
+  'hawk',
+  'asap',
+  'netrc',
+];
+
 interface Props {
-  authTypes?: AuthType[];
+  authentication?: RequestAuthentication | {};
+  authTypes?: AuthTypes[];
   disabled?: boolean;
 }
-export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = false }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const { requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+
+export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTypes, disabled = false }) => {
+  const { requestId, requestGroupId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId?: string; requestGroupId?: string };
   const patchRequest = useRequestPatcher();
-  const onClick = useCallback(async (type: AuthType) => {
-    if (!activeRequest || !('authentication' in activeRequest)) {
+  const patchRequestGroup = useRequestGroupPatcher();
+  const onClick = useCallback(async (type: AuthTypes | 'inherit') => {
+    const clickedSameSetting = type === getAuthObjectOrNull(authentication)?.type || '';
+    if (clickedSameSetting) {
       return;
     }
+    const selectedInherit = type === 'inherit';
+    const newAuthentication = selectedInherit ? {} : castOneAuthTypeToAnother(type, authentication || {});
+    requestId && patchRequest(requestId, { authentication: newAuthentication });
+    requestGroupId && patchRequestGroup(requestGroupId, { authentication: newAuthentication });
+  }, [authentication, patchRequest, patchRequestGroup, requestGroupId, requestId]);
 
-    const { authentication } = activeRequest;
+  const selectedAuthType = getAuthObjectOrNull(authentication)?.type || 'inherit';
 
-    if (type === authentication.type) {
-      // Type didn't change
-      return;
-    }
+  const authTypesItems: {
+    id: AuthTypes;
+    name: string;
+  }[] = [
+      {
+      id: 'apikey',
+      name: 'API Key',
+      },
+      {
+        id: 'basic',
+        name: 'Basic',
+      },
+      {
+        id: 'digest',
+        name: 'Digest',
+      },
+      {
+        id: 'ntlm',
+        name: 'NTLM',
+      },
+      {
+        id: 'oauth1',
+        name: 'OAuth 1.0',
+      },
+      {
+        id: 'oauth2',
+        name: 'OAuth 2.0',
+      },
+      {
+        id: 'iam',
+        name: 'AWS IAM',
+      },
+      {
+        id: 'bearer',
+        name: 'Bearer Token',
+      },
+      {
+        id: 'hawk',
+        name: 'Hawk',
+      },
+      {
+        id: 'asap',
+        name: 'Atlassian ASAP',
+      },
+      {
+        id: 'netrc',
+        name: 'Netrc',
+      },
+    ];
 
-    const newAuthentication = makeNewAuth(type, authentication);
-    const defaultAuthentication = makeNewAuth(authentication.type);
-
-    // Prompt the user if fields will change between new and old
-    for (const key of Object.keys(authentication)) {
-      if (key === 'type') {
-        continue;
-      }
-
-      const value = authentication[key];
-      const changedSinceDefault = defaultAuthentication[key] !== value;
-      const willChange = newAuthentication[key] !== value;
-
-      if (changedSinceDefault && willChange) {
-        await showModal(AlertModal, {
-          title: 'Switch Authentication?',
-          message: 'Current authentication settings will be lost',
-          addCancel: true,
-        });
-        break;
-      }
-    }
-    patchRequest(requestId, { authentication: newAuthentication });
-  }, [activeRequest, patchRequest, requestId]);
-  const isCurrent = useCallback((type: AuthType) => {
-    if (!activeRequest || !('authentication' in activeRequest)) {
-      return false;
-    }
-    return type === (activeRequest.authentication.type || 'none');
-  }, [activeRequest]);
-
-  if (!activeRequest) {
-    return null;
-  }
+  const authTypeSections: {
+    id: string;
+    icon: IconName;
+    name: string;
+    items: {
+      id: AuthTypes | 'inherit';
+      name: string;
+    }[];
+  }[] = [
+      {
+        id: 'Other',
+        name: 'Other',
+        icon: 'ellipsis-h',
+        items: [
+          {
+            id: 'inherit',
+            name: 'Inherit from parent',
+          },
+          {
+            id: 'none',
+            name: 'None',
+          },
+        ],
+      },
+      {
+        id: 'Auth Types',
+        name: 'Auth Types',
+        icon: 'lock',
+        items: authTypesItems.filter(item => authTypes.includes(item.id)),
+      },
+    ];
 
   return (
-    <Dropdown
-      aria-label='Authentication Dropdown'
+    <Select
       isDisabled={disabled}
-      triggerButton={
-        <DropdownButton className="tall">
-          {'authentication' in activeRequest ? getAuthTypeName(activeRequest.authentication.type) || 'Auth' : 'Auth'}
-          <i className="fa fa-caret-down space-left" />
-        </DropdownButton>
-      }
+      aria-label="Change Authentication type"
+      name="auth-type"
+      onSelectionChange={authType => {
+        onClick(authType as AuthTypes);
+      }}
+      selectedKey={selectedAuthType}
     >
-      <DropdownSection
-        aria-label='Auth types section'
-        title="Auth Types"
-      >
-        {authTypes.map(authType =>
-          <DropdownItem
-            key={authType}
-            aria-label={getAuthTypeName(authType, true)}
-          >
-            <ItemContent
-              icon={isCurrent(authType) ? 'check' : 'empty'}
-              label={getAuthTypeName(authType, true)}
-              onClick={() => onClick(authType)}
-            />
-          </DropdownItem>
-        )}
-      </DropdownSection>
-      <DropdownSection
-        aria-label="Other types section"
-        title="Other"
-      >
-        <DropdownItem aria-label='None' key="none">
-          <ItemContent
-            icon={isCurrent('none') ? 'check' : 'empty'}
-            label={'No Authentication'}
-            onClick={() => onClick('none')}
-          />
-        </DropdownItem>
-      </DropdownSection>
-    </Dropdown>
+      <Button className="px-4 min-w-[17ch] py-1 font-bold flex flex-1 items-center justify-between gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+        <SelectValue className="flex truncate items-center justify-center gap-2">
+          {({ selectedText }) => (
+            <div className='flex items-center gap-2 text-[--hl]'>
+              {selectedText || 'Auth Type'}
+            </div>
+          )}
+        </SelectValue>
+        <Icon icon="caret-down" />
+      </Button>
+      <Popover className="min-w-max">
+        <ListBox
+          items={authTypeSections}
+          className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+        >
+          {section => (
+            <Section>
+              <Header className='pl-2 py-1 flex items-center gap-2 text-[--hl] text-xs uppercase'>
+                <Icon icon={section.icon} /> <span>{section.name}</span>
+              </Header>
+              <Collection items={section.items}>
+                {item => (
+                  <ListBoxItem
+                    className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                    aria-label={item.name}
+                    textValue={item.name}
+                  >
+                    {({ isSelected }) => (
+                      <>
+                        <span>{item.name}</span>
+                        {isSelected && (
+                          <Icon
+                            icon="check"
+                            className="text-[--color-success] justify-self-end"
+                          />
+                        )}
+                      </>
+                    )}
+                  </ListBoxItem>
+                )}
+              </Collection>
+            </Section>
+          )}
+        </ListBox>
+      </Popover>
+    </Select>
   );
 };

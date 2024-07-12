@@ -14,7 +14,7 @@
           "NODE_ENV": "development",
         }
       },
-      "command": "${workspaceRoot}/packages/insomnia/node_modules/.bin/esr esbuild.main.ts"
+      "command": "${workspaceRoot}/node_modules/.bin/esr esbuild.main.ts"
     },
     {
       "label": "Insomnia: Compile Renderer (Watch)",
@@ -52,7 +52,7 @@
           }
         }
       },
-      "command": "${workspaceRoot}/packages/insomnia/node_modules/.bin/vite dev"
+      "command": "${workspaceRoot}/node_modules/.bin/vite dev"
     },
     {
       "label": "Insomnia: Compile (Watch)",

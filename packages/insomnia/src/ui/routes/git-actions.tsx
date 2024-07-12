@@ -74,7 +74,7 @@ export const gitRepoLoader: ActionFunction = async ({
 
     if (GitVCS.isInitializedForRepo(gitRepository._id)) {
       return {
-        branch: await GitVCS.getBranch(),
+        branch: await GitVCS.getCurrentBranch(),
         branches: await GitVCS.listBranches(),
         gitRepository: gitRepository,
       };
@@ -132,7 +132,7 @@ export const gitRepoLoader: ActionFunction = async ({
     await GitVCS.addRemote(gitUri);
 
     return {
-      branch: await GitVCS.getBranch(),
+      branch: await GitVCS.getCurrentBranch(),
       branches: await GitVCS.listBranches(),
       gitRepository: gitRepository,
     };
@@ -299,7 +299,7 @@ export const gitChangesLoader: LoaderFunction = async ({
 
   invariant(gitRepository, 'Git Repository not found');
 
-  const branch = await GitVCS.getBranch();
+  const branch = await GitVCS.getCurrentBranch();
   try {
     const { changes, statusNames } = await getGitChanges(GitVCS, workspace);
 

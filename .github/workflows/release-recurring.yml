@@ -17,6 +17,7 @@ env:
   PR_NUMBER: ${{ github.event.number }}
 jobs:
   build-and-upload-artifacts:
+    timeout-minutes: 15
     # Skip jobs for release PRs
     # windows on recurring should be portable
     if: ${{ !startsWith(github.head_ref, 'release/') }}
@@ -33,10 +34,10 @@ jobs:
             build-targets: "tar.gz"
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
@@ -52,6 +53,17 @@ jobs:
       - name: Package
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+      
+      # - name: Set publish metadata # Checksum for provenance must be calculated before moving artifacts temporarily
+      #   id: metadata
+      #   run: |
+      #     INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)
+      #     echo "INSO_VERSION=${INSO_VERSION}" >> $GITHUB_ENV
+      #     ./.github/scripts/generate-binary-digest.sh
+      #   env:
+      #     ARTIFACT_PATH: "packages"
+      #     CLI_ARTIFACT_SHAFILE: ${{runner.temp}}/cli.sha256
+      #     ELECTRON_ARTIFACT_SHAFILE: ${{runner.temp}}/electron.sha256
 
       - name: Test critical path on packaged electron app
         run: npm run test:package -w packages/insomnia-smoke-test -- --project=Critical
@@ -59,14 +71,14 @@ jobs:
           INSOMNIA_UPDATES_URL: http://localhost:4010
 
       - name: Upload smoke test traces
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-package-critical-test-traces-${{ github.run_number }}
           path: packages/insomnia-smoke-test/traces
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-artifacts-${{ github.run_number }}

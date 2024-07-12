@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
-import tinykeys, { createKeybindingsHandler as _createKeybindingsHandler, KeyBindingHandlerOptions, type KeyBindingMap } from 'tinykeys';
+import { createKeybindingsHandler as _createKeybindingsHandler, KeyBindingHandlerOptions, type KeyBindingMap, tinykeys } from 'tinykeys';
 
 import { getPlatformKeyCombinations } from '../../common/hotkeys';
 import { keyboardKeys } from '../../common/keyboard-keys';

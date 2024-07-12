@@ -10,14 +10,14 @@ With Insomnia you can:
 - **Debug APIs** using the most popular protocols and formats.
 - **Design APIs** using the native OpenAPI editor and visual preview.
 - **Test APIs** using native test suites.
-- **Mock APIs** will be coming soon in November 2023.
+- **Mock APIs** using a server and routes.
 - **Build CI/CD pipelines** using the native Insomnia CLI for linting and testing.
 - **Collaborate with others** using the many collaboration features to share your projects.
 
 And a lot more! The following storage options are supported for your projects, collections, specs and all other files:
 
 - **Local Vault**: for local storage of collections, design specs and every other resource.
-- **Cloud Sync**: for cloud collaboration, end-to-end encrypted (E2EE) and free.
+- **Cloud Sync**: for cloud collaboration, encrypted and free.
 - **Git Sync**: for Git storage of all files using any 3rd party Git repository.
 
 ![Insomnia API Client](https://raw.githubusercontent.com/Kong/insomnia/develop/screenshots/main.png)
