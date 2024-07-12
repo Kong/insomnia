@@ -16,10 +16,14 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "strict": true,
-    "target": "ES2019",
+    "target": "ES2020",
     "useUnknownInCatchVariables": false,
 
-    "lib": ["DOM.Iterable", "DOM"],
+    "lib": [
+      "ES2020",
+      "DOM.Iterable",
+      "DOM"
+    ],
     "isolatedModules": true,
     "jsx": "react",
     "outDir": "./build",

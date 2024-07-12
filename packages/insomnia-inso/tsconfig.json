@@ -8,7 +8,10 @@
     "declaration": true,
     "declarationMap": true,
     "esModuleInterop": true,
-    "lib": ["DOM", "ES2019"],
+    "lib": [
+      "DOM",
+      "ES2020"
+    ],
     "module": "CommonJS",
     "moduleResolution": "node",
     "noImplicitReturns": true,
@@ -18,7 +21,7 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "strict": true,
-    "target": "ES2019",
+    "target": "ES2020",
     "types": ["node"],
     "useUnknownInCatchVariables": false
   },
