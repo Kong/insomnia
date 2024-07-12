@@ -177,6 +177,7 @@ export const tryToExecutePreRequestScript = async ({
       settings,
       cookieJar,
       globals: activeGlobalEnvironment,
+      requestTestResults: new Array<RequestTestResult>(),
     };
   }
   const joinedScript = [...folderScripts].join('\n');
@@ -207,6 +208,7 @@ export const tryToExecutePreRequestScript = async ({
     settings: mutatedContext.settings || settings,
     globals: mutatedContext.globals,
     cookieJar: mutatedContext.cookieJar,
+    requestTestResults: mutatedContext.requestTestResults,
   };
 };
 
@@ -411,7 +413,10 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
       await fn${i}();
   `);
   if (folderScripts.length === 0) {
-    return context;
+    return {
+      ...context,
+      requestTestResults: new Array<RequestTestResult>(),
+    };
   }
   const joinedScript = [...folderScripts].join('\n');
 
