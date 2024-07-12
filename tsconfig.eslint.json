@@ -1,7 +1,0 @@
-{
-  "extends": "./tsconfig.base.json",
-  "include": [
-    ".eslintrc.js",
-    "jest-preset.js",
-  ],
-}
