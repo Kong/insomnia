@@ -86,7 +86,7 @@ const fetchGraphQLSchemaForRequest = async ({
   try {
 
     const bodyJson = JSON.stringify({
-      query: getIntrospectionQuery(),
+      query: getIntrospectionQuery({ inputValueDeprecation: true }),
       operationName: 'IntrospectionQuery',
     });
     const introspectionRequest = await db.upsert(
