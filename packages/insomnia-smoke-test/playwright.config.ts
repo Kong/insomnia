@@ -5,7 +5,7 @@ const config: PlaywrightTestConfig = {
     {
       // Run all tests, runs only on Release PR test workflow
       name: 'Default',
-      testMatch: /prerelease\/.*.test.ts/,
+      testMatch: /.*\/.*.test.ts/,
       retries: 0,
     },
     {
