@@ -23,6 +23,14 @@ Insomnia uses [`npm workspaces`](https://docs.npmjs.com/cli/v9/using-npm/workspa
 
 - `/packages` contains related packages that are consumed by `insomnia` or externally.
 
+Insomnia Inso CLI is built using a series of steps
+
+1. `packages/insomnia-send-request/dist/index.js` is transpiled from `packages/insomnia` using both esbuild and tsc to gather some of insomnia renderer networking functionality
+1. `insomnia-inso` uses project references to import `insomnia-send-request` and `insomnia-testing` to gather functionality for creating test code and running requests.
+1. `packages/insomnia-inso/dist/index.js` is transpiled with esbuild
+1. `packages/insomnia-inso/bin/inso` is shell script which points at `packages/insomnia-inso/dist/index.js` and is used for local development
+1. `packages/insomnia-inso/binaries/inso` is an executable made with `pkg`
+
 ## The `insomnia` Main Package
 
 `/packages/insomnia` is the entry point for the app. All other packages are imported from this one.
@@ -81,9 +89,9 @@ This is just a brief summary of Insomnia's current technical debt.
 - [x] styling vision (react-aria + tailwind)
 - [ ] de-polymorph database
 - [ ] codemirror is unmaintained
-- [ ] nedb is unmaintained
+- [x] nedb is unmaintained
 - [ ] grpc state state should be in main rather than renderer
-- [ ] drag and drop is flakey
+- [x] drag and drop is flakey
 - [ ] sync code is spaghetti
 - [ ] template rendering is spaghetti and has poor discoverability
 - [ ] inso abstraction limits networking improvements
@@ -101,3 +109,4 @@ bump the following node and electron versions
 - `packages/insomnia/package.json` electron and node-libcurl
 - `packages/insomnia-send-request/package.json` node-libcurl
 - `shell.nix`
+
