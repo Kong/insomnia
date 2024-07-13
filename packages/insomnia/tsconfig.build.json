@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-  /* Basic */
+    /* Basic */
     "esModuleInterop": true,
     "skipLibCheck": true,
     "target": "es2022",
@@ -10,8 +10,6 @@
     "isolatedModules": true,
     /* Transpiling Options */
     "module": "ESNext",
-    "outDir": "./build",
-    "rootDir": ".",
     "sourceMap": true,
     /* Runs in the DOM */
     "lib": [
@@ -20,13 +18,13 @@
       "DOM"
     ],
     "jsx": "react",
-  /* Strictness */
-  "strict": true,
-  "noImplicitReturns": true,
-  "noUnusedLocals": true,
-  "noUnusedParameters": true,
-  "noFallthroughCasesInSwitch": true,
-  "useUnknownInCatchVariables": false,
+    /* Strictness */
+    "strict": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "useUnknownInCatchVariables": false,
   },
   "include": [
     "**/*.d.ts",
