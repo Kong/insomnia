@@ -1,5 +1,31 @@
 {
-  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    /* Basic */
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "es2022",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "isolatedModules": true,
+    /* Transpiling Options */
+    "module": "ESNext",
+    "sourceMap": true,
+    /* Runs in the DOM */
+    "lib": [
+      "ES2020",
+      "DOM.Iterable",
+      "DOM"
+    ],
+    "jsx": "react",
+    /* Strictness */
+    "strict": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "useUnknownInCatchVariables": false,
+  },
   "include": [
     ".eslintrc.js",
     "config",
@@ -14,7 +40,8 @@
     "tailwind.config.js",
     "postcss.config.js",
     "vite.config.ts",
-    "vite-plugin-electron-node-require"
+    "vite-plugin-electron-node-require",
+    "**/*.d.ts",
   ],
   "exclude": [
     "bin",
@@ -25,5 +52,22 @@
     "src/main.min.js",
     "src/preload.js",
     "svgr.config.js",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/__jest__",
+    "**/__mocks__",
+    "**/__snapshots__",
+    "**/__tests__",
+    "**/main.min.js",
+    "__jest__",
+    "assets",
+    "bin",
+    "config",
+    "jest.config.js",
+    "node_modules",
+    "src/coverage",
+    "src/main.min.js",
+    "src/preload.js",
+    "src/hidden-window-preload.js",
   ],
 }
