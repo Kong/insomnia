@@ -25,11 +25,12 @@ Insomnia uses [`npm workspaces`](https://docs.npmjs.com/cli/v9/using-npm/workspa
 
 Insomnia Inso CLI is built using a series of steps
 
-1. `packages/insomnia-send-request/dist/index.js` is transpiled from `packages/insomnia` using both esbuild and tsc to gather some of insomnia renderer networking functionality
-1. `insomnia-inso` uses project references to import `insomnia-send-request` and `insomnia-testing` to gather functionality for creating test code and running requests.
-1. `packages/insomnia-inso/dist/index.js` is transpiled with esbuild
-1. `packages/insomnia-inso/bin/inso` is shell script which points at `packages/insomnia-inso/dist/index.js` and is used for local development
-1. `packages/insomnia-inso/binaries/inso` is an executable made with `pkg`
+1. `packages/insomnia-send-request/dist/index.js` is transpiled from `packages/insomnia` using esbuild to expose `getSendRequestCallbackMemDb` in order to send a request without writing to database
+2. `insomnia-testing` is connected to both `packages/insomnia` `packages/insomnia-inso` using "project references" to expose `generate`, `runTests` and `runTestsCli`
+3. `insomnia-inso` uses"project references" to import `insomnia-send-request` and `insomnia-testing`.
+4. `packages/insomnia-inso/dist/index.js` is transpiled with esbuild
+5. `packages/insomnia-inso/bin/inso` is shell script which points at `packages/insomnia-inso/dist/index.js` and is used for local development
+6. `packages/insomnia-inso/binaries/inso` is an executable made with `pkg`
 
 ## The `insomnia` Main Package
 
