@@ -109,4 +109,3 @@ bump the following node and electron versions
 - `packages/insomnia/package.json` electron and node-libcurl
 - `packages/insomnia-send-request/package.json` node-libcurl
 - `shell.nix`
-
