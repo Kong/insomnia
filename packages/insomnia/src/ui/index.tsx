@@ -176,7 +176,7 @@ async function renderApp() {
                 action: async (...args) => (await import('./routes/organization')).syncOrganizationsAction(...args),
               },
               {
-                path: 'syncOrgsAndProjectsAction',
+                path: 'sync-orgs-and-projects',
                 action: async (...args) => (await import('./routes/organization')).syncOrgsAndProjectsAction(...args),
               },
               {

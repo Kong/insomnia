@@ -465,13 +465,13 @@ const OrganizationRoute = () => {
 
   const syncOrgsAndProjects = useCallback(() => {
     const submit = syncOrgsAndProjectsFetcher.submit;
-    console.log('asyncTaskList', asyncTaskList);
+
     submit({
       organizationId,
       projectId: projectId || '',
       asyncTaskList,
     }, {
-      action: '/organization/syncOrgsAndProjectsAction',
+      action: '/organization/sync-orgs-and-projects',
       method: 'POST',
       encType: 'application/json',
     });
