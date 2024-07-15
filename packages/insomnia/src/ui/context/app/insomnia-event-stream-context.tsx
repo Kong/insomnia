@@ -1,5 +1,5 @@
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
-import { useFetcher, useParams, useRevalidator, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { insomniaFetch } from '../../../ui/insomniaFetch';
 import type { ProjectIdLoaderData } from '../../routes/project';
@@ -86,7 +86,6 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   const syncStorageRuleFetcher = useFetcher();
   const syncProjectsFetcher = useFetcher();
   const syncDataFetcher = useFetcher();
-  const { revalidate } = useRevalidator();
 
   // Update presence when the user switches org, projects, workspaces
   useEffect(() => {
@@ -121,7 +120,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
 
   useEffect(() => {
     const sessionId = userSession.id;
-    if (sessionId && remoteId) {
+    if (sessionId) {
       try {
         const source = new EventSource(`insomnia-event-source://v1/teams/${sanitizeTeamId(organizationId)}/streams?sessionId=${sessionId}`);
 
@@ -160,12 +159,12 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                 action: `/organization/${organizationId}/sync-projects`,
                 method: 'POST',
               });
-            } else if (event.type === 'FileDeleted' && event.team === organizationId && event.project === remoteId) {
+            } else if (event.type === 'FileDeleted' && event.team === organizationId && remoteId && event.project === remoteId) {
               syncProjectsFetcher.submit({}, {
                 action: `/organization/${organizationId}/sync-projects`,
                 method: 'POST',
               });
-            } else if (['BranchDeleted', 'FileChanged'].includes(event.type) && event.team === organizationId && event.project === remoteId) {
+            } else if (['BranchDeleted', 'FileChanged'].includes(event.type) && event.team === organizationId && remoteId && event.project === remoteId) {
               syncDataFetcher.submit({}, {
                 method: 'POST',
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
@@ -184,7 +183,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
       }
     }
     return;
-  }, [organizationId, projectId, remoteId, revalidate, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, syncStorageRuleFetcher, userSession.id, workspaceId]);
+  }, [organizationId, projectId, remoteId, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, syncStorageRuleFetcher, userSession.id, workspaceId]);
 
   return (
     <InsomniaEventStreamContext.Provider
