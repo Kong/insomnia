@@ -39,7 +39,7 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
 
   const fullPath = `Request.${error?.path}`;
   const result = JSONPath({ json: request, path: `$.${error?.path}` });
-  const template = result && result.length ? result[0] : null;
+  const template = result && Array.isArray(result) && result.length ? result[0] : null;
   const locationLabel = template?.includes('\n') ? `line ${error?.location.line} of` : null;
 
   return (

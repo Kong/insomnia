@@ -23,6 +23,35 @@ Insomnia uses [`npm workspaces`](https://docs.npmjs.com/cli/v9/using-npm/workspa
 
 - `/packages` contains related packages that are consumed by `insomnia` or externally.
 
+Insomnia Inso CLI is built using a series of steps
+
+1. `packages/insomnia-send-request/dist/index.js` is transpiled from `packages/insomnia` using esbuild to expose `getSendRequestCallbackMemDb` in order to send a request without writing to database
+1. `insomnia-testing` is connected to both `packages/insomnia` `packages/insomnia-inso` using "project references" to expose `generate`, `runTests` and `runTestsCli`
+1. `insomnia-inso` uses"project references" to import `insomnia-send-request` and `insomnia-testing`.
+1. `packages/insomnia-inso/dist/index.js` is transpiled with esbuild
+1. `packages/insomnia-inso/bin/inso` is shell script which points at `packages/insomnia-inso/dist/index.js` and is used for local development
+1. `packages/insomnia-inso/binaries/inso` is an executable made with `pkg`
+
+What `insomnia-send-request` is an abstraction which trades-off CLI build complexity against refactoring the insomnia app into modules which both could share. It exposes some behaviour from the insomnia renderer.
+
+- database: to fetch needed models
+- nunjucks templates: to interpolate the fields containing tags
+- node-libcurl: to send the request
+- fs: to persist responses
+- plugins: potentially needed by the community, unclear if the implementation works
+
+Problems
+
+- send-request bundles almost the entire renderer, react components included, meaning that although we are intending to use this code in node we are bundling it using rules intended for browsers.
+- node-libcurl present bundling issues because it needs to re-download a different version from npm each time you want to work on either insomnia or inso.
+- nunjucks codepaths haven't been touched in a long time, they need some love in order to be able to understand how to make them composable.
+
+Unexplored ideas in this area.
+
+- create a database package with nunjucks templating and have both insomnia and inso use it with project references, use node-libcurl directly, eliminating `insomnia-send-request`.
+- use an adapter pattern in inso to replace node-libcurl with fetch in order to avoid the bundling issues NaN modules present.
+- remove plugin support from inso and reimplement later with a fixed and supported API.
+
 ## The `insomnia` Main Package
 
 `/packages/insomnia` is the entry point for the app. All other packages are imported from this one.
@@ -81,9 +110,9 @@ This is just a brief summary of Insomnia's current technical debt.
 - [x] styling vision (react-aria + tailwind)
 - [ ] de-polymorph database
 - [ ] codemirror is unmaintained
-- [ ] nedb is unmaintained
+- [x] nedb is unmaintained
 - [ ] grpc state state should be in main rather than renderer
-- [ ] drag and drop is flakey
+- [x] drag and drop is flakey
 - [ ] sync code is spaghetti
 - [ ] template rendering is spaghetti and has poor discoverability
 - [ ] inso abstraction limits networking improvements

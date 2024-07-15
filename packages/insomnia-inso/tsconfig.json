@@ -1,26 +1,30 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "allowSyntheticDefaultImports": true,
-    "allowUnreachableCode": true,
-    "allowUnusedLabels": false,
-    "checkJs": true,
-    "declaration": true,
-    "declarationMap": true,
+    /* Basic */
     "esModuleInterop": true,
-    "lib": ["DOM", "ES2019"],
-    "module": "CommonJS",
+    "skipLibCheck": true,
+    "target": "es2022",
+    "allowJs": true,
+    "checkJs": true,
+    "resolveJsonModule": true,
     "moduleResolution": "node",
+    "isolatedModules": true,
+    /* Transpiling Options */
+    "module": "CommonJS",
+    "sourceMap": true,
+    /* Runs in the DOM NOTE: this is inconsistent with reality */
+    "lib": [
+      "ES2020",
+      "DOM.Iterable",
+      "DOM"
+    ],
+    /* Strictness */
+    "strict": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "pretty": true,
-    "resolveJsonModule": true,
-    "sourceMap": true,
-    "strict": true,
-    "target": "ES2019",
-    "types": ["node"],
-    "useUnknownInCatchVariables": false
+    "noFallthroughCasesInSwitch": true,
+    "useUnknownInCatchVariables": false,
   },
   "include": [
     ".eslintrc.js",

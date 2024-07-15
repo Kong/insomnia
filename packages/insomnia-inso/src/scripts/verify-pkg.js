@@ -1,11 +1,12 @@
-// import { spawn } from 'child_process';
-// import { resolve } from 'path';
 const spawn = require('child_process').spawn;
 const resolve = require('path').resolve;
 const basePath = resolve('binaries/inso');
 const childProcess = spawn(basePath, ['--help']);
 childProcess.stdout.on('data', data => {
   console.log(`stdout: ${data}`);
+});
+childProcess.stderr.on('data', data => {
+  console.log(`stderr: ${data}`);
 });
 childProcess.on('error', err => {
   console.error(`Error: ${err.message}`);

@@ -16,9 +16,7 @@
   "types": "src/index.ts",
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "test": "jest",
-    "build": "tsc --build tsconfig.build.json",
-    "watch": "npm run build -- --watch"
+    "test": "jest"
   },
   "homepage": "https://github.com/Kong/insomnia#readme",
   "description": ""
