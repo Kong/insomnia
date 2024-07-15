@@ -13,7 +13,7 @@ import { RequestInfo } from './request-info';
 import { Response as ScriptResponse } from './response';
 import { readBodyFromPath, toScriptResponse } from './response';
 import { sendRequest } from './send-request';
-import { RequestTestResult, skip, test, type TestHandler } from './test';
+import { type RequestTestResult, skip, test, type TestHandler } from './test';
 import { toUrlObject } from './urls';
 
 export class InsomniaObject {
