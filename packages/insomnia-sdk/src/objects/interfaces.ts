@@ -4,7 +4,7 @@ import type { Request } from 'insomnia/src/models/request';
 import type { Settings } from 'insomnia/src/models/settings';
 import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
 
-import { RequestTestResult } from './test';
+import type { RequestTestResult } from './test';
 
 export interface RequestContext {
     request: Request;

@@ -1,6 +1,6 @@
 import clone from 'clone';
 import fs from 'fs';
-import { RequestTestResult } from 'insomnia-sdk';
+import { type RequestTestResult } from 'insomnia-sdk';
 import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
 
