@@ -32,7 +32,7 @@ import { database } from '../../common/database';
 import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { findPersonalOrganization, isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, type Organization } from '../../models/organization';
-import type { Project } from '../../models/project';
+import { type Project, type as ProjectType } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
@@ -170,12 +170,13 @@ async function syncOrganizations(sessionId: string, accountId: string) {
 interface SyncOrgsAndProjectsActionRequest {
   organizationId: string;
   asyncTaskList: AsyncTask[];
+  projectId?: string;
 }
 
 // this action is used to run task that we dont want to block the UI
 export const syncOrgsAndProjectsAction: ActionFunction = async ({ request }) => {
   try {
-    const { organizationId, asyncTaskList } = await request.json() as SyncOrgsAndProjectsActionRequest;
+    const { organizationId, projectId, asyncTaskList } = await request.json() as SyncOrgsAndProjectsActionRequest;
     const { id: sessionId, accountId } = await userSession.getOrCreate();
 
     const taskPromiseList = [];
@@ -201,6 +202,14 @@ export const syncOrgsAndProjectsAction: ActionFunction = async ({ request }) => 
     }
 
     await Promise.all(taskPromiseList);
+
+    // When user switch to a new organization, there is no project in db cache, we need to redirect to the first project after sync project
+    if (!projectId && asyncTaskList.includes(AsyncTask.SyncProjects)) {
+      const firstProject = await database.getWhere<Project>(ProjectType, { parentId: organizationId });
+      if (firstProject?._id) {
+        return redirect(`/organization/${organizationId}/project/${firstProject?._id}`);
+      }
+    }
 
     return {};
   } catch (error) {
@@ -462,6 +471,7 @@ const OrganizationRoute = () => {
     if (asyncTaskList?.length) {
       submit({
         organizationId,
+        projectId: projectId || '',
         asyncTaskList,
       }, {
         action: '/organization/syncOrgsAndProjectsAction',
@@ -469,7 +479,7 @@ const OrganizationRoute = () => {
         encType: 'application/json',
       });
     }
-  }, [userSession.id, organizationId, userSession.accountId, syncOrgsAndProjectsFetcher.submit, asyncTaskList]);
+  }, [userSession.id, organizationId, userSession.accountId, syncOrgsAndProjectsFetcher.submit, asyncTaskList, projectId]);
 
   useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
