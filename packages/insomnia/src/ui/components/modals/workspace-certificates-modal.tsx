@@ -2,8 +2,8 @@ import React, { Fragment, useEffect, useId, useState } from 'react';
 import { Button, Dialog, FileTrigger, GridList, GridListItem, Heading, Input, Label, Modal, ModalOverlay, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { ClientCertificate } from '../../../models/client-certificate';
-import { WorkspaceLoaderData } from '../../routes/workspace';
+import type { ClientCertificate } from '../../../models/client-certificate';
+import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { Icon } from '../icon';
 import { PasswordViewer } from '../viewers/password-viewer';
 

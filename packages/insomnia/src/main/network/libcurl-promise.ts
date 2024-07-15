@@ -15,9 +15,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { version } from '../../../package.json';
 import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { describeByteSize, hasAuthHeader } from '../../common/misc';
-import { ClientCertificate } from '../../models/client-certificate';
-import { RequestHeader } from '../../models/request';
-import { ResponseHeader } from '../../models/response';
+import type { ClientCertificate } from '../../models/client-certificate';
+import type { RequestHeader } from '../../models/request';
+import type { ResponseHeader } from '../../models/response';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';
 export interface CurlRequestOptions {

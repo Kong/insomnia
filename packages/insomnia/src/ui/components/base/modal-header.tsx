@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { FC, memo, ReactNode } from 'react';
+import React, { type FC, memo, type ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;

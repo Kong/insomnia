@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from 'react-aria-components';
-import { ActionFunction, redirect, useFetcher, useNavigate } from 'react-router-dom';
+import { type ActionFunction, redirect, useFetcher, useNavigate } from 'react-router-dom';
 
 import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';

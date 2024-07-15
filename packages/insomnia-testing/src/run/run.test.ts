@@ -1,6 +1,6 @@
 import { describe, expect, it, jest  } from '@jest/globals';
 
-import { SendRequestCallback } from './insomnia';
+import type { SendRequestCallback } from './insomnia';
 import { runTests } from './run';
 
 const exampleTest = `

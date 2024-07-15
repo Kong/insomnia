@@ -1,13 +1,13 @@
 import fs from 'fs';
-import React, { FC, useCallback } from 'react';
+import React, { type FC, useCallback } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE } from '../../../common/constants';
-import { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';
-import { WebSocketEvent, WebSocketMessageEvent } from '../../../main/network/websocket';
+import type { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';
+import type { WebSocketEvent, WebSocketMessageEvent } from '../../../main/network/websocket';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import { RequestLoaderData } from '../../routes/request';
+import type { RequestLoaderData } from '../../routes/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { showError } from '../modals';
 import { WebSocketPreviewModeDropdown } from './websocket-preview-dropdown';

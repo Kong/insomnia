@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-import { gRPCBridgeAPI } from './main/ipc/grpc';
-import { CurlBridgeAPI } from './main/network/curl';
+import type { gRPCBridgeAPI } from './main/ipc/grpc';
+import type { CurlBridgeAPI } from './main/network/curl';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 import { invariant } from './utils/invariant';
 

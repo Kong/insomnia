@@ -1,5 +1,5 @@
-import { GraphQLList, GraphQLNonNull, GraphQLType } from 'graphql';
-import React, { FC, Fragment, useCallback } from 'react';
+import { GraphQLList, GraphQLNonNull, type GraphQLType } from 'graphql';
+import React, { type FC, Fragment, useCallback } from 'react';
 
 interface Props {
   onNavigate: (type: GraphQLType) => void;

@@ -1,7 +1,7 @@
-import React, { FC, useEffect, useRef } from 'react';
+import React, { type FC, useEffect, useRef } from 'react';
 
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
-import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
+import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
 
 interface Props {
   timeline: ResponseTimelineEntry[];

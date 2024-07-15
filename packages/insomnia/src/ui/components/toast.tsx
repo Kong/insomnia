@@ -1,6 +1,6 @@
 import classnames from 'classnames';
 import type { IpcRendererEvent } from 'electron';
-import React, { FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
 import {

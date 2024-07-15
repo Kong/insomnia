@@ -1,9 +1,9 @@
 import classnames from 'classnames';
-import React, { FC, memo } from 'react';
+import React, { type FC, memo } from 'react';
 
 import { isMac } from '../../common/constants';
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';
-import { KeyCombination, PlatformKeyCombinations } from '../../common/settings';
+import type { KeyCombination, PlatformKeyCombinations } from '../../common/settings';
 
 interface Props {
   /** One of these two must be given. If both is given, keyCombination will be used. */

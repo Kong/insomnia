@@ -1,9 +1,9 @@
 import { getItemCount } from '@react-stately/collections';
 import type { AriaMenuProps } from '@react-types/menu';
-import { Node } from '@react-types/shared';
+import type { Node } from '@react-types/shared';
 import React, { useRef } from 'react';
 import { useMenu } from 'react-aria';
-import { TreeState, useTreeState } from 'react-stately';
+import { type TreeState, useTreeState } from 'react-stately';
 import styled from 'styled-components';
 
 import { MenuItem } from './menu-item';

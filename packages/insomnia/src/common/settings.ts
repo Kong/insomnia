@@ -1,4 +1,4 @@
-import { ValueOf } from 'type-fest';
+import type { ValueOf } from 'type-fest';
 
 /**
  * The readable definition of a hotkey.

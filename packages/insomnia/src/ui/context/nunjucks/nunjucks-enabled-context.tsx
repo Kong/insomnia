@@ -1,4 +1,4 @@
-import React, { createContext, FC, PropsWithChildren, useContext } from 'react';
+import React, { createContext, type FC, type PropsWithChildren, useContext } from 'react';
 
 interface Props {
   disable?: boolean;

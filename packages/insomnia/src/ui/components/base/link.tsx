@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { FC, ReactNode, useCallback } from 'react';
+import React, { type FC, type ReactNode, useCallback } from 'react';
 
 interface Props {
   href: string;

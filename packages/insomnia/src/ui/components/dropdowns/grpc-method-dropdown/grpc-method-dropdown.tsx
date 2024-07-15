@@ -1,4 +1,4 @@
-import React, { Fragment, FunctionComponent } from 'react';
+import React, { Fragment, type FunctionComponent } from 'react';
 import { Button, Header, ListBox, ListBoxItem, Popover, Section, Select, SelectValue } from 'react-aria-components';
 
 import type { GrpcMethodInfo, GrpcMethodType } from '../../../../main/ipc/grpc';

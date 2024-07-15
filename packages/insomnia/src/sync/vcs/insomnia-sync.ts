@@ -1,7 +1,7 @@
 import { showModal } from '../../ui/components/modals';
 import { SyncMergeModal } from '../../ui/components/modals/sync-merge-modal';
 import FileSystemDriver from '../store/drivers/file-system-driver';
-import { MergeConflict } from '../types';
+import type { MergeConflict } from '../types';
 import { VCS } from './vcs';
 
 let vcs: VCS | null = null;

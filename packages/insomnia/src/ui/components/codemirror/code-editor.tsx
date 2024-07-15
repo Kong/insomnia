@@ -2,9 +2,9 @@ import './base-imports';
 
 import classnames from 'classnames';
 import clone from 'clone';
-import CodeMirror, { CodeMirrorLinkClickCallback, EditorConfiguration, ShowHintOptions } from 'codemirror';
-import { GraphQLInfoOptions } from 'codemirror-graphql/info';
-import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
+import CodeMirror, { type CodeMirrorLinkClickCallback, type EditorConfiguration, type ShowHintOptions } from 'codemirror';
+import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
+import type { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
@@ -14,9 +14,9 @@ import vkBeautify from 'vkbeautify';
 
 import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
 import * as misc from '../../../common/misc';
-import { KeyCombination } from '../../../common/settings';
+import type { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
-import { NunjucksParsedTag } from '../../../templating/utils';
+import type { NunjucksParsedTag } from '../../../templating/utils';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';

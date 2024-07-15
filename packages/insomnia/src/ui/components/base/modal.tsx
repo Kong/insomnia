@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, type ReactNode, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { FocusScope } from 'react-aria';
 
 import { createKeybindingsHandler } from '../keydown-binder';

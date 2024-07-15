@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 import { Cookie } from 'tough-cookie';
 
 import { CookiesModal } from '../modals/cookies-modal';

@@ -5,9 +5,9 @@ import fsPath from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 import { mustGetModel } from '../models';
-import { CookieJar } from '../models/cookie-jar';
-import { Environment } from '../models/environment';
-import { GitRepository } from '../models/git-repository';
+import type { CookieJar } from '../models/cookie-jar';
+import type { Environment } from '../models/environment';
+import type { GitRepository } from '../models/git-repository';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
 import type { Workspace } from '../models/workspace';

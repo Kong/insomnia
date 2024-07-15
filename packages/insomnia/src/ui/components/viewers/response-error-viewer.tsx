@@ -1,4 +1,4 @@
-import React, { FC, memo } from 'react';
+import React, { type FC, memo } from 'react';
 
 import { docsBase } from '../../../common/documentation';
 import { useRootLoaderData } from '../../routes/root';

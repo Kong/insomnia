@@ -1,11 +1,11 @@
-import { FC, useEffect } from 'react';
+import { type FC, useEffect } from 'react';
 import React from 'react';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { isRemoteProject } from '../../../models/project';
-import { OrganizationFeatureLoaderData } from '../../routes/organization';
+import type { OrganizationFeatureLoaderData } from '../../routes/organization';
 import { useRootLoaderData } from '../../routes/root';
-import { WorkspaceLoaderData } from '../../routes/workspace';
+import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { GitSyncDropdown } from './git-sync-dropdown';
 import { SyncDropdown } from './sync-dropdown';
 

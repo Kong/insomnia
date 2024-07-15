@@ -1,6 +1,6 @@
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { Project, RemoteProject } from '../../models/project';
+import type { Project, RemoteProject } from '../../models/project';
 
 // Migration:
 // Team ~= Project > Workspaces

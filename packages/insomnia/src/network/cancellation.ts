@@ -1,8 +1,8 @@
-import { RequestContext } from 'insomnia-sdk';
+import type { RequestContext } from 'insomnia-sdk';
 
 import type { CurlRequestOptions, CurlRequestOutput } from '../main/network/libcurl-promise';
-import { CookieJar } from '../models/cookie-jar';
-import { Request } from '../models/request';
+import type { CookieJar } from '../models/cookie-jar';
+import type { Request } from '../models/request';
 
 const cancelRequestFunctionMap = new Map<string, () => void>();
 

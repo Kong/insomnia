@@ -11,7 +11,7 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 import {
-  LoaderFunction,
+  type LoaderFunction,
   redirect,
   useFetcher,
   useParams,
@@ -22,14 +22,14 @@ import { database } from '../../common/database';
 import { documentationLinks } from '../../common/documentation';
 import * as models from '../../models';
 import { isGrpcRequest } from '../../models/grpc-request';
-import { isRequest, Request } from '../../models/request';
-import { UnitTest } from '../../models/unit-test';
-import { UnitTestSuite } from '../../models/unit-test-suite';
+import { isRequest, type Request } from '../../models/request';
+import type { UnitTest } from '../../models/unit-test';
+import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { isWebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import {
   CodeEditor,
-  CodeEditorHandle,
+  type CodeEditorHandle,
 } from '../components/codemirror/code-editor';
 import { EditableInput } from '../components/editable-input';
 import { Icon } from '../components/icon';

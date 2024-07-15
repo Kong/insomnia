@@ -2,9 +2,9 @@ import React from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
-import { ProjectIdLoaderData } from '../routes/project';
+import type { ProjectIdLoaderData } from '../routes/project';
 import { useRootLoaderData } from '../routes/root';
-import { WorkspaceLoaderData } from '../routes/workspace';
+import type { WorkspaceLoaderData } from '../routes/workspace';
 import { AvatarGroup } from './avatar';
 
 export const PresentUsers = () => {

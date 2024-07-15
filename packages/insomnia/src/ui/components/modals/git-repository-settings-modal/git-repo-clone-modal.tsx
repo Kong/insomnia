@@ -1,11 +1,11 @@
-import React, { Key, useEffect, useRef, useState } from 'react';
+import React, { type Key, useEffect, useRef, useState } from 'react';
 import { useFetcher, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { docsGitSync } from '../../../../common/documentation';
 import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
 import { Link } from '../../base/link';
-import { Modal, type ModalHandle, ModalProps } from '../../base/modal';
+import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
 import { ModalBody } from '../../base/modal-body';
 import { ModalFooter } from '../../base/modal-footer';
 import { ModalHeader } from '../../base/modal-header';

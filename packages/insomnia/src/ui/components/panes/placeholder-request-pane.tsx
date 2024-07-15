@@ -1,4 +1,4 @@
-import React, { FC, useCallback } from 'react';
+import React, { type FC, useCallback } from 'react';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { useRootLoaderData } from '../../routes/root';

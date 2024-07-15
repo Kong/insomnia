@@ -4,6 +4,6 @@ export {
   runTestsCli,
 } from './run';
 
-export {
+export type {
   TestResults,
 };

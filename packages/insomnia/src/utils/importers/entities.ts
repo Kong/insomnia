@@ -1,4 +1,4 @@
-import * as Har from 'har-format';
+import type * as Har from 'har-format';
 
 export interface Comment {
   comment?: string;

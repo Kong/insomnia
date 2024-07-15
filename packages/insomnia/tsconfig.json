@@ -25,6 +25,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": false,
+    "verbatimModuleSyntax": true
   },
   "include": [
     ".eslintrc.js",

@@ -1,4 +1,4 @@
-import { Cookie, CookieJar, CookieJSON } from 'tough-cookie';
+import { Cookie, CookieJar, type CookieJSON } from 'tough-cookie';
 
 import type { Cookie as CookieModel } from '../models/cookie-jar';
 

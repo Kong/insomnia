@@ -1,10 +1,10 @@
 import classnames from 'classnames';
-import React, { FC, PropsWithChildren } from 'react';
+import React, { type FC, type PropsWithChildren } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { RequestAccordionKeys } from '../../../../../models/request-meta';
+import type { RequestAccordionKeys } from '../../../../../models/request-meta';
 import { useRequestMetaPatcher } from '../../../../hooks/use-request';
-import { RequestLoaderData } from '../../../../routes/request';
+import type { RequestLoaderData } from '../../../../routes/request';
 
 interface Props {
   label: string;

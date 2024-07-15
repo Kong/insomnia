@@ -1,21 +1,21 @@
-import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
 
-import { database, Operation } from '../../common/database';
+import { database, type Operation } from '../../common/database';
 import { isNotNullOrUndefined } from '../../common/misc';
 import * as models from '../../models';
 import { canSync } from '../../models';
-import { ApiSpec } from '../../models/api-spec';
-import { Environment } from '../../models/environment';
-import { GrpcRequest } from '../../models/grpc-request';
-import { MockRoute } from '../../models/mock-route';
-import { MockServer } from '../../models/mock-server';
-import { Request } from '../../models/request';
-import { RequestGroup } from '../../models/request-group';
-import { UnitTest } from '../../models/unit-test';
-import { UnitTestSuite } from '../../models/unit-test-suite';
-import { WebSocketRequest } from '../../models/websocket-request';
-import { scopeToActivity, Workspace } from '../../models/workspace';
-import {
+import type { ApiSpec } from '../../models/api-spec';
+import type { Environment } from '../../models/environment';
+import type { GrpcRequest } from '../../models/grpc-request';
+import type { MockRoute } from '../../models/mock-route';
+import type { MockServer } from '../../models/mock-server';
+import type { Request } from '../../models/request';
+import type { RequestGroup } from '../../models/request-group';
+import type { UnitTest } from '../../models/unit-test';
+import type { UnitTestSuite } from '../../models/unit-test-suite';
+import type { WebSocketRequest } from '../../models/websocket-request';
+import { scopeToActivity, type Workspace } from '../../models/workspace';
+import type {
   BackendProject,
   Snapshot,
   Status,

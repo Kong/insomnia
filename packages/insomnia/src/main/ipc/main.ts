@@ -1,4 +1,4 @@
-import { app, BrowserWindow, IpcRendererEvent, shell } from 'electron';
+import { app, BrowserWindow, type IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
@@ -7,12 +7,12 @@ import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
 import installPlugin from '../install-plugin';
-import { CurlBridgeAPI } from '../network/curl';
+import type { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
-import { addExecutionStep, completeExecutionStep, getExecution, startExecution, StepName, TimingStep } from '../network/request-timing';
-import { WebSocketBridgeAPI } from '../network/websocket';
+import { addExecutionStep, completeExecutionStep, getExecution, startExecution, type StepName, type TimingStep } from '../network/request-timing';
+import type { WebSocketBridgeAPI } from '../network/websocket';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
-import { gRPCBridgeAPI } from './grpc';
+import type { gRPCBridgeAPI } from './grpc';
 
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;

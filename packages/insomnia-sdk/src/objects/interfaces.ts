@@ -1,8 +1,8 @@
-import { CookieJar as InsomniaCookieJar } from 'insomnia/src/models/cookie-jar';
-import { ClientCertificate } from 'insomnia/src/models/client-certificate';
+import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
+import type { CookieJar as InsomniaCookieJar } from 'insomnia/src/models/cookie-jar';
 import type { Request } from 'insomnia/src/models/request';
-import { Settings } from 'insomnia/src/models/settings';
-import { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
+import type { Settings } from 'insomnia/src/models/settings';
+import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
 
 export interface RequestContext {
     request: Request;

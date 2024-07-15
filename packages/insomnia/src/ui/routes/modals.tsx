@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { ErrorBoundary } from '../components/error-boundary';
@@ -18,7 +18,7 @@ import { SelectModal } from '../components/modals/select-modal';
 import { SettingsModal } from '../components/modals/settings-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { WrapperModal } from '../components/modals/wrapper-modal';
-import { WorkspaceLoaderData } from './workspace';
+import type { WorkspaceLoaderData } from './workspace';
 
 const Modals: FC = () => {
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;

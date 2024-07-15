@@ -1,5 +1,5 @@
 import fuzzySort from 'fuzzysort';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
 import { fuzzyMatch } from '../../../common/misc';
 

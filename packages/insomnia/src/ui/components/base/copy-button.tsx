@@ -1,7 +1,7 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { type FC, useCallback, useState } from 'react';
 import { useInterval } from 'react-use';
 
-import { Button, ButtonProps } from '../themed-button';
+import { Button, type ButtonProps } from '../themed-button';
 
 interface Props extends ButtonProps {
   confirmMessage?: string;

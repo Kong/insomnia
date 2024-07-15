@@ -2,7 +2,7 @@ import clone from 'clone';
 import crypto from 'crypto';
 
 import { strings } from '../../common/strings';
-import { BaseModel } from '../../models';
+import type { BaseModel } from '../../models';
 import { deleteKeys, resetKeys, shouldIgnoreKey } from '../ignore-keys';
 import { deterministicStringify } from '../lib/deterministicStringify';
 import type {

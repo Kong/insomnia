@@ -1,4 +1,4 @@
-import { ImportRequest } from './entities';
+import type { ImportRequest } from './entities';
 import { setDefaults } from './utils';
 
 export interface InsomniaImporter {

@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
 import { useRootLoaderData } from '../../routes/root';

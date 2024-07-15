@@ -1,4 +1,4 @@
-import React, { FC, Fragment } from 'react';
+import React, { type FC, Fragment } from 'react';
 
 import {
   EditorKeyMap,
@@ -10,7 +10,7 @@ import {
   updatesSupported,
 } from '../../../common/constants';
 import { docsKeyMaps } from '../../../common/documentation';
-import { HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
+import { type HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
 import { strings } from '../../../common/strings';
 import { initNewOAuthSession } from '../../../network/o-auth-2/get-token';
 import { useRootLoaderData } from '../../routes/root';

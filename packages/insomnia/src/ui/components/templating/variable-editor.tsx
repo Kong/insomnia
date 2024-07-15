@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 

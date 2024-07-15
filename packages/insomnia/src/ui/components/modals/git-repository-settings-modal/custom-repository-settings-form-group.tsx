@@ -1,7 +1,7 @@
-import React, { FunctionComponent } from 'react';
+import React, { type FunctionComponent } from 'react';
 
 import { docsGitAccessToken } from '../../../../common/documentation';
-import { GitRepository } from '../../../../models/git-repository';
+import type { GitRepository } from '../../../../models/git-repository';
 import { Link } from '../../base/link';
 import { HelpTooltip } from '../../help-tooltip';
 

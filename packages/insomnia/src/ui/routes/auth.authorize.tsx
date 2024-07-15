@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import { Heading } from 'react-aria-components';
-import { ActionFunction, redirect, useFetcher, useFetchers, useNavigate } from 'react-router-dom';
+import { type ActionFunction, redirect, useFetcher, useFetchers, useNavigate } from 'react-router-dom';
 
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';

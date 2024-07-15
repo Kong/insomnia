@@ -1,14 +1,14 @@
 import { expect } from 'chai';
-import { ClientCertificate } from 'insomnia/src/models/client-certificate';
-import { RequestHeader } from 'insomnia/src/models/request';
-import { Settings } from 'insomnia/src/models/settings';
+import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
+import type { RequestHeader } from 'insomnia/src/models/request';
+import type { Settings } from 'insomnia/src/models/settings';
 
 import { toPreRequestAuth } from './auth';
 import { CookieObject } from './cookies';
 import { Environment, Variables } from './environments';
-import { RequestContext } from './interfaces';
+import type { RequestContext } from './interfaces';
 import { unsupportedError } from './properties';
-import { Request as ScriptRequest, RequestOptions, toScriptRequestBody } from './request';
+import { Request as ScriptRequest, type RequestOptions, toScriptRequestBody } from './request';
 import { RequestInfo } from './request-info';
 import { Response as ScriptResponse } from './response';
 import { readBodyFromPath, toScriptResponse } from './response';

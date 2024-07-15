@@ -1,6 +1,6 @@
 import { status } from '@grpc/grpc-js';
 import classnames from 'classnames';
-import React, { FC, memo } from 'react';
+import React, { type FC, memo } from 'react';
 
 import { Tooltip } from '../tooltip';
 

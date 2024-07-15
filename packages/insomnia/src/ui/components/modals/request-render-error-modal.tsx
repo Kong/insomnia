@@ -2,12 +2,12 @@ import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { docsTemplateTags } from '../../../common/documentation';
-import { GrpcRequest } from '../../../models/grpc-request';
-import { Request } from '../../../models/request';
-import { WebSocketRequest } from '../../../models/websocket-request';
+import type { GrpcRequest } from '../../../models/grpc-request';
+import type { Request } from '../../../models/request';
+import type { WebSocketRequest } from '../../../models/websocket-request';
 import { RenderError } from '../../../templating';
 import { Link } from '../base/link';
-import { Modal, type ModalHandle, ModalProps } from '../base/modal';
+import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 export interface RequestRenderErrorModalOptions {

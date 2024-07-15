@@ -1,5 +1,5 @@
 import * as path from 'path';
-import React, { FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 
 import {
   NPM_PACKAGE_BASE,

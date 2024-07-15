@@ -1,11 +1,11 @@
 import Ajv from 'ajv';
 import deepEqual from 'deep-equal';
 import { RESPONSE_CODE_REASONS } from 'insomnia/src/common/constants';
-import { sendCurlAndWriteTimelineError, type sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
+import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
 
-import { Cookie, CookieOptions } from './cookies';
+import { Cookie, type CookieOptions } from './cookies';
 import { CookieList } from './cookies';
-import { Header, HeaderDefinition, HeaderList } from './headers';
+import { Header, type HeaderDefinition, HeaderList } from './headers';
 import { Property, unsupportedError } from './properties';
 import { Request } from './request';
 

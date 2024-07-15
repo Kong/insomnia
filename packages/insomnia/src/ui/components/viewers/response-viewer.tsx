@@ -11,7 +11,7 @@ import {
   PREVIEW_MODE_FRIENDLY,
   PREVIEW_MODE_RAW,
 } from '../../../common/constants';
-import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
+import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { ResponseCSVViewer } from './response-csv-viewer';
 import { ResponseErrorViewer } from './response-error-viewer';

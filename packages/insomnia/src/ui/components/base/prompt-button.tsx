@@ -1,8 +1,8 @@
 import React, {
-  FunctionComponent,
-  MouseEvent,
-  PropsWithChildren,
-  ReactNode,
+  type FunctionComponent,
+  type MouseEvent,
+  type PropsWithChildren,
+  type ReactNode,
   useEffect,
   useRef,
   useState,

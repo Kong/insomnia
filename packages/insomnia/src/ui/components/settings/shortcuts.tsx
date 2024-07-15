@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
 import {
   areSameKeyCombinations,
@@ -8,7 +8,7 @@ import {
   newDefaultRegistry,
 } from '../../../common/hotkeys';
 import { generateId } from '../../../common/misc';
-import { HotKeyRegistry, KeyboardShortcut, KeyCombination } from '../../../common/settings';
+import type { HotKeyRegistry, KeyboardShortcut, KeyCombination } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';

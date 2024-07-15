@@ -12,8 +12,8 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 import {
-  ActionFunction,
-  LoaderFunction,
+  type ActionFunction,
+  type LoaderFunction,
   NavLink,
   Outlet,
   redirect,
@@ -30,8 +30,8 @@ import { getAppWebsiteBaseURL } from '../../common/constants';
 import { database } from '../../common/database';
 import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
-import { findPersonalOrganization, isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
-import { Project } from '../../models/project';
+import { findPersonalOrganization, isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, type Organization } from '../../models/organization';
+import type { Project } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
@@ -55,8 +55,8 @@ import { useAIContext } from '../context/app/ai-context';
 import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-stream-context';
 import { syncProjects } from './project';
 import { useRootLoaderData } from './root';
-import { UntrackedProjectsLoaderData } from './untracked-projects';
-import { WorkspaceLoaderData } from './workspace';
+import type { UntrackedProjectsLoaderData } from './untracked-projects';
+import type { WorkspaceLoaderData } from './workspace';
 
 export interface OrganizationsResponse {
   start: number;

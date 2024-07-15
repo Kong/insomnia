@@ -1,5 +1,5 @@
-import { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { FC, Fragment, useEffect, useMemo, useState } from 'react';
+import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import React, { type FC, Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -28,9 +28,9 @@ import {
 } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
-  ActionFunction,
+  type ActionFunction,
   defer,
-  LoaderFunction,
+  type LoaderFunction,
   redirect,
   useFetcher,
   useFetchers,
@@ -42,10 +42,10 @@ import {
 import { useLocalStorage } from 'react-use';
 
 import { logout } from '../../account/session';
-import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
+import { parseApiSpec, type ParsedApiSpec } from '../../common/api-specs';
 import {
   DASHBOARD_SORT_ORDERS,
-  DashboardSortOrder,
+  type DashboardSortOrder,
   dashboardSortOrderName,
   DEFAULT_SIDEBAR_SIZE,
   getAppWebsiteBaseURL,
@@ -55,18 +55,18 @@ import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { userSession } from '../../models';
-import { ApiSpec } from '../../models/api-spec';
+import type { ApiSpec } from '../../models/api-spec';
 import { sortProjects } from '../../models/helpers/project';
-import { MockServer } from '../../models/mock-server';
+import type { MockServer } from '../../models/mock-server';
+import type { Organization } from '../../models/organization';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
-import { Organization } from '../../models/organization';
 import {
   isRemoteProject,
-  Project,
+  type Project,
   SCRATCHPAD_PROJECT_ID,
 } from '../../models/project';
-import { isDesign, scopeToActivity, Workspace, WorkspaceScope } from '../../models/workspace';
-import { WorkspaceMeta } from '../../models/workspace-meta';
+import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '../../models/workspace';
+import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { showModal } from '../../ui/components/modals';
 import { AskModal } from '../../ui/components/modals/ask-modal';
@@ -87,7 +87,7 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '../hooks/use-loader-defer-data';
-import { OrganizationFeatureLoaderData, OrganizationLoaderData, useOrganizationLoaderData } from './organization';
+import { type OrganizationFeatureLoaderData, type OrganizationLoaderData, useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
 interface TeamProject {

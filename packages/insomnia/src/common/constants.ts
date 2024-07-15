@@ -1,6 +1,6 @@
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
-import { KeyCombination } from './settings';
+import type { KeyCombination } from './settings';
 
 // Vite is filtering out process.env variables that are not prefixed with VITE_.
 const ENV = 'env';

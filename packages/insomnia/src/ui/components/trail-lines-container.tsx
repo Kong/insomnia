@@ -3,7 +3,7 @@ import type { PropsWithChildren } from 'react';
 import React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-import TrailLines, { TrailsLineHandle } from './trail-lines';
+import TrailLines, { type TrailsLineHandle } from './trail-lines';
 
 interface Size {
   width: number;

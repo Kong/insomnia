@@ -1,6 +1,6 @@
 import { Readable } from 'node:stream';
 
-import { Curl, CurlFeature, CurlInfoDebug, HeaderInfo } from '@getinsomnia/node-libcurl';
+import { Curl, CurlFeature, CurlInfoDebug, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import electron, { BrowserWindow } from 'electron';
 import fs from 'fs';
 import path from 'path';
@@ -8,11 +8,11 @@ import { v4 as uuidV4 } from 'uuid';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
 import * as models from '../../models';
-import { CookieJar } from '../../models/cookie-jar';
-import { Environment } from '../../models/environment';
-import { RequestAuthentication, RequestHeader } from '../../models/request';
-import { Response } from '../../models/response';
-import { Compression, getBodyBuffer } from '../../models/response';
+import type { CookieJar } from '../../models/cookie-jar';
+import type { Environment } from '../../models/environment';
+import type { RequestAuthentication, RequestHeader } from '../../models/request';
+import type { Response } from '../../models/response';
+import { type Compression, getBodyBuffer } from '../../models/response';
 import { filterClientCertificates } from '../../network/certificate';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { invariant } from '../../utils/invariant';

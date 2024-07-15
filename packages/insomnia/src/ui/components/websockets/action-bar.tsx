@@ -1,13 +1,13 @@
-import React, { FC, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { type FC, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useFetcher, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import * as models from '../../../models';
-import { WebSocketRequest } from '../../../models/websocket-request';
+import type { WebSocketRequest } from '../../../models/websocket-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
-import { ConnectActionParams } from '../../routes/request';
-import { OneLineEditor, OneLineEditorHandle } from '../codemirror/one-line-editor';
+import type { ConnectActionParams } from '../../routes/request';
+import { OneLineEditor, type OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { DisconnectButton } from './disconnect-button';
 

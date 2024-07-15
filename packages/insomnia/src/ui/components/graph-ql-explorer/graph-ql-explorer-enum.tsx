@@ -1,5 +1,5 @@
 import { GraphQLEnumType } from 'graphql';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
 import { MarkdownPreview } from '../markdown-preview';
 

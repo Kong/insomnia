@@ -3,8 +3,8 @@ import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize }
 import { VCS } from '../../sync/vcs/vcs';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
-import { isDefaultOrganizationProject, Project, update as updateProject } from '../project';
-import { Workspace } from '../workspace';
+import { isDefaultOrganizationProject, type Project, update as updateProject } from '../project';
+import type { Workspace } from '../workspace';
 import { getOrCreateByParentId as getOrCreateWorkspaceMeta } from '../workspace-meta';
 export const sortProjects = (projects: Project[]) => [
   ...projects.filter(p => isDefaultOrganizationProject(p))
