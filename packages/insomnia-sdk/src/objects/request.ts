@@ -1,14 +1,14 @@
-import { Settings } from 'insomnia/src/models/settings';
-import { ClientCertificate, init as initClientCertificate } from 'insomnia/src/models/client-certificate';
-import { Request as InsomniaRequest, RequestBody as InsomniaRequestBody, RequestBodyParameter, RequestPathParameter } from 'insomnia/src/models/request';
+import { type ClientCertificate, init as initClientCertificate } from 'insomnia/src/models/client-certificate';
+import type { Request as InsomniaRequest, RequestBody as InsomniaRequestBody, RequestBodyParameter, RequestPathParameter } from 'insomnia/src/models/request';
+import type { Settings } from 'insomnia/src/models/settings';
 
-import { AuthOptions, AuthOptionTypes, fromPreRequestAuth, RequestAuth } from './auth';
-import { CertificateOptions } from './certificates';
+import { type AuthOptions, type AuthOptionTypes, fromPreRequestAuth, RequestAuth } from './auth';
+import type { CertificateOptions } from './certificates';
 import { Certificate } from './certificates';
-import { HeaderDefinition } from './headers';
+import type { HeaderDefinition } from './headers';
 import { Header, HeaderList } from './headers';
 import { Property, PropertyBase, PropertyList } from './properties';
-import { ProxyConfig, ProxyConfigOptions } from './proxy-configs';
+import { ProxyConfig, type ProxyConfigOptions } from './proxy-configs';
 import { QueryParam, toUrlObject, Url } from './urls';
 import { Variable, VariableList } from './variables';
 
@@ -607,7 +607,7 @@ export function mergeRequestBody(
             ),
         };
     } catch (e) {
-        throw Error(`failed to update body: ${e}`)
+        throw Error(`failed to update body: ${e}`);
     }
 }
 

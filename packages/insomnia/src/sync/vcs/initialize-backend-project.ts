@@ -1,9 +1,9 @@
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { BaseModel, canSync } from '../../models';
-import { Project } from '../../models/project';
-import { Workspace } from '../../models/workspace';
-import { StatusCandidate } from '../types';
+import { type BaseModel, canSync } from '../../models';
+import type { Project } from '../../models/project';
+import type { Workspace } from '../../models/workspace';
+import type { StatusCandidate } from '../types';
 import { VCS } from './vcs';
 
 export const initializeLocalBackendProjectAndMarkForSync = async ({ vcs, workspace }: { vcs: VCS; workspace: Workspace }) => {

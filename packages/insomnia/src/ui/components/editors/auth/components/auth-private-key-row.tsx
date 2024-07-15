@@ -1,12 +1,12 @@
-import React, { FC, ReactNode, useCallback } from 'react';
+import React, { type FC, type ReactNode, useCallback } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { toKebabCase } from '../../../../../common/misc';
 import { invariant } from '../../../../../utils/invariant';
 import { useNunjucks } from '../../../../context/nunjucks/use-nunjucks';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../../../hooks/use-request';
-import { RequestLoaderData } from '../../../../routes/request';
-import { RequestGroupLoaderData } from '../../../../routes/request-group';
+import type { RequestLoaderData } from '../../../../routes/request';
+import type { RequestGroupLoaderData } from '../../../../routes/request-group';
 import { showModal } from '../../../modals';
 import { CodePromptModal } from '../../../modals/code-prompt-modal';
 import { AuthRow } from './auth-row';

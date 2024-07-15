@@ -1,4 +1,4 @@
-import { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, Dialog, DropIndicator, GridList, GridListItem, Heading, Label, ListBoxItem, Menu, MenuTrigger, Modal, ModalOverlay, Popover, Text, useDragAndDrop } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
@@ -7,10 +7,10 @@ import { docsTemplateTags } from '../../../common/documentation';
 import { debounce } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
 import { isRemoteProject } from '../../../models/project';
-import { OrganizationFeatureLoaderData } from '../../routes/organization';
-import { WorkspaceLoaderData } from '../../routes/workspace';
+import type { OrganizationFeatureLoaderData } from '../../routes/organization';
+import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { EditableInput } from '../editable-input';
-import { EnvironmentEditor, EnvironmentEditorHandle, EnvironmentInfo } from '../editors/environment-editor';
+import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from '../editors/environment-editor';
 import { Icon } from '../icon';
 import { showAlert } from '.';
 

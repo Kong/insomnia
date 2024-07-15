@@ -1,9 +1,9 @@
 import Color from 'color';
 
 import { getAppDefaultTheme } from '../common/constants';
-import { ThemeSettings } from '../models/settings';
+import type { ThemeSettings } from '../models/settings';
 import type { Theme } from './index';
-import { ColorScheme, getThemes } from './index';
+import { type ColorScheme, getThemes } from './index';
 
 export type HexColor = `#${string}`;
 export type RGBColor = `rgb(${string})`;

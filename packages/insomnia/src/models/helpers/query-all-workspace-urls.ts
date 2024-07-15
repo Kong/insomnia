@@ -1,8 +1,8 @@
 import { database as db } from '../../common/database';
 import * as models from '../../models';
 import { invariant } from '../../utils/invariant';
-import { GrpcRequest, type as GrpcRequestType } from '../grpc-request';
-import { Request, type as RequestType } from '../request';
+import type { GrpcRequest, type as GrpcRequestType } from '../grpc-request';
+import type { Request, type as RequestType } from '../request';
 
 export const queryAllWorkspaceUrls = async (
   workspaceId: string,

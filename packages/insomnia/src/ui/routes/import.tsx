@@ -1,7 +1,6 @@
-// Import
-import { ActionFunction } from 'react-router-dom';
+import type { ActionFunction } from 'react-router-dom';
 
-import { fetchImportContentFromURI, importResourcesToProject, importResourcesToWorkspace, scanResources, ScanResult } from '../../common/import';
+import { fetchImportContentFromURI, importResourcesToProject, importResourcesToWorkspace, scanResources, type ScanResult } from '../../common/import';
 import * as models from '../../models';
 import { invariant } from '../../utils/invariant';
 

@@ -1,15 +1,15 @@
-import * as Har from 'har-format';
+import type * as Har from 'har-format';
 import React from 'react';
-import { LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { type LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TYPE_YAML, contentTypesMap, getMockServiceURL, RESPONSE_CODE_REASONS } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { getResponseCookiesFromHeaders } from '../../common/har';
 import * as models from '../../models';
-import { MockRoute } from '../../models/mock-route';
-import { MockServer } from '../../models/mock-server';
-import { Request, RequestHeader } from '../../models/request';
-import { Response } from '../../models/response';
+import type { MockRoute } from '../../models/mock-route';
+import type { MockServer } from '../../models/mock-server';
+import type { Request, RequestHeader } from '../../models/request';
+import type { Response } from '../../models/response';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
@@ -23,7 +23,7 @@ import { AlertModal } from '../components/modals/alert-modal';
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { SvgIcon } from '../components/svg-icon';
-import { MockServerLoaderData } from './mock-server';
+import type { MockServerLoaderData } from './mock-server';
 import { useRootLoaderData } from './root';
 
 export interface MockRouteLoaderData {

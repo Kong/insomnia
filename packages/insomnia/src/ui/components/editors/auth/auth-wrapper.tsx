@@ -1,4 +1,4 @@
-import React, { FC, ReactNode } from 'react';
+import React, { type FC, type ReactNode } from 'react';
 import { Toolbar } from 'react-aria-components';
 
 import {
@@ -14,7 +14,7 @@ import {
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
 } from '../../../../common/constants';
-import { AuthTypes, RequestAuthentication } from '../../../../models/request';
+import type { AuthTypes, RequestAuthentication } from '../../../../models/request';
 import { getAuthObjectOrNull } from '../../../../network/authentication';
 import { AuthDropdown } from '../../dropdowns/auth-dropdown';
 import { ApiKeyAuth } from './api-key-auth';

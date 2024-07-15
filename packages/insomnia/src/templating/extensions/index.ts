@@ -1,11 +1,11 @@
-import { ExtraRenderInfo } from '../../common/render';
+import type { ExtraRenderInfo } from '../../common/render';
 import type { Request } from '../../models/request';
 import type { Response } from '../../models/response';
-import {
+import type {
   PluginStore,
 } from '../../plugins/context';
-import { AppContext } from '../../plugins/context/app';
-import { HelperContext } from '../base-extension';
+import type { AppContext } from '../../plugins/context/app';
+import type { HelperContext } from '../base-extension';
 import type { NunjucksActionTag, NunjucksParsedTagArg } from '../utils';
 export type PluginArgumentValue = string | number | boolean;
 

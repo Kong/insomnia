@@ -1,4 +1,4 @@
-import { ExtraRenderInfo, RENDER_PURPOSE_SEND } from '../../common/render';
+import { type ExtraRenderInfo, RENDER_PURPOSE_SEND } from '../../common/render';
 import * as models from '../../models';
 import type { Request } from '../../models/request';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';

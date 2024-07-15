@@ -1,7 +1,7 @@
 import classnames from 'classnames';
-import React, { FC, memo } from 'react';
+import React, { type FC, memo } from 'react';
 
-import { TimingStep } from '../../../main/network/request-timing';
+import type { TimingStep } from '../../../main/network/request-timing';
 import { Tooltip } from '../tooltip';
 
 interface Props {

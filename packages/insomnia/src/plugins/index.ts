@@ -2,13 +2,13 @@ import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
 
-import { ParsedApiSpec } from '../common/api-specs';
+import type { ParsedApiSpec } from '../common/api-specs';
 import type { PluginConfig, PluginConfigMap } from '../common/settings';
 import * as models from '../models';
-import { GrpcRequest } from '../models/grpc-request';
+import type { GrpcRequest } from '../models/grpc-request';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
-import { WebSocketRequest } from '../models/websocket-request';
+import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
 import type { PluginTemplateTag } from '../templating/extensions/index';
 import { showError } from '../ui/components/modals/index';

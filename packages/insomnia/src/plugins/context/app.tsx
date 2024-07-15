@@ -10,7 +10,7 @@ import {
 } from '../../common/render';
 import { HtmlElementWrapper } from '../../ui/components/html-element-wrapper';
 import { showAlert, showModal, showPrompt } from '../../ui/components/modals';
-import { PromptModalOptions } from '../../ui/components/modals/prompt-modal';
+import type { PromptModalOptions } from '../../ui/components/modals/prompt-modal';
 import { WrapperModal } from '../../ui/components/modals/wrapper-modal';
 
 interface DialogOptions {

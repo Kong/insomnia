@@ -1,7 +1,7 @@
 import { database as db } from '../common/database';
 import { isGrpcRequest } from './grpc-request';
 import type { BaseModel } from './index';
-import { Project } from './project';
+import type { Project } from './project';
 import { isRequest } from './request';
 import type { RequestGroup } from './request-group';
 import { isWebSocketRequest } from './websocket-request';

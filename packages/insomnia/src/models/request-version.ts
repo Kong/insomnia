@@ -3,10 +3,10 @@ import deepEqual from 'deep-equal';
 import { database as db } from '../common/database';
 import { compressObject, decompressObject } from '../common/misc';
 import * as requestOperations from '../models/helpers/request-operations';
-import { GrpcRequest } from './grpc-request';
+import type { GrpcRequest } from './grpc-request';
 import type { BaseModel } from './index';
-import { isRequest, Request } from './request';
-import { isWebSocketRequest, WebSocketRequest } from './websocket-request';
+import { isRequest, type Request } from './request';
+import { isWebSocketRequest, type WebSocketRequest } from './websocket-request';
 
 export const name = 'Request Version';
 

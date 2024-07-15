@@ -1,22 +1,22 @@
-import { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { useEffect, useRef, useState } from 'react';
 import { Breadcrumb, Breadcrumbs, Button, DropIndicator, GridList, GridListItem, Heading, Label, ListBoxItem, Menu, MenuTrigger, Popover, Text, useDragAndDrop } from 'react-aria-components';
-import { ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { NavLink, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { debounce } from '../../common/misc';
-import { Environment } from '../../models/environment';
+import type { Environment } from '../../models/environment';
 import { isRemoteProject } from '../../models/project';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { EditableInput } from '../components/editable-input';
-import { EnvironmentEditor, EnvironmentEditorHandle, EnvironmentInfo } from '../components/editors/environment-editor';
+import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from '../components/editors/environment-editor';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showAlert } from '../components/modals';
-import { OrganizationFeatureLoaderData } from './organization';
-import { WorkspaceLoaderData } from './workspace';
+import type { OrganizationFeatureLoaderData } from './organization';
+import type { WorkspaceLoaderData } from './workspace';
 
 const Environments = () => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();

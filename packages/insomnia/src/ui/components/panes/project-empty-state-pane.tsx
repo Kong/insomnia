@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 

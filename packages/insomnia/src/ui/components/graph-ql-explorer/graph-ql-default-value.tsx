@@ -1,7 +1,7 @@
 import { astFromValue, print } from 'graphql';
-import React, { FC, memo } from 'react';
+import React, { type FC, memo } from 'react';
 
-import { GraphQLFieldWithParentName } from './graph-ql-types';
+import type { GraphQLFieldWithParentName } from './graph-ql-types';
 
 interface Props {
   field: GraphQLFieldWithParentName;

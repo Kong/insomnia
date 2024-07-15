@@ -2,9 +2,9 @@ import { PressResponder } from '@react-aria/interactions';
 import type { AriaMenuProps, MenuTriggerProps } from '@react-types/menu';
 import type { Placement } from '@react-types/overlays';
 import classnames from 'classnames';
-import React, { CSSProperties, forwardRef, ReactNode, useImperativeHandle, useRef } from 'react';
+import React, { type CSSProperties, forwardRef, type ReactNode, useImperativeHandle, useRef } from 'react';
 import { mergeProps, useMenuTrigger } from 'react-aria';
-import { MenuTriggerState, useMenuTriggerState } from 'react-stately';
+import { type MenuTriggerState, useMenuTriggerState } from 'react-stately';
 import styled from 'styled-components';
 
 import { DropdownButton } from './dropdown-button';

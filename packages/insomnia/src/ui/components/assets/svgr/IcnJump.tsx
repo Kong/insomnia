@@ -1,4 +1,4 @@
-import React, { SVGProps, memo } from 'react';
+import React, { memo, type SVGProps } from 'react';
 export const SvgIcnJump = memo<SVGProps<SVGSVGElement>>(props => (
   <svg viewBox="0 0 14 14" width="1em" height="1em" role="img" {...props}>
     <path d="M8.25 1.5h3.19L5.72 7.22l1.06 1.06 5.72-5.72v3.19H14V0H8.25v1.5Z" />

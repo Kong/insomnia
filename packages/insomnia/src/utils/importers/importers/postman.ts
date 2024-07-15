@@ -1,8 +1,8 @@
-import { AuthTypeOAuth2 } from '../../../models/request';
+import type { AuthTypeOAuth2 } from '../../../models/request';
 import { forceBracketNotation } from '../../../templating/utils';
 import { fakerFunctions } from '../../../ui/components/templating/faker-functions';
-import { Converter, ImportRequest, Parameter } from '../entities';
-import {
+import type { Converter, ImportRequest, Parameter } from '../entities';
+import type {
   Auth as V200Auth,
   EventList as V200EventList,
   Folder as V200Folder,
@@ -14,7 +14,7 @@ import {
   Url,
   UrlEncodedParameter as V200UrlEncodedParameter,
 } from './postman-2.0.types';
-import {
+import type {
   Auth as V210Auth,
   Auth1 as V210Auth1,
   EventList as V210EventList,

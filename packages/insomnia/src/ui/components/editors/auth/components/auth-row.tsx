@@ -1,9 +1,9 @@
 import classnames from 'classnames';
-import React, { FC, PropsWithChildren, ReactNode } from 'react';
+import React, { type FC, type PropsWithChildren, type ReactNode } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { RequestLoaderData } from '../../../../routes/request';
-import { RequestGroupLoaderData } from '../../../../routes/request-group';
+import type { RequestLoaderData } from '../../../../routes/request';
+import type { RequestGroupLoaderData } from '../../../../routes/request-group';
 import { HelpTooltip } from '../../../help-tooltip';
 
 interface Props {

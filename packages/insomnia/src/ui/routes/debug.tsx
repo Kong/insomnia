@@ -1,7 +1,7 @@
-import { IconName } from '@fortawesome/fontawesome-svg-core';
-import { ServiceError, StatusObject } from '@grpc/grpc-js';
+import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { FC, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { type FC, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -26,9 +26,9 @@ import {
   TooltipTrigger,
   useDragAndDrop,
 } from 'react-aria-components';
-import { ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
-  LoaderFunction,
+  type LoaderFunction,
   NavLink,
   redirect,
   useFetcher,
@@ -38,26 +38,26 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, SortOrder, sortOrderName } from '../../common/constants';
-import { ChangeBufferEvent, database as db } from '../../common/database';
+import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '../../common/constants';
+import { type ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId, isNotNullOrUndefined } from '../../common/misc';
-import { PlatformKeyCombinations } from '../../common/settings';
+import type { PlatformKeyCombinations } from '../../common/settings';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
-import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
+import { type GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import {
   isEventStreamRequest,
   isRequest,
   isRequestId,
-  Request,
+  type Request,
 } from '../../models/request';
-import { isRequestGroup, isRequestGroupId, RequestGroup } from '../../models/request-group';
+import { isRequestGroup, isRequestGroupId, type RequestGroup } from '../../models/request-group';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import {
   isWebSocketRequest,
   isWebSocketRequestId,
-  WebSocketRequest,
+  type WebSocketRequest,
 } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import { DropdownHint } from '../components/base/dropdown/dropdown-hint';
@@ -93,19 +93,19 @@ import { WebSocketRequestPane } from '../components/websockets/websocket-request
 import { useExecutionState } from '../hooks/use-execution-state';
 import { useReadyState } from '../hooks/use-ready-state';
 import {
-  CreateRequestType,
+  type CreateRequestType,
   useRequestGroupMetaPatcher,
   useRequestGroupPatcher,
   useRequestMetaPatcher,
   useRequestPatcher,
 } from '../hooks/use-request';
-import {
+import type {
   GrpcRequestLoaderData,
   RequestLoaderData,
   WebSocketRequestLoaderData,
 } from './request';
 import { useRootLoaderData } from './root';
-import { WorkspaceLoaderData } from './workspace';
+import type { WorkspaceLoaderData } from './workspace';
 
 export interface GrpcMessage {
   id: string;

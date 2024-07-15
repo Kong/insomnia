@@ -7,10 +7,10 @@ import os from 'os';
 import { CookieJar } from 'tough-cookie';
 import * as uuid from 'uuid';
 
-import { Request, RequestParameter } from '../../../models/request';
-import { Response } from '../../../models/response';
-import { TemplateTag } from '../../../plugins';
-import { PluginTemplateTag } from '../../../templating/extensions';
+import type { Request, RequestParameter } from '../../../models/request';
+import type { Response } from '../../../models/response';
+import type { TemplateTag } from '../../../plugins';
+import type { PluginTemplateTag } from '../../../templating/extensions';
 import { invariant } from '../../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
 import { fakerFunctions } from './faker-functions';

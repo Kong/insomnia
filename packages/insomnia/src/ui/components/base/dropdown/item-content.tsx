@@ -1,8 +1,8 @@
 import classNames from 'classnames';
-import React, { CSSProperties, FC, PropsWithChildren, ReactNode } from 'react';
+import React, { type CSSProperties, type FC, type PropsWithChildren, type ReactNode } from 'react';
 import styled from 'styled-components';
 
-import { PlatformKeyCombinations } from '../../../../common/settings';
+import type { PlatformKeyCombinations } from '../../../../common/settings';
 import { svgPlacementHack } from '../../dropdowns/dropdown-placement-hacks';
 import { SvgIcon } from '../../svg-icon';
 import { PromptButton } from '../prompt-button';

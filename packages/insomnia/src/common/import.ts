@@ -1,22 +1,22 @@
 import { readFile } from 'fs/promises';
 
-import { ApiSpec, isApiSpec } from '../models/api-spec';
-import { CookieJar, isCookieJar } from '../models/cookie-jar';
-import { BaseEnvironment, Environment, isEnvironment } from '../models/environment';
-import { GrpcRequest, isGrpcRequest } from '../models/grpc-request';
-import { BaseModel, getModel } from '../models/index';
+import { type ApiSpec, isApiSpec } from '../models/api-spec';
+import { type CookieJar, isCookieJar } from '../models/cookie-jar';
+import { type BaseEnvironment, type Environment, isEnvironment } from '../models/environment';
+import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
+import { type BaseModel, getModel } from '../models/index';
 import * as models from '../models/index';
-import { isMockRoute, MockRoute } from '../models/mock-route';
-import { isRequest, Request } from '../models/request';
+import { isMockRoute, type MockRoute } from '../models/mock-route';
+import { isRequest, type Request } from '../models/request';
 import { isRequestGroup } from '../models/request-group';
-import { isUnitTest, UnitTest } from '../models/unit-test';
-import { isUnitTestSuite, UnitTestSuite } from '../models/unit-test-suite';
+import { isUnitTest, type UnitTest } from '../models/unit-test';
+import { isUnitTestSuite, type UnitTestSuite } from '../models/unit-test-suite';
 import {
   isWebSocketRequest,
-  WebSocketRequest,
+  type WebSocketRequest,
 } from '../models/websocket-request';
-import { isWorkspace, Workspace } from '../models/workspace';
-import { convert, InsomniaImporter } from '../utils/importers/convert';
+import { isWorkspace, type Workspace } from '../models/workspace';
+import { convert, type InsomniaImporter } from '../utils/importers/convert';
 import { invariant } from '../utils/invariant';
 import { database as db } from './database';
 import { generateId } from './misc';

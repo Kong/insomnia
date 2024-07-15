@@ -1,6 +1,6 @@
-import React, { forwardRef, ReactNode, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, type ReactNode, useImperativeHandle, useRef, useState } from 'react';
 
-import { Modal, ModalHandle, type ModalProps } from '../base/modal';
+import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 

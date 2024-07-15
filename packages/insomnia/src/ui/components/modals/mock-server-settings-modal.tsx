@@ -3,8 +3,8 @@ import { Button, Dialog, Heading, Input, Label, Link, Modal, ModalOverlay, Radio
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { invariant } from '../../../utils/invariant';
-import { OrganizationLoaderData } from '../../routes/organization';
-import { ProjectIdLoaderData } from '../../routes/project';
+import type { OrganizationLoaderData } from '../../routes/organization';
+import type { ProjectIdLoaderData } from '../../routes/project';
 import { Icon } from '../icon';
 import { showModal } from '.';
 import { AlertModal } from './alert-modal';

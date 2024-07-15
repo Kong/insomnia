@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
-import { GitRepository } from '../../../../models/git-repository';
+import type { GitRepository } from '../../../../models/git-repository';
 import {
   exchangeCodeForGitLabToken,
   generateAuthorizationUrl,

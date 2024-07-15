@@ -15,7 +15,7 @@ import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { fetchRequestData, fetchRequestGroupData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../network';
 import {
-  AuthKeys,
+  type AuthKeys,
   GRANT_TYPE_AUTHORIZATION_CODE,
   PKCE_CHALLENGE_S256,
 } from './constants';

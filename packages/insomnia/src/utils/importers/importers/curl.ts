@@ -1,7 +1,7 @@
-import { ControlOperator, parse, ParseEntry } from 'shell-quote';
+import { type ControlOperator, parse, type ParseEntry } from 'shell-quote';
 import { URL } from 'url';
 
-import { Converter, ImportRequest, Parameter } from '../entities';
+import { type Converter, type ImportRequest, type Parameter } from '../entities';
 
 export const id = 'curl';
 export const name = 'cURL';

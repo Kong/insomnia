@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import { PlatformKeyCombinations } from '../../../../common/settings';
+import type { PlatformKeyCombinations } from '../../../../common/settings';
 import { Hotkey } from '../../hotkey';
 
 const StyledHotkey = styled(Hotkey)({

@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FC, ReactNode, useEffect, useMemo, useState } from 'react';
+import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { AUTH_OAUTH_2 } from '../../../../common/constants';
@@ -19,8 +19,8 @@ import {
 import { getOAuth2Token } from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/get-token';
 import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
-import { RequestLoaderData } from '../../../routes/request';
-import { RequestGroupLoaderData } from '../../../routes/request-group';
+import type { RequestLoaderData } from '../../../routes/request';
+import type { RequestGroupLoaderData } from '../../../routes/request-group';
 import { Link } from '../../base/link';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';

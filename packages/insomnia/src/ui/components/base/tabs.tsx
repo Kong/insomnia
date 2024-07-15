@@ -1,7 +1,7 @@
-import { Node, Orientation } from '@react-types/shared';
-import React, { createRef, FC, ReactNode } from 'react';
-import { AriaTabListProps, AriaTabPanelProps, useTab, useTabList, useTabPanel } from 'react-aria';
-import { Item, ItemProps, TabListState, useTabListState } from 'react-stately';
+import type { Node, Orientation } from '@react-types/shared';
+import React, { createRef, type FC, type ReactNode } from 'react';
+import { type AriaTabListProps, type AriaTabPanelProps, useTab, useTabList, useTabPanel } from 'react-aria';
+import { Item, type ItemProps, type TabListState, useTabListState } from 'react-stately';
 import styled from 'styled-components';
 
 interface StyledTabProps {

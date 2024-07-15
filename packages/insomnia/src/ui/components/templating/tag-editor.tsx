@@ -1,6 +1,6 @@
 import classnames from 'classnames';
 import clone from 'clone';
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { useMount } from 'react-use';
 
 import { database as db } from '../../../common/database';
@@ -8,8 +8,8 @@ import { delay, fnOrString } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';
 import * as models from '../../../models';
 import type { BaseModel } from '../../../models/index';
-import { isRequest, Request } from '../../../models/request';
-import { isRequestGroup, RequestGroup } from '../../../models/request-group';
+import { isRequest, type Request } from '../../../models/request';
+import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
 import * as plugins from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';

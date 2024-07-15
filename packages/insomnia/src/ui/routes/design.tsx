@@ -4,9 +4,9 @@ import { stat } from 'fs/promises';
 import { OpenAPIV3 } from 'openapi-types';
 import path from 'path';
 import React, {
-  FC,
+  type FC,
   Fragment,
-  ReactNode,
+  type ReactNode,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -31,9 +31,9 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
-  LoaderFunction,
+  type LoaderFunction,
   NavLink,
   useFetcher,
   useLoaderData,
@@ -48,12 +48,12 @@ import YAMLSourceMap from 'yaml-source-map';
 import { parseApiSpec } from '../../common/api-specs';
 import { ACTIVITY_SPEC, DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { debounce, isNotNullOrUndefined } from '../../common/misc';
-import { ApiSpec } from '../../models/api-spec';
+import type { ApiSpec } from '../../models/api-spec';
 import * as models from '../../models/index';
 import { invariant } from '../../utils/invariant';
 import {
   CodeEditor,
-  CodeEditorHandle,
+  type CodeEditorHandle,
 } from '../components/codemirror/code-editor';
 import { DesignEmptyState } from '../components/design-empty-state';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
@@ -73,7 +73,7 @@ import {
 } from '../hooks/use-vcs-version';
 import { SpectralRunner } from '../worker/spectral-run';
 import { useRootLoaderData } from './root';
-import { WorkspaceLoaderData } from './workspace';
+import type { WorkspaceLoaderData } from './workspace';
 
 interface LoaderData {
   apiSpec: ApiSpec;

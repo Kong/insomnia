@@ -2,13 +2,13 @@ import electron, { BrowserWindow } from 'electron';
 import fs from 'fs';
 import { IncomingMessage } from 'http';
 import path from 'path';
-import tls, { KeyObject, PxfObject } from 'tls';
+import tls, { type KeyObject, type PxfObject } from 'tls';
 import { v4 as uuidV4 } from 'uuid';
 import {
-  CloseEvent,
-  ErrorEvent,
-  Event,
-  MessageEvent,
+  type CloseEvent,
+  type ErrorEvent,
+  type Event,
+  type MessageEvent,
   WebSocket,
 } from 'ws';
 
@@ -17,9 +17,9 @@ import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { webSocketRequest } from '../../models';
 import * as models from '../../models';
-import { CookieJar } from '../../models/cookie-jar';
-import { RequestAuthentication, RequestHeader } from '../../models/request';
-import { BaseWebSocketRequest } from '../../models/websocket-request';
+import type { CookieJar } from '../../models/cookie-jar';
+import type { RequestAuthentication, RequestHeader } from '../../models/request';
+import type { BaseWebSocketRequest } from '../../models/websocket-request';
 import type { WebSocketResponse } from '../../models/websocket-response';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';

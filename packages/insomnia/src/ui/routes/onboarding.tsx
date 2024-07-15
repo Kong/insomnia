@@ -1,4 +1,4 @@
-import { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React from 'react';
 import { Link, Route, Routes, useLocation } from 'react-router-dom';
 

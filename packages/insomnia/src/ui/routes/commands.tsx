@@ -1,16 +1,16 @@
-import { LoaderFunction } from 'react-router-dom';
+import type { LoaderFunction } from 'react-router-dom';
 
 import { database } from '../../common/database';
 import { fuzzyMatch } from '../../common/misc';
 import { environment, grpcRequest, project, request, requestGroup, userSession, webSocketRequest, workspace } from '../../models';
-import { Environment } from '../../models/environment';
-import { GrpcRequest } from '../../models/grpc-request';
-import { isScratchpadOrganizationId, Organization } from '../../models/organization';
-import { isRemoteProject, Project } from '../../models/project';
-import { Request } from '../../models/request';
-import { RequestGroup } from '../../models/request-group';
-import { WebSocketRequest } from '../../models/websocket-request';
-import { scopeToActivity, Workspace } from '../../models/workspace';
+import type { Environment } from '../../models/environment';
+import type { GrpcRequest } from '../../models/grpc-request';
+import { isScratchpadOrganizationId, type Organization } from '../../models/organization';
+import { isRemoteProject, type Project } from '../../models/project';
+import type { Request } from '../../models/request';
+import type { RequestGroup } from '../../models/request-group';
+import type { WebSocketRequest } from '../../models/websocket-request';
+import { scopeToActivity, type Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
 import { insomniaFetch } from '../insomniaFetch';
 

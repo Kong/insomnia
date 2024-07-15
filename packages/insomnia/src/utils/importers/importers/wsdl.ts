@@ -3,10 +3,10 @@ import {
   getJsonForWSDL,
   getSwaggerForService,
   getWSDLServices,
-  Swagger,
+  type Swagger,
 } from 'apiconnect-wsdl';
 
-import { Converter } from '../entities';
+import type { Converter } from '../entities';
 import * as postman from './postman';
 
 export const id = 'wsdl';

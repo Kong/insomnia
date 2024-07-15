@@ -1,4 +1,4 @@
-import { BaseModel } from '../models';
+import type { BaseModel } from '../models';
 
 export interface Team {
   id: string;

@@ -1,7 +1,7 @@
-import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../grpc-request';
+import { type GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../grpc-request';
 import * as models from '../index';
-import { Request } from '../request';
-import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../websocket-request';
+import type { Request } from '../request';
+import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../websocket-request';
 
 export function getById(requestId: string): Promise<Request | GrpcRequest | WebSocketRequest | null> {
   if (isGrpcRequestId(requestId)) {

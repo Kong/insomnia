@@ -1,8 +1,8 @@
-import React, { FC, PropsWithChildren } from 'react';
+import React, { type FC, type PropsWithChildren } from 'react';
 import styled from 'styled-components';
 
 import { keyboardShortcutDescriptions } from '../../../common/hotkeys';
-import { KeyboardShortcut } from '../../../common/settings';
+import type { KeyboardShortcut } from '../../../common/settings';
 import { useRootLoaderData } from '../../routes/root';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';

@@ -1,7 +1,7 @@
-import React, { FC, memo } from 'react';
+import React, { type FC, memo } from 'react';
 
 import { CONTENT_TYPE_GRAPHQL, METHOD_DELETE, METHOD_OPTIONS } from '../../../common/constants';
-import { isEventStreamRequest, Request } from '../../../models/request';
+import { isEventStreamRequest, type Request } from '../../../models/request';
 
 interface Props {
   method: string;

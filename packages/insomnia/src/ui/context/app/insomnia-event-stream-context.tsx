@@ -1,10 +1,10 @@
-import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
+import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useFetcher, useParams, useRevalidator, useRouteLoaderData } from 'react-router-dom';
 
 import { insomniaFetch } from '../../../ui/insomniaFetch';
-import { ProjectIdLoaderData } from '../../routes/project';
+import type { ProjectIdLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
-import { WorkspaceLoaderData } from '../../routes/workspace';
+import type { WorkspaceLoaderData } from '../../routes/workspace';
 
 const InsomniaEventStreamContext = createContext<{
   presence: UserPresence[];

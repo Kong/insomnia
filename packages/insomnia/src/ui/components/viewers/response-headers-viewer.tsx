@@ -1,4 +1,4 @@
-import React, { FC, Fragment, useMemo } from 'react';
+import React, { type FC, Fragment, useMemo } from 'react';
 import styled from 'styled-components';
 import { URL } from 'url';
 

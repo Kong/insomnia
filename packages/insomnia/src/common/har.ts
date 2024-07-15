@@ -1,6 +1,6 @@
 import clone from 'clone';
 import fs from 'fs';
-import * as Har from 'har-format';
+import type * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
 import * as models from '../models';

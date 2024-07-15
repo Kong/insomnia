@@ -1,5 +1,5 @@
-import { GraphQLArgument, GraphQLType } from 'graphql';
-import React, { FC } from 'react';
+import type { GraphQLArgument, GraphQLType } from 'graphql';
+import React, { type FC } from 'react';
 
 import { SvgIcon } from '../svg-icon';
 import { Tooltip } from '../tooltip';

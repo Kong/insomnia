@@ -1,9 +1,9 @@
-import React, { FC, useCallback } from 'react';
+import React, { type FC, useCallback } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import type { RequestHeader } from '../../../models/request';
-import { MockRouteLoaderData, useMockRoutePatcher } from '../../routes/mock-route';
+import { type MockRouteLoaderData, useMockRoutePatcher } from '../../routes/mock-route';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 

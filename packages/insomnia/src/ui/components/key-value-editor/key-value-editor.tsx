@@ -1,5 +1,5 @@
 import { useResizeObserver } from '@react-aria/utils';
-import React, { FC, Fragment, useCallback, useRef, useState } from 'react';
+import React, { type FC, Fragment, useCallback, useRef, useState } from 'react';
 import { FocusScope } from 'react-aria';
 import { Button, Dialog, DialogTrigger, DropIndicator, GridList, GridListItem, Menu, MenuItem, MenuTrigger, Popover, ToggleButton, Toolbar, useDragAndDrop } from 'react-aria-components';
 import { useListData } from 'react-stately';
@@ -9,7 +9,7 @@ import { describeByteSize, generateId } from '../../../common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
 import { FileInputButton } from '../base/file-input-button';
 import { PromptButton } from '../base/prompt-button';
-import { OneLineEditor, OneLineEditorHandle } from '../codemirror/one-line-editor';
+import { OneLineEditor, type OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { CodePromptModal } from '../modals/code-prompt-modal';

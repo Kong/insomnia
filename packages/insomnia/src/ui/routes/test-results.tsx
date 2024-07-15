@@ -1,10 +1,10 @@
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { Heading } from 'react-aria-components';
-import { LoaderFunction, redirect, useRouteLoaderData } from 'react-router-dom';
+import { type LoaderFunction, redirect, useRouteLoaderData } from 'react-router-dom';
 
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { UnitTestResult } from '../../models/unit-test-result';
+import type { UnitTestResult } from '../../models/unit-test-result';
 import { invariant } from '../../utils/invariant';
 import { Icon } from '../components/icon';
 

@@ -1,4 +1,4 @@
-import React, { Component, CSSProperties, NamedExoticComponent, ReactNode, SVGProps } from 'react';
+import React, { Component, type CSSProperties, type NamedExoticComponent, type ReactNode, type SVGProps } from 'react';
 import styled from 'styled-components';
 import type { ValueOf } from 'type-fest';
 

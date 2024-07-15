@@ -1,6 +1,6 @@
 import 'codemirror/addon/mode/overlay';
 
-import CodeMirror, { CodeMirrorLinkClickCallback } from 'codemirror';
+import CodeMirror, { type CodeMirrorLinkClickCallback } from 'codemirror';
 import { decode } from 'html-entities';
 
 import { FLEXIBLE_URL_REGEX } from '../../../../common/constants';

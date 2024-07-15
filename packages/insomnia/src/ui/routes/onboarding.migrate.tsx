@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Heading, Radio, RadioGroup } from 'react-aria-components';
-import { ActionFunction, LoaderFunction, redirect, useFetcher } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, redirect, useFetcher } from 'react-router-dom';
 
 import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { invariant } from '../../utils/invariant';

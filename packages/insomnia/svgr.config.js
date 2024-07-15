@@ -1,6 +1,6 @@
 module.exports = {
   template: (variables, { tpl }) => tpl`
-      import React, { SVGProps, memo } from 'react';
+      import React, { memo, type SVGProps } from 'react';
 
       export const ${variables.componentName} = memo<SVGProps<SVGSVGElement>>(props => (
         ${variables.jsx}

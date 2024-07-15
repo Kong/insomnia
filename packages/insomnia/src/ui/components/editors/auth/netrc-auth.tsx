@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
 export const NetrcAuth: FC = () => (
   <div className="vertically-center text-center">

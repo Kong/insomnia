@@ -1,8 +1,8 @@
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import styled from 'styled-components';
 
-import { ColorScheme } from '../../../plugins';
-import { PluginTheme } from '../../../plugins/misc';
+import type { ColorScheme } from '../../../plugins';
+import type { PluginTheme } from '../../../plugins/misc';
 import { useThemes } from '../../hooks/theme';
 import { HelpTooltip } from '../help-tooltip';
 

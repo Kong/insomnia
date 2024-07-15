@@ -1,5 +1,5 @@
 import fs from 'fs';
-import React, { FC, useCallback } from 'react';
+import React, { type FC, useCallback } from 'react';
 
 import * as misc from '../../../../common/misc';
 import { FileInputButton } from '../../base/file-input-button';

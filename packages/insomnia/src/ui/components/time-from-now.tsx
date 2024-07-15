@@ -1,5 +1,5 @@
 import { differenceInMinutes, formatDistanceToNowStrict } from 'date-fns';
-import React, { FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 import { useInterval } from 'react-use';
 
 interface Props {

@@ -1,10 +1,10 @@
 import 'codemirror/addon/mode/overlay';
 
-import CodeMirror, { EnvironmentAutocompleteOptions, Hint, ShowHintOptions } from 'codemirror';
+import CodeMirror, { type EnvironmentAutocompleteOptions, type Hint, type ShowHintOptions } from 'codemirror';
 
 import { getPlatformKeyCombinations } from '../../../../common/hotkeys';
 import { escapeRegex, fnOrString, isNotNullOrUndefined } from '../../../../common/misc';
-import { getDefaultFill, NunjucksParsedTag } from '../../../../templating/utils';
+import { getDefaultFill, type NunjucksParsedTag } from '../../../../templating/utils';
 import { isNunjucksMode } from '../modes/nunjucks';
 
 const NAME_MATCH_FLEXIBLE = /[\w.\][\-/]+$/;

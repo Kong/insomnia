@@ -8,11 +8,11 @@ import {
 } from 'react-router-dom';
 
 import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
-import { ResponseHeader } from '../../../models/response';
+import type { ResponseHeader } from '../../../models/response';
 import { invariant } from '../../../utils/invariant';
 import { isInMockContentTypeList, useMockRoutePatcher } from '../../routes/mock-route';
-import { RequestLoaderData } from '../../routes/request';
-import { WorkspaceLoaderData } from '../../routes/workspace';
+import type { RequestLoaderData } from '../../routes/request';
+import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { showModal, showPrompt } from '../modals';

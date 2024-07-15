@@ -1,4 +1,4 @@
-import { ClientCertificate } from '../models/client-certificate';
+import type { ClientCertificate } from '../models/client-certificate';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 

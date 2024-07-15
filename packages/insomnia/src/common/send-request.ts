@@ -1,11 +1,11 @@
 import path from 'path';
 
-import { BaseModel, types as modelTypes } from '../models';
+import { type BaseModel, types as modelTypes } from '../models';
 import * as models from '../models';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import { getBodyBuffer } from '../models/response';
-import { Settings } from '../models/settings';
+import type { Settings } from '../models/settings';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import {
   getOrInheritAuthentication,
