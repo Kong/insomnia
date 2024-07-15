@@ -365,7 +365,7 @@ export interface OrganizationFeatureLoaderData {
   billingPromise: Promise<Billing>;
 }
 export interface OrganizationStorageLoaderData {
-  storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
+  storagePromise: Promise<'cloud_plus_local' | 'cloud_only' | 'local_only'>;
 }
 
 // Create an in-memory storage to store the storage rules
@@ -379,17 +379,19 @@ export const organizationStorageLoader: LoaderFunction = async ({ params }): Pro
 
   if (storageRule) {
     return {
-      storage: storageRule.storage,
+      storagePromise: Promise.resolve(storageRule.storage),
     };
   }
 
   // Otherwise fetch from the API
   try {
-    const storageRule = await insomniaFetch<StorageRule | undefined>({
+    const storageRuleResponse = insomniaFetch<StorageRule | undefined>({
       method: 'GET',
       path: `/v1/organizations/${organizationId}/storage-rule`,
       sessionId,
     });
+
+    const storageRule = await storageRuleResponse.then(res => res);
 
     invariant(storageRule, 'Failed to load storageRule');
 
@@ -397,11 +399,11 @@ export const organizationStorageLoader: LoaderFunction = async ({ params }): Pro
 
     // Return the value
     return {
-      storage: storageRule?.storage || DefaultStorage,
+      storagePromise: Promise.resolve(storageRule?.storage || DefaultStorage),
     };
   } catch (err) {
     return {
-      storage: DefaultStorage,
+      storagePromise: Promise.resolve(DefaultStorage),
     };
   }
 };
