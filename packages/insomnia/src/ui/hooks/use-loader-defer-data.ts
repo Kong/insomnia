@@ -25,7 +25,7 @@ export const useLoaderDeferData = <T>(deferedDataPromise?: Promise<T>, keepStale
         setData(data);
       } catch (err) {
         setError(err);
-        console.log('Failed to load defered data', err);
+        console.warn('Failed to load defered data', err);
       }
     })();
   }, [deferedDataPromise, keepStaleDataKey]);

@@ -7,6 +7,7 @@ import { docsTemplateTags } from '../../../common/documentation';
 import { debounce } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
 import { isRemoteProject } from '../../../models/project';
+import { useLoaderDeferData } from '../../hooks/use-loader-defer-data';
 import type { OrganizationFeatureLoaderData } from '../../routes/organization';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { EditableInput } from '../editable-input';
@@ -31,11 +32,11 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
     }
   }, [organizationId, permissionsFetcher]);
 
-  const { features } = permissionsFetcher.data || {
-    features: {
-      gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
-    },
-  };
+  const { featuresPromise } = permissionsFetcher.data || {};
+  const [features = {
+    gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
+  }] = useLoaderDeferData(featuresPromise);
+
   const createEnvironmentFetcher = useFetcher();
   const deleteEnvironmentFetcher = useFetcher();
   const updateEnvironmentFetcher = useFetcher();
