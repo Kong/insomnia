@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
   Link,
@@ -461,24 +461,31 @@ const OrganizationRoute = () => {
 
   const syncOrgsAndProjectsFetcher = useFetcher();
 
-  useEffect(() => {
+  const asyncTaskStatus = syncOrgsAndProjectsFetcher.data?.error ? 'error' : syncOrgsAndProjectsFetcher.state;
+
+  const syncOrgsAndProjects = useCallback(() => {
     const submit = syncOrgsAndProjectsFetcher.submit;
+
+    submit({
+      organizationId,
+      projectId: projectId || '',
+      asyncTaskList,
+    }, {
+      action: '/organization/sync-orgs-and-projects',
+      method: 'POST',
+      encType: 'application/json',
+    });
+  }, [asyncTaskList, organizationId, syncOrgsAndProjectsFetcher.submit, projectId]);
+
+  useEffect(() => {
     // each route navigation will change history state, only submit this action when the asyncTaskList state is not empty
     // currently we have 2 cases that will set the asyncTaskList state
     // 1. first entry
     // 2. when user switch to another organization
     if (asyncTaskList?.length) {
-      submit({
-        organizationId,
-        projectId: projectId || '',
-        asyncTaskList,
-      }, {
-        action: '/organization/syncOrgsAndProjectsAction',
-        method: 'POST',
-        encType: 'application/json',
-      });
+      syncOrgsAndProjects();
     }
-  }, [userSession.id, organizationId, userSession.accountId, syncOrgsAndProjectsFetcher.submit, asyncTaskList, projectId]);
+  }, [organizationId, asyncTaskList, syncOrgsAndProjects]);
 
   useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
@@ -883,7 +890,32 @@ const OrganizationRoute = () => {
                     )}
                   </ProgressBar>
                 )}
-                <TooltipTrigger>
+                {/* The sync indicator only show when network status is online */}
+                {/* use for show sync organization and projects status(1. first enter app 2. switch organization) */}
+                {status === 'online' && asyncTaskStatus !== 'idle' ? (
+                  <TooltipTrigger>
+                    <Button
+                      className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                      onPress={() => {
+                        asyncTaskStatus === 'error' && syncOrgsAndProjects();
+                      }}
+                    >
+                      <Icon
+                        icon={asyncTaskStatus !== 'error' ? 'spinner' : 'circle'}
+                        className={`${asyncTaskStatus === 'error' ? 'text-[--color-danger]' : 'text-[--color-success]'} w-5 ${asyncTaskStatus !== 'error' ? 'animate-spin' : ''}`}
+                      />
+                      {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
+                    </Button>
+                    <Tooltip
+                      placement="top"
+                      offset={8}
+                      className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                    >
+                      {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
+                    </Tooltip>
+                  </TooltipTrigger>
+                ) : (
+                    <TooltipTrigger>
                   <Button
                     className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
                     onPress={() => {
@@ -921,6 +953,7 @@ const OrganizationRoute = () => {
                       : 'Log in to Insomnia to unlock the full product experience.'}
                   </Tooltip>
                 </TooltipTrigger>
+                )}
                 <span className='w-[1px] h-full bg-[--hl-sm]' />
                 <Link>
                   <a
