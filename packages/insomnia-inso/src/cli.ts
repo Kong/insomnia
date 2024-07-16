@@ -351,7 +351,13 @@ export const go = (args?: string[]) => {
         return process.exit(1);
       }
 
-      let requests = db.Request.filter(req => req.parentId === workspaceId);
+      const getRequestGroupIdsRecursively = (from: string[]): string[] => {
+        const parentIds = db.RequestGroup.filter(rg => from.includes(rg.parentId)).map(rg => rg._id);
+        return [...parentIds, ...(parentIds.length > 0 ? getRequestGroupIdsRecursively(parentIds) : [])];
+      };
+      const allRequestGroupIds = getRequestGroupIdsRecursively([workspaceId]);
+      let requests = db.Request.filter(req => [workspaceId, ...allRequestGroupIds].includes(req.parentId));
+
       if (options.requestNamePattern) {
         requests = requests.filter(req => req.name.match(new RegExp(options.requestNamePattern)));
       }
