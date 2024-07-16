@@ -297,7 +297,7 @@ export const go = (args?: string[]) => {
     });
 
   run.command('collection [identifier]')
-    .description('Run Insomnia request collection, identifier can be a workspace id or request group id')
+    .description('Run Insomnia request collection, identifier can be a workspace id')
     .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
     .option('-e, --env <identifier>', 'environment to use', '')
     .option('-b, --bail', 'abort ("bail") after first test failure', false)
@@ -377,7 +377,6 @@ export const go = (args?: string[]) => {
           }
           logger.log(`Running request: ${req.name} ${req._id}`);
           const res = await sendRequest(req._id);
-          // TODO: use logging levels
           logger.trace(res);
           if (res.status !== 200) {
             success = false;
