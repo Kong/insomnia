@@ -143,7 +143,7 @@
     "cross-env": "^7.0.3",
     "date-fns": "^3.6.0",
     "deep-equal": "^1.0.1",
-    "electron": "30.0.9",
+    "electron": "30.2.0",
     "electron-builder": "24.13.3",
     "electron-builder-squirrel-windows": "24.13.3",
     "electron-devtools-installer": "^3.2.0",
