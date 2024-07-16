@@ -1,6 +1,8 @@
+import * as Sentry from '@sentry/electron/main';
 import { app, BrowserWindow, type IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
+import { LandingPage, SentryMetrics } from '../../common/sentry';
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
 import * as models from '../../models';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
@@ -11,8 +13,10 @@ import type { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { addExecutionStep, completeExecutionStep, getExecution, startExecution, type StepName, type TimingStep } from '../network/request-timing';
 import type { WebSocketBridgeAPI } from '../network/websocket';
-import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
+import { ipcMainHandle, ipcMainOn, ipcMainOnce, type RendererOnChannels } from './electron';
 import type { gRPCBridgeAPI } from './grpc';
+
+const APP_START_TIME = performance.now();
 
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;
@@ -46,6 +50,7 @@ export interface RendererToMainBridgeAPI {
   addExecutionStep: (options: { requestId: string; stepName: StepName }) => void;
   startExecution: (options: { requestId: string }) => void;
   completeExecutionStep: (options: { requestId: string }) => void;
+  landingPageRendered: (landingPage: LandingPage) => void;
 }
 export function registerMainHandlers() {
   ipcMainOn('addExecutionStep', (_, options: { requestId: string; stepName: StepName }) => {
@@ -118,5 +123,13 @@ export function registerMainHandlers() {
       // eslint-disable-next-line no-restricted-properties
       shell.openExternal(href);
     }
+  });
+
+  ipcMainOnce('landingPageRendered', (_, landingPage: LandingPage) => {
+    const duration = performance.now() - APP_START_TIME;
+    Sentry.metrics.distribution(SentryMetrics.APP_START_DURATION, duration, {
+      tags: { landingPage },
+      unit: 'millisecond',
+    });
   });
 }

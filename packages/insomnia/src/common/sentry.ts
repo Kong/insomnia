@@ -8,3 +8,11 @@ export const SENTRY_OPTIONS: Partial<ClientOptions> = {
   environment: getAppEnvironment(),
   release: getAppVersion(),
 };
+
+export const enum SentryMetrics {
+  APP_START_DURATION = 'app_start_duration',
+};
+
+export const enum LandingPage {
+  Project = 'project',
+}

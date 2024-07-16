@@ -52,6 +52,7 @@ import {
 } from '../../common/constants';
 import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
+import { LandingPage } from '../../common/sentry';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { userSession } from '../../models';
@@ -988,6 +989,8 @@ const ProjectRoute: FC = () => {
   const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent;
   const showStorageRestrictionMessage = storage !== 'cloud_plus_local';
 
+
+  window.main.landingPageRendered(LandingPage.Project);
   return (
     <ErrorBoundary>
       <Fragment>
