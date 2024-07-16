@@ -331,6 +331,9 @@ export const database = {
     delete db._empty;
     electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
       try {
+        if (fnName === 'insert') {
+          console.log('inserting');
+        }
         // @ts-expect-error -- mapping unsoundness
         const result = await database[fnName](...args);
         e.sender.send(replyChannel, null, result);

@@ -2,6 +2,7 @@ import { createWriteStream } from 'node:fs';
 import path from 'node:path';
 
 import * as contentDisposition from 'content-disposition';
+import type { RequestTestResult } from 'insomnia-sdk';
 import { extension as mimeExtension } from 'mime-types';
 import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
 
@@ -421,18 +422,34 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
 
     const requestMeta = await models.requestMeta.getByParentId(requestId);
     invariant(requestMeta, 'RequestMeta not found');
-    const responsePatch = await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context);
-    const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
+    const baseResponsePatch = await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context);
+
+    const is2XXWithBodyPath = baseResponsePatch.statusCode && baseResponsePatch.statusCode >= 200 && baseResponsePatch.statusCode < 300 && baseResponsePatch.bodyPath;
     const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
 
     mutatedContext.request.afterResponseScript = afterResponseScript;
     window.main.addExecutionStep({ requestId, stepName: 'Executing after-response script' });
-    await tryToExecuteAfterResponseScript({
+    const postMutatedContext = await tryToExecuteAfterResponseScript({
       ...requestData,
       ...mutatedContext,
       response,
     });
     window.main.completeExecutionStep({ requestId });
+
+    const responsePatch = postMutatedContext ?
+      {
+        ...baseResponsePatch,
+        // both pre-request and after-response test results are collected
+        requestTestResults: [
+          ...mutatedContext.requestTestResults.map(
+            (result: RequestTestResult): RequestTestResult => ({ ...result, category: 'pre-request' }),
+          ),
+          ...postMutatedContext.requestTestResults.map(
+            (result: RequestTestResult): RequestTestResult => ({ ...result, category: 'after-response' }),
+          ),
+        ],
+      }
+      : baseResponsePatch;
 
     if (!shouldWriteToFile) {
       const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);

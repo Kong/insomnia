@@ -29,6 +29,7 @@ import { ResponseViewer } from '../viewers/response-viewer';
 import { BlankPane } from './blank-pane';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
+import { RequestTestResultPane } from './request-test-result-pane';
 
 interface Props {
   activeRequestId: string;
@@ -143,6 +144,19 @@ export const ResponsePane: FC<Props> = ({
 
   const timeline = models.response.getTimeline(activeResponse);
   const cookieHeaders = getSetCookieHeaders(activeResponse.headers);
+
+  let passedTestCount = 0;
+  let totalTestCount = 0;
+  activeResponse.requestTestResults.forEach(result => {
+    if (result.status === 'passed') {
+      passedTestCount++;
+    }
+    totalTestCount++;
+  });
+  const testResultCountTagColor = totalTestCount > 0 ?
+    passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600' :
+    'bg-[var(--hl-sm)]';
+
   return (
     <Pane type="response">
       {!activeResponse ? null : (
@@ -238,19 +252,44 @@ export const ResponsePane: FC<Props> = ({
 
         <TabPanel
           className='w-full flex-1 flex flex-col overflow-y-auto'
+          key="test-results"
+          id="test results"
+          // title={
+          //   <div>
+          //     <span>
+          //       Tests
+          //     </span>
+          //     <span
+          //       className={`rounded-sm ml-1 px-1 ${testResultCountTagColor}`}
+          //       // style={{ color: 'white', top: '0', right: '5px' }}
+          //       style={{ color: 'text-[--hl]' }}
+          //     >
+          //       {`${passedTestCount} / ${totalTestCount}`}
+          //     </span>
+          //   </div>
+          // }
+        >
+          <RequestTestResultPane requestTestResults={activeResponse.requestTestResults} />
+        </TabPanel>
+
+        <TabPanel
+          className='w-full flex-1 flex flex-col overflow-y-auto'
           id='mock-response'
         >
           <MockResponseExtractor />
         </TabPanel>
 
         <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='timeline'>
+
           <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
             <ResponseTimelineViewer
               key={activeResponse._id}
               timeline={timeline}
             />
           </ErrorBoundary>
+
         </TabPanel>
+
       </Tabs>
       <ErrorBoundary errorClassName="font-error pad text-center">
         {isExecuting && <ResponseTimer

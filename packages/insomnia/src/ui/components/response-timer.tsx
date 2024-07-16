@@ -36,7 +36,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
             key={`${activeRequestId}-${record.stepName}`}
             className='flex w-full leading-8'
           >
-            <div className='w-3/4 text-left content-center leading-8'>
+            <div className='w-3/4 ml-1 text-left content-center leading-8'>
               <span className="leading-8">
                 {
                   record.duration ?
@@ -48,7 +48,9 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
                 {record.stepName}
               </span>
             </div>
-            {record.duration ? `${((record.duration) / 1000).toFixed(1)} s` : (<MillisecondTimer />)}
+            <div className='w-1/4 mr-1 text-right leading-8'>
+              {record.duration ? `${((record.duration) / 1000).toFixed(1)} s` : (<MillisecondTimer />)}
+            </div>
           </div>
         ))}
       </div>

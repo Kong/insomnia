@@ -1,4 +1,5 @@
 import fs from 'fs';
+import type { RequestTestResult } from 'insomnia-sdk';
 import { Readable } from 'stream';
 import zlib from 'zlib';
 
@@ -46,6 +47,7 @@ export interface BaseResponse {
   // Things from the request
   settingStoreCookies: boolean | null;
   settingSendCookies: boolean | null;
+  requestTestResults: RequestTestResult[];
 }
 
 export type Response = BaseModel & BaseResponse;
@@ -80,6 +82,7 @@ export function init(): BaseResponse {
     // Responses sent before environment filtering will have a special value
     // so they don't show up at all when filtering is on.
     environmentId: '__LEGACY__',
+    requestTestResults: [],
   };
 }
 
