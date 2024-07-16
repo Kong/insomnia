@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [core@9.3.3-beta.1] - 2024-07-16
+
+## What's Changed
+* :rocket: 9.3.3-beta.0 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7674
+* fix: default user-agent for oauth2 [7672] by @filfreire in https://github.com/Kong/insomnia/pull/7675
+* inso fifth pass by @jackkav in https://github.com/Kong/insomnia/pull/7601
+* feat: inso parent folder auth by @jackkav in https://github.com/Kong/insomnia/pull/7676
+* chore: duplicate / symbol for import in insomnia-sdk/src/objects/(interfaces.ts, request.ts) by @Novsochetra in https://github.com/Kong/insomnia/pull/7686
+* fix: changelog [no-ticket] by @filfreire in https://github.com/Kong/insomnia/pull/7677
+* chore: enable sentry tracing by @CurryYangxx in https://github.com/Kong/insomnia/pull/7688
+* force vite to always wipe cache by @jackkav in https://github.com/Kong/insomnia/pull/7690
+* chore: make the overlay darker in displaying request timings by @ihexxa in https://github.com/Kong/insomnia/pull/7691
+* split test job into app and cli by @jackkav in https://github.com/Kong/insomnia/pull/7685
+* chore: add smoke test for git-sync [INS-4132] by @filfreire in https://github.com/Kong/insomnia/pull/7682
+* feat(Markdown Preview): always enable preview by @gatzjames in https://github.com/Kong/insomnia/pull/7694
+* fix(Delete Environment): Don't show empty view when deleting an environment by @gatzjames in https://github.com/Kong/insomnia/pull/7695
+* fix(Export): Option to export all data from the settings on the login view by @gatzjames in https://github.com/Kong/insomnia/pull/7702
+* fix: typo in style name by @ihexxa in https://github.com/Kong/insomnia/pull/7701
+* fix: ui improvement when return deferred data in loader by @CurryYangxx in https://github.com/Kong/insomnia/pull/7681
+* fix: refresh storage rule when org change by @CurryYangxx in https://github.com/Kong/insomnia/pull/7707
+* hide self host url in create/edit mock by @jackkav in https://github.com/Kong/insomnia/pull/7704
+* feat(Request pane): Add indicators for body and auth in the request pane tabs by @gatzjames in https://github.com/Kong/insomnia/pull/7697
+* Trim Bearer Authentication Strings by @SimplexShotz in https://github.com/Kong/insomnia/pull/7279
+* feat: show deprecation warnings on graphql arguments by @anujbiyani in https://github.com/Kong/insomnia/pull/7364
+* Clean up outdate jest and tsconfigs by @jackkav in https://github.com/Kong/insomnia/pull/7712
+* chore: mv prerelease tests into smoke [INS-4132] by @filfreire in https://github.com/Kong/insomnia/pull/7705
+* feat: add test utils on scripting snippets [INS-4141] by @filfreire in https://github.com/Kong/insomnia/pull/7692
+* fix: migrate loader redirect by @CurryYangxx in https://github.com/Kong/insomnia/pull/7426
+* refactor: flatten and reduce tsconfigs by @jackkav in https://github.com/Kong/insomnia/pull/7716
+* enable verbatimModuleSyntax by @jackkav in https://github.com/Kong/insomnia/pull/7718
+* perf: return deferred data in permission loader by @CurryYangxx in https://github.com/Kong/insomnia/pull/7635
+* perf: change org performance improvement [INS-3968] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7582
+* feat: add async task indicator [INS-4106] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7522
+* fix(sdk): sdk type cleanup by @ihexxa in https://github.com/Kong/insomnia/pull/7721
+* chore: bump electron 30.0 to 30.2 by @filfreire in https://github.com/Kong/insomnia/pull/7714
+* fix: Use SSE for storage control updates by @pavkout in https://github.com/Kong/insomnia/pull/7661
+
+## New Contributors
+* @Novsochetra made their first contribution in https://github.com/Kong/insomnia/pull/7686
+* @SimplexShotz made their first contribution in https://github.com/Kong/insomnia/pull/7279
+* @anujbiyani made their first contribution in https://github.com/Kong/insomnia/pull/7364
+
+**Full Changelog**: https://github.com/Kong/insomnia/compare/core@9.3.3-beta.0...core@9.3.3-beta.1
+
 ## [core@9.3.3-beta.0] - 2024-07-08
 
 ## What's Changed
