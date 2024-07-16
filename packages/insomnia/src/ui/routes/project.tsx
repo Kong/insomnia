@@ -1476,6 +1476,18 @@ const ProjectRoute: FC = () => {
                   <form
                     className='flex flex-col gap-4'
                     onSubmit={e => {
+                      e.preventDefault();
+                      const formData = new FormData(e.currentTarget);
+                      const type = formData.get('type');
+
+                      if (!type) {
+                        showAlert({
+                          title: 'Project type not selected',
+                          message: 'Please select a project type before continuing',
+                        });
+                        return;
+                      }
+
                       createNewProjectFetcher.submit(e.currentTarget, {
                         action: `/organization/${organizationId}/project/new`,
                         method: 'post',
