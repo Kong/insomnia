@@ -631,11 +631,9 @@ const ProjectRoute: FC = () => {
     isActive: true,
   }] = useLoaderDeferData(billingPromise);
 
-  const { storagePromise } = storageRuleFetcher.data || {
-    storage: DefaultStorage,
-  };
+  const { storagePromise } = storageRuleFetcher.data || {};
 
-  const [storage = 'cloud_plus_local'] = useLoaderDeferData(storagePromise);
+  const [storage = DefaultStorage] = useLoaderDeferData(storagePromise);
 
   const [projectListFilter, setProjectListFilter] = useLocalStorage(`${organizationId}:project-list-filter`, '');
   const [workspaceListFilter, setWorkspaceListFilter] = useLocalStorage(`${projectId}:workspace-list-filter`, '');

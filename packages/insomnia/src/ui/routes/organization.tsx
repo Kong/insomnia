@@ -391,15 +391,14 @@ export const organizationStorageLoader: LoaderFunction = async ({ params }): Pro
       sessionId,
     });
 
-    const storageRule = await storageRuleResponse.then(res => res);
-
-    invariant(storageRule, 'Failed to load storageRule');
-
-    inMemoryStorageRuleCache.set(organizationId, storageRule);
-
     // Return the value
     return {
-      storagePromise: Promise.resolve(storageRule?.storage || DefaultStorage),
+      storagePromise: storageRuleResponse.then(res => {
+        if (res) {
+          inMemoryStorageRuleCache.set(organizationId, res);
+        }
+        return res?.storage || DefaultStorage;
+      }),
     };
   } catch (err) {
     return {
