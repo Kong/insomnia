@@ -59,8 +59,13 @@ export class Response extends Property {
         );
         this.originalRequest = options.originalRequest;
         this.responseTime = options.responseTime;
-        this.status = options.reason || RESPONSE_CODE_REASONS[options.code];
         this.stream = options.stream;
+        const detectedStatus = options.reason || RESPONSE_CODE_REASONS[options.code];
+        if (!detectedStatus) {
+            throw Error('Response constructor: reason or code field must be set in the options');
+        } else {
+            this.status = detectedStatus;
+        }
     }
 
     // TODO: the accurate type of the response should be given
@@ -105,7 +110,11 @@ export class Response extends Property {
             if (directives.length === 0) {
                 throw Error('contentInfo: header Content-Type value is blank');
             } else {
-                mimeInfo.mimeType = directives[0];
+                const mimeType = directives[0];
+                if (!mimeType) {
+                    throw Error('contentInfo: mime type in header Content-Type is invalid');
+                }
+                mimeInfo.mimeType = mimeType;
                 directives.forEach(dir => {
                     if (dir.startsWith('charset')) {
                         mimeInfo.charset = dir.slice(dir.indexOf('=') + 1);

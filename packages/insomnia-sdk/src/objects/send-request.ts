@@ -20,17 +20,17 @@ export async function sendRequest(
 
         try {
             window.bridge.curlRequest(requestOptions)
-                .then(result => {
+                .then((result: any) => {
                     const output = result as CurlRequestOutput;
                     return curlOutputToResponse(output, request);
-                }).then(transformedOutput => {
+                }).then((transformedOutput: Response) => {
                     cb(undefined, transformedOutput);
                     resolve(transformedOutput);
                 }).catch(e => {
                     cb(e, undefined);
                     resolve(undefined);
                 });
-        } catch (err) {
+        } catch (err: any) {
             if (err.name === 'AbortError') {
                 cb(`Request was cancelled: ${err.message}`, undefined);
             } else {
@@ -196,7 +196,13 @@ async function curlOutputToResponse(
     result: CurlRequestOutput,
     request: string | Request | RequestOptions,
 ): Promise<Response> {
+    if (result.headerResults.length === 0) {
+        throw Error('curlOutputToResponse: no header result is found');
+    }
     const lastRedirect = result.headerResults[result.headerResults.length - 1];
+    if (!lastRedirect) {
+        throw Error('curlOutputToResponse: the lastRedirect is not defined');
+    }
 
     const originalRequest = typeof request === 'string' ?
         new Request({ url: request, method: 'GET' }) :

@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { AuthOptions, fromPreRequestAuth, RequestAuth, toPreRequestAuth } from '../auth';
+import { type AuthOptions, fromPreRequestAuth, RequestAuth, toPreRequestAuth } from '../auth';
 import { Variable, VariableList } from '../variables';
 
 const varListToObject = (obj: VariableList<Variable> | undefined) => {

@@ -14,7 +14,7 @@ export interface ProxyConfigOptions {
 }
 
 export class ProxyConfig extends Property {
-    _kind: string = 'ProxyConfig';
+    override _kind: string = 'ProxyConfig';
     type: string;
 
     host: string;
@@ -67,7 +67,7 @@ export class ProxyConfig extends Property {
         this.bypass = def.bypass || [];
     }
 
-    static _index: string = 'key';
+    static override _index: string = 'key';
 
     static isProxyConfig(obj: object) {
         return '_kind' in obj && obj._kind === 'ProxyConfig';

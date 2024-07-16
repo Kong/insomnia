@@ -27,7 +27,7 @@ export interface CookieOptions extends InsomniaCookieExtensions {
 }
 
 export class Cookie extends Property {
-    readonly _kind: string = 'Cookie';
+    override readonly _kind: string = 'Cookie';
     protected cookie: ToughCookie;
     private extensions?: { key: string; value: string }[];
     private insoExtensions: InsomniaCookieExtensions = {};
@@ -62,7 +62,7 @@ export class Cookie extends Property {
         };
     }
 
-    static _index = 'key';
+    static override _index = 'key';
 
     static isCookie(obj: Property) {
         return '_kind' in obj && obj._kind === 'Cookie';
@@ -136,7 +136,7 @@ export class Cookie extends Property {
         return cookieStrs.join('; ');
     }
 
-    toString = () => {
+    override toString = () => {
         const hostOnlyPart = this.cookie.hostOnly ? '; HostOnly' : '';
         const sessionPart = this.cookie.extensions?.includes('session') ? '; Session' : '';
         const extensionPart = this.extensions && this.extensions.length > 0 ?
@@ -146,7 +146,7 @@ export class Cookie extends Property {
         return this.cookie.toString() + hostOnlyPart + sessionPart + extensionPart;
     };
 
-    valueOf = () => {
+    override valueOf = () => {
         return this.cookie.toJSON().value;
     };
 
@@ -154,7 +154,7 @@ export class Cookie extends Property {
         return this.cookie.toJSON().key;
     };
 
-    toJSON = () => {
+    override toJSON = () => {
         return {
             id: this.id,
             key: this.cookie.key,
@@ -178,7 +178,7 @@ export class Cookie extends Property {
 }
 
 export class CookieList extends PropertyList<Cookie> {
-    _kind: string = 'CookieList';
+    override _kind: string = 'CookieList';
 
     constructor(cookies: Cookie[]) {
         super(
