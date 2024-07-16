@@ -208,7 +208,7 @@ describe('test Url Match Pattern', () => {
         try {
             const matchPattern = new UrlMatchPattern(pattern);
             matchPattern.testProtocol('http');
-        } catch (e) {
+        } catch (e: any) {
             expect(e.message).toContain('UrlMatchPattern: protocol is not specified');
         }
     });
