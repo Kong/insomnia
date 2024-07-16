@@ -42,6 +42,9 @@ jobs:
       - name : Build Inso
         run: npm run build -w insomnia-inso
 
+      - name: Start test server
+        run: npm run serve -w insomnia-smoke-test & npx -y wait-on http://localhost:4010
+
       - name: Run Inso bundle tests
         run: npm run test:bundle -w insomnia-inso
 
