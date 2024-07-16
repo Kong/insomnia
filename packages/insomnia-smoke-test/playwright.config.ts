@@ -3,7 +3,7 @@ import { PlaywrightTestConfig } from '@playwright/test';
 const config: PlaywrightTestConfig = {
   projects: [
     {
-      // High-confidence smoke/sanity checks, runs on release recurring and release builds
+      // High-confidence smoke/sanity checks, runs on Test App only on Ubuntu
       name: 'Smoke',
       testMatch: /smoke\/.*.test.ts/,
       retries: 0,
