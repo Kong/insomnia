@@ -612,16 +612,16 @@ const ProjectRoute: FC = () => {
   }, [organizationId, permissionsFetcher.load]);
 
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
-  const { features, billing, storage } = permissionsFetcher.data || {
-    features: {
-      gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
-      orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
-    },
-    billing: {
-      isActive: true,
-    },
-    storage: 'cloud_plus_local',
-  };
+
+  const { featuresPromise, billingPromise, storagePromise } = permissionsFetcher.data || {};
+  const [features = {
+    gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
+    orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
+  }] = useLoaderDeferData(featuresPromise);
+  const [billing = {
+    isActive: true,
+  }] = useLoaderDeferData(billingPromise);
+  const [storage = 'cloud_plus_local'] = useLoaderDeferData(storagePromise);
   const [projectListFilter, setProjectListFilter] = useLocalStorage(`${organizationId}:project-list-filter`, '');
   const [workspaceListFilter, setWorkspaceListFilter] = useLocalStorage(`${projectId}:workspace-list-filter`, '');
   const [workspaceListScope, setWorkspaceListScope] = useLocalStorage(`${projectId}:workspace-list-scope`, 'all');
