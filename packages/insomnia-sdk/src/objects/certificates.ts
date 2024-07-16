@@ -16,9 +16,9 @@ export interface CertificateOptions {
 }
 
 export class Certificate extends Property {
-    _kind: string = 'Certificate';
+    override _kind: string = 'Certificate';
 
-    name?: string;
+    override name?: string;
     matches?: UrlMatchPatternList<UrlMatchPattern>;
     key?: SrcRef;
     cert?: SrcRef;
