@@ -5,20 +5,30 @@ import { Button, Input } from 'react-aria-components';
 export const EditableInput = ({
   value = 'Untitled',
   ariaLabel,
+  editable = false,
   name,
   className,
   onSubmit,
   onSingleClick,
+  onEditableChange,
 }: {
   value: string;
   ariaLabel?: string;
+    editable?: boolean;
+    onEditableChange?: (editable: boolean) => void;
   name?: string;
     className?: string;
     onSubmit: (value: string) => void;
     onSingleClick?: () => void;
 }) => {
-  const [isEditable, setIsEditable] = useState(false);
+  const [isEditable, setIsEditable] = useState(editable);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    setIsEditable(editable);
+  }
+    , [editable]);
+
   useEffect(() => {
     if (!isEditable) {
       return;
@@ -71,6 +81,7 @@ export const EditableInput = ({
           clickTimeout = null;
         }
         setIsEditable(true);
+        onEditableChange?.(true);
       }
 
       button.addEventListener('dblclick', onDoubleClick);
@@ -82,7 +93,7 @@ export const EditableInput = ({
     }
 
     return () => { };
-  }, [onSingleClick]);
+  }, [onEditableChange, onSingleClick]);
 
   return (
     <>
@@ -97,6 +108,7 @@ export const EditableInput = ({
         onPress={e => {
           if (e.pointerType !== 'mouse') {
             setIsEditable(true);
+            onEditableChange?.(true);
           }
         }}
         name={name}
@@ -118,17 +130,20 @@ export const EditableInput = ({
                 e.stopPropagation();
                 onSubmit(value);
                 setIsEditable(false);
+                onEditableChange?.(false);
               }
 
               if (e.key === 'Escape') {
                 e.stopPropagation();
                 setIsEditable(false);
+                onEditableChange?.(false);
               }
             }}
             onBlur={e => {
               const value = e.currentTarget.value;
               onSubmit(value);
               setIsEditable(false);
+              onEditableChange?.(false);
             }}
           />
         </FocusScope>
