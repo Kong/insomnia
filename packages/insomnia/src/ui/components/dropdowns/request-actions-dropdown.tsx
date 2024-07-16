@@ -19,7 +19,7 @@ import type { WebSocketRequest } from '../../../models/websocket-request';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
-import { useRequestMetaPatcher, useRequestPatcher } from '../../hooks/use-request';
+import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
@@ -35,6 +35,9 @@ interface Props {
   isPinned: Boolean;
   request: Request | GrpcRequest | WebSocketRequest;
   requestGroup?: RequestGroup;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  onRename: () => void;
 }
 
 export const RequestActionsDropdown = ({
@@ -42,12 +45,14 @@ export const RequestActionsDropdown = ({
   activeProject,
   isPinned,
   request,
+  isOpen,
+  onOpenChange,
+  onRename,
 }: Props) => {
   const {
     settings,
   } = useRootLoaderData();
   const patchRequestMeta = useRequestMetaPatcher();
-  const patchRequest = useRequestPatcher();
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const requestFetcher = useFetcher();
@@ -121,17 +126,6 @@ export const RequestActionsDropdown = ({
         message: err instanceof Error ? err.message : 'Unknown error',
       });
     }
-  };
-
-  const handleRename = () => {
-    showPrompt({
-      title: 'Rename Request',
-      defaultValue: request.name,
-      submitName: 'Rename',
-      selectText: true,
-      label: 'Name',
-      onComplete: name => patchRequest(request._id, { name }),
-    });
   };
 
   const togglePin = () => {
@@ -229,7 +223,7 @@ export const RequestActionsDropdown = ({
           {
             id: 'Rename',
             name: 'Rename',
-            action: handleRename,
+            action: onRename,
             icon: 'edit',
           },
           {
@@ -268,7 +262,13 @@ export const RequestActionsDropdown = ({
 
   return (
     <Fragment>
-      <MenuTrigger onOpenChange={isOpen => isOpen && onOpen()}>
+      <MenuTrigger
+        isOpen={isOpen}
+        onOpenChange={isOpen => {
+          isOpen && onOpen();
+          onOpenChange(isOpen);
+        }}
+      >
         <Button
           data-testid={`Dropdown-${toKebabCase(request.name)}`}
           aria-label="Request Actions"
