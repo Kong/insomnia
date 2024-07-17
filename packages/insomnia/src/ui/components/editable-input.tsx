@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FocusScope } from 'react-aria';
-import { Button, Input } from 'react-aria-components';
+import { Input } from 'react-aria-components';
 
 export const EditableInput = ({
   value = 'Untitled',
@@ -22,7 +22,7 @@ export const EditableInput = ({
     onSingleClick?: () => void;
 }) => {
   const [isEditable, setIsEditable] = useState(editable);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const editableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsEditable(editable);
@@ -56,8 +56,8 @@ export const EditableInput = ({
   }, [isEditable]);
 
   useEffect(() => {
-    const button = buttonRef.current;
-    if (button) {
+    const editableElement = editableRef.current;
+    if (editableElement) {
       let clickTimeout: ReturnType<typeof setTimeout> | null = null;
       function onClick(e: MouseEvent) {
         e.stopPropagation();
@@ -71,7 +71,7 @@ export const EditableInput = ({
           onSingleClick?.();
         }, 200);
       }
-      button.addEventListener('click', onClick);
+      editableElement.addEventListener('click', onClick);
 
       function onDoubleClick(e: MouseEvent) {
         e.stopPropagation();
@@ -84,11 +84,11 @@ export const EditableInput = ({
         onEditableChange?.(true);
       }
 
-      button.addEventListener('dblclick', onDoubleClick);
+      editableElement.addEventListener('dblclick', onDoubleClick);
 
       return () => {
-        button.removeEventListener('click', onClick);
-        button.removeEventListener('dblclick', onDoubleClick);
+        editableElement.removeEventListener('click', onClick);
+        editableElement.removeEventListener('dblclick', onDoubleClick);
       };
     }
 
@@ -97,26 +97,18 @@ export const EditableInput = ({
 
   return (
     <>
-      <Button
-        ref={buttonRef}
+      <div
+        ref={editableRef}
         className={
           `items-center truncate justify-center data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all
             ${isEditable ? 'hidden' : ''}
             ${className || 'px-2'}
           `
         }
-        onPress={e => {
-          if (e.pointerType !== 'mouse') {
-            setIsEditable(true);
-            onEditableChange?.(true);
-          }
-        }}
-        name={name}
         aria-label={ariaLabel}
-        value={value}
       >
         <span className="truncate">{value}</span>
-      </Button>
+      </div>
       {isEditable && (
         <FocusScope contain restoreFocus autoFocus>
           <Input
