@@ -15,6 +15,7 @@ import { loadDb } from './db';
 import { loadApiSpec, promptApiSpec } from './db/models/api-spec';
 import { loadEnvironment, promptEnvironment } from './db/models/environment';
 import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
+import { loadWorkspace, promptWorkspace } from './db/models/workspace';
 
 export interface GlobalOptions {
   ci: boolean;
@@ -288,6 +289,100 @@ export const go = (args?: string[]) => {
 
         // TODO: is this necessary?
         const success = options.verbose ? await runTestPromise : await noConsoleLog(() => runTestPromise);
+        return process.exit(success ? 0 : 1);
+      } catch (error) {
+        logErrorAndExit(error);
+      }
+      return process.exit(1);
+    });
+
+  run.command('collection [identifier]')
+    .description('Run Insomnia request collection, identifier can be a workspace id')
+    .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
+    .option('-e, --env <identifier>', 'environment to use', '')
+    .option('-b, --bail', 'abort ("bail") after first test failure', false)
+    .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
+    .action(async (identifier, cmd: { env: string; disableCertValidation: true; requestNamePattern: string; bail: boolean }) => {
+      const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
+
+      const commandOptions = { ...globals, ...cmd };
+      const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
+
+      const options = {
+        reporter: defaultReporter,
+        ...__configFile?.options || {},
+        ...commandOptions,
+        ...(__configFile ? { __configFile } : {}),
+      };
+      logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
+      options.ci && logger.setReporters([new BasicReporter()]);
+      options.printOptions && logger.log('Loaded options', options, '\n');
+      let pathToSearch = '';
+      const useLocalAppData = !options.workingDir && !options.exportFile;
+      if (useLocalAppData) {
+        logger.warn('No working directory or export file provided, using local app data directory.');
+        pathToSearch = localAppDir;
+      } else {
+        pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
+      }
+      if (options.reporter && !reporterTypesSet.has(options.reporter)) {
+        logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
+        return process.exit(1);
+      }
+
+      const db = await loadDb({
+        pathToSearch,
+        filterTypes: [],
+      });
+
+      const workspace = identifier ? loadWorkspace(db, identifier) : await promptWorkspace(db, !!options.ci);
+
+      if (!workspace) {
+        logger.fatal('No workspace found; cannot run requests.', identifier);
+        return process.exit(1);
+      }
+
+      // Find environment
+      const workspaceId = workspace._id;
+      const environment = options.env ? loadEnvironment(db, workspaceId, options.env) : await promptEnvironment(db, !!options.ci, workspaceId);
+
+      if (!environment) {
+        logger.fatal('No environment identified; cannot run requests without a valid environment.');
+        return process.exit(1);
+      }
+
+      const getRequestGroupIdsRecursively = (from: string[]): string[] => {
+        const parentIds = db.RequestGroup.filter(rg => from.includes(rg.parentId)).map(rg => rg._id);
+        return [...parentIds, ...(parentIds.length > 0 ? getRequestGroupIdsRecursively(parentIds) : [])];
+      };
+      const allRequestGroupIds = getRequestGroupIdsRecursively([workspaceId]);
+      let requests = db.Request.filter(req => [workspaceId, ...allRequestGroupIds].includes(req.parentId));
+
+      if (options.requestNamePattern) {
+        requests = requests.filter(req => req.name.match(new RegExp(options.requestNamePattern)));
+      }
+      if (!requests.length) {
+        logger.fatal('No requests identified; nothing to run.');
+        return process.exit(1);
+      }
+
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Load lazily when needed, otherwise this require slows down the entire CLI.
+        const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
+        const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation });
+        let success = true;
+        for (const req of requests) {
+          if (options.bail && !success) {
+            return;
+          }
+          logger.log(`Running request: ${req.name} ${req._id}`);
+          const res = await sendRequest(req._id);
+          logger.trace(res);
+          if (res.status !== 200) {
+            success = false;
+            logger.error(`Request failed with status ${res.status}`);
+          }
+        }
         return process.exit(success ? 0 : 1);
       } catch (error) {
         logErrorAndExit(error);
