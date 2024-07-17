@@ -1,4 +1,4 @@
-import { type ExtraRenderInfo, RENDER_PURPOSE_SEND } from '../../common/render';
+import { type ExtraRenderInfo } from '../../common/render';
 import * as models from '../../models';
 import type { Request } from '../../models/request';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
@@ -17,7 +17,7 @@ export function init() {
           responseId,
         } = await fetchRequestData(req._id);
 
-        const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND, extraInfo);
+        const renderResult = await tryToInterpolateRequest(request, environment._id, 'send', extraInfo);
         const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
         const response = await sendCurlAndWriteTimeline(
           renderedRequest,

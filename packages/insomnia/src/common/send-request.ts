@@ -18,7 +18,6 @@ import {
 import { invariant } from '../utils/invariant';
 import { database } from './database';
 import { generateId } from './misc';
-import { RENDER_PURPOSE_SEND } from './render';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
@@ -90,7 +89,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       responseId,
     } = await fetchInsoRequestData(requestId);
     // NOTE: inso ignores active environment, using the one passed in
-    const renderResult = await tryToInterpolateRequest(request, environmentId, RENDER_PURPOSE_SEND);
+    const renderResult = await tryToInterpolateRequest(request, environmentId, 'send');
     const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,

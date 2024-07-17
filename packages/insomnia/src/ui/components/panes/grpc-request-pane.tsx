@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { documentationLinks } from '../../../common/documentation';
 import { generateId } from '../../../common/misc';
-import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '../../../common/render';
+import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage } from '../../../common/render';
 import type { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
 import type { GrpcRequestHeader } from '../../../models/grpc-request';
@@ -105,7 +105,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
         const request = await getRenderedGrpcRequest({
           request: activeRequest,
           environment: environmentId,
-          purpose: RENDER_PURPOSE_SEND,
+          purpose: 'send',
           skipBody: canClientStream(methodType),
         });
         window.main.grpc.start({ request });
@@ -252,7 +252,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                           const requestBody = await getRenderedGrpcRequestMessage({
                             request: activeRequest,
                             environment: environmentId,
-                            purpose: RENDER_PURPOSE_SEND,
+                            purpose: 'send',
                           });
                           const preparedMessage = {
                             body: requestBody,

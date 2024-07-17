@@ -9,7 +9,7 @@ import { version } from '../../../package.json';
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import { type ChangeBufferEvent, database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
-import { RENDER_PURPOSE_SEND, type RenderedRequest } from '../../common/render';
+import { type RenderedRequest } from '../../common/render';
 import type { ResponsePatch } from '../../main/network/libcurl-promise';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
@@ -387,7 +387,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const renderedResult = await tryToInterpolateRequest(
       mutatedContext.request,
       mutatedContext.environment,
-      RENDER_PURPOSE_SEND,
+      'send',
       undefined,
       mutatedContext.baseEnvironment,
       ignoreUndefinedEnvVariable,
@@ -502,7 +502,7 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
   }
   );
 
-  const renderResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
+  const renderResult = await tryToInterpolateRequest(req, environment._id, 'send');
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
   window.main.completeExecutionStep({ requestId: req._id });
