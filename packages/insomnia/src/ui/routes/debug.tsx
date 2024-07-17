@@ -996,14 +996,6 @@ export const Debug: FC = () => {
                       {item.pinned && (
                         <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
                       )}
-                      {/* {!isRequestGroup(item.doc) && (
-                        <RequestActionsDropdown
-                          activeEnvironment={activeEnvironment}
-                          activeProject={activeProject}
-                          request={item.doc}
-                          isPinned={item.pinned}
-                        />
-                      )} */}
                     </div>
                   </GridListItem>
                 );
