@@ -35,7 +35,7 @@ const config: BuildOptions = {
     'process.env.VERSION': JSON.stringify(isProd ? version : 'dev'),
     '__DEV__': JSON.stringify(!isProd),
   },
-  external: ['@getinsomnia/node-libcurl', 'insomnia-send-request', 'fsevents', 'mocha'],
+  external: ['@getinsomnia/node-libcurl', 'fsevents', 'mocha'],
   entryPoints: ['./src/index.ts'],
 };
 

@@ -9,6 +9,11 @@
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "isolatedModules": true,
+    "paths": {
+      "electron": [
+        "../insomnia/send-request/electron",
+      ],
+    },
     /* Transpiling Options */
     "module": "CommonJS",
     "sourceMap": true,

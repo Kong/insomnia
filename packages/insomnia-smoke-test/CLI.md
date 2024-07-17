@@ -37,16 +37,13 @@ npm run test:binary -w insomnia-inso
 
 ## Debugging CLI tests using watcher
 
-This is helpful for debugging failing api tests and changing the send-request abstraction
+This is helpful for debugging failing api tests
 
 From project root, in separate terminals:
 
 ```sh
 # start smoke test api
 npm run serve -w packages/insomnia-smoke-test
-
-# build send-request
-npm run build:sr -w packages/insomnia
 
 # watch inso
 npm run start -w packages/insomnia-inso
