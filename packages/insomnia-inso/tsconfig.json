@@ -14,7 +14,8 @@
         "../insomnia/send-request/electron",
       ],
     },
-    "jsx": "preserve",
+    /* remove this  once react AlertModal is out of the plugins code path */
+    "jsx": "react",
     /* Transpiling Options */
     "module": "CommonJS",
     "sourceMap": true,
