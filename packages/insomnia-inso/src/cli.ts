@@ -366,8 +366,6 @@ export const go = (args?: string[]) => {
       }
 
       try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Load lazily when needed, otherwise this require slows down the entire CLI.
-        const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
         const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation });
         let success = true;
         for (const req of requests) {
