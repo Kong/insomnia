@@ -249,9 +249,9 @@ async function migrateProjectsUnderOrganization(personalOrganizationId: string, 
 async function syncStorageRule(sessionId: string, organizationId: string) {
   try {
     const storageRule = await insomniaFetch<StorageRule | undefined>({
-        method: 'GET',
-        path: `/v1/organizations/${organizationId}/storage-rule`,
-        sessionId,
+      method: 'GET',
+      path: `/v1/organizations/${organizationId}/storage-rule`,
+      sessionId,
     });
 
     invariant(storageRule, 'Failed to load storageRule');
@@ -957,14 +957,14 @@ const OrganizationRoute = () => {
                 {status === 'online' && asyncTaskStatus !== 'idle' ? (
                   <TooltipTrigger>
                     <Button
-                      className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                      className="px-4 py-1 h-full flex items-center justify-center gap-1 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
                       onPress={() => {
                         asyncTaskStatus === 'error' && syncOrgsAndProjects();
                       }}
                     >
                       <Icon
                         icon={asyncTaskStatus !== 'error' ? 'spinner' : 'circle'}
-                        className={`${asyncTaskStatus === 'error' ? 'text-[--color-danger]' : 'text-[--color-success]'} w-5 ${asyncTaskStatus !== 'error' ? 'animate-spin' : ''}`}
+                        className={`${asyncTaskStatus === 'error' ? 'text-[--color-danger]' : 'text-[--color-font]'} w-5 ${asyncTaskStatus !== 'error' ? 'animate-spin' : ''}`}
                       />
                       {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
                     </Button>
@@ -978,43 +978,43 @@ const OrganizationRoute = () => {
                   </TooltipTrigger>
                 ) : (
                     <TooltipTrigger>
-                  <Button
-                    className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                    onPress={() => {
-                      !user && navigate('/auth/login');
-                      if (settings.proxyEnabled) {
-                        showSettingsModal({
-                          tab: 'proxy',
-                        });
-                      }
-                    }}
-                  >
-                    <Icon
-                      icon="circle"
-                      className={
-                        user
-                          ? status === 'online'
-                            ? 'text-[--color-success]'
-                            : 'text-[--color-danger]'
-                          : ''
-                      }
-                    />{' '}
-                    {user
-                      ? status.charAt(0).toUpperCase() + status.slice(1)
-                      : 'Log in to see your projects'}
-                    {status === 'online' && settings.proxyEnabled ? ' via proxy' : ''}
-                  </Button>
-                  <Tooltip
-                    placement="top"
-                    offset={8}
-                    className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                  >
-                    {user
-                      ? status === 'online' ? 'You have connectivity to the Internet' + (settings.proxyEnabled ? ' via the configured proxy' : '') + '.'
-                        : 'You are offline. Connect to sync your data.'
-                      : 'Log in to Insomnia to unlock the full product experience.'}
-                  </Tooltip>
-                </TooltipTrigger>
+                      <Button
+                        className="px-4 py-1 h-full flex items-center justify-center gap-1 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                        onPress={() => {
+                          !user && navigate('/auth/login');
+                          if (settings.proxyEnabled) {
+                            showSettingsModal({
+                              tab: 'proxy',
+                            });
+                          }
+                        }}
+                      >
+                        <Icon
+                          icon="circle"
+                          className={
+                            user
+                              ? status === 'online'
+                                ? 'text-[--color-success]'
+                                : 'text-[--color-danger]'
+                              : ''
+                          }
+                        />{' '}
+                        {user
+                          ? status.charAt(0).toUpperCase() + status.slice(1)
+                          : 'Log in to see your projects'}
+                        {status === 'online' && settings.proxyEnabled ? ' via proxy' : ''}
+                      </Button>
+                      <Tooltip
+                        placement="top"
+                        offset={8}
+                        className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                      >
+                        {user
+                          ? status === 'online' ? 'You have connectivity to the Internet' + (settings.proxyEnabled ? ' via the configured proxy' : '') + '.'
+                            : 'You are offline. Connect to sync your data.'
+                          : 'Log in to Insomnia to unlock the full product experience.'}
+                      </Tooltip>
+                    </TooltipTrigger>
                 )}
                 <span className='w-[1px] h-full bg-[--hl-sm]' />
                 <Link>
