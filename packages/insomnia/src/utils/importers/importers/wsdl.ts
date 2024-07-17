@@ -85,7 +85,7 @@ const convertWsdlToPostman = async (input: string) => {
   const wsdls = await getJsonForWSDL(input);
   const { services } = getWSDLServices(wsdls);
 
-  const items = services.map(({ service, filename }) => {
+  const items = services.map(({ service, filename }: { service: string; filename: string }) => {
     const wsdlEntry = findWSDLForServiceName(wsdls, service);
     return getSwaggerForService(wsdlEntry, service, filename);
   });

@@ -44,7 +44,7 @@ export interface Cookie {
 export interface Header extends Comment {
   name: 'Cookie' | 'Content-Type' | string;
   disabled?: boolean;
-  value: UNKNOWN;
+  value: any;
 }
 
 export interface QueryString extends Comment {
@@ -74,7 +74,7 @@ export interface ImportRequest<T extends {} = {}> extends Comment {
   parameters?: Parameter[];
   parentId?: string | null;
   postData?: Har.PostData;
-  variable?: UNKNOWN;
+  variable?: any;
   queryString?: QueryString[];
   url?: string;
   preRequestScript?: string;
