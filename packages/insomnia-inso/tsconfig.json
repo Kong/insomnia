@@ -14,6 +14,7 @@
         "../insomnia/send-request/electron",
       ],
     },
+    "jsx": "preserve",
     /* Transpiling Options */
     "module": "CommonJS",
     "sourceMap": true,
@@ -30,6 +31,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": false,
+ 
   },
   "include": [
     ".eslintrc.js",
@@ -37,6 +39,7 @@
     "jest.config.js",
     "package.json",
     "src",
+    "../insomnia/types",
   ],
   "exclude": [
     "**/*.test.ts",
