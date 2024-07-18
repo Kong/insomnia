@@ -43,7 +43,9 @@ testWithLegacyDatabase('Run data migration to version 8', async ({ page, userCon
   // Open migrated local migrated collection that should have Git Sync
   await page.getByLabel('Local Project (GIT)').click();
   await page.getByLabel('OpenAPI').click();
-  await page.getByText('Delete user').click();
+  await page.getByTestId('workspace-debug').click();
+
+  await page.getByText('Delete user').click({ force: true });
   await page.getByLabel('Git Sync').isVisible();
   await page.getByTestId('project').click();
 
