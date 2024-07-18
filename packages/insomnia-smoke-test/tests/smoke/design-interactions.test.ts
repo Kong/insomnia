@@ -30,7 +30,7 @@ test.describe('Design interactions', async () => {
 
     // Rename test suite
     await page.getByLabel('Request Collection').getByText('New Suite');
-    await page.getByRole('button', { name: 'New Suite' }).dblclick();
+    await page.locator('[data-editable=true]', { hasText: 'New Suite' }).dblclick();
     await page.getByRole('textbox').fill('New Suite 2');
     await page.getByRole('textbox').press('Enter');
 

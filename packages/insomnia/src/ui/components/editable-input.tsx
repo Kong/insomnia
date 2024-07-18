@@ -105,6 +105,7 @@ export const EditableInput = ({
             ${className || 'px-2'}
           `
         }
+        data-editable
         aria-label={ariaLabel}
       >
         <span className="truncate">{value}</span>

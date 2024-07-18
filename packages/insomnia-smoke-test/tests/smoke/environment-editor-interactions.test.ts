@@ -40,7 +40,7 @@ test.describe('Environment Editor', async () => {
     // Rename the environment
     await page.getByRole('button', { name: 'Manage Environments' }).click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
-    await page.getByRole('row', { name: 'ExampleB' }).getByRole('button', { name: 'name' }).dblclick();
+    await page.getByRole('row', { name: 'ExampleB' }).locator('[data-editable=true]').dblclick();
     await page.getByRole('row', { name: 'ExampleB' }).locator('input').fill('Gandalf');
     await page.getByRole('row', { name: 'ExampleB' }).locator('input').press('Enter');
 
