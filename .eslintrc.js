@@ -50,14 +50,7 @@ module.exports = {
     'jest/globals': true,
     node: true,
   },
-  overrides: [
-    {
-      files: ['*.js'],
-      rules: {
-        '@typescript-eslint/no-var-requires': OFF(UNKNOWN),
-      },
-    },
-  ],
+  overrides: [{ files: ['*.ts', '*.tsx', '*.js'], }],
   rules: {
     'array-bracket-spacing': ERROR,
     'brace-style': SUCCESSOR(TYPESCRIPT_EXTENSION),
@@ -137,6 +130,7 @@ module.exports = {
     '@typescript-eslint/space-infix-ops': ERROR,
     '@typescript-eslint/semi': [ERROR, 'always'],
     '@typescript-eslint/quotes': [ERROR, 'single', { avoidEscape: true }],
+    '@typescript-eslint/no-var-requires': OFF(UNKNOWN),
 
     'simple-import-sort/imports': ERROR,
     'filenames/match-exported': OFF(UNKNOWN),

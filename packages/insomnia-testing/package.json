@@ -15,7 +15,7 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "lint": "eslint . --ext .js,.ts,.tsx --cache",
+    "lint": "eslint . --cache",
     "test": "jest",
     "type-check": "tsc --noEmit --project tsconfig.json"
   },

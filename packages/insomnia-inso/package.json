@@ -20,7 +20,7 @@
     "inso": "bin/inso"
   },
   "scripts": {
-    "lint": "eslint . --ext .js,.ts,.tsx --cache",
+    "lint": "eslint . --cache",
     "test": "esr esbuild.ts && jest --testPathIgnorePatterns=cli.test.ts",
     "test:watch": "npm run test -- --watch",
     "test:bundle": "jest cli.test.ts -t \"inso dev bundle\"",
