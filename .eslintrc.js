@@ -9,20 +9,15 @@ const {
 
 /** @type { import('eslint').Linter.Config } */
 module.exports = {
+  root: true,
   settings: {
     react: {
       version: 'detect',
     },
   },
   parser: '@typescript-eslint/parser',
-  parserOptions: {
-    tsconfigRootDir: __dirname,
-    ecmaFeatures: {
-      jsx: true,
-    },
-  },
   extends: [
-    'plugin:@typescript-eslint/eslint-recommended',
+    'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
@@ -154,5 +149,12 @@ module.exports = {
       message: 'use the `window.main.openInBrowser` function instead.  see https://security.stackexchange.com/questions/225799/dangers-of-electrons-shell-openexternal-on-untrusted-content for more information.',
     }],
     'react/display-name': OFF(UNKNOWN),
+    'no-empty': [ERROR, { 'allowEmptyCatch': true }], // TODO: remove this
+    'no-extra-semi': OFF(UNKNOWN), // TODO: remove this
+    'no-useless-escape': OFF(UNKNOWN), // TODO: remove this
+    'no-constant-condition': OFF(UNKNOWN), // TODO: remove this
+    'no-extra-boolean-cast': OFF(UNKNOWN), // TODO: remove this
+    'no-inner-declarations': OFF(UNKNOWN), // TODO: remove this
+    'no-useless-catch': OFF(UNKNOWN), // TODO: remove this
   },
 };
