@@ -96,7 +96,7 @@ export const keyboardKeys: Record<string, { keyCode: number; label: string; code
   },
   delete: {
     keyCode: 46,
-    code: 'NumpadDecimal',
+    code: 'Delete',
     label: 'Delete',
   },
   num0: {
