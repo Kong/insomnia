@@ -1,148 +1,15 @@
-import { useResizeObserver } from '@react-aria/utils';
-import React, { type FC, Fragment, useCallback, useRef, useState } from 'react';
-import { FocusScope } from 'react-aria';
-import { Button, Dialog, DialogTrigger, DropIndicator, GridList, GridListItem, Menu, MenuItem, MenuTrigger, Popover, ToggleButton, Toolbar, useDragAndDrop } from 'react-aria-components';
+import React, { type FC, Fragment, useCallback } from 'react';
+import { Button, DropIndicator, ListBox, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, ToggleButton, Toolbar, useDragAndDrop } from 'react-aria-components';
 import { useListData } from 'react-stately';
-import { createKeybindingsHandler } from 'tinykeys';
 
 import { describeByteSize, generateId } from '../../../common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
 import { FileInputButton } from '../base/file-input-button';
 import { PromptButton } from '../base/prompt-button';
-import { OneLineEditor, type OneLineEditorHandle } from '../codemirror/one-line-editor';
+import { OneLineEditor } from '../codemirror/one-line-editor';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { CodePromptModal } from '../modals/code-prompt-modal';
-
-function isCodeMirrorAutocompleteActive() {
-  const codeMirrorAutocomplete = document.querySelector('.CodeMirror-hints');
-  const isFocusedElementInsideCodeMirrorAutoComplete = document.activeElement?.closest('.CodeMirror-hints');
-
-  return isFocusedElementInsideCodeMirrorAutoComplete && codeMirrorAutocomplete && document.body.contains(codeMirrorAutocomplete);
-}
-
-const EditableOneLineEditorModal = ({
-  id,
-  defaultValue,
-  placeholder,
-  readOnly,
-  getAutocompleteConstants,
-  onChange,
-}: {
-  id: string;
-  defaultValue: string;
-  placeholder?: string;
-  readOnly?: boolean;
-  getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
-  onChange: (value: string) => void;
-}) => {
-  const [value, setValue] = useState(defaultValue);
-  const [isOpen, setIsOpen] = useState(false);
-  const editorRef = useRef<OneLineEditorHandle>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  const [buttonDimensions, setButtonDimensions] = useState<{
-    width: number;
-    height: number;
-    left: number;
-  } | null>(null);
-
-  const onResize = useCallback(() => {
-    if (buttonRef.current) {
-      const { left, height, width } = buttonRef.current.getBoundingClientRect();
-
-      setButtonDimensions({ width, height, left });
-    }
-  }, [buttonRef]);
-
-  const onKeydown = useCallback((e: KeyboardEvent, value: string) => {
-    const handler = createKeybindingsHandler({
-      'Enter': e => {
-        e.preventDefault();
-        onChange(value);
-        setValue(value);
-        setIsOpen(false);
-      },
-    });
-
-    handler(e);
-  },
-    [onChange]);
-
-  useResizeObserver({
-    ref: buttonRef,
-    onResize: onResize,
-  });
-
-  const editorContainerRef = useRef<HTMLDivElement>(null);
-
-  return (
-    <DialogTrigger
-      isOpen={isOpen}
-      onOpenChange={(isOpen => {
-        setIsOpen(isOpen);
-        if (!isOpen) {
-          onChange(value);
-          setValue(value);
-        }
-      })}
-    >
-      <Button ref={buttonRef} className={`relative px-2 ${isOpen ? 'opacity-0' : ''}`}>
-        <OneLineEditor
-          id={id}
-          key={(isOpen ? 'open' : 'closed') + value}
-          placeholder={placeholder}
-          defaultValue={value}
-          readOnly
-          getAutocompleteConstants={getAutocompleteConstants}
-          onChange={() => { }}
-        />
-        <span className='absolute top-0 left-0 w-full h-full' />
-      </Button>
-      <Popover
-        isNonModal
-        offset={0}
-        placement='start top'
-        shouldCloseOnInteractOutside={() => {
-          if (isCodeMirrorAutocompleteActive()) {
-            return false;
-          }
-
-          return true;
-        }}
-        style={{
-          '--trigger-width': buttonDimensions?.width ? `${buttonDimensions.width}px` : '0',
-          '--trigger-height': buttonDimensions?.height ? `${buttonDimensions.height}px` : '0',
-          '--trigger-left': buttonDimensions?.left ? `${buttonDimensions.left}px` : '0',
-        } as React.CSSProperties}
-        className="transform text-[--color-font] px-2 !z-10 w-[--trigger-width] h-[--trigger-height] !left-[--trigger-left] flex relative overflow-y-auto focus:outline-none"
-      >
-        <Dialog className='w-full outline-none'>
-          <FocusScope autoFocus>
-            <div
-              ref={editorContainerRef}
-              className='w-full h-full'
-              onFocus={() => {
-                editorRef.current?.focusEnd();
-              }}
-            >
-              <OneLineEditor
-                id={id}
-                ref={editorRef}
-                placeholder={placeholder}
-                defaultValue={value}
-                readOnly={readOnly}
-                getAutocompleteConstants={getAutocompleteConstants}
-                onChange={setValue}
-                onKeyDown={onKeydown}
-              />
-            </div>
-          </FocusScope>
-        </Dialog>
-      </Popover>
-    </DialogTrigger>
-  );
-};
 
 interface Pair {
   id?: string;
@@ -236,7 +103,8 @@ export const KeyValueEditor: FC<Props> = ({
     getItems: keys =>
       [...keys].map(key => {
         const pair = pairsList.getItem(key);
-        return { 'text/plain': `${pair.id} | ${pair.name}: ${pair.value}` };
+        console.log('drag-pair', pair);
+        return { 'text/plain': `${pair.id}` };
       }),
     onReorder(e) {
       if (e.target.dropPosition === 'before') {
@@ -263,6 +131,89 @@ export const KeyValueEditor: FC<Props> = ({
 
         onChange(items);
       }
+    },
+    renderDragPreview(items) {
+      const pair = pairsList.getItem(items[0]['text/plain']);
+
+      console.log({ pair });
+      const element = document.querySelector(`[data-key="${pair.id}"]`);
+
+      const isFile = pair.type === 'file';
+      const isMultiline = pair.type === 'text' && pair.multiline;
+      const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+
+      let valueEditor = (
+        <div className="relative h-full w-full flex flex-1 px-2">
+          <OneLineEditor
+            id={'key-value-editor__value' + pair.id}
+            placeholder={valuePlaceholder || 'Value'}
+            defaultValue={pair.value}
+            readOnly
+            getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
+            onChange={() => { }}
+          />
+        </div>
+      );
+
+      if (isFile) {
+        valueEditor = (
+          <FileInputButton
+            showFileName
+            showFileIcon
+            disabled
+            className="px-2 py-1 w-full flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden"
+            path={pair.fileName || ''}
+            onChange={() => { }}
+          />
+        );
+      }
+
+      if (isMultiline) {
+        valueEditor = (
+          <Button
+            isDisabled
+            className="px-2 py-1 w-full flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden"
+          >
+            <i className="fa fa-pencil-square-o space-right" />
+            {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
+          </Button>
+        );
+      }
+
+      return (
+        <div
+          className="flex outline-none bg-[--color-bg] flex-shrink-0 h-[--line-height-sm] items-center gap-2 px-2"
+          style={{
+            width: element?.clientWidth,
+          }}
+        >
+          <div slot="drag" className="cursor-grab invisible p-2 w-5 flex focus-visible:bg-[--hl-sm] justify-center items-center flex-shrink-0">
+            <Icon icon="grip-vertical" className='w-2 text-[--hl]' />
+          </div>
+          <div className="relative h-full w-full flex flex-1 px-2">
+            <OneLineEditor
+              id={'key-value-editor__name' + pair.id}
+              placeholder={namePlaceholder || 'Name'}
+              defaultValue={pair.name}
+              readOnly
+              onChange={() => { }}
+            />
+          </div>
+          {valueEditor}
+          {showDescription && (
+            <div className="relative h-full w-full flex flex-1 px-2">
+              <OneLineEditor
+                id={'key-value-editor__description' + pair.id}
+                placeholder={descriptionPlaceholder || 'Description'}
+                defaultValue={pair.description || ''}
+                readOnly
+                onChange={() => { }}
+              />
+            </div>
+          )}
+          <div className="flex flex-shrink-0 items-center gap-2 w-[5.75rem]" />
+        </div>
+      );
     },
     renderDropIndicator(target) {
       return (
@@ -308,7 +259,7 @@ export const KeyValueEditor: FC<Props> = ({
         </ToggleButton>
       </Toolbar>
       {readOnlyPairsList.items.length > 0 && (
-        <GridList
+        <ListBox
           aria-label='Key-value pairs readonly'
           selectionMode='none'
           dependencies={[showDescription, nunjucksEnabled]}
@@ -359,10 +310,10 @@ export const KeyValueEditor: FC<Props> = ({
             }
 
             return (
-              <GridListItem textValue={pair.name + '-' + pair.value} className="flex outline-none bg-[--color-bg] flex-shrink-0 h-[--line-height-sm] items-center gap-2 px-2 data-[dragging]:opacity-50">
-                <Button slot="drag" className="cursor-grab invisible p-2 w-5 flex focus-visible:bg-[--hl-sm] justify-center items-center flex-shrink-0">
+              <ListBoxItem textValue={pair.name + '-' + pair.value} className="flex outline-none bg-[--color-bg] flex-shrink-0 h-[--line-height-sm] items-center gap-2 px-2">
+                <div slot="drag" className="cursor-grab invisible p-2 w-5 flex focus-visible:bg-[--hl-sm] justify-center items-center flex-shrink-0">
                   <Icon icon="grip-vertical" className='w-2 text-[--hl]' />
-                </Button>
+                </div>
                 <div className="relative h-full w-full flex flex-1 px-2">
                   <OneLineEditor
                     id={'key-value-editor__name' + pair.id}
@@ -385,16 +336,15 @@ export const KeyValueEditor: FC<Props> = ({
                   </div>
                 )}
                 <div className="flex flex-shrink-0 items-center gap-2 w-[5.75rem]" />
-              </GridListItem>
+              </ListBoxItem>
             );
           }}
-        </GridList>
+        </ListBox>
       )}
-      <GridList
+      <ListBox
         aria-label='Key-value pairs'
         selectionMode='none'
-        disabledBehavior='all'
-        dependencies={[showDescription, nunjucksEnabled]}
+        // dependencies={[showDescription, nunjucksEnabled]}
         className="flex pt-1 flex-col w-full overflow-y-auto flex-1 relative"
         dragAndDropHooks={dragAndDropHooks}
         items={items.map(pair => ({ ...pair, upsertPair, removePair }))}
@@ -405,11 +355,11 @@ export const KeyValueEditor: FC<Props> = ({
           const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
 
           let valueEditor = (
-            <EditableOneLineEditorModal
+            <OneLineEditor
               id={'key-value-editor__value' + pair.id}
               placeholder={valuePlaceholder || 'Value'}
               defaultValue={pair.value}
-              readOnly={isDisabled}
+              readOnly={pair.disabled || isDisabled}
               getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
               onChange={value => pair.upsertPair({ ...pair, value })}
             />
@@ -420,7 +370,7 @@ export const KeyValueEditor: FC<Props> = ({
               <FileInputButton
                 showFileName
                 showFileIcon
-                disabled={isDisabled}
+                disabled={pair.disabled || isDisabled}
                 className="px-2 py-1 w-full fle flex-shrink-0 flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden"
                 path={pair.fileName || ''}
                 onChange={fileName => pair.upsertPair({ ...pair, fileName })}
@@ -431,7 +381,7 @@ export const KeyValueEditor: FC<Props> = ({
           if (isMultiline) {
             valueEditor = (
               <Button
-                isDisabled={isDisabled}
+                isDisabled={pair.disabled || isDisabled}
                 className="px-2 py-1 w-full flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden"
                 onPress={() => showModal(CodePromptModal, {
                   submitName: 'Done',
@@ -458,25 +408,31 @@ export const KeyValueEditor: FC<Props> = ({
           }
 
           return (
-            <GridListItem id={pair.id} textValue={pair.name + '-' + pair.value} style={{ opacity: pair.disabled ? '0.4' : '1' }} className={`grid relative outline-none bg-[--color-bg] flex-shrink-0 h-[--line-height-sm] gap-2 px-2 data-[dragging]:opacity-50 ${showDescription ? '[grid-template-columns:max-content_1fr_1fr_1fr_max-content]' : '[grid-template-columns:max-content_1fr_1fr_max-content]'}`}>
-              <Button slot="drag" className="cursor-grab p-2 w-5 flex focus-visible:bg-[--hl-sm] justify-center items-center flex-shrink-0">
+            <ListBoxItem
+              id={pair.id}
+              key={pair.id}
+              textValue={pair.name + '-' + pair.value}
+              style={{ opacity: pair.disabled ? '0.4' : '1' }}
+              className={`grid relative outline-none bg-[--color-bg] flex-shrink-0 h-[--line-height-sm] gap-2 px-2 ${showDescription ? '[grid-template-columns:max-content_1fr_1fr_1fr_max-content]' : '[grid-template-columns:max-content_1fr_1fr_max-content]'}`}
+            >
+              <div slot="drag" className="cursor-grab p-2 w-5 flex focus-visible:bg-[--hl-sm] justify-center items-center flex-shrink-0">
                 <Icon icon="grip-vertical" className='w-2 text-[--hl]' />
-              </Button>
-              <EditableOneLineEditorModal
+              </div>
+              <OneLineEditor
                 id={'key-value-editor__name' + pair.id}
                 placeholder={namePlaceholder || 'Name'}
                 defaultValue={pair.name}
-                readOnly={isDisabled}
+                readOnly={pair.disabled || isDisabled}
                 getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
                 onChange={name => pair.upsertPair({ ...pair, name })}
               />
               {valueEditor}
               {showDescription && (
-                <EditableOneLineEditorModal
+                <OneLineEditor
                   id={'key-value-editor__description' + pair.id}
                   placeholder={descriptionPlaceholder || 'Description'}
                   defaultValue={pair.description || ''}
-                  readOnly={isDisabled}
+                  readOnly={pair.disabled || isDisabled}
                   onChange={description => pair.upsertPair({ ...pair, description })}
                 />
               )}
@@ -550,10 +506,10 @@ export const KeyValueEditor: FC<Props> = ({
                   <Icon icon="trash-can" />
                 </PromptButton>
               </Toolbar>
-            </GridListItem>
+            </ListBoxItem>
           );
         }}
-      </GridList>
+      </ListBox>
     </Fragment>
   );
 };
