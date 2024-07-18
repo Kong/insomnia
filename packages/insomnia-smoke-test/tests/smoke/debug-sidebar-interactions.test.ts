@@ -110,7 +110,8 @@ test.describe('Debug-Sidebar', async () => {
       await requestLocator.getByLabel('Request Actions').click();
       await page.getByRole('menuitemradio', { name: 'Rename' }).click();
 
-      await requestLocator.locator('[data-editable=true] >> input[type="text"]').fill('example http1');
+      await page.getByRole('textbox', { name: 'GET example http' }).fill('example http1');
+      await requestLocator.click();
       await page.getByLabel('Request Collection').getByRole('row', { name: 'example http1' }).click();
     });
 
