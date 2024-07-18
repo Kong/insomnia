@@ -32,8 +32,9 @@ testWithLegacyDatabase('Run data migration to version 8', async ({ page, userCon
 
   // Open migrated local migrated collection that should now have Insomnia Sync
   await page.getByLabel('Local Collection').click();
-  await page.getByLabel('Mars', { exact: true }).click();
-  await page.getByRole('option', { name: 'Mars' }).click();
+  await page.getByLabel('Manage Environments', { exact: true }).click();
+  await page.getByLabel('Select a Collection').getByRole('option', { name: 'Mars' }).click();
+  await page.getByTestId('underlay').click();
   await page.getByLabel('Insomnia Sync').isVisible();
   await page.getByText('Get list of rockets').click();
   await page.getByTestId('project').click();
