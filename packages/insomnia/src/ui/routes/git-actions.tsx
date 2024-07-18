@@ -521,7 +521,15 @@ export const cloneGitRepoAction: ActionFunction = async ({
     const existingWorkspace = await models.workspace.getById(workspace._id);
 
     if (existingWorkspace) {
-      return redirect(`/organization/${existingWorkspace.parentId}/project/${existingWorkspace.parentId}/workspace/${existingWorkspace._id}/debug`);
+      const project = await models.project.getById(existingWorkspace.parentId);
+      if (!project) {
+        return {
+          errors: ['It seems that the repository being cloned is connected to an orphaned workspace. Please move that workspace to a project and try again.'],
+        };
+      }
+
+      const organizationId = project?.parentId;
+      return redirect(`/organization/${organizationId}/project/${project._id}/workspace/${existingWorkspace._id}/debug`);
     }
 
     // Loop over all model folders in root
