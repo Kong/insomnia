@@ -608,7 +608,7 @@ export function mergeRequestBody(
     }
 
     try {
-        const textContent = updatedReqBody?.raw ? updatedReqBody?.raw :
+        const textContent = updatedReqBody?.raw !== undefined ? updatedReqBody?.raw :
             updatedReqBody?.graphql ? JSON.stringify(updatedReqBody?.graphql) : undefined;
 
         return {
@@ -636,11 +636,13 @@ export function mergeRequests(
         url: updatedReq.url.toString(),
         method: updatedReq.method,
         body: mergeRequestBody(updatedReq.body, originalReq.body),
-        headers: updatedReq.headers.map(
-            (header: Header) => ({
-                name: header.key,
-                value: header.value,
-            }),
+        headers: updatedReq.headers
+            .map(
+                (header: Header) => ({
+                    name: header.key,
+                    value: header.value,
+                    disabled: header.disabled,
+                }),
             {},
         ),
         authentication: fromPreRequestAuth(updatedReq.auth),
