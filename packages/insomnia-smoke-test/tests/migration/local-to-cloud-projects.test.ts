@@ -30,12 +30,13 @@ testWithLegacyDatabase('Run data migration to version 8', async ({ page, userCon
   // Open migrated Project (Local before migration)
   await page.getByLabel('Insomnia').click();
 
-  // Open migrated local migrated collection that should now have Insomnia Sync
+  // Open migrated local migrated collection that should have Git Sync
   await page.getByLabel('Local Collection').click();
-  await page.getByLabel('Manage Environments', { exact: true }).click();
-  await page.getByLabel('Select a Collection').getByRole('option', { name: 'Mars' }).click();
+  await page.getByRole('button', { name: 'Manage Environments' }).click();
+  await page.getByLabel('Select a Collection').getByRole('option', { name: 'Mars' }).press('Enter');
   await page.getByTestId('underlay').click();
-  await page.getByLabel('Insomnia Sync').isVisible();
+  // The collection is moved to a local project
+  await page.getByLabel('Git Sync').isVisible();
   await page.getByText('Get list of rockets').click();
   await page.getByTestId('project').click();
 
