@@ -566,6 +566,7 @@ const TestSuiteRoute = () => {
       )}
       {unitTests.length > 0 && (
         <ListBox
+          aria-label='Unit tests'
           dragAndDropHooks={unitTestsDragAndDrop.dragAndDropHooks}
           items={unitTests.map(unitTest => ({
             ...unitTest,

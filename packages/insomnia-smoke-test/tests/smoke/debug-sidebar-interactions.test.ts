@@ -109,8 +109,9 @@ test.describe('Debug-Sidebar', async () => {
       await requestLocator.click();
       await requestLocator.getByLabel('Request Actions').click();
       await page.getByRole('menuitemradio', { name: 'Rename' }).click();
-      await page.locator('text=Rename RequestName Rename >> input[type="text"]').fill('example http1');
-      await page.locator('div[role="dialog"] button:has-text("Rename")').click();
+
+      await page.getByRole('textbox', { name: 'GET example http' }).fill('example http1');
+      await requestLocator.click();
       await page.getByLabel('Request Collection').getByRole('row', { name: 'example http1' }).click();
     });
 

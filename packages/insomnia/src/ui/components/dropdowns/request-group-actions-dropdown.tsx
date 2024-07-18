@@ -12,7 +12,7 @@ import type { RequestGroup } from '../../../models/request-group';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
-import { type CreateRequestType, useRequestGroupPatcher } from '../../hooks/use-request';
+import type { CreateRequestType } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
@@ -24,10 +24,16 @@ import { PasteCurlModal } from '../modals/paste-curl-modal';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  onRename: () => void;
 }
 
 export const RequestGroupActionsDropdown = ({
   requestGroup,
+  isOpen,
+  onOpenChange,
+  onRename,
 }: Props) => {
   const {
     activeProject,
@@ -71,18 +77,6 @@ export const RequestGroupActionsDropdown = ({
             encType: 'application/json',
           });
       },
-    });
-  };
-
-  const patchGroup = useRequestGroupPatcher();
-  const handleRename = () => {
-    showPrompt({
-      title: 'Rename Folder',
-      defaultValue: requestGroup.name,
-      submitName: 'Rename',
-      selectText: true,
-      label: 'Name',
-      onComplete: name => patchGroup(requestGroup._id, { name }),
     });
   };
 
@@ -252,8 +246,7 @@ export const RequestGroupActionsDropdown = ({
             id: 'Rename',
             name: 'Rename',
             icon: 'edit',
-            action: () =>
-              handleRename(),
+            action: onRename,
           },
           {
             id: 'Settings',
@@ -289,7 +282,13 @@ export const RequestGroupActionsDropdown = ({
 
   return (
     <Fragment>
-      <MenuTrigger onOpenChange={isOpen => isOpen && onOpen()}>
+      <MenuTrigger
+        isOpen={isOpen}
+        onOpenChange={isOpen => {
+          isOpen && onOpen();
+          onOpenChange(isOpen);
+        }}
+      >
         <Button
           data-testid={`Dropdown-${toKebabCase(requestGroup.name)}`}
           aria-label="Request Group Actions"

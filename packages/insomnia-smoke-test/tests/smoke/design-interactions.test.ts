@@ -29,8 +29,7 @@ test.describe('Design interactions', async () => {
     await page.click('text=New test suite');
 
     // Rename test suite
-    await page.getByLabel('Request Collection').getByText('New Suite');
-    await page.getByRole('button', { name: 'New Suite' }).dblclick();
+    await page.getByRole('heading', { name: 'New Suite' }).locator('span').dblclick();
     await page.getByRole('textbox').fill('New Suite 2');
     await page.getByRole('textbox').press('Enter');
 
@@ -38,12 +37,10 @@ test.describe('Design interactions', async () => {
     await page.getByLabel('New test').click();
 
     // Rename test
-    await page.getByRole('button', { name: 'Returns 200', exact: true }).dblclick();
-    // TODO(filipe) - Something is wrong here. It should be a single dblclick
-    await page.getByRole('button', { name: 'Returns 200', exact: true }).dblclick();
-    await page.getByRole('textbox').fill('Returns 200 and works');
-    await page.getByRole('textbox').press('Enter');
-    await page.getByRole('heading', { name: 'Returns 200 and works' }).click();
+    await page.getByLabel('Unit tests').getByRole('heading', { name: 'Returns' }).locator('div').dblclick();
+    await page.getByLabel('Unit tests').getByRole('textbox').fill('Returns 200 and works');
+    await page.getByLabel('Unit tests').getByRole('textbox').press('Enter');
+    await page.getByLabel('Unit tests').getByText('Returns 200 and works').click();
     // Use autocomplete inside the test code
     // TODO(filipe) - add this in another PR
   });
