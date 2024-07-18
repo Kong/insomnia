@@ -5,6 +5,7 @@ import * as commander from 'commander';
 import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consola';
 import { cosmiconfig } from 'cosmiconfig';
 import fs from 'fs';
+import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
 import { generate, runTestsCli } from 'insomnia-testing';
 import { parseArgsStringToArgv } from 'string-argv';
 
@@ -267,8 +268,6 @@ export const go = (args?: string[]) => {
       }
 
       try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Load lazily when needed, otherwise this require slows down the entire CLI.
-        const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
         const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation });
         // Generate test file
         const testFileContents = generate(suites.map(suite => ({
@@ -367,8 +366,6 @@ export const go = (args?: string[]) => {
       }
 
       try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Load lazily when needed, otherwise this require slows down the entire CLI.
-        const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
         const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation });
         let success = true;
         for (const req of requests) {

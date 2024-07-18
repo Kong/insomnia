@@ -4,9 +4,9 @@ import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import { GraphQLSchema } from 'graphql';
 
-import { HandleGetRenderContext, HandleRender } from './common/render';
-import { Settings } from './models/settings';
-import { NunjucksParsedTag } from './templating/utils';
+import { HandleGetRenderContext, HandleRender } from '../src/common/render';
+import { Settings } from '../src/models/settings';
+import { NunjucksParsedTag } from '../src/templating/utils';
 
 type LinkClickCallback = (url: string) => void;
 
@@ -24,8 +24,8 @@ interface InsomniaExtensions {
 declare module 'codemirror' {
   type CodeMirrorLinkClickCallback = LinkClickCallback;
 
-  interface Editor extends InsomniaExtensions {}
-  interface EditorFromTextEditor extends InsomniaExtensions {}
+  interface Editor extends InsomniaExtensions { }
+  interface EditorFromTextEditor extends InsomniaExtensions { }
   interface TextMarker {
     // This flag is being used internally by codemirror and the fold extension
     __isFold: boolean;

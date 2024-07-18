@@ -3,11 +3,6 @@ import type ReactDOM from 'react-dom';
 
 import { getAppPlatform, getAppVersion } from '../../common/constants';
 import type { RenderPurpose } from '../../common/render';
-import {
-  RENDER_PURPOSE_GENERAL,
-  RENDER_PURPOSE_NO_RENDER,
-  RENDER_PURPOSE_SEND,
-} from '../../common/render';
 import { HtmlElementWrapper } from '../../ui/components/html-element-wrapper';
 import { showAlert, showModal, showPrompt } from '../../ui/components/modals';
 import type { PromptModalOptions } from '../../ui/components/modals/prompt-modal';
@@ -66,13 +61,13 @@ export interface PrivateProperties {
   } | {}>;
 }
 
-export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
+export function init(renderPurpose: RenderPurpose = 'general'): {
   app: AppContext;
   __private: PrivateProperties;
 } {
   const canShowDialogs =
-    renderPurpose === RENDER_PURPOSE_SEND ||
-    renderPurpose === RENDER_PURPOSE_NO_RENDER;
+    renderPurpose === 'send' ||
+    renderPurpose === 'no-render';
   return {
     app: {
       alert(title: string, message?: string) {
@@ -92,8 +87,8 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
         options = {},
       ) {
         if (
-          renderPurpose !== RENDER_PURPOSE_SEND &&
-          renderPurpose !== RENDER_PURPOSE_NO_RENDER
+          renderPurpose !== 'send' &&
+          renderPurpose !== 'no-render'
         ) {
           return;
         }

@@ -16,7 +16,6 @@ import { useLocalStorage } from 'react-use';
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
-import { RENDER_PURPOSE_SEND } from '../../../../common/render';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
 import type { Request } from '../../../../models/request';
@@ -112,7 +111,7 @@ const fetchGraphQLSchemaForRequest = async ({
       responseId,
     } = await fetchRequestData(introspectionRequest._id);
 
-    const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
+    const renderResult = await tryToInterpolateRequest(request, environment._id, 'send');
     const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
     const res = await sendCurlAndWriteTimeline(
       renderedRequest,

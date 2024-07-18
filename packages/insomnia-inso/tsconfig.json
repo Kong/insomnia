@@ -9,6 +9,13 @@
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "isolatedModules": true,
+    "paths": {
+      "electron": [
+        "../insomnia/send-request/electron",
+      ],
+    },
+    /* remove this  once react AlertModal is out of the plugins code path */
+    "jsx": "react",
     /* Transpiling Options */
     "module": "CommonJS",
     "sourceMap": true,
@@ -25,6 +32,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": false,
+ 
   },
   "include": [
     ".eslintrc.js",
@@ -32,6 +40,7 @@
     "jest.config.js",
     "package.json",
     "src",
+    "../insomnia/types",
   ],
   "exclude": [
     "**/*.test.ts",
