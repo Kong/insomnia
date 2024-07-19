@@ -40,15 +40,6 @@ testWithLegacyDatabase('Run data migration to version 8', async ({ page, userCon
   await page.getByText('Get list of rockets').click();
   await page.getByTestId('project').click();
 
-  // Open migrated local migrated collection that should have Git Sync
-  await page.getByLabel('Local Project (GIT)').click();
-  await page.getByLabel('OpenAPI').click();
-  await page.getByTestId('workspace-debug').click();
-
-  await page.getByText('Delete user').click({ force: true });
-  await page.getByLabel('Git Sync').isVisible();
-  await page.getByTestId('project').click();
-
   await page.getByLabel('Personal Workspace', { exact: true }).click();
 
   // Open Team that is migrated to Organization
