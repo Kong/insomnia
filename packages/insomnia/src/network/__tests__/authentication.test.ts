@@ -4,6 +4,7 @@ import { AUTH_API_KEY, AUTH_OAUTH_1 } from '../../common/constants';
 import {
   _buildBearerHeader,
   getAuthHeader,
+  getAuthObjectOrNull,
   getAuthQueryParams,
 } from '../authentication';
 
@@ -204,5 +205,42 @@ describe('API Key', () => {
         'value': 'test',
       });
     });
+  });
+});
+
+describe('getAuthObjectOrNull', () => {
+  it('returns null if authentication is null', async () => {
+    const expected = await getAuthObjectOrNull(null);
+    expect(expected).toBeNull();
+  });
+  it('returns null if authentication is undefined', async () => {
+    const expected = await getAuthObjectOrNull(undefined);
+    expect(expected).toBeNull();
+  });
+  it('returns null if authentication is empty object', async () => {
+    const expected = await getAuthObjectOrNull({});
+    expect(expected).toBeNull();
+  });
+  it('returns null if authentication has no type', async () => {
+    const authentication = {
+      username: 'jack',
+    };
+    const expected = await getAuthObjectOrNull(authentication);
+    expect(expected).toBeNull();
+  });
+  it('returns auth object if authentication has none type', async () => {
+    const authentication = {
+      type: 'none',
+    };
+    const expected = await getAuthObjectOrNull(authentication);
+    expect(expected).toBe(expected);
+  });
+  it('returns auth object if authentication has basic type', async () => {
+    const authentication = {
+      username: 'jack',
+      type: 'basic',
+    };
+    const expected = await getAuthObjectOrNull(authentication);
+    expect(expected).toBe(expected);
   });
 });

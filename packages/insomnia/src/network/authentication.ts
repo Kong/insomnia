@@ -190,5 +190,5 @@ export const _buildBearerHeader = (accessToken: string, prefix?: string) => {
   return header;
 };
 export const isAuthEnabled = (auth?: RequestAuthentication | {}) => (auth && 'disabled' in auth) ? auth.disabled !== true : true;
-export const getAuthObjectOrNull = (auth?: RequestAuthentication | {}): RequestAuthentication | null =>
-  (auth === undefined || Object.keys(auth).length === 0 || !('type' in auth)) ? null : auth;
+export const getAuthObjectOrNull = (auth?: RequestAuthentication | {} | null): RequestAuthentication | null =>
+  (!auth || Object.keys(auth).length === 0 || !('type' in auth)) ? null : auth;
