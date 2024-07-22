@@ -1,0 +1,50 @@
+_type: export
+__export_format: 4
+__export_date: 2024-02-13T07:27:17.322Z
+__export_source: insomnia.desktop.app:v8.6.1
+resources:
+  - _id: wrk_6b9b8455fd784462ae19cd51d7156f86
+    parentId: null
+    modified: 1707808692801
+    created: 1707808692801
+    name: Pre-request Scripts
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: env_9e44ac71d3a51fc6a8951b8968e45c44c5236355
+    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
+    modified: 1720533288414
+    created: 1720533288414
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1720533288414
+  - _id: req_bd8b1eb53418482585b70d0a9616a8cc
+    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
+    modified: 1707809216530
+    created: 1707809085329
+    url: https://api.insomnia.rest
+    name: Fetch from remote
+    description: ""
+    method: GET
+    body: {}
+    preRequestScript: |-
+      const res = await fetch('https://api.insomnia.rest');
+      console.log(res)
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/8.6.1
+    authentication: {}
+    metaSortKey: -1707809028549
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
