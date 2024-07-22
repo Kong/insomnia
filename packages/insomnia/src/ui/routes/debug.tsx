@@ -1012,7 +1012,6 @@ export const Debug: FC = () => {
                 key={sortOrder}
                 dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
                 onAction={key => {
-                  console.log(key);
                   const id = key.toString();
                   if (isRequestGroupId(id)) {
                     const item = collection.find(i => i.doc._id === id);
@@ -1101,17 +1100,7 @@ export const Debug: FC = () => {
         </div>
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
-      <Panel
-        onFocus={() => {
-          requestId && expandAllForRequestFetcher.submit({
-            requestId,
-          }, {
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/expand-all-for-request`,
-            method: 'POST',
-            encType: 'application/json',
-          });
-        }}
-      >
+      <Panel>
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" className='pane-one theme--pane'>
             {workspaceId ? (
@@ -1211,6 +1200,10 @@ const CollectionGridListItem = ({
 
   const name = patchFetcher?.json && typeof patchFetcher.json === 'object' && 'name' in patchFetcher.json && typeof patchFetcher.json.name === 'string' ? patchFetcher.json.name : item.doc.name;
 
+  const params = useParams() as { requestId?: string; requestGroupId?: string };
+
+  const isSelected = item.doc._id === params.requestId || item.doc._id === params.requestGroupId;
+
   return (
     <GridListItem
       id={item.doc._id}
@@ -1225,12 +1218,13 @@ const CollectionGridListItem = ({
           setIsContextMenuOpen(true);
         }}
         onDoubleClick={() => setIsEditable(true)}
-        className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+        data-selected={isSelected}
+        className="flex select-none outline-none data-[selected=true]:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
         style={{
           paddingLeft: `${item.level + 1}rem`,
         }}
       >
-        <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+        <span data-selected={isSelected} className="data-[selected=true]:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
         <Button slot="drag" className="hidden" />
         {isRequest(item.doc) && (
           <span

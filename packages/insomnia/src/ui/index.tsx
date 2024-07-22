@@ -1019,10 +1019,6 @@ async function renderApp() {
                                 path: 'toggle-expand-all',
                                 action: async (...args) => (await import('./routes/actions')).toggleExpandAllRequestGroupsAction(...args),
                               },
-                              {
-                                path: 'expand-all-for-request',
-                                action: async (...args) => (await import('./routes/actions')).expandAllForRequest(...args),
-                              },
                             ],
                           },
                           {
