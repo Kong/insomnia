@@ -21,6 +21,7 @@ resources:
     color: null
     isPrivate: false
     metaSortKey: 1720533288414
+    _type: environment
   - _id: req_bd8b1eb53418482585b70d0a9616a8cc
     parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
     modified: 1707809216530

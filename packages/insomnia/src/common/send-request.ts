@@ -90,7 +90,8 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     } = await fetchInsoRequestData(requestId);
     // NOTE: inso ignores active environment, using the one passed in
     const renderResult = await tryToInterpolateRequest(request, environmentId, 'send');
-    const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+    // skip plugins
+    const renderedRequest = renderResult.request;
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
       clientCertificates,
@@ -99,10 +100,10 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       timelinePath,
       responseId,
     );
-    const res = await responseTransform(response, environmentId, renderedRequest, renderResult.context);
-    const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
+
+    const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = response;
     const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
-    const bodyBuffer = await getBodyBuffer(res) as Buffer;
+    const bodyBuffer = await getBodyBuffer(response) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
     return { status, statusMessage, data, headers, responseTime };
 
