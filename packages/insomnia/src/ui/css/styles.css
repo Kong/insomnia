@@ -13,6 +13,10 @@
 @tailwind utilities;
 
 
+[data-platform="darwin"] * {
+  scrollbar-width: thin;
+}
+
 html {
   font-size: 11px;
 }
