@@ -70,7 +70,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
 
       if (oAuth2Token) {
         const token = oAuth2Token.accessToken;
-        return _buildBearerHeader(token, authentication.tokenPrefix);
+        return _buildBearerHeader(token, authentication.tokenPrefix, authentication.headerName);
       }
       return;
     } catch (err) {
@@ -171,13 +171,13 @@ export function getAuthQueryParams(authentication: RequestAuthentication) {
   return;
 }
 
-export const _buildBearerHeader = (accessToken: string, prefix?: string) => {
+export const _buildBearerHeader = (accessToken: string, prefix?: string, headerName?: string) => {
   if (!accessToken) {
     return;
   }
 
   const header = {
-    name: 'Authorization',
+    name: `${headerName || 'Authorization'}`,
     value: '',
   };
 

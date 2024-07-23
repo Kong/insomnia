@@ -81,6 +81,7 @@ export interface AuthTypeOAuth2 {
   pkceMethod?: string;
   responseType?: OAuth2ResponseType;
   origin?: string;
+  headerName?: string;
 }
 export interface AuthTypeHawk {
   type: typeof AUTH_HAWK;

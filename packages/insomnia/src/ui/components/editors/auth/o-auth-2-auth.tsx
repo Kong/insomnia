@@ -109,6 +109,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: typeof
   const username = <AuthInputRow label='Username' property='username' key='username' />;
   const password = <AuthInputRow label='Password' property='password' key='password' mask />;
   const tokenPrefix = <AuthInputRow label='Header Prefix' property='tokenPrefix' key='tokenPrefix' help='Change Authorization header prefix from "Bearer" to something else. Use "NO_PREFIX" to send raw token without prefix.' />;
+  const headerName = <AuthInputRow label='Header Name' property='headerName' key='headerName' help='Change the name of the authorization header from "Authorization" to something else.' />;
   const responseType = <AuthSelectRow
     label='Response Type'
     property='responseType'
@@ -145,6 +146,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: typeof
     resource,
     origin,
     credentialsInBody,
+    headerName,
   };
 };
 
@@ -167,6 +169,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
     resource,
     origin,
     credentialsInBody,
+    headerName,
   } = getFields(authentication);
 
   const { grantType } = authentication;
@@ -190,6 +193,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
       state,
       credentialsInBody,
       tokenPrefix,
+      headerName,
       audience,
       resource,
       origin,
@@ -205,6 +209,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
       scope,
       credentialsInBody,
       tokenPrefix,
+      headerName,
       audience,
       resource,
     ];
@@ -221,6 +226,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
       scope,
       credentialsInBody,
       tokenPrefix,
+      headerName,
       audience,
     ];
   } else if (grantType === GRANT_TYPE_IMPLICIT) {
@@ -235,6 +241,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
       scope,
       state,
       tokenPrefix,
+      headerName,
       audience,
     ];
   }
