@@ -144,104 +144,106 @@ export const ResponsePane: FC<Props> = ({
   const timeline = models.response.getTimeline(activeResponse);
   const cookieHeaders = getSetCookieHeaders(activeResponse.headers);
   return (
-    <Pane type="response">
-      {!activeResponse ? null : (
-        <PaneHeader className="row-spaced">
-          <div aria-atomic="true" aria-live="polite" className="no-wrap scrollable scrollable--no-bars pad-left">
-            <StatusTag statusCode={activeResponse.statusCode} statusMessage={activeResponse.statusMessage} />
-            <TimeTag milliseconds={activeResponse.elapsedTime} steps={steps} />
-            <SizeTag bytesRead={activeResponse.bytesRead} bytesContent={activeResponse.bytesContent} />
-          </div>
-          <ResponseHistoryDropdown
-            activeResponse={activeResponse}
-          />
-        </PaneHeader>
-      )}
-      <Tabs aria-label="Response pane tabs">
-        <TabItem
-          key="preview"
-          title={
-            <PreviewModeDropdown
-              download={handleDownloadResponseBody}
-              copyToClipboard={handleCopyResponseToClipboard}
-            />
-          }
-        >
-          <ResponseViewer
-            key={activeResponse._id}
-            bytes={Math.max(activeResponse.bytesContent, activeResponse.bytesRead)}
-            contentType={activeResponse.contentType || ''}
-            disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
-            disablePreviewLinks={settings.disableResponsePreviewLinks}
-            download={handleDownloadResponseBody}
-            editorFontSize={settings.editorFontSize}
-            error={activeResponse.error}
-            filter={filter}
-            filterHistory={filterHistory}
-            getBody={handleGetResponseBody}
-            previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
-            responseId={activeResponse._id}
-            updateFilter={activeResponse.error ? undefined : handleSetFilter}
-            url={activeResponse.url}
-          />
-        </TabItem>
-        <TabItem
-          key="headers"
-          title={
-            <div className='flex items-center gap-2'>
-              Headers
-              {activeResponse.headers.length > 0 && (
-                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{activeResponse.headers.length}</span>
-              )}
-            </div>
-          }
-        >
-          <PanelContainer className="pad">
-            <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
-              <ResponseHeadersViewer headers={activeResponse.headers} />
-            </ErrorBoundary>
-          </PanelContainer>
-        </TabItem>
-        <TabItem
-          key="cookies"
-          title={
-            <div className='flex items-center gap-2'>
-              Cookies
-              {cookieHeaders.length > 0 && (
-                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{cookieHeaders.length}</span>
-              )}
-            </div>
-          }
-        >
-          <PanelContainer className="pad">
-            <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
-              <ResponseCookiesViewer
-                cookiesSent={activeResponse.settingSendCookies}
-                cookiesStored={activeResponse.settingStoreCookies}
-                headers={cookieHeaders}
-              />
-            </ErrorBoundary>
-          </PanelContainer>
-        </TabItem>
-        <TabItem key="timeline" title="Timeline">
-          <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
-            <ResponseTimelineViewer
-              key={activeResponse._id}
-              timeline={timeline}
-            />
-          </ErrorBoundary>
-        </TabItem>
-        <TabItem key="mock-response" title="Mock Response">
-          <MockResponseExtractor />
-        </TabItem>
-      </Tabs>
-      <ErrorBoundary errorClassName="font-error pad text-center">
-        {isExecuting && <ResponseTimer
-          handleCancel={() => cancelRequestById(activeRequest._id)}
-          activeRequestId={activeRequestId}
-          steps={steps}
-        />}
-      </ErrorBoundary>
-    </Pane>
+    <p>Olá Mundo</p>
+    // <Pane type="response">
+    //   {!activeResponse ? null : (
+    //     <PaneHeader className="row-spaced">
+    //       <div aria-atomic="true" aria-live="polite" className="no-wrap scrollable scrollable--no-bars pad-left">
+    //         <StatusTag statusCode={activeResponse.statusCode} statusMessage={activeResponse.statusMessage} />
+    //         <TimeTag milliseconds={activeResponse.elapsedTime} steps={steps} />
+    //         <SizeTag bytesRead={activeResponse.bytesRead} bytesContent={activeResponse.bytesContent} />
+    //       </div>
+    //       <ResponseHistoryDropdown
+    //         activeResponse={activeResponse}
+    //       />
+    //     </PaneHeader>
+    //   )}
+    //   <Tabs aria-label="Response pane tabs">
+    //     <TabItem
+    //       key="preview"
+    //       title={
+    //         <PreviewModeDropdown
+    //           download={handleDownloadResponseBody}
+    //           copyToClipboard={handleCopyResponseToClipboard}
+    //         />
+    //       }
+    //     >
+    //       <p>Olá</p>
+    //       {/* <ResponseViewer
+    //         key={activeResponse._id}
+    //         bytes={Math.max(activeResponse.bytesContent, activeResponse.bytesRead)}
+    //         contentType={activeResponse.contentType || ''}
+    //         disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
+    //         disablePreviewLinks={settings.disableResponsePreviewLinks}
+    //         download={handleDownloadResponseBody}
+    //         editorFontSize={settings.editorFontSize}
+    //         error={activeResponse.error}
+    //         filter={filter}
+    //         filterHistory={filterHistory}
+    //         getBody={handleGetResponseBody}
+    //         previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
+    //         responseId={activeResponse._id}
+    //         updateFilter={activeResponse.error ? undefined : handleSetFilter}
+    //         url={activeResponse.url}
+    //       /> */}
+    //     </TabItem>
+    //     <TabItem
+    //       key="headers"
+    //       title={
+    //         <div className='flex items-center gap-2'>
+    //           Headers
+    //           {activeResponse.headers.length > 0 && (
+    //             <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{activeResponse.headers.length}</span>
+    //           )}
+    //         </div>
+    //       }
+    //     >
+    //       <PanelContainer className="pad">
+    //         <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
+    //           <ResponseHeadersViewer headers={activeResponse.headers} />
+    //         </ErrorBoundary>
+    //       </PanelContainer>
+    //     </TabItem>
+    //     <TabItem
+    //       key="cookies"
+    //       title={
+    //         <div className='flex items-center gap-2'>
+    //           Cookies
+    //           {cookieHeaders.length > 0 && (
+    //             <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{cookieHeaders.length}</span>
+    //           )}
+    //         </div>
+    //       }
+    //     >
+    //       <PanelContainer className="pad">
+    //         <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
+    //           <ResponseCookiesViewer
+    //             cookiesSent={activeResponse.settingSendCookies}
+    //             cookiesStored={activeResponse.settingStoreCookies}
+    //             headers={cookieHeaders}
+    //           />
+    //         </ErrorBoundary>
+    //       </PanelContainer>
+    //     </TabItem>
+    //     <TabItem key="timeline" title="Timeline">
+    //       <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
+    //         <ResponseTimelineViewer
+    //           key={activeResponse._id}
+    //           timeline={timeline}
+    //         />
+    //       </ErrorBoundary>
+    //     </TabItem>
+    //     <TabItem key="mock-response" title="Mock Response">
+    //       <MockResponseExtractor />
+    //     </TabItem>
+    //   </Tabs>
+    //   <ErrorBoundary errorClassName="font-error pad text-center">
+    //     {isExecuting && <ResponseTimer
+    //       handleCancel={() => cancelRequestById(activeRequest._id)}
+    //       activeRequestId={activeRequestId}
+    //       steps={steps}
+    //     />}
+    //   </ErrorBoundary>
+    // </Pane>
   );
 };
