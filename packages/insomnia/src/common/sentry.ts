@@ -14,6 +14,8 @@ export const SENTRY_OPTIONS: Partial<ClientOptions> = {
 export const enum SentryMetrics {
   APP_START_DURATION = 'app_start_duration',
   MAIN_PROCESS_START_DURATION = 'main_process_start_duration',
+  ORGANIZATION_SWITCH_DURATION = 'organization_switch_duration',
+  PROJECT_SWITCH_DURATION = 'project_switch_duration',
 };
 
 export const enum LandingPage {
