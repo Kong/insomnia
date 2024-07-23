@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from 'react-aria-components';
 import { type ActionFunction, redirect, useFetcher, useNavigate } from 'react-router-dom';
 
+import { LandingPage } from '../../common/sentry';
 import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { Icon } from '../components/icon';
@@ -57,6 +58,10 @@ const Login = () => {
       method: 'POST',
     });
   };
+
+  useEffect(() => {
+    window.main.landingPageRendered(LandingPage.Login);
+  }, []);
 
   return (
     <div

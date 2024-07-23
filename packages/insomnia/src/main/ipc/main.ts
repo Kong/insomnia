@@ -2,7 +2,7 @@ import * as Sentry from '@sentry/electron/main';
 import { app, BrowserWindow, type IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
-import { LandingPage, SentryMetrics } from '../../common/sentry';
+import { APP_START_TIME, LandingPage, SentryMetrics } from '../../common/sentry';
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
 import * as models from '../../models';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
@@ -15,8 +15,6 @@ import { addExecutionStep, completeExecutionStep, getExecution, startExecution, 
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { ipcMainHandle, ipcMainOn, ipcMainOnce, type RendererOnChannels } from './electron';
 import type { gRPCBridgeAPI } from './grpc';
-
-const APP_START_TIME = performance.now();
 
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;

@@ -43,6 +43,7 @@ import {
 import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '../../common/constants';
 import { type ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId, isNotNullOrUndefined } from '../../common/misc';
+import { LandingPage } from '../../common/sentry';
 import type { PlatformKeyCombinations } from '../../common/settings';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
@@ -64,6 +65,7 @@ import {
   isWebSocketRequestId,
   type WebSocketRequest,
 } from '../../models/websocket-request';
+import { isScratchpad } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
 import { DropdownHint } from '../components/base/dropdown/dropdown-hint';
 import { RequestActionsDropdown } from '../components/dropdowns/request-actions-dropdown';
@@ -721,6 +723,13 @@ export const Debug: FC = () => {
       };
     }
   }, [settings.forceVerticalLayout, direction]);
+
+  useEffect(() => {
+    if (isScratchpad(activeWorkspace)) {
+      window.main.landingPageRendered(LandingPage.Scratchpad);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>

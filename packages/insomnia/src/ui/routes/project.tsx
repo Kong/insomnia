@@ -990,7 +990,10 @@ const ProjectRoute: FC = () => {
   const showStorageRestrictionMessage = storage !== 'cloud_plus_local';
 
 
-  window.main.landingPageRendered(LandingPage.Project);
+  useEffect(() => {
+    window.main.landingPageRendered(LandingPage.Project);
+  }, []);
+
   return (
     <ErrorBoundary>
       <Fragment>
