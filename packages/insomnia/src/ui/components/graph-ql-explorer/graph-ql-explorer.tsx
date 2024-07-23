@@ -1,6 +1,6 @@
-import { SchemaReference } from 'codemirror-graphql/utils/SchemaReference';
-import { GraphQLEnumType, GraphQLField, GraphQLNamedType, GraphQLSchema, GraphQLType, isNamedType } from 'graphql';
-import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { type SchemaReference } from 'codemirror-graphql/utils/SchemaReference';
+import { GraphQLEnumType, type GraphQLField, type GraphQLNamedType, GraphQLSchema, type GraphQLType, isNamedType } from 'graphql';
+import React, { type FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { GraphQLExplorerEnum } from './graph-ql-explorer-enum';
@@ -8,7 +8,7 @@ import { GraphQLExplorerField } from './graph-ql-explorer-field';
 import { GraphQLExplorerSchema } from './graph-ql-explorer-schema';
 import { GraphQLExplorerSearchResults } from './graph-ql-explorer-search-results';
 import { GraphQLExplorerType } from './graph-ql-explorer-type';
-import { ActiveReference, GraphQLFieldWithParentName } from './graph-ql-types';
+import type { ActiveReference, GraphQLFieldWithParentName } from './graph-ql-types';
 
 function getReferenceInfo(reference: SchemaReference) {
   let field: GraphQLField<any, any, { [key: string]: any }> | undefined;

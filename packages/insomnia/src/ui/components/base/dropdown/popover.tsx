@@ -1,6 +1,6 @@
-import React, { FC, ReactNode, useRef } from 'react';
-import { AriaPopoverProps, DismissButton, Overlay, useOverlayTrigger, usePopover } from 'react-aria';
-import { OverlayTriggerState } from 'react-stately';
+import React, { type FC, type ReactNode, useRef } from 'react';
+import { type AriaPopoverProps, DismissButton, Overlay, useOverlayTrigger, usePopover } from 'react-aria';
+import type { OverlayTriggerState } from 'react-stately';
 
 interface Props extends Omit<AriaPopoverProps, 'popoverRef' | 'maxHeight'> {
   children: ReactNode;

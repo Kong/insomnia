@@ -1,6 +1,6 @@
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
-import { DASHBOARD_SORT_ORDERS, DashboardSortOrder, dashboardSortOrderName } from '../../../common/constants';
+import { DASHBOARD_SORT_ORDERS, type DashboardSortOrder, dashboardSortOrderName } from '../../../common/constants';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 
 interface DashboardSortDropdownProps {

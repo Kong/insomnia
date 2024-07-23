@@ -1,4 +1,4 @@
-import React, { ReactNode, Suspense } from 'react';
+import React, { type ReactNode, Suspense } from 'react';
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 
 const getNameInitials = (name?: string) => {

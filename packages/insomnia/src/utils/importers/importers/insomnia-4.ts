@@ -1,7 +1,7 @@
 import YAML from 'yaml';
 
-import { Converter } from '../entities';
-import { Insomnia3Data } from './insomnia-3';
+import type { Converter } from '../entities';
+import type { Insomnia3Data } from './insomnia-3';
 
 export const id = 'insomnia-4';
 export const name = 'Insomnia v4';

@@ -1,4 +1,3 @@
-import { RENDER_PURPOSE_SEND } from '../common/render';
 import { stats } from '../models';
 import { getBodyBuffer } from '../models/response';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from './network';
@@ -16,7 +15,7 @@ export function getSendRequestCallback() {
       timelinePath,
       responseId,
     } = await fetchRequestData(requestId);
-    const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
+    const renderResult = await tryToInterpolateRequest(request, environment._id, 'send');
     const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
     // TODO: remove this temporary hack to support GraphQL variables in the request body properly

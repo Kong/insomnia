@@ -2,41 +2,40 @@ import { describe, expect, it } from '@jest/globals';
 import { exec, ExecException } from 'child_process';
 import path from 'path';
 
-// dev experience
-// goals: it should be quick and run in  ci and should be easy to debug
-// ideas: create a second test.yml easier to reason about the state of node-libcurl it can parallel
-
-// issues: no immeidate feedback as the test is running
-//               run the test, do you need to know about the libcurl thing or should i be automated?
-
-// should be each to copy and run in local js debug terminal
-// and also print which one fails when running all tests
-// TODO: move all fixtures to the same folder, and name valid or invalid or whatever
 const shouldReturnSuccessCode = [
+  // help
   '$PWD/packages/insomnia-inso/bin/inso -h',
-  // identifier filepath
+
+  // lint spec
+  // as identifer filepath
   '$PWD/packages/insomnia-inso/bin/inso lint spec packages/insomnia-inso/src/commands/fixtures/openapi-spec.yaml',
-  // identifier filepath with spectral.yaml
+  // as identifier filepath with spectral.yaml
   '$PWD/packages/insomnia-inso/bin/inso lint spec packages/insomnia-inso/src/commands/fixtures/with-ruleset/path-plugin.yaml',
+  // as working directory and identifier filename
   '$PWD/packages/insomnia-inso/bin/inso lint spec -w packages/insomnia-inso/src/commands/fixtures/with-ruleset path-plugin.yaml',
-  // lint from db
+  // as working directory containing nedb
   '$PWD/packages/insomnia-inso/bin/inso lint spec -w packages/insomnia-inso/src/db/fixtures/nedb spc_46c5a4',
   '$PWD/packages/insomnia-inso/bin/inso lint spec -w packages/insomnia-inso/src/db/fixtures/git-repo spc_46c5a4',
   '$PWD/packages/insomnia-inso/bin/inso lint spec -w packages/insomnia-inso/src/db/fixtures/insomnia-v4/insomnia_v4.yaml spc_3b2850',
-  // export from db
+  // export spec nedb, git-repo, export file
   '$PWD/packages/insomnia-inso/bin/inso export spec -w packages/insomnia-inso/src/db/fixtures/nedb spc_46c5a4',
   '$PWD/packages/insomnia-inso/bin/inso export spec -w packages/insomnia-inso/src/db/fixtures/git-repo spc_46c5a4',
   '$PWD/packages/insomnia-inso/bin/inso export spec -w packages/insomnia-inso/src/db/fixtures/insomnia-v4/insomnia_v4.yaml spc_3b2850',
-  // test from db
+
+  // run test
+  // nedb, gitrepo, export file
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/nedb -e env_env_ca046a uts_fe901c',
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/nedb -e env_env_ca046a --reporter min uts_fe901c',
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/git-repo -e env_env_ca046a uts_fe901c',
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/insomnia-v4/insomnia_v4.yaml -e env_env_0e4670 spc_3b2850',
+  // export file,request can inherit auth headers and variables from folder
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/examples/folder-inheritance-document.yml spc_a8144e --verbose',
-  // workspace - request from db
-  // '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/insomnia-v4/insomnia_v4.yaml -e env_env_0e4670 --requestNamePattern "Example 1" wrk_8ee1e0',
-  // TODO: request group - request from db, add simple export file pointing at local server
-  // TODO: add bail option
+
+  // run collection
+  // export file
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-smoke-test/fixtures/simple.yaml -e env_2eecf85b7f wrk_0702a5',
+  // with regex filter
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-smoke-test/fixtures/simple.yaml -e env_2eecf85b7f --requestNamePattern "example http" wrk_0702a5',
 ];
 
 const shouldReturnErrorCode = [

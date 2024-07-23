@@ -4,7 +4,7 @@
 //
 // The major modifications are marked in comments starting with "CHANGED ---"
 import CodeMirror from 'codemirror';
-import { JSHINT, type LintError, LintOptions } from 'jshint';
+import { JSHINT, type LintError, type LintOptions } from 'jshint';
 CodeMirror.registerHelper('lint', 'javascript', validator);
 
 interface ValidationError {

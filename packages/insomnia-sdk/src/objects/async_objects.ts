@@ -16,7 +16,7 @@ export class ProxiedPromise<T> extends Promise<T> {
         }
     }
 
-    static all(promises: Promise<any>[]) {
+    static override all(promises: Promise<any>[]) {
         const promise = super.all(promises);
         if (monitoring) {
             scriptPromises.push(promise);
@@ -24,7 +24,7 @@ export class ProxiedPromise<T> extends Promise<T> {
         return promise;
     }
 
-    static allSettled(promises: Promise<any>[]) {
+    static override allSettled(promises: Promise<any>[]) {
         // promise will be counted in Promise.resolve
         return super.allSettled(promises);
     }
@@ -35,7 +35,7 @@ export class ProxiedPromise<T> extends Promise<T> {
         return super.reject("'super.any' not supported");
     }
 
-    static race(promises: Promise<any>[]) {
+    static override race(promises: Promise<any>[]) {
         const promise = super.race(promises);
         if (monitoring) {
             scriptPromises.push(promise);
@@ -43,7 +43,7 @@ export class ProxiedPromise<T> extends Promise<T> {
         return promise;
     }
 
-    static reject(value: any) {
+    static override reject(value: any) {
         const promise = super.reject(value);
         if (monitoring) {
             scriptPromises.push(promise);
@@ -51,7 +51,7 @@ export class ProxiedPromise<T> extends Promise<T> {
         return promise;
     }
 
-    static resolve<T>(value?: T | PromiseLike<T>) {
+    static override resolve<T>(value?: T | PromiseLike<T>) {
         const promise = super.resolve(value);
         if (monitoring) {
             scriptPromises.push(promise);

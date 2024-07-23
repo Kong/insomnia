@@ -10,7 +10,7 @@ import {
   AUTH_OAUTH_2,
 } from '../common/constants';
 import type { RenderedRequest } from '../common/render';
-import { AuthTypeOAuth2, RequestAuthentication, RequestParameter } from '../models/request';
+import type { AuthTypeOAuth2, RequestAuthentication, RequestParameter } from '../models/request';
 import { COOKIE, HEADER, QUERY_PARAMS } from './api-key/constants';
 import { getBasicAuthHeader } from './basic-auth/get-header';
 import { getBearerAuthHeader } from './bearer-auth/get-header';
@@ -190,5 +190,5 @@ export const _buildBearerHeader = (accessToken: string, prefix?: string) => {
   return header;
 };
 export const isAuthEnabled = (auth?: RequestAuthentication | {}) => (auth && 'disabled' in auth) ? auth.disabled !== true : true;
-export const getAuthObjectOrNull = (auth?: RequestAuthentication | {}): RequestAuthentication | null =>
-  (auth === undefined || Object.keys(auth).length === 0 || !('type' in auth)) ? null : auth;
+export const getAuthObjectOrNull = (auth?: RequestAuthentication | {} | null): RequestAuthentication | null =>
+  (!auth || Object.keys(auth).length === 0 || !('type' in auth)) ? null : auth;

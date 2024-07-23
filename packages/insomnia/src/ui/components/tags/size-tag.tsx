@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { FC, memo } from 'react';
+import React, { type FC, memo } from 'react';
 
 import * as misc from '../../../common/misc';
 import { Tooltip } from '../tooltip';

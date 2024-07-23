@@ -1,5 +1,5 @@
-import { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { FC } from 'react';
+import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import React, { type FC } from 'react';
 import { Button, Collection, Header, ListBox, ListBoxItem, Popover, Section, Select, SelectValue } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 
@@ -17,11 +17,11 @@ import {
   getContentTypeName,
   METHOD_POST,
 } from '../../../common/constants';
-import { Request, RequestBody, RequestHeader, RequestParameter } from '../../../models/request';
+import type { Request, RequestBody, RequestHeader, RequestParameter } from '../../../models/request';
 import { deconstructQueryStringToParams } from '../../../utils/url/querystring';
 import { SegmentEvent } from '../../analytics';
 import { useRequestPatcher } from '../../hooks/use-request';
-import { RequestLoaderData } from '../../routes/request';
+import type { RequestLoaderData } from '../../routes/request';
 import { Icon } from '../icon';
 import { showAlert } from '../modals/index';
 

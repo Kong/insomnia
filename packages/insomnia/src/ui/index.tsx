@@ -9,7 +9,7 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 
-import { migrateFromLocalStorage, SessionData, setSessionData } from '../account/session';
+import { migrateFromLocalStorage, type SessionData, setSessionData } from '../account/session';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
@@ -176,7 +176,7 @@ async function renderApp() {
                 action: async (...args) => (await import('./routes/organization')).syncOrganizationsAction(...args),
               },
               {
-                path: 'syncOrgsAndProjectsAction',
+                path: 'sync-orgs-and-projects',
                 action: async (...args) => (await import('./routes/organization')).syncOrgsAndProjectsAction(...args),
               },
               {
@@ -195,6 +195,20 @@ async function renderApp() {
                         await import('./routes/organization')
                       ).organizationPermissionsLoader(...args),
                     shouldRevalidate: data => data.currentParams.organizationId !== data.nextParams.organizationId,
+                  },
+                  {
+                    path: 'storage-rule',
+                    loader: async (...args) =>
+                      (
+                        await import('./routes/organization')
+                      ).organizationStorageLoader(...args),
+                  },
+                  {
+                    path: 'sync-storage-rule',
+                    action: async (...args) =>
+                      (
+                        await import('./routes/organization')
+                      ).syncOrganizationStorageRuleAction(...args),
                   },
                   {
                     path: 'sync-projects',
@@ -1004,10 +1018,6 @@ async function renderApp() {
                               {
                                 path: 'toggle-expand-all',
                                 action: async (...args) => (await import('./routes/actions')).toggleExpandAllRequestGroupsAction(...args),
-                              },
-                              {
-                                path: 'expand-all-for-request',
-                                action: async (...args) => (await import('./routes/actions')).expandAllForRequest(...args),
                               },
                             ],
                           },

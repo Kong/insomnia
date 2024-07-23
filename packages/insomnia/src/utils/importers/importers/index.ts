@@ -1,4 +1,4 @@
-import { Importer } from '../entities';
+import type { Importer } from '../entities';
 import * as curl from './curl';
 import * as har from './har';
 import * as insomnia1 from './insomnia-1';

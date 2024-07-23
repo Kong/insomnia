@@ -7,25 +7,25 @@ import {
 import { Code, ConnectError, createPromiseClient } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-node';
 import {
-  Call,
-  ClientDuplexStream,
-  ClientReadableStream,
+  type Call,
+  type ClientDuplexStream,
+  type ClientReadableStream,
   credentials,
   makeGenericClientConstructor,
   Metadata,
-  ServiceError,
+  type ServiceError,
   status,
-  StatusObject,
+  type StatusObject,
 } from '@grpc/grpc-js';
-import * as protoLoader from '@grpc/proto-loader';
-import {
+import type {
   AnyDefinition,
   EnumTypeDefinition,
   MessageTypeDefinition,
   PackageDefinition,
   ServiceDefinition,
 } from '@grpc/proto-loader';
-import electron, { IpcMainEvent } from 'electron';
+import * as protoLoader from '@grpc/proto-loader';
+import electron, { type IpcMainEvent } from 'electron';
 import * as grpcReflection from 'grpc-reflection-js';
 
 import { version } from '../../../package.json';

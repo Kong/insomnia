@@ -1,5 +1,5 @@
 import type { OAuth2ResponseType, RequestAuthentication } from 'insomnia/src/models/request';
-import { OAuth1SignatureMethod } from 'insomnia/src/network/o-auth-1/constants';
+import type { OAuth1SignatureMethod } from 'insomnia/src/network/o-auth-1/constants';
 
 import { Property } from './properties';
 import { Variable, VariableList } from './variables';
@@ -293,7 +293,7 @@ export class RequestAuth extends Property {
         return this.authOptions.get(this.type);
     }
 
-    toJSON() {
+    override toJSON() {
         const obj: AuthOptions = { type: this.type };
         const authOption = this.authOptions.get(this.type);
         if (!authOption) {
@@ -311,7 +311,7 @@ export class RequestAuth extends Property {
         const currentType = type ? type : this.type;
         const authOpts = rawOptionsToVariables(options, currentType);
 
-        if (authOpts.length > 0) {
+        if (authOpts.length > 0 && authOpts[0]) {
             this.type = currentType;
             this.authOptions.set(currentType, authOpts[0]);
         } else {
@@ -325,7 +325,7 @@ export class RequestAuth extends Property {
         }
 
         const authOpts = rawOptionsToVariables(options, type);
-        if (authOpts.length > 0) {
+        if (authOpts.length > 0 && authOpts[0]) {
             this.type = type;
             this.authOptions.set(type, authOpts[0]);
         } else {

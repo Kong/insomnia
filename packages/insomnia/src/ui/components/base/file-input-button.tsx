@@ -1,5 +1,5 @@
 import { basename as pathBasename } from 'path';
-import React, { HTMLAttributes, useCallback } from 'react';
+import React, { type HTMLAttributes, useCallback } from 'react';
 
 import { selectFileOrFolder } from '../../../common/select-file-or-folder';
 

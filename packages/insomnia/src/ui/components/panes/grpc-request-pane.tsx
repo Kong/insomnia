@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useRef, useState } from 'react';
+import React, { type FunctionComponent, useRef, useState } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useMount } from 'react-use';
 import styled from 'styled-components';
@@ -6,20 +6,20 @@ import styled from 'styled-components';
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { documentationLinks } from '../../../common/documentation';
 import { generateId } from '../../../common/misc';
-import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '../../../common/render';
-import { GrpcMethodType } from '../../../main/ipc/grpc';
+import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage } from '../../../common/render';
+import type { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
 import type { GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import { GrpcRequestState } from '../../routes/debug';
-import { GrpcRequestLoaderData } from '../../routes/request';
-import { WorkspaceLoaderData } from '../../routes/workspace';
+import type { GrpcRequestState } from '../../routes/debug';
+import type { GrpcRequestLoaderData } from '../../routes/request';
+import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
-import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
+import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
 import { ErrorBoundary } from '../error-boundary';
@@ -105,7 +105,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
         const request = await getRenderedGrpcRequest({
           request: activeRequest,
           environment: environmentId,
-          purpose: RENDER_PURPOSE_SEND,
+          purpose: 'send',
           skipBody: canClientStream(methodType),
         });
         window.main.grpc.start({ request });
@@ -252,7 +252,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                           const requestBody = await getRenderedGrpcRequestMessage({
                             request: activeRequest,
                             environment: environmentId,
-                            purpose: RENDER_PURPOSE_SEND,
+                            purpose: 'send',
                           });
                           const preparedMessage = {
                             body: requestBody,

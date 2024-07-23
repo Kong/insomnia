@@ -1,4 +1,4 @@
-import React, { FC, Fragment } from 'react';
+import React, { type FC, Fragment } from 'react';
 
 import { CodeEditor } from '../../codemirror/code-editor';
 

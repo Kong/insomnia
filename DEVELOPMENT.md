@@ -23,6 +23,33 @@ Insomnia uses [`npm workspaces`](https://docs.npmjs.com/cli/v9/using-npm/workspa
 
 - `/packages` contains related packages that are consumed by `insomnia` or externally.
 
+Insomnia Inso CLI is built using a series of steps
+
+1. `insomnia-inso` uses monorepo references to import `insomnia` and `insomnia-testing` to expose  `getSendRequestCallbackMemDb` and `generate`, `runTests`, `runTestsCli` respectively
+1. `packages/insomnia-inso/dist/index.js` is transpiled with esbuild to commonjs
+1. `packages/insomnia-inso/bin/inso` is shell script which points at `packages/insomnia-inso/dist/index.js` and is used for local development
+1. `packages/insomnia-inso/binaries/inso` is an executable made with `pkg`
+
+`getSendRequestCallbackMemDb` exposes some behaviour from the insomnia renderer.
+
+- database: to fetch needed models
+- nunjucks templates: to interpolate the fields containing tags
+- node-libcurl: to send the request
+- fs: to persist responses
+- plugins: potentially needed by the community, unclear if the implementation works
+
+Problems
+
+- inso bundles almost the entire renderer, react components included, meaning that although we are intending to use this code in node we are bundling it using rules intended for browsers and stubs electron.
+- node-libcurl present bundling issues because it needs to re-download a different version from npm each time you want to work on either insomnia or inso.
+- nunjucks codepaths haven't been touched in a long time, they need some love in order to be able to understand how to make them composable.
+
+Unexplored ideas in this area.
+
+- create a database package with nunjucks templating and have both insomnia and inso use it with project references, use node-libcurl directly, that way we don't need to stub electorn and only import the code we use.
+- use an adapter pattern in inso to replace node-libcurl with fetch in order to avoid the bundling issues NaN modules present.
+- remove plugin support from inso and reimplement later with a fixed and supported API.
+
 ## The `insomnia` Main Package
 
 `/packages/insomnia` is the entry point for the app. All other packages are imported from this one.
@@ -81,14 +108,15 @@ This is just a brief summary of Insomnia's current technical debt.
 - [x] styling vision (react-aria + tailwind)
 - [ ] de-polymorph database
 - [ ] codemirror is unmaintained
-- [ ] nedb is unmaintained
+- [x] nedb is unmaintained
 - [ ] grpc state state should be in main rather than renderer
-- [ ] drag and drop is flakey
+- [x] drag and drop is flakey
 - [ ] sync code is spaghetti
 - [ ] template rendering is spaghetti and has poor discoverability
 - [ ] inso abstraction limits networking improvements
 - [ ] testing feature doesn't scale with investment
 - [ ] unify curl.ts and libcurl-promise implementations
+- [x] send-request
 
 ## Electron upgrade
 
@@ -99,5 +127,4 @@ bump the following node and electron versions
 - `.npmrc`
 - `.nvmrc`
 - `packages/insomnia/package.json` electron and node-libcurl
-- `packages/insomnia-send-request/package.json` node-libcurl
 - `shell.nix`

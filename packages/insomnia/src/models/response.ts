@@ -2,7 +2,7 @@ import fs from 'fs';
 import { Readable } from 'stream';
 import zlib from 'zlib';
 
-import { database as db, Query } from '../common/database';
+import { database as db, type Query } from '../common/database';
 import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as requestOperations from '../models/helpers/request-operations';
 import type { BaseModel } from './index';

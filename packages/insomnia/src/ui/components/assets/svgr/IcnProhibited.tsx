@@ -1,4 +1,4 @@
-import React, { SVGProps, memo } from 'react';
+import React, { memo, type SVGProps } from 'react';
 export const SvgIcnProhibited = memo<SVGProps<SVGSVGElement>>(props => (
   <svg
     width="1em"

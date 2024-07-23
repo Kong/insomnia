@@ -5,8 +5,8 @@ import Mocha, { type Reporter, type ReporterConstructor } from 'mocha';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
-import { TestResults } from './entities';
-import { Insomnia, InsomniaOptions } from './insomnia';
+import type { TestResults } from './entities';
+import { Insomnia, type InsomniaOptions } from './insomnia';
 import { JavaScriptReporter } from './javascript-reporter';
 
 // declare var insomnia: Insomnia;

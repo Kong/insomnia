@@ -1,7 +1,7 @@
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { useToggle } from 'react-use';
 
-import { SettingsOfType } from '../../../common/settings';
+import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
 import { HelpTooltip } from '../help-tooltip';

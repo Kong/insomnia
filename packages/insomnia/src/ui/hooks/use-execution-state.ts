@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { TimingStep } from '../../main/network/request-timing';
+import type { TimingStep } from '../../main/network/request-timing';
 
 export function useExecutionState({ requestId }: { requestId?: string }) {
   const [steps, setSteps] = useState<TimingStep[]>([]);

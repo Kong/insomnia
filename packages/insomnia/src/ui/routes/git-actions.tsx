@@ -1,18 +1,18 @@
 import { fromUrl } from 'hosted-git-info';
 import { Errors } from 'isomorphic-git';
 import path from 'path';
-import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
 import YAML from 'yaml';
 
 import { ACTIVITY_SPEC } from '../../common/constants';
 import { database } from '../../common/database';
 import * as models from '../../models';
 import { isApiSpec } from '../../models/api-spec';
-import { GitRepository } from '../../models/git-repository';
+import type { GitRepository } from '../../models/git-repository';
 import { createGitRepository } from '../../models/helpers/git-repository-operations';
 import {
   isWorkspace,
-  Workspace,
+  type Workspace,
   WorkspaceScopeKeys,
 } from '../../models/workspace';
 import { fsClient } from '../../sync/git/fs-client';
@@ -22,7 +22,7 @@ import GitVCS, {
   GIT_INSOMNIA_DIR,
   GIT_INSOMNIA_DIR_NAME,
   GIT_INTERNAL_DIR,
-  GitLogEntry,
+  type GitLogEntry,
 } from '../../sync/git/git-vcs';
 import { MemClient } from '../../sync/git/mem-client';
 import { NeDBClient } from '../../sync/git/ne-db-client';
@@ -521,7 +521,15 @@ export const cloneGitRepoAction: ActionFunction = async ({
     const existingWorkspace = await models.workspace.getById(workspace._id);
 
     if (existingWorkspace) {
-      return redirect(`/organization/${existingWorkspace.parentId}/project/${existingWorkspace.parentId}/workspace/${existingWorkspace._id}/debug`);
+      const project = await models.project.getById(existingWorkspace.parentId);
+      if (!project) {
+        return {
+          errors: ['It seems that the repository being cloned is connected to an orphaned workspace. Please move that workspace to a project and try again.'],
+        };
+      }
+
+      const organizationId = project?.parentId;
+      return redirect(`/organization/${organizationId}/project/${project._id}/workspace/${existingWorkspace._id}/debug`);
     }
 
     // Loop over all model folders in root

@@ -1,5 +1,5 @@
-import { Converter, ImportRequest } from '../entities';
-import { Insomnia1Data } from './insomnia-1';
+import type { Converter, ImportRequest } from '../entities';
+import type { Insomnia1Data } from './insomnia-1';
 
 export const id = 'insomnia-2';
 export const name = 'Insomnia v2';

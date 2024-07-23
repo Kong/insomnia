@@ -1,4 +1,4 @@
-import { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useCallback, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Section } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
@@ -6,19 +6,20 @@ import { useFetcher, useParams } from 'react-router-dom';
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
-import { PlatformKeyCombinations } from '../../../common/settings';
+import type { PlatformKeyCombinations } from '../../../common/settings';
 import type { Environment } from '../../../models/environment';
-import { GrpcRequest } from '../../../models/grpc-request';
-import { Project } from '../../../models/project';
-import { isRequest, Request } from '../../../models/request';
+import type { GrpcRequest } from '../../../models/grpc-request';
+import type { Project } from '../../../models/project';
+import { isRequest, type Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import { incrementDeletedRequests } from '../../../models/stats';
 // Plugin action related imports
-import { WebSocketRequest } from '../../../models/websocket-request';
+// Plugin action related imports
+import type { WebSocketRequest } from '../../../models/websocket-request';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
-import { useRequestMetaPatcher, useRequestPatcher } from '../../hooks/use-request';
+import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
@@ -34,6 +35,9 @@ interface Props {
   isPinned: Boolean;
   request: Request | GrpcRequest | WebSocketRequest;
   requestGroup?: RequestGroup;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  onRename: () => void;
 }
 
 export const RequestActionsDropdown = ({
@@ -41,12 +45,14 @@ export const RequestActionsDropdown = ({
   activeProject,
   isPinned,
   request,
+  isOpen,
+  onOpenChange,
+  onRename,
 }: Props) => {
   const {
     settings,
   } = useRootLoaderData();
   const patchRequestMeta = useRequestMetaPatcher();
-  const patchRequest = useRequestPatcher();
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const requestFetcher = useFetcher();
@@ -120,17 +126,6 @@ export const RequestActionsDropdown = ({
         message: err instanceof Error ? err.message : 'Unknown error',
       });
     }
-  };
-
-  const handleRename = () => {
-    showPrompt({
-      title: 'Rename Request',
-      defaultValue: request.name,
-      submitName: 'Rename',
-      selectText: true,
-      label: 'Name',
-      onComplete: name => patchRequest(request._id, { name }),
-    });
   };
 
   const togglePin = () => {
@@ -228,7 +223,7 @@ export const RequestActionsDropdown = ({
           {
             id: 'Rename',
             name: 'Rename',
-            action: handleRename,
+            action: onRename,
             icon: 'edit',
           },
           {
@@ -267,7 +262,13 @@ export const RequestActionsDropdown = ({
 
   return (
     <Fragment>
-      <MenuTrigger onOpenChange={isOpen => isOpen && onOpen()}>
+      <MenuTrigger
+        isOpen={isOpen}
+        onOpenChange={isOpen => {
+          isOpen && onOpen();
+          onOpenChange(isOpen);
+        }}
+      >
         <Button
           data-testid={`Dropdown-${toKebabCase(request.name)}`}
           aria-label="Request Actions"

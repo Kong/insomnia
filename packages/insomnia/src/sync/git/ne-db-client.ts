@@ -1,10 +1,10 @@
-import { PromiseFsClient } from 'isomorphic-git';
+import type { PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
 import YAML from 'yaml';
 
 import { database as db } from '../../common/database';
+import type { BaseModel } from '../../models';
 import * as models from '../../models';
-import { BaseModel } from '../../models';
 import { isWorkspace } from '../../models/workspace';
 import { resetKeys } from '../ignore-keys';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';

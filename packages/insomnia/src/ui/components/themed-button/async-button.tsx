@@ -1,4 +1,4 @@
-import React, { MouseEvent, ReactNode, useCallback, useState } from 'react';
+import React, { type MouseEvent, type ReactNode, useCallback, useState } from 'react';
 
 import type { ButtonProps } from './button';
 import { Button } from './button';

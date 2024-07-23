@@ -3,8 +3,8 @@ import { Button, Dialog, Heading, Input, Label, Link, Modal, ModalOverlay, Radio
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { invariant } from '../../../utils/invariant';
-import { OrganizationLoaderData } from '../../routes/organization';
-import { ProjectIdLoaderData } from '../../routes/project';
+import type { OrganizationLoaderData } from '../../routes/organization';
+import type { ProjectIdLoaderData } from '../../routes/project';
 import { Icon } from '../icon';
 import { showModal } from '.';
 import { AlertModal } from './alert-modal';
@@ -153,19 +153,21 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                     To learn more about self hosting. <Link href="https://docs.insomnia.rest/insomnia/api-mocking" className='underline'>Click here</Link>
                   </span>
                 </div>
-                <TextField
-                  name="mockServerUrl"
-                  className={`group relative flex-1 flex flex-col gap-2 ${serverType === 'cloud' ? 'disabled' : ''}`}
-                >
-                  <Label className='text-sm text-[--hl]'>
-                    Self-hosted mock server URL
-                  </Label>
-                  <Input
-                    disabled={serverType === 'cloud'}
-                    placeholder={serverType === 'cloud' ? '' : 'https://example.com'}
-                    className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
-                  />
-                </TextField>
+                {!isSelfHostedDisabled && (
+                  <TextField
+                    name="mockServerUrl"
+                    className={`group relative flex-1 flex flex-col gap-2 ${serverType === 'cloud' ? 'disabled' : ''}`}
+                  >
+                    <Label className='text-sm text-[--hl]'>
+                      Self-hosted mock server URL
+                    </Label>
+                    <Input
+                      disabled={serverType === 'cloud'}
+                      placeholder={serverType === 'cloud' ? '' : 'https://example.com'}
+                      className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                    />
+                  </TextField>
+                )}
                 <div className="flex justify-end gap-2 items-center">
                   <div className='flex items-center gap-2'>
                     <Button

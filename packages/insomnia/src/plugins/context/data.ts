@@ -22,7 +22,7 @@ const getWorkspaces = (activeProjectId?: string) => {
   }
 };
 
-// Only in the case of running unit tests from Inso via send-request can activeProjectId be undefined. This is because the concept of a project doesn't exist in git/insomnia sync or an export file
+// Only in the case of running unit tests from Inso can activeProjectId be undefined. This is because the concept of a project doesn't exist in git/insomnia sync or an export file
 export const init = (activeProjectId?: string) => ({
   data: {
     import: {

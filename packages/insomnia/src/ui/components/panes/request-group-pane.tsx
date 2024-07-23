@@ -1,14 +1,15 @@
-import React, { FC, useRef, useState } from 'react';
+import React, { type FC, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { Settings } from '../../../models/settings';
+import type { Settings } from '../../../models/settings';
+import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import { RequestGroupLoaderData } from '../../routes/request-group';
-import { WorkspaceLoaderData } from '../../routes/workspace';
+import type { RequestGroupLoaderData } from '../../routes/request-group';
+import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
-import { EnvironmentEditor, EnvironmentEditorHandle } from '../editors/environment-editor';
+import { EnvironmentEditor, type EnvironmentEditorHandle } from '../editors/environment-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestScriptEditor } from '../editors/request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
@@ -45,6 +46,9 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
     }
   };
 
+  const requestGroupAuth = getAuthObjectOrNull(activeRequestGroup.authentication);
+  const isNoneOrInherited = requestGroupAuth?.type === 'none' || requestGroupAuth === null;
+
   return (
     <>
       <Tabs aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
@@ -53,7 +57,12 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
             className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
             id='auth'
           >
-            Auth
+            <span>Auth</span>
+            {!isNoneOrInherited && (
+              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
+                <span className='w-2 h-2 bg-green-500 rounded-full' />
+              </span>
+            )}
           </Tab>
           <Tab
             className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'

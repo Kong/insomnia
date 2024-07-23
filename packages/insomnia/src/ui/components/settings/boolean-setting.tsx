@@ -1,7 +1,7 @@
-import React, { FC, ReactNode } from 'react';
+import React, { type FC, type ReactNode } from 'react';
 import styled from 'styled-components';
 
-import { SettingsOfType } from '../../../common/settings';
+import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
 import { HelpTooltip } from '../help-tooltip';

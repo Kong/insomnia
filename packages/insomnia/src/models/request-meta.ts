@@ -1,4 +1,4 @@
-import { PREVIEW_MODE_FRIENDLY, PreviewMode } from '../common/constants';
+import { PREVIEW_MODE_FRIENDLY, type PreviewMode } from '../common/constants';
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 

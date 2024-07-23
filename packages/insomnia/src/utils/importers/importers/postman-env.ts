@@ -1,4 +1,4 @@
-import { Converter } from '../entities';
+import type { Converter } from '../entities';
 
 export const id = 'postman-environment';
 export const name = 'Postman Environment';

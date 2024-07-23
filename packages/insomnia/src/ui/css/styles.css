@@ -12,7 +12,8 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
+
+[data-platform="darwin"] * {
   scrollbar-width: thin;
 }
 

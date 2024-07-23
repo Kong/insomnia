@@ -1,10 +1,10 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
-import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
+import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models/index';
 import type { Response } from '../../../models/response';
 import { ResponseTimelineViewer } from '../../components/viewers/response-timeline-viewer';
-import { Modal, type ModalHandle, ModalProps } from '../base/modal';
+import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 

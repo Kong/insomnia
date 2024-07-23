@@ -1,8 +1,8 @@
-import { Node } from '@react-types/shared';
+import type { Node } from '@react-types/shared';
 import React from 'react';
 import { useRef } from 'react';
 import { useMenuItem } from 'react-aria';
-import { TreeState } from 'react-stately';
+import type { TreeState } from 'react-stately';
 import styled from 'styled-components';
 
 interface StyledListItemProps {

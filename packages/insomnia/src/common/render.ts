@@ -5,11 +5,11 @@ import * as models from '../models';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
-import { isProject, Project } from '../models/project';
+import { isProject, type Project } from '../models/project';
 import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
-import { isRequestGroup, RequestGroup } from '../models/request-group';
-import { WebSocketRequest } from '../models/websocket-request';
-import { isWorkspace, Workspace } from '../models/workspace';
+import { isRequestGroup, type RequestGroup } from '../models/request-group';
+import type { WebSocketRequest } from '../models/websocket-request';
+import { isWorkspace, type Workspace } from '../models/workspace';
 import * as templating from '../templating';
 import * as templatingUtils from '../templating/utils';
 import { setDefaultProtocol } from '../utils/url/protocol';
@@ -459,7 +459,7 @@ export async function getRenderContext(
       return p ? p.value : null;
     },
     getEnvironmentId: () => subEnvironmentId,
-    // It is possible for a project to not exist because this code path can be reached via Inso/insomnia-send-request which has no concept of a project.
+    // It is possible for a project to not exist because this code path can be reached via Inso which has no concept of a project.
     getProjectId: () => project?._id,
   };
 

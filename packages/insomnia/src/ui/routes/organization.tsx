@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
   Link,
@@ -12,13 +12,14 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 import {
-  ActionFunction,
-  LoaderFunction,
+  type ActionFunction,
+  type LoaderFunction,
   NavLink,
   Outlet,
   redirect,
   useFetcher,
   useLoaderData,
+  useLocation,
   useNavigate,
   useParams,
   useRouteLoaderData,
@@ -30,13 +31,14 @@ import { getAppWebsiteBaseURL } from '../../common/constants';
 import { database } from '../../common/database';
 import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
-import { findPersonalOrganization, isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
-import { Project } from '../../models/project';
+import { findPersonalOrganization, isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, type Organization } from '../../models/organization';
+import { type Project, type as ProjectType } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
+import { AsyncTask, getInitialRouteForOrganization } from '../../utils/router';
 import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
@@ -55,8 +57,8 @@ import { useAIContext } from '../context/app/ai-context';
 import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-stream-context';
 import { syncProjects } from './project';
 import { useRootLoaderData } from './root';
-import { UntrackedProjectsLoaderData } from './untracked-projects';
-import { WorkspaceLoaderData } from './workspace';
+import type { UntrackedProjectsLoaderData } from './untracked-projects';
+import type { WorkspaceLoaderData } from './workspace';
 
 export interface OrganizationsResponse {
   start: number;
@@ -166,32 +168,48 @@ async function syncOrganizations(sessionId: string, accountId: string) {
 }
 
 interface SyncOrgsAndProjectsActionRequest {
-  sessionId: string;
-  accountId: string;
-  personalOrganizationId?: string;
   organizationId: string;
+  asyncTaskList: AsyncTask[];
+  projectId?: string;
 }
 
 // this action is used to run task that we dont want to block the UI
 export const syncOrgsAndProjectsAction: ActionFunction = async ({ request }) => {
   try {
-    const { organizationId } = await request.json() as SyncOrgsAndProjectsActionRequest;
+    const { organizationId, projectId, asyncTaskList } = await request.json() as SyncOrgsAndProjectsActionRequest;
     const { id: sessionId, accountId } = await userSession.getOrCreate();
 
-    invariant(sessionId, 'sessionId is required');
-    invariant(accountId, 'accountId is required');
     const taskPromiseList = [];
-    taskPromiseList.push(syncOrganizations(sessionId, accountId));
-    const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
-    invariant(organizations, 'Failed to fetch organizations.');
-    const personalOrganization = findPersonalOrganization(organizations, accountId);
-    invariant(personalOrganization, 'personalOrganization is required');
-    invariant(personalOrganization.id, 'personalOrganizationId is required');
-    taskPromiseList.push(migrateProjectsUnderOrganization(personalOrganization.id, sessionId));
-    invariant(organizationId, 'organizationId is required');
-    taskPromiseList.push(syncProjects(organizationId));
+    if (asyncTaskList.includes(AsyncTask.SyncOrganization)) {
+      invariant(sessionId, 'sessionId is required');
+      invariant(accountId, 'accountId is required');
+      taskPromiseList.push(syncOrganizations(sessionId, accountId));
+    }
+
+    if (asyncTaskList.includes(AsyncTask.MigrateProjects)) {
+      const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+      invariant(organizations, 'Failed to fetch organizations.');
+      const personalOrganization = findPersonalOrganization(organizations, accountId);
+      invariant(personalOrganization, 'personalOrganization is required');
+      invariant(personalOrganization.id, 'personalOrganizationId is required');
+      invariant(sessionId, 'sessionId is required');
+      taskPromiseList.push(migrateProjectsUnderOrganization(personalOrganization.id, sessionId));
+    }
+
+    if (asyncTaskList.includes(AsyncTask.SyncProjects)) {
+      invariant(organizationId, 'organizationId is required');
+      taskPromiseList.push(syncProjects(organizationId));
+    }
 
     await Promise.all(taskPromiseList);
+
+    // When user switch to a new organization, there is no project in db cache, we need to redirect to the first project after sync project
+    if (!projectId && asyncTaskList.includes(AsyncTask.SyncProjects)) {
+      const firstProject = await database.getWhere<Project>(ProjectType, { parentId: organizationId });
+      if (firstProject?._id) {
+        return redirect(`/organization/${organizationId}/project/${firstProject?._id}`);
+      }
+    }
 
     return {};
   } catch (error) {
@@ -228,6 +246,22 @@ async function migrateProjectsUnderOrganization(personalOrganizationId: string, 
   }
 };
 
+async function syncStorageRule(sessionId: string, organizationId: string) {
+  try {
+    const storageRule = await insomniaFetch<StorageRule | undefined>({
+      method: 'GET',
+      path: `/v1/organizations/${organizationId}/storage-rule`,
+      sessionId,
+    });
+
+    invariant(storageRule, 'Failed to load storageRule');
+
+    inMemoryStorageRuleCache.set(organizationId, storageRule);
+  } catch (error) {
+    console.log('[storageRule] Failed to load storage rules', error);
+  }
+}
+
 export const indexLoader: LoaderFunction = async () => {
   const { id: sessionId, accountId } = await userSession.getOrCreate();
   if (sessionId) {
@@ -259,6 +293,20 @@ export const syncOrganizationsAction: ActionFunction = async () => {
 
   if (sessionId) {
     await syncOrganizations(sessionId, accountId);
+  }
+
+  return null;
+};
+
+export const syncOrganizationStorageRuleAction: ActionFunction = async ({ params }) => {
+  const { organizationId } = params;
+
+  invariant(organizationId, 'Organization ID is required');
+
+  const { id: sessionId } = await userSession.getOrCreate();
+
+  if (sessionId) {
+    await syncStorageRule(sessionId, organizationId);
   }
 
   return null;
@@ -306,16 +354,58 @@ export interface Billing {
   isActive: boolean;
 }
 
+export const DefaultStorage = 'cloud_plus_local';
 export interface StorageRule {
   storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
   isOverridden: boolean;
 }
 
 export interface OrganizationFeatureLoaderData {
-  features: FeatureList;
-  billing: Billing;
-  storage: 'cloud_plus_local' | 'cloud_only' | 'local_only';
+  featuresPromise: Promise<FeatureList>;
+  billingPromise: Promise<Billing>;
 }
+export interface OrganizationStorageLoaderData {
+  storagePromise: Promise<'cloud_plus_local' | 'cloud_only' | 'local_only'>;
+}
+
+// Create an in-memory storage to store the storage rules
+export const inMemoryStorageRuleCache: Map<string, StorageRule> = new Map<string, StorageRule>();
+
+export const organizationStorageLoader: LoaderFunction = async ({ params }): Promise<OrganizationStorageLoaderData> => {
+  const { organizationId } = params as { organizationId: string };
+  const { id: sessionId } = await userSession.getOrCreate();
+
+  const storageRule = inMemoryStorageRuleCache.get(organizationId);
+
+  if (storageRule) {
+    return {
+      storagePromise: Promise.resolve(storageRule.storage),
+    };
+  }
+
+  // Otherwise fetch from the API
+  try {
+    const storageRuleResponse = insomniaFetch<StorageRule | undefined>({
+      method: 'GET',
+      path: `/v1/organizations/${organizationId}/storage-rule`,
+      sessionId,
+    });
+
+    // Return the value
+    return {
+      storagePromise: storageRuleResponse.then(res => {
+        if (res) {
+          inMemoryStorageRuleCache.set(organizationId, res);
+        }
+        return res?.storage || DefaultStorage;
+      }),
+    };
+  } catch (err) {
+    return {
+      storagePromise: Promise.resolve(DefaultStorage),
+    };
+  }
+};
 
 export const organizationPermissionsLoader: LoaderFunction = async ({ params }): Promise<OrganizationFeatureLoaderData> => {
   const { organizationId } = params as { organizationId: string };
@@ -330,13 +420,10 @@ export const organizationPermissionsLoader: LoaderFunction = async ({ params }):
     isActive: true,
   };
 
-  const fallbackStorage = 'cloud_plus_local';
-
   if (isScratchpadOrganizationId(organizationId)) {
     return {
-      features: fallbackFeatures,
-      billing: fallbackBilling,
-      storage: fallbackStorage,
+      featuresPromise: Promise.resolve(fallbackFeatures),
+      billingPromise: Promise.resolve(fallbackBilling),
     };
   }
 
@@ -348,28 +435,20 @@ export const organizationPermissionsLoader: LoaderFunction = async ({ params }):
   }
 
   try {
-    const response = await insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
+    const featuresResponse = insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
       method: 'GET',
       path: `/v1/organizations/${organizationId}/features`,
       sessionId,
     });
 
-    const ruleResponse = await insomniaFetch<StorageRule | undefined>({
-      method: 'GET',
-      path: `/v1/organizations/${organizationId}/storage-rule`,
-      sessionId,
-    });
-    const storage = ruleResponse?.storage || fallbackStorage;
     return {
-      features: response?.features || fallbackFeatures,
-      billing: response?.billing || fallbackBilling,
-      storage,
+      featuresPromise: featuresResponse.then(res => res?.features || fallbackFeatures),
+      billingPromise: featuresResponse.then(res => res?.billing || fallbackBilling),
     };
   } catch (err) {
     return {
-      features: fallbackFeatures,
-      billing: fallbackBilling,
-      storage: fallbackStorage,
+      featuresPromise: Promise.resolve(fallbackFeatures),
+      billingPromise: Promise.resolve(fallbackBilling),
     };
   }
 };
@@ -438,20 +517,37 @@ const OrganizationRoute = () => {
     projectId?: string;
     workspaceId?: string;
   };
-  const syncOrgsAndProjects = useFetcher();
+
+  const location = useLocation();
+  const asyncTaskList = location.state?.asyncTaskList as AsyncTask[];
+
+  const syncOrgsAndProjectsFetcher = useFetcher();
+
+  const asyncTaskStatus = syncOrgsAndProjectsFetcher.data?.error ? 'error' : syncOrgsAndProjectsFetcher.state;
+
+  const syncOrgsAndProjects = useCallback(() => {
+    const submit = syncOrgsAndProjectsFetcher.submit;
+
+    submit({
+      organizationId,
+      projectId: projectId || '',
+      asyncTaskList,
+    }, {
+      action: '/organization/sync-orgs-and-projects',
+      method: 'POST',
+      encType: 'application/json',
+    });
+  }, [asyncTaskList, organizationId, syncOrgsAndProjectsFetcher.submit, projectId]);
 
   useEffect(() => {
-    const isIdleAndUninitialized = syncOrgsAndProjects.state === 'idle' && !syncOrgsAndProjects.data;
-    if (isIdleAndUninitialized) {
-      syncOrgsAndProjects.submit({
-        organizationId,
-      }, {
-        action: '/organization/syncOrgsAndProjectsAction',
-        method: 'POST',
-        encType: 'application/json',
-      });
+    // each route navigation will change history state, only submit this action when the asyncTaskList state is not empty
+    // currently we have 2 cases that will set the asyncTaskList state
+    // 1. first entry
+    // 2. when user switch to another organization
+    if (asyncTaskList?.length) {
+      syncOrgsAndProjects();
     }
-  }, [userSession.id, organizationId, userSession.accountId, syncOrgsAndProjects]);
+  }, [organizationId, asyncTaskList, syncOrgsAndProjects]);
 
   useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
@@ -659,40 +755,51 @@ const OrganizationRoute = () => {
           ) : null}
           {isOrganizationSidebarOpen && <div className={`[grid-area:Navbar] overflow-hidden ${isOrganizationSidebarOpen ? '' : 'hidden'}`}>
             <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
-              {organizations.map(organization => (
-                <TooltipTrigger key={organization.id}>
-                  <Link className="outline-none">
-                    <NavLink
-                      className={({ isActive, isPending }) =>
-                        `select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${isActive
+              {organizations.map(organization => {
+                const isActive = organization.id === organizationId;
+                return (
+                  <TooltipTrigger key={organization.id}>
+                    <Link className="outline-none">
+                      <div
+                        className={`select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${isActive
                           ? 'outline-[--color-font]'
                           : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
-                        } ${isPending ? 'animate-pulse' : ''}`
-                      }
-                      to={`/organization/${organization.id}`}
+                          }`}
+                        onClick={async () => {
+                          const routeForOrganization = await getInitialRouteForOrganization(organization.id);
+                          navigate(routeForOrganization, {
+                            state: {
+                              asyncTaskList: [
+                                // we only need sync projects when user switch to another organization
+                                AsyncTask.SyncProjects,
+                              ],
+                            },
+                          });
+                        }}
+                      >
+                        {isPersonalOrganization(organization) && isOwnerOfOrganization({
+                          organization,
+                          accountId: userSession.accountId || '',
+                        }) ? (
+                          <Icon icon="home" />
+                        ) : (
+                          <OrganizationAvatar
+                            alt={organization.display_name}
+                            src={organization.branding?.logo_url || ''}
+                          />
+                        )}
+                      </div>
+                    </Link>
+                    <Tooltip
+                      placement="right"
+                      offset={8}
+                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                     >
-                      {isPersonalOrganization(organization) && isOwnerOfOrganization({
-                        organization,
-                        accountId: userSession.accountId || '',
-                      }) ? (
-                        <Icon icon="home" />
-                      ) : (
-                        <OrganizationAvatar
-                          alt={organization.display_name}
-                          src={organization.branding?.logo_url || ''}
-                        />
-                      )}
-                    </NavLink>
-                  </Link>
-                  <Tooltip
-                    placement="right"
-                    offset={8}
-                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                  >
-                    <span>{organization.display_name}</span>
-                  </Tooltip>
-                </TooltipTrigger>
-              ))}
+                      <span>{organization.display_name}</span>
+                    </Tooltip>
+                  </TooltipTrigger>
+                );
+              })}
               <MenuTrigger>
                 <Button className="select-none text-[--color-font] hover:no-underline transition-all duration-150 box-border p-[--padding-sm] font-bold outline-none rounded-md w-[28px] h-[28px] flex items-center justify-center overflow-hidden">
                   <Icon icon="plus" />
@@ -845,44 +952,70 @@ const OrganizationRoute = () => {
                     )}
                   </ProgressBar>
                 )}
-                <TooltipTrigger>
-                  <Button
-                    className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                    onPress={() => {
-                      !user && navigate('/auth/login');
-                      if (settings.proxyEnabled) {
-                        showSettingsModal({
-                          tab: 'proxy',
-                        });
-                      }
-                    }}
-                  >
-                    <Icon
-                      icon="circle"
-                      className={
-                        user
-                          ? status === 'online'
-                            ? 'text-[--color-success]'
-                            : 'text-[--color-danger]'
-                          : ''
-                      }
-                    />{' '}
-                    {user
-                      ? status.charAt(0).toUpperCase() + status.slice(1)
-                      : 'Log in to see your projects'}
-                    {status === 'online' && settings.proxyEnabled ? ' via proxy' : ''}
-                  </Button>
-                  <Tooltip
-                    placement="top"
-                    offset={8}
-                    className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                  >
-                    {user
-                      ? status === 'online' ? 'You have connectivity to the Internet' + (settings.proxyEnabled ? ' via the configured proxy' : '') + '.'
-                        : 'You are offline. Connect to sync your data.'
-                      : 'Log in to Insomnia to unlock the full product experience.'}
-                  </Tooltip>
-                </TooltipTrigger>
+                {/* The sync indicator only show when network status is online */}
+                {/* use for show sync organization and projects status(1. first enter app 2. switch organization) */}
+                {status === 'online' && asyncTaskStatus !== 'idle' ? (
+                  <TooltipTrigger>
+                    <Button
+                      className="px-4 py-1 h-full flex items-center justify-center gap-1 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                      onPress={() => {
+                        asyncTaskStatus === 'error' && syncOrgsAndProjects();
+                      }}
+                    >
+                      <Icon
+                        icon={asyncTaskStatus !== 'error' ? 'spinner' : 'circle'}
+                        className={`${asyncTaskStatus === 'error' ? 'text-[--color-danger]' : 'text-[--color-font]'} w-5 ${asyncTaskStatus !== 'error' ? 'animate-spin' : ''}`}
+                      />
+                      {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
+                    </Button>
+                    <Tooltip
+                      placement="top"
+                      offset={8}
+                      className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                    >
+                      {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
+                    </Tooltip>
+                  </TooltipTrigger>
+                ) : (
+                    <TooltipTrigger>
+                      <Button
+                        className="px-4 py-1 h-full flex items-center justify-center gap-1 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                        onPress={() => {
+                          !user && navigate('/auth/login');
+                          if (settings.proxyEnabled) {
+                            showSettingsModal({
+                              tab: 'proxy',
+                            });
+                          }
+                        }}
+                      >
+                        <Icon
+                          icon="circle"
+                          className={
+                            user
+                              ? status === 'online'
+                                ? 'text-[--color-success]'
+                                : 'text-[--color-danger]'
+                              : ''
+                          }
+                        />{' '}
+                        {user
+                          ? status.charAt(0).toUpperCase() + status.slice(1)
+                          : 'Log in to see your projects'}
+                        {status === 'online' && settings.proxyEnabled ? ' via proxy' : ''}
+                      </Button>
+                      <Tooltip
+                        placement="top"
+                        offset={8}
+                        className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                      >
+                        {user
+                          ? status === 'online' ? 'You have connectivity to the Internet' + (settings.proxyEnabled ? ' via the configured proxy' : '') + '.'
+                            : 'You are offline. Connect to sync your data.'
+                          : 'Log in to Insomnia to unlock the full product experience.'}
+                      </Tooltip>
+                    </TooltipTrigger>
+                )}
                 <span className='w-[1px] h-full bg-[--hl-sm]' />
                 <Link>
                   <a

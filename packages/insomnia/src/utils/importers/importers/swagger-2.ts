@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { OpenAPIV2 } from 'openapi-types';
 import YAML from 'yaml';
 
-import { Converter, Header, ImportRequest } from '../entities';
+import type { Converter, Header, ImportRequest } from '../entities';
 import { unthrowableParseJson } from '../utils';
 
 const SUPPORTED_SWAGGER_VERSION = '2.0';

@@ -1,6 +1,5 @@
 build
 bin
-send-request
 coverage
 src/*.js
 src/*.js.map

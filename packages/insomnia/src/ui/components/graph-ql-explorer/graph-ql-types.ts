@@ -1,5 +1,5 @@
-import { SchemaReference } from 'codemirror-graphql/utils/SchemaReference';
-import { GraphQLField } from 'graphql';
+import type { SchemaReference } from 'codemirror-graphql/utils/SchemaReference';
+import type { GraphQLField } from 'graphql';
 
 type GraphQLFieldAny = GraphQLField<any, any>;
 

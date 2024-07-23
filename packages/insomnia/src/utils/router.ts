@@ -2,9 +2,9 @@ import { matchPath } from 'react-router-dom';
 
 import { database } from '../common/database';
 import * as models from '../models';
-import { Organization } from '../models/organization';
+import type { Organization } from '../models/organization';
 import { findPersonalOrganization } from '../models/organization';
-import { Project } from '../models/project';
+import type { Project } from '../models/project';
 export const enum AsyncTask {
   SyncOrganization,
   MigrateProjects,

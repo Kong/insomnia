@@ -1,7 +1,7 @@
-import CodeMirror, { Token } from 'codemirror';
+import CodeMirror, { type Token } from 'codemirror';
 
 import * as misc from '../../../../common/misc';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import type { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import { getTagDefinitions } from '../../../../templating/index';
 import { tokenizeTag } from '../../../../templating/utils';
 import { showModal } from '../../modals/index';

@@ -1,7 +1,7 @@
 import classnames from 'classnames';
 import React, {
-  CSSProperties,
-  ReactNode,
+  type CSSProperties,
+  type ReactNode,
 } from 'react';
 import {
   mergeProps,

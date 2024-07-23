@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import appPackageJson from '../../../../package.json';
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import { RENDER_PURPOSE_SEND } from '../../../common/render';
 import * as modals from '../../../ui/components/modals';
 import * as plugin from '../app';
 
@@ -43,7 +42,7 @@ describe('app.alert()', () => {
 
   it('shows alert with message when sending', async () => {
     modals.showAlert = jest.fn().mockReturnValue('dummy-return-value');
-    const result = plugin.init(RENDER_PURPOSE_SEND);
+    const result = plugin.init('send');
     // Make sure it returns result of showAlert()
     expect(result.app.alert('Title')).toBe('dummy-return-value');
     expect(result.app.alert('Title', 'Message')).toBe('dummy-return-value');
@@ -77,7 +76,7 @@ describe('app.prompt()', () => {
 
   it('shows alert with message when sending', async () => {
     modals.showPrompt = jest.fn();
-    const result = plugin.init(RENDER_PURPOSE_SEND);
+    const result = plugin.init('send');
     // Make sure it returns result of showAlert()
     result.app.prompt('Title');
     result.app.prompt('Title', {

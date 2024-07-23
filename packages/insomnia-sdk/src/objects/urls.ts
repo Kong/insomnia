@@ -12,7 +12,7 @@ export interface QueryParamOptions {
 }
 
 export class QueryParam extends Property {
-    _kind: string = 'QueryParam';
+    override _kind: string = 'QueryParam';
 
     key: string;
     value: string;
@@ -43,7 +43,7 @@ export class QueryParam extends Property {
     // (static) _postman_propertyAllowsMultipleValues :Boolean
     // (static) _postman_propertyIndexKey :String
 
-    static _index = 'key';
+    static override _index = 'key';
 
     static parse(queryStr: string) {
         const params = new UrlSearchParams(queryStr);
@@ -84,7 +84,7 @@ export class QueryParam extends Property {
         return {};
     }
 
-    toString() {
+    override toString() {
         const params = new UrlSearchParams();
         params.append(this.key, this.value);
 
@@ -94,6 +94,9 @@ export class QueryParam extends Property {
     update(param: string | { key: string; value: string; type?: string }) {
         if (typeof param === 'string') {
             const paramObj = QueryParam.parseSingle(param);
+            if (!paramObj) {
+                throw Error('failed to update param: input `param` is invalid');
+            }
             this.key = typeof paramObj.key === 'string' ? paramObj.key : '';
             this.value = typeof paramObj.value === 'string' ? paramObj.value : '';
         } else if ('key' in param && 'value' in param) {
@@ -122,7 +125,7 @@ export interface UrlOptions {
 }
 
 export class Url extends PropertyBase {
-    _kind: string = 'Url';
+    override _kind: string = 'Url';
 
     id?: string;
     // TODO: should be related to RequestAuth
@@ -205,7 +208,11 @@ export class Url extends PropertyBase {
                 if (authParts.length < 2) {
                     throw Error(`new Url(): failed to parse auth in url ${urlStr}`);
                 }
-                auth = { username: authParts[0], password: authParts[1] };
+                // authParts[x] would not be undefined
+                // add empty string for type checking
+                const username = authParts[0] || '';
+                const password = authParts[1] || '';
+                auth = { username, password };
             }
         } else {
             // don't do anything if @ appears in path
@@ -225,10 +232,16 @@ export class Url extends PropertyBase {
                     .split('&')
                     .map(pairStr => {
                         const queryParts = pairStr.split('=');
-                        const key = queryParts[0];
-                        const value = queryParts.length > 1 ? queryParts[1] : '';
+                        const key = queryParts[0] || '';
+                        const value = queryParts.length > 1 ? queryParts[1] || '' : '';
                         return { key, value };
                     })
+                    .filter(kvPair => {
+                        return kvPair && kvPair.key !== ''; // the value could be ''
+                    })
+                    .map(kvPair => {
+                        return { key: kvPair.key, value: kvPair.value };
+                    }),
             );
         }
 
@@ -265,15 +278,19 @@ export class Url extends PropertyBase {
         if (potentialStartOfHostname < potentialEndOfHostname) {
             const hostname = urlStr.slice(potentialStartOfHostname, potentialEndOfHostname);
             const hostnameParts = hostname.split(':');
+            const hostPart = hostnameParts[0];
             if (hostnameParts.length === 2) {
                 port = hostnameParts[1];
             } else if (hostnameParts.length > 2) {
                 throw Error('new Url(): failed to parse hostname in url ${urlStr}');
             }
+            if (!hostPart) {
+                throw Error('new Url(): the hostname part is invalid');
+            }
 
             host.push(
                 ...
-                hostnameParts[0].split('.'),
+                hostPart.split('.'),
             );
         }
 
@@ -381,7 +398,7 @@ export class Url extends PropertyBase {
         }
     }
 
-    toString(forceProtocol?: boolean) {
+    override toString(forceProtocol?: boolean) {
         const protocolStr = forceProtocol ?
             (this.protocol ? `${this.protocol}//` : 'http://') :
             (this.protocol ? `${this.protocol}//` : '');
@@ -427,7 +444,7 @@ export class UrlMatchPattern extends Property {
     // "http://localhost/*"
     // It doesn't support match patterns for top Level domains (TLD).
 
-    id: string = '';
+    override id: string = '';
     private pattern: string;
 
     constructor(pattern: string) {
@@ -436,7 +453,7 @@ export class UrlMatchPattern extends Property {
         this.pattern = pattern;
     }
 
-    static _index = 'id';
+    static override _index = 'id';
     static readonly MATCH_ALL_URLS: string = '<all_urls>';
     static pattern: string | undefined = undefined; // TODO: its usage is unknown
     static readonly PROTOCOL_DELIMITER: string = '+';
@@ -617,7 +634,7 @@ export class UrlMatchPattern extends Property {
         return false;
     }
 
-    toString() {
+    override toString() {
         return this.pattern;
     }
 
@@ -627,7 +644,7 @@ export class UrlMatchPattern extends Property {
 }
 
 export class UrlMatchPatternList<T extends UrlMatchPattern> extends PropertyList<T> {
-    _kind: string = 'UrlMatchPatternList';
+    override _kind: string = 'UrlMatchPatternList';
 
     constructor(parent: PropertyList<T> | undefined, populate: T[]) {
         super(UrlMatchPattern, undefined, populate);

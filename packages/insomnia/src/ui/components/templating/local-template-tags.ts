@@ -7,10 +7,10 @@ import os from 'os';
 import { CookieJar } from 'tough-cookie';
 import * as uuid from 'uuid';
 
-import { Request, RequestParameter } from '../../../models/request';
-import { Response } from '../../../models/response';
-import { TemplateTag } from '../../../plugins';
-import { PluginTemplateTag } from '../../../templating/extensions';
+import type { Request, RequestParameter } from '../../../models/request';
+import type { Response } from '../../../models/response';
+import type { TemplateTag } from '../../../plugins';
+import type { PluginTemplateTag } from '../../../templating/extensions';
 import { invariant } from '../../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
 import { fakerFunctions } from './faker-functions';
@@ -197,7 +197,8 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         if (JSONPath && ['userInfo', 'cpus'].includes(fnName)) {
           try {
-            value = JSONPath({ json: value, path: filter })[0];
+            const results = JSONPath({ json: value, path: filter });
+            value = Array.isArray(results) ? results[0] : results;
           } catch (err) { }
         }
 
@@ -303,6 +304,9 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         let results;
         try {
           results = JSONPath({ json: body, path: filter });
+          if (!Array.isArray(results)) {
+            results = [results];
+          }
         } catch (err) {
           throw new Error(`Invalid JSONPath query: ${filter}`);
         }
@@ -715,6 +719,9 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
             try {
               results = JSONPath({ json: bodyJSON, path: sanitizedFilter });
+              if (!Array.isArray(results)) {
+                results = [results];
+              }
             } catch (err) {
               throw new Error(`Invalid JSONPath query: ${sanitizedFilter}`);
             }

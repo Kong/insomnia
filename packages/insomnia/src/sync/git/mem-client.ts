@@ -1,4 +1,4 @@
-import { PromiseFsClient } from 'isomorphic-git';
+import type { PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
 
 import Stat from './stat';

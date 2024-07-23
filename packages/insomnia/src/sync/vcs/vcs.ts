@@ -9,7 +9,7 @@ import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
 import type { Operation } from '../../common/database';
 import { generateId } from '../../common/misc';
-import { BaseModel } from '../../models';
+import type { BaseModel } from '../../models';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import Store from '../store';
 import type { BaseDriver } from '../store/drivers/base';
@@ -26,7 +26,7 @@ import type {
   StageEntry,
   StatusCandidate,
 } from '../types';
-import { BackendProjectWithTeams } from './normalize-backend-project-team';
+import type { BackendProjectWithTeams } from './normalize-backend-project-team';
 import {
   compareBranches,
   generateCandidateMap,

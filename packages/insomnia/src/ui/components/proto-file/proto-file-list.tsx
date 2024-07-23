@@ -1,7 +1,7 @@
-import React, { FunctionComponent } from 'react';
+import React, { type FunctionComponent } from 'react';
 import styled from 'styled-components';
 
-import { ProtoDirectory } from '../../../models/proto-directory';
+import type { ProtoDirectory } from '../../../models/proto-directory';
 import type { ProtoFile } from '../../../models/proto-file';
 import { Button } from '../themed-button';
 

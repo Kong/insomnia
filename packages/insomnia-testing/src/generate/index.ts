@@ -5,4 +5,4 @@ export {
   generateToFile,
 } from './generate';
 
-export { Test, TestSuite };
+export type { Test, TestSuite };

@@ -5,8 +5,8 @@ import path from 'path';
 import { database as db } from '../../common/database';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
-import { isProtoDirectory, ProtoDirectory } from '../../models/proto-directory';
-import { isProtoFile, ProtoFile } from '../../models/proto-file';
+import { isProtoDirectory, type ProtoDirectory } from '../../models/proto-directory';
+import { isProtoFile, type ProtoFile } from '../../models/proto-file';
 import { isWorkspace, type Workspace } from '../../models/workspace';
 
 interface WriteResult {

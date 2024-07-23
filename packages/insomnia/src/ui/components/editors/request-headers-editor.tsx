@@ -1,4 +1,4 @@
-import React, { FC, useCallback } from 'react';
+import React, { type FC, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';

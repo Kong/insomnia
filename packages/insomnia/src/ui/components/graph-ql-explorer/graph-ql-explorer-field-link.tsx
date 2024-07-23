@@ -1,6 +1,6 @@
-import React, { FC, Fragment, useCallback } from 'react';
+import React, { type FC, Fragment, useCallback } from 'react';
 
-import { GraphQLFieldWithParentName } from './graph-ql-types';
+import type { GraphQLFieldWithParentName } from './graph-ql-types';
 
 interface Props {
   onNavigate: (type: GraphQLFieldWithParentName) => void;

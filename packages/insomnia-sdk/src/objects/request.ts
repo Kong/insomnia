@@ -1,14 +1,14 @@
-import { Settings } from 'insomnia/src/models/settings';
-import { ClientCertificate, init as initClientCertificate } from 'insomnia/src/models/client-certificate';
-import { Request as InsomniaRequest, RequestBody as InsomniaRequestBody, RequestBodyParameter, RequestPathParameter } from 'insomnia/src/models/request';
+import { type ClientCertificate, init as initClientCertificate } from 'insomnia/src/models/client-certificate';
+import type { Request as InsomniaRequest, RequestBody as InsomniaRequestBody, RequestBodyParameter, RequestPathParameter } from 'insomnia/src/models/request';
+import type { Settings } from 'insomnia/src/models/settings';
 
-import { AuthOptions, AuthOptionTypes, fromPreRequestAuth, RequestAuth } from './auth';
-import { CertificateOptions } from './certificates';
+import { type AuthOptions, type AuthOptionTypes, fromPreRequestAuth, RequestAuth } from './auth';
+import type { CertificateOptions } from './certificates';
 import { Certificate } from './certificates';
-import { HeaderDefinition } from './headers';
+import type { HeaderDefinition } from './headers';
 import { Header, HeaderList } from './headers';
 import { Property, PropertyBase, PropertyList } from './properties';
-import { ProxyConfig, ProxyConfigOptions } from './proxy-configs';
+import { ProxyConfig, type ProxyConfigOptions } from './proxy-configs';
 import { QueryParam, toUrlObject, Url } from './urls';
 import { Variable, VariableList } from './variables';
 
@@ -48,17 +48,17 @@ export class FormParam extends Property {
     // static parse(param: FormParam) {
     // }
 
-    toJSON() {
+    override toJSON() {
         return { key: this.key, value: this.value, type: this.type };
     }
 
-    toString() {
+    override toString() {
         const key = encodeURIComponent(this.key);
         const value = encodeURIComponent(this.value);
         return `${key}=${value}`;
     }
 
-    valueOf() {
+    override valueOf() {
         return this.value;
     }
 }
@@ -150,7 +150,7 @@ export class RequestBody extends PropertyBase {
         }
     }
 
-    toString() {
+    override toString() {
         try {
             switch (this.mode) {
                 case 'formdata':
@@ -244,7 +244,7 @@ function requestOptionsToClassFields(options: RequestOptions) {
 }
 
 export class Request extends Property {
-    name: string;
+    override name: string;
     url: Url;
     method: string;
     headers: HeaderList<Header>;
@@ -379,7 +379,7 @@ export class Request extends Property {
     // size(): RequestSize {
     // }
 
-    toJSON() {
+    override toJSON() {
         return {
             url: this.url,
             method: this.method,
@@ -492,10 +492,14 @@ export function mergeClientCertificates(
     }
 
     const baseCertificate = originalClientCertificates && originalClientCertificates.length > 0 ?
-        originalClientCertificates[0] :
         {
+            // TODO: remove baseModelPart currently it is necessary for type checking
             ...initClientCertificate(),
-            // TODO: remove baseModelPart when it is not necessary for certs
+            ...originalClientCertificates[0],
+        } :
+        {
+            // TODO: remove baseModelPart currently it is necessary for type checking
+            ...initClientCertificate(),
             _id: '',
             type: '',
             parentId: '',
@@ -505,7 +509,7 @@ export function mergeClientCertificates(
             name: '',
         };
 
-    if (updatedReq.certificate.pfx != null && updatedReq.certificate.pfx?.src !== '') {
+    if (updatedReq.certificate.pfx && updatedReq.certificate.pfx?.src !== '') {
         return [{
             ...baseCertificate,
             key: null,
@@ -514,13 +518,25 @@ export function mergeClientCertificates(
             pfx: updatedReq.certificate.pfx?.src,
         }];
     } else if (
-        updatedReq.certificate.key != null &&
-        updatedReq.certificate.cert != null &&
+        updatedReq &&
+        updatedReq.certificate.key &&
+        updatedReq.certificate.cert &&
         updatedReq.certificate.key?.src !== '' &&
         updatedReq.certificate.cert?.src !== ''
     ) {
         return [{
             ...baseCertificate,
+
+            _id: '',
+            type: '',
+            parentId: '',
+            modified: 0,
+            created: 0,
+            isPrivate: false,
+            name: updatedReq.name || '',
+            host: updatedReq.url.getHost() || '',
+            disabled: updatedReq.disabled || false,
+
             key: updatedReq.certificate.key?.src,
             cert: updatedReq.certificate.cert?.src,
             passphrase: updatedReq.certificate.passphrase || null,
@@ -607,7 +623,7 @@ export function mergeRequestBody(
             ),
         };
     } catch (e) {
-        throw Error(`failed to update body: ${e}`)
+        throw Error(`failed to update body: ${e}`);
     }
 }
 

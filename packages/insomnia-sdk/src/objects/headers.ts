@@ -1,4 +1,4 @@
-import { Property, PropertyList, unsupportedError } from './properties';
+import { Property, PropertyList } from './properties';
 
 export interface HeaderDefinition {
     key: string;
@@ -10,7 +10,7 @@ export interface HeaderDefinition {
 }
 
 export class Header extends Property {
-    _kind: string = 'Header';
+    override _kind: string = 'Header';
     type: string = '';
     key: string;
     value: string;
@@ -35,7 +35,7 @@ export class Header extends Property {
         }
     }
 
-    static _index: string = 'key';
+    static override _index: string = 'key';
 
     static create(input?: { key: string; value: string } | string, name?: string): Header {
         return new Header(input || { key: '', value: '' }, name);
@@ -88,7 +88,7 @@ export class Header extends Property {
         this.value = newHeader.value;
     }
 
-    valueOf() {
+    override valueOf() {
         return this.value;
     }
 }
@@ -108,11 +108,6 @@ export class HeaderList<T extends Header> extends PropertyList<T> {
 
     static isHeaderList(obj: any) {
         return '_kind' in obj && obj._kind === 'HeaderList';
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    eachParent(_iterator: any, _context?: object | undefined) {
-        throw unsupportedError('eachParent');
     }
 
     contentSize(): number {

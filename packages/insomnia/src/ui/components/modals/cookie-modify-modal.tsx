@@ -8,8 +8,8 @@ import { Cookie as ToughCookie } from 'tough-cookie';
 
 import { cookieToString } from '../../../common/cookies';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
-import { WorkspaceLoaderData } from '../../routes/workspace';
-import { Modal, type ModalHandle, ModalProps } from '../base/modal';
+import type { WorkspaceLoaderData } from '../../routes/workspace';
+import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';

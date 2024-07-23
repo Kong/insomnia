@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-inso",
-  "version": "9.3.3-beta.0",
+  "version": "9.3.3-beta.2",
   "homepage": "https://insomnia.rest",
   "description": "A CLI for Insomnia - The Collaborative API Design Tool",
   "author": "Kong <office@konghq.com>",
@@ -56,7 +56,6 @@
     "consola": "^2.15.0",
     "cosmiconfig": "^9.0.0",
     "enquirer": "^2.4.1",
-    "insomnia-send-request": "../insomnia-send-request",
     "@seald-io/nedb": "^4.0.4",
     "string-argv": "^0.3.2",
     "yaml": "^1.6.0"

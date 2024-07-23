@@ -193,7 +193,7 @@ export class Property extends PropertyBase {
             const rendered = getInterpolator().render(content, context);
             return JSON.parse(rendered);
 
-        } catch (e) {
+        } catch (e: any) {
             throw Error(`replaceSubstitutionsIn: ${e.toString()}`);
         }
     }

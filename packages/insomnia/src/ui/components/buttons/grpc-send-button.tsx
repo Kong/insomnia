@@ -1,7 +1,7 @@
-import React, { FunctionComponent } from 'react';
+import React, { type FunctionComponent } from 'react';
 
-import { GrpcMethodType } from '../../../main/ipc/grpc';
-import { Button, ButtonProps } from '../themed-button';
+import type { GrpcMethodType } from '../../../main/ipc/grpc';
+import { Button, type ButtonProps } from '../themed-button';
 
 interface Props {
   running: boolean;

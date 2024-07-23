@@ -1,10 +1,10 @@
 
-import { AriaButtonProps } from '@react-types/button';
-import React, { CSSProperties, forwardRef, useRef } from 'react';
+import type { AriaButtonProps } from '@react-types/button';
+import React, { type CSSProperties, forwardRef, useRef } from 'react';
 import { mergeProps, useButton, useFocusRing } from 'react-aria';
 import styled from 'styled-components';
 
-import { Button as ThemedButton, ButtonProps } from '../../themed-button';
+import { Button as ThemedButton, type ButtonProps } from '../../themed-button';
 
 interface StyledThemedButtonProps extends ButtonProps {
   removePaddings?: boolean;

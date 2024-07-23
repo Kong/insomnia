@@ -1,13 +1,13 @@
 import * as protoLoader from '@grpc/proto-loader';
 import fs from 'fs';
 import path from 'path';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { ChangeBufferEvent, database as db } from '../../../common/database';
+import { type ChangeBufferEvent, database as db } from '../../../common/database';
 import { selectFileOrFolder } from '../../../common/select-file-or-folder';
 import * as models from '../../../models';
-import { isProtoDirectory, ProtoDirectory } from '../../../models/proto-directory';
+import { isProtoDirectory, type ProtoDirectory } from '../../../models/proto-directory';
 import { isProtoFile, type ProtoFile } from '../../../models/proto-file';
 import { ProtoDirectoryLoader } from '../../../network/grpc/proto-directory-loader';
 import { writeProtoFile } from '../../../network/grpc/write-proto-file';
@@ -15,7 +15,7 @@ import { Modal, type ModalHandle } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import { ExpandedProtoDirectory, ProtoFileList } from '../proto-file/proto-file-list';
+import { type ExpandedProtoDirectory, ProtoFileList } from '../proto-file/proto-file-list';
 import { AsyncButton } from '../themed-button';
 import { showAlert, showError } from '.';
 const tryToSelectFilePath = async () => {

@@ -3,10 +3,10 @@ import {
   getJsonForWSDL,
   getSwaggerForService,
   getWSDLServices,
-  Swagger,
+  type Swagger,
 } from 'apiconnect-wsdl';
 
-import { Converter } from '../entities';
+import type { Converter } from '../entities';
 import * as postman from './postman';
 
 export const id = 'wsdl';
@@ -85,7 +85,7 @@ const convertWsdlToPostman = async (input: string) => {
   const wsdls = await getJsonForWSDL(input);
   const { services } = getWSDLServices(wsdls);
 
-  const items = services.map(({ service, filename }) => {
+  const items = services.map(({ service, filename }: { service: string; filename: string }) => {
     const wsdlEntry = findWSDLForServiceName(wsdls, service);
     return getSwaggerForService(wsdlEntry, service, filename);
   });

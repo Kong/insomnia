@@ -1,13 +1,13 @@
-import { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
+import type { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import type { GraphQLHintOptions } from 'codemirror-graphql/hint';
 import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import type { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import type { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
-import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, Kind, NonNullTypeNode, OperationDefinitionNode, parse, typeFromAST } from 'graphql';
+import { type DefinitionNode, type DocumentNode, GraphQLNonNull, GraphQLSchema, Kind, type NonNullTypeNode, type OperationDefinitionNode, parse, typeFromAST } from 'graphql';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
-import { Maybe } from 'graphql-language-service';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import type { Maybe } from 'graphql-language-service';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import { Button, Group, Heading, Toolbar, Tooltip, TooltipTrigger } from 'react-aria-components';
 import ReactDOM from 'react-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -16,7 +16,6 @@ import { useLocalStorage } from 'react-use';
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
-import { RENDER_PURPOSE_SEND } from '../../../../common/render';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
 import type { Request } from '../../../../models/request';
@@ -25,9 +24,9 @@ import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
 import { useRootLoaderData } from '../../../routes/root';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
-import { CodeEditor, CodeEditorHandle } from '../../codemirror/code-editor';
+import { CodeEditor, type CodeEditorHandle } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
-import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
+import type { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
@@ -86,7 +85,7 @@ const fetchGraphQLSchemaForRequest = async ({
   try {
 
     const bodyJson = JSON.stringify({
-      query: getIntrospectionQuery(),
+      query: getIntrospectionQuery({ inputValueDeprecation: true }),
       operationName: 'IntrospectionQuery',
     });
     const introspectionRequest = await db.upsert(
@@ -112,7 +111,7 @@ const fetchGraphQLSchemaForRequest = async ({
       responseId,
     } = await fetchRequestData(introspectionRequest._id);
 
-    const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
+    const renderResult = await tryToInterpolateRequest(request, environment._id, 'send');
     const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
     const res = await sendCurlAndWriteTimeline(
       renderedRequest,

@@ -4,7 +4,7 @@ import { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 import { parse as urlParse } from 'url';
 import YAML from 'yaml';
 
-import { Authentication, Converter, ImportRequest } from '../entities';
+import type { Authentication, Converter, ImportRequest } from '../entities';
 import { unthrowableParseJson } from '../utils';
 
 export const id = 'openapi3';
@@ -303,6 +303,7 @@ const importRequest = (
     method: endpointSchema.method?.toUpperCase(),
     url: `{{ _.base_url }}${pathWithParamsAsVariables(endpointSchema.path)}`,
     body: body,
+    description: endpointSchema.description || '',
     headers: [...paramHeaders, ...securityHeaders],
     authentication: authentication as Authentication,
     parameters: [...prepareQueryParams(endpointSchema), ...securityParams],

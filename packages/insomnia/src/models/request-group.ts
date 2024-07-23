@@ -1,6 +1,6 @@
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
-import { RequestAuthentication, RequestHeader } from './request';
+import type { RequestAuthentication, RequestHeader } from './request';
 
 export const name = 'Folder';
 

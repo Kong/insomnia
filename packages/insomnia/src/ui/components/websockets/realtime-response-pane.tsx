@@ -1,18 +1,18 @@
 import fs from 'fs';
-import React, { FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 import { Button, Input, SearchField } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getSetCookieHeaders } from '../../../common/misc';
-import { CurlEvent } from '../../../main/network/curl';
-import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
-import { WebSocketEvent } from '../../../main/network/websocket';
-import { Response } from '../../../models/response';
-import { WebSocketResponse } from '../../../models/websocket-response';
+import type { CurlEvent } from '../../../main/network/curl';
+import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
+import type { WebSocketEvent } from '../../../main/network/websocket';
+import type { Response } from '../../../models/response';
+import type { WebSocketResponse } from '../../../models/websocket-response';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
-import { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';
+import type { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';

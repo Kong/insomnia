@@ -1,5 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { FC, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { type FC, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -14,9 +14,9 @@ import {
   Popover,
   useDragAndDrop,
 } from 'react-aria-components';
-import { ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
-  LoaderFunction,
+  type LoaderFunction,
   NavLink,
   Route,
   Routes,
@@ -50,7 +50,7 @@ import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-e
 import { useRootLoaderData } from './root';
 import { TestRunStatus } from './test-results';
 import TestSuiteRoute from './test-suite';
-import { WorkspaceLoaderData } from './workspace';
+import type { WorkspaceLoaderData } from './workspace';
 
 interface LoaderData {
   unitTestSuites: UnitTestSuite[];

@@ -1,11 +1,12 @@
-import { FC, useEffect } from 'react';
+import { type FC, useEffect } from 'react';
 import React from 'react';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { isRemoteProject } from '../../../models/project';
-import { OrganizationFeatureLoaderData } from '../../routes/organization';
+import { useLoaderDeferData } from '../../hooks/use-loader-defer-data';
+import type { OrganizationFeatureLoaderData } from '../../routes/organization';
 import { useRootLoaderData } from '../../routes/root';
-import { WorkspaceLoaderData } from '../../routes/workspace';
+import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { GitSyncDropdown } from './git-sync-dropdown';
 import { SyncDropdown } from './sync-dropdown';
 
@@ -30,11 +31,11 @@ export const WorkspaceSyncDropdown: FC = () => {
     }
   }, [organizationId, permissionsFetcher]);
 
-  const { features } = permissionsFetcher.data || {
-    features: {
-      gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
-    },
-  };
+  const { featuresPromise } = permissionsFetcher.data || {};
+  const [features = {
+    gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
+  }] = useLoaderDeferData(featuresPromise);
+
   if (!userSession.id) {
     return null;
   }

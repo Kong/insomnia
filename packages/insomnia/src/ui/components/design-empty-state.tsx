@@ -1,6 +1,6 @@
-import { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import { readFile } from 'fs/promises';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { Button, Heading, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
 import { documentationLinks } from '../../common/documentation';

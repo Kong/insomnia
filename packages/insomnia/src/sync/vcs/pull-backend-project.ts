@@ -1,9 +1,9 @@
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { RemoteProject } from '../../models/project';
-import { isWorkspace, Workspace } from '../../models/workspace';
-import { BackendProjectWithTeam } from './normalize-backend-project-team';
+import type { RemoteProject } from '../../models/project';
+import { isWorkspace, type Workspace } from '../../models/workspace';
+import type { BackendProjectWithTeam } from './normalize-backend-project-team';
 import { interceptAccessError } from './util';
 import { VCS } from './vcs';
 

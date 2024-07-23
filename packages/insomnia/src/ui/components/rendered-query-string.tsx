@@ -1,11 +1,11 @@
 import classNames from 'classnames';
-import React, { FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
-import { PATH_PARAMETER_REGEX, Request, RequestAuthentication, RequestParameter } from '../../models/request';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { WebSocketRequest } from '../../models/websocket-request';
+import { PATH_PARAMETER_REGEX, type Request, type RequestAuthentication, type RequestParameter } from '../../models/request';
+import { isRequestGroup, type RequestGroup } from '../../models/request-group';
+import type { WebSocketRequest } from '../../models/websocket-request';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../network/authentication';
 import { getOrInheritAuthentication } from '../../network/network';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../utils/url/querystring';

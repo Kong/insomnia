@@ -1,8 +1,8 @@
 import { invariant } from '../../../utils/invariant';
-import { ModalProps } from '../base/modal';
-import { AlertModal, AlertModalOptions } from './alert-modal';
-import { ErrorModal, ErrorModalOptions } from './error-modal';
-import { PromptModal, PromptModalOptions } from './prompt-modal';
+import type { ModalProps } from '../base/modal';
+import { AlertModal, type AlertModalOptions } from './alert-modal';
+import { ErrorModal, type ErrorModalOptions } from './error-modal';
+import { PromptModal, type PromptModalOptions } from './prompt-modal';
 
 interface ModalHandle {
   show:(options: any) => void;

@@ -1,4 +1,4 @@
-import { Mock } from 'jest-mock';
+import type { Mock } from 'jest-mock';
 
 import { showAlert, showError, showModal, showPrompt } from './ui/components/modals';
 

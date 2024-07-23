@@ -10,4 +10,4 @@ export {
   runTestsCli,
 } from './run';
 
-export { Test, TestSuite, TestResults };
+export type { Test, TestSuite, TestResults };

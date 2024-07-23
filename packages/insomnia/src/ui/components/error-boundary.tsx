@@ -1,4 +1,4 @@
-import React, { PureComponent, ReactNode } from 'react';
+import React, { PureComponent, type ReactNode } from 'react';
 
 import { showError } from './modals/index';
 

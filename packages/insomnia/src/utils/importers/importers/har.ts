@@ -1,6 +1,6 @@
-import * as Har from 'har-format';
+import type * as Har from 'har-format';
 
-import { Body, Converter, ImportRequest } from '../entities';
+import type { Body, Converter, ImportRequest } from '../entities';
 
 export const id = 'har';
 export const name = 'HAR 1.2';

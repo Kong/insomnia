@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { FC, HTMLAttributes, memo, ReactNode } from 'react';
+import React, { type FC, type HTMLAttributes, memo, type ReactNode } from 'react';
 
 interface Props extends HTMLAttributes<HTMLDivElement> {
   noScroll?: boolean;

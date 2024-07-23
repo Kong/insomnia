@@ -1,16 +1,16 @@
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { AuthTypeOAuth1 } from '../../../../models/request';
+import type { AuthTypeOAuth1 } from '../../../../models/request';
 import {
-  OAuth1SignatureMethod,
+  type OAuth1SignatureMethod,
   SIGNATURE_METHOD_HMAC_SHA1,
   SIGNATURE_METHOD_HMAC_SHA256,
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
 } from '../../../../network/o-auth-1/constants';
-import { RequestLoaderData } from '../../../routes/request';
-import { RequestGroupLoaderData } from '../../../routes/request-group';
+import type { RequestLoaderData } from '../../../routes/request';
+import type { RequestGroupLoaderData } from '../../../routes/request-group';
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthPrivateKeyRow } from './components/auth-private-key-row';
 import { AuthSelectRow } from './components/auth-select-row';

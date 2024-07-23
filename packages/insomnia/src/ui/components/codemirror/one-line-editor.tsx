@@ -2,15 +2,15 @@ import './base-imports';
 
 import classnames from 'classnames';
 import clone from 'clone';
-import CodeMirror, { EditorConfiguration } from 'codemirror';
+import CodeMirror, { type EditorConfiguration } from 'codemirror';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import { useMount, useUnmount } from 'react-use';
 
 import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
 import * as misc from '../../../common/misc';
-import { KeyCombination } from '../../../common/settings';
+import type { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
-import { NunjucksParsedTag } from '../../../templating/utils';
+import type { NunjucksParsedTag } from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '../../hooks/use-editor-refresh';
 import { useRootLoaderData } from '../../routes/root';

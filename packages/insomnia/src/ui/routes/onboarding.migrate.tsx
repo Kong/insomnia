@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Heading, Radio, RadioGroup } from 'react-aria-components';
-import { ActionFunction, LoaderFunction, redirect, useFetcher } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, redirect, useFetcher } from 'react-router-dom';
 
 import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { invariant } from '../../utils/invariant';
@@ -9,7 +9,7 @@ import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
 
 export const loader: LoaderFunction = async () => {
-  if (!shouldMigrateProjectUnderOrganization()) {
+  if (!await shouldMigrateProjectUnderOrganization()) {
     return redirect('/organization');
   }
 

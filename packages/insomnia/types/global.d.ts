@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
-import type { HiddenBrowserWindowToMainBridgeAPI } from './hidden-window-preload';
-import type { RendererToMainBridgeAPI } from './main/ipc/main';
+import type { HiddenBrowserWindowToMainBridgeAPI } from '../src/hidden-window-preload';
+import type { RendererToMainBridgeAPI } from '../src/main/ipc/main';
 
 declare global {
   interface Window {
