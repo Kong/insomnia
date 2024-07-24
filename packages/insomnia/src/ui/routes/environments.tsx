@@ -306,9 +306,6 @@ const Environments = () => {
                     name="name"
                     ariaLabel="Environment name"
                     className="px-1 flex-1"
-                    onSingleClick={() => {
-                      setSelectedEnvironmentId(item._id);
-                    }}
                     onSubmit={name => {
                       name && updateEnvironmentFetcher.submit({
                         patch: {
@@ -414,9 +411,6 @@ const Environments = () => {
                 name="name"
                 ariaLabel="Environment name"
                 className="px-1 flex-1"
-                onSingleClick={() => {
-                  setSelectedEnvironmentId(selectedEnvironmentId);
-                }}
                 onSubmit={name => {
                   name && updateEnvironmentFetcher.submit({
                     patch: {
