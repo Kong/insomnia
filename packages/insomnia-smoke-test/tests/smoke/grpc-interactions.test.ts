@@ -30,7 +30,9 @@ test.describe('gRPC interactions', () => {
   });
 
   test('can send unidirectional requests', async ({ page }) => {
-    await page.getByLabel('Request Collection').getByText('Unary', { exact: true }).click();
+    // GridList onAction callback is trigger by click or pointerup event.Click event is stopped propogation by EditableInput component, and playwright click function seems cant trigger pointerup event.
+    // So we need to add position option to click function to prevent click on EditableInput.
+    await page.getByLabel('Request Collection').getByTestId('Unary').click({ position: { x: 0, y: 0 } });
     await page.locator('[data-testid="request-pane"] >> text=Unary').click();
     await page.click('text=Send');
 
