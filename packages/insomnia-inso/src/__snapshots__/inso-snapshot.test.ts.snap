@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Snapshot for "inso --help" 1`] = `
+exports[`Help snapshots "inso --help" 1`] = `
 "Usage: inso [options] [command]
 
 A CLI for Insomnia!
@@ -42,7 +42,7 @@ Commands:
   help [command]          display help for command"
 `;
 
-exports[`Snapshot for "inso -h" 1`] = `
+exports[`Help snapshots "inso -h" 1`] = `
 "Usage: inso [options] [command]
 
 A CLI for Insomnia!
@@ -84,7 +84,7 @@ Commands:
   help [command]          display help for command"
 `;
 
-exports[`Snapshot for "inso export -h" 1`] = `
+exports[`Help snapshots "inso export -h" 1`] = `
 "Usage: inso export [options] [command]
 
 Export data from insomnia models
@@ -98,7 +98,7 @@ Commands:
   help [command]               display help for command"
 `;
 
-exports[`Snapshot for "inso export spec -h" 1`] = `
+exports[`Help snapshots "inso export spec -h" 1`] = `
 "Usage: inso export spec [options] [identifier]
 
 Export an API Specification to a file, identifier can be an API Spec id
@@ -110,7 +110,7 @@ Options:
   -h, --help             display help for command"
 `;
 
-exports[`Snapshot for "inso generate -h" 1`] = `
+exports[`Help snapshots "inso generate -h" 1`] = `
 "Usage: inso [options] [command]
 
 A CLI for Insomnia!
@@ -152,7 +152,7 @@ Commands:
   help [command]          display help for command"
 `;
 
-exports[`Snapshot for "inso help" 1`] = `
+exports[`Help snapshots "inso help" 1`] = `
 "Usage: inso [options] [command]
 
 A CLI for Insomnia!
@@ -194,7 +194,7 @@ Commands:
   help [command]          display help for command"
 `;
 
-exports[`Snapshot for "inso lint -h" 1`] = `
+exports[`Help snapshots "inso lint -h" 1`] = `
 "Usage: inso lint [options] [command]
 
 Lint a yaml file in the workingDir or the provided file path (with
@@ -209,7 +209,7 @@ Commands:
   help [command]     display help for command"
 `;
 
-exports[`Snapshot for "inso lint spec -h" 1`] = `
+exports[`Help snapshots "inso lint spec -h" 1`] = `
 "Usage: inso lint spec [options] [identifier]
 
 Lint an API Specification, identifier can be an API Spec id or a file path
@@ -218,7 +218,7 @@ Options:
   -h, --help  display help for command"
 `;
 
-exports[`Snapshot for "inso run -h" 1`] = `
+exports[`Help snapshots "inso run -h" 1`] = `
 "Usage: inso run [options] [command]
 
 Execution utilities
@@ -234,7 +234,7 @@ Commands:
   help [command]                     display help for command"
 `;
 
-exports[`Snapshot for "inso run test -h" 1`] = `
+exports[`Help snapshots "inso run test -h" 1`] = `
 "Usage: inso run test [options] [identifier]
 
 Run Insomnia unit test suites, identifier can be a test suite id or a API Spec
@@ -253,4 +253,49 @@ Options:
   --disableCertValidation        disable certificate validation for requests
                                  with SSL (default: false)
   -h, --help                     display help for command"
+`;
+
+exports[`Run Collection Snapshots "inso run collection -w ../../packages/insomnia-smoke-test/fixtures/simple.yaml --verbose -e env_2eecf85b7f wrk_0702a5 --requestNamePattern http" 1`] = `
+"[90m›[39m Data store configured from Insomnia export at [36m/Users/jack.kavanagh@konghq.com/git/insomnia/packages/insomnia-smoke-test/fixtures/simple.yaml[39m
+[90m›[39m Load workspace with identifier [36mwrk_0702a5[39m from data store
+[90m›[39m Found 1.
+[90m›[39m Load base environment for the workspace [36mwrk_0702a57d75d44255a8cecd2c5fa87809[39m from data store
+[90m›[39m Found 1.
+[90m›[39m Load sub environment with identifier [36menv_2eecf85b7f[39m from data store
+[90m›[39m Found 1
+Running request: example http req_579daeabc7534a52b242bdaaaf6ca4dc
+[90m›[39m {
+  status: 200,
+  statusMessage: 'OK',
+  data: '{"id":"1"}',
+  headers: {
+    'x-powered-by': 'Express',
+    'content-type': 'application/json; charset=utf-8',
+    'content-length': '10',
+    etag: 'W/"a-g8XH0Dum5CMsI43ax61J3a/Qg5Q"',
+    date: 'Wed, 24 Jul 2024 10:29:16 GMT',
+    connection: 'keep-alive',
+    'keep-alive': 'timeout=5'
+  },
+  responseTime: 3.65,
+  timelinePath: '/tmp/insomnia-send-request/responses/res_bb7e8ec7dc6f40e2b32367a8fb4e380d.timeline'
+}
+[90m›[39m Preparing request to http://localhost:4010/pets/1 Current time is 2024-07-24T10:29:16.886Z Enable automatic URL encoding Using default HTTP version Enable timeout of 30000ms Enable SSL validation   Trying 127.0.0.1:4010...
+ Connected to localhost (127.0.0.1) port 4010 (#0)
+ GET /pets/1 HTTP/1.1
+Host: localhost:4010
+Accept: */*
+
+ Mark bundle as not supporting multiuse
+ HTTP/1.1 200 OK
+ X-Powered-By: Express
+ Content-Type: application/json; charset=utf-8
+ Content-Length: 10
+ ETag: W/"a-g8XH0Dum5CMsI43ax61J3a/Qg5Q"
+ Date: Wed, 24 Jul 2024 10:29:16 GMT
+ Connection: keep-alive
+ Keep-Alive: timeout=5
+ 
+ Received 10 B chunk Connection #0 to host localhost left intact
+"
 `;
