@@ -1,6 +1,5 @@
-import { RulesetDefinition, Spectral } from '@stoplight/spectral-core';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { bundleAndLoadRuleset } = require('@stoplight/spectral-ruleset-bundler/with-loader');
+import { Spectral } from '@stoplight/spectral-core';
+import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
 import { oas } from '@stoplight/spectral-rulesets';
 import { DiagnosticSeverity } from '@stoplight/types';
 import fs from 'fs';
@@ -24,17 +23,15 @@ export const getRuleSetFileFromFolderByFilename = async (filePath: string) => {
 export async function lintSpecification({ specContent, rulesetFileName }: { specContent: string; rulesetFileName?: string },) {
   const spectral = new Spectral();
   // Use custom ruleset if present
-  let ruleset = oas;
   try {
     if (rulesetFileName) {
-      ruleset = await bundleAndLoadRuleset(rulesetFileName, { fs });
+      spectral.setRuleset(await bundleAndLoadRuleset(rulesetFileName, { fs, fetch }));
     }
   } catch (error) {
     logger.fatal(error.message);
     return { isValid: false };
   }
 
-  spectral.setRuleset(ruleset as RulesetDefinition);
   const results = await spectral.run(specContent);
   if (!results.length) {
     logger.log('No linting errors or warnings.');
