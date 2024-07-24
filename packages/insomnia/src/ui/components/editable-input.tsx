@@ -9,7 +9,6 @@ export const EditableInput = ({
   name,
   className,
   onSubmit,
-  onSingleClick,
   onEditableChange,
 }: {
   value: string;
@@ -19,7 +18,6 @@ export const EditableInput = ({
   name?: string;
     className?: string;
     onSubmit: (value: string) => void;
-    onSingleClick?: () => void;
 }) => {
   const [isEditable, setIsEditable] = useState(editable);
   const editableRef = useRef<HTMLDivElement>(null);
@@ -55,45 +53,13 @@ export const EditableInput = ({
     };
   }, [isEditable]);
 
-  useEffect(() => {
-    const editableElement = editableRef.current;
-    if (editableElement) {
-      let clickTimeout: ReturnType<typeof setTimeout> | null = null;
-      function onClick(e: MouseEvent) {
-        e.stopPropagation();
-        e.preventDefault();
-        if (clickTimeout !== null) {
-          clearTimeout(clickTimeout);
-        }
-        // If timeout passes fire the single click
-        // else prevent the single click and fire the double click
-        clickTimeout = setTimeout(() => {
-          onSingleClick?.();
-        }, 200);
-      }
-      editableElement.addEventListener('click', onClick);
+  function onDoubleClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    e.stopPropagation();
+    e.preventDefault();
 
-      function onDoubleClick(e: MouseEvent) {
-        e.stopPropagation();
-        e.preventDefault();
-        if (clickTimeout !== null) {
-          clearTimeout(clickTimeout);
-          clickTimeout = null;
-        }
-        setIsEditable(true);
-        onEditableChange?.(true);
-      }
-
-      editableElement.addEventListener('dblclick', onDoubleClick);
-
-      return () => {
-        editableElement.removeEventListener('click', onClick);
-        editableElement.removeEventListener('dblclick', onDoubleClick);
-      };
-    }
-
-    return () => { };
-  }, [onEditableChange, onSingleClick]);
+    setIsEditable(true);
+    onEditableChange?.(true);
+  }
 
   return (
     <>
@@ -105,6 +71,7 @@ export const EditableInput = ({
             ${className || 'px-2'}
           `
         }
+        onDoubleClick={onDoubleClick}
         data-editable
         aria-label={ariaLabel}
       >

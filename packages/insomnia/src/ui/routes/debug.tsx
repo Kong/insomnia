@@ -976,15 +976,6 @@ export const Debug: FC = () => {
                         name="request name"
                         ariaLabel="request name"
                         className="px-1 flex-1"
-                        onSingleClick={() => {
-                          if (item && isRequestGroup(item.doc)) {
-                            navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}?${searchParams.toString()}`);
-                          } else {
-                            navigate(
-                              `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}?${searchParams.toString()}`
-                            );
-                          }
-                        }}
                         onSubmit={name => {
                           if (isRequestGroup(item.doc)) {
                             patchGroup(item.doc._id, { name });
