@@ -1,10 +1,8 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../../__jest__/before-each';
 import { getBearerAuthHeader } from '../get-header';
 
 describe('getBearerAuthHeader()', () => {
-  beforeEach(globalBeforeEach);
 
   it('succeed with token and prefix', () => {
     const header = getBearerAuthHeader('token', 'prefix');

@@ -1,7 +1,6 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
 import path from 'path';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models';
 import { Cookie } from '../../models/cookie-jar';
 import { Request } from '../../models/request';
@@ -12,7 +11,6 @@ import { getRenderedRequestAndContext } from '../render';
 
 describe('export', () => {
   beforeEach(async () => {
-    await globalBeforeEach();
     await models.project.all();
     await models.settings.getOrCreate();
   });

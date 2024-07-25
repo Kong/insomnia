@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 import { quote } from 'shell-quote';
 
 import { Parameter } from '../entities';

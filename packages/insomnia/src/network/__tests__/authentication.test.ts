@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
 import { AUTH_API_KEY, AUTH_OAUTH_1 } from '../../common/constants';
 import {

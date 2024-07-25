@@ -1,8 +1,7 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import { project, request, requestGroup, workspace } from '../../models';
 import * as importUtil from '../import';
 
@@ -32,8 +31,6 @@ describe('isInsomniaV4Import()', () => {
 });
 
 describe('importRaw()', () => {
-  beforeEach(globalBeforeEach);
-
   it('should import a curl request to a new workspace', async () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();

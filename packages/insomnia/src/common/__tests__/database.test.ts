@@ -1,6 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models';
 import { data as fixtures } from '../__fixtures__/nestedfolders';
 import { _repairDatabase, database as db } from '../database';
@@ -17,8 +16,6 @@ function loadFixture() {
 }
 
 describe('init()', () => {
-  beforeEach(globalBeforeEach);
-
   it('handles being initialized twice', async () => {
     await db.init(models.types(), {
       inMemoryOnly: true,
@@ -31,8 +28,6 @@ describe('init()', () => {
 });
 
 describe('onChange()', () => {
-  beforeEach(globalBeforeEach);
-
   it('handles change listeners', async () => {
     const doc = {
       type: models.request.type,
@@ -62,7 +57,6 @@ describe('onChange()', () => {
 });
 
 describe('bufferChanges()', () => {
-  beforeEach(globalBeforeEach);
 
   it('properly buffers changes', async () => {
     const doc = {
@@ -156,7 +150,6 @@ describe('bufferChanges()', () => {
 });
 
 describe('bufferChangesIndefinitely()', () => {
-  beforeEach(globalBeforeEach);
 
   it('should not auto flush', async () => {
     const doc = {
@@ -191,7 +184,6 @@ describe('bufferChangesIndefinitely()', () => {
 });
 
 describe('requestCreate()', () => {
-  beforeEach(globalBeforeEach);
 
   it('creates a valid request', async () => {
     const now = Date.now();
@@ -228,7 +220,6 @@ describe('requestCreate()', () => {
 
 describe('requestGroupDuplicate()', () => {
   beforeEach(async () => {
-    await globalBeforeEach();
     await loadFixture();
   });
 
@@ -261,7 +252,6 @@ describe('requestGroupDuplicate()', () => {
 });
 
 describe('_repairDatabase()', () => {
-  beforeEach(globalBeforeEach);
 
   it('fixes duplicate environments', async () => {
     // Create Workspace with no children
@@ -645,13 +635,12 @@ describe('_repairDatabase()', () => {
 });
 
 describe('duplicate()', () => {
-  beforeEach(globalBeforeEach);
 
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
 
   it('should overwrite appropriate fields on the parent when duplicating', async () => {
     const date = 1478795580200;
-    Date.now = jest.fn().mockReturnValue(date);
+    Date.now = vi.fn().mockReturnValue(date);
     const workspace = await models.workspace.create({
       name: 'Test Workspace',
     });
@@ -678,18 +667,17 @@ describe('duplicate()', () => {
     const workspace = await models.workspace.create({
       name: 'Test Workspace',
     });
-    const spy = jest.spyOn(models.workspace, 'migrate');
+    const spy = vi.spyOn(models.workspace, 'migrate');
     await db.duplicate(workspace);
     expect(spy).not.toHaveBeenCalled();
   });
 });
 
 describe('docCreate()', () => {
-  beforeEach(globalBeforeEach);
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
 
   it('should call migrate when creating', async () => {
-    const spy = jest.spyOn(models.workspace, 'migrate');
+    const spy = vi.spyOn(models.workspace, 'migrate');
     await db.docCreate(models.workspace.type, {
       name: 'Test Workspace',
     });
@@ -699,7 +687,6 @@ describe('docCreate()', () => {
 });
 
 describe('withAncestors()', () => {
-  beforeEach(globalBeforeEach);
 
   it('should return itself and all parents but exclude siblings', async () => {
     const spc = await models.project.create();

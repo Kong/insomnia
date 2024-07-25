@@ -1,9 +1,9 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 import * as settingsOriginal from '../settings';
 
-const actual = jest.requireActual('../settings') as typeof settingsOriginal;
+const actual = vi.requireActual('../settings') as typeof settingsOriginal;
 
-actual.getConfigSettings = jest.fn();
+actual.getConfigSettings = vi.fn();
 
 module.exports = actual;

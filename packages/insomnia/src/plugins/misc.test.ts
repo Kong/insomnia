@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it, vi } from 'vitest';
 
 import { containsNunjucks, PluginTheme, validateTheme, validateThemeName } from './misc';
 
@@ -22,7 +22,7 @@ describe('validateTheme', () => {
   const displayName = 'Mock Plugin';
   const mockMessage = (path: string[]) => `[plugin] Nunjucks values in plugin themes are no longer valid. The plugin ${displayName} (${name}) has an invalid value, "${nunjucksValue}" at the path $.theme.${path.join('.')}`;
 
-  jest.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(console, 'error').mockImplementation(() => { });
 
   it('will validate rawCSS in the plugin theme', () => {
     const pluginTheme: PluginTheme = {

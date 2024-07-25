@@ -1,9 +1,8 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import path from 'path';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
 
-import { globalBeforeEach } from '../../../__jest__/before-each';
 import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import { workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
@@ -14,9 +13,10 @@ import { assertAsyncError, setupDateMocks } from './util';
 const workspaceBuilder = createBuilder(workspaceModelSchema);
 
 describe('NeDBClient', () => {
-  afterAll(() => jest.restoreAllMocks());
+  afterAll(() => {
+    vi.restoreAllMocks();
+  });
   beforeEach(async () => {
-    await globalBeforeEach();
     workspaceBuilder.reset();
     setupDateMocks();
     // Create some sample models
@@ -117,7 +117,7 @@ describe('NeDBClient', () => {
   describe('writeFile()', () => {
     it('should ignore files not in GIT_INSOMNIA_DIR directory', async () => {
       // Arrange
-      const upsertSpy = jest.spyOn(db, 'upsert');
+      const upsertSpy = vi.spyOn(db, 'upsert');
       const workspaceId = 'wrk_1';
       const neDbClient = new NeDBClient(workspaceId, 'proj_1');
       const env = {
@@ -138,7 +138,7 @@ describe('NeDBClient', () => {
       // Arrange
       const workspaceId = 'wrk_1';
       const neDbClient = new NeDBClient(workspaceId, 'proj_1');
-      const upsertSpy = jest.spyOn(db, 'upsert');
+      const upsertSpy = vi.spyOn(db, 'upsert');
       const env = {
         _id: 'env_1',
         type: models.environment.type,
@@ -159,9 +159,8 @@ describe('NeDBClient', () => {
       const workspaceId = 'wrk_1';
       const projectId = `${models.project.prefix}_1`;
       const neDbClient = new NeDBClient(workspaceId, projectId);
-      const upsertSpy = jest.spyOn(db, 'upsert');
+      const upsertSpy = vi.spyOn(db, 'upsert');
 
-      // @ts-expect-error not sure why scope is being typed as never
       workspaceBuilder._id(workspaceId).scope('design').certificates(null);
 
       // @ts-expect-error parentId can be string or null for a workspace

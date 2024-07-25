@@ -1,5 +1,5 @@
-import { it } from '@jest/globals';
 import { parse } from 'protobufjs';
+import { expect, it } from 'vitest';
 
 import { mockRequestMethods } from '../automock';
 

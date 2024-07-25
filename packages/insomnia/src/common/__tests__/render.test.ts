@@ -1,21 +1,19 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models';
 import { environmentModelSchema, requestGroupModelSchema } from '../../models/__schemas__/model-schemas';
 import { Environment } from '../../models/environment';
 import { Workspace } from '../../models/workspace';
 import * as renderUtils from '../render';
 
-jest.mock('electron');
+vi.mock('electron');
 
 const envBuilder = createBuilder(environmentModelSchema);
 const reqGroupBuilder = createBuilder(requestGroupModelSchema);
 
 describe('render tests', () => {
   beforeEach(async () => {
-    await globalBeforeEach();
     await models.project.all();
     await models.settings.getOrCreate();
     envBuilder.reset();

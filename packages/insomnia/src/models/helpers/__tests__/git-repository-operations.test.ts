@@ -1,11 +1,9 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../index';
 import { createGitRepository, deleteGitRepository } from '../git-repository-operations';
 
 describe('gitRepositoryOperations', () => {
-  beforeEach(globalBeforeEach);
   describe('createGitRepository', () => {
     it('should create and link to workspace meta', async () => {
       const repoId = 'git_1';

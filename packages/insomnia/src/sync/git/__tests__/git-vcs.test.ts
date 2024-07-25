@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as git from 'isomorphic-git';
 import path from 'path';
 
@@ -15,7 +15,7 @@ describe('Git-VCS', () => {
     barTxt = path.join(GIT_INSOMNIA_DIR, 'bar.txt');
   });
 
-  afterAll(() => jest.restoreAllMocks());
+  afterAll(() => vi.restoreAllMocks());
 
   beforeEach(setupDateMocks);
 
