@@ -67,6 +67,7 @@
     "ts-jest": "^29.1.2",
     "tslib": "2.0.1",
     "type-fest": "^4.15.0",
-    "typescript": "^5.4.4"
+    "typescript": "^5.4.4",
+    "vitest": "^2.0.4"
   }
 }

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Snapshot for "inso --help" 1`] = `
+exports[`Snapshot for > "inso --help" 1`] = `
 "Usage: inso [options] [command]
 
 A CLI for Insomnia!
@@ -42,7 +42,7 @@ Commands:
   help [command]          display help for command"
 `;
 
-exports[`Snapshot for "inso -h" 1`] = `
+exports[`Snapshot for > "inso -h" 1`] = `
 "Usage: inso [options] [command]
 
 A CLI for Insomnia!
@@ -84,7 +84,7 @@ Commands:
   help [command]          display help for command"
 `;
 
-exports[`Snapshot for "inso export -h" 1`] = `
+exports[`Snapshot for > "inso export -h" 1`] = `
 "Usage: inso export [options] [command]
 
 Export data from insomnia models
@@ -98,7 +98,7 @@ Commands:
   help [command]               display help for command"
 `;
 
-exports[`Snapshot for "inso export spec -h" 1`] = `
+exports[`Snapshot for > "inso export spec -h" 1`] = `
 "Usage: inso export spec [options] [identifier]
 
 Export an API Specification to a file, identifier can be an API Spec id
@@ -110,7 +110,7 @@ Options:
   -h, --help             display help for command"
 `;
 
-exports[`Snapshot for "inso generate -h" 1`] = `
+exports[`Snapshot for > "inso generate -h" 1`] = `
 "Usage: inso [options] [command]
 
 A CLI for Insomnia!
@@ -152,7 +152,7 @@ Commands:
   help [command]          display help for command"
 `;
 
-exports[`Snapshot for "inso help" 1`] = `
+exports[`Snapshot for > "inso help" 1`] = `
 "Usage: inso [options] [command]
 
 A CLI for Insomnia!
@@ -194,7 +194,7 @@ Commands:
   help [command]          display help for command"
 `;
 
-exports[`Snapshot for "inso lint -h" 1`] = `
+exports[`Snapshot for > "inso lint -h" 1`] = `
 "Usage: inso lint [options] [command]
 
 Lint a yaml file in the workingDir or the provided file path (with
@@ -209,7 +209,7 @@ Commands:
   help [command]     display help for command"
 `;
 
-exports[`Snapshot for "inso lint spec -h" 1`] = `
+exports[`Snapshot for > "inso lint spec -h" 1`] = `
 "Usage: inso lint spec [options] [identifier]
 
 Lint an API Specification, identifier can be an API Spec id or a file path
@@ -218,7 +218,7 @@ Options:
   -h, --help  display help for command"
 `;
 
-exports[`Snapshot for "inso run -h" 1`] = `
+exports[`Snapshot for > "inso run -h" 1`] = `
 "Usage: inso run [options] [command]
 
 Execution utilities
@@ -234,7 +234,7 @@ Commands:
   help [command]                     display help for command"
 `;
 
-exports[`Snapshot for "inso run test -h" 1`] = `
+exports[`Snapshot for > "inso run test -h" 1`] = `
 "Usage: inso run test [options] [identifier]
 
 Run Insomnia unit test suites, identifier can be a test suite id or a API Spec
