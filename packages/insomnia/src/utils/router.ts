@@ -5,7 +5,7 @@ import * as models from '../models';
 import type { Organization } from '../models/organization';
 import { findPersonalOrganization } from '../models/organization';
 import type { Project } from '../models/project';
-import { scopeToActivity } from '../models/workspace';
+import { scopeToActivity, type Workspace } from '../models/workspace';
 export const enum AsyncTask {
   SyncOrganization,
   MigrateProjects,
@@ -39,6 +39,14 @@ export const getInitialRouteForOrganization = async ({
           const existingWorkspace = await models.workspace.getById(match.params.workspaceId);
           if (existingWorkspace) {
             return `/organization/${match.params.organizationId}/project/${existingProject._id}/workspace/${existingWorkspace._id}/${scopeToActivity(existingWorkspace.scope)}`;
+          }
+
+          const firstWorkspace = await database.getWhere<Workspace>(models.workspace.type, {
+            parentId: existingProject._id,
+          });
+
+          if (firstWorkspace?._id) {
+            return `/organization/${match.params.organizationId}/project/${existingProject._id}/workspace/${firstWorkspace._id}/${scopeToActivity(firstWorkspace.scope)}`;
           }
         }
 
