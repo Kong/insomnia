@@ -1,5 +1,3 @@
-import { SentryError } from '@sentry/utils';
-
 const STATE_IN_NUN_VAR = 'nunvar';
 const STATE_IN_NUN_TAG = 'nuntag';
 const STATE_IN_NUN_COM = 'nuncom';
@@ -38,7 +36,7 @@ function ensureStringify(val?: string | Object): string {
     try {
       defaultVal = JSON.stringify(val);
     } catch (error) {
-      SentryError.captureStackTrace(error);
+      // If we can't stringify, just return the default
     }
 
     return defaultVal;
