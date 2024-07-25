@@ -83,7 +83,8 @@ export function forceBracketNotation(prefix: string, key: string | number) {
 }
 
 export function normalizeToDotAndBracketNotation(prefix: string) {
-  return objectPath.normalize(prefix);
+  // objectPath.normalize will enter endless loop if last char in key is backslash
+  return objectPath.normalize(prefix.replace(/\\+'/g, '\''));
 }
 
 /**
