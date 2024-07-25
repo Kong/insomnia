@@ -209,7 +209,7 @@ export async function initInsomniaObject(
         url: reqUrl,
         method: rawObj.request.method,
         header: rawObj.request.headers.map(
-            (header: RequestHeader) => ({ key: header.name, value: header.value })
+            (header: RequestHeader) => ({ key: header.name, value: header.value, disabled: header.disabled })
         ),
         body: toScriptRequestBody(rawObj.request.body),
         auth: toPreRequestAuth(rawObj.request.authentication),
