@@ -1,5 +1,5 @@
-import { describe, expect, it } from '@jest/globals';
 import path from 'path';
+import { describe, expect, it } from 'vitest';
 
 import insomniaAdapter from './insomnia-adapter';
 

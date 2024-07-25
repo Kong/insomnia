@@ -1,7 +1,7 @@
-import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
 import path from 'path';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { globalBeforeAll, globalBeforeEach } from '../jest/before';
+import { globalBeforeAll, globalBeforeEach } from '../vitest/before';
 import { lintSpecification } from './lint-specification';
 
 describe('lint specification', () => {

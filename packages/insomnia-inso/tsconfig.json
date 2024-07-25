@@ -52,6 +52,6 @@
     "jest.config.js",
     "node_modules",
     "scripts",
-    "src/jest",
+    "src/vitest",
   ],
 }

@@ -1,4 +1,5 @@
 import { logType } from 'consola';
+import { vi } from 'vitest';
 
 import { logger, LogsByType } from '../cli';
 
@@ -32,5 +33,5 @@ export const globalBeforeAll = () => {
 };
 
 export const globalBeforeEach = () => {
-  logger.mockTypes(() => jest.fn());
+  logger.mockTypes(() => vi.fn());
 };
