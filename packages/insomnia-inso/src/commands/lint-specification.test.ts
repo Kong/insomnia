@@ -1,17 +1,9 @@
 import path from 'path';
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { globalBeforeAll, globalBeforeEach } from '../vitest/before';
 import { lintSpecification } from './lint-specification';
 
 describe('lint specification', () => {
-  beforeAll(() => {
-    globalBeforeAll();
-  });
-
-  beforeEach(() => {
-    globalBeforeEach();
-  });
 
   const specContent = `openapi: '3.0.2'
 info:
