@@ -1,12 +1,13 @@
 import { test } from '../../playwright/test';
 
 test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)', async ({ page }) => {
-
-    let gitSyncSmokeTestToken = process.env.GIT_SYNC_SMOKE_TEST_TOKEN;
+    const gitSyncSmokeTestToken = process.env.GIT_SYNC_SMOKE_TEST_TOKEN;
 
     // read env variable to skip test
     if (!gitSyncSmokeTestToken) {
+        console.log('Skipping, set GIT_SYNC_SMOKE_TEST_TOKEN to run, TIP: "gh auth login to get a token" and "export GIT_SYNC_SMOKE_TEST_TOKEN=$(gh auth token)"');
         test.skip();
+        return;
     }
 
     // generate a uuid string
