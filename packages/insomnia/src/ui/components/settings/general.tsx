@@ -313,8 +313,7 @@ export const General: FC = () => {
 
       {!isLoggedIn && (
         <>
-          <hr className="pad-top" />
-          <h2>Network Activity</h2>
+          <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Network Activity</h2>
           <BooleanSetting
             descriptions={[
               `Help Kong improve its products by sending anonymous data about features and plugins used, hardware and software configuration, statistics on number of requests, ${strings.collection.plural.toLowerCase()}, ${strings.document.plural.toLowerCase()}, etc.`,
