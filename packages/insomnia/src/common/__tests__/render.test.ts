@@ -1,13 +1,11 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import * as models from '../../models';
 import { environmentModelSchema, requestGroupModelSchema } from '../../models/__schemas__/model-schemas';
 import { Environment } from '../../models/environment';
 import { Workspace } from '../../models/workspace';
 import * as renderUtils from '../render';
-
-vi.mock('electron');
 
 const envBuilder = createBuilder(environmentModelSchema);
 const reqGroupBuilder = createBuilder(requestGroupModelSchema);

@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import * as models from '../index';
 import { WorkspaceScopeKeys } from '../workspace';
-
 describe('migrate()', () => {
 
   it('migrates client certificates properly', async () => {

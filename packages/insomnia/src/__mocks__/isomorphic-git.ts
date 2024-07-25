@@ -1,5 +1,5 @@
-import { vi } from 'vitest';
 import isomorphicGitOriginal from 'isomorphic-git';
+import { vi } from 'vitest';
 
 // eslint-disable-next-line filenames/match-exported
 const git = vi.requireActual('isomorphic-git') as typeof isomorphicGitOriginal;

@@ -1,6 +1,6 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as git from 'isomorphic-git';
 import path from 'path';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR } from '../git-vcs';
 import { MemClient } from '../mem-client';
@@ -15,7 +15,9 @@ describe('Git-VCS', () => {
     barTxt = path.join(GIT_INSOMNIA_DIR, 'bar.txt');
   });
 
-  afterAll(() => vi.restoreAllMocks());
+  afterAll(() => {
+    vi.restoreAllMocks();
+  });
 
   beforeEach(setupDateMocks);
 

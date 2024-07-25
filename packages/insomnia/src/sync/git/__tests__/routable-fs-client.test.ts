@@ -5,7 +5,9 @@ import { MemClient } from '../mem-client';
 import { routableFSClient } from '../routable-fs-client';
 
 describe('routableFSClient', () => {
-  afterAll(() => vi.restoreAllMocks());
+  afterAll(() => {
+    vi.restoreAllMocks();
+  });
 
   it('routes .git and other files to separate places', async () => {
     const pGit = MemClient.createClient();
