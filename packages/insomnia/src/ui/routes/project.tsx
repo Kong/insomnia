@@ -242,7 +242,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   } catch (err) {
     console.log('[project] Could not fetch remote projects.');
   }
-  const initialOrganizationRoute = await getInitialRouteForOrganization(organizationId);
+  const initialOrganizationRoute = await getInitialRouteForOrganization({ organizationId });
   return redirect(initialOrganizationRoute);
 };
 

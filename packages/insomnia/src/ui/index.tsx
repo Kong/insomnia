@@ -1130,7 +1130,8 @@ async function renderApp() {
       window.main.trackPageView({ name: routeWithoutUUID });
     }
 
-    match?.params.organizationId && localStorage.setItem(`locationHistoryEntry:${match?.params.organizationId}`, currentRoute);
+    match?.params.organizationId && localStorage.setItem(`locationHistoryEntry:${match.params.organizationId}`, currentRoute);
+    match?.params.organizationId && localStorage.setItem('lastVisitedOrganizationId', match.params.organizationId);
   });
 
   ReactDOM.createRoot(root).render(
