@@ -766,7 +766,7 @@ const OrganizationRoute = () => {
                           : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
                           }`}
                         onClick={async () => {
-                          const routeForOrganization = await getInitialRouteForOrganization(organization.id);
+                          const routeForOrganization = await getInitialRouteForOrganization({ organizationId: organization.id });
                           navigate(routeForOrganization, {
                             state: {
                               asyncTaskList: [
