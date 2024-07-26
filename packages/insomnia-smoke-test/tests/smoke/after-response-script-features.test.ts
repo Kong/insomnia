@@ -28,7 +28,7 @@ test.describe('after-response script features tests', async () => {
         await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
         // verify
-        await page.getByRole('tab', { name: 'Timeline' }).click();
+        await page.getByRole('tab', { name: 'Console' }).click();
 
         await expect(responsePane).toContainText('✓ happy tests');
         await expect(responsePane).toContainText('✕ unhappy tests: AssertionError: expected 199 to deeply equal 200');
