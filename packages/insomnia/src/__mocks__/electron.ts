@@ -1,14 +1,14 @@
-import { jest } from '@jest/globals';
 import { EventEmitter } from 'events';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { vi } from 'vitest';
 
 const RANDOM_STRING = Math.random().toString().replace('.', '');
 
 const remote = {
   app: {
-    getPath(name) {
+    getPath(name: string) {
       const dir = path.join(os.tmpdir(), `insomnia-tests-${RANDOM_STRING}`, name);
       fs.mkdirSync(dir, { recursive: true });
       return dir;
@@ -18,7 +18,7 @@ const remote = {
       return 'en-US';
     },
 
-    exit: jest.fn(),
+    exit: vi.fn(),
   },
   net: {
     request() {
@@ -59,35 +59,32 @@ const remote = {
 };
 
 const dialog = {
-  showErrorBox: jest.fn(),
+  showErrorBox: vi.fn(),
 };
 
-const electron = {
+export const electronMock = {
   ...remote,
   remote,
   dialog,
   ipcMain: {
-    on: jest.fn(),
+    on: vi.fn(),
 
     once() {},
   },
   ipcRenderer: {
-    on: jest.fn(),
-    removeAllListeners: jest.fn(),
+    on: vi.fn(),
+    removeAllListeners: vi.fn(),
 
     once() {},
 
-    send: jest.fn(),
+    send: vi.fn(),
   },
   shell: {
-    openExternal: jest.fn(),
+    openExternal: vi.fn(),
   },
   clipboard: {
-    writeText: jest.fn(),
-    readText: jest.fn(),
-    clear: jest.fn(),
+    writeText: vi.fn(),
+    readText: vi.fn(),
+    clear: vi.fn(),
   },
 };
-
-// WARNING: changing this to `export default` will break the mock and be incredibly hard to debug. Ask me how I know.
-module.exports = electron;

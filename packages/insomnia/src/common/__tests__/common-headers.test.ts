@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
 import allCharsets from '../../datasets/charsets';
 import allMimeTypes from '../../datasets/content-types';

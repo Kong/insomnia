@@ -1,14 +1,12 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
+import { database as db } from '../../common/database';
 import * as models from '../../models';
 import { getAppVersion } from '../constants';
 import { exportRequestsData, exportRequestsHAR, exportWorkspacesData, exportWorkspacesHAR } from '../export';
-
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(async () => {
-    await globalBeforeEach();
     await models.project.all();
     await models.settings.getOrCreate();
   });
@@ -111,6 +109,8 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   });
 
   it('exports all workspaces as an HTTP Archive', async () => {
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
+
     const wrk1 = await models.workspace.create({
       _id: 'wrk_1',
       name: 'Workspace 1',
@@ -211,8 +211,6 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
 });
 
 describe('export', () => {
-  beforeEach(globalBeforeEach);
-
   it('exports all workspaces and some requests only', async () => {
     const w = await models.workspace.create({
       name: 'Workspace',

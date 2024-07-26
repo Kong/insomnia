@@ -1,11 +1,8 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../index';
 import { WorkspaceScopeKeys } from '../workspace';
-
 describe('migrate()', () => {
-  beforeEach(globalBeforeEach);
 
   it('migrates client certificates properly', async () => {
     const workspace = await models.workspace.create({

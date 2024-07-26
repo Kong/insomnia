@@ -1,11 +1,8 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../../__jest__/before-each';
 import { getBasicAuthHeader } from '../get-header';
 
 describe('getBasicAuthHeader()', () => {
-  beforeEach(globalBeforeEach);
-
   it('succeed with username and password', () => {
     const header = getBasicAuthHeader('user', 'password');
     expect(header).toEqual({

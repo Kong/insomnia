@@ -1,15 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import LocalStorage from '../../main/local-storage';
 
 describe('LocalStorage()', () => {
-  beforeEach(globalBeforeEach);
-
   afterEach(() => {
-    jest.clearAllTimers();
+    vi.clearAllTimers();
   });
 
   it('create directory', () => {
@@ -47,7 +44,7 @@ describe('LocalStorage()', () => {
   });
 
   it('does handles malformed files', () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
     const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
     const localStorage = new LocalStorage(basePath);
 
@@ -64,7 +61,7 @@ describe('LocalStorage()', () => {
   });
 
   it('does handles failing to write file', () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
     const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
     const localStorage = new LocalStorage(basePath);
     fs.rmdirSync(basePath);
@@ -77,13 +74,13 @@ describe('LocalStorage()', () => {
   });
 
   it('stores a key', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
     const localStorage = new LocalStorage(basePath);
     localStorage.setItem('foo', 'bar');
 
     // Force debouncer to flush
-    jest.runOnlyPendingTimers();
+    vi.runOnlyPendingTimers();
 
     // Assert there is one item stored
     expect(fs.readdirSync(basePath).length).toEqual(1);
@@ -94,7 +91,7 @@ describe('LocalStorage()', () => {
   });
 
   it('debounces key sets', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
     const localStorage = new LocalStorage(basePath);
     localStorage.setItem('foo', 'bar1');
@@ -103,7 +100,7 @@ describe('LocalStorage()', () => {
     expect(fs.readdirSync(basePath).length).toEqual(0);
 
     // Force debouncer to flush
-    jest.runOnlyPendingTimers();
+    vi.runOnlyPendingTimers();
 
     // Make sure only one item exists
     expect(fs.readdirSync(basePath).length).toEqual(2);
