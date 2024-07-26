@@ -44,9 +44,12 @@ jobs:
            path: packages/insomnia/build
 
   SmokeTest:
+    needs: BuildForSmokeTest
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
