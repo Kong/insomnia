@@ -67,5 +67,6 @@
     "src/main.min.js",
     "src/preload.js",
     "src/hidden-window-preload.js",
+    "./src/__mocks__/@getinsomnia/node-libcurl.ts"
   ],
 }

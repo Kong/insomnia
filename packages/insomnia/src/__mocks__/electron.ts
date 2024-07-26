@@ -8,7 +8,7 @@ const RANDOM_STRING = Math.random().toString().replace('.', '');
 
 const remote = {
   app: {
-    getPath(name) {
+    getPath(name: string) {
       const dir = path.join(os.tmpdir(), `insomnia-tests-${RANDOM_STRING}`, name);
       fs.mkdirSync(dir, { recursive: true });
       return dir;

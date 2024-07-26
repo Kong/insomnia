@@ -16,7 +16,7 @@ vi.mock('@getinsomnia/node-libcurl', () => nodeLibcurlMock);
 vi.mock('isomorphic-git', async importOriginal => {
   const actual = await importOriginal();
   return {
-    ...actual,
+    ...Object.assign({}, actual),
     push: vi.fn(),
     clone: vi.fn(),
   };
