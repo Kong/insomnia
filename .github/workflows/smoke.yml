@@ -47,6 +47,11 @@ jobs:
     needs: BuildForSmokeTest
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4]
+        shardTotal: [4]
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -69,7 +74,7 @@ jobs:
       - name: Smoke test electron app
         run: |
           GIT_SYNC_SMOKE_TEST_TOKEN=${{env.GIT_SYNC_SMOKE_TEST_TOKEN}} \
-          npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
+          npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         env:
           GIT_SYNC_SMOKE_TEST_TOKEN: ${{ secrets.GIT_SYNC_SMOKE_TEST_TOKEN }}
 
