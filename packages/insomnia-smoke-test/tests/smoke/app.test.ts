@@ -45,7 +45,7 @@ test('can send requests', async ({ app, page }) => {
   await page.getByLabel('Request Collection').getByTestId('connects to event stream and shows ping response').press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Connect' }).click();
   await expect(statusTag).toContainText('200 OK');
-  await page.getByRole('tab', { name: 'Timeline' }).click();
+  await page.getByRole('tab', { name: 'Console' }).click();
   await expect(responseBody).toContainText('Connected to 127.0.0.1');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Disconnect' }).click();
 
@@ -66,7 +66,7 @@ test('can send requests', async ({ app, page }) => {
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect(statusTag).toContainText('200 OK');
   // TODO(filipe): re-add a check for the preview that is less flaky
-  await page.getByRole('tab', { name: 'Timeline' }).click();
+  await page.getByRole('tab', { name: 'Console' }).click();
   await page.locator('pre').filter({ hasText: '< Content-Type: application/pdf' }).click();
 
   await page.getByLabel('Request Collection').getByTestId('sends request with basic authentication').press('Enter');
@@ -77,7 +77,7 @@ test('can send requests', async ({ app, page }) => {
   await page.getByLabel('Request Collection').getByTestId('sends request with cookie and get cookie in response').press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect(statusTag).toContainText('200 OK');
-  await page.getByRole('tab', { name: 'Timeline' }).click();
+  await page.getByRole('tab', { name: 'Console' }).click();
   await expect(responseBody).toContainText('Set-Cookie: insomnia-test-cookie=value123');
 });
 

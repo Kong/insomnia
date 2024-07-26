@@ -15,6 +15,6 @@ test('can make a mock route: WARNING: THIS TEST DEPENDS ON mock.insomnia.moe to 
 
   await page.getByRole('button', { name: 'Test' }).click();
   await page.getByText('No body returned for response').click();
-  await page.getByRole('tab', { name: 'Timeline' }).click();
+  await page.getByRole('tab', { name: 'Console' }).click();
   await page.getByText('HTTP/2 200').click();
 });

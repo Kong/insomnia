@@ -30,7 +30,7 @@ test.describe('Environment Editor', async () => {
     // Send a request check variables defaulted to base env since new env is empty
     await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
     await page.getByRole('button', { name: 'Send' }).click();
-    await page.getByRole('tab', { name: 'Timeline' }).click();
+    await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByText('baseenv0').click();
     await page.getByText('baseenv1').click();
   });
@@ -53,7 +53,7 @@ test.describe('Environment Editor', async () => {
     await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
     // await page.waitForTimeout(60000);
     await page.getByRole('button', { name: 'Send' }).click();
-    await page.getByRole('tab', { name: 'Timeline' }).click();
+    await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByText('subenvB0').click();
     await page.getByText('subenvB1').click();
   });
@@ -94,7 +94,7 @@ test.describe('Environment Editor', async () => {
 
     // Check new variables are in the timeline
     await page.getByRole('button', { name: 'Send' }).click();
-    await page.getByRole('tab', { name: 'Timeline' }).click();
+    await page.getByRole('tab', { name: 'Console' }).click();
 
     // FIXME(filipe) - adding variables to request body can be so fast they don't get picked up when sending request
 
