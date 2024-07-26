@@ -1,4 +1,4 @@
-import { matchPath } from 'react-router-dom';
+import { matchPath, type PathMatch } from 'react-router-dom';
 
 import { database } from '../common/database';
 import * as models from '../models';
@@ -11,6 +11,27 @@ export const enum AsyncTask {
   MigrateProjects,
   SyncProjects,
 }
+
+const getMatchParams = (location: string) => {
+  const workspaceMatch = matchPath(
+    {
+      path: '/organization/:organizationId/project/:projectId/workspace/:workspaceId',
+      end: false,
+    },
+    location
+  );
+
+  const projectMatch = matchPath(
+    {
+      path: '/organization/:organizationId/project/:projectId',
+      end: false,
+    },
+    location
+  );
+
+  return (workspaceMatch || projectMatch) as PathMatch<'organizationId' | 'projectId' | 'workspaceId'> | null;
+};
+
 export const getInitialRouteForOrganization = async ({
   organizationId,
   navigateToWorkspace = false,
@@ -21,13 +42,8 @@ export const getInitialRouteForOrganization = async ({
   );
   // Check if the last visited project exists and redirect to it
   if (prevOrganizationLocation) {
-    const match = matchPath(
-      {
-        path: '/organization/:organizationId/project/:projectId/workspace/:workspaceId',
-        end: false,
-      },
-      prevOrganizationLocation
-    );
+
+    const match = getMatchParams(prevOrganizationLocation);
 
     if (match && match.params.organizationId && match.params.projectId) {
       const existingProject = await models.project.getById(match.params.projectId);
