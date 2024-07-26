@@ -163,7 +163,7 @@ function tokensToLines(tokens: ReturnType<typeof tokenize>) {
   return lines.map(l => l.join(''));
 }
 
-export const ednPrettify = (edn: string, _filter?: string) => {
+export const ednPrettify = (edn: string) => {
   const tokens = tokenize(edn);
   const lines = tokensToLines(tokens);
 
