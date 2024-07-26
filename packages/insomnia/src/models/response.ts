@@ -149,7 +149,8 @@ async function _findRecentForRequest(
   };
 
   // Filter responses by environment if setting is enabled
-  if ((await models.settings.get()).filterResponsesByEnv) {
+  const settings = await models.settings.get();
+  if (environmentId && settings?.filterResponsesByEnv) {
     query.environmentId = environmentId;
   }
 
@@ -177,7 +178,8 @@ export async function create(patch: Partial<Response> = {}, maxResponses = 20): 
   const requestVersion = request ? await models.requestVersion.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
   // Filter responses by environment if setting is enabled
-  const shouldQueryByEnvId = (await models.settings.get()).filterResponsesByEnv && patch.hasOwnProperty('environmentId');
+  const settings = await models.settings.get();
+  const shouldQueryByEnvId = patch.hasOwnProperty('environmentId') && settings.filterResponsesByEnv;
   const query = {
     parentId,
     ...(shouldQueryByEnvId ? { environmentId: patch.environmentId } : {}),

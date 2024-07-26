@@ -273,10 +273,6 @@ describe('postman', () => {
         expect(headers).toEqual([]);
       });
     });
-
-    describe('oauth2', () => {
-      // we don't have a importOauth2AuthenticationFromHeader with which to write a test for since importBearerAuthenticationFromHeader handles this case
-    });
   });
 
   describe('oauth2', () => {

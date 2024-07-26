@@ -1,6 +1,7 @@
 import path from 'path';
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { database as db } from '../../common/database';
 import * as models from '../../models';
 import { Cookie } from '../../models/cookie-jar';
 import { Request } from '../../models/request';
@@ -11,6 +12,7 @@ import { getRenderedRequestAndContext } from '../render';
 
 describe('export', () => {
   beforeEach(async () => {
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
     await models.project.all();
     await models.settings.getOrCreate();
   });
