@@ -62,7 +62,7 @@ const dialog = {
   showErrorBox: vi.fn(),
 };
 
-const electron = {
+export const electron = {
   ...remote,
   remote,
   dialog,
@@ -88,6 +88,3 @@ const electron = {
     clear: vi.fn(),
   },
 };
-
-// WARNING: changing this to `export default` will break the mock and be incredibly hard to debug. Ask me how I know.
-module.exports = electron;

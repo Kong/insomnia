@@ -202,7 +202,7 @@ function v1() {
   return uuid;
 }
 
-function v4() {
+export function v4() {
   const uuid = v4UUIDs[v4Counter++];
   if (!uuid) {
     throw new Error('Not enough mocked v4 UUIDs to go around');

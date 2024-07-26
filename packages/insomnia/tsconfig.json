@@ -42,6 +42,7 @@
     "vite.config.ts",
     "vite-plugin-electron-node-require",
     "**/*.d.ts",
+    "setup-vitest.ts",
   ],
   "exclude": [
     "bin",
