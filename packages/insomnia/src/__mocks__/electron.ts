@@ -62,7 +62,7 @@ const dialog = {
   showErrorBox: vi.fn(),
 };
 
-export const electron = {
+export const electronMock = {
   ...remote,
   remote,
   dialog,

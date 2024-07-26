@@ -194,7 +194,7 @@ const getTsEnumOnlyWithNamedMembers = enumObj => {
 };
 
 // WARNING: changing this to `export default` will break the mock and be incredibly hard to debug. Ask me how I know.
-export const nodeLibcurl = {
+export const nodeLibcurlMock = {
   Curl,
   CurlAuth: getTsEnumOnlyWithNamedMembers(CurlAuth),
   CurlCode: getTsEnumOnlyWithNamedMembers(CurlCode),

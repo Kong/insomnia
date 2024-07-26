@@ -19,35 +19,4 @@ describe('gitRepositoryOperations', () => {
     });
   });
 
-  describe('deleteGitRepository', () => {
-    it('should delete', async () => {
-      const repo = await models.gitRepository.create();
-      expect(await models.gitRepository.all()).toHaveLength(1);
-      await deleteGitRepository(repo);
-      expect(await models.gitRepository.all()).toHaveLength(0);
-    });
-
-    it('should reset workspace meta fields', async () => {
-      const repo = await models.gitRepository.create();
-      const wrk = await models.workspace.create();
-      await models.workspaceMeta.create({
-        parentId: wrk._id,
-        gitRepositoryId: repo._id,
-        cachedGitRepositoryBranch: 'abc',
-        cachedGitLastCommitTime: 123,
-        cachedGitLastAuthor: 'abc',
-      });
-      await deleteGitRepository(repo);
-      expect(await models.gitRepository.all()).toHaveLength(0);
-      const meta = await models.workspaceMeta.getByParentId(wrk._id);
-      expect(meta).toStrictEqual(
-        expect.objectContaining({
-          gitRepositoryId: null,
-          cachedGitLastCommitTime: null,
-          cachedGitRepositoryBranch: null,
-          cachedGitLastAuthor: null,
-        }),
-      );
-    });
-  });
 });

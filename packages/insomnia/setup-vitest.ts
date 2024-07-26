@@ -1,10 +1,10 @@
 import { vi } from 'vitest';
 
-import { nodeLibcurl } from './src/__mocks__/@getinsomnia/node-libcurl';
-import { electron } from './src/__mocks__/electron';
+import { nodeLibcurlMock } from './src/__mocks__/@getinsomnia/node-libcurl';
+import { electronMock } from './src/__mocks__/electron';
 import { database as db } from './src/common/database';
 import * as models from './src/models';
-import { v4 as v4Mock } from './src/models/__mocks__/uuid';
+import { v4Mock } from './src/models/__mocks__/uuid';
 await db.init(
   models.types(),
   {
@@ -13,9 +13,18 @@ await db.init(
   true,
   () => { },
 );
-vi.mock('electron', () => ({ default: electron }));
+vi.mock('electron', () => ({ default: electronMock }));
 
 vi.mock('uuid', () => ({
   v4: () => v4Mock(),
 }));
-vi.mock('@getinsomnia/node-libcurl', () => nodeLibcurl);
+vi.mock('@getinsomnia/node-libcurl', () => nodeLibcurlMock);
+
+vi.mock('isomorphic-git', async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    push: vi.fn(),
+    clone: vi.fn(),
+  };
+});

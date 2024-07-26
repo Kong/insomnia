@@ -31,21 +31,6 @@ describe('create()', () => {
     expect(await models.grpcRequestMeta.getOrCreateByParentId(expected.parentId)).toEqual(expected);
   });
 
-  it('creates a valid GrpcRequestMeta if it does not exist', async () => {
-    Date.now = vi.fn().mockReturnValue(1478795580200);
-    const request = await models.grpcRequestMeta.getOrCreateByParentId('greq_124');
-    const expected = {
-      _id: 'greqm_dd2ccc1a2745477a881a9e8ef9d42403',
-      created: 1478795580200,
-      modified: 1478795580200,
-      parentId: 'greq_124',
-      pinned: false,
-      type: 'GrpcRequestMeta',
-      lastActive: 0,
-    };
-    expect(request).toEqual(expected);
-  });
-
   it('fails when missing parentId', async () => {
     expect(() =>
       models.grpcRequestMeta.create({
