@@ -53,7 +53,6 @@
     "consola": "^2.15.0",
     "cosmiconfig": "^9.0.0",
     "enquirer": "^2.4.1",
-    "insomnia-send-request": "../insomnia-send-request",
     "string-argv": "^0.3.2",
     "yaml": "^1.6.0"
   }
