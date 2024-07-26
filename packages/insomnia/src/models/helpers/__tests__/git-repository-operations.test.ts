@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import * as models from '../../index';
-import { createGitRepository, deleteGitRepository } from '../git-repository-operations';
+import { createGitRepository } from '../git-repository-operations';
 
 describe('gitRepositoryOperations', () => {
   describe('createGitRepository', () => {

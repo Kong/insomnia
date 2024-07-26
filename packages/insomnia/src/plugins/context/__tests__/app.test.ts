@@ -1,7 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import appPackageJson from '../../../../package.json';
-import * as modals from '../../../ui/components/modals';
 import * as plugin from '../app';
 
 describe('init()', () => {

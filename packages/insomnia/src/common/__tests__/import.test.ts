@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { project, request, requestGroup, workspace } from '../../models';
 import * as importUtil from '../import';

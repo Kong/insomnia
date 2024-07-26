@@ -1,6 +1,6 @@
 import grpcJSOriginal from '@grpc/grpc-js';
-import { vi } from 'vitest';
 import { EventEmitter } from 'events';
+import { vi } from 'vitest';
 
 const grpcJs = vi.requireActual('@grpc/grpc-js') as typeof grpcJSOriginal;
 

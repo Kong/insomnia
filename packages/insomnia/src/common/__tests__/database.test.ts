@@ -1,19 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as models from '../../models';
-import { data as fixtures } from '../__fixtures__/nestedfolders';
 import { _repairDatabase, database as db } from '../database';
-
-function loadFixture() {
-  const promises: Promise<models.BaseModel>[] = [];
-  for (const type of Object.keys(fixtures)) {
-    for (const doc of fixtures[type]) {
-      // @ts-expect-error -- TSCONVERSION
-      promises.push(db.insert<models.BaseModel>({ ...doc, type }));
-    }
-  }
-  return Promise.all(promises);
-}
 
 describe('init()', () => {
   it('handles being initialized twice', async () => {
