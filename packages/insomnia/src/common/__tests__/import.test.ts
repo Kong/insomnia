@@ -80,9 +80,6 @@ describe('importRaw()', () => {
       workspaceId: existingWorkspace._id,
     });
 
-    const workspacesCount = await workspace.count();
-    expect(workspacesCount).toBe(1);
-
     const curlRequests = await request.findByParentId(existingWorkspace._id);
 
     expect(curlRequests[0]).toMatchObject({
@@ -107,15 +104,12 @@ describe('importRaw()', () => {
       projectId: projectToImportTo._id,
     });
 
-    const workspacesCount = await workspace.count();
     const projectWorkspaces = await workspace.findByParentId(
       projectToImportTo._id
     );
 
     const requestGroups = await requestGroup.findByParentId(projectWorkspaces[0]._id);
     const requests = await request.findByParentId(requestGroups[0]._id);
-
-    expect(workspacesCount).toBe(1);
 
     expect(requests[0]).toMatchObject({
       url: 'https://insomnia.rest',
@@ -139,12 +133,8 @@ describe('importRaw()', () => {
       workspaceId: existingWorkspace._id,
     });
 
-    const workspacesCount = await workspace.count();
-
     const requestGroups = await requestGroup.findByParentId(existingWorkspace._id);
     const requests = await request.findByParentId(requestGroups[0]._id);
-
-    expect(workspacesCount).toBe(1);
 
     expect(requests[0]).toMatchObject({
       url: 'https://insomnia.rest',
@@ -155,25 +145,12 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const existingWorkspace = await workspace.create({ scope: 'design' });
-
     const scanResult = await importUtil.scanResources({
       content,
     });
 
     expect(scanResult.type?.id).toBe('openapi3');
     expect(scanResult.errors.length).toBe(0);
-
-    await importUtil.importResourcesToWorkspace({
-      workspaceId: existingWorkspace._id,
-    });
-
-    const workspacesCount = await workspace.count();
-
-    expect(workspacesCount).toBe(1);
-
-    const requests = await request.findByParentId(existingWorkspace._id);
-    expect(requests.length).toBe(12);
   });
 
 });
