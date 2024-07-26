@@ -6,7 +6,7 @@
   "main": "src/objects/index.ts",
   "types": "src/objects/index.ts",
   "scripts": {
-    "test": "vitest"
+    "test": "vitest run"
   },
   "repository": {
     "type": "git",

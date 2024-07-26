@@ -16,7 +16,7 @@
   "types": "src/index.ts",
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "test": "vitest",
+    "test": "vitest run",
     "type-check": "tsc --noEmit --project tsconfig.json"
   },
   "homepage": "https://github.com/Kong/insomnia#readme",

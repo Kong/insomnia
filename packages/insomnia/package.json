@@ -25,7 +25,7 @@
     "start": "concurrently -n browser,main --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "start:dev-server": "vite dev",
     "start:electron": "cross-env NODE_ENV=development esr esbuild.main.ts && electron --inspect=5858 .",
-    "test": "vitest",
+    "test": "vitest run",
     "electron:dev-build": "electron ./build/main.min.js",
     "type-check": "tsc --noEmit --project tsconfig.json",
     "type-check:watch": "npm run type-check -- --watch",
