@@ -399,20 +399,20 @@ test.describe('pre-request features tests', async () => {
         await expect(responsePane).toContainText('fixtures/certificates/fake.pfx'); // original proxy
     });
 
-    // test('insomnia.test and insomnia.expect can work together ', async ({ page }) => {
-    //     const responsePane = page.getByTestId('response-pane');
+    test('pre: insomnia.test and insomnia.expect can work together', async ({ page }) => {
+        await page.getByLabel('Request Collection').getByTestId('insomnia.test').press('Enter');
 
-    //     await page.getByLabel('Request Collection').getByTestId('insomnia.test').press('Enter');
+        // send
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
-    //     // send
-    //     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+        // verify
+        await page.getByRole('tab', { name: 'Tests' }).click();
 
-    //     // verify
-    //     await page.getByRole('tab', { name: 'Console' }).click();
-
-    //     await expect(responsePane).toContainText('✓ happy tests');
-    //     await expect(responsePane).toContainText('✕ unhappy tests: AssertionError: expected 199 to deeply equal 200');
-    // });
+        const rows = page.getByTestId('test-result-row');
+        await expect(rows.first()).toContainText('PASS');
+        await expect(rows.nth(1)).toContainText('FAIL');
+        await expect(rows.nth(1)).toContainText('AssertionError:');
+    });
 
     test('environment and baseEnvironment can be persisted', async ({ page }) => {
         const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
