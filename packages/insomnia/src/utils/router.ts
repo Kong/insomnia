@@ -12,7 +12,7 @@ export const enum AsyncTask {
   SyncProjects,
 }
 
-const getMathParams = (location: string) => {
+const getMatchParams = (location: string) => {
   const workspaceMatch = matchPath(
     {
       path: '/organization/:organizationId/project/:projectId/workspace/:workspaceId',
@@ -43,7 +43,7 @@ export const getInitialRouteForOrganization = async ({
   // Check if the last visited project exists and redirect to it
   if (prevOrganizationLocation) {
 
-    const match = getMathParams(prevOrganizationLocation);
+    const match = getMatchParams(prevOrganizationLocation);
 
     if (match && match.params.organizationId && match.params.projectId) {
       const existingProject = await models.project.getById(match.params.projectId);
