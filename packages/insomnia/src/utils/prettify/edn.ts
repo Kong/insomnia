@@ -1,9 +1,9 @@
 const delimitersData = [
   // Procedence matters
-  ["#{", '}'],
-  ["{", "}"],
-  ["[", "]"]
-]
+  ['#{', '}'],
+  ['{', '}'],
+  ['[', ']'],
+];
 
 const [startDelimiters, endDelimiters] = delimitersData.reduce(
   (acc, e) => {
@@ -17,46 +17,46 @@ const [startDelimiters, endDelimiters] = delimitersData.reduce(
 function tokenize(edn: string) {
   let insideString = false;
 
-  let tokens: string[] = [];
+  const tokens: string[] = [];
 
-  let symbol = "";
+  let symbol = '';
 
   for (const c of edn) {
     if (!insideString) {
       // Ignore when
-      if (c === "," || c === "\n" || (c === " ")) {
+      if (c === ',' || c === '\n' || (c === ' ')) {
         if (symbol) {
-          tokens.push(symbol)
-          symbol = "";
+          tokens.push(symbol);
+          symbol = '';
         }
         continue;
       } else if (c === '"') {
         insideString = true;
         symbol += c;
-      } else if (c === " " && symbol) {
+      } else if (c === ' ' && symbol) {
         tokens.push(symbol);
-        symbol = "";
+        symbol = '';
       } else if (startDelimiters.includes(symbol + c)) {
         tokens.push(symbol + c);
-        symbol = "";
+        symbol = '';
       } else if (endDelimiters.includes(c)) {
         if (symbol) {
           tokens.push(symbol);
         }
         tokens.push(c);
-        symbol = "";
+        symbol = '';
       } else {
         symbol += c;
       }
-      continue
+      continue;
     }
 
-    if (c === '"' && symbol.at(-1) !== "\\") {
+    if (c === '"' && symbol.at(-1) !== '\\') {
       insideString = false;
       tokens.push(symbol + c);
-      symbol = "";
-    } else if (c === "\n") {
-      symbol += "\\n"
+      symbol = '';
+    } else if (c === '\n') {
+      symbol += '\\n';
     } else {
       symbol += c;
     }
@@ -70,18 +70,18 @@ function spacesOnLeft(spaces: number[]) {
   const length = spaces.reduce((acc, e) => acc + e, 0);
 
   return Array.from({ length })
-    .map(() => " ")
-    .join("");
+    .map(() => ' ')
+    .join('');
 }
 
 function tokensToLines(tokens: ReturnType<typeof tokenize>) {
-  let lines: string[][] = [];
+  const lines: string[][] = [];
 
   let currentLine: string[] = [];
 
   let keyValue: string[] = [];
 
-  let elements: { spaces: number, perLine: number }[] = [];
+  const elements: { spaces: number; perLine: number }[] = [];
 
   let tokenUsed = false;
 
@@ -90,7 +90,7 @@ function tokensToLines(tokens: ReturnType<typeof tokenize>) {
     const nextEnding = nextToken && endDelimiters.includes(nextToken);
 
     if (tokenUsed) {
-      const line = currentLine.join("");
+      const line = currentLine.join('');
       // Check if its a empty structure, in that case, store current line and start a new one
       if (!nextEnding && line.trim()) {
         lines.push(currentLine);
@@ -107,29 +107,29 @@ function tokensToLines(tokens: ReturnType<typeof tokenize>) {
       keyValue = [];
       currentLine.push(t);
       if (nextEnding) {
-        currentLine.push(nextToken)
+        currentLine.push(nextToken);
         tokenUsed = true;
       } else {
-        const currenLineLength = currentLine.map((e) => e.length).reduce((acc, e) => acc + e)
-        const spacesAlreadyCounted = elements.reduce((acc, e) => acc + e.spaces, 0)
-        elements.push({ spaces: currenLineLength - spacesAlreadyCounted, perLine: t === "{" ? 2 : 1 });
+        const currenLineLength = currentLine.map(e => e.length).reduce((acc, e) => acc + e);
+        const spacesAlreadyCounted = elements.reduce((acc, e) => acc + e.spaces, 0);
+        elements.push({ spaces: currenLineLength - spacesAlreadyCounted, perLine: t === '{' ? 2 : 1 });
       }
-      continue
+      continue;
     }
 
     if (endDelimiter) {
       keyValue = [];
-      lines.at(-1)!.push(t)
-      elements.pop()
+      lines.at(-1)!.push(t);
+      elements.pop();
       currentLine = [spacesOnLeft(elements.map(e => e.spaces))];
-      continue
+      continue;
     }
 
     currentLine.push(t);
 
     // Token can be a key, value or metadata, only key and value are valid for line count
     // Metadata are tokens started with # like #uuid
-    if (!t.startsWith("#")) {
+    if (!t.startsWith('#')) {
       keyValue.push(t);
     }
 
@@ -143,7 +143,7 @@ function tokensToLines(tokens: ReturnType<typeof tokenize>) {
 
     // If line is not ending and next token is not a closing delimiter, continue for next token
     if (!endLine && !nextEnding) {
-      currentLine.push(" ");
+      currentLine.push(' ');
       continue;
     }
 
@@ -151,21 +151,21 @@ function tokensToLines(tokens: ReturnType<typeof tokenize>) {
     if (nextEnding) {
       currentLine.push(nextToken);
       tokenUsed = true;
-      elements.pop()
+      elements.pop();
     }
 
     lines.push(currentLine);
     currentLine = [spacesOnLeft(elements.map(e => e.spaces))];
   }
 
-  lines.push(currentLine)
+  lines.push(currentLine);
 
-  return lines.map(l => l.join(""));
+  return lines.map(l => l.join(''));
 }
 
 export const ednPrettify = (edn: string, _filter?: string) => {
   const tokens = tokenize(edn);
-  const lines = tokensToLines(tokens)
+  const lines = tokensToLines(tokens);
 
-  return lines.join("\n");
+  return lines.join('\n');
 };
