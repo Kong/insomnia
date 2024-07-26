@@ -991,7 +991,7 @@ const ProjectRoute: FC = () => {
   const showStorageRestrictionMessage = storage !== 'cloud_plus_local';
 
   useEffect(() => {
-    window.main.landingPageRendered(LandingPage.Project);
+    window.main.landingPageRendered(LandingPage.ProjectDashboard);
   }, []);
 
   const nextProjectId = useRef<string>();

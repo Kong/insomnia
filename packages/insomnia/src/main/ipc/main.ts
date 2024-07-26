@@ -48,7 +48,7 @@ export interface RendererToMainBridgeAPI {
   addExecutionStep: (options: { requestId: string; stepName: StepName }) => void;
   startExecution: (options: { requestId: string }) => void;
   completeExecutionStep: (options: { requestId: string }) => void;
-  landingPageRendered: (landingPage: LandingPage) => void;
+  landingPageRendered: (landingPage: LandingPage, tags?: Record<string, string>) => void;
 }
 export function registerMainHandlers() {
   ipcMainOn('addExecutionStep', (_, options: { requestId: string; stepName: StepName }) => {
@@ -123,10 +123,13 @@ export function registerMainHandlers() {
     }
   });
 
-  ipcMainOnce('landingPageRendered', (_, landingPage: LandingPage) => {
+  ipcMainOnce('landingPageRendered', (_, { landingPage, tags = {} }: { landingPage: LandingPage; tags?: Record<string, string> }) => {
     const duration = performance.now() - APP_START_TIME;
     Sentry.metrics.distribution(SentryMetrics.APP_START_DURATION, duration, {
-      tags: { landingPage },
+      tags: {
+        landingPage,
+        ...tags,
+      },
       unit: 'millisecond',
     });
   });

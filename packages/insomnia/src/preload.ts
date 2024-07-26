@@ -93,7 +93,10 @@ const main: Window['main'] = {
       port.postMessage({ ...options, type: 'runPreRequestScript' });
     }),
   },
-  landingPageRendered: options => ipcRenderer.send('landingPageRendered', options),
+  landingPageRendered: (landingPage, tags) => ipcRenderer.send('landingPageRendered', {
+    landingPage,
+    tags,
+  }),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {

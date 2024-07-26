@@ -20,8 +20,9 @@ export const enum SentryMetrics {
 };
 
 export const enum LandingPage {
-  Project = 'project',
+  ProjectDashboard = 'projectDashboard',
   Onboarding = 'onboarding',
   Login = 'login',
   Scratchpad = 'scratchpad',
+  Workspace = 'workspace',
 }
