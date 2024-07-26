@@ -55,7 +55,7 @@ test.describe('test hidden window handling', async () => {
 
     expect(await page.locator('.pane-two pre').innerText()).toEqual('Timeout: Running script took too long');
     await page.getByRole('tab', { name: 'Console' }).click();
-    await page.getByRole('tab', { name: 'Preview ' }).click();
+    await page.getByRole('tab', { name: 'Preview' }).click();
     const windows = await app.windows();
     const hiddenWindow = windows[1];
     hiddenWindow.close();
