@@ -1,4 +1,5 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import * as Sentry from '@sentry/electron/renderer';
+import React, { Fragment, useEffect, useRef, useState } from 'react';
 import {
   Button,
   Link,
@@ -28,6 +29,7 @@ import { useLocalStorage } from 'react-use';
 import * as session from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { database } from '../../common/database';
+import { SentryMetrics } from '../../common/sentry';
 import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
@@ -455,6 +457,20 @@ const OrganizationRoute = () => {
     progress: loadingAIProgress,
   } = useAIContext();
 
+  const nextOrganizationId = useRef<string>();
+  const startSwitchOrganizationTime = useRef<number>();
+
+  useEffect(() => {
+    if (nextOrganizationId.current && startSwitchOrganizationTime.current && nextOrganizationId.current === organizationId) {
+      const duration = performance.now() - startSwitchOrganizationTime.current;
+      Sentry.metrics.distribution(SentryMetrics.ORGANIZATION_SWITCH_DURATION, duration, {
+        unit: 'millisecond',
+      });
+      nextOrganizationId.current = undefined;
+      startSwitchOrganizationTime.current = undefined;
+    }
+  }, [organizationId]);
+
   return (
     <InsomniaEventStreamProvider>
       <div className="w-full h-full">
@@ -638,32 +654,44 @@ const OrganizationRoute = () => {
                         `select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${isActive
                           ? 'outline-[--color-font]'
                           : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
-                        } ${isPending ? 'animate-pulse' : ''}`
-                      }
-                      to={`/organization/${organization.id}`}
+                          }`}
+                        onClick={async () => {
+                          nextOrganizationId.current = organization.id;
+                          startSwitchOrganizationTime.current = performance.now();
+                          const routeForOrganization = await getInitialRouteForOrganization({ organizationId: organization.id });
+                          navigate(routeForOrganization, {
+                            state: {
+                              asyncTaskList: [
+                                // we only need sync projects when user switch to another organization
+                                AsyncTask.SyncProjects,
+                              ],
+                            },
+                          });
+                        }}
+                      >
+                        {isPersonalOrganization(organization) && isOwnerOfOrganization({
+                          organization,
+                          accountId: userSession.accountId || '',
+                        }) ? (
+                          <Icon icon="home" />
+                        ) : (
+                          <OrganizationAvatar
+                            alt={organization.display_name}
+                            src={organization.branding?.logo_url || ''}
+                          />
+                        )}
+                      </div>
+                    </Link>
+                    <Tooltip
+                      placement="right"
+                      offset={8}
+                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                     >
-                      {isPersonalOrganization(organization) && isOwnerOfOrganization({
-                        organization,
-                        accountId: userSession.accountId || '',
-                      }) ? (
-                        <Icon icon="home" />
-                      ) : (
-                        <OrganizationAvatar
-                          alt={organization.display_name}
-                          src={organization.branding?.logo_url || ''}
-                        />
-                      )}
-                    </NavLink>
-                  </Link>
-                  <Tooltip
-                    placement="right"
-                    offset={8}
-                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                  >
-                    <span>{organization.display_name}</span>
-                  </Tooltip>
-                </TooltipTrigger>
-              ))}
+                      <span>{organization.display_name}</span>
+                    </Tooltip>
+                  </TooltipTrigger>
+                );
+              })}
               <MenuTrigger>
                 <Button className="select-none text-[--color-font] hover:no-underline transition-all duration-150 box-border p-[--padding-sm] font-bold outline-none rounded-md w-[28px] h-[28px] flex items-center justify-center overflow-hidden">
                   <Icon icon="plus" />

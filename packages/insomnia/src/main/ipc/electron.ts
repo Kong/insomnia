@@ -88,7 +88,7 @@ export const ipcMainOn = (
     ...args: any[]
   ) => Promise<void> | any
 ) => ipcMain.on(channel, listener);
-export type OnceChannels = 'halfSecondAfterAppStart';
+export type OnceChannels = 'halfSecondAfterAppStart' | 'landingPageRendered';
 export const ipcMainOnce = (
   channel: OnceChannels,
   listener: (

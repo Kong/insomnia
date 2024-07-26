@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button, Dialog, DialogTrigger, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { ActionFunction, Link, redirect, useFetcher, useNavigate } from 'react-router-dom';
 
+import { LandingPage } from '../../common/sentry';
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { exportAllData } from '../../common/export-all-data';
 import { SegmentEvent } from '../analytics';
@@ -62,6 +63,10 @@ const Login = () => {
         method: 'POST',
       });
   };
+
+  useEffect(() => {
+    window.main.landingPageRendered(LandingPage.Login);
+  }, []);
 
   return (
     <div

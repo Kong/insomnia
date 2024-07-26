@@ -1,9 +1,10 @@
-import React from 'react';
-import { LoaderFunction, Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
 
 import { SortOrder } from '../../common/constants';
 import { database } from '../../common/database';
 import { fuzzyMatchAll } from '../../common/misc';
+import { LandingPage } from '../../common/sentry';
 import { sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
@@ -280,6 +281,13 @@ export const workspaceLoader: LoaderFunction = async ({
 };
 
 const WorkspaceRoute = () => {
+  const { activeWorkspace } = useLoaderData() as WorkspaceLoaderData;
+
+  useEffect(() => {
+    const { scope } = activeWorkspace;
+    window.main.landingPageRendered(LandingPage.Workspace, { scope });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return <Outlet />;
 };
 

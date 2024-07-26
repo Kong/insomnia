@@ -1,6 +1,8 @@
+import * as Sentry from '@sentry/electron/main';
 import { app, BrowserWindow, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
+import { APP_START_TIME, LandingPage, SentryMetrics } from '../../common/sentry';
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
 import * as models from '../../models';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
@@ -10,7 +12,7 @@ import installPlugin from '../install-plugin';
 import { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { WebSocketBridgeAPI } from '../network/websocket';
-import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
+import { ipcMainHandle, ipcMainOn, ipcMainOnce, type RendererOnChannels } from './electron';
 import { gRPCBridgeAPI } from './grpc';
 
 export interface RendererToMainBridgeAPI {
@@ -41,6 +43,7 @@ export interface RendererToMainBridgeAPI {
     };
   };
   hiddenBrowserWindow: HiddenBrowserWindowBridgeAPI;
+  landingPageRendered: (landingPage: LandingPage, tags?: Record<string, string>) => void;
 }
 export function registerMainHandlers() {
   ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
@@ -101,5 +104,16 @@ export function registerMainHandlers() {
       // eslint-disable-next-line no-restricted-properties
       shell.openExternal(href);
     }
+  });
+
+  ipcMainOnce('landingPageRendered', (_, { landingPage, tags = {} }: { landingPage: LandingPage; tags?: Record<string, string> }) => {
+    const duration = performance.now() - APP_START_TIME;
+    Sentry.metrics.distribution(SentryMetrics.APP_START_DURATION, duration, {
+      tags: {
+        landingPage,
+        ...tags,
+      },
+      unit: 'millisecond',
+    });
   });
 }
