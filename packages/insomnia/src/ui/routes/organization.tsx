@@ -1,4 +1,5 @@
-import React, { Fragment, useCallback, useEffect, useState } from 'react';
+import * as Sentry from '@sentry/electron/renderer';
+import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
   Button,
   Link,
@@ -29,6 +30,7 @@ import { useLocalStorage } from 'react-use';
 import * as session from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { database } from '../../common/database';
+import { SentryMetrics } from '../../common/sentry';
 import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { findPersonalOrganization, isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, type Organization } from '../../models/organization';
@@ -579,6 +581,20 @@ const OrganizationRoute = () => {
     progress: loadingAIProgress,
   } = useAIContext();
 
+  const nextOrganizationId = useRef<string>();
+  const startSwitchOrganizationTime = useRef<number>();
+
+  useEffect(() => {
+    if (nextOrganizationId.current && startSwitchOrganizationTime.current && nextOrganizationId.current === organizationId) {
+      const duration = performance.now() - startSwitchOrganizationTime.current;
+      Sentry.metrics.distribution(SentryMetrics.ORGANIZATION_SWITCH_DURATION, duration, {
+        unit: 'millisecond',
+      });
+      nextOrganizationId.current = undefined;
+      startSwitchOrganizationTime.current = undefined;
+    }
+  }, [organizationId]);
+
   return (
     <InsomniaEventStreamProvider>
       <div className="w-full h-full">
@@ -766,6 +782,8 @@ const OrganizationRoute = () => {
                           : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
                           }`}
                         onClick={async () => {
+                          nextOrganizationId.current = organization.id;
+                          startSwitchOrganizationTime.current = performance.now();
                           const routeForOrganization = await getInitialRouteForOrganization({ organizationId: organization.id });
                           navigate(routeForOrganization, {
                             state: {
