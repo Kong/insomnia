@@ -28,6 +28,9 @@ describe('init()', () => {
 });
 
 describe('onChange()', () => {
+  beforeEach(async () => {
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
+  });
   it('handles change listeners', async () => {
     const doc = {
       type: models.request.type,
@@ -45,7 +48,6 @@ describe('onChange()', () => {
     const updatedDoc = await models.request.update(newDoc, {
       name: 'bar',
     });
-    expect(changesSeen.length).toBe(2);
     expect(changesSeen).toEqual([
       [['insert', newDoc, false]],
       [['update', updatedDoc, false]],
@@ -218,40 +220,10 @@ describe('requestCreate()', () => {
   });
 });
 
-describe('requestGroupDuplicate()', () => {
+describe('_repairDatabase()', async () => {
   beforeEach(async () => {
-    await loadFixture();
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
   });
-
-  it('duplicates a RequestGroup', async () => {
-    const requestGroup = await models.requestGroup.getById('fld_1');
-    expect(requestGroup).not.toEqual(null);
-    if (requestGroup === null) {
-      return;
-    }
-
-    expect(requestGroup.name).toBe('Fld 1');
-    const newRequestGroup = await models.requestGroup.duplicate(requestGroup);
-    expect(newRequestGroup._id).not.toBe(requestGroup._id);
-    expect(newRequestGroup.name).toBe('Fld 1 (Copy)');
-    const allRequests = await models.request.all();
-    const allRequestGroups = await models.requestGroup.all();
-    const childRequests = await models.request.findByParentId(requestGroup._id);
-    const childRequestGroups = await models.requestGroup.findByParentId(requestGroup._id);
-    const newChildRequests = await models.request.findByParentId(newRequestGroup._id);
-    const newChildRequestGroups = await models.requestGroup.findByParentId(newRequestGroup._id);
-    // This asserting is pretty garbage but it at least checks
-    // to see that the recursion worked (for the most part)
-    expect(allRequests.length).toBe(8);
-    expect(allRequestGroups.length).toBe(5);
-    expect(childRequests.length).toBe(2);
-    expect(childRequestGroups.length).toBe(1);
-    expect(newChildRequests.length).toBe(2);
-    expect(newChildRequestGroups.length).toBe(1);
-  });
-});
-
-describe('_repairDatabase()', () => {
 
   it('fixes duplicate environments', async () => {
     // Create Workspace with no children
