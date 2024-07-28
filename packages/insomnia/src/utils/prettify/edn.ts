@@ -24,7 +24,7 @@ function tokenize(edn: string) {
   for (const c of edn) {
     if (!insideString) {
       // Ignore when
-      if (c === ',' || c === '\n' || (c === ' ')) {
+      if (c === ',' || c === '\n' || c === '\r' || c === '\t' || (c === ' ')) {
         if (symbol) {
           tokens.push(symbol);
           symbol = '';
@@ -33,9 +33,6 @@ function tokenize(edn: string) {
       } else if (c === '"') {
         insideString = true;
         symbol += c;
-      } else if (c === ' ' && symbol) {
-        tokens.push(symbol);
-        symbol = '';
       } else if (startDelimiters.includes(symbol + c)) {
         tokens.push(symbol + c);
         symbol = '';
@@ -55,12 +52,9 @@ function tokenize(edn: string) {
       insideString = false;
       tokens.push(symbol + c);
       symbol = '';
-    } else if (c === '\n') {
-      symbol += '\\n';
     } else {
       symbol += c;
     }
-
   }
 
   return tokens;
@@ -77,11 +71,11 @@ function spacesOnLeft(spaces: number[]) {
 function tokensToLines(tokens: ReturnType<typeof tokenize>) {
   const lines: string[][] = [];
 
+  const elements: { spaces: number; perLine: number }[] = [];
+
   let currentLine: string[] = [];
 
   let keyValue: string[] = [];
-
-  const elements: { spaces: number; perLine: number }[] = [];
 
   let tokenUsed = false;
 
@@ -119,7 +113,12 @@ function tokensToLines(tokens: ReturnType<typeof tokenize>) {
 
     if (endDelimiter) {
       keyValue = [];
-      lines.at(-1)!.push(t);
+      if (currentLine.length > 1) {
+        currentLine.push(t);
+        lines.push(currentLine);
+      } else {
+        lines.at(-1)!.push(t);
+      }
       elements.pop();
       currentLine = [spacesOnLeft(elements.map(e => e.spaces))];
       continue;
@@ -160,11 +159,16 @@ function tokensToLines(tokens: ReturnType<typeof tokenize>) {
 
   lines.push(currentLine);
 
-  return lines.map(l => l.join(''));
+  return lines.map(l => l.join('')).filter(e => e);
 }
 
 export const ednPrettify = (edn: string) => {
   const tokens = tokenize(edn);
+
+  if (!startDelimiters.includes(tokens[0])) {
+    return edn;
+  }
+
   const lines = tokensToLines(tokens);
 
   return lines.join('\n');
