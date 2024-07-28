@@ -167,8 +167,7 @@ export const ResponsePane: FC<Props> = ({
             />
           }
         >
-          <p>Olá</p>
-          {/* <ResponseViewer
+          <ResponseViewer
             key={activeResponse._id}
             bytes={Math.max(activeResponse.bytesContent, activeResponse.bytesRead)}
             contentType={activeResponse.contentType || ''}
@@ -184,7 +183,7 @@ export const ResponsePane: FC<Props> = ({
             responseId={activeResponse._id}
             updateFilter={activeResponse.error ? undefined : handleSetFilter}
             url={activeResponse.url}
-          /> */}
+          />
         </TabItem>
         <TabItem
           key="headers"

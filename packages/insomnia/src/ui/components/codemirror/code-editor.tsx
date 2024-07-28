@@ -251,7 +251,6 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     const shouldPrettify = forcePrettify || autoPrettify;
     if (shouldPrettify) {
       setOriginalCode(code);
-      console.log([`[garug]${filter}`])
       if (mode?.includes('xml')) {
         code = prettifyXML(code, filter);
       } else if (mode?.includes('json')) {
