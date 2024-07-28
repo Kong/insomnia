@@ -1,7 +1,8 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, Route, Routes, useLocation } from 'react-router-dom';
 
+import { LandingPage } from '../../common/sentry';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
 import auto_pull from '../images/onboarding/auto_pull.png';
@@ -149,6 +150,10 @@ const FeatureWizardView = () => {
 
 const Onboarding = () => {
   const location = useLocation();
+
+  useEffect(() => {
+    window.main.landingPageRendered(LandingPage.Onboarding);
+  }, []);
 
   return (
     <div className="relative h-full w-full text-left flex bg-[--color-bg]">

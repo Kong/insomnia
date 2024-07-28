@@ -1,10 +1,10 @@
-import { describe, expect, it, jest } from '@jest/globals';
-import { Cookie, CookieJar, CookieSerialized } from 'tough-cookie';
+import { Cookie, CookieJar } from 'tough-cookie';
+import { describe, expect, it, vi } from 'vitest';
 
 import { cookiesFromJar, jarFromCookies } from '../cookies';
 
-describe('jarFromCookies()', () => {
-  it('returns valid cookies', done => {
+describe('jarFromCookies()', async () => {
+  it('returns valid cookies', async () => {
     const jar = jarFromCookies([
       {
         key: 'foo',
@@ -20,12 +20,11 @@ describe('jarFromCookies()', () => {
       expect(cookies[0].value).toEqual('bar');
       expect(cookies[0].creation instanceof Date).toEqual(true);
       expect(cookies[0].expires).toEqual('Infinity');
-      done();
     });
   });
 
   it('handles malformed JSON', () => {
-    jest.spyOn(console, 'log').mockImplementationOnce(() => {});
+    vi.spyOn(console, 'log').mockImplementationOnce(() => { });
     // @ts-expect-error this test is verifying that an invalid input is handled appropriately
     const jar = jarFromCookies('not a jar');
     expect(jar.constructor.name).toBe('CookieJar');
@@ -35,7 +34,7 @@ describe('jarFromCookies()', () => {
 describe('cookiesFromJar()', () => {
   it('returns valid jar', async () => {
     const d = new Date();
-    const initialCookies: CookieSerialized[] = [
+    const initialCookies = [
       {
         key: 'bar',
         value: 'baz',
@@ -45,7 +44,7 @@ describe('cookiesFromJar()', () => {
       {
         // This one will fail to parse, and be skipped
         bad: 'cookie',
-      } as CookieSerialized,
+      },
     ];
 
     const jar = CookieJar.fromJSON({ cookies: initialCookies });
@@ -61,7 +60,7 @@ describe('cookiesFromJar()', () => {
 
   it('handles bad jar', async () => {
     const jar = CookieJar.fromJSON({ cookies: [] });
-    jest.spyOn(console, 'warn').mockImplementationOnce(() => {});
+    vi.spyOn(console, 'warn').mockImplementationOnce(() => { });
     // MemoryStore never actually throws errors, so lets mock the function to force it to this time.
     // @ts-expect-error intentionally invalid value
     jar.store.getAllCookies = cb => cb(new Error('Dummy Error'));

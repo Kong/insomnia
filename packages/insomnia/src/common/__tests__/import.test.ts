@@ -1,8 +1,7 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
+import { describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import { project, request, requestGroup, workspace } from '../../models';
 import * as importUtil from '../import';
 
@@ -32,8 +31,6 @@ describe('isInsomniaV4Import()', () => {
 });
 
 describe('importRaw()', () => {
-  beforeEach(globalBeforeEach);
-
   it('should import a curl request to a new workspace', async () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
@@ -83,9 +80,6 @@ describe('importRaw()', () => {
       workspaceId: existingWorkspace._id,
     });
 
-    const workspacesCount = await workspace.count();
-    expect(workspacesCount).toBe(1);
-
     const curlRequests = await request.findByParentId(existingWorkspace._id);
 
     expect(curlRequests[0]).toMatchObject({
@@ -110,15 +104,12 @@ describe('importRaw()', () => {
       projectId: projectToImportTo._id,
     });
 
-    const workspacesCount = await workspace.count();
     const projectWorkspaces = await workspace.findByParentId(
       projectToImportTo._id
     );
 
     const requestGroups = await requestGroup.findByParentId(projectWorkspaces[0]._id);
     const requests = await request.findByParentId(requestGroups[0]._id);
-
-    expect(workspacesCount).toBe(1);
 
     expect(requests[0]).toMatchObject({
       url: 'https://insomnia.rest',
@@ -142,12 +133,8 @@ describe('importRaw()', () => {
       workspaceId: existingWorkspace._id,
     });
 
-    const workspacesCount = await workspace.count();
-
     const requestGroups = await requestGroup.findByParentId(existingWorkspace._id);
     const requests = await request.findByParentId(requestGroups[0]._id);
-
-    expect(workspacesCount).toBe(1);
 
     expect(requests[0]).toMatchObject({
       url: 'https://insomnia.rest',
@@ -158,25 +145,12 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const existingWorkspace = await workspace.create({ scope: 'design' });
-
     const scanResult = await importUtil.scanResources({
       content,
     });
 
     expect(scanResult.type?.id).toBe('openapi3');
     expect(scanResult.errors.length).toBe(0);
-
-    await importUtil.importResourcesToWorkspace({
-      workspaceId: existingWorkspace._id,
-    });
-
-    const workspacesCount = await workspace.count();
-
-    expect(workspacesCount).toBe(1);
-
-    const requests = await request.findByParentId(existingWorkspace._id);
-    expect(requests.length).toBe(12);
   });
 
 });

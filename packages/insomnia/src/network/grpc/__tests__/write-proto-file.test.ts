@@ -1,22 +1,20 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import fs from 'fs';
-import { SpyInstance } from 'jest-mock';
 import os from 'os';
 import path from 'path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
 import { writeProtoFile } from '../write-proto-file';
 
 describe('writeProtoFile', () => {
-  let existsSyncSpy: SpyInstance<any>;
-  let tmpDirSpy: SpyInstance<any>;
-  let writeFileSpy: SpyInstance<any>;
+  let existsSyncSpy;
+  let tmpDirSpy;
+  let writeFileSpy;
 
   const _setupSpies = () => {
-    existsSyncSpy = jest.spyOn(fs, 'existsSync');
-    tmpDirSpy = jest.spyOn(os, 'tmpdir');
-    writeFileSpy = jest.spyOn(fs.promises, 'writeFile');
+    existsSyncSpy = vi.spyOn(fs, 'existsSync');
+    tmpDirSpy = vi.spyOn(os, 'tmpdir');
+    writeFileSpy = vi.spyOn(fs.promises, 'writeFile');
   };
 
   const _configureSpies = (tmpDir: string, exists: boolean) => {
@@ -32,16 +30,13 @@ describe('writeProtoFile', () => {
   };
 
   beforeEach(async () => {
-    await globalBeforeEach();
-
-    // Spies should be setup AFTER globalBeforeEach()
     _setupSpies();
   });
 
   afterEach(() => {
     _restoreSpies();
 
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('individual files', () => {

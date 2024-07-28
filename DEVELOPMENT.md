@@ -78,7 +78,7 @@ Insomnia stores data in a few places:
 
 ## Automated testing
 
-We use [Jest](https://jestjs.io/) and [react-testing-library](https://testing-library.com/docs/react-testing-library) to write our unit tests, and [Playwright](https://github.com/microsoft/playwright) for integration tests.
+We use [Vitest](https://vitest.dev/) and [Playwright](https://github.com/microsoft/playwright)
 
 Unit tests exist alongside the file under test. For example:
 

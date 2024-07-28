@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
 import { type AuthOptions, fromPreRequestAuth, RequestAuth, toPreRequestAuth } from '../auth';
 import { Variable, VariableList } from '../variables';

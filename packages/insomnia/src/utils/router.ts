@@ -1,47 +1,75 @@
-import { matchPath } from 'react-router-dom';
+import { matchPath, type PathMatch } from 'react-router-dom';
 
 import { database } from '../common/database';
 import * as models from '../models';
 import type { Organization } from '../models/organization';
 import { findPersonalOrganization } from '../models/organization';
 import type { Project } from '../models/project';
+import { scopeToActivity } from '../models/workspace';
 export const enum AsyncTask {
   SyncOrganization,
   MigrateProjects,
   SyncProjects,
 }
-export const getInitialRouteForOrganization = async (orgId: string) => {
+
+const getMatchParams = (location: string) => {
+  const workspaceMatch = matchPath(
+    {
+      path: '/organization/:organizationId/project/:projectId/workspace/:workspaceId',
+      end: false,
+    },
+    location
+  );
+
+  const projectMatch = matchPath(
+    {
+      path: '/organization/:organizationId/project/:projectId',
+      end: false,
+    },
+    location
+  );
+
+  return (workspaceMatch || projectMatch) as PathMatch<'organizationId' | 'projectId' | 'workspaceId'> | null;
+};
+
+export const getInitialRouteForOrganization = async ({
+  organizationId,
+  navigateToWorkspace = false,
+}: { organizationId: string; navigateToWorkspace?: boolean }) => {
   // 1. assuming we have history, try to redirect to the last visited project
   const prevOrganizationLocation = localStorage.getItem(
-    `locationHistoryEntry:${orgId}`
+    `locationHistoryEntry:${organizationId}`
   );
   // Check if the last visited project exists and redirect to it
   if (prevOrganizationLocation) {
-    const match = matchPath(
-      {
-        path: '/organization/:organizationId/project/:projectId',
-        end: false,
-      },
-      prevOrganizationLocation
-    );
+
+    const match = getMatchParams(prevOrganizationLocation);
 
     if (match && match.params.organizationId && match.params.projectId) {
       const existingProject = await models.project.getById(match.params.projectId);
 
       if (existingProject) {
         console.log('Redirecting to last visited project', existingProject._id);
+
+        if (match.params.workspaceId && navigateToWorkspace) {
+          const existingWorkspace = await models.workspace.getById(match.params.workspaceId);
+          if (existingWorkspace) {
+            return `/organization/${match.params.organizationId}/project/${existingProject._id}/workspace/${existingWorkspace._id}/${scopeToActivity(existingWorkspace.scope)}`;
+          }
+        }
+
         return `/organization/${match?.params.organizationId}/project/${existingProject._id}`;
       }
     }
   }
   // 2. if no history, redirect to the first project
-  const firstProject = await database.getWhere<Project>(models.project.type, { parentId: orgId });
+  const firstProject = await database.getWhere<Project>(models.project.type, { parentId: organizationId });
 
   if (firstProject?._id) {
-    return `/organization/${orgId}/project/${firstProject?._id}`;
+    return `/organization/${organizationId}/project/${firstProject?._id}`;
   }
   // 3. if no project, redirect to the project route
-  return `/organization/${orgId}/project`;
+  return `/organization/${organizationId}/project`;
 };
 
 export const getInitialEntry = async () => {
@@ -65,9 +93,19 @@ export const getInitialEntry = async () => {
       if (!personalOrganization) {
         return '/organization';
       }
-      const personalOrganizationId = personalOrganization.id;
+
+      let organizationId = personalOrganization.id;
+
+      // Check if the user has a last visited organization
+      try {
+        const lastVisitedOrganizationId = localStorage.getItem('lastVisitedOrganizationId');
+        if (lastVisitedOrganizationId && organizations.find(o => o.id === lastVisitedOrganizationId)) {
+          organizationId = lastVisitedOrganizationId;
+        }
+      } catch (e) { }
+
       return {
-        pathname: await getInitialRouteForOrganization(personalOrganizationId),
+        pathname: await getInitialRouteForOrganization({ organizationId, navigateToWorkspace: true }),
         state: {
           // async task need to excute when first entry
           asyncTaskList: [AsyncTask.SyncOrganization, AsyncTask.MigrateProjects, AsyncTask.SyncProjects],

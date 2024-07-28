@@ -49,14 +49,11 @@ jobs:
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
 
       - name: Smoke test electron app
-        # Partial Smoke test run, for regular CI triggers
-        if: ${{ !startsWith(github.head_ref, 'release/') }}
-        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
-
-      - name: Prerelease test electron app
-        # Full Smoke test run, for Release PRs
-        if: ${{ startsWith(github.head_ref, 'release/') }}
-        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Default
+        run: |
+          GIT_SYNC_SMOKE_TEST_TOKEN=${{env.GIT_SYNC_SMOKE_TEST_TOKEN}} \
+          npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
+        env:
+          GIT_SYNC_SMOKE_TEST_TOKEN: ${{ secrets.GIT_SYNC_SMOKE_TEST_TOKEN }}
 
       # This step should always run even when previous steps fail
       - name: Upload smoke test traces

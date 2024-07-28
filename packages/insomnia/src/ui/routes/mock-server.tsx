@@ -282,11 +282,6 @@ const MockServerRoute = () => {
                     value={item.name}
                     name="name"
                     ariaLabel="Mock route name"
-                    onSingleClick={() => {
-                      navigate({
-                        pathname: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${item._id}`,
-                      });
-                    }}
                     onSubmit={name => {
                       const hasRouteInServer = mockRoutes.filter(m => m._id !== item._id).find(m => m.name === name);
                       if (hasRouteInServer) {

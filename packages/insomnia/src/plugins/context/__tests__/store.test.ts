@@ -1,6 +1,5 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as plugin from '../store';
 const PLUGIN = {
   name: 'my-plugin',
@@ -10,7 +9,6 @@ const PLUGIN = {
 };
 
 describe('init()', () => {
-  beforeEach(globalBeforeEach);
 
   it('initializes correctly', async () => {
     const result = plugin.init({
@@ -28,7 +26,6 @@ describe('init()', () => {
 });
 
 describe('store.*', () => {
-  beforeEach(globalBeforeEach);
 
   it('all methods work', async () => {
     const p = plugin.init(PLUGIN);

@@ -1,10 +1,8 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import * as utils from '../utils';
 
 describe('getKeys()', () => {
-  beforeEach(globalBeforeEach);
 
   it('flattens complex object', () => {
     const obj = {
@@ -89,7 +87,6 @@ describe('getKeys()', () => {
 });
 
 describe('tokenizeTag()', () => {
-  beforeEach(globalBeforeEach);
 
   it('tokenizes complex tag', () => {
     const actual = utils.tokenizeTag('{% name bar, "baz \\"qux\\""   , 1 + 5 | default("foo") %}');
@@ -224,7 +221,6 @@ describe('tokenizeTag()', () => {
 });
 
 describe('unTokenizeTag()', () => {
-  beforeEach(globalBeforeEach);
 
   it('handles the default case', () => {
     const tagStr = '{% name bar, "baz \\"qux\\""   , 1 + 5, \'hi\' %}';
@@ -297,7 +293,6 @@ describe('unTokenizeTag()', () => {
 });
 
 describe('encodeEncoding()', () => {
-  beforeEach(globalBeforeEach);
 
   it('encodes things', () => {
     expect(utils.encodeEncoding('hello', 'base64')).toBe('b64::aGVsbG8=::46b');
@@ -308,7 +303,6 @@ describe('encodeEncoding()', () => {
 });
 
 describe('decodeEncoding()', () => {
-  beforeEach(globalBeforeEach);
 
   it('encodes things', () => {
     expect(utils.decodeEncoding('b64::aGVsbG8=::46b')).toBe('hello');
@@ -320,7 +314,6 @@ describe('decodeEncoding()', () => {
 });
 
 describe('extractVariableKey()', () => {
-  beforeEach(globalBeforeEach);
 
   it('extract nunjucks variable key', () => {
     expect(utils.extractVariableKey('{{name}}', 1, 1)).toBe('name');

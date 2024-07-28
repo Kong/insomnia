@@ -1,12 +1,9 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import { parseApiSpec } from '../api-specs';
 
 describe('parseApiSpec()', () => {
-  beforeEach(globalBeforeEach);
-
   it('parses YAML and JSON OpenAPI specs', () => {
     const objSpec = {
       openapi: '3.0.0',
