@@ -228,6 +228,7 @@ const Root = () => {
         for (const entry of list.getEntries()) {
           // Log the entry and all associated details.
           const { name, duration } = entry;
+          console.log('[before perf improvement]: back to dashboard', `${duration}ms`);
           Sentry.metrics.distribution(name, duration, {
             unit: 'millisecond',
           });
