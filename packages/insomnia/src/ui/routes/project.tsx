@@ -926,7 +926,7 @@ const ProjectRoute: FC = () => {
   const startSwitchProjectTime = useRef<number>();
 
   useEffect(() => {
-    if (nextProjectId.current && startSwitchProjectTime.current && nextProjectId.current === organizationId) {
+    if (nextProjectId.current && startSwitchProjectTime.current && nextProjectId.current === projectId) {
       const duration = performance.now() - startSwitchProjectTime.current;
       Sentry.metrics.distribution(SentryMetrics.PROJECT_SWITCH_DURATION, duration, {
         unit: 'millisecond',
@@ -934,7 +934,7 @@ const ProjectRoute: FC = () => {
       nextProjectId.current = undefined;
       startSwitchProjectTime.current = undefined;
     }
-  }, [organizationId]);
+  }, [projectId]);
 
   return (
     <ErrorBoundary>
