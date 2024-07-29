@@ -1,5 +1,6 @@
 import '../css/styles.css';
 
+import * as Sentry from '@sentry/electron/renderer';
 import type { IpcRendererEvent } from 'electron';
 import React, { useEffect, useState } from 'react';
 import { type LoaderFunction, Outlet, useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
@@ -218,6 +219,25 @@ const Root = () => {
       },
     );
   }, [actionFetcher, navigate]);
+
+  // use User Timing API to measure performance
+  useEffect(() => {
+    try {
+      // Create the performance observer.
+      const observer = new PerformanceObserver(list => {
+        for (const entry of list.getEntries()) {
+          // Log the entry and all associated details.
+          const { name, duration } = entry;
+          Sentry.metrics.distribution(name, duration, {
+            unit: 'millisecond',
+          });
+        }
+      });
+      observer.observe({ type: 'measure', buffered: true });
+    } catch (e) {
+      // Do nothing if the browser doesn't support this API.
+    }
+  }, []);
 
   return (
     <AIProvider>
