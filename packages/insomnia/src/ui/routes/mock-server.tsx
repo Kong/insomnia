@@ -178,7 +178,14 @@ const MockServerRoute = () => {
         <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
           <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 font-bold w-full'>
             <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
-              <NavLink data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm" to={`/organization/${organizationId}/project/${projectId}`}>
+                <NavLink
+                  data-testid="project"
+                  className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  to={`/organization/${organizationId}/project/${projectId}`}
+                  onClick={() => {
+                    performance.mark('returnToDashboard:start');
+                  }}
+                >
                 <Icon className='text-xs' icon="chevron-left" />
               </NavLink>
               <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />

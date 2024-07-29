@@ -936,6 +936,22 @@ const ProjectRoute: FC = () => {
     }
   }, [projectId]);
 
+  useEffect(() => {
+    try {
+      // use mark and measure to track the time it takes to return to the dashboard
+      // TODO:
+      // investigate Sentry's React Router integration: https://docs.sentry.io/platforms/javascript/guides/react/features/react-router/
+      // use same approach to track other operations in SentryMetrics
+      const markList = performance.getEntriesByName('returnToDashboard:start', 'mark');
+      if (markList?.length) {
+        performance.mark('returnToDashboard:end');
+        performance.measure(SentryMetrics.BACK_TO_DASHBOARD, 'returnToDashboard:start', 'returnToDashboard:end');
+        performance.clearMarks('returnToDashboard:start');
+        performance.clearMarks('returnToDashboard:end');
+      }
+    } catch (e) { }
+  }, []);
+
   return (
     <ErrorBoundary>
       <Fragment>
