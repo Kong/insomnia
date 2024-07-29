@@ -654,21 +654,14 @@ const OrganizationRoute = () => {
                         `select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${isActive
                           ? 'outline-[--color-font]'
                           : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
-                          }`}
-                        onClick={async () => {
-                          nextOrganizationId.current = organization.id;
-                          startSwitchOrganizationTime.current = performance.now();
-                          const routeForOrganization = await getInitialRouteForOrganization({ organizationId: organization.id });
-                          navigate(routeForOrganization, {
-                            state: {
-                              asyncTaskList: [
-                                // we only need sync projects when user switch to another organization
-                                AsyncTask.SyncProjects,
-                              ],
-                            },
-                          });
-                        }}
-                      >
+                        } ${isPending ? 'animate-pulse' : ''}`
+                      }
+                      to={`/organization/${organization.id}`}
+                      onClick={async () => {
+                        nextOrganizationId.current = organization.id;
+                        startSwitchOrganizationTime.current = performance.now();
+                      }}
+                    >
                         {isPersonalOrganization(organization) && isOwnerOfOrganization({
                           organization,
                           accountId: userSession.accountId || '',
@@ -680,7 +673,7 @@ const OrganizationRoute = () => {
                             src={organization.branding?.logo_url || ''}
                           />
                         )}
-                      </div>
+                    </NavLink>
                     </Link>
                     <Tooltip
                       placement="right"
@@ -690,8 +683,8 @@ const OrganizationRoute = () => {
                       <span>{organization.display_name}</span>
                     </Tooltip>
                   </TooltipTrigger>
-                );
-              })}
+              )
+              )}
               <MenuTrigger>
                 <Button className="select-none text-[--color-font] hover:no-underline transition-all duration-150 box-border p-[--padding-sm] font-bold outline-none rounded-md w-[28px] h-[28px] flex items-center justify-center overflow-hidden">
                   <Icon icon="plus" />
