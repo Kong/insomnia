@@ -1265,7 +1265,7 @@ const CollectionGridListItem = ({
           value={getRequestNameOrFallback({ ...item.doc, name })}
           name="request name"
           ariaLabel={label}
-          className="px-1 flex-1"
+          className="px-1 flex-1 hover:!bg-transparent"
           onSubmit={name => {
             if (isRequestGroup(item.doc)) {
               patchGroup(item.doc._id, { name });

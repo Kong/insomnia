@@ -383,7 +383,7 @@ const TestRoute: FC = () => {
                         value={item.name}
                         name="name"
                         ariaLabel="Test suite name"
-                        className='flex-1 px-1'
+                        className='flex-1 px-1 hover:!bg-transparent'
                         onSubmit={name => {
                           name && updateTestSuiteFetcher.submit(
                             { name },

@@ -282,6 +282,7 @@ const MockServerRoute = () => {
                     value={item.name}
                     name="name"
                     ariaLabel="Mock route name"
+                    className='hover:!bg-transparent'
                     onSubmit={name => {
                       const hasRouteInServer = mockRoutes.filter(m => m._id !== item._id).find(m => m.name === name);
                       if (hasRouteInServer) {
