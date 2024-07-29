@@ -1,8 +1,8 @@
+import { describe, expect, it } from 'vitest';
+
+import { runCliFromRoot } from './bundle.test';
 // Tests both bundle and packaged versions of the CLI with the same commands and expectations.
 // Intended to be coarse grained (only checks for success or failure) smoke test to ensure packaging worked as expected.
-
-import { describe, expect, it } from 'vitest';
-import { runCliFromRoot } from './bundle.test';
 
 const shouldReturnSuccessCode = [
   // help

@@ -21,5 +21,5 @@ describe('inso dev bundle', () => {
 // Execute the command in the root directory of the project
 export const runCliFromRoot = (input: string): Promise<{ code: number; error: ExecException | null; stdout: string; stderr: string }> => {
   return new Promise(resolve => exec(input, { cwd: path.resolve(__dirname, '../../..') },
-    (error, stdout, stderr) => resolve({ code: error?.code || 0, error, stdout, stderr, })));
+    (error, stdout, stderr) => resolve({ code: error?.code || 0, error, stdout, stderr })));
 };
