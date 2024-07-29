@@ -1269,6 +1269,9 @@ export const deleteClientCertificateAction: ActionFunction = async ({ request })
 
 export const updateSettingsAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
+  if (patch.hasOwnProperty('enableAnalytics') && !patch.enableAnalytics) {
+    window.main.trackSegmentEvent({ event: SegmentEvent.analyticsDisabled });
+  }
   await models.settings.patch(patch);
   return null;
 };
