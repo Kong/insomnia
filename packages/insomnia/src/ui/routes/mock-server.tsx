@@ -355,7 +355,7 @@ const MockServerRoute = () => {
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
       <Panel>
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
-          <Panel id="pane-one" className='pane-one theme--pane'>
+          <Panel id="pane-one" minSize={10} className='pane-one theme--pane'>
             <Routes>
       <Route
         path={'mock-route/:mockRouteId/*'}
@@ -378,7 +378,7 @@ const MockServerRoute = () => {
             </Routes>
           </Panel>
           <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
-          <Panel id="pane-two" className='pane-two theme--pane'>
+          <Panel id="pane-two" minSize={10} className='pane-two theme--pane'>
             <Routes>
       <Route
         path={'mock-route/:mockRouteId/*'}
