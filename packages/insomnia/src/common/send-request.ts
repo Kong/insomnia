@@ -1,5 +1,5 @@
 import path from 'path';
-
+import { appendFile } from 'node:fs/promises';
 import { type BaseModel, types as modelTypes } from '../models';
 import * as models from '../models';
 import type { Request } from '../models/request';
@@ -16,6 +16,7 @@ import {
 import { invariant } from '../utils/invariant';
 import { database } from './database';
 import { generateId } from './misc';
+import { Console } from 'insomnia-sdk';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
@@ -90,6 +91,20 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     const renderResult = await tryToInterpolateRequest(request, environmentId, 'send');
     // skip plugins
     const renderedRequest = renderResult.request;
+    const scriptConsole = new Console();
+    const script = `console.log('jack is here');`
+    const AsyncFunction = (async () => { }).constructor;
+    const executeScript = AsyncFunction(
+      'console',
+      `
+        ${script};
+        return;`
+    );
+
+    const mutatedInsomniaObject = await executeScript(
+      scriptConsole,
+    );
+    await appendFile(timelinePath, scriptConsole.dumpLogs());
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
       clientCertificates,
@@ -107,3 +122,4 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     return { status, statusMessage, data, headers, responseTime, timelinePath };
   };
 }
+
