@@ -1,87 +1,57 @@
+// This file is responsible for compressing the binaries for each architecture
+import fs from 'node:fs/promises';
+
 import { ProcessEnvOptions, spawn } from 'child_process';
-import fs from 'fs';
 import path from 'path';
 
 import packageJson from '../../package.json';
-const prefixPkgArtifacts = (msg: string) => `[pkg-inso-artifacts] ${msg}`;
 
 const { platform } = process;
-const isMac = () => platform === 'darwin';
-const isLinux = () => platform === 'linux';
-const isWindows = () => platform === 'win32';
 
-const getArchiveName = () => {
+const spawnCompressProcess = (cwd: ProcessEnvOptions['cwd']) => {
   const version = process.env.VERSION || packageJson.version;
-  if (isMac()) {
-    return `inso-macos-${version}.zip`;
+
+  if (platform === 'darwin') {
+    return spawn('ditto', [
+      '-c',
+      '-k',
+      '../binaries/inso',
+      `inso-macos-${version}.zip`,
+    ], { cwd, shell: true });
   }
 
-  if (isLinux()) {
-    return `inso-linux-${version}.tar.xz`;
+  if (platform === 'win32' || platform === 'linux') {
+    return spawn('tar', [
+      '-C',
+      '../binaries',
+      platform === 'win32' ? '-a -cf' : '-cJf',
+      platform === 'win32'
+        ? `inso-windows-${version}.zip`
+        : `inso-linux-${version}.tar.xz`,
+      platform === 'win32' ? 'inso.exe' : 'inso',
+    ], { cwd, shell: true });
   }
 
-  if (isWindows()) {
-    return `inso-windows-${version}.zip`;
-  }
-
-  throw new Error(prefixPkgArtifacts(`Unsupported OS: ${platform}`));
-};
-
-const startProcess = (cwd: ProcessEnvOptions['cwd']) => {
-  const name = getArchiveName();
-
-  if (isMac()) {
-    return spawn('ditto',
-      [
-        '-c',
-        '-k',
-        '../binaries/inso',
-        name,
-      ], {
-        cwd,
-        shell: true,
-      });
-  }
-
-  if (isWindows() || isLinux()) {
-
-    return spawn('tar',
-      [
-        '-C',
-        '../binaries',
-        isWindows() ? '-a -cf' : '-cJf',
-        name,
-        isWindows() ? 'inso.exe' : 'inso',
-      ], {
-        cwd,
-        shell: true,
-      });
-  }
-
-  throw new Error(prefixPkgArtifacts(`Unsupported OS: ${platform}`));
+  throw new Error(`[pkg-inso-artifacts] Unsupported OS: ${platform}`);
 };
 
 const artifacts = async () => {
+  // ensure packages/insomnia-inso/artifacts exists
+  const artifactsDir = path.join(__dirname, '../../artifacts');
+  await fs.mkdir(artifactsDir, { recursive: true });
   return new Promise<void>(resolve => {
-    const cwd = path.join(__dirname, '../../artifacts');
-    fs.mkdirSync(cwd, { recursive: true });
-
-    const process = startProcess(cwd);
-
-    process.stdout.on('data', data => {
+    const childProcess = spawnCompressProcess(artifactsDir);
+    childProcess.stdout.on('data', data => {
       console.log(data.toString());
     });
-
-    process.stderr.on('data', data => {
+    childProcess.stderr.on('data', data => {
       console.log(data.toString());
     });
-
-    process.on('exit', code => {
+    childProcess.on('exit', code => {
       if (code !== 0) {
-        console.log(prefixPkgArtifacts(`exited with code ${code}`));
-        throw new Error(prefixPkgArtifacts('failed to compress'));
+        console.log(`[pkg-inso-artifacts] exited with code ${code}`);
+        throw new Error('[pkg-inso-artifacts] failed to compress');
       }
-
       resolve();
     });
   });
