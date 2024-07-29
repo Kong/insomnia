@@ -125,6 +125,7 @@ export function registerMainHandlers() {
 
   ipcMainOnce('landingPageRendered', (_, { landingPage, tags = {} }: { landingPage: LandingPage; tags?: Record<string, string> }) => {
     const duration = performance.now() - APP_START_TIME;
+    console.log('[after perf improvement]: app start duration', `${duration}ms`);
     Sentry.metrics.distribution(SentryMetrics.APP_START_DURATION, duration, {
       tags: {
         landingPage,

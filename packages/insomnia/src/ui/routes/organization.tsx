@@ -587,6 +587,7 @@ const OrganizationRoute = () => {
   useEffect(() => {
     if (nextOrganizationId.current && startSwitchOrganizationTime.current && nextOrganizationId.current === organizationId) {
       const duration = performance.now() - startSwitchOrganizationTime.current;
+      console.log('[after perf improvement]: switch organization', `${duration}ms`);
       Sentry.metrics.distribution(SentryMetrics.ORGANIZATION_SWITCH_DURATION, duration, {
         unit: 'millisecond',
       });
