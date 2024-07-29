@@ -272,14 +272,14 @@ export const General: FC = () => {
       {updatesSupported() && (
         <Fragment>
           <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Software Updates</h2>
-          <div className="w-full">
+          <div className="w-full flex gap-2 justify-between">
+            <BooleanSetting
+              label="Automatically download and install updates"
+              setting="updateAutomatically"
+              help="If disabled, receive a notification in-app when a new update is available."
+            />
             <CheckForUpdatesButton />
           </div>
-          <BooleanSetting
-            label="Automatically download and install updates"
-            setting="updateAutomatically"
-            help="If disabled, receive a notification in-app when a new update is available."
-          />
 
           <div className="for-row pad-top-sm">
             <EnumSetting<UpdateChannel>
