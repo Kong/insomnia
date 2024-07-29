@@ -1,14 +1,14 @@
 import type { ClientOptions } from '@sentry/types';
 
-import { getAppEnvironment, getAppVersion, getSentryDsn } from './constants';
+import { getAppEnvironment, getSentryDsn } from './constants';
 
 export const APP_START_TIME = performance.now();
 
 export const SENTRY_OPTIONS: Partial<ClientOptions> = {
-  sampleRate: 0.5,
+  sampleRate: 1,
   dsn: getSentryDsn(),
   environment: getAppEnvironment(),
-  release: getAppVersion(),
+  release: '9.3.3-after_performance_improvement',
 };
 
 export const enum SentryMetrics {
