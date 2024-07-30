@@ -137,8 +137,8 @@ jobs:
           appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
           appstore-connect-team-id: FX44YY62GV
 
-      - name: Create inso artifacts
-        run: npm run inso-package:artifacts
+      - name: Create Inso zip/tar/gz artifacts
+        run: npm run artifacts -w insomnia-inso
 
       - name: Create inso Docker Image artifacts
         if: matrix.os == 'ubuntu-latest'
