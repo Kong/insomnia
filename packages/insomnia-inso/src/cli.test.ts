@@ -1,6 +1,7 @@
+import { exec, ExecException } from 'child_process';
+import path from 'path';
 import { describe, expect, it } from 'vitest';
 
-import { runCliFromRoot } from './bundle.test';
 // Tests both bundle and packaged versions of the CLI with the same commands and expectations.
 // Intended to be coarse grained (only checks for success or failure) smoke test to ensure packaging worked as expected.
 
@@ -62,6 +63,18 @@ describe('inso dev bundle', () => {
     }
     expect(result.code).toBe(1);
   });
+  it('logs response and timeline with verbose', async () => {
+    const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/minimal.yml wrk_5b5ab6 --verbose';
+    const result = await runCliFromRoot(input);
+    if (result.code !== 0) {
+      console.log(result);
+    }
+    // logs response object
+    expect(result.stdout).toContain('status: 200');
+    // logs timeline
+    expect(result.stdout).toContain('Preparing request to http://127.0.0.1:4010/');
+    // expect(result.stdout).toContain('foo bar baz');
+  });
 });
 
 const packagedSuccessCodes = shouldReturnSuccessCode.map(x => x.replace('$PWD/packages/insomnia-inso/bin/inso', '$PWD/packages/insomnia-inso/binaries/inso'));
@@ -83,3 +96,9 @@ describe('inso packaged binary', () => {
     expect(result.code).toBe(1);
   });
 });
+
+// Execute the command in the root directory of the project
+export const runCliFromRoot = (input: string): Promise<{ code: number; error: ExecException | null; stdout: string; stderr: string }> => {
+  return new Promise(resolve => exec(input, { cwd: path.resolve(__dirname, '../../..') },
+    (error, stdout, stderr) => resolve({ code: error?.code || 0, error, stdout, stderr })));
+};
