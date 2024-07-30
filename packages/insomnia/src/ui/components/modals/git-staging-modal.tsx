@@ -2,6 +2,7 @@ import classnames from 'classnames';
 import React, { type FC, useEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useParams } from 'react-router-dom';
+import { tinykeys } from 'tinykeys';
 
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
@@ -39,6 +40,13 @@ export const GitStagingModal: FC<ModalProps> = ({
   const gitChangesFetcher = useFetcher<GitChangesLoaderData>();
   const gitCommitFetcher = useFetcher<CommitToGitRepoResult>();
   const rollbackFetcher = useFetcher<GitRollbackChangesResult>();
+
+  useEffect(() => {
+    const unsubscribe = tinykeys(document.body, {
+      'esc': () => modalRef.current?.hide(),
+    });
+    return unsubscribe;
+  }, []);
 
   const isLoadingGitChanges = gitChangesFetcher.state !== 'idle';
 
