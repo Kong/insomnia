@@ -22,7 +22,7 @@ interface Pair {
   multiline?: boolean | string;
 }
 
-function createEmtyPair() {
+function createEmptyPair() {
   return {
     id: generateId('pair'),
     name: '',
@@ -68,7 +68,7 @@ export const KeyValueEditor: FC<Props> = ({
     initialItems: pairs.length > 0 ? pairs.map(pair => {
       const pairId = pair.id || generateId('pair');
       return { ...pair, id: pairId };
-    }) : [createEmtyPair()],
+    }) : [createEmptyPair()],
     getKey: item => item.id,
   });
 
@@ -101,7 +101,7 @@ export const KeyValueEditor: FC<Props> = ({
       const items = pairsList.items.filter(pair => pair.id !== id);
 
       if (pairsList.items.length === 0) {
-        pairsList.append(createEmtyPair());
+        pairsList.append(createEmptyPair());
       }
 
       onChange(items);
@@ -111,7 +111,7 @@ export const KeyValueEditor: FC<Props> = ({
   const removeAllPairs = useCallback(function removeAllPairs() {
     pairsList.setSelectedKeys(new Set(pairsList.items.map(item => item.id)));
     pairsList.removeSelectedItems();
-    pairsList.append(createEmtyPair());
+    pairsList.append(createEmptyPair());
     onChange([]);
   }, [onChange, pairsList]);
 
