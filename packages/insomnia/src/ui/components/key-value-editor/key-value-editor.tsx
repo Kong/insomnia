@@ -119,7 +119,6 @@ export const KeyValueEditor: FC<Props> = ({
     getItems: keys =>
       [...keys].map(key => {
         const pair = pairsList.getItem(key);
-        console.log('drag-pair', pair);
         return { 'text/plain': `${pair.id}` };
       }),
     onReorder(e) {
@@ -151,7 +150,6 @@ export const KeyValueEditor: FC<Props> = ({
     renderDragPreview(items) {
       const pair = pairsList.getItem(items[0]['text/plain']);
 
-      console.log({ pair });
       const element = document.querySelector(`[data-key="${pair.id}"]`);
 
       const isFile = pair.type === 'file';
@@ -444,7 +442,6 @@ export const KeyValueEditor: FC<Props> = ({
                 readOnly={pair.disabled || isDisabled}
                 getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
                 onChange={name => {
-                  console.log(name);
                   upsertPair({ ...pair, name });
                 }}
               />
