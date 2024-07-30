@@ -17,7 +17,7 @@ const spawnCompressProcess = (cwd: ProcessEnvOptions['cwd']) => {
       '-k',
       '../binaries/inso',
       `inso-macos-${version}.zip`,
-    ], { cwd, shell: true });
+    ], { cwd });
   }
 
   if (platform === 'win32' || platform === 'linux') {
@@ -29,7 +29,7 @@ const spawnCompressProcess = (cwd: ProcessEnvOptions['cwd']) => {
         ? `inso-windows-${version}.zip`
         : `inso-linux-${version}.tar.xz`,
       platform === 'win32' ? 'inso.exe' : 'inso',
-    ], { cwd, shell: true });
+    ], { cwd });
   }
 
   throw new Error(`[pkg-inso-artifacts] Unsupported OS: ${platform}`);
