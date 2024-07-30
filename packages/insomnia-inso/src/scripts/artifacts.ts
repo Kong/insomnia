@@ -29,7 +29,7 @@ const spawnCompressProcess = (cwd: ProcessEnvOptions['cwd']) => {
         ? `inso-windows-${version}.zip`
         : `inso-linux-${version}.tar.xz`,
       platform === 'win32' ? 'inso.exe' : 'inso',
-    ], { cwd });
+    ], { cwd, shell: platform === 'win32' });
   }
 
   throw new Error(`[pkg-inso-artifacts] Unsupported OS: ${platform}`);
