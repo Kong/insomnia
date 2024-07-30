@@ -22,6 +22,16 @@ interface Pair {
   multiline?: boolean | string;
 }
 
+function createEmtyPair() {
+  return {
+    id: generateId('pair'),
+    name: '',
+    value: '',
+    description: '',
+    disabled: false,
+  };
+}
+
 type AutocompleteHandler = (pair: Pair) => string[] | PromiseLike<string[]>;
 
 interface Props {
@@ -55,14 +65,14 @@ export const KeyValueEditor: FC<Props> = ({
   const [showDescription, setShowDescription] = React.useState(false);
   const { enabled: nunjucksEnabled } = useNunjucksEnabled();
   const pairsList = useListData({
-    initialItems: pairs.map(pair => {
+    initialItems: pairs.length > 0 ? pairs.map(pair => {
       const pairId = pair.id || generateId('pair');
       return { ...pair, id: pairId };
-    }),
+    }) : [createEmtyPair()],
     getKey: item => item.id,
   });
 
-  const items = pairsList.items.length > 0 ? pairsList.items : [{ id: 'pair-empty', name: '', value: '', description: '', disabled: false }];
+  const items = pairsList.items.length > 0 ? pairsList.items : [];
 
   const readOnlyPairsList = useListData({
     initialItems: readOnlyPairs?.map(pair => {
@@ -89,6 +99,11 @@ export const KeyValueEditor: FC<Props> = ({
     if (pairsList.getItem(id)) {
       pairsList.remove(id);
       const items = pairsList.items.filter(pair => pair.id !== id);
+
+      if (pairsList.items.length === 0) {
+        pairsList.append(createEmtyPair());
+      }
+
       onChange(items);
     }
   }, [onChange, pairsList]);
@@ -96,6 +111,7 @@ export const KeyValueEditor: FC<Props> = ({
   const removeAllPairs = useCallback(function removeAllPairs() {
     pairsList.setSelectedKeys(new Set(pairsList.items.map(item => item.id)));
     pairsList.removeSelectedItems();
+    pairsList.append(createEmtyPair());
     onChange([]);
   }, [onChange, pairsList]);
 
@@ -347,7 +363,8 @@ export const KeyValueEditor: FC<Props> = ({
         // dependencies={[showDescription, nunjucksEnabled]}
         className="flex pt-1 flex-col w-full overflow-y-auto flex-1 relative"
         dragAndDropHooks={dragAndDropHooks}
-        items={items.map(pair => ({ ...pair, upsertPair, removePair }))}
+        dependencies={[upsertPair, removePair, showDescription, nunjucksEnabled]}
+        items={items}
       >
         {pair => {
           const isFile = pair.type === 'file';
@@ -357,11 +374,12 @@ export const KeyValueEditor: FC<Props> = ({
           let valueEditor = (
             <OneLineEditor
               id={'key-value-editor__value' + pair.id}
+              key={'key-value-editor__value' + pair.id + pair.disabled}
               placeholder={valuePlaceholder || 'Value'}
               defaultValue={pair.value}
               readOnly={pair.disabled || isDisabled}
               getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
-              onChange={value => pair.upsertPair({ ...pair, value })}
+              onChange={value => upsertPair({ ...pair, value })}
             />
           );
 
@@ -373,7 +391,7 @@ export const KeyValueEditor: FC<Props> = ({
                 disabled={pair.disabled || isDisabled}
                 className="px-2 py-1 w-full fle flex-shrink-0 flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden"
                 path={pair.fileName || ''}
-                onChange={fileName => pair.upsertPair({ ...pair, fileName })}
+                onChange={fileName => upsertPair({ ...pair, fileName })}
               />
             );
           }
@@ -389,8 +407,8 @@ export const KeyValueEditor: FC<Props> = ({
                   defaultValue: pair.value,
                   enableRender: nunjucksEnabled,
                   mode: pair.multiline && typeof pair.multiline === 'string' ? pair.multiline : 'text/plain',
-                  onChange: (value: string) => pair.upsertPair({ ...pair, value }),
-                  onModeChange: (mode: string) => pair.upsertPair({ ...pair, multiline: mode }),
+                  onChange: (value: string) => upsertPair({ ...pair, value }),
+                  onModeChange: (mode: string) => upsertPair({ ...pair, multiline: mode }),
                 })}
               >
                 <i className="fa fa-pencil-square-o space-right" />
@@ -420,20 +438,25 @@ export const KeyValueEditor: FC<Props> = ({
               </div>
               <OneLineEditor
                 id={'key-value-editor__name' + pair.id}
+                key={'key-value-editor__name' + pair.id + pair.disabled}
                 placeholder={namePlaceholder || 'Name'}
                 defaultValue={pair.name}
                 readOnly={pair.disabled || isDisabled}
                 getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
-                onChange={name => pair.upsertPair({ ...pair, name })}
+                onChange={name => {
+                  console.log(name);
+                  upsertPair({ ...pair, name });
+                }}
               />
               {valueEditor}
               {showDescription && (
                 <OneLineEditor
                   id={'key-value-editor__description' + pair.id}
+                  key={'key-value-editor__description' + pair.id + pair.disabled}
                   placeholder={descriptionPlaceholder || 'Description'}
                   defaultValue={pair.description || ''}
                   readOnly={pair.disabled || isDisabled}
-                  onChange={description => pair.upsertPair({ ...pair, description })}
+                  onChange={description => upsertPair({ ...pair, description })}
                 />
               )}
               <Toolbar className="flex items-center gap-1">
@@ -455,14 +478,14 @@ export const KeyValueEditor: FC<Props> = ({
                           id: 'text',
                           name: 'Text',
                           textValue: 'Text',
-                          onAction: () => pair.upsertPair({ ...pair, type: 'text', multiline: false }),
+                          onAction: () => upsertPair({ ...pair, type: 'text', multiline: false }),
                         },
                         ...allowMultiline ? [
                           {
                             id: 'multiline-text',
                             name: 'Multiline text',
                             textValue: 'Multiline text',
-                            onAction: () => pair.upsertPair({ ...pair, type: 'text', multiline: true }),
+                            onAction: () => upsertPair({ ...pair, type: 'text', multiline: true }),
                           },
                         ] : [],
                         ...allowFile ? [
@@ -470,7 +493,7 @@ export const KeyValueEditor: FC<Props> = ({
                             id: 'file',
                             name: 'File',
                             textValue: 'File',
-                            onAction: () => pair.upsertPair({ ...pair, type: 'file' }),
+                            onAction: () => upsertPair({ ...pair, type: 'file' }),
                           },
                         ] : [],
                       ]}
@@ -491,7 +514,7 @@ export const KeyValueEditor: FC<Props> = ({
                 </MenuTrigger>
                 <ToggleButton
                   className="flex items-center justify-center h-7 aspect-square rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                  onChange={isSelected => pair.upsertPair({ ...pair, disabled: !isSelected })}
+                  onChange={isSelected => upsertPair({ ...pair, disabled: !isSelected })}
                   isSelected={!pair.disabled}
                 >
                   <Icon icon={pair.disabled ? 'square' : 'check-square'} />
@@ -501,7 +524,7 @@ export const KeyValueEditor: FC<Props> = ({
                   className="flex items-center disabled:opacity-50 justify-center h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   confirmMessage=''
                   doneMessage=''
-                  onClick={() => pair.removePair(pair.id)}
+                  onClick={() => removePair(pair.id)}
                 >
                   <Icon icon="trash-can" />
                 </PromptButton>
