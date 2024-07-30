@@ -79,13 +79,13 @@ export const EnvironmentPicker = ({
         </div>
       </Button>
       <Popover className="min-w-max max-h-[90vh] flex flex-col !z-10" placement='bottom start' offset={8}>
-        <Dialog className="border h-full w-full grid grid-flow-col [grid-auto-columns:min(260px,calc(40vw))_min(340px,calc(50vw))] overflow-hidden divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] bg-[--color-bg] shadow-lg rounded-md focus:outline-none">
+        <Dialog className="border h-full w-full grid grid-flow-col [grid-auto-columns:min(260px,calc(40vw))_min(260px,calc(40vw))] overflow-hidden divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] bg-[--color-bg] shadow-lg rounded-md focus:outline-none">
           <div className='relative w-full h-full flex flex-col overflow-hidden flex-1'>
             <div className='relative w-full h-full flex flex-col overflow-hidden flex-1'>
               <Heading className='text-sm flex-shrink-0 h-[--line-height-sm] font-bold text-[--hl] px-3 py-1 flex items-center gap-2 justify-between'>
-                <span>Collection Environments</span>
+                <span>Collection Environments ({[baseEnvironment, ...subEnvironments].length})</span>
                 <Button onPress={onOpenEnvironmentSettingsModal} aria-label='Manage collection environments' className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] outline-none hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                  <Icon icon="gear" />
+                  <Icon icon="edit" />
                 </Button>
               </Heading>
               <ListBox
@@ -105,11 +105,11 @@ export const EnvironmentPicker = ({
                     }
                   );
                 }}
-                className="p-2 select-none text-sm min-w-max overflow-y-auto focus:outline-none"
+                className="p-2 select-none text-sm overflow-y-auto focus:outline-none"
               >
                 {item => (
                   <ListBoxItem
-                    className={`aria-disabled:font-bold rounded flex gap-2 pr-1 aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none transition-colors ${item.isBase ? 'pl-[--padding-md]' : 'pl-8'}`}
+                    className={`aria-disabled:font-bold truncate rounded flex gap-2 pr-1 aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none transition-colors ${item.isBase ? 'pl-[--padding-md]' : 'pl-8'}`}
                   >
                     {({ isSelected, isDisabled }) => (
                       <Fragment>
