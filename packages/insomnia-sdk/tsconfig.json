@@ -30,8 +30,6 @@
   ],
   "exclude": [
     "**/__tests__",
-    "node_modules",
-    "__tests__",
-    "**/insomnia/src",
+    "node_modules"
   ]
 }
