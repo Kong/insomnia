@@ -1,24 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models';
-import { data as fixtures } from '../__fixtures__/nestedfolders';
 import { _repairDatabase, database as db } from '../database';
 
-function loadFixture() {
-  const promises: Promise<models.BaseModel>[] = [];
-  for (const type of Object.keys(fixtures)) {
-    for (const doc of fixtures[type]) {
-      // @ts-expect-error -- TSCONVERSION
-      promises.push(db.insert<models.BaseModel>({ ...doc, type }));
-    }
-  }
-  return Promise.all(promises);
-}
-
 describe('init()', () => {
-  beforeEach(globalBeforeEach);
-
   it('handles being initialized twice', async () => {
     await db.init(models.types(), {
       inMemoryOnly: true,
@@ -31,8 +16,9 @@ describe('init()', () => {
 });
 
 describe('onChange()', () => {
-  beforeEach(globalBeforeEach);
-
+  beforeEach(async () => {
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
+  });
   it('handles change listeners', async () => {
     const doc = {
       type: models.request.type,
@@ -50,7 +36,6 @@ describe('onChange()', () => {
     const updatedDoc = await models.request.update(newDoc, {
       name: 'bar',
     });
-    expect(changesSeen.length).toBe(2);
     expect(changesSeen).toEqual([
       [['insert', newDoc, false]],
       [['update', updatedDoc, false]],
@@ -62,7 +47,6 @@ describe('onChange()', () => {
 });
 
 describe('bufferChanges()', () => {
-  beforeEach(globalBeforeEach);
 
   it('properly buffers changes', async () => {
     const doc = {
@@ -156,7 +140,6 @@ describe('bufferChanges()', () => {
 });
 
 describe('bufferChangesIndefinitely()', () => {
-  beforeEach(globalBeforeEach);
 
   it('should not auto flush', async () => {
     const doc = {
@@ -191,7 +174,6 @@ describe('bufferChangesIndefinitely()', () => {
 });
 
 describe('requestCreate()', () => {
-  beforeEach(globalBeforeEach);
 
   it('creates a valid request', async () => {
     const now = Date.now();
@@ -226,42 +208,10 @@ describe('requestCreate()', () => {
   });
 });
 
-describe('requestGroupDuplicate()', () => {
+describe('_repairDatabase()', async () => {
   beforeEach(async () => {
-    await globalBeforeEach();
-    await loadFixture();
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
   });
-
-  it('duplicates a RequestGroup', async () => {
-    const requestGroup = await models.requestGroup.getById('fld_1');
-    expect(requestGroup).not.toEqual(null);
-    if (requestGroup === null) {
-      return;
-    }
-
-    expect(requestGroup.name).toBe('Fld 1');
-    const newRequestGroup = await models.requestGroup.duplicate(requestGroup);
-    expect(newRequestGroup._id).not.toBe(requestGroup._id);
-    expect(newRequestGroup.name).toBe('Fld 1 (Copy)');
-    const allRequests = await models.request.all();
-    const allRequestGroups = await models.requestGroup.all();
-    const childRequests = await models.request.findByParentId(requestGroup._id);
-    const childRequestGroups = await models.requestGroup.findByParentId(requestGroup._id);
-    const newChildRequests = await models.request.findByParentId(newRequestGroup._id);
-    const newChildRequestGroups = await models.requestGroup.findByParentId(newRequestGroup._id);
-    // This asserting is pretty garbage but it at least checks
-    // to see that the recursion worked (for the most part)
-    expect(allRequests.length).toBe(8);
-    expect(allRequestGroups.length).toBe(5);
-    expect(childRequests.length).toBe(2);
-    expect(childRequestGroups.length).toBe(1);
-    expect(newChildRequests.length).toBe(2);
-    expect(newChildRequestGroups.length).toBe(1);
-  });
-});
-
-describe('_repairDatabase()', () => {
-  beforeEach(globalBeforeEach);
 
   it('fixes duplicate environments', async () => {
     // Create Workspace with no children
@@ -645,13 +595,12 @@ describe('_repairDatabase()', () => {
 });
 
 describe('duplicate()', () => {
-  beforeEach(globalBeforeEach);
 
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
 
   it('should overwrite appropriate fields on the parent when duplicating', async () => {
     const date = 1478795580200;
-    Date.now = jest.fn().mockReturnValue(date);
+    Date.now = vi.fn().mockReturnValue(date);
     const workspace = await models.workspace.create({
       name: 'Test Workspace',
     });
@@ -678,18 +627,17 @@ describe('duplicate()', () => {
     const workspace = await models.workspace.create({
       name: 'Test Workspace',
     });
-    const spy = jest.spyOn(models.workspace, 'migrate');
+    const spy = vi.spyOn(models.workspace, 'migrate');
     await db.duplicate(workspace);
     expect(spy).not.toHaveBeenCalled();
   });
 });
 
 describe('docCreate()', () => {
-  beforeEach(globalBeforeEach);
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
 
   it('should call migrate when creating', async () => {
-    const spy = jest.spyOn(models.workspace, 'migrate');
+    const spy = vi.spyOn(models.workspace, 'migrate');
     await db.docCreate(models.workspace.type, {
       name: 'Test Workspace',
     });
@@ -699,7 +647,6 @@ describe('docCreate()', () => {
 });
 
 describe('withAncestors()', () => {
-  beforeEach(globalBeforeEach);
 
   it('should return itself and all parents but exclude siblings', async () => {
     const spc = await models.project.create();

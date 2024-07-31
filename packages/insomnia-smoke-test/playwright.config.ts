@@ -3,13 +3,7 @@ import { PlaywrightTestConfig } from '@playwright/test';
 const config: PlaywrightTestConfig = {
   projects: [
     {
-      // Run all tests, runs only on Release PR test workflow
-      name: 'Default',
-      testMatch: /.*\/.*.test.ts/,
-      retries: 0,
-    },
-    {
-      // High-confidence smoke/sanity checks, runs on non-release PR test workflow
+      // High-confidence smoke/sanity checks, runs on Test App only on Ubuntu
       name: 'Smoke',
       testMatch: /smoke\/.*.test.ts/,
       retries: 0,

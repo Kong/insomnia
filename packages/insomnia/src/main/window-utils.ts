@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/electron/main';
 import {
   app,
   BrowserWindow,
@@ -27,6 +28,7 @@ import {
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
 import * as log from '../common/log';
+import { APP_START_TIME, SentryMetrics } from '../common/sentry';
 import { invariant } from '../utils/invariant';
 import { ipcMainOn } from './ipc/electron';
 import LocalStorage from './local-storage';
@@ -166,7 +168,7 @@ export function stopHiddenBrowserWindow() {
   hiddenWindowIsBusy = false;
 }
 
-export function createWindow(): ElectronBrowserWindow {
+export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): ElectronBrowserWindow {
   const { bounds, fullscreen, maximize } = getBounds();
   const { x, y, width, height } = bounds;
 
@@ -255,6 +257,12 @@ export function createWindow(): ElectronBrowserWindow {
   const appUrl = process.env.APP_RENDER_URL || pathToFileURL(appPath).href;
 
   console.log(`[main] Loading ${appUrl}`);
+  if (firstLaunch) {
+    const duration = performance.now() - APP_START_TIME;
+    Sentry.metrics.distribution(SentryMetrics.MAIN_PROCESS_START_DURATION, duration, {
+      unit: 'millisecond',
+    });
+  }
   mainBrowserWindow.loadURL(appUrl);
   // Emitted when the window is closed.
   mainBrowserWindow.on('closed', () => {
@@ -777,8 +785,8 @@ function initLocalStorage() {
   localStorage = new LocalStorage(localStoragePath);
 }
 
-export function createWindowsAndReturnMain() {
-  const mainWindow = browserWindows.get('Insomnia') ?? createWindow();
+export function createWindowsAndReturnMain({ firstLaunch }: { firstLaunch?: boolean } = {}) {
+  const mainWindow = browserWindows.get('Insomnia') ?? createWindow({ firstLaunch });
   if (!browserWindows.get('HiddenBrowserWindow')) {
     createHiddenBrowserWindow();
   }

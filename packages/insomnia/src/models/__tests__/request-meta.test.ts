@@ -1,10 +1,8 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../index';
 
 describe('create()', () => {
-  beforeEach(globalBeforeEach);
 
   it('fails when missing parentId', async () => {
     expect(() =>

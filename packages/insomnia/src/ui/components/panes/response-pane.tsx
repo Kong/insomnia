@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import React, { type FC, useCallback } from 'react';
+import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
@@ -12,7 +13,6 @@ import { useExecutionState } from '../../hooks/use-execution-state';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import type { RequestLoaderData } from '../../routes/request';
 import { useRootLoaderData } from '../../routes/root';
-import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { MockResponseExtractor } from '../editors/mock-response-extractor';
@@ -157,16 +157,52 @@ export const ResponsePane: FC<Props> = ({
           />
         </PaneHeader>
       )}
-      <Tabs aria-label="Response pane tabs">
-        <TabItem
-          key="preview"
-          title={
+      <Tabs aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
+        <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='preview'
+          >
+            Preview
+          </Tab>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='headers'
+          >
+            Headers
+            {activeResponse.headers.length > 0 && (
+              <span className="p-2 aspect-square flex items-center justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{activeResponse.headers.length}</span>
+            )}
+          </Tab>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='cookies'
+          >
+            Cookies
+            {cookieHeaders.length > 0 && (
+              <span className="p-2 aspect-square flex items-center justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{cookieHeaders.length}</span>
+            )}
+          </Tab>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='mock-response'
+          >
+            → Mock
+          </Tab>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='timeline'
+          >
+            Console
+          </Tab>
+        </TabList>
+        <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='preview'>
+          <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
             <PreviewModeDropdown
               download={handleDownloadResponseBody}
               copyToClipboard={handleCopyResponseToClipboard}
             />
-          }
-        >
+          </Toolbar>
           <ResponseViewer
             key={activeResponse._id}
             bytes={Math.max(activeResponse.bytesContent, activeResponse.bytesRead)}
@@ -184,56 +220,37 @@ export const ResponsePane: FC<Props> = ({
             updateFilter={activeResponse.error ? undefined : handleSetFilter}
             url={activeResponse.url}
           />
-        </TabItem>
-        <TabItem
-          key="headers"
-          title={
-            <div className='flex items-center gap-2'>
-              Headers
-              {activeResponse.headers.length > 0 && (
-                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{activeResponse.headers.length}</span>
-              )}
-            </div>
-          }
+        </TabPanel>
+        <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='headers'>
+          <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
+            <ResponseHeadersViewer headers={activeResponse.headers} />
+          </ErrorBoundary>
+        </TabPanel>
+        <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='cookies'>
+          <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
+            <ResponseCookiesViewer
+              cookiesSent={activeResponse.settingSendCookies}
+              cookiesStored={activeResponse.settingStoreCookies}
+              headers={cookieHeaders}
+            />
+          </ErrorBoundary>
+        </TabPanel>
+
+        <TabPanel
+          className='w-full flex-1 flex flex-col overflow-y-auto'
+          id='mock-response'
         >
-          <PanelContainer className="pad">
-            <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
-              <ResponseHeadersViewer headers={activeResponse.headers} />
-            </ErrorBoundary>
-          </PanelContainer>
-        </TabItem>
-        <TabItem
-          key="cookies"
-          title={
-            <div className='flex items-center gap-2'>
-              Cookies
-              {cookieHeaders.length > 0 && (
-                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{cookieHeaders.length}</span>
-              )}
-            </div>
-          }
-        >
-          <PanelContainer className="pad">
-            <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
-              <ResponseCookiesViewer
-                cookiesSent={activeResponse.settingSendCookies}
-                cookiesStored={activeResponse.settingStoreCookies}
-                headers={cookieHeaders}
-              />
-            </ErrorBoundary>
-          </PanelContainer>
-        </TabItem>
-        <TabItem key="timeline" title="Timeline">
+          <MockResponseExtractor />
+        </TabPanel>
+
+        <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='timeline'>
           <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
             <ResponseTimelineViewer
               key={activeResponse._id}
               timeline={timeline}
             />
           </ErrorBoundary>
-        </TabItem>
-        <TabItem key="mock-response" title="Mock Response">
-          <MockResponseExtractor />
-        </TabItem>
+        </TabPanel>
       </Tabs>
       <ErrorBoundary errorClassName="font-error pad text-center">
         {isExecuting && <ResponseTimer

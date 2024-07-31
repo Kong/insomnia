@@ -1,6 +1,6 @@
-import { describe, expect, it } from '@jest/globals';
 import execa from 'execa';
 import path from 'path';
+import { describe, expect, it } from 'vitest';
 
 // MAKE SURE YOU BUILD THE PROJECT BEFORE RUNNING THESE TESTS.
 // These tests use the executable /bin/inso, which relies on /dist.

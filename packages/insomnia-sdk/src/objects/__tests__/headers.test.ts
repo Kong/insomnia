@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
 import { Header, HeaderList } from '../headers';
 // import { QueryParam, setUrlParser, Url, UrlMatchPattern } from '../urls';

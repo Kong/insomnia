@@ -108,7 +108,7 @@ export interface CodeEditorProps {
 const normalizeMimeType = (mode?: string) => {
   const mimeType = mode ? mode.split(';')[0] : 'text/plain';
   if (mimeType.includes('graphql-variables')) {
-    return 'graphql-variables';
+    return 'application/json';
   } else if (mimeType.includes('graphql')) {
     // Because graphQL plugin doesn't recognize application/graphql content-type
     return 'graphql';

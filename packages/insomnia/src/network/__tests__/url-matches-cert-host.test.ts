@@ -1,12 +1,9 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import { urlMatchesCertHost } from '../url-matches-cert-host';
 
 describe('urlMatchesCertHost', () => {
-  beforeEach(globalBeforeEach);
   describe('when the certificate host has no wildcard', () => {
-    beforeEach(globalBeforeEach);
 
     it('should return false if the requested host does not match the certificate host', () => {
       const requestUrl = 'https://www.example.org';
@@ -70,8 +67,6 @@ describe('urlMatchesCertHost', () => {
   });
 
   describe('when using wildcard certificate hosts', () => {
-    beforeEach(globalBeforeEach);
-
     it('should return true if the certificate host is only a wildcard', () => {
       const requestUrl = 'https://www.example.org/some/resources?query=1';
       const certificateHost = '*';
@@ -140,8 +135,6 @@ describe('urlMatchesCertHost', () => {
   });
 
   describe('when an invalid certificate host is supplied', () => {
-    beforeEach(globalBeforeEach);
-
     it('should return false if the certificate host contains invalid characters', () => {
       const requestUrl = 'https://www.example.org/some/resources?query=1';
       const certificateHost = 'https://example!.org';

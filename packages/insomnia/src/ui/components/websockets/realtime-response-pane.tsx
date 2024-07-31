@@ -1,6 +1,6 @@
 import fs from 'fs';
 import React, { type FC, useEffect, useState } from 'react';
-import { Button, Input, SearchField } from 'react-aria-components';
+import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
@@ -13,7 +13,6 @@ import type { Response } from '../../../models/response';
 import type { WebSocketResponse } from '../../../models/websocket-response';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
 import type { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';
-import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
@@ -135,8 +134,40 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
           activeResponse={response}
         />
       </PaneHeader>
-      <Tabs aria-label="Curl response pane tabs">
-        <TabItem key="events" title="Events">
+      <Tabs aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
+        <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='events'
+          >
+            Events
+          </Tab>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='headers'
+          >
+            Headers
+            {response.headers.length > 0 && (
+              <span className="p-2 aspect-square flex items-center justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{response.headers.length}</span>
+            )}
+          </Tab>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='cookies'
+          >
+            Cookies
+            {cookieHeaders.length > 0 && (
+              <span className="p-2 aspect-square flex items-center justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{cookieHeaders.length}</span>
+            )}
+          </Tab>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='timeline'
+          >
+            Console
+          </Tab>
+        </TabList>
+        <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='events'>
           <PanelGroup direction='vertical' className='h-full w-full grid grid-rows-[repeat(auto-fit,minmax(0,1fr))]'>
             {response.error ? <ResponseErrorViewer url={response.url} error={response.error} />
               : <>
@@ -210,52 +241,28 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
                 )}
               </>}
           </PanelGroup>
-        </TabItem>
-        <TabItem
-          key="headers"
-          title={
-            <div className='flex items-center gap-2'>
-              Headers
-              {response.headers.length > 0 && (
-                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{response.headers.length}</span>
-              )}
-            </div>
-          }
-        >
-          <PanelContainer className="pad">
-            <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
-              <ResponseHeadersViewer headers={response.headers} />
-            </ErrorBoundary>
-          </PanelContainer>
-        </TabItem>
-        <TabItem
-          key="cookies"
-          title={
-            <div className='flex items-center gap-2'>
-              Cookies
-              {cookieHeaders.length > 0 && (
-                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{cookieHeaders.length}</span>
-              )}
-            </div>
-          }
-        >
-          <PanelContainer className="pad">
-            <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
-              <ResponseCookiesViewer
-                cookiesSent={response.settingSendCookies}
-                cookiesStored={response.settingStoreCookies}
-                headers={cookieHeaders}
-              />
-            </ErrorBoundary>
-          </PanelContainer>
-        </TabItem>
-        <TabItem key="timeline" title="Timeline">
+        </TabPanel>
+        <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='headers'>
+          <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
+            <ResponseHeadersViewer headers={response.headers} />
+          </ErrorBoundary>
+        </TabPanel>
+        <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='cookies'>
+          <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
+            <ResponseCookiesViewer
+              cookiesSent={response.settingSendCookies}
+              cookiesStored={response.settingStoreCookies}
+              headers={cookieHeaders}
+            />
+          </ErrorBoundary>
+        </TabPanel>
+        <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='timeline'>
           <ResponseTimelineViewer
             key={response._id}
             timeline={timeline}
             pinToBottom={true}
           />
-        </TabItem>
+        </TabPanel>
       </Tabs>
     </ Pane>
   );

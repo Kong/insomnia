@@ -1,9 +1,9 @@
-import { describe, expect, it, jest } from '@jest/globals';
 import path from 'path';
+import { describe, expect, it, vi } from 'vitest';
 
 import { loadCosmiConfig } from './cli';
 
-jest.unmock('cosmiconfig');
+vi.unmock('cosmiconfig');
 
 const fixturesDir = path.join('src', 'fixtures');
 
@@ -23,8 +23,8 @@ describe('loadCosmiConfig()', () => {
   });
 
   it('should return empty object and report error if specified config file not found', async () => {
-    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
     const result = await loadCosmiConfig('not-found.yaml');
     expect(result).toEqual({});
     expect(consoleLogSpy).toHaveBeenCalledWith('Could not find config file at not-found.yaml.');

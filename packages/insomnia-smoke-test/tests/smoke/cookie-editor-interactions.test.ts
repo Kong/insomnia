@@ -44,7 +44,7 @@ test.describe('Cookie editor', async () => {
     await page.click('[data-testid="request-pane"] button:has-text("Send")');
 
     // Check in the timeline that the cookie was sent
-    await page.getByRole('tab', { name: 'Timeline' }).click();
+    await page.getByRole('tab', { name: 'Console' }).click();
     await page.click('text=foo2=bar2; foo=b123ar');
 
     // Send ws request
@@ -53,7 +53,7 @@ test.describe('Cookie editor', async () => {
     await page.click('[data-testid="request-pane"] >> text=Connect');
 
     // Check in the timeline that the cookie was sent
-    await page.getByRole('tab', { name: 'Timeline' }).click();
+    await page.getByRole('tab', { name: 'Console' }).click();
     await page.click('text=foo2=bar2; foo=b123ar;');
   });
 
