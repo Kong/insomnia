@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
-import React, { type FC, useCallback } from 'react';
+import React, { type FC, useCallback, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router-dom';
 
@@ -125,6 +125,21 @@ export const ResponsePane: FC<Props> = ({
     }
   }, [activeRequest, activeResponse]);
 
+  const { passedTestCount, totalTestCount } = useMemo(() => {
+    let passedTestCount = 0;
+    let totalTestCount = 0;
+    activeResponse?.requestTestResults.forEach(result => {
+      if (result.status === 'passed') {
+        passedTestCount++;
+      }
+      totalTestCount++;
+    });
+    return { passedTestCount, totalTestCount };
+  }, [activeResponse]);
+  const testResultCountTagColor = totalTestCount > 0 ?
+    passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600' :
+    'bg-[var(--hl-sm)]';
+
   if (!activeRequest) {
     return <BlankPane type="response" />;
   }
@@ -144,18 +159,6 @@ export const ResponsePane: FC<Props> = ({
 
   const timeline = models.response.getTimeline(activeResponse);
   const cookieHeaders = getSetCookieHeaders(activeResponse.headers);
-
-  let passedTestCount = 0;
-  let totalTestCount = 0;
-  activeResponse.requestTestResults.forEach(result => {
-    if (result.status === 'passed') {
-      passedTestCount++;
-    }
-    totalTestCount++;
-  });
-  const testResultCountTagColor = totalTestCount > 0 ?
-    passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600' :
-    'bg-[var(--hl-sm)]';
 
   return (
     <Pane type="response">
