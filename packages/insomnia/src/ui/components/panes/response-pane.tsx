@@ -199,6 +199,22 @@ export const ResponsePane: FC<Props> = ({
           </Tab>
           <Tab
             className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='test-results'
+          >
+            <div>
+              <span>
+                Tests
+              </span>
+              <span
+                className={`rounded-sm ml-1 px-1 ${testResultCountTagColor}`}
+                style={{ color: 'text-[--hl]' }}
+              >
+                {`${passedTestCount} / ${totalTestCount}`}
+              </span>
+            </div>
+          </Tab>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
             id='mock-response'
           >
             → Mock
@@ -249,47 +265,26 @@ export const ResponsePane: FC<Props> = ({
             />
           </ErrorBoundary>
         </TabPanel>
-
         <TabPanel
           className='w-full flex-1 flex flex-col overflow-y-auto'
-          key="test-results"
-          id="test results"
-          // title={
-          //   <div>
-          //     <span>
-          //       Tests
-          //     </span>
-          //     <span
-          //       className={`rounded-sm ml-1 px-1 ${testResultCountTagColor}`}
-          //       // style={{ color: 'white', top: '0', right: '5px' }}
-          //       style={{ color: 'text-[--hl]' }}
-          //     >
-          //       {`${passedTestCount} / ${totalTestCount}`}
-          //     </span>
-          //   </div>
-          // }
+          id='test-results'
         >
           <RequestTestResultPane requestTestResults={activeResponse.requestTestResults} />
         </TabPanel>
-
         <TabPanel
           className='w-full flex-1 flex flex-col overflow-y-auto'
           id='mock-response'
         >
           <MockResponseExtractor />
         </TabPanel>
-
         <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='timeline'>
-
           <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
             <ResponseTimelineViewer
               key={activeResponse._id}
               timeline={timeline}
             />
           </ErrorBoundary>
-
         </TabPanel>
-
       </Tabs>
       <ErrorBoundary errorClassName="font-error pad text-center">
         {isExecuting && <ResponseTimer
