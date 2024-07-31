@@ -1,12 +1,13 @@
 {
   "private": true,
   "name": "insomnia-sdk",
-  "version": "9.3.3-beta.4",
+  "version": "9.3.3",
   "description": "",
   "main": "src/objects/index.ts",
   "types": "src/objects/index.ts",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "type-check": "tsc --noEmit --project tsconfig.json"
   },
   "repository": {
     "type": "git",

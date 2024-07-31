@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import path from 'node:path';
 
@@ -375,6 +376,9 @@ export const go = (args?: string[]) => {
           logger.log(`Running request: ${req.name} ${req._id}`);
           const res = await sendRequest(req._id);
           logger.trace(res);
+          const timelineString = await readFile(res.timelinePath, 'utf8');
+          const timeline = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e).value).join(' ');
+          logger.trace(timeline);
           if (res.status !== 200) {
             success = false;
             logger.error(`Request failed with status ${res.status}`);
