@@ -5,6 +5,8 @@
     "skipLibCheck": true,
     "target": "es2022",
     "allowJs": true,
+    "resolveJsonModule": true,
+    "module": "ES2022",
     "moduleResolution": "node",
     "isolatedModules": true,
     /* Strictness */
@@ -15,6 +17,7 @@
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": false,
     "verbatimModuleSyntax": true,
+    "jsx": "react",
     /* If your code runs in the DOM: */
     "lib": [
       "es2022",
@@ -22,6 +25,9 @@
       "dom.iterable"
     ],
   },
+  "include": [
+    "../insomnia/types"
+  ],
   "exclude": [
     "**/__tests__",
     "node_modules",
