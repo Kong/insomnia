@@ -6,7 +6,8 @@
   "main": "src/objects/index.ts",
   "types": "src/objects/index.ts",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "type-check": "tsc --noEmit --project tsconfig.json"
   },
   "repository": {
     "type": "git",
