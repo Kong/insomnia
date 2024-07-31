@@ -237,13 +237,13 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
         return code;
       }
     };
-    const prettifyEDN = (code: string, filter?: string) => {
+    const prettifyEDN = (code: string) => {
       try {
-        return ednPrettify(code, filter);
+        return ednPrettify(code);
       } catch (error) {
         return code;
       }
-    }
+    };
     if (typeof code !== 'string') {
       console.warn('Code editor was passed non-string value', code);
       return;
@@ -256,7 +256,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
       } else if (mode?.includes('json')) {
         code = prettifyJSON(code, filter);
       } else if (mode?.includes('edn')) {
-        code = prettifyEDN(code, filter);
+        code = prettifyEDN(code);
       }
     }
     // this prevents codeMirror from needlessly setting the same thing repeatedly (which has the effect of moving the user's cursor and resetting the viewport scroll: a bad user experience)
