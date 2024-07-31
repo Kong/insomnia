@@ -5,9 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [core@9.3.3-beta.1] - 2024-07-16
+
+## [core@9.3.3] - 2024-07-31
 
 ## What's Changed
+* perf: App start improvement [INS-3957] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7492
 * :rocket: 9.3.3-beta.0 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7674
 * fix: default user-agent for oauth2 [7672] by @filfreire in https://github.com/Kong/insomnia/pull/7675
 * inso fifth pass by @jackkav in https://github.com/Kong/insomnia/pull/7601
@@ -41,22 +43,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * fix(sdk): sdk type cleanup by @ihexxa in https://github.com/Kong/insomnia/pull/7721
 * chore: bump electron 30.0 to 30.2 by @filfreire in https://github.com/Kong/insomnia/pull/7714
 * fix: Use SSE for storage control updates by @pavkout in https://github.com/Kong/insomnia/pull/7661
+* :rocket: 9.3.3-beta.1 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7723
+* Update CHANGELOG.md by @CurryYangxx in https://github.com/Kong/insomnia/pull/7725
+* feat: inso collection runner by @jackkav in https://github.com/Kong/insomnia/pull/7700
+* fix: cannot delete request by shortcut [INS-4156] by @yaoweiprc in https://github.com/Kong/insomnia/pull/7728
+* fix(Key-Value Editor): Edit mode by @gatzjames in https://github.com/Kong/insomnia/pull/7739
+* remove send-request by @jackkav in https://github.com/Kong/insomnia/pull/7731
+* feat(Generate Collection from Spec): add description to requests if it's available from the oas3 schema by @gatzjames in https://github.com/Kong/insomnia/pull/7734
+* fix: syncing status indicator ui by @CurryYangxx in https://github.com/Kong/insomnia/pull/7730
+* feat(Sidebar): interactions improvements by @gatzjames in https://github.com/Kong/insomnia/pull/7722
+* fix(Git Clone): redirect using incorrect organizationId by @gatzjames in https://github.com/Kong/insomnia/pull/7740
+* :rocket: 9.3.3-beta.2 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7741
+* handle null auth by @jackkav in https://github.com/Kong/insomnia/pull/7746
+* fix(Collection): Clean up auto-scroll and add back selected item styling by @gatzjames in https://github.com/Kong/insomnia/pull/7747
+* fixes incorrect scrollbar display issue by @Karthik7406 in https://github.com/Kong/insomnia/pull/7742
+* fix: reduce uncessary navigate when switching requests and tests by @CurryYangxx in https://github.com/Kong/insomnia/pull/7748
+* fix: lost <disabled> in header transforming and blank req body by @ihexxa in https://github.com/Kong/insomnia/pull/7738
+* chore: git sync pull push test [INS-4132] by @filfreire in https://github.com/Kong/insomnia/pull/7720
+* vitest by @jackkav in https://github.com/Kong/insomnia/pull/7754
+* feat(History): Navigate to last opened workspace on app load by @gatzjames in https://github.com/Kong/insomnia/pull/7755
+* feat(Sentry): clean up unnecessary sentry stack by @gatzjames in https://github.com/Kong/insomnia/pull/7758
+* fix(Settings): update header styles for analytics by @gatzjames in https://github.com/Kong/insomnia/pull/7759
+* fix: can't match project when last visit page is dashboard by @CurryYangxx in https://github.com/Kong/insomnia/pull/7762
+* fix(History): navigate to the project if the last visited workspace has been deleted by @gatzjames in https://github.com/Kong/insomnia/pull/7764
+* feat(Response Pane): improve tabs styles by @gatzjames in https://github.com/Kong/insomnia/pull/7765
+* :rocket: 9.3.3-beta.3 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7766
+* chore: add sentry metric [INS-4115] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7727
+* Vitest-2 app package by @jackkav in https://github.com/Kong/insomnia/pull/7757
+* fix: project switch report by @CurryYangxx in https://github.com/Kong/insomnia/pull/7771
+* :rocket: 9.3.3-beta.4 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7774
+* feat(UI): UI improvements for the app by @gatzjames in https://github.com/Kong/insomnia/pull/7773
+* chore: check analytics issue [INS-4212] by @filfreire in https://github.com/Kong/insomnia/pull/7775
+* fix(GraphQL Editor): make inputValueDeprecation optional and change variable mode to json by @gatzjames in https://github.com/Kong/insomnia/pull/7779
+* inso cli dx improvements by @jackkav in https://github.com/Kong/insomnia/pull/7776
+* fix(Git Staging Modal): close the modal on ESC by @gatzjames in https://github.com/Kong/insomnia/pull/7781
+* fix(KeyValue Editor): fix key value focus issue and handle updating params from url by @gatzjames in https://github.com/Kong/insomnia/pull/7780
+* feat(Styles): Minor style improvements by @gatzjames in https://github.com/Kong/insomnia/pull/7782
+* :rocket: 9.3.3-beta.5 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7783
+* Add type checking to sdk package by @jackkav in https://github.com/Kong/insomnia/pull/7719
 
 ## New Contributors
 * @Novsochetra made their first contribution in https://github.com/Kong/insomnia/pull/7686
 * @SimplexShotz made their first contribution in https://github.com/Kong/insomnia/pull/7279
 * @anujbiyani made their first contribution in https://github.com/Kong/insomnia/pull/7364
+* @yaoweiprc made their first contribution in https://github.com/Kong/insomnia/pull/7728
+* @Karthik7406 made their first contribution in https://github.com/Kong/insomnia/pull/7742
 
-**Full Changelog**: https://github.com/Kong/insomnia/compare/core@9.3.3-beta.0...core@9.3.3-beta.1
-
-## [core@9.3.3-beta.0] - 2024-07-08
-
-## What's Changed
-
-- :rocket: 9.3.2 by @insomnia-infra in <https://github.com/Kong/insomnia/pull/7665>
-- perf: App start improvement [INS-3957] by @CurryYangxx in <https://github.com/Kong/insomnia/pull/7492>
-
-**Full Changelog**: <https://github.com/Kong/insomnia/compare/core@9.3.2...core@9.3.3-beta.0>
+**Full Changelog**: https://github.com/Kong/insomnia/compare/core@9.3.2...core@9.3.3
 
 ## [core@9.3.2] - 2024-07-04
 
