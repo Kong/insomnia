@@ -34,7 +34,7 @@ test('can use node-libcurl, httpsnippet, hidden browser window', async ({ app, p
   await page.getByLabel('Request Collection').getByTestId('sends request with pre-request script').press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect(statusTag).toContainText('200 OK');
-  await page.getByRole('tab', { name: 'Timeline' }).click();
+  await page.getByRole('tab', { name: 'Console' }).click();
 });
 
 test('can use external modules in scripts ', async ({ app, page }) => {

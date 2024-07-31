@@ -1,11 +1,9 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import { ClientCertificate } from '../../models/client-certificate';
 import { filterClientCertificates } from '../certificate';
 
 describe('filterClientCertificates', () => {
-  beforeEach(globalBeforeEach);
 
   const requestUrl = 'https://www.example.com:1234';
   const clientCertificatesWithMatchPort: ClientCertificate[] = [

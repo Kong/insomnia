@@ -285,10 +285,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                             value={item.name}
                             name="name"
                             ariaLabel="Environment name"
-                            className="px-1 flex-1"
-                            onSingleClick={() => {
-                              setSelectedEnvironmentId(item._id);
-                            }}
+                            className="px-1 flex-1 hover:!bg-transparent"
                             onSubmit={name => {
                               name && updateEnvironmentFetcher.submit({
                                 patch: {
@@ -390,9 +387,6 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                         name="name"
                         ariaLabel="Environment name"
                         className="px-1 flex-1"
-                        onSingleClick={() => {
-                          setSelectedEnvironmentId(selectedEnvironmentId);
-                        }}
                         onSubmit={name => {
                           name && updateEnvironmentFetcher.submit({
                             patch: {

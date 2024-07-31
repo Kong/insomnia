@@ -1,6 +1,5 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { describe, expect, it, vi } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import { chunkArray } from '../../sync/vcs/vcs';
 import {
   debounce,
@@ -15,8 +14,6 @@ import {
 } from '../misc';
 
 describe('hasAuthHeader()', () => {
-  beforeEach(globalBeforeEach);
-
   it('finds valid header', () => {
     const yes = hasAuthHeader([
       {
@@ -47,8 +44,6 @@ describe('hasAuthHeader()', () => {
 });
 
 describe('generateId()', () => {
-  beforeEach(globalBeforeEach);
-
   it('generates a valid ID', () => {
     const id = generateId('foo');
     expect(id).toMatch(/^foo_[a-z0-9]{32}$/);
@@ -61,8 +56,6 @@ describe('generateId()', () => {
 });
 
 describe('filterHeaders()', () => {
-  beforeEach(globalBeforeEach);
-
   it('handles bad headers', () => {
     expect(filterHeaders(null, null)).toEqual([]);
     expect(filterHeaders([], null)).toEqual([]);
@@ -133,17 +126,14 @@ describe('filterHeaders()', () => {
 });
 
 describe('keyedDebounce()', () => {
-  beforeEach(async () => {
-    await globalBeforeEach();
-  });
 
   it('debounces correctly', async () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const resultsList: Record<string, string[]>[] = [];
-    const setter = jest.fn((result: Record<string, string[]>) => {
+    const setter = vi.fn((result: Record<string, string[]>) => {
       resultsList.push(result);
     });
-    jest.clearAllTimers();
+    vi.clearAllTimers();
     const fn = keyedDebounce<string>(setter, 100);
     fn('foo', 'bar');
     fn('baz', 'bar');
@@ -152,7 +142,7 @@ describe('keyedDebounce()', () => {
     fn('multi', 'foo', 'bar', 'baz');
     expect(resultsList).toEqual([]);
 
-    jest.runAllTimers();
+    vi.runAllTimers();
 
     expect(resultsList).toEqual([
       {
@@ -165,10 +155,8 @@ describe('keyedDebounce()', () => {
 });
 
 describe('debounce()', () => {
-  beforeEach(globalBeforeEach);
-
   it('debounces correctly', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const resultList = [];
     const fn = debounce((...args) => {
       resultList.push(args);
@@ -179,14 +167,12 @@ describe('debounce()', () => {
     fn('baz', 'bar');
     fn('foo', 'bar3');
     expect(resultList).toEqual([]);
-    jest.runOnlyPendingTimers();
+    vi.runOnlyPendingTimers();
     expect(resultList).toEqual([['foo', 'bar3']]);
   });
 });
 
 describe('fuzzyMatch()', () => {
-  beforeEach(globalBeforeEach);
-
   it('can get a positive fuzzy match on a single field', () => {
     expect(fuzzyMatch('test', 'testing')).toEqual({
       score: -3,
@@ -207,8 +193,6 @@ describe('fuzzyMatch()', () => {
 });
 
 describe('fuzzyMatchAll()', () => {
-  beforeEach(globalBeforeEach);
-
   it('can get a positive fuzzy match on multiple fields', () => {
     expect(fuzzyMatchAll('', [undefined])).toEqual(null);
     expect(fuzzyMatchAll('', ['testing'])).toEqual(null);

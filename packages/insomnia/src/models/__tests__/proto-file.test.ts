@@ -1,11 +1,8 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { describe, expect, it, vi } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../index';
 
 describe('init()', () => {
-  beforeEach(globalBeforeEach);
-
   it('contains all required fields', async () => {
     expect(models.protoFile.init()).toEqual({
       name: 'New Proto File',
@@ -15,10 +12,8 @@ describe('init()', () => {
 });
 
 describe('create()', () => {
-  beforeEach(globalBeforeEach);
-
   it('creates a valid protofile', async () => {
-    Date.now = jest.fn().mockReturnValue(1478795580200);
+    Date.now = vi.fn().mockReturnValue(1478795580200);
     const request = await models.protoFile.create({
       name: 'My File',
       parentId: 'fld_124',
@@ -38,7 +33,7 @@ describe('create()', () => {
   });
 
   it('fails when missing parentId', async () => {
-    Date.now = jest.fn().mockReturnValue(1478795580200);
+    Date.now = vi.fn().mockReturnValue(1478795580200);
     expect(() =>
       models.protoFile.create({
         name: 'no parentId',

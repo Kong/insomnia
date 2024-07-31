@@ -29,7 +29,7 @@ test('Check filter responses by environment preference', async ({ app, page }) =
   // Send a request
   await page.getByLabel('Request Collection').getByTestId('example http').press('Enter');
   await page.click('[data-testid="request-pane"] button:has-text("Send")');
-  await page.click('text=Timeline');
+  await page.click('text=Console');
   await page.locator('text=HTTP/1.1 200 OK').click();
 
   // Set filter responses by environment
@@ -40,6 +40,6 @@ test('Check filter responses by environment preference', async ({ app, page }) =
 
   // Re-send the request and check timeline
   await page.locator('[data-testid="request-pane"] button:has-text("Send")').click();
-  await page.click('text=Timeline');
+  await page.click('text=Console');
   await page.locator('text=HTTP/1.1 200 OK').click();
 });

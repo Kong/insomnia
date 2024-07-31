@@ -1,7 +1,10 @@
-import { describe, expect, it } from '@jest/globals';
 import buffer from 'buffer/';
+import { describe, expect, it } from 'vitest';
 
 import * as crypt from '../crypt';
+/**
+* @vitest-environment jsdom
+*/
 
 describe('crypt', () => {
   describe('deriveKey()', () => {

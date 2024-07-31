@@ -30,7 +30,6 @@ module.exports = {
   plugins: [
     '@typescript-eslint',
     'react',
-    'jest',
     'html',
     'json',
     'filenames',
@@ -52,7 +51,6 @@ module.exports = {
     browser: true,
     commonjs: true,
     es6: true,
-    'jest/globals': true,
     node: true,
   },
   overrides: [

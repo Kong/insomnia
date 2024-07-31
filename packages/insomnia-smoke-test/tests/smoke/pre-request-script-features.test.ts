@@ -368,7 +368,7 @@ test.describe('pre-request features tests', async () => {
         await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
         // verify
-        await page.getByRole('tab', { name: 'Timeline' }).click();
+        await page.getByRole('tab', { name: 'Console' }).click();
         await expect(responsePane).toContainText('localhost:2222'); // original proxy
         await expect(responsePane).toContainText('Trying 127.0.0.1:8888'); // updated proxy
     });
@@ -395,7 +395,7 @@ test.describe('pre-request features tests', async () => {
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
         // verify
-        await page.getByRole('tab', { name: 'Timeline' }).click();
+        await page.getByRole('tab', { name: 'Console' }).click();
         await expect(responsePane).toContainText('fixtures/certificates/fake.pfx'); // original proxy
     });
 
@@ -408,7 +408,7 @@ test.describe('pre-request features tests', async () => {
         await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
         // verify
-        await page.getByRole('tab', { name: 'Timeline' }).click();
+        await page.getByRole('tab', { name: 'Console' }).click();
 
         await expect(responsePane).toContainText('✓ happy tests');
         await expect(responsePane).toContainText('✕ unhappy tests: AssertionError: expected 199 to deeply equal 200');

@@ -1,3 +1,5 @@
+import { describe, expect, it } from 'vitest';
+
 import { type PluginTemplateTagContext } from '../../../../templating/extensions';
 import { invariant } from '../../../../utils/invariant';
 import { localTemplateTags } from '../local-template-tags';

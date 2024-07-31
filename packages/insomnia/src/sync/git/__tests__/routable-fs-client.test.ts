@@ -1,11 +1,13 @@
-import { afterAll, describe, expect, it, jest } from '@jest/globals';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 
 import { GIT_CLONE_DIR } from '../git-vcs';
 import { MemClient } from '../mem-client';
 import { routableFSClient } from '../routable-fs-client';
 
 describe('routableFSClient', () => {
-  afterAll(() => jest.restoreAllMocks());
+  afterAll(() => {
+    vi.restoreAllMocks();
+  });
 
   it('routes .git and other files to separate places', async () => {
     const pGit = MemClient.createClient();
