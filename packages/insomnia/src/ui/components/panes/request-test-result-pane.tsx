@@ -7,37 +7,17 @@ import { fuzzyMatch } from '../../../common/misc';
 
 type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
 
-interface Props {
+interface RequestTestResultRowsProps {
   requestTestResults: RequestTestResult[];
+  resultFilter: string;
+  targetTests: string;
 }
 
-export const RequestTestResultPane: FC<Props> = ({
+const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
   requestTestResults,
-}) => {
-  const [targetTests, setTargetTests] = useState<TargetTestType>('all');
-  const [resultFilter, setResultFilter] = useState('');
-
-  const noTestFoundPage = (
-    <div className="text-center mt-5">
-      <div className="">No test results found</div>
-      <div className="text-sm text-neutral-400">
-        <b>
-          <a href="https://docs.insomnia.rest/insomnia/after-response-script">
-            Add test cases
-          </a>
-        </b> using scripting and run the request.
-      </div>
-    </div>
-  );
-  if (requestTestResults.length === 0) {
-    return noTestFoundPage;
-  }
-
-  const selectAllTests = () => setTargetTests('all');
-  const selectPassedTests = () => setTargetTests('passed');
-  const selectFailedTests = () => setTargetTests('failed');
-  const selectSkippedTests = () => setTargetTests('skipped');
-
+  resultFilter,
+  targetTests,
+}: RequestTestResultRowsProps) => {
   const testResultRows = requestTestResults
     .filter(result => {
       switch (targetTests) {
@@ -108,6 +88,40 @@ export const RequestTestResultPane: FC<Props> = ({
         </div>);
     });
 
+  return <>{testResultRows}</>;
+};
+
+interface Props {
+  requestTestResults: RequestTestResult[];
+}
+
+export const RequestTestResultPane: FC<Props> = ({
+  requestTestResults,
+}) => {
+  const [targetTests, setTargetTests] = useState<TargetTestType>('all');
+  const [resultFilter, setResultFilter] = useState('');
+
+  const noTestFoundPage = (
+    <div className="text-center mt-5">
+      <div className="">No test results found</div>
+      <div className="text-sm text-neutral-400">
+        <b>
+          <a href="https://docs.insomnia.rest/insomnia/after-response-script">
+            Add test cases
+          </a>
+        </b> using scripting and run the request.
+      </div>
+    </div>
+  );
+  if (requestTestResults.length === 0) {
+    return noTestFoundPage;
+  }
+
+  const selectAllTests = () => setTargetTests('all');
+  const selectPassedTests = () => setTargetTests('passed');
+  const selectFailedTests = () => setTargetTests('failed');
+  const selectSkippedTests = () => setTargetTests('skipped');
+
   return <>
     <div className='h-full flex flex-col divide-y divide-solid divide-[--hl-md]'>
       <div className='h-[calc(100%-var(--line-height-sm))]'>
@@ -118,7 +132,11 @@ export const RequestTestResultPane: FC<Props> = ({
           <button className="rounded-3xl btn btn--clicky-small mx-1 my-auto" onClick={selectSkippedTests} >Skipped</button>
         </Toolbar>
         <div className="overflow-y-auto w-auto overflow-x-auto h-[calc(100%-var(--line-height-sm))]">
-          {testResultRows}
+          <RequestTestResultRows
+            requestTestResults={requestTestResults}
+            resultFilter={resultFilter}
+            targetTests={targetTests}
+          />
         </div>
       </div>
       <Toolbar className="flex items-center h-[--line-height-sm] flex-shrink-0 flex-row text-[var(--font-size-sm)] box-border overflow-x-auto">
