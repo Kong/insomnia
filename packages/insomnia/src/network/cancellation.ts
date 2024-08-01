@@ -3,7 +3,7 @@ import type { RequestContext } from 'insomnia-sdk';
 import type { CurlRequestOptions, CurlRequestOutput } from '../main/network/libcurl-promise';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Request } from '../models/request';
-
+import { runScript as nodejsRunScript } from '../scriptExecutor';
 const cancelRequestFunctionMap = new Map<string, () => void>();
 
 export async function cancelRequestById(requestId: string) {
@@ -29,7 +29,7 @@ export const cancellableRunScript = async (options: { script: string; context: R
   try {
     const result = await cancellablePromise({
       signal: controller.signal,
-      fn: window.main.hiddenBrowserWindow.runScript(options),
+      fn: process.type === 'renderer' ? window.main.hiddenBrowserWindow.runScript(options) : nodejsRunScript(options),
     });
 
     return result as {

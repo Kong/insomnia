@@ -7,7 +7,7 @@ resources:
     parentId: wrk_5b5ab67830944ffcbec47528366ef403
     modified: 1636142586648
     created: 1636141100570
-    url: http://127.0.0.1:4010/basic/auth
+    url: http://127.0.0.1:4010
     name: basic auth by pre request script
     description: ""
     method: GET

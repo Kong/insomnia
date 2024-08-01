@@ -23,6 +23,8 @@ to download the electron version of node-libcurl run the following
 
 ```shell
 npm run install-libcurl-electron
+# OR
+node_modules/.bin/node-pre-gyp install --directory node_modules/@getinsomnia/node-libcurl --update-binary --runtime=electron --target=30.0.0 
 ```
 
 ## Run CLI Smoke Tests
