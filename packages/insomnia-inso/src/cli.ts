@@ -375,6 +375,11 @@ export const go = (args?: string[]) => {
           }
           logger.log(`Running request: ${req.name} ${req._id}`);
           const res = await sendRequest(req._id);
+          if (!res) {
+            logger.error('Timed out while running script');
+            success = false;
+            continue;
+          }
           logger.trace(res);
           const timelineString = await readFile(res.timelinePath, 'utf8');
           const timeline = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e).value).join(' ');

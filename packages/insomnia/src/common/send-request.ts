@@ -89,7 +89,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     const mutatedContext = await tryToExecutePreRequestScript(requestData, requestData.workspace._id);
 
     if (mutatedContext === null) {
-      console.error('Failed to execute pre-request script TODO: handle this better');
+      console.error('Time out while executing pre-request script');
       return null;
     }
     const ignoreUndefinedEnvVariable = true;
