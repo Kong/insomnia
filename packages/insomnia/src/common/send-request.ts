@@ -1,4 +1,5 @@
 import path from 'path';
+
 import { type BaseModel, types as modelTypes } from '../models';
 import * as models from '../models';
 import type { Request } from '../models/request';
@@ -91,7 +92,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       console.error('Failed to execute pre-request script TODO: handle this better');
       return null;
     }
-    const ignoreUndefinedEnvVariable = true
+    const ignoreUndefinedEnvVariable = true;
     // NOTE: inso ignores active environment, using the one passed in
     const renderedResult = await tryToInterpolateRequest(
       mutatedContext.request,
@@ -123,4 +124,3 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     return { status, statusMessage, data, headers, responseTime, timelinePath: requestData.timelinePath };
   };
 }
-
