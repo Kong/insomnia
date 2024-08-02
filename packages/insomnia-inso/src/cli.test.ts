@@ -87,6 +87,16 @@ describe('inso dev bundle', () => {
       expect(result.stdout).toContain('Preparing request to http://127.0.0.1:4010/');
       expect(result.stdout).toContain('custom-test-header: test-header-value');
     });
+
+    it('require("insomnia-collection") works', async () => {
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/script-require.yml wrk_5b5ab6 --verbose';
+      const result = await runCliFromRoot(input);
+      if (result.code !== 0) {
+        console.log(result);
+      }
+      expect(result.stdout).toContain('X-Hello: hello');
+      expect(result.stdout).toContain('GET /echo?k1=v1 HTTP/1.1');
+    });
   });
 });
 

@@ -5,6 +5,7 @@ import { Console, mergeClientCertificates, mergeCookieJar, mergeRequests, mergeS
 import * as _ from 'lodash';
 
 import { invariant } from '../src/utils/invariant';
+import { requireInterceptor } from './requireInterceptor';
 
 export const runScript = async (
   { script, context }: { script: string; context: RequestContext },
@@ -40,7 +41,7 @@ export const runScript = async (
 
   const mutatedInsomniaObject = await executeScript(
     executionContext,
-    process.type === 'renderer' ? window.bridge.requireInterceptor : null,
+    process.type === 'renderer' ? window.bridge.requireInterceptor : requireInterceptor,
     scriptConsole,
     evalInterceptor,
     _,
