@@ -2,6 +2,7 @@
 
 # This script should generate a node sea binary
 # run with ./packages/insomnia-inso/generate-sea-binary.sh 
+# test with ./packages/insomnia-inso/binaries/inso-sea -h
 
 set -e
 CONFIG_PATH=packages/insomnia-inso/sea-config.json
