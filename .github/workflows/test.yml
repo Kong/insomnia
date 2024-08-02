@@ -16,48 +16,89 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  Test:
+  Install:
     timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout branch
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
           cache-dependency-path: package-lock.json
+      - run: npm ci
 
-      - name: Install packages
-        run: npm ci
+  Lint:
+    needs: Install
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - run: npm ci --prefer-offline
+      - run: npm run lint
+      - run: npm run lint:markdown
+      - run: npm run type-check
 
-      - name: Lint
-        run: npm run lint
+  Test:
+    needs: Install
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - run: npm ci --prefer-offline
+      - run: npm test
 
-      - name: Lint markdown
-        run: npm run lint:markdown
-
-      - name: Type checks
-        run: npm run type-check
-
-      - name: Unit Tests
-        run: npm test
-
+  BuildForSmokeTests:
+    needs: Install
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - run: npm ci --prefer-offline
       - name: Build app for smoke tests
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
+      - uses: actions/cache@v4
+        with:
+           key: cache-build
+           path: packages/insomnia/build
 
-      - name: Smoke test electron app
-        run: |
+  SmokeTest:
+    needs: BuildForSmokeTests
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - run: npm ci --prefer-offline
+      - uses: actions/cache@v4
+        with:
+           key: cache-build
+           path: packages/insomnia/build
+      - run: |
           GIT_SYNC_SMOKE_TEST_TOKEN=${{env.GIT_SYNC_SMOKE_TEST_TOKEN}} \
           npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
         env:
           GIT_SYNC_SMOKE_TEST_TOKEN: ${{ secrets.GIT_SYNC_SMOKE_TEST_TOKEN }}
-
-      # This step should always run even when previous steps fail
-      - name: Upload smoke test traces
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           if-no-files-found: ignore
