@@ -61,13 +61,15 @@ jobs:
             package-lock.json
             packages/*/package-lock.json
       - run: npm ci
-      - name: Build app for smoke tests
-        run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
       - uses: actions/cache@v4
+        id: cache-build
         with:
            key: cache-build
            path: packages/insomnia/build
            restore-keys: cache-build
+      - if: steps.cache-build.outputs.cache-hit != 'true'
+        name: Build app for smoke tests
+        run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
 
   SmokeTest:
     needs: BuildForSmokeTests
