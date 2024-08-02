@@ -202,14 +202,8 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                             textValue: entry.name || entry.document?.type || '',
                           }))}
                           aria-label='Unstaged changes'
-                          selectedKeys={[selectedItemId]}
-                          selectionMode='single'
-                          onSelectionChange={keys => {
-                            if (keys !== 'all') {
-                              const key = keys.values().next().value;
-
-                              setSelectedItemId(key);
-                            }
+                          onAction={key => {
+                            setSelectedItemId(key.toString());
                           }}
                           renderEmptyState={() => (
                             <p className='p-2 text-[--hl] text-sm'>
@@ -275,14 +269,8 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                             textValue: entry.name || entry.document?.type || '',
                           }))}
                           aria-label='Unstaged changes'
-                          selectedKeys={[selectedItemId]}
-                          selectionMode='single'
-                          onSelectionChange={keys => {
-                            if (keys !== 'all') {
-                              const key = keys.values().next().value;
-
-                              setSelectedItemId(key);
-                            }
+                          onAction={key => {
+                            setSelectedItemId(key.toString());
                           }}
                         >
                           {item => {
