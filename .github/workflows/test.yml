@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  Install:
-    timeout-minutes: 1
+  Lint:
+    timeout-minutes: 2
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,28 +29,12 @@ jobs:
             package-lock.json
             packages/*/package-lock.json
       - run: npm ci
-
-  Lint:
-    needs: Install
-    timeout-minutes: 20
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            packages/*/package-lock.json
-      - run: npm ci --prefer-offline
       - run: npm run lint
       - run: npm run lint:markdown
       - run: npm run type-check
 
   Test:
-    needs: Install
-    timeout-minutes: 20
+    timeout-minutes: 2
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -61,12 +45,11 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             packages/*/package-lock.json
-      - run: npm ci --prefer-offline
+      - run: npm ci
       - run: npm test
 
   BuildForSmokeTests:
-    needs: Install
-    timeout-minutes: 20
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -77,7 +60,7 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             packages/*/package-lock.json
-      - run: npm ci --prefer-offline
+      - run: npm ci
       - name: Build app for smoke tests
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
       - uses: actions/cache@v4
@@ -88,7 +71,7 @@ jobs:
 
   SmokeTest:
     needs: BuildForSmokeTests
-    timeout-minutes: 20
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -99,7 +82,7 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             packages/*/package-lock.json
-      - run: npm ci --prefer-offline
+      - run: npm ci
       - uses: actions/cache@v4
         with:
            key: cache-build
