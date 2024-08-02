@@ -64,9 +64,9 @@ jobs:
       - uses: actions/cache@v4
         id: cache-build
         with:
-           key: cache-build
+           key: cache-build-${{runner.os}}-${{ github.sha }}
            path: packages/insomnia/build
-           restore-keys: cache-build
+           restore-keys: cache-build-${{runner.os}}-${{ github.sha }}
       - if: steps.cache-build.outputs.cache-hit != 'true'
         name: Build app for smoke tests
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
@@ -92,9 +92,9 @@ jobs:
       - run: npm ci
       - uses: actions/cache@v4
         with:
-           key: cache-build
+           key: cache-build-${{runner.os}}-${{ github.sha }}
            path: packages/insomnia/build
-           restore-keys: cache-build
+           restore-keys: cache-build-${{runner.os}}-${{ github.sha }}
       - name: Smoke test electron app
         run: |
           GIT_SYNC_SMOKE_TEST_TOKEN=${{env.GIT_SYNC_SMOKE_TEST_TOKEN}} \
