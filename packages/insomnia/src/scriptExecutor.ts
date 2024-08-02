@@ -41,7 +41,7 @@ export const runScript = async (
 
   const mutatedInsomniaObject = await executeScript(
     executionContext,
-    process.type === 'renderer' ? window.bridge.requireInterceptor : requireInterceptor,
+    requireInterceptor,
     scriptConsole,
     evalInterceptor,
     _,
