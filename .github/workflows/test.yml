@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   Install:
-    timeout-minutes: 20
+    timeout-minutes: 1
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +25,9 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
       - run: npm ci
 
   Lint:
@@ -38,7 +40,9 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
       - run: npm ci --prefer-offline
       - run: npm run lint
       - run: npm run lint:markdown
@@ -54,7 +58,9 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
       - run: npm ci --prefer-offline
       - run: npm test
 
@@ -68,7 +74,9 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
       - run: npm ci --prefer-offline
       - name: Build app for smoke tests
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
@@ -76,6 +84,7 @@ jobs:
         with:
            key: cache-build
            path: packages/insomnia/build
+           restore-keys: cache-build
 
   SmokeTest:
     needs: BuildForSmokeTests
@@ -87,12 +96,15 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
       - run: npm ci --prefer-offline
       - uses: actions/cache@v4
         with:
            key: cache-build
            path: packages/insomnia/build
+           restore-keys: cache-build
       - run: |
           GIT_SYNC_SMOKE_TEST_TOKEN=${{env.GIT_SYNC_SMOKE_TEST_TOKEN}} \
           npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
