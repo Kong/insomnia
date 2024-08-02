@@ -16,64 +16,63 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  Lint:
+    timeout-minutes: 2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run lint:markdown
+      - run: npm run type-check
+
   Test:
-    timeout-minutes: 5
+    timeout-minutes: 2
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout branch
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
+      - run: npm ci
+      - run: npm test
 
-      - name: Install packages
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Lint markdown
-        run: npm run lint:markdown
-
-      - name: Type checks
-        run: npm run type-check
-
-      - name: Unit Tests
-        run: npm test
-
-  BuildForSmokeTest:
-    timeout-minutes: 5
+  BuildForSmokeTests:
+    timeout-minutes: 2
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout branch
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
-          cache-dependency-path: package-lock.json
-
-      - name: Install packages
-        run: npm ci
-
-      - name: Build app for smoke tests
-        run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
-
-      # cache the build that we just created
-      - name: Cache build
-        uses: actions/cache@v4
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
+      - run: npm ci
+      - uses: actions/cache@v4
+        id: cache-build
         with:
            key: cache-build
            path: packages/insomnia/build
+           restore-keys: cache-build
+      - if: steps.cache-build.outputs.cache-hit != 'true'
+        name: Build app for smoke tests
+        run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
 
   SmokeTest:
-    needs: BuildForSmokeTest
+    needs: BuildForSmokeTests
     timeout-minutes: 5
     runs-on: ubuntu-latest
     strategy:
@@ -82,34 +81,27 @@ jobs:
         shardIndex: [1, 2, 3, 4, 5, 6, 7, 8]
         shardTotal: [8]
     steps:
-      - name: Checkout branch
-        uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
-          cache-dependency-path: package-lock.json
-
-      - name: Install packages
-        run: npm ci
-
-      - name: Cache build
-        uses: actions/cache@v4
+          cache-dependency-path: |
+            package-lock.json
+            packages/*/package-lock.json
+      - run: npm ci
+      - uses: actions/cache@v4
         with:
            key: cache-build
            path: packages/insomnia/build
-
+           restore-keys: cache-build
       - name: Smoke test electron app
         run: |
           GIT_SYNC_SMOKE_TEST_TOKEN=${{env.GIT_SYNC_SMOKE_TEST_TOKEN}} \
           npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         env:
           GIT_SYNC_SMOKE_TEST_TOKEN: ${{ secrets.GIT_SYNC_SMOKE_TEST_TOKEN }}
-
-      # This step should always run even when previous steps fail
-      - name: Upload smoke test traces
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           if-no-files-found: ignore
