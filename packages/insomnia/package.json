@@ -52,7 +52,7 @@
     "dompurify": "^3.0.11",
     "electron-context-menu": "^3.6.1",
     "electron-log": "^4.4.8",
-    "grpc-reflection-js": "0.3.0",
+    "grpc-reflection-js": "jackkav/grpc-reflection-js#remove-lodash-set",
     "hawk": "9.0.2",
     "hkdf": "^0.0.2",
     "hosted-git-info": "5.2.1",
