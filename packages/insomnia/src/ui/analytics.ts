@@ -1,5 +1,6 @@
 export enum SegmentEvent {
   appStarted = 'App Started',
+  analyticsDisabled = 'Analytics Disabled',
   collectionCreate = 'Collection Created',
   dataExport = 'Data Exported',
   dataImport = 'Data Imported',

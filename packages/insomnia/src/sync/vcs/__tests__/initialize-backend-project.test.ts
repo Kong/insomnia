@@ -1,21 +1,19 @@
-import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { pushSnapshotOnInitialize } from '../initialize-backend-project';
 import { VCS } from '../vcs';
 
 describe('initialize-backend-project', () => {
-  beforeEach(globalBeforeEach);
 
   describe('pushSnapshotOnInitialize()', () => {
     const vcs = new VCS(new MemoryDriver());
 
-    const pushSpy = jest.spyOn(vcs, 'push');
+    const pushSpy = vi.spyOn(vcs, 'push');
 
     beforeEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     afterAll(() => {

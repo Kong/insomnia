@@ -1,11 +1,9 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import { getModel, mustGetModel } from '../index';
 import * as models from '../index';
 
 describe('index', () => {
-  beforeEach(globalBeforeEach);
   describe('getModel()', () => {
     it('should get model if found', () => {
       expect(getModel(models.workspace.type)).not.toBeNull();

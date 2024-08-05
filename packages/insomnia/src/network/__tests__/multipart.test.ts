@@ -1,15 +1,10 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
-import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
+import { describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import { buildMultipart, DEFAULT_BOUNDARY } from '../../main/network/multipart';
 
-window.app = electron.app;
-
 describe('buildMultipart()', () => {
-  beforeEach(globalBeforeEach);
 
   it('builds a simple request', async () => {
     const { filePath, boundary, contentLength } = await buildMultipart([

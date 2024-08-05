@@ -1,9 +1,9 @@
 
-import { describe, expect, it  } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
+import { vi } from 'vitest';
 
 import { generate } from '../generate';
 import { runTests } from '../run';
-import { mockedSendRequest, mockedSendRequestMultiple } from '../test-helpers/send-request-mock';
 
 describe('integration', () => {
   it('generates and runs basic tests', async () => {
@@ -26,7 +26,7 @@ describe('integration', () => {
         ],
       },
     ]);
-    const sendRequest = mockedSendRequest();
+    const sendRequest = vi.fn().mockResolvedValue({ status: 200 });
 
     const { stats, failures } = await runTests(testSrc, { sendRequest });
     expect(failures).toEqual([]);
@@ -56,7 +56,7 @@ describe('integration', () => {
       },
     ]);
 
-    const sendRequest = mockedSendRequest();
+    const sendRequest = vi.fn().mockResolvedValue({ status: 200 });
 
     const { stats, failures } = await runTests(testSrc, { sendRequest });
     expect(failures).toEqual([]);
@@ -82,7 +82,9 @@ describe('integration', () => {
       statusMessage: 'def',
     };
 
-    const sendRequest = mockedSendRequestMultiple(response1, response2);
+    const sendRequest = vi.fn();
+    sendRequest.mockResolvedValueOnce(response1);
+    sendRequest.mockResolvedValueOnce(response2);
 
     const testSrc = generate([
       {

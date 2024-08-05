@@ -43,6 +43,7 @@ import {
 import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '../../common/constants';
 import { type ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId, isNotNullOrUndefined } from '../../common/misc';
+import { LandingPage } from '../../common/sentry';
 import type { PlatformKeyCombinations } from '../../common/settings';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
@@ -64,6 +65,7 @@ import {
   isWebSocketRequestId,
   type WebSocketRequest,
 } from '../../models/websocket-request';
+import { isScratchpad } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
 import { DropdownHint } from '../components/base/dropdown/dropdown-hint';
 import { RequestActionsDropdown } from '../components/dropdowns/request-actions-dropdown';
@@ -722,6 +724,13 @@ export const Debug: FC = () => {
     }
   }, [settings.forceVerticalLayout, direction]);
 
+  useEffect(() => {
+    if (isScratchpad(activeWorkspace)) {
+      window.main.landingPageRendered(LandingPage.Scratchpad);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={10} collapsible>
@@ -1093,7 +1102,7 @@ export const Debug: FC = () => {
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
       <Panel>
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
-          <Panel id="pane-one" className='pane-one theme--pane'>
+          <Panel id="pane-one" minSize={10} className='pane-one theme--pane'>
             {workspaceId ? (
               <ErrorBoundary showAlert>
                 {isRequestGroupId(requestGroupId) && (
@@ -1131,7 +1140,7 @@ export const Debug: FC = () => {
           </Panel>
           {activeRequest ? (<>
             <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
-            <Panel id="pane-two" className='pane-two theme--pane'>
+            <Panel id="pane-two" minSize={10} className='pane-two theme--pane'>
               <ErrorBoundary showAlert>
                 {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
                   <GrpcResponsePane grpcState={grpcState} />
@@ -1256,7 +1265,7 @@ const CollectionGridListItem = ({
           value={getRequestNameOrFallback({ ...item.doc, name })}
           name="request name"
           ariaLabel={label}
-          className="px-1 flex-1"
+          className="px-1 flex-1 hover:!bg-transparent"
           onSubmit={name => {
             if (isRequestGroup(item.doc)) {
               patchGroup(item.doc._id, { name });

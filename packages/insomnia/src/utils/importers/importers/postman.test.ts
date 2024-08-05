@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
 import { ImportPostman, transformPostmanToNunjucksString } from './postman';
 import { HttpsSchemaGetpostmanComJsonCollectionV210, Request1 } from './postman-2.1.types';
@@ -272,10 +272,6 @@ describe('postman', () => {
         });
         expect(headers).toEqual([]);
       });
-    });
-
-    describe('oauth2', () => {
-      // we don't have a importOauth2AuthenticationFromHeader with which to write a test for since importBearerAuthenticationFromHeader handles this case
     });
   });
 

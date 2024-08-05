@@ -115,20 +115,17 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
               />
             </div>
           ) : (
-            <div className="pad-sm pad-bottom tall">
-              <div className="form-control form-control--outlined form-control--tall tall">
+              <div className="tall bg-[--hl-xs] rounded">
                 <CodeEditor
                   id="code-prompt-modal"
                   hideLineNumbers
                   showPrettifyButton
-                  className="tall"
                   defaultValue={defaultValue}
                   placeholder={placeholder}
                   onChange={onChange}
                   mode={mode}
                   enableNunjucks
                 />
-              </div>
             </div>
           )}
         </NunjucksEnabledProvider>
@@ -138,7 +135,7 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
           <Dropdown
             aria-label='Select a mode'
             triggerButton={
-              <DropdownButton className="btn btn--clicky margin-left-sm">
+              <DropdownButton className="!hover:no-underline !bg-transparent !hover:bg-opacity-90 !border !border-solid !border-[--hl-md] !py-2 !px-3 !text-[--color-font] !transition-colors !rounded-sm">
                 {MODES[mode]}
                 <i className="fa fa-caret-down space-left" />
               </DropdownButton>

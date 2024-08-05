@@ -6,24 +6,21 @@ import {
 } from '@bufbuild/protobuf';
 import { UnaryResponse } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-node';
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as grpcReflection from 'grpc-reflection-js';
 import protobuf from 'protobufjs';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { globalBeforeEach } from '../../../__jest__/before-each';
 import { loadMethodsFromReflection } from '../grpc';
 
-jest.mock('grpc-reflection-js');
-jest.mock('@connectrpc/connect-node');
+vi.mock('grpc-reflection-js');
+vi.mock('@connectrpc/connect-node');
 
 describe('loadMethodsFromReflection', () => {
-  beforeEach(globalBeforeEach);
 
   describe('one service reflection', () => {
     beforeEach(() => {
-      globalBeforeEach();
       // we want to test that the values that are passed to axios are returned in the config key
-      (grpcReflection.Client as unknown as jest.Mock).mockImplementation(() => ({
+      (grpcReflection.Client as unknown as vi.Mock).mockImplementation(() => ({
         listServices: () => Promise.resolve(['FooService']),
         fileContainingSymbol: async () => {
           const parsed = protobuf.parse(`
@@ -63,9 +60,8 @@ describe('loadMethodsFromReflection', () => {
 
   describe('format service reflection', () => {
     beforeEach(() => {
-      globalBeforeEach();
       // we want to test that the values that are passed to axios are returned in the config key
-      (grpcReflection.Client as unknown as jest.Mock).mockImplementation(() => ({
+      (grpcReflection.Client as unknown as vi.Mock).mockImplementation(() => ({
         listServices: () => Promise.resolve(['FooService']),
         fileContainingSymbol: async () => {
           const parsed = protobuf.parse(`
@@ -105,9 +101,8 @@ describe('loadMethodsFromReflection', () => {
 
   describe('multiple service reflection', () => {
     beforeEach(() => {
-      globalBeforeEach();
       // we want to test that the values that are passed to axios are returned in the config key
-      (grpcReflection.Client as unknown as jest.Mock).mockImplementation(() => ({
+      (grpcReflection.Client as unknown as vi.Mock).mockImplementation(() => ({
         listServices: () => Promise.resolve(['FooService', 'BarService']),
         fileContainingSymbol: async () => {
           const parsed = protobuf.parse(`
@@ -165,7 +160,7 @@ describe('loadMethodsFromReflection', () => {
 
   describe('buf reflection api', () => {
     it('loads module', async () => {
-      (createConnectTransport as unknown as jest.Mock).mockImplementation(
+      (createConnectTransport as unknown as vi.Mock).mockImplementation(
         options => {
           expect(options.baseUrl).toStrictEqual('https://buf.build');
           return {

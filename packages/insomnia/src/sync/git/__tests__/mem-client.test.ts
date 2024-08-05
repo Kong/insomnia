@@ -1,12 +1,14 @@
-import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import path from 'path';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GIT_CLONE_DIR } from '../git-vcs';
 import { MemClient } from '../mem-client';
 import { assertAsyncError, setupDateMocks } from './util';
 
 describe('MemClient', () => {
-  afterAll(() => jest.restoreAllMocks());
+  afterAll(() => {
+    vi.restoreAllMocks();
+  });
   beforeEach(setupDateMocks);
   const fooTxt = 'foo.txt';
   const barTxt = 'bar.txt';

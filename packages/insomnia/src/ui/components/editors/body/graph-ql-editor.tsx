@@ -67,10 +67,12 @@ const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionN
 const fetchGraphQLSchemaForRequest = async ({
   requestId,
   url,
+  inputValueDeprecation = false,
 }: {
   requestId: string;
   environmentId: string;
   url: string;
+    inputValueDeprecation: boolean;
 }) => {
   if (!url) {
     return;
@@ -83,11 +85,11 @@ const fetchGraphQLSchemaForRequest = async ({
   }
 
   try {
-
     const bodyJson = JSON.stringify({
-      query: getIntrospectionQuery({ inputValueDeprecation: true }),
+      query: getIntrospectionQuery({ inputValueDeprecation }),
       operationName: 'IntrospectionQuery',
     });
+
     const introspectionRequest = await db.upsert(
       Object.assign({}, req, {
         _id: req._id + '.graphql',
@@ -101,6 +103,7 @@ const fetchGraphQLSchemaForRequest = async ({
         },
       }),
     );
+
     const { request,
       environment,
       settings,
@@ -225,6 +228,7 @@ export const GraphQLEditor: FC<Props> = ({
     'graphql.automaticFetch',
     true
   );
+  const [includeInputValueDeprecation, setIncludeInputValueDeprecation] = useState(false);
   const [schema, setSchema] = useState<GraphQLSchema | null>(null);
   const [schemaFetchError, setSchemaFetchError] = useState<{
     message: string;
@@ -245,6 +249,7 @@ export const GraphQLEditor: FC<Props> = ({
         requestId: request._id,
         environmentId,
         url: request.url,
+        inputValueDeprecation: includeInputValueDeprecation,
       });
       isMounted && setSchemaFetchError(newState?.schemaFetchError);
       isMounted && newState?.schema && setSchema(newState.schema);
@@ -255,7 +260,7 @@ export const GraphQLEditor: FC<Props> = ({
     return () => {
       isMounted = false;
     };
-  }, [automaticFetch, environmentId, request._id, request.url, workspaceId]);
+  }, [automaticFetch, environmentId, includeInputValueDeprecation, request._id, request.url, workspaceId]);
   const {
     settings,
   } = useRootLoaderData();
@@ -527,6 +532,7 @@ export const GraphQLEditor: FC<Props> = ({
                     requestId: request._id,
                     environmentId,
                     url: request.url,
+                    inputValueDeprecation: includeInputValueDeprecation,
                   });
                   setSchemaFetchError(newState?.schemaFetchError);
                   newState?.schema && setSchema(newState.schema);
@@ -547,6 +553,21 @@ export const GraphQLEditor: FC<Props> = ({
                 }
                 onClick={() => {
                   setAutoFetch(!automaticFetch);
+                }}
+              />
+            </DropdownItem>
+            <DropdownItem aria-label='Fetch deprecation values'>
+              <ItemContent
+                stayOpenAfterClick
+                icon={`toggle-${includeInputValueDeprecation ? 'on' : 'off'}`}
+                label={
+                  <>
+                    <span style={{ marginRight: '10px' }}>Include input value deprecation</span>
+                    <HelpTooltip>When fetching the schema include input value deprecation reasons</HelpTooltip>
+                  </>
+                }
+                onClick={() => {
+                  setIncludeInputValueDeprecation(!includeInputValueDeprecation);
                 }}
               />
             </DropdownItem>

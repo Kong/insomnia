@@ -1,4 +1,4 @@
-import { DOMParser } from 'xmldom';
+import { DOMParser } from '@xmldom/xmldom';
 import xpath from 'xpath';
 
 /**
@@ -9,7 +9,6 @@ export const queryXPath = (xml: string, query?: string) => {
   if (query === undefined) {
     throw new Error('Must pass an XPath query.');
   }
-  try {
     const selectedValues = xpath.select(query, dom);
     // Functions return plain strings
     if (typeof selectedValues === 'string') {
@@ -33,7 +32,5 @@ export const queryXPath = (xml: string, query?: string) => {
         }
         return { outer, inner: null };
       });
-  } catch (err) {
-    throw new Error(`Invalid XPath query: ${query}`);
-  }
+
 };

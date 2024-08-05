@@ -104,7 +104,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
     const bodyBuffer = await getBodyBuffer(res) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
-    return { status, statusMessage, data, headers, responseTime };
+    return { status, statusMessage, data, headers, responseTime, timelinePath };
 
   };
 }

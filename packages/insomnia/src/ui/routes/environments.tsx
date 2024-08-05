@@ -305,7 +305,7 @@ const Environments = () => {
                     value={item.name}
                     name="name"
                     ariaLabel="Environment name"
-                    className="px-1 flex-1"
+                    className="px-1 flex-1 hover:!bg-transparent"
                     onSubmit={name => {
                       name && updateEnvironmentFetcher.submit({
                         patch: {

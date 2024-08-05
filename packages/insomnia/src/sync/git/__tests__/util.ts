@@ -1,3 +1,5 @@
+import { expect } from 'vitest';
+
 export function setupDateMocks() {
   let ts = 1000000000000;
 

@@ -1,3 +1,3 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
-export const captureException = jest.fn();
+export const captureException = vi.fn();

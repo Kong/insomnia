@@ -1,10 +1,8 @@
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
-import { beforeEach, describe, expect, it } from '@jest/globals';
-import electron from 'electron';
 import fs from 'fs';
 import { join as pathJoin, resolve as pathResolve } from 'path';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import {
   AUTH_AWS_IAM,
   AUTH_BASIC,
@@ -23,13 +21,10 @@ import * as models from '../../models';
 import * as networkUtils from '../network';
 import { getSetCookiesFromResponseHeaders } from '../network';
 
-window.app = electron.app;
-
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
 
 describe('sendCurlAndWriteTimeline()', () => {
   beforeEach(async () => {
-    await globalBeforeEach();
     await models.project.all();
   });
 
@@ -806,8 +801,6 @@ describe('sendCurlAndWriteTimeline()', () => {
 });
 
 describe('_getAwsAuthHeaders', () => {
-  beforeEach(globalBeforeEach);
-
   it('should generate expected headers', () => {
     const authentication = {
       type: AUTH_AWS_IAM,

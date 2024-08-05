@@ -984,7 +984,7 @@ const Design: FC = () => {
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
       <Panel>
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
-          <Panel id="pane-one" className='pane-one theme--pane'>
+          <Panel id="pane-one" minSize={10} className='pane-one theme--pane'>
             <div className="flex flex-col h-full w-full overflow-hidden divide-y divide-solid divide-[--hl-md]">
               <div className="relative overflow-hidden flex-shrink-0 flex flex-1 basis-1/2">
                 <CodeEditor
@@ -1123,7 +1123,7 @@ const Design: FC = () => {
           {isSpecPaneOpen && (
             <>
               <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
-              <Panel id="pane-two" className='pane-two theme--pane'>
+              <Panel id="pane-two" minSize={10} className='pane-two theme--pane'>
                 <SwaggerUIDiv text={apiSpec.contents} />
               </Panel>
             </>

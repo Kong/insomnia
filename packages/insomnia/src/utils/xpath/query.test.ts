@@ -1,7 +1,9 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
 import { queryXPath } from './query';
-
+/**
+* @vitest-environment jsdom
+*/
 describe('queryXPath()', () => {
   it('handles missing query', () => {
     expect(() => {
@@ -38,6 +40,6 @@ describe('queryXPath()', () => {
   it('handles invalid query', () => {
     expect(() => {
       queryXPath('<hi>there</hi>', '//[]');
-    }).toThrowError('Invalid XPath query: //[]');
+    }).toThrowError('XPath parse error');
   });
 });

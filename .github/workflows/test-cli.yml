@@ -62,8 +62,8 @@ jobs:
       - name: Run Inso binary tests
         run: npm run test:binary -w insomnia-inso
 
-      - name: Create Inso CLI artifacts
-        run: npm run inso-package:artifacts
+      - name: Create Inso zip/tar/gz artifacts
+        run: npm run artifacts -w insomnia-inso
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 

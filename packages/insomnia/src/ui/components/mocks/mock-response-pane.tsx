@@ -120,7 +120,7 @@ export const MockResponsePane = () => {
       <TabItem key="headers" title="Headers">
         <ResponseHeadersViewer headers={activeResponse?.headers || []} />
       </TabItem>
-      <TabItem key="timeline" title="Timeline">
+      <TabItem key="timeline" title="Console">
         <ResponseTimelineViewer
           key={activeResponse?._id}
           timeline={timeline}

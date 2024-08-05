@@ -1,11 +1,8 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
 import { isUrlMatchedInNoProxyRule } from '../is-url-matched-in-no-proxy-rule';
 
 describe('isUrlMatchedInNoProxyRule - noProxyRule hostname and wildcard matches', () => {
-  beforeEach(globalBeforeEach);
-
   it('should handle poorly formatted url', () => {
     const noProxyRule = 'localhost,127.0.0.1';
     const url = '';
