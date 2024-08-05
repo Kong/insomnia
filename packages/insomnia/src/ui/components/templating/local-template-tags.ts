@@ -740,7 +740,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
               return results[0];
             }
           } else {
-            const DOMParser = (await import('xmldom')).DOMParser;
+            const DOMParser = (await import('@xmldom/xmldom')).DOMParser;
             const dom = new DOMParser().parseFromString(body);
             if (sanitizedFilter === undefined) {
               throw new Error('Must pass an XPath query.');

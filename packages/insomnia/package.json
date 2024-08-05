@@ -127,7 +127,6 @@
     "@types/uuid": "^9.0.8",
     "@types/vkbeautify": "^0.99.4",
     "@types/ws": "^8.5.10",
-    "@types/xmldom": "0.1.34",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.19",
     "buffer": "^6.0.3",
@@ -177,7 +176,7 @@
     "vite": "^5.2.8",
     "vkbeautify": "^0.99.3",
     "ws": "^8.17.1",
-    "xmldom": "^0.6.0",
+    "@xmldom/xmldom": "^0.8.10",
     "xpath": "0.0.34",
     "@sentry/electron": "^5.1.0"
   },
