@@ -42,7 +42,7 @@
     "@grpc/proto-loader": "^0.7.13",
     "@seald-io/nedb": "^4.0.4",
     "@segment/analytics-node": "2.1.0",
-    "apiconnect-wsdl": "1.8.31",
+    "apiconnect-wsdl": "2.0.36",
     "aws4": "^1.12.0",
     "chai": "^4.3.4",
     "chai-json-schema": "1.5.1",
