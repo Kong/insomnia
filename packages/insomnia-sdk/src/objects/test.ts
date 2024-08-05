@@ -12,6 +12,7 @@ export function test(
             testCase: msg,
             status: 'passed',
             executionTime,
+            category: 'unknown',
         });
     } catch (e) {
         const executionTime = performance.now() - started;
@@ -20,6 +21,7 @@ export function test(
             status: 'failed',
             executionTime,
             errorMessage: `${e}`,
+            category: 'unknown',
         });
     }
 }
@@ -33,15 +35,18 @@ export function skip(
         testCase: msg,
         status: 'skipped',
         executionTime: 0,
+        category: 'unknown',
     });
 }
 
 export type TestStatus = 'passed' | 'failed' | 'skipped';
+export type TestCategory = 'unknown' | 'pre-request' | 'after-response';
 export interface RequestTestResult {
     testCase: string;
     status: TestStatus;
     executionTime: number; // milliseconds
     errorMessage?: string;
+    category: TestCategory;
 }
 
 export interface TestHandler {

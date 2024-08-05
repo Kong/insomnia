@@ -37,11 +37,12 @@ export const MockResponseExtractor = () => {
   const mimeType = maybeMimeType && isInMockContentTypeList(maybeMimeType) ? maybeMimeType : 'text/plain';
   return (
     <div className="px-32 h-full flex flex-col justify-center">
-      <div className="flex place-content-center text-9xl pb-2 text-[--hl-md]">
+      <div className="flex place-content-center text-9xl pb-8 text-[--hl-md]">
         <Icon icon="cube" />
       </div>
       <div className="flex place-content-center pb-2">
-        Transform this {getContentTypeName(activeResponse?.contentType) || ''} response to a new mock route or overwrite an existing one.
+        Transform this
+        {activeResponse?.contentType ? getContentTypeName(activeResponse?.contentType) === 'Other' ? '' : ` ${getContentTypeName(activeResponse?.contentType)}` : ''} response to a new mock route or overwrite an existing one.
       </div>
       <form
         onSubmit={async e => {
@@ -151,7 +152,7 @@ export const MockResponseExtractor = () => {
                   setSelectedMockRoute('');
                 }}
               >
-                <option value="">-- Create new... --</option>
+                <option value="">-- Create new --</option>
                 {mockServerAndRoutes
                   .map(w => (
                     <option key={w._id} value={w._id}>
@@ -177,7 +178,7 @@ export const MockResponseExtractor = () => {
                   setSelectedMockRoute(selected);
                 }}
               >
-                <option value="">-- Create new... --</option>
+                <option value="">-- Create new --</option>
                 {mockServerAndRoutes.find(s => s._id === selectedMockServer)?.routes
                   .map(w => (
                     <option key={w._id} value={w._id}>
