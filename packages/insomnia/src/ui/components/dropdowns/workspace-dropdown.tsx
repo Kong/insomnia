@@ -1,5 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { type FC, type ReactNode, useCallback, useState } from 'react';
+import React, { type FC, type ReactNode, useCallback, useEffect, useState } from 'react';
 import { Button, Collection, Dialog, Header, Heading, Menu, MenuItem, MenuTrigger, Modal, ModalOverlay, Popover, Section } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
@@ -50,6 +50,11 @@ export const WorkspaceDropdown: FC = () => {
   const deleteWorkspaceFetcher = useFetcher();
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
+
+  // after duplicate workspace, close the modal
+  useEffect(() => {
+    setIsDuplicateModalOpen(false);
+  }, [workspaceId]);
 
   const {
     access,
