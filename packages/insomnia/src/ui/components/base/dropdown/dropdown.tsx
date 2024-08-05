@@ -1,11 +1,9 @@
 import { PressResponder } from '@react-aria/interactions';
 import type { AriaMenuProps, MenuTriggerProps } from '@react-types/menu';
 import type { Placement } from '@react-types/overlays';
-import classnames from 'classnames';
 import React, { type CSSProperties, forwardRef, type ReactNode, useImperativeHandle, useRef } from 'react';
 import { mergeProps, useMenuTrigger } from 'react-aria';
 import { type MenuTriggerState, useMenuTriggerState } from 'react-stately';
-import styled from 'styled-components';
 
 import { DropdownButton } from './dropdown-button';
 import { Menu } from './menu';
@@ -16,11 +14,6 @@ export interface DropdownHandle {
   hide: () => void;
   toggle: (filterVisible?: boolean) => void;
 }
-
-const Container = styled.div({
-  position: 'relative',
-  display: 'inline-block',
-});
 
 export interface DropdownProps extends AriaMenuProps<any>, MenuTriggerProps {
   label?: string;
@@ -63,7 +56,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: Dropdo
 
   const { menuTriggerProps, menuProps } = useMenuTrigger({ isDisabled }, state, triggerRef);
   return (
-    <Container className={classnames('dropdown', className)} style={style} data-testid={dataTestId}>
+    <div className={`relative inline-block dropdown ${className || ''}`} style={style} data-testid={dataTestId}>
       <PressResponder {...menuTriggerProps} isPressed={state.isOpen} ref={triggerRef}>
         {triggerButton || <DropdownButton>{label} <span aria-hidden="true" style={{ paddingLeft: 5 }}>?</span></DropdownButton>}
       </PressResponder>
@@ -82,7 +75,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: Dropdo
           />
         </Popover>
       )}
-    </Container>
+    </div>
   );
 });
 
