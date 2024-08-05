@@ -1,4 +1,5 @@
 import { Analytics } from '@segment/analytics-node';
+import crypto from 'crypto';
 import { net } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -57,13 +58,18 @@ export enum SegmentEvent {
   buttonClick = 'Button Clicked',
 }
 
+function hashString(input: string) {
+  return crypto.createHash('sha256').update(input).digest('hex');
+}
+
 export async function trackSegmentEvent(
   event: SegmentEvent,
   properties?: Record<string, any>,
 ) {
   const settings = await models.settings.getOrCreate();
   const userSession = await models.userSession.getOrCreate();
-  const allowAnalytics = settings.enableAnalytics || userSession?.accountId;
+  const hashedUserId = userSession?.accountId ? hashString(userSession.accountId) : '';
+  const allowAnalytics = settings.enableAnalytics || hashedUserId;
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
@@ -77,7 +83,7 @@ export async function trackSegmentEvent(
         properties,
         context,
         anonymousId,
-        userId: userSession?.accountId || '',
+        userId: hashedUserId || '',
       }, error => {
         if (error) {
           console.warn('[analytics] Error sending segment event', error);
@@ -92,8 +98,9 @@ export async function trackSegmentEvent(
 export async function trackPageView(name: string) {
   const settings = await models.settings.getOrCreate();
   const userSession = await models.userSession.getOrCreate();
+  const hashedUserId = userSession?.accountId ? hashString(userSession.accountId) : '';
 
-  const allowAnalytics = settings.enableAnalytics || userSession?.accountId;
+  const allowAnalytics = settings.enableAnalytics || hashedUserId;
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
@@ -102,7 +109,7 @@ export async function trackPageView(name: string) {
         os: { name: _getOsName(), version: process.getSystemVersion() },
       };
 
-      analytics.page({ name, context, anonymousId, userId: userSession?.accountId }, error => {
+      analytics.page({ name, context, anonymousId, userId: hashedUserId }, error => {
         if (error) {
           console.warn('[analytics] Error sending segment event', error);
         }
