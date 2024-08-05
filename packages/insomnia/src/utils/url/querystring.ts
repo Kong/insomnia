@@ -157,7 +157,7 @@ export const deconstructQueryStringToParams = <T extends IQueryStringOptions>(
   for (const stringPair of stringPairs) {
     // NOTE: This only splits on first equals sign. '1=2=3' --> ['1', '2=3']
     const [encodedName, ...encodedValues] = stringPair.split('=');
-    // Use null as value when strictNullHandling is enabled and not equal sign in string pair
+    // Use null as value when strictNullHandling is enabled and no equal sign in string pair
     const encodedValue: ValueType = (encodedValues.length === 0 && strictNullHandling) ? null : encodedValues.join('=');
 
     let name = '';
