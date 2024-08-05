@@ -97,6 +97,15 @@ describe('inso dev bundle', () => {
       expect(result.stdout).toContain('X-Hello: hello');
       expect(result.stdout).toContain('GET /echo?k1=v1 HTTP/1.1');
     });
+
+    it('insomnia.sendRequest works', async () => {
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/script-send-request.yml wrk_cfacae --verbose';
+      const result = await runCliFromRoot(input);
+      if (result.code !== 0) {
+        console.log(result);
+      }
+      expect(result.stdout).toContain('log: "we did it: 200"');
+    });
   });
 });
 

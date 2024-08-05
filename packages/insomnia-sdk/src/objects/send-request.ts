@@ -1,4 +1,5 @@
-import type { CurlRequestOutput } from 'insomnia/src/main/network/libcurl-promise';
+import { curlRequest, type CurlRequestOutput } from 'insomnia/src/main/network/libcurl-promise';
+import { readCurlResponse } from 'insomnia/src/models/response';
 import type { Settings } from 'insomnia/src/models/settings';
 import { Cookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,7 +20,8 @@ export async function sendRequest(
         const requestOptions = requestToCurlOptions(request, settings);
 
         try {
-            window.bridge.curlRequest(requestOptions)
+            const nodejsCurlRequest = process.type === 'renderer' ? window.bridge.curlRequest : curlRequest;
+            nodejsCurlRequest(requestOptions)
                 .then((result: any) => {
                     const output = result as CurlRequestOutput;
                     return curlOutputToResponse(output, request);
@@ -253,8 +255,8 @@ async function curlOutputToResponse(
             originalRequest,
         });
     }
-
-    const bodyResult = await window.bridge.readCurlResponse({
+    const nodejsReadCurlResponse = process.type === 'renderer' ? window.bridge.readCurlResponse : readCurlResponse;
+    const bodyResult = await nodejsReadCurlResponse({
         bodyPath: result.responseBodyPath,
         bodyCompression: result.patch.bodyCompression,
     });
