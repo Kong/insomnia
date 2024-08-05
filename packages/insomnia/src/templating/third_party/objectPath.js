@@ -6,15 +6,13 @@ https://github.com/Kong/insomnia/issues/7286
 objectPath.parse could enter endless loop if last char in key name is backslash.
 */
 
-type Quote = '\'' | '\"';
-
 const regex = {
     "'": /\\\'/g,
     '"': /\\\"/g,
 };
 
 const ObjectPath = {
-    parse: function(str: string) {
+    parse: function(str) {
         if (typeof str !== 'string') {
             throw new TypeError('ObjectPath.parse must be passed a string');
         }
@@ -91,15 +89,15 @@ const ObjectPath = {
 
     // root === true : auto calculate root; must be dot-notation friendly
     // root String : the string to use as root
-    stringify: function(arr: (string | number)[], quote?: Quote, forceQuote?: boolean) {
+    stringify: function(arr, quote, forceQuote) {
         if (!Array.isArray(arr)) {
             arr = [arr];
         }
 
         quote = (quote === '"') ? '"' : "'";
-        const regexp = new RegExp('(\\\\|' + quote + ')', 'g'); // regex => /(\\|')/g
+        let regexp = new RegExp('(\\\\|' + quote + ')', 'g'); // regex => /(\\|')/g
 
-        return arr.map(function(value: string | number, key: number) {
+        return arr.map(function(value, key) {
             let property = value.toString();
             if (!forceQuote && /^[A-z_]\w*$/.exec(property)) { // str with only A-z0-9_ chars will display `foo.bar`
                 return (key !== 0) ? '.' + property : property;
@@ -112,7 +110,7 @@ const ObjectPath = {
         }).join('');
     },
 
-    normalize: function(data: string, quote?: Quote, forceQuote?: boolean) {
+    normalize: function(data, quote, forceQuote) {
         return ObjectPath.stringify(Array.isArray(data) ? data : ObjectPath.parse(data), quote, forceQuote);
     },
 };
