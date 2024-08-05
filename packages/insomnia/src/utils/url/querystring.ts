@@ -13,6 +13,21 @@ const RFC_3986_SUB_DELIMITERS = '$+,;='; // (unintentionally?) missing: !&'()*
 /** see list of allowed characters https://datatracker.ietf.org/doc/html/rfc3986#section-2.2 */
 const URL_PATH_CHARACTER_WHITELIST = `${RFC_3986_GENERAL_DELIMITERS}${RFC_3986_SUB_DELIMITERS}`;
 
+interface IQueryStringOptions {
+  // Option to distingush between parameters with(&foo=) and without(&foo) equal signs. Both are converted to empty string by default.
+  strictNullHandling?: boolean;
+}
+type SearchParamsValueType = string;
+type StrictNullSearchParamsValueType = string | null;
+interface ISearchParams {
+  name: string;
+  value: SearchParamsValueType;
+}
+interface IStrictNullSearchParams extends Omit<ISearchParams, 'value'> {
+  value: StrictNullSearchParamsValueType;
+}
+// helper function to process deconstructQueryStringToParams return type base on options parameter
+type ProcessDeconstructFuncReturnType<T> = T extends { strictNullHandling: true } ? IStrictNullSearchParams[] : ISearchParams[];
 export const getJoiner = (url: string) => {
   url = url || '';
   return url.indexOf('?') === -1 ? '?' : '&';
@@ -58,12 +73,15 @@ export const extractQueryStringFromUrl = (url: string) => {
  * Build a querystring parameter from a param object
  */
 export const buildQueryParameter = (
-  param: { name?: string; value?: string | number },
+  param: { name?: string; value?: StrictNullSearchParamsValueType | number },
 
   /** allow empty names and values */
   strict?: boolean,
+  /** extra options like strict hanlde null value */
+  options?: IQueryStringOptions
 ) => {
   strict = strict === undefined ? true : strict;
+  const { strictNullHandling = false } = options || {};
 
   // Skip non-name ones in strict mode
   if (strict && !param.name) {
@@ -75,7 +93,8 @@ export const buildQueryParameter = (
     param.value = String(param.value);
   }
 
-  if (!strict || param.value) {
+  // Keep equal sign if strictNullHandling and param value is empty string, see https://github.com/Kong/insomnia/issues/2111
+  if (!strict || param.value || (strictNullHandling && param.value === '')) {
     // Don't encode ',' in values
     const value = flexibleEncodeComponent(param.value || '').replace(/%2C/gi, ',');
     const name = flexibleEncodeComponent(param.name || '');
@@ -90,14 +109,17 @@ export const buildQueryParameter = (
  * Build a querystring from a list of name/value pairs
  */
 export const buildQueryStringFromParams = (
-  parameters: { name: string; value?: string }[],
+  parameters: { name: string; value?: StrictNullSearchParamsValueType }[],
   /** allow empty names and values */
   strict?: boolean,
+  /** extra options like strict hanlde null value */
+  options?: IQueryStringOptions
 ) => {
   strict = strict === undefined ? true : strict;
+  const { strictNullHandling = false } = options || {};
   const items = [];
   for (const param of parameters) {
-    const built = buildQueryParameter(param, strict);
+    const built = buildQueryParameter(param, strict, { strictNullHandling });
     if (!built) {
       continue;
     }
@@ -110,16 +132,21 @@ export const buildQueryStringFromParams = (
  * Deconstruct a querystring to name/value pairs
  * @param [qs] {string}
  * @param [strict=true] {boolean} - allow empty names and values
- * @returns {{name: string, value: string}[]}
+ * @param [options] {IQueryStringOptions} - deconstruct options like strict null handling
+ * @returns {{name: string, value: string | null}[]}
  */
-export const deconstructQueryStringToParams = (
+export const deconstructQueryStringToParams = <T extends IQueryStringOptions>(
   qs?: string,
 
   /** allow empty names and values */
   strict?: boolean,
-) => {
+  /** extra deconstruct options like strict hanlde null value */
+  options?: T
+): ProcessDeconstructFuncReturnType<T> => {
   strict = strict === undefined ? true : strict;
-  const pairs: { name: string; value: string }[] = [];
+  const { strictNullHandling = false } = options || {};
+  const pairs: ProcessDeconstructFuncReturnType<T> = [];
+  type ValueType = typeof pairs[number]['value'];
 
   if (!qs) {
     return pairs;
@@ -130,7 +157,8 @@ export const deconstructQueryStringToParams = (
   for (const stringPair of stringPairs) {
     // NOTE: This only splits on first equals sign. '1=2=3' --> ['1', '2=3']
     const [encodedName, ...encodedValues] = stringPair.split('=');
-    const encodedValue = encodedValues.join('=');
+    // Use null as value when strictNullHandling is enabled and not equal sign in string pair
+    const encodedValue: ValueType = (encodedValues.length === 0 && strictNullHandling) ? null : encodedValues.join('=');
 
     let name = '';
     try {
@@ -140,9 +168,9 @@ export const deconstructQueryStringToParams = (
       name = encodedName;
     }
 
-    let value = '';
+    let value: ValueType = '';
     try {
-      value = decodeURIComponent(encodedValue || '');
+      value = (strictNullHandling && encodedValue === null) ? null : decodeURIComponent(encodedValue || '');
     } catch (error) {
       // Just leave it
       value = encodedValue;
@@ -151,7 +179,7 @@ export const deconstructQueryStringToParams = (
     if (strict && !name) {
       continue;
     }
-
+    // @ts-expect-error value type is converted from pairs type automatically
     pairs.push({ name, value });
   }
 
@@ -162,11 +190,13 @@ export const deconstructQueryStringToParams = (
  * Automatically encode the path and querystring components
  * @param url url to encode
  * @param encode enable encoding
+ * @param options enable extra options like strict null handling
  */
-export const smartEncodeUrl = (url: string, encode?: boolean) => {
+export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQueryStringOptions) => {
   // Default autoEncode = true if not passed
   encode = encode === undefined ? true : encode;
-
+  // Default do not strcit handle null value
+  const { strictNullHandling = false } = options || {};
   const urlWithProto = setDefaultProtocol(url);
 
   if (!encode) {
@@ -191,16 +221,16 @@ export const smartEncodeUrl = (url: string, encode?: boolean) => {
     // ~~~~~~~~~~~~~~ //
 
     if (parsedUrl.query) {
-      const qsParams = deconstructQueryStringToParams(parsedUrl.query);
+      const qsParams = deconstructQueryStringToParams(parsedUrl.query, true, { strictNullHandling });
       const encodedQsParams = [];
       for (const { name, value } of qsParams) {
         encodedQsParams.push({
           name: flexibleEncodeComponent(name),
-          value: flexibleEncodeComponent(value),
+          value: (strictNullHandling && value === null) ? null : flexibleEncodeComponent(value as string),
         });
       }
 
-      parsedUrl.query = buildQueryStringFromParams(encodedQsParams);
+      parsedUrl.query = buildQueryStringFromParams(encodedQsParams, true, { strictNullHandling });
       parsedUrl.search = `?${parsedUrl.query}`;
     }
 

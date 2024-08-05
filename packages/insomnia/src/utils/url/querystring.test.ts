@@ -80,6 +80,26 @@ describe('querystring', () => {
       expect(str).toBe('foo');
     });
 
+    it('builds param with null value', () => {
+      const str = buildQueryParameter({ name: 'foo', value: null });
+      expect(str).toBe('foo');
+    });
+
+    it('builds param with null value and enable strictNullHandling', () => {
+      const str = buildQueryParameter({ name: 'foo', value: null }, true, { strictNullHandling: true });
+      expect(str).toBe('foo');
+    });
+
+    it('builds param with empty string value', () => {
+      const str = buildQueryParameter({ name: 'foo', value: '' });
+      expect(str).toBe('foo');
+    });
+
+    it('builds param with empty string value and enable strictNullHandling', () => {
+      const str = buildQueryParameter({ name: 'foo', value: '' }, true, { strictNullHandling: true });
+      expect(str).toBe('foo=');
+    });
+
     it('builds empty param without name', () => {
       const str = buildQueryParameter({ value: 'bar' });
       expect(str).toBe('');
@@ -98,13 +118,15 @@ describe('querystring', () => {
     it('builds from params', () => {
       const str = buildQueryStringFromParams([
         { name: 'foo', value: 'bar??' },
+        { name: 'foo1', value: '' },
+        { name: 'foo2', value: null },
         { name: 'hello' },
         { name: 'hi there', value: 'bar??' },
         { name: '', value: 'bar??' },
         { name: '', value: '' },
       ]);
 
-      expect(str).toBe('foo=bar%3F%3F&hello&hi%20there=bar%3F%3F');
+      expect(str).toBe('foo=bar%3F%3F&foo1&foo2&hello&hi%20there=bar%3F%3F');
     });
     it('builds from params', () => {
       const str = buildQueryStringFromParams(
@@ -119,6 +141,23 @@ describe('querystring', () => {
       );
 
       expect(str).toBe('foo=bar%3F%3F&hello=&hi%20there=bar%3F%3F&=bar%3F%3F&=');
+    });
+    it('builds from params with strict mode and strictNullHandling', () => {
+      const str = buildQueryStringFromParams(
+        [
+          { name: 'foo', value: 'bar??' },
+          { name: 'foo1', value: '' },
+          { name: 'foo2', value: null },
+          { name: 'hello' },
+          { name: 'hi there', value: 'bar??' },
+          { name: '', value: 'bar??' },
+          { name: '', value: '' },
+        ],
+        true,
+        { strictNullHandling: true }
+      );
+
+      expect(str).toBe('foo=bar%3F%3F&foo1=&foo2&hello&hi%20there=bar%3F%3F');
     });
   });
 
@@ -154,6 +193,16 @@ describe('querystring', () => {
         { name: 'hi there', value: 'bar??' },
         { name: '', value: '' },
         { name: '', value: 'val' },
+      ]);
+    });
+
+    it('builds from params with strictNullHandle', () => {
+      const str = deconstructQueryStringToParams('foo=bar&foo1&foo2=', true, { strictNullHandling: true });
+
+      expect(str).toEqual([
+        { name: 'foo', value: 'bar' },
+        { name: 'foo1', value: null },
+        { name: 'foo2', value: '' },
       ]);
     });
   });
@@ -226,5 +275,20 @@ describe('querystring', () => {
       const url = smartEncodeUrl('https://google.com/%%?foo=%%', false);
       expect(url).toBe('https://google.com/%%?foo=%%');
     });
+
+    it('Equal sign behavior with or without strictNullHandle option', () => {
+      const urlEqualSign1 = smartEncodeUrl('https://google.com/terminologies?foo=bar&foo1=');
+      expect(urlEqualSign1).toBe('https://google.com/terminologies?foo=bar&foo1');
+
+      const urlNoEqualSign1 = smartEncodeUrl('https://google.com/terminologies?foo=bar&foo1');
+      expect(urlNoEqualSign1).toBe('https://google.com/terminologies?foo=bar&foo1');
+
+      const urlEqualSign2 = smartEncodeUrl('https://google.com/terminologies?foo=bar&foo1=', true, { strictNullHandling: true });
+      expect(urlEqualSign2).toBe('https://google.com/terminologies?foo=bar&foo1=');
+
+      const urlNoEqualSign2 = smartEncodeUrl('https://google.com/terminologies?foo=bar&foo1', true, { strictNullHandling: true });
+      expect(urlNoEqualSign2).toBe('https://google.com/terminologies?foo=bar&foo1');
+    });
+
   });
 });

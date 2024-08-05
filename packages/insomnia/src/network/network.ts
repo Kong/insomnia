@@ -580,10 +580,10 @@ export const transformUrl = (url: string, params: RequestParameter[], authentica
   const customUrl = joinUrlAndQueryString(url, buildQueryStringFromParams(authQueryParam ? params.concat([authQueryParam]) : params));
   const isUnixSocket = customUrl.match(/https?:\/\/unix:\//);
   if (!isUnixSocket) {
-    return { finalUrl: smartEncodeUrl(customUrl, shouldEncode) };
+    return { finalUrl: smartEncodeUrl(customUrl, shouldEncode, { strictNullHandling: true }) };
   }
   // URL prep will convert "unix:/path" hostname to "unix/path"
-  const match = smartEncodeUrl(customUrl, shouldEncode).match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
+  const match = smartEncodeUrl(customUrl, shouldEncode, { strictNullHandling: true }).match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
   const protocol = (match && match[1]) || '';
   const socketPath = (match && match[2]) || '';
   const socketUrl = (match && match[3]) || '';
