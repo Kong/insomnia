@@ -163,3 +163,8 @@ table.json-diff-viewer {
 .bounce-in {
   animation: bounceIn 350ms ease-in;
 }
+
+.editor .CodeMirror-dialog.CodeMirror-dialog-top {
+  width: 50%;
+  margin-left: 50%;
+}
