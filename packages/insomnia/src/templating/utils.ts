@@ -1,6 +1,5 @@
-import objectPath from 'objectpath';
-
 import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
+import objectPath from './third_party/objectPath';
 
 export interface NunjucksParsedTagArg {
   type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model';
@@ -83,9 +82,7 @@ export function forceBracketNotation(prefix: string, key: string | number) {
 }
 
 export function normalizeToDotAndBracketNotation(prefix: string) {
-  // objectPath.normalize will enter endless loop if last char in key name is backslash, just remove backslashes at the end of key name
-  // workaround for https://github.com/Kong/insomnia/issues/7286
-  return objectPath.normalize(prefix.replace(/\\+']/g, '\']'));
+  return objectPath.normalize(prefix);
 }
 
 /**
