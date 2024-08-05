@@ -1,4 +1,4 @@
-import { curlRequest, type CurlRequestOutput } from 'insomnia/src/main/network/libcurl-promise';
+import type { CurlRequestOutput } from 'insomnia/src/main/network/libcurl-promise';
 import { readCurlResponse } from 'insomnia/src/models/response';
 import type { Settings } from 'insomnia/src/models/settings';
 import { Cookie } from 'tough-cookie';
@@ -15,12 +15,12 @@ export async function sendRequest(
     cb: (error?: string, response?: Response) => void,
     settings: Settings,
 ): Promise<Response | undefined> {
-    return new Promise<Response | undefined>(resolve => {
+    return new Promise<Response | undefined>(async resolve => {
         // TODO(george): enable cascading cancellation later as current solution just adds complexity
         const requestOptions = requestToCurlOptions(request, settings);
 
         try {
-            const nodejsCurlRequest = process.type === 'renderer' ? window.bridge.curlRequest : curlRequest;
+            const nodejsCurlRequest = process.type === 'renderer' ? window.bridge.curlRequest : (await import('insomnia/src/main/network/libcurl-promise')).curlRequest;
             nodejsCurlRequest(requestOptions)
                 .then((result: any) => {
                     const output = result as CurlRequestOutput;
