@@ -254,7 +254,6 @@ interface SyncData {
     ahead: number;
     behind: number;
   };
-  remoteBackendProjects: BackendProject[];
 }
 
 const remoteBranchesCache: Record<string, string[]> = {};
@@ -320,16 +319,20 @@ export const syncDataLoader: LoaderFunction = async ({
     const vcs = VCSInstance();
     const { syncItems } = await getSyncItems({ workspaceId });
     const localBranches = (await vcs.getBranchNames()).sort();
-    const remoteBranches = (
-      remoteBranchesCache[workspaceId] || (await vcs.getRemoteBranchNames())
-    ).sort();
     const currentBranch = await vcs.getCurrentBranchName();
     const history = (await vcs.getHistory()).sort((a, b) =>
       b.created > a.created ? 1 : -1
     );
     const historyCount = await vcs.getHistoryCount();
     const status = await vcs.status(syncItems);
-    const compare =
+
+    let remoteBranches: string[] = [];
+    let compare = { ahead: 0, behind: 0 };
+    try {
+      remoteBranches = (
+        remoteBranchesCache[workspaceId] || (await vcs.getRemoteBranchNames())
+      ).sort();
+      compare =
       remoteCompareCache[workspaceId] || (await vcs.compareRemoteBranch());
     const remoteBackendProjects =
       remoteBackendProjectsCache[workspaceId] ||
@@ -337,10 +340,10 @@ export const syncDataLoader: LoaderFunction = async ({
         teamId: project.parentId,
         teamProjectId: project.remoteId,
       }));
-
     remoteBranchesCache[workspaceId] = remoteBranches;
     remoteCompareCache[workspaceId] = compare;
     remoteBackendProjectsCache[workspaceId] = remoteBackendProjects;
+    } catch (e) { }
 
     return {
       syncItems,
@@ -351,7 +354,6 @@ export const syncDataLoader: LoaderFunction = async ({
       historyCount,
       status,
       compare,
-      remoteBackendProjects,
     };
   } catch (e) {
     const errorMessage =
