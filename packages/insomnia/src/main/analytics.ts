@@ -68,10 +68,10 @@ export async function trackSegmentEvent(
 ) {
   const settings = await models.settings.getOrCreate();
   const userSession = await models.userSession.getOrCreate();
-  if (!userSession?.hashedUserId) {
-    userSession.hashedUserId = userSession?.accountId ? hashString(userSession.accountId) : '';
+  if (!userSession?.hashedAccountId) {
+    userSession.hashedAccountId = userSession?.accountId ? hashString(userSession.accountId) : '';
   }
-  const allowAnalytics = settings.enableAnalytics || userSession?.hashedUserId;
+  const allowAnalytics = settings.enableAnalytics || userSession?.hashedAccountId;
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
@@ -85,7 +85,7 @@ export async function trackSegmentEvent(
         properties,
         context,
         anonymousId,
-        userId: userSession?.hashedUserId || '',
+        userId: userSession?.hashedAccountId || '',
       }, error => {
         if (error) {
           console.warn('[analytics] Error sending segment event', error);
@@ -100,11 +100,11 @@ export async function trackSegmentEvent(
 export async function trackPageView(name: string) {
   const settings = await models.settings.getOrCreate();
   const userSession = await models.userSession.getOrCreate();
-  if (!userSession?.hashedUserId) {
-    userSession.hashedUserId = userSession?.accountId ? hashString(userSession.accountId) : '';
+  if (!userSession?.hashedAccountId) {
+    userSession.hashedAccountId = userSession?.accountId ? hashString(userSession.accountId) : '';
   }
 
-  const allowAnalytics = settings.enableAnalytics || userSession?.hashedUserId;
+  const allowAnalytics = settings.enableAnalytics || userSession?.hashedAccountId;
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
@@ -113,7 +113,7 @@ export async function trackPageView(name: string) {
         os: { name: _getOsName(), version: process.getSystemVersion() },
       };
 
-      analytics.page({ name, context, anonymousId, userId: userSession?.hashedUserId }, error => {
+      analytics.page({ name, context, anonymousId, userId: userSession?.hashedAccountId }, error => {
         if (error) {
           console.warn('[analytics] Error sending segment event', error);
         }

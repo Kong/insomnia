@@ -14,7 +14,7 @@ export interface BaseUserSession {
 };
 
 export interface HashedUserSession {
-  hashedUserId: string;
+  hashedAccountId: string;
 }
 
 export type UserSession = BaseModel & BaseUserSession & HashedUserSession;
