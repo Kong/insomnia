@@ -131,6 +131,25 @@ describe('inso packaged binary', () => {
   });
 });
 
+const helpCommands = [
+  '$PWD/packages/insomnia-inso/bin/inso -h',
+  '$PWD/packages/insomnia-inso/bin/inso --help',
+  '$PWD/packages/insomnia-inso/bin/inso help',
+  '$PWD/packages/insomnia-inso/bin/inso generate -h',
+  '$PWD/packages/insomnia-inso/bin/inso run -h',
+  '$PWD/packages/insomnia-inso/bin/inso run test -h',
+  '$PWD/packages/insomnia-inso/bin/inso lint -h',
+  '$PWD/packages/insomnia-inso/bin/inso lint spec -h',
+  '$PWD/packages/insomnia-inso/bin/inso export -h',
+  '$PWD/packages/insomnia-inso/bin/inso export spec -h',
+];
+describe('Snapshot for', () => {
+  it.each(helpCommands)('"inso %s"', async input => {
+    const { stdout } = await runCliFromRoot(input);
+    expect(stdout).toMatchSnapshot();
+  });
+});
+
 // Execute the command in the root directory of the project
 export const runCliFromRoot = (input: string): Promise<{ code: number; error: ExecException | null; stdout: string; stderr: string }> => {
   return new Promise(resolve => exec(input, { cwd: path.resolve(__dirname, '../../..') },
