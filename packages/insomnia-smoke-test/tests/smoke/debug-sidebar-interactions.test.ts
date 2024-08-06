@@ -93,17 +93,6 @@ test.describe('Debug-Sidebar', async () => {
       await requestLocator.click();
     });
 
-    test.skip('Delete Request', async ({ page }) => {
-      const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example http' });
-      await requestLocator.click();
-      const numberOfRequests = await page.getByLabel('Request Collection').getByRole('row').count();
-      await requestLocator.getByLabel('Request Actions').click();
-      await page.getByRole('menuitemradio', { name: 'Delete' }).click();
-      await page.locator('.modal__content').getByRole('button', { name: 'Delete' }).click();
-
-      expect(page.getByLabel('Request Collection').getByRole('row')).toHaveCount(numberOfRequests - 1);
-    });
-
     test('Rename a request', async ({ page }) => {
       const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example http' });
       await requestLocator.click();
