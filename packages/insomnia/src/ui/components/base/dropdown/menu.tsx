@@ -4,27 +4,9 @@ import type { Node } from '@react-types/shared';
 import React, { useRef } from 'react';
 import { useMenu } from 'react-aria';
 import { type TreeState, useTreeState } from 'react-stately';
-import styled from 'styled-components';
 
 import { MenuItem } from './menu-item';
 import { MenuSection } from './menu-section';
-
-const List = styled.ul({
-  border: '1px solid var(--hl-sm)',
-  boxShadow: '0 0 1rem 0 rgba(0, 0, 0, 0.1)',
-  boxSizing: 'border-box',
-  background: 'var(--color-bg)',
-  margin: 'var(--padding-xxs) 3px',
-  paddingTop: 'var(--radius-md)',
-  paddingBottom: 'var(--radius-md)',
-  borderRadius: 'var(--radius-md)',
-  overflowY: 'auto',
-  maxHeight: '85vh',
-
-  '&:focus': {
-    outline: '0',
-  },
-});
 
 interface Props<T extends object> extends AriaMenuProps<T> {
   closeOnSelect?: boolean;
@@ -39,7 +21,23 @@ export const Menu = <T extends object>(props: Props<T>) => {
   const { menuProps } = useMenu(props, state, ref);
 
   return (
-    <List {...menuProps} ref={ref} className="dropdown__menu">
+    <ul
+      style={{
+        border: '1px solid var(--hl-sm)',
+        boxShadow: '0 0 1rem 0 rgba(0, 0, 0, 0.1)',
+        boxSizing: 'border-box',
+        background: 'var(--color-bg)',
+        margin: 'var(--padding-xxs) 3px',
+        paddingTop: 'var(--radius-md)',
+        paddingBottom: 'var(--radius-md)',
+        borderRadius: 'var(--radius-md)',
+        overflowY: 'auto',
+        maxHeight: '85vh',
+      }}
+      {...menuProps}
+      ref={ref}
+      className="dropdown__menu focus:outline-0"
+    >
       {[...state.collection].map((item: Node<T>) => {
         // If the item is a section and the section has items, render a MenuSection
         // @ts-expect-error -- early deprecation
@@ -68,6 +66,6 @@ export const Menu = <T extends object>(props: Props<T>) => {
 
         return null;
       })}
-    </List>
+    </ul>
   );
 };
