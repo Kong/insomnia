@@ -1,4 +1,5 @@
 import React, { type FC, type PropsWithChildren } from 'react';
+import { Button } from 'react-aria-components';
 import { useParams } from 'react-router-dom';
 
 import { getAccountId } from '../../../account/session';
@@ -9,7 +10,6 @@ import { useRootLoaderData } from '../../routes/root';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
-import { Button } from '../themed-button';
 
 const Title: FC<PropsWithChildren> = ({ children }) => (
   <div className='font-bold'>
@@ -19,8 +19,12 @@ const Title: FC<PropsWithChildren> = ({ children }) => (
 
 const SquareButton: FC<PropsWithChildren & { onClick: () => void }> = ({ children, onClick }) => (
   <Button
-    onClick={onClick}
+    onPress={onClick}
     style={{
+      fontSize: 'var(--font-size-sm)',
+      display: 'flex',
+      alignItems: 'center',
+      border: '1px solid transparent',
       flexDirection: 'column',
       padding: 'var(--padding-xl)',
       gap: 'var(--padding-md)',
@@ -32,16 +36,21 @@ const SquareButton: FC<PropsWithChildren & { onClick: () => void }> = ({ childre
   </Button>
 );
 
-const AlmostSquareButton: FC<PropsWithChildren & { onClick: () => void }> = ({ children, onClick }) => (
+const AlmostSquareButton: FC<PropsWithChildren & { onClick: () => void }> = ({ children, onClick, ...props }) => (
   <Button
-    onClick={onClick}
+    onPress={onClick}
     style={{
+      fontSize: 'var(--font-size-sm)',
+      display: 'flex',
+      alignItems: 'center',
+      border: '1px solid transparent',
       flexDirection: 'column',
       padding: '4em var(--padding-xl)',
       gap: 'var(--padding-md)',
       maxWidth: 130,
       background: 'linear-gradient(120.49deg, var(--color-bg) 9.66%, var(--hl-md) 107.02%)',
     }}
+    {...props}
   >
     {children}
   </Button>
