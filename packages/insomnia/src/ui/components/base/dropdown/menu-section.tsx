@@ -2,38 +2,8 @@ import type { Node } from '@react-types/shared';
 import React from 'react';
 import { useMenuSection, useSeparator } from 'react-aria';
 import type { TreeState } from 'react-stately';
-import styled from 'styled-components';
 
 import { MenuItem } from './menu-item';
-
-interface StyledDividerProps {
-  withoutLabel?: boolean;
-}
-
-const StyledDividerContainer = styled.div<StyledDividerProps>({
-  display: 'flex',
-  alignItems: 'center',
-  margin: '0 10px',
-});
-
-const StyledDividerSpan = styled.span<StyledDividerProps>({
-  whiteSpace: 'nowrap',
-  paddingRight: '1em',
-  color: 'var(--hl)',
-  background: 'var(--color-bg)',
-  fontSize: 'var(--font-size-xs)',
-  textTransform: 'uppercase',
-  margin: 'var(--padding-sm) 0',
-});
-
-const StyledDivider = styled.hr({
-  margin: 'var(--padding-xs) 0',
-});
-
-const StyledList = styled.ul({
-  padding: 0,
-  listStyle: 'none',
-});
 
 interface Props<T> {
   section: Node<T>;
@@ -57,11 +27,28 @@ export const MenuSection = <T extends object>({
 
   return (
     <li {...itemProps}>
-      <StyledDividerContainer>
-        {section.rendered && <StyledDividerSpan {...headingProps}>{section.rendered}</StyledDividerSpan>}
-        {shouldDisplayDivider && <StyledDivider {...separatorProps}/>}
-      </StyledDividerContainer>
-      <StyledList {...groupProps}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          margin: '0 10px',
+        }}
+      >
+        {section.rendered && <span
+          style={{
+            whiteSpace: 'nowrap',
+            paddingRight: '1em',
+            color: 'var(--hl)',
+            background: 'var(--color-bg)',
+            fontSize: 'var(--font-size-xs)',
+            textTransform: 'uppercase',
+            margin: 'var(--padding-sm) 0',
+          }}
+          {...headingProps}
+        >{section.rendered}</span>}
+        {shouldDisplayDivider && <hr style={{ margin: 'var(--padding-xs) 0' }} {...separatorProps} />}
+      </div>
+      <ul {...groupProps} className='p-0 list-none'>
         {[...section.childNodes].map((node: Node<T>) => (
           node.rendered && <MenuItem
             key={node.key}
@@ -70,7 +57,7 @@ export const MenuSection = <T extends object>({
             closeOnSelect={closeOnSelect}
           />
         ))}
-      </StyledList>
+      </ul>
     </li>
   );
 };
