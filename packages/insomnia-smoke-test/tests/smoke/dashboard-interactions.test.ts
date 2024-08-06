@@ -47,43 +47,6 @@ test.describe('Dashboard', async () => {
   });
   test.describe('Interactions', async () => { // Not sure about the name here
     // TODO(INS-2504) - we don't support importing multiple collections at this time
-    test.skip('Can filter through multiple collections', async ({ app, page }) => {
-      await page.getByLabel('All Files (0)').click();
-      await expect(page.locator('.app')).not.toContainText('Git Sync');
-      await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
-
-      await page.getByRole('button', { name: 'Create in project' }).click();
-      const text = await loadFixture('multiple-workspaces.yaml');
-      await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-      await page.getByRole('menuitemradio', { name: 'Import' }).click();
-      await page.locator('[data-test-id="import-from-clipboard"]').click();
-      await page.getByRole('button', { name: 'Scan' }).click();
-      await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-      await page.getByLabel('Smoke tests').click();
-      // Check that 10 new workspaces are imported besides the default one
-      const workspaceCards = page.getByLabel('Workspaces').getByRole('gridcell');
-      await expect(workspaceCards).toHaveCount(11);
-      await expect(page.locator('.app')).toContainText('New Document');
-      await expect(page.locator('.app')).toContainText('collection 1');
-      await expect(page.locator('.app')).toContainText('design doc 1');
-      await expect(page.locator('.app')).toContainText('Swagger Petstore V3 JSON 1.0.0');
-      await expect(page.locator('.app')).toContainText('Swagger Petstore V3 YAML 1.0.0');
-
-      // Filter by collection
-      const filter = page.locator('[placeholder="Filter\\.\\.\\."]');
-
-      // Filter by word with results expected
-      await filter.fill('design');
-      await expect(page.locator('.card-badge')).toHaveCount(4);
-
-      // Filter by number
-      await filter.fill('3');
-      await expect(page.locator('.card-badge')).toHaveCount(2);
-
-      // Filter by word with no results expected
-      await filter.fill('invalid');
-      await expect(page.locator('.card-badge')).toHaveCount(0);
-    });
 
     test('Can create, rename and delete a document', async ({ page }) => {
       await page.getByLabel('All Files (0)').click();
