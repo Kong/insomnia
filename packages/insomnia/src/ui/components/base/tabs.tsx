@@ -19,22 +19,11 @@ const Tab: FC<TabProps> = ({ item, state, isNested }) => {
 
   return (
     <div
-      className='focus:bg-[--hl-md]'
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        position: 'relative',
-        padding: '0 var(--padding-md)',
-        color: 'var(--hl)',
-        height: isNested ? 'var(--line-height-md)' : 'var(--line-height-sm)',
-        border: isNested ? 'none' : '1px solid transparent',
-        borderTop: 'none',
-        borderLeft: !isNested && isSelected ? '1px solid var(--hl-md)' : 'none',
-        borderRight: !isNested && isSelected ? '1px solid var(--hl-md)' : 'none',
-        borderBottom: isNested && isSelected ? '2px solid var(--hl-xl)' : '1px solid var(--hl-md)',
-      }}
+      className={`focus:bg-[--hl-md] flex items-center justify-center whitespace-nowrap relative px-[--padding-md] text-[--hl] 
+        ${isNested ? 'h-[--line-height-md]' : 'h-[--line-height-sm]'} 
+        ${isNested ? 'border-none' : 'border-2 border-transparent'} 
+        ${!isNested && isSelected ? 'border-l-2 border-r-2 border-[--hl-md]' : ''} 
+        ${isNested && isSelected ? 'border-b-2 border-[--hl-xl]' : 'border-b-2 border-[--hl-md]'}`}
       {...tabProps}
       ref={ref}
     >
@@ -53,13 +42,7 @@ const TabPanel: FC<TabPanelProps> = ({ state, ...props }) => {
 
   return (
     <div
-      style={{
-        width: '100%',
-        height: '100%',
-        position: 'relative',
-        boxSizing: 'border-box',
-        overflowY: 'auto',
-      }}
+      className="w-full h-full relative box-border overflow-y-auto"
       {...tabPanelProps}
       ref={ref}
     >
@@ -79,25 +62,10 @@ const Tabs: FC<TabsProps> = props => {
 
   return (
     <div
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'grid',
-        gridTemplateRows: 'auto minmax(0, 1fr)',
-        gridTemplateColumns: '100%',
-        alignContent: 'stretch',
-      }}
+      className="w-full h-full grid grid-rows-[auto] grid-rows-[minmax(0, 1fr)] grid-cols-[100%] content-stretch"
     >
       <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          width: '100%',
-          height: '100%',
-          boxSizing: 'border-box',
-          backgroundColor: 'var(--color-bg)',
-          overflow: 'auto',
-        }}
+        className="flex flex-row w-full h-full box-border bg-[--color-bg] overflow-auto"
         {...tabListProps}
         ref={ref}
       >
@@ -125,16 +93,11 @@ interface PanelContainerProps {
 }
 
 const PanelContainer: FC<PanelContainerProps> = ({ className, children }) => {
-  return (<div
-    style={{
-      width: '100%',
-      height: '100%',
-      position: 'relative',
-      boxSizing: 'border-box',
-      overflowY: 'auto',
-    }}
-    className={className}
-  >{children}</div>);
+  return (
+    <div className={`w-full h-full relative box-border overflow-y-auto ${className || ''}`}>
+      {children}
+    </div>
+  );
 };
 
 export { Tabs, Item as TabItem, PanelContainer };
