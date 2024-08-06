@@ -5,7 +5,7 @@ import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-com
 
 import type { CurlEvent } from '../../../main/network/curl';
 import type { WebSocketEvent } from '../../../main/network/websocket';
-import { SvgIcon, type SvgIconProps } from '../svg-icon';
+import { type IconId, SvgIcon } from '../svg-icon';
 
 const Timestamp: FC<{ time: Date | number }> = ({ time }) => {
   const date = format(time, 'HH:mm:ss');
@@ -18,7 +18,7 @@ interface Props {
   onSelect: (event: WebSocketEvent | CurlEvent) => void;
 }
 
-function getIcon(event: WebSocketEvent | CurlEvent): SvgIconProps['icon'] {
+function getIcon(event: WebSocketEvent | CurlEvent): IconId {
   switch (event.type) {
     case 'message': {
       if (event.direction === 'OUTGOING') {
