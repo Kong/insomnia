@@ -1,5 +1,4 @@
 import React, { forwardRef, useCallback, useState } from 'react';
-import styled from 'styled-components';
 
 import { HTTP_METHODS } from '../../../common/constants';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -7,20 +6,12 @@ import { showPrompt } from '../modals/index';
 
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 
-const StyledDropdownButton = styled(DropdownButton)({
-  '&&': {
-    paddingLeft: 'var(--padding-sm)',
-  },
-});
-
 interface Props {
-  className?: string;
   method: string;
   onChange: (method: string) => void;
 }
 
 export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
-  className,
   method,
   onChange,
 }, ref) => {
@@ -78,10 +69,10 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
       ref={ref}
       className="method-dropdown"
       triggerButton={
-        <StyledDropdownButton className={className}>
+        <DropdownButton className='!pl-2'>
           <span className={`http-method-${method}`}>{method}</span>{' '}
           <i className="fa fa-caret-down space-left" />
-        </StyledDropdownButton>
+        </DropdownButton>
       }
     >
       <DropdownSection>
