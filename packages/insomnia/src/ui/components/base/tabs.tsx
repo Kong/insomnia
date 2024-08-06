@@ -21,9 +21,9 @@ const Tab: FC<TabProps> = ({ item, state, isNested }) => {
     <div
       className={`focus:bg-[--hl-md] flex items-center justify-center whitespace-nowrap relative px-[--padding-md] text-[--hl] 
         ${isNested ? 'h-[--line-height-md]' : 'h-[--line-height-sm]'} 
-        ${isNested ? 'border-none' : 'border-2 border-transparent'} 
-        ${!isNested && isSelected ? 'border-l-2 border-r-2 border-[--hl-md]' : ''} 
-        ${isNested && isSelected ? 'border-b-2 border-[--hl-xl]' : 'border-b-2 border-[--hl-md]'}`}
+        ${isNested ? 'border-none' : 'border-solid border border-transparent'} 
+        ${!isNested && isSelected ? 'border-solid border-l border-r border-[--hl-md]' : ''} 
+        ${isNested && isSelected ? 'border-solid border-b border-[--hl-xl]' : 'border-solid border-b border-[--hl-md]'}`}
       {...tabProps}
       ref={ref}
     >
@@ -62,10 +62,10 @@ const Tabs: FC<TabsProps> = props => {
 
   return (
     <div
-      className="w-full h-full grid grid-rows-[auto] grid-rows-[minmax(0, 1fr)] grid-cols-[100%] content-stretch"
+      className="w-full h-full content-stretch"
     >
       <div
-        className="flex flex-row w-full h-full box-border bg-[--color-bg] overflow-auto"
+        className="flex flex-row border-solid border-b border-[--hl-md] box-border bg-[--color-bg] overflow-auto"
         {...tabListProps}
         ref={ref}
       >
