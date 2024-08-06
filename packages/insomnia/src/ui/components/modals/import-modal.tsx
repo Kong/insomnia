@@ -1,6 +1,7 @@
 import React, {
   type FC,
   Fragment,
+  type PropsWithChildren,
   type ReactNode,
   useEffect,
   useId,
@@ -22,14 +23,20 @@ import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalHeader } from '../base/modal-header';
 import { Button } from '../themed-button';
 
-const Pill = styled.div({
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--padding-xs)',
-  padding: 'var(--padding-sm)',
-  borderRadius: 'var(--radius-md)',
-  fontSize: 'var(--font-size-xs)',
-});
+const Pill: FC<PropsWithChildren> = ({ children }) => (
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 'var(--padding-xs)',
+      padding: 'var(--padding-sm)',
+      borderRadius: 'var(--radius-md)',
+      fontSize: 'var(--font-size-xs)',
+    }}
+  >
+    {children}
+  </div>
+);
 
 const RadioGroup = styled.div({
   display: 'flex',
@@ -43,26 +50,6 @@ const RadioGroup = styled.div({
   },
 });
 
-const RadioLabel = styled.label({
-  padding: 'var(--padding-sm)',
-  borderRadius: 'var(--radius-md)',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--padding-sm)',
-});
-
-const RadioInput = styled.input({
-  position: 'absolute',
-  width: '1px',
-  height: '1px',
-  padding: '0',
-  margin: '-1px',
-  overflow: 'hidden',
-  clip: 'rect(0,0,0,0)',
-  whiteSpace: 'nowrap',
-  borderWidth: '0',
-});
-
 const Radio: FC<{
   name: string;
   value: string;
@@ -74,7 +61,7 @@ const Radio: FC<{
   const id = useId();
   return (
     <div>
-      <RadioInput
+      <input
         id={id}
         type="radio"
         name={name}
@@ -82,8 +69,29 @@ const Radio: FC<{
         value={value}
         defaultChecked={defaultChecked}
         onChange={onChange}
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          padding: '0',
+          margin: '-1px',
+          overflow: 'hidden',
+          clip: 'rect(0,0,0,0)',
+          whiteSpace: 'nowrap',
+          borderWidth: '0',
+        }}
       />
-      <RadioLabel data-test-id={`import-from-${value}`} htmlFor={id}>{children}</RadioLabel>
+      <label
+        style={{
+          padding: 'var(--padding-sm)',
+          borderRadius: 'var(--radius-md)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--padding-sm)',
+        }}
+        data-test-id={`import-from-${value}`}
+        htmlFor={id}
+      >{children}</label>
     </div>
   );
 };
