@@ -1,20 +1,9 @@
 import React, { type CSSProperties, type FC, type PropsWithChildren, type ReactNode } from 'react';
-import styled from 'styled-components';
 
 import type { PlatformKeyCombinations } from '../../../../common/settings';
-import { svgPlacementHack } from '../../dropdowns/dropdown-placement-hacks';
 import { SvgIcon } from '../../svg-icon';
 import { PromptButton } from '../prompt-button';
 import { DropdownHint } from './dropdown-hint';
-
-const Checkmark = styled(SvgIcon)({
-  '&&': {
-    ...svgPlacementHack,
-    '& svg': {
-      fill: 'var(--color-surprise)',
-    },
-  },
-});
 
 type ItemContentProps = PropsWithChildren<{
   icon?: string | ReactNode;
@@ -47,7 +36,7 @@ export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
         {children || label}
       </div>
       {hint && <DropdownHint keyBindings={hint} />}
-      {isSelected && <Checkmark icon="checkmark" />}
+      {isSelected && <SvgIcon icon="checkmark" />}
     </>
   );
 
