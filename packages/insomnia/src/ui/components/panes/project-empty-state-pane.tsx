@@ -12,32 +12,6 @@ import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
 import { Button } from '../themed-button';
 
-const Divider = styled.div({
-  color: 'var(--color-font)',
-  maxWidth: 500,
-  width: '100%',
-  margin: 'var(--padding-md) 0',
-  display: 'flex',
-  alignItems: 'center',
-  fontSize: 'var(--text-sm)',
-  '&::before': {
-    content: '""',
-    height: '1px',
-    backgroundColor: 'var(--color-font)',
-    flexGrow: '1',
-    opacity: 'calc(var(--opacity-subtle) * 0.8)',
-    marginRight: '1rem',
-  },
-  '&::after': {
-    content: '""',
-    height: '1px',
-    backgroundColor: 'var(--color-font)',
-    flexGrow: '1',
-    opacity: 'calc(var(--opacity-subtle) * 0.8)',
-    marginLeft: '1rem',
-  },
-});
-
 const Title: FC<PropsWithChildren> = ({ children }) => (
   <div className='font-bold'>
     {children}
@@ -184,13 +158,7 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
           /> New Environment
         </SquareButton>
       </div>
-      <Divider
-        style={{
-          width: '100%',
-        }}
-      >
-        or
-      </Divider>
+      <hr className='py-2' />
       <div
         style={{
           display: 'flex',
