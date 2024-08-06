@@ -11,7 +11,6 @@ import React, {
 import { OverlayContainer, useDrop } from 'react-aria';
 import { Heading } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
-import styled from 'styled-components';
 
 import { isScratchpadProject } from '../../../models/project';
 import { SegmentEvent } from '../../analytics';
@@ -38,18 +37,6 @@ const Pill: FC<PropsWithChildren> = ({ children }) => (
   </div>
 );
 
-const RadioGroup = styled.div({
-  display: 'flex',
-  padding: 'var(--padding-xs)',
-  border: '1px solid var(--hl-md)',
-  borderRadius: 'var(--radius-md)',
-  backgroundColor: 'var(--hl-xs)',
-  'input[type="radio"]:checked ~ label': {
-    backgroundColor: 'var(--color-bg)',
-    boxShadow: '0 0 5px 1px var(--hl-xs)',
-  },
-});
-
 const Radio: FC<{
   name: string;
   value: string;
@@ -60,7 +47,7 @@ const Radio: FC<{
 }> = ({ name, value, onChange, children, checked, defaultChecked }) => {
   const id = useId();
   return (
-    <div>
+    <div className="has-[:checked]:bg-[--color-bg]">
       <input
         id={id}
         type="radio"
@@ -95,15 +82,6 @@ const Radio: FC<{
     </div>
   );
 };
-
-const Fieldset = styled.fieldset({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 'var(--padding-md)',
-  legend: {
-    marginBottom: 'var(--padding-xs)',
-  },
-});
 
 const FileField: FC = () => {
   const id = useId();
@@ -486,8 +464,22 @@ const ScanResourcesForm = ({
           gap: 'var(--padding-sm)',
         }}
       >
-        <Fieldset>
-          <RadioGroup>
+        <fieldset
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--padding-md)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              padding: 'var(--padding-xs)',
+              border: '1px solid var(--hl-md)',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'var(--hl-xs)',
+            }}
+          >
             <Radio
               onChange={() => setImportFrom('file')}
               name="importFrom"
@@ -515,8 +507,8 @@ const ScanResourcesForm = ({
               <i className="fa fa-clipboard" />
               Clipboard
             </Radio>
-          </RadioGroup>
-        </Fieldset>
+          </div>
+        </fieldset>
         {importFrom === 'file' && <FileField />}
         {importFrom === 'uri' && (
           <div className="form-control form-control--outlined">
