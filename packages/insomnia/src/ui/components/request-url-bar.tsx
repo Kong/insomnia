@@ -2,7 +2,6 @@ import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef,
 import { Button } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData, useSearchParams } from 'react-router-dom';
 import { useInterval } from 'react-use';
-import styled from 'styled-components';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -27,16 +26,6 @@ import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown
 import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
 import { VariableMissingErrorModal } from './modals/variable-missing-error-modal';
-
-const StyledDropdownButton = styled(DropdownButton)({
-  '&:hover:not(:disabled)': {
-    backgroundColor: 'var(--color-surprise)',
-  },
-
-  '&:focus:not(:disabled)': {
-    backgroundColor: 'var(--color-surprise)',
-  },
-});
 
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
@@ -283,8 +272,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                   aria-label="Request Options"
                   closeOnSelect={false}
                   triggerButton={
-                    <StyledDropdownButton
-                      className="urlbar__send-context rounded-r-sm"
+                    <DropdownButton
+                      className="urlbar__send-context rounded-r-sm enabled:hover:!bg-[--color-surprise] enabled:focus:!bg-[--color-surprise]"
                       style={{
                         borderTopRightRadius: '0.125rem',
                         borderBottomRightRadius: '0.125rem',
@@ -292,7 +281,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                       removeBorderRadius={true}
                     >
                       <i className="fa fa-caret-down" />
-                    </StyledDropdownButton>
+                    </DropdownButton>
                   }
                 >
                   <DropdownSection
