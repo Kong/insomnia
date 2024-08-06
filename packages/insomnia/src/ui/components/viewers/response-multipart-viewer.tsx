@@ -164,7 +164,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
           <Dropdown
             aria-label='Select Part Dropdown'
             triggerButton={
-              <Button className="btn btn--clicky">
+              <Button className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]">
                 <div
                   style={{
                     minWidth: '200px',
@@ -194,7 +194,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
         <Dropdown
           aria-label='Part Actions Dropdown'
           triggerButton={
-            <Button className="btn btn--clicky">
+            <Button className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]">
               <i className="fa fa-bars" />
             </Button>
           }

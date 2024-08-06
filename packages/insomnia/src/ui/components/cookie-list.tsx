@@ -153,9 +153,9 @@ export const CookieList: FC<CookieListProps> = ({
     {cookies.length === 0 && <div className="pad faint italic text-center">
       <p>I couldn't find any cookies for you.</p>
       <p className='pt-4'>
-        <button className="btn btn--clicky" onClick={addCookie}>
+        <Button className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]" onClick={addCookie}>
           <Icon icon="plus" /> Add Cookie
-        </button>
+        </Button>
       </p>
     </div>}
   </div>;

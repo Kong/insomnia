@@ -252,7 +252,7 @@ export const General: FC = () => {
           help="If checked, clears the OAuth session every time Insomnia is relaunched."
         />
         <button
-          className="btn btn--clicky pointer"
+          className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs] pointer"
           style={{
             padding: 0,
           }}

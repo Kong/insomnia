@@ -85,7 +85,7 @@ export const GitBranchesModal: FC<Props> = (({
                 </label>
               </div>
               <div className="form-control form-control--no-label width-auto">
-                <button disabled={newBranchFetcher.state === 'loading'} type="submit" className="btn btn--clicky">
+                <button disabled={newBranchFetcher.state === 'loading'} type="submit" className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]">
                   <i className='fa fa-plus space-right' /> Create
                 </button>
               </div>

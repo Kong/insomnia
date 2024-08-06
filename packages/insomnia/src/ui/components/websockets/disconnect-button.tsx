@@ -1,42 +1,7 @@
-import React, { type FC, type PropsWithChildren } from 'react';
+import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
 
 import { Dropdown as OriginalDropdown, DropdownItem, ItemContent } from '../base/dropdown';
-
-const Connections: FC<PropsWithChildren> = ({ children }) => (
-  <div
-    style={{
-      display: 'flex',
-      justifyContent: 'space-evenly',
-      width: 25,
-    }}
-  >
-    {children}
-  </div>
-);
-
-const Connection: FC<PropsWithChildren & { size?: number }> = ({ size = 10 }) => (
-  <div
-    style={{
-      borderRadius: '50%',
-      width: size,
-      height: size,
-      background: 'var(--color-success)',
-    }}
-  />
-);
-
-const TextWrapper: FC<PropsWithChildren> = ({ children }) => (
-  <div
-    style={{
-      textAlign: 'left',
-      width: '100%',
-      paddingLeft: 'var(--padding-xs)',
-    }}
-  >
-    {children}
-  </div>
-);
 
 export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
   const handleCloseThisRequest = () => {
@@ -90,24 +55,24 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
       >
         <DropdownItem aria-label='Disconnect this request'>
           <ItemContent onClick={handleCloseThisRequest}>
-            <Connections>
-              <Connection />
-            </Connections>
-            <TextWrapper>
+            <div className="flex justify-evenly w-[25px]">
+              <div className='rounded-[50%] w-[10px] h-[10px] bg-success' />
+            </div>
+            <div className="text-left w-full pl-[--padding-xs]">
               Disconnect this request
-            </TextWrapper>
+            </div>
           </ItemContent>
         </DropdownItem>
         <DropdownItem aria-label='Disconnect all requests'>
           <ItemContent onClick={handleCloseAllRequests}>
-            <Connections>
-              <Connection size={5} />
-              <Connection size={5} />
-              <Connection size={5} />
-            </Connections>
-            <TextWrapper>
+            <div className="flex justify-evenly w-[25px]">
+              <div className='rounded-[50%] w-[5px] h-[5px] bg-success' />
+              <div className='rounded-[50%] w-[5px] h-[5px] bg-success' />
+              <div className='rounded-[50%] w-[5px] h-[5px] bg-success' />
+            </div>
+            <div className="text-left w-full pl-[--padding-xs]">
               Disconnect all requests
-            </TextWrapper>
+            </div>
           </ItemContent>
         </DropdownItem>
       </OriginalDropdown>

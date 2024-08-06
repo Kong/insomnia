@@ -23,7 +23,7 @@ export const PlaceholderResponsePane: FC<PropsWithChildren<{}>> = ({ children })
             'environment_showEditor',
             'preferences_showKeyboardShortcuts',
           ].map(shortcut => (
-            <div key={shortcut} className="flex items-center justify-between w-full p-4">
+            <div key={shortcut} className="flex items-center justify-between w-full m-[--padding-sm]">
               <div className="mr-8">
                 {keyboardShortcutDescriptions[shortcut as KeyboardShortcut]}
               </div>
