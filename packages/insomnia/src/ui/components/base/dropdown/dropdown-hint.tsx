@@ -9,7 +9,7 @@ interface Props {
 
 export const DropdownHint = (props: Props) => {
   return <Hotkey
-    className='ml-auto text-[--hl-xl] pl-4'
+    className='ml-auto text-[--hl-xl] pl-[--padding-lg]'
     keyBindings={props.keyBindings}
   />;
 };

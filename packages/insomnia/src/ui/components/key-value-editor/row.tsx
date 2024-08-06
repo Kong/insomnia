@@ -162,7 +162,7 @@ export const Row: FC<Props> = ({
           <Dropdown
             aria-label='Select type Dropdown'
             triggerButton={
-              <Button className="tall">
+              <Button>
                 <i className="fa fa-caret-down" />
               </Button>
             }

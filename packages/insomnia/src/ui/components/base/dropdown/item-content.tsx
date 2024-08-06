@@ -26,12 +26,8 @@ export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
     <>
       <div className='flex items-center w-full'>
         {icon && typeof icon === 'string' ? <i
-          className={`fa fa-${icon} flex items-center`}
-          style={{
-            padding: '0 var(--padding-xs)',
-            width: 'unset',
-            ...iconStyle,
-          }}
+          className={`fa fa-${icon} flex items-center px-[--padding-xs]`}
+          style={iconStyle}
         /> : icon}
         {children || label}
       </div>
@@ -55,19 +51,8 @@ export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
   return (
     <div
       role='button'
-      className={className}
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingRight: 'var(--padding-md)',
-        paddingLeft: 'var(--padding-sm)',
-        background: isSelected ? 'var(--hl-xs)' : 'initial',
-        fontWeight: isSelected ? 'bold' : 'normal',
-        ...style,
-      }}
+      className={`w-full h-full flex items-center justify-between pl-[--padding-sm] pr-[--padding-md] ${className || ''} ${isSelected ? 'bg-[--hl-xs] font-bold' : ''}`}
+      style={style}
     >
       {content}
     </div>

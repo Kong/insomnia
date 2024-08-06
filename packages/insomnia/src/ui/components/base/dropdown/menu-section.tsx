@@ -27,35 +27,27 @@ export const MenuSection = <T extends object>({
 
   return (
     <li {...itemProps}>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          margin: '0 10px',
-        }}
-      >
-        {section.rendered && <span
-          style={{
-            whiteSpace: 'nowrap',
-            paddingRight: '1em',
-            color: 'var(--hl)',
-            background: 'var(--color-bg)',
-            fontSize: 'var(--font-size-xs)',
-            textTransform: 'uppercase',
-            margin: 'var(--padding-sm) 0',
-          }}
-          {...headingProps}
-        >{section.rendered}</span>}
-        {shouldDisplayDivider && <hr style={{ margin: 'var(--padding-xs) 0' }} {...separatorProps} />}
+      <div className="flex items-center mx-10">
+        {section.rendered && (
+          <span
+            className="whitespace-nowrap pr-4 text-[--hl] bg-[--color-bg] text-xs uppercase my-2"
+            {...headingProps}
+          >
+            {section.rendered}
+          </span>
+        )}
+        {shouldDisplayDivider && <hr className="my-1" {...separatorProps} />}
       </div>
-      <ul {...groupProps} className='p-0 list-none'>
+      <ul {...groupProps} className="p-0 list-none">
         {[...section.childNodes].map((node: Node<T>) => (
-          node.rendered && <MenuItem
-            key={node.key}
-            item={node}
-            state={state}
-            closeOnSelect={closeOnSelect}
-          />
+          node.rendered && (
+            <MenuItem
+              key={node.key}
+              item={node}
+              state={state}
+              closeOnSelect={closeOnSelect}
+            />
+          )
         ))}
       </ul>
     </li>

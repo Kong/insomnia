@@ -48,7 +48,7 @@ export const MenuItem = <T extends object>({
 
   return (
     <li
-      className={`flex items-center leading-10 text-left text-[--color-font] m-0 min-w-[15rem] whitespace-nowrap ${isFocused ? 'bg-hl-sm' : 'bg-transparent'} ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'} hover:bg-[--hl-xs] focus:outline-0`}
+      className={`flex items-center leading-10 text-left text-[--color-font] m-0 min-w-[15rem] whitespace-nowrap ${isFocused ? 'bg-[--hl-sm]' : 'bg-transparent'} ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'} hover:bg-[--hl-xs] focus:outline-0`}
       {...menuItemProps}
       ref={ref}
     >
