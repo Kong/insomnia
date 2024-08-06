@@ -19,7 +19,7 @@ import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import type { ConnectActionParams, RequestLoaderData, SendActionParams } from '../routes/request';
 import { useRootLoaderData } from '../routes/root';
 import type { WorkspaceLoaderData } from '../routes/workspace';
-import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
+import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
 import { OneLineEditor, type OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
@@ -272,16 +272,15 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                   aria-label="Request Options"
                   closeOnSelect={false}
                   triggerButton={
-                    <DropdownButton
+                    <Button
                       className="urlbar__send-context rounded-r-sm enabled:hover:!bg-[--color-surprise] enabled:focus:!bg-[--color-surprise]"
                       style={{
                         borderTopRightRadius: '0.125rem',
                         borderBottomRightRadius: '0.125rem',
                       }}
-                      removeBorderRadius={true}
                     >
                       <i className="fa fa-caret-down" />
-                    </DropdownButton>
+                    </Button>
                   }
                 >
                   <DropdownSection

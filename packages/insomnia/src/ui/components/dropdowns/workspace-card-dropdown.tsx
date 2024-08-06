@@ -16,7 +16,7 @@ import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
 import { showError, showPrompt } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
@@ -105,9 +105,9 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
         aria-label='Workspace Actions Dropdown'
         onOpen={refresh}
         triggerButton={
-          <DropdownButton aria-label='Workspace actions menu button' className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+          <Button aria-label='Workspace actions menu button' className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
             <SvgIcon icon="ellipsis" />
-          </DropdownButton>
+          </Button>
         }
       >
         <DropdownItem aria-label='Duplicate'>

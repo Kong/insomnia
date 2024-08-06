@@ -1,9 +1,10 @@
 import classnames from 'classnames';
 import React, { type FC } from 'react';
+import { Button } from 'react-aria-components';
 
 import { describeByteSize } from '../../../common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { FileInputButton } from '../base/file-input-button';
 import { PromptButton } from '../base/prompt-button';
 import { OneLineEditor } from '../codemirror/one-line-editor';
@@ -161,9 +162,9 @@ export const Row: FC<Props> = ({
           <Dropdown
             aria-label='Select type Dropdown'
             triggerButton={
-              <DropdownButton className="tall">
+              <Button className="tall">
                 <i className="fa fa-caret-down" />
-              </DropdownButton>
+              </Button>
             }
           >
             <DropdownItem aria-label='Text'>

@@ -1,7 +1,8 @@
 import React, { forwardRef, useCallback, useState } from 'react';
+import { Button } from 'react-aria-components';
 
 import { HTTP_METHODS } from '../../../common/constants';
-import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { showPrompt } from '../modals/index';
 
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
@@ -69,10 +70,10 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
       ref={ref}
       className="method-dropdown"
       triggerButton={
-        <DropdownButton className='!pl-2'>
+        <Button className='!pl-2'>
           <span className={`http-method-${method}`}>{method}</span>{' '}
           <i className="fa fa-caret-down space-left" />
-        </DropdownButton>
+        </Button>
       }
     >
       <DropdownSection>

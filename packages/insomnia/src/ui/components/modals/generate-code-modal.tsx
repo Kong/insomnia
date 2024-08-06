@@ -1,10 +1,11 @@
 import type { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import { Button } from 'react-aria-components';
 
 import { exportHarWithRequest } from '../../../common/har';
 import type { Request } from '../../../models/request';
 import { CopyButton } from '../base/copy-button';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -123,10 +124,10 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
           <Dropdown
             aria-label='Select a target'
             triggerButton={
-              <DropdownButton className="btn btn--clicky">
+              <Button className="btn btn--clicky">
                 {target ? target.title : 'n/a'}
                 <i className="fa fa-caret-down" />
-              </DropdownButton>
+              </Button>
             }
           >
             {targets.map(target => (
@@ -150,10 +151,10 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
           <Dropdown
             aria-label='Select a client'
             triggerButton={
-              <DropdownButton className="btn btn--clicky">
+              <Button className="btn btn--clicky">
                 {client ? client.title : 'n/a'}
                 <i className="fa fa-caret-down" />
-              </DropdownButton>
+              </Button>
             }
           >
             {clients.map(client => (

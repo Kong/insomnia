@@ -1,5 +1,6 @@
 import type * as Har from 'har-format';
 import React from 'react';
+import { Button } from 'react-aria-components';
 import { type LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TYPE_YAML, contentTypesMap, getMockServiceURL, RESPONSE_CODE_REASONS } from '../../common/constants';
@@ -12,7 +13,7 @@ import type { Request, RequestHeader } from '../../models/request';
 import type { Response } from '../../models/response';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
+import { Dropdown, DropdownItem, ItemContent } from '../components/base/dropdown';
 import { PanelContainer, TabItem, Tabs } from '../components/base/tabs';
 import { CodeEditor } from '../components/codemirror/code-editor';
 import { MockResponseHeadersEditor } from '../components/editors/mock-response-headers-editor';
@@ -224,10 +225,10 @@ export const MockRouteRoute = () => {
             title={<Dropdown
               aria-label='Change Body Type'
               triggerButton={
-                <DropdownButton>
+                <Button>
                   {mockRoute.mimeType ? 'Mock ' + contentTypesMap[mockRoute.mimeType]?.[0] : 'Mock Body'}
                   <i className="fa fa-caret-down space-left" />
-                </DropdownButton>
+                </Button>
               }
             >
               {mockContentTypes.map(contentType => (

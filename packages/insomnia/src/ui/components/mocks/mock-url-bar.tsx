@@ -8,7 +8,7 @@ import * as models from '../../../models';
 import { useTimeoutWhen } from '../../hooks/useTimeoutWhen';
 import { type MockRouteLoaderData, useMockRoutePatcher } from '../../routes/mock-route';
 import { useRootLoaderData } from '../../routes/root';
-import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import type { OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -55,10 +55,10 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
       ref={methodDropdownRef}
       className="method-dropdown"
       triggerButton={
-        <DropdownButton className="pad-right pad-left vertically-center hover:bg-[--color-surprise] focus:bg-[--color-surprise]">
+        <Button className="pad-right pad-left vertically-center hover:bg-[--color-surprise] focus:bg-[--color-surprise]">
           <span className={`http-method-${mockRoute.method}`}>{mockRoute.method}</span>{' '}
           <i className="fa fa-caret-down space-left" />
-        </DropdownButton>
+        </Button>
       }
     >{HTTP_METHODS.map(method => (
       <DropdownItem key={method}>
@@ -119,16 +119,15 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
         aria-label="Request Options"
         closeOnSelect={false}
         triggerButton={
-          <DropdownButton
+          <Button
             className="!px-1 mr-1 !text-[--color-font-surprise] !bg-[--color-surprise] rounded-r-sm hover:bg-opacity-90 focus:bg-opacity-90"
             style={{
               borderTopRightRadius: '0.125rem',
               borderBottomRightRadius: '0.125rem',
             }}
-            removeBorderRadius={true}
           >
             <i className="fa fa-caret-down" />
-          </DropdownButton>
+          </Button>
         }
       >
         <DropdownSection

@@ -1,5 +1,6 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
 import React, { useCallback, useRef } from 'react';
+import { Button } from 'react-aria-components';
 import { useFetcher, useRouteLoaderData } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 
@@ -12,7 +13,7 @@ import { isWebSocketResponse, type WebSocketResponse } from '../../../models/web
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import type { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
-import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
@@ -158,14 +159,14 @@ export const ResponseHistoryDropdown = ({
       closeOnSelect={false}
       className="tall pane__header__right"
       triggerButton={
-        <DropdownButton className="btn btn--super-compact tall" title="Response history">
+        <Button className="btn btn--super-compact tall">
           {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}
           {!isLatestResponseActive ? (
             <i className="fa fa-thumb-tack space-left" />
           ) : (
             <i className="fa fa-caret-down space-left" />
           )}
-        </DropdownButton>
+        </Button>
       }
     >
       <DropdownSection

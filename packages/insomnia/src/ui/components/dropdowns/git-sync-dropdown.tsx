@@ -1,5 +1,6 @@
 import classnames from 'classnames';
 import React, { type FC, Fragment, useEffect, useRef, useState } from 'react';
+import { Button } from 'react-aria-components';
 import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
@@ -16,7 +17,6 @@ import type {
 } from '../../routes/git-actions';
 import {
   Dropdown,
-  DropdownButton,
   type DropdownHandle,
   DropdownItem,
   DropdownSection,
@@ -29,7 +29,6 @@ import { GitBranchesModal } from '../modals/git-branches-modal';
 import { GitLogModal } from '../modals/git-log-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { GitStagingModal } from '../modals/git-staging-modal';
-import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
 
 interface Props {
@@ -250,12 +249,8 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
           className="w-full h-[--line-height-sm]"
           ref={dropdownRef}
           triggerButton={
-            <DropdownButton
-              size="medium"
-              variant='text'
+            <Button
               aria-label='Git Sync'
-              removePaddings={false}
-              removeBorderRadius
               style={{
                 width: '100%',
                 borderRadius: '0',
@@ -263,7 +258,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                 height: 'var(--line-height-sm)',
                 boxSizing: 'border-box',
               }}
-              disabled={isLoading}
+              isDisabled={isLoading}
             >
               <div
                 style={{
@@ -295,7 +290,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                 </div>
               </div>
 
-            </DropdownButton>
+            </Button>
           }
         >
           <DropdownSection
@@ -311,9 +306,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                 aria-label='Use Insomnia Sync'
               >
                 <Button
-                  variant='contained'
-                  bg='surprise'
-                  onClick={async () => {
+                  onPress={async () => {
                     if (gitRepository) {
                       await deleteGitRepository(gitRepository);
                       revalidate();
@@ -427,12 +420,8 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
           className="w-full h-[--line-height-sm]"
           ref={dropdownRef}
           triggerButton={
-            <DropdownButton
-              size="medium"
+            <Button
               aria-label='Git Sync'
-              variant='text'
-              removePaddings={false}
-              removeBorderRadius
               style={{
                 width: '100%',
                 borderRadius: '0',
@@ -440,7 +429,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                 height: 'var(--line-height-sm)',
                 border: 'none',
               }}
-              disabled={isLoading}
+              isDisabled={isLoading}
             >
               <div
                 style={{
@@ -457,7 +446,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                 <span className="ellipsis">Git Sync</span>
               </div>
 
-            </DropdownButton>
+            </Button>
           }
         >
           <DropdownSection
@@ -472,9 +461,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                 aria-label='Use Insomnia Sync'
               >
                 <Button
-                  variant='contained'
-                  bg='surprise'
-                  onClick={async () => {
+                  onPress={async () => {
                     if (gitRepository) {
                       await deleteGitRepository(gitRepository);
                       revalidate();

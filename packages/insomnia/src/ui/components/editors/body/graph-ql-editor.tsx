@@ -23,7 +23,7 @@ import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInt
 import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
 import { useRootLoaderData } from '../../../routes/root';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
 import { CodeEditor, type CodeEditorHandle } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import type { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
@@ -478,9 +478,9 @@ export const GraphQLEditor: FC<Props> = ({
           aria-label='Operations Dropdown'
           isDisabled={!state.operations.length}
           triggerButton={
-            <DropdownButton className="btn btn--compact text-[var(--hl)] p-[var(--padding-xs)] h-full">
+            <Button className="btn btn--compact text-[var(--hl)] p-[var(--padding-xs)] h-full">
               {state.body.operationName || 'Operations'}
-            </DropdownButton>
+            </Button>
           }
         >
           {state.operations.map(operationName => (
@@ -498,13 +498,11 @@ export const GraphQLEditor: FC<Props> = ({
         <Dropdown
           aria-label='Schema Dropdown'
           triggerButton={
-            <DropdownButton
+            <Button
               className="btn btn--compact text-[var(--hl)] p-[var(--padding-xs)] h-full"
-              disableHoverBehavior={false}
-              removeBorderRadius
             >
               <span>schema <i className="fa fa-wrench" /></span>
-            </DropdownButton>
+            </Button>
           }
         >
           <DropdownItem aria-label='Show Documentation'>

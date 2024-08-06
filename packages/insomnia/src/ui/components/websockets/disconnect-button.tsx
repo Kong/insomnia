@@ -1,6 +1,7 @@
 import React, { type FC, type PropsWithChildren } from 'react';
+import { Button } from 'react-aria-components';
 
-import { Dropdown as OriginalDropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
+import { Dropdown as OriginalDropdown, DropdownItem, ItemContent } from '../base/dropdown';
 
 const Connections: FC<PropsWithChildren> = ({ children }) => (
   <div
@@ -76,7 +77,7 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
         data-testid="DisconnectDropdown__Dropdown"
         aria-label='Disconnect Dropdown'
         triggerButton={
-          <DropdownButton
+          <Button
             style={{
               paddingRight: 'var(--padding-xs)',
               paddingLeft: 'var(--padding-xs)',
@@ -84,7 +85,7 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
             name="DisconnectDropdown__DropdownButton"
           >
             <i className="fa fa-caret-down" />
-          </DropdownButton>
+          </Button>
         }
       >
         <DropdownItem aria-label='Disconnect this request'>

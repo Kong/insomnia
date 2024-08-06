@@ -3,9 +3,9 @@ import type { AriaMenuProps, MenuTriggerProps } from '@react-types/menu';
 import type { Placement } from '@react-types/overlays';
 import React, { type CSSProperties, forwardRef, type ReactNode, useImperativeHandle, useRef } from 'react';
 import { mergeProps, useMenuTrigger } from 'react-aria';
+import { Button } from 'react-aria-components';
 import { type MenuTriggerState, useMenuTriggerState } from 'react-stately';
 
-import { DropdownButton } from './dropdown-button';
 import { Menu } from './menu';
 import { Popover } from './popover';
 
@@ -58,7 +58,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: Dropdo
   return (
     <div className={`relative inline-block dropdown ${className || ''}`} style={style} data-testid={dataTestId}>
       <PressResponder {...menuTriggerProps} isPressed={state.isOpen} ref={triggerRef}>
-        {triggerButton || <DropdownButton>{label} <span aria-hidden="true" style={{ paddingLeft: 5 }}>?</span></DropdownButton>}
+        {triggerButton || <Button>{label} <span aria-hidden="true" style={{ paddingLeft: 5 }}>?</span></Button>}
       </PressResponder>
 
       {state.isOpen && (

@@ -1,6 +1,7 @@
 import fs from 'fs';
 import type * as Har from 'har-format';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
+import { Button } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router-dom';
 import { useFetcher } from 'react-router-dom';
 import { useInterval } from 'react-use';
@@ -18,7 +19,7 @@ import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
 import type { MockRouteLoaderData } from '../../routes/mock-route';
 import { useRootLoaderData } from '../../routes/root';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { TabItem, Tabs } from '../base/tabs';
 import { CodeEditor } from '../codemirror/code-editor';
 import { Pane, PaneHeader } from '../panes/pane';
@@ -220,10 +221,10 @@ const PreviewModeDropdown = ({ activeResponse, previewMode, setPreviewMode }: { 
     <Dropdown
       aria-label='Preview Mode Dropdown'
       triggerButton={
-        <DropdownButton className="tall !text-[--hl]">
+        <Button className="tall !text-[--hl]">
           {getPreviewModeName(previewMode)}
           <i className="fa fa-caret-down space-left" />
-        </DropdownButton>
+        </Button>
       }
     >
       <DropdownSection
