@@ -38,24 +38,8 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   margin?: string;
 }
 
-const getColorVar = (theme?: ValueOf<typeof ButtonThemeEnum>) => {
-  if (!theme || theme === ButtonThemeEnum.Default) {
-    return 'var(--color-font)';
-  }
-
-  return `var(--color-${theme})`;
-};
-
-const getFontColorVar = (theme?: ValueOf<typeof ButtonThemeEnum>) => {
-  if (!theme || theme === ButtonThemeEnum.Default) {
-    return 'var(--color-font)';
-  }
-
-  return `var(--color-font-${theme})`;
-};
-
 export const Button = styled.button<ButtonProps>`
-  color: ${({ bg }) => getColorVar(bg)};
+  color: ${({ bg }) => bg ? `var(--color-font-${bg})` : 'var(--color-font)'};
   margin: ${({ margin }) => (margin || 0)};
   text-align: center;
   font-size: var(--font-size-sm);
@@ -122,7 +106,7 @@ export const Button = styled.button<ButtonProps>`
       return 'background-color: var(--hl-xs)';
     }
 
-    return `background: var(--color-${bg}); color: ${getFontColorVar(bg)}`;
+  return `background: var(--color-${bg}); color: var(--color-font-${bg});`;
   }}}
 
   &:focus,
