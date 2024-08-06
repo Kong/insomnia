@@ -613,12 +613,6 @@ const ScanResourcesForm = ({
   );
 };
 
-const ImportTypeTitle = styled.div({
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--padding-sm)',
-});
-
 const ImportResourcesForm = ({
   scanResult,
   defaultProjectId,
@@ -664,7 +658,13 @@ const ImportResourcesForm = ({
           <thead>
             <tr className="table--no-outline-row">
               <th>
-                <ImportTypeTitle>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--padding-sm)',
+                  }}
+                >
                   {scanResult.type?.id.includes('insomnia') && (
                     <Fragment>
                       <InsomniaIcon width={24} height={24} />
@@ -708,7 +708,7 @@ const ImportResourcesForm = ({
                     </Fragment>
                   )}{' '}
                   resources to be imported:
-                </ImportTypeTitle>
+                </div>
               </th>
             </tr>
           </thead>
