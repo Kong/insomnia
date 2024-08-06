@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import React, { type CSSProperties, type FC, type PropsWithChildren, type ReactNode } from 'react';
 import styled from 'styled-components';
 
@@ -7,51 +6,6 @@ import { svgPlacementHack } from '../../dropdowns/dropdown-placement-hacks';
 import { SvgIcon } from '../../svg-icon';
 import { PromptButton } from '../prompt-button';
 import { DropdownHint } from './dropdown-hint';
-
-interface StyledIconProps {
-  icon: string;
-}
-
-const StyledIcon = styled.i.attrs<StyledIconProps>(props => ({
-  className: classNames('fa', `fa-${props.icon}`),
-}))<StyledIconProps>({
-  display: 'flex',
-  alignItems: 'center',
-  padding: '0 var(--padding-xs)',
-  width: 'unset',
-});
-
-interface ContainerProps {
-  isSelected?: boolean;
-}
-
-const StyledItemContainer = styled.div<ContainerProps>(props => ({
-  width: '100%',
-  height: '100%',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  paddingRight: 'var(--padding-md)',
-  paddingLeft: 'var(--padding-sm)',
-  background: props.isSelected ? 'var(--hl-xs)' : 'initial',
-  fontWeight: props.isSelected ? 'bold' : 'normal',
-}));
-
-const StyledItemPromptContainer = styled(PromptButton)({
-  width: '100%',
-  height: '100%',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  paddingRight: 'var(--padding-md)',
-  paddingLeft: 'var(--padding-sm)',
-});
-
-const StyledItemContent = styled.div({
-  display: 'flex',
-  alignItems: 'center',
-  width: '100%',
-});
 
 const Checkmark = styled(SvgIcon)({
   '&&': {
@@ -81,10 +35,17 @@ export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
 
   const content = (
     <>
-      <StyledItemContent>
-        {icon && typeof icon === 'string' ? <StyledIcon icon={icon} style={iconStyle} /> : icon}
+      <div className='flex items-center w-full'>
+        {icon && typeof icon === 'string' ? <i
+          className={`fa fa-${icon} flex items-center`}
+          style={{
+            padding: '0 var(--padding-xs)',
+            width: 'unset',
+            ...iconStyle,
+          }}
+        /> : icon}
         {children || label}
-      </StyledItemContent>
+      </div>
       {hint && <DropdownHint keyBindings={hint} />}
       {isSelected && <Checkmark icon="checkmark" />}
     </>
@@ -92,24 +53,34 @@ export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
 
   if (withPrompt) {
     return (
-      <StyledItemPromptContainer
+      <PromptButton
         fullWidth
-        className={className}
+        className={`w-full h-full flex items-center justify-between pl-1 pr-2 ${className || ''}`}
         onClick={onClick}
       >
         {content}
-      </StyledItemPromptContainer>
+      </PromptButton>
     );
   }
 
   return (
-    <StyledItemContainer
+    <div
       role='button'
       className={className}
-      style={style}
-      isSelected={isSelected}
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingRight: 'var(--padding-md)',
+        paddingLeft: 'var(--padding-sm)',
+        background: isSelected ? 'var(--hl-xs)' : 'initial',
+        fontWeight: isSelected ? 'bold' : 'normal',
+        ...style,
+      }}
     >
       {content}
-    </StyledItemContainer>
+    </div>
   );
 };
