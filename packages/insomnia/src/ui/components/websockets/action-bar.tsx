@@ -1,6 +1,5 @@
 import React, { type FC, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useFetcher, useParams } from 'react-router-dom';
-import styled from 'styled-components';
 
 import * as models from '../../../models';
 import type { WebSocketRequest } from '../../../models/websocket-request';
@@ -11,18 +10,6 @@ import { OneLineEditor, type OneLineEditorHandle } from '../codemirror/one-line-
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { DisconnectButton } from './disconnect-button';
 
-const Button = styled.button<{ warning?: boolean }>(({ warning }) => ({
-  borderRadius: 'var(--radius-sm)',
-  paddingRight: 'var(--padding-md)',
-  paddingLeft: 'var(--padding-md)',
-  textAlign: 'center',
-  background: warning ? 'var(--color-danger)' : 'var(--color-surprise)',
-  color: 'var(--color-font-surprise)',
-  ':hover': {
-    filter: 'brightness(0.8)',
-  },
-}));
-
 interface ActionBarProps {
   request: WebSocketRequest;
   environmentId: string;
@@ -30,40 +17,6 @@ interface ActionBarProps {
   readyState: boolean;
   onChange: (value: string) => void;
 }
-
-const Form = styled.form({
-  flex: 1,
-  display: 'flex',
-});
-
-const StyledUrlBar = styled.div({
-  boxSizing: 'border-box',
-  width: '100%',
-  height: '100%',
-  paddingRight: 'var(--padding-md)',
-  paddingLeft: 'var(--padding-md)',
-});
-
-const WebSocketIcon = styled.span({
-  color: 'var(--color-notice)',
-  display: 'flex',
-  alignItems: 'center',
-  paddingLeft: 'var(--padding-md)',
-});
-
-const ConnectionStatus = styled.span({
-  color: 'var(--color-success)',
-  display: 'flex',
-  alignItems: 'center',
-  paddingLeft: 'var(--padding-md)',
-});
-export const ConnectionCircle = styled.span({
-  backgroundColor: 'var(--color-success)',
-  marginRight: 'var(--padding-sm)',
-  width: 10,
-  height: 10,
-  borderRadius: '50%',
-});
 
 export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId, defaultValue, onChange, readyState }) => {
   const isOpen = readyState;
@@ -135,21 +88,22 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
   const isConnectingOrClosed = !readyState;
   return (
     <>
-      {!isOpen && <WebSocketIcon>WS</WebSocketIcon>}
+      {!isOpen && <span style={{ color: 'var(--color-notice)', display: 'flex', alignItems: 'center', paddingLeft: 'var(--padding-md)' }}>WS</span>}
       {isOpen && (
-        <ConnectionStatus>
-          <ConnectionCircle />
+        <span style={{ color: 'var(--color-success)', display: 'flex', alignItems: 'center', paddingLeft: 'var(--padding-md)' }}>
+          <span style={{ backgroundColor: 'var(--color-success)', marginRight: 'var(--padding-sm)', width: 10, height: 10, borderRadius: '50%' }} />
           CONNECTED
-        </ConnectionStatus>
+        </span>
       )}
-      <Form
+      <form
+        style={{ flex: 1, display: 'flex' }}
         aria-disabled={isOpen}
         onSubmit={event => {
           event.preventDefault();
           handleSubmit();
         }}
       >
-        <StyledUrlBar>
+        <div style={{ boxSizing: 'border-box', width: '100%', height: '100%', paddingRight: 'var(--padding-md)', paddingLeft: 'var(--padding-md)' }}>
           <OneLineEditor
             id="websocket-url-bar"
             ref={oneLineEditorRef}
@@ -162,13 +116,13 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
             onChange={onChange}
             type="text"
           />
-        </StyledUrlBar>
+        </div>
         <div className='flex p-1'>
           {isConnectingOrClosed
-            ? <Button type="submit">Connect</Button>
+            ? <button className='hover:brightness-75' style={{ borderRadius: 'var(--radius-sm)', paddingRight: 'var(--padding-md)', paddingLeft: 'var(--padding-md)', textAlign: 'center', background: 'var(--color-surprise)', color: 'var(--color-font-surprise)' }} type="submit">Connect</button>
             : <DisconnectButton requestId={request._id} />}
         </div>
-      </Form>
+      </form>
     </>
   );
 };
