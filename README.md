@@ -38,7 +38,7 @@ the freedom to choose to store sensitive projects locally, while still being abl
 ## Premium features and support
 
 Kong Inc. offers commercial subscriptions that enhance Insomnia in a variety of ways. Some of those features include the ability to create organizations for your projects, Enterprise SSO with SAML and OIDC, RBAC when sharing
-our projects with others, AI capabilities to increase developer productivity when creating, testing and documenting APIs and a lot more.
+your projects with others, AI capabilities to increase developer productivity when creating, testing and documenting APIs and a lot more.
 
 You can [explore all premium plans](https://insomnia.rest/pricing) and get started for free.
 
