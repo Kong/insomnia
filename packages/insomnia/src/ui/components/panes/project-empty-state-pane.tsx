@@ -1,4 +1,4 @@
-import React, { type FC } from 'react';
+import React, { type FC, type PropsWithChildren } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -11,19 +11,6 @@ import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
 import { Button } from '../themed-button';
-
-const Wrapper = styled.div({
-  height: '100%',
-  width: '100%',
-  boxSizing: 'border-box',
-  display: 'flex',
-  flexWrap: 'wrap',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  textAlign: 'center',
-  opacity: 'calc(var(--opacity-subtle) * 0.8)',
-});
 
 const Divider = styled.div({
   color: 'var(--color-font)',
@@ -51,25 +38,41 @@ const Divider = styled.div({
   },
 });
 
-const Title = styled.div({
-  fontWeight: 'bold',
-});
+const Title: FC<PropsWithChildren> = ({ children }) => (
+  <div className='font-bold'>
+    {children}
+  </div>
+);
 
-const SquareButton = styled(Button)({
-  flexDirection: 'column',
-  padding: 'var(--padding-xl)',
-  gap: 'var(--padding-md)',
-  maxWidth: 180,
-  background: 'linear-gradient(120.49deg, var(--color-bg) 9.66%, var(--hl-md) 107.02%)',
-});
+const SquareButton: FC<PropsWithChildren & { onClick: () => void }> = ({ children, onClick }) => (
+  <Button
+    onClick={onClick}
+    style={{
+      flexDirection: 'column',
+      padding: 'var(--padding-xl)',
+      gap: 'var(--padding-md)',
+      maxWidth: 180,
+      background: 'linear-gradient(120.49deg, var(--color-bg) 9.66%, var(--hl-md) 107.02%)',
+    }}
+  >
+    {children}
+  </Button>
+);
 
-const AlmostSquareButton = styled(Button)({
-  flexDirection: 'column',
-  maxWidth: 130,
-  padding: '4em var(--padding-xl)',
-  gap: 'var(--padding-md)',
-  background: 'linear-gradient(120.49deg, var(--color-bg) 9.66%, var(--hl-md) 107.02%)',
-});
+const AlmostSquareButton: FC<PropsWithChildren & { onClick: () => void }> = ({ children, onClick }) => (
+  <Button
+    onClick={onClick}
+    style={{
+      flexDirection: 'column',
+      padding: '4em var(--padding-xl)',
+      gap: 'var(--padding-md)',
+      maxWidth: 130,
+      background: 'linear-gradient(120.49deg, var(--color-bg) 9.66%, var(--hl-md) 107.02%)',
+    }}
+  >
+    {children}
+  </Button>
+);
 
 interface Props {
   createRequestCollection: () => void;
@@ -116,7 +119,20 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
   };
 
   return (
-    <Wrapper>
+    <div
+      style={{
+        height: '100%',
+        width: '100%',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexWrap: 'wrap',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        opacity: 'calc(var(--opacity-subtle) * 0.8)',
+      }}
+    >
       <Title>This is an empty project, to get started create your first resource:</Title>
       <div
         style={{
@@ -239,6 +255,6 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
           <span><i className="fa-regular fa-file fa-lg" /></span> Postman
         </AlmostSquareButton>
       </div>
-    </Wrapper>
+    </div>
   );
 };
