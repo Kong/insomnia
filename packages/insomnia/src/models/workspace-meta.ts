@@ -1,4 +1,5 @@
 import { database as db } from '../common/database';
+import type { Compare, Status } from '../sync/types';
 import type { BaseModel } from './index';
 
 export const name = 'Workspace Meta';
@@ -19,6 +20,10 @@ export interface BaseWorkspaceMeta {
   gitRepositoryId: string | null;
   parentId: string | null;
   pushSnapshotOnInitialize: boolean;
+  syncData: {
+    status: Status;
+    compare: Compare;
+  } | null;
 }
 
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
@@ -40,6 +45,7 @@ export function init(): BaseWorkspaceMeta {
     gitRepositoryId: null,
     parentId: null,
     pushSnapshotOnInitialize: false,
+    syncData: null,
   };
 }
 

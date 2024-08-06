@@ -69,6 +69,7 @@ import {
 } from '../../models/project';
 import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
+import type { Compare, Status } from '../../sync/types';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { showModal } from '../../ui/components/modals';
 import { AskModal } from '../../ui/components/modals/ask-modal';
@@ -263,6 +264,10 @@ export interface InsomniaFile {
   mockServer?: MockServer;
   workspace?: Workspace;
   apiSpec?: ApiSpec;
+  syncData?: {
+    status: Status;
+    compare: Compare;
+  } | null;
 }
 
 export interface ProjectIdLoaderData {
@@ -371,6 +376,7 @@ async function getAllLocalFiles({
       mockServer,
       apiSpec,
       workspace,
+      syncData: workspaceMeta?.syncData,
     };
   });
 

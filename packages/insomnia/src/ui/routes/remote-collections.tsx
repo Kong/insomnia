@@ -19,6 +19,7 @@ import type { WebSocketRequest } from '../../models/websocket-request';
 import { scopeToActivity, type Workspace } from '../../models/workspace';
 import type {
   BackendProject,
+  Compare,
   Snapshot,
   Status,
   StatusCandidate,
@@ -250,14 +251,11 @@ interface SyncData {
   historyCount: number;
   status: Status;
   syncItems: StatusCandidate[];
-  compare: {
-    ahead: number;
-    behind: number;
-  };
+  compare: Compare;
 }
 
 const remoteBranchesCache: Record<string, string[]> = {};
-const remoteCompareCache: Record<string, { ahead: number; behind: number }> =
+const remoteCompareCache: Record<string, Compare> =
   {};
 const remoteBackendProjectsCache: Record<string, BackendProject[]> = {};
 
@@ -332,17 +330,20 @@ export const syncDataLoader: LoaderFunction = async ({
       remoteBranches = (
         remoteBranchesCache[workspaceId] || (await vcs.getRemoteBranchNames())
       ).sort();
-      compare =
-      remoteCompareCache[workspaceId] || (await vcs.compareRemoteBranch());
-    const remoteBackendProjects =
-      remoteBackendProjectsCache[workspaceId] ||
-      (await vcs.remoteBackendProjects({
-        teamId: project.parentId,
-        teamProjectId: project.remoteId,
-      }));
-    remoteBranchesCache[workspaceId] = remoteBranches;
-    remoteCompareCache[workspaceId] = compare;
-    remoteBackendProjectsCache[workspaceId] = remoteBackendProjects;
+      compare = remoteCompareCache[workspaceId] || (await vcs.compareRemoteBranch());
+      const remoteBackendProjects =
+        remoteBackendProjectsCache[workspaceId] ||
+        (await vcs.remoteBackendProjects({
+          teamId: project.parentId,
+          teamProjectId: project.remoteId,
+        }));
+      remoteBranchesCache[workspaceId] = remoteBranches;
+      remoteCompareCache[workspaceId] = compare;
+      remoteBackendProjectsCache[workspaceId] = remoteBackendProjects;
+
+      models.workspaceMeta.updateByParentId(workspaceId, {
+        syncData: { status, compare },
+      });
     } catch (e) { }
 
     return {
