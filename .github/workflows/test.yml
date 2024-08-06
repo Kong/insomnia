@@ -54,8 +54,9 @@ jobs:
       - name: Smoke test electron app
         env:
           GIT_SYNC_SMOKE_TEST_TOKEN: ${{ secrets.GIT_SYNC_SMOKE_TEST_TOKEN }}
+          SKIBIDI: test123
         run: |
-          GIT_SYNC_SMOKE_TEST_TOKEN=$GIT_SYNC_SMOKE_TEST_TOKEN npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
+          SKIBIDI=$SKIBIDI GIT_SYNC_SMOKE_TEST_TOKEN=$GIT_SYNC_SMOKE_TEST_TOKEN npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
 
       # This step should always run even when previous steps fail
       - name: Upload smoke test traces
