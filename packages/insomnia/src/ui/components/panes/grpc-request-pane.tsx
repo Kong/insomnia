@@ -1,7 +1,6 @@
 import React, { type FunctionComponent, useRef, useState } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useMount } from 'react-use';
-import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { documentationLinks } from '../../../common/documentation';
@@ -39,27 +38,6 @@ interface Props {
   setGrpcState: (states: GrpcRequestState) => void;
   reloadRequests: (requestIds: string[]) => void;
 }
-
-const StyledUrlBar = styled.div`
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: stretch;
-`;
-
-const StyledUrlEditor = styled.div`
-  flex: 1;
-`;
-
-const StyledDropdownWrapper = styled.div({
-  flex: '1',
-  display: 'flex',
-  alignItems: 'center',
-  paddingRight: 'var(--padding-sm)',
-  gap: 'var(--padding-xs)',
-});
 
 export const canClientStream = (methodType?: GrpcMethodType) => methodType === 'client' || methodType === 'bidi';
 export const GrpcMethodTypeName = {
@@ -148,9 +126,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     <>
       <Pane type="request">
         <PaneHeader>
-          <StyledUrlBar>
+          <div className="w-full h-full flex flex-row justify-between items-stretch">
             <div className="method-grpc pad-right pad-left vertically-center">gRPC</div>
-            <StyledUrlEditor title={activeRequest.url}>
+            <div className='flex-1' title={activeRequest.url}>
               <OneLineEditor
                 id="grpc-url"
                 key={uniquenessKey}
@@ -160,8 +138,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 onChange={url => patchRequest(requestId, { url })}
                 getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, requestId)}
               />
-            </StyledUrlEditor>
-            <StyledDropdownWrapper>
+            </div>
+            <div className="flex-1 flex items-center pr-[--padding-sm] gap-[--padding-xs]">
               <GrpcMethodDropdown
                 disabled={running}
                 methods={methods}
@@ -228,7 +206,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   <i className="fa fa-file-code-o" />
                 </Tooltip>
               </Button>
-            </StyledDropdownWrapper>
+            </div>
             <div className='flex p-1'>
               <GrpcSendButton
                 running={running}
@@ -237,7 +215,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 handleStart={handleRequestSend}
               />
             </div>
-          </StyledUrlBar>
+          </div>
         </PaneHeader>
         <PaneBody>
           {methodType && (
@@ -245,7 +223,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
               <TabItem key="method-type" title={GrpcMethodTypeName[methodType]}>
                 <>
                   {running && canClientStream(methodType) && (
-                    <ActionButtonsContainer>
+                    <div className="flex flex-row justify-end box-border h-[var(--line-height-sm)] border-b border-[var(--hl-lg)] p-1">
                       <button
                         className='btn btn--compact btn--clicky-small margin-left-sm bg-default'
                         onClick={async () => {
@@ -276,7 +254,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                       >
                         Commit <i className='fa fa-arrow-right' />
                       </button>
-                    </ActionButtonsContainer>
+                    </div>
                   )}
                   <Tabs key={uniquenessKey} aria-label="Grpc tabbed messages tabs" isNested>
                     {[
@@ -352,12 +330,3 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     </>
   );
 };
-const ActionButtonsContainer = styled.div({
-  display: 'flex',
-  flexDirection: 'row',
-  justifyContent: 'flex-end',
-  boxSizing: 'border-box',
-  height: 'var(--line-height-sm)',
-  borderBottom: '1px solid var(--hl-lg)',
-  padding: 3,
-});
