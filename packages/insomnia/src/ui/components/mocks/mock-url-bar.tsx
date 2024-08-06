@@ -120,7 +120,7 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
         closeOnSelect={false}
         triggerButton={
           <Button
-            className="!px-1 mr-1 !text-[--color-font-surprise] !bg-[--color-surprise] rounded-r-sm hover:bg-opacity-90 focus:bg-opacity-90"
+            className="urlbar__send-context rounded-r-sm enabled:hover:!bg-[--color-surprise] enabled:focus:!bg-[--color-surprise]"
             style={{
               borderTopRightRadius: '0.125rem',
               borderBottomRightRadius: '0.125rem',
