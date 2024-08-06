@@ -1,51 +1,41 @@
-import React, { type FC } from 'react';
-import styled from 'styled-components';
+import React, { type FC, type PropsWithChildren } from 'react';
 
 import { Dropdown as OriginalDropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 
-const SplitButton = styled.div({
-  borderRadius: 'var(--radius-sm)',
-  overflow: 'hidden',
-  display: 'flex',
-  color: 'var(--color-font-surprise)',
-});
-const Dropdown = styled(OriginalDropdown)({
-  display: 'flex',
-  textAlign: 'center',
-  borderLeft: '1px solid var(--hl-md)',
-  background: 'var(--color-danger)',
-  ':hover': {
-    opacity: 0.9,
-  },
-});
-const StyledDropdownButton = styled(DropdownButton)({
-  paddingRight: 'var(--padding-xs)',
-  paddingLeft: 'var(--padding-xs)',
-});
-const ActionButton = styled.button({
-  paddingRight: 'var(--padding-md)',
-  paddingLeft: 'var(--padding-md)',
-  background: 'var(--color-danger)',
-  ':hover': {
-    opacity: 0.9,
-  },
-});
-const Connections = styled.div({
-  display: 'flex',
-  justifyContent: 'space-evenly',
-  width: 25,
-});
-const Connection = styled.div<{ size?: number }>(({ size = 10 }) => ({
-  borderRadius: '50%',
-  width: size,
-  height: size,
-  background: 'var(--color-success)',
-}));
-const TextWrapper = styled.div({
-  textAlign: 'left',
-  width: '100%',
-  paddingLeft: 'var(--padding-xs)',
-});
+const Connections: FC<PropsWithChildren> = ({ children }) => (
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'space-evenly',
+      width: 25,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const Connection: FC<PropsWithChildren & { size?: number }> = ({ size = 10 }) => (
+  <div
+    style={{
+      borderRadius: '50%',
+      width: size,
+      height: size,
+      background: 'var(--color-success)',
+    }}
+  />
+);
+
+const TextWrapper: FC<PropsWithChildren> = ({ children }) => (
+  <div
+    style={{
+      textAlign: 'left',
+      width: '100%',
+      paddingLeft: 'var(--padding-xs)',
+    }}
+  >
+    {children}
+  </div>
+);
 
 export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
   const handleCloseThisRequest = () => {
@@ -55,24 +45,46 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
     window.main.webSocket.closeAll();
   };
   return (
-    <SplitButton>
-      <ActionButton
+    <div
+      style={{
+        borderRadius: 'var(--radius-sm)',
+        overflow: 'hidden',
+        display: 'flex',
+        color: 'var(--color-font-surprise)',
+      }}
+    >
+      <button
         type="button"
+        style={{
+          paddingRight: 'var(--padding-md)',
+          paddingLeft: 'var(--padding-md)',
+          background: 'var(--color-danger)',
+        }}
         onClick={handleCloseThisRequest}
       >
         Disconnect
-      </ActionButton>
-      <Dropdown
-        key="dropdown"
+      </button>
+      <OriginalDropdown
         className="tall"
+        style={{
+          display: 'flex',
+          textAlign: 'center',
+          borderLeft: '1px solid var(--hl-md)',
+          background: 'var(--color-danger)',
+        }}
+        key="dropdown"
         data-testid="DisconnectDropdown__Dropdown"
         aria-label='Disconnect Dropdown'
         triggerButton={
-          <StyledDropdownButton
+          <DropdownButton
+            style={{
+              paddingRight: 'var(--padding-xs)',
+              paddingLeft: 'var(--padding-xs)',
+            }}
             name="DisconnectDropdown__DropdownButton"
           >
             <i className="fa fa-caret-down" />
-          </StyledDropdownButton>
+          </DropdownButton>
         }
       >
         <DropdownItem aria-label='Disconnect this request'>
@@ -97,7 +109,7 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
             </TextWrapper>
           </ItemContent>
         </DropdownItem>
-      </Dropdown>
-    </SplitButton>
+      </OriginalDropdown>
+    </div>
   );
 };
