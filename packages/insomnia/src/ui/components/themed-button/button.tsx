@@ -1,7 +1,6 @@
 import type { ButtonHTMLAttributes } from 'react';
-import styled, { css } from 'styled-components';
+import React from 'react';
 import type { ValueOf } from 'type-fest';
-
 export const ButtonSizeEnum = {
   Default: 'default',
   Small: 'small',
@@ -36,122 +35,116 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ValueOf<typeof ButtonSizeEnum>;
   radius?: string;
   margin?: string;
+  removeBorderRadius?: boolean;
+  isDisabled?: boolean;
+  disableHoverBehavior?: boolean;
+  isPressed?: boolean;
+  removePaddings?: boolean;
 }
 
-export const Button = styled.button<ButtonProps>`
-  color: ${({ bg }) => bg ? `var(--color-font-${bg})` : 'var(--color-font)'};
-  margin: ${({ margin }) => (margin || 0)};
-  text-align: center;
-  font-size: var(--font-size-sm);
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid transparent;
-
-  ${({ radius }) => css`
-    border-radius: ${radius};
-  `};
-
-  ${({ size }) => {
-    switch (size) {
-      case 'xs':
-        return css`
-          padding: 0 calc(var(--padding-md) * 0.5);
-          height: calc(var(--line-height-xs) * 0.5);
-          font-size: var(--font-size-xs);
-        `;
-      case 'small':
-        return css`
-          padding: 0 calc(var(--padding-md) * 0.8);
-          height: calc(var(--line-height-xs) * 0.8);
-          font-size: var(--font-size-sm);
-        `;
-
-      case 'medium':
-        return css`
-          padding: 0 var(--padding-md);
-          height: calc(var(--line-height-md) * 0.8);
-          font-size: var(--font-size-md);
-        `;
-
-      default:
-        return css`
-          padding: 0 var(--padding-md);
-          height: var(--line-height-xs);
-        `;
-    }
-  }}}
-
-  ${({ variant, bg }) => {
-    if (variant !== 'outlined') {
-      return '';
+export const Button: React.FC<ButtonProps> = ({
+  bg = 'default',
+  radius = '3px',
+  size = 'default',
+  variant = 'outlined',
+  margin,
+  children,
+  removeBorderRadius,
+  isDisabled,
+  disableHoverBehavior,
+  isPressed,
+  removePaddings,
+  ...props
+}) => {
+  const getButtonStyles = () => {
+    let buttonStyles: any = {
+      color: bg ? `var(--color-font-${bg})` : 'var(--color-font)',
+      margin: margin || 0,
+      textAlign: 'center',
+      fontSize: 'var(--font-size-sm)',
+      display: 'inline-flex',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      border: '1px solid transparent',
+    };
+    if (removeBorderRadius) {
+      buttonStyles = {
+        ...buttonStyles,
+        borderRadius: 0,
+      };
+    } else if (radius) {
+      buttonStyles = {
+        ...buttonStyles,
+        borderRadius: radius,
+      };
     }
 
-    // Inherit border color from text color for colored outlines
-    if (bg === 'default') {
-      return 'border-color: var(--hl-lg)';
+    const sizeStyles = {
+      xs: {
+        padding: '0 calc(var(--padding-md) * 0.5)',
+        height: 'calc(var(--line-height-xs) * 0.5)',
+        fontSize: 'var(--font-size-xs)',
+      },
+      small: {
+        padding: '0 calc(var(--padding-md) * 0.8)',
+        height: 'calc(var(--line-height-xs) * 0.8)',
+        fontSize: 'var(--font-size-sm)',
+      },
+      medium: {
+        padding: '0 var(--padding-md)',
+        height: 'calc(var(--line-height-md) * 0.8)',
+        fontSize: 'var(--font-size-md)',
+      },
+      default: {
+        padding: '0 var(--padding-md)',
+        height: 'var(--line-height-xs)',
+      },
+    };
+
+    if (size) {
+      buttonStyles = {
+        ...buttonStyles,
+        ...sizeStyles[size],
+      };
     }
 
-    // Colored borders inherit from button text color
-    return 'border-color: inherit';
-  }}}
-
-  ${({ variant, bg }) => {
-    if (variant !== 'contained') {
-      return 'background-color: transparent;';
+    if (variant === 'outlined') {
+      if (bg === 'default') {
+        buttonStyles = {
+          ...buttonStyles,
+          borderColor: 'var(--hl-lg)',
+        };
+      } else {
+        buttonStyles = {
+          ...buttonStyles,
+          borderColor: 'inherit',
+        };
+      }
     }
 
-    if (bg === 'default') {
-      return 'background-color: var(--hl-xs)';
-    }
-
-  return `background: var(--color-${bg}); color: var(--color-font-${bg});`;
-  }}}
-
-  &:focus,
-  &:hover {
-    &:not(:disabled) {
-      outline: 0;
-      ${({ variant, bg }) => {
     if (variant === 'contained') {
-      // kind of a hack, but using inset box shadow to darken the theme color
-      return 'box-shadow: inset 0 0 99px rgba(0, 0, 0, 0.1)';
+      if (bg === 'default') {
+        buttonStyles = {
+          ...buttonStyles,
+          backgroundColor: 'var(--hl-xs)',
+          color: `var(--color-font-${bg})`,
+        };
+      } else {
+        buttonStyles = {
+          ...buttonStyles,
+          background: `var(--color-${bg})`,
+          color: `var(--color-font-${bg})`,
+        };
+      }
     }
 
-    if (bg === 'default') {
-      return 'background-color: var(--hl-xs)';
-    }
+    return buttonStyles;
+  };
 
-    return `background-color: rgba(var(--color-${bg}-rgb), 0.1)`;
-  }}
-    }
-  }
-
-  &:active:not(:disabled) {
-    ${({ variant, bg }) => {
-    if (variant === 'contained') {
-      // kind of a hack, but using inset box shadow to darken the theme color
-      return 'box-shadow: inset 0 0 99px rgba(0, 0, 0, 0.2)';
-    }
-
-    if (bg === 'default') {
-      return 'background-color: var(--hl-sm)';
-    }
-
-    return `background-color: rgba(var(--color-${bg}-rgb), 0.2)`;
-  }}
-  }
-
-  &:disabled {
-    opacity: 60%;
-  }
-`;
-
-Button.defaultProps = {
-  variant: 'outlined',
-  bg: 'default',
-  size: 'default',
-  radius: '3px',
-  role: 'button',
+  return (
+    <button style={getButtonStyles()} disabled={isDisabled} {...props}>
+      {children}
+    </button>
+  );
 };
