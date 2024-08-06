@@ -2,7 +2,6 @@ import React, { useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
-import styled from 'styled-components';
 
 import { getMockServiceBinURL, HTTP_METHODS } from '../../../common/constants';
 import * as models from '../../../models';
@@ -16,15 +15,7 @@ import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showModal, showPrompt } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
-const StyledDropdownButton = styled(DropdownButton)({
-  '&:hover:not(:disabled)': {
-    backgroundColor: 'var(--color-surprise)',
-  },
 
-  '&:focus:not(:disabled)': {
-    backgroundColor: 'var(--color-surprise)',
-  },
-});
 export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: string) => void; onSend: (path: string) => void }) => {
   const { mockServer, mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const { settings } = useRootLoaderData();
@@ -109,7 +100,7 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
         <Icon icon="copy" />
       </Button>
       <Button
-        className="px-5 ml-1 text-[--color-font-surprise] bg-[--color-surprise] hover:bg-opacity-90 rounded-l-sm"
+        className="px-5 ml-1 text-[--color-font-surprise] bg-[--color-surprise] hover:bg-opacity-90 focus:bg-opacity-90 rounded-l-sm"
         onPress={() => {
           if (isCancellable) {
             setCurrentInterval(null);
@@ -128,8 +119,8 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
         aria-label="Request Options"
         closeOnSelect={false}
         triggerButton={
-          <StyledDropdownButton
-            className="urlbar__send-context rounded-r-sm"
+          <DropdownButton
+            className="!px-1 mr-1 !text-[--color-font-surprise] !bg-[--color-surprise] rounded-r-sm hover:bg-opacity-90 focus:bg-opacity-90"
             style={{
               borderTopRightRadius: '0.125rem',
               borderBottomRightRadius: '0.125rem',
@@ -137,7 +128,7 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
             removeBorderRadius={true}
           >
             <i className="fa fa-caret-down" />
-          </StyledDropdownButton>
+          </DropdownButton>
         }
       >
         <DropdownSection
