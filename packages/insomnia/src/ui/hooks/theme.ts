@@ -1,4 +1,4 @@
-import { type ChangeEvent, useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useAsync } from 'react-use';
 
 import type { ThemeSettings } from '../../models/settings';
@@ -52,7 +52,7 @@ export const useThemes = () => {
 
   }, [autoDetectColorScheme, darkTheme, lightTheme, patchSettings, theme]);
 
-  const changeAutoDetect = useCallback(({ target: { checked } }: ChangeEvent<HTMLInputElement>) => apply({ autoDetectColorScheme: checked }), [apply]);
+  const changeAutoDetect = useCallback((autoDetectColorScheme: boolean) => apply({ autoDetectColorScheme }), [apply]);
 
   // Activate the theme for the selected color scheme
   const activate = useCallback(async (themeName: string, colorScheme: ColorScheme) => {
