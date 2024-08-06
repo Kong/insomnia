@@ -432,7 +432,6 @@ export class GitVCS {
   async log(input: {depth?: number} = {}) {
     const { depth = 35 } = input;
     try {
-      // TODO: why we need to fetch here
       const remoteOriginURI = await this.getRemoteOriginURI();
       if (remoteOriginURI) {
         await git.fetch({
