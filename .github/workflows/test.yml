@@ -33,6 +33,9 @@ jobs:
       - name: Install packages
         run: npm ci
 
+      - name: Audit packages
+        run: npm audit
+
       - name: Lint
         run: npm run lint
 
