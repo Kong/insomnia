@@ -1,6 +1,5 @@
 import React, { type FC, type PropsWithChildren } from 'react';
 import { useParams } from 'react-router-dom';
-import styled from 'styled-components';
 
 import { getAccountId } from '../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../common/constants';
