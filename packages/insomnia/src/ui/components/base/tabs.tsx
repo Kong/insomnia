@@ -71,23 +71,6 @@ const StyledTab = styled.div<StyledTabProps>(({ isNested, isSelected }) => ({
   },
 }));
 
-const StyledTabPanel = styled.div({
-  width: '100%',
-  height: '100%',
-  position: 'relative',
-  boxSizing: 'border-box',
-  overflowY: 'auto',
-});
-
-const StyledTabsContainer = styled.div({
-  width: '100%',
-  height: '100%',
-  display: 'grid',
-  gridTemplateRows: 'auto minmax(0, 1fr)',
-  gridTemplateColumns: '100%',
-  alignContent: 'stretch',
-});
-
 interface StyledTabListProps {
   isNested?: boolean;
 }
@@ -168,9 +151,19 @@ const TabPanel: FC<TabPanelProps> = ({ state, ...props }) => {
   const { tabPanelProps } = useTabPanel(props, state, ref);
 
   return (
-    <StyledTabPanel {...tabPanelProps} ref={ref}>
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        boxSizing: 'border-box',
+        overflowY: 'auto',
+      }}
+      {...tabPanelProps}
+      ref={ref}
+    >
       {state.selectedItem?.props.children}
-    </StyledTabPanel>
+    </div>
   );
 };
 
@@ -184,7 +177,16 @@ const Tabs: FC<TabsProps> = props => {
   const { tabListProps } = useTabList(props, state, ref);
 
   return (
-    <StyledTabsContainer>
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'grid',
+        gridTemplateRows: 'auto minmax(0, 1fr)',
+        gridTemplateColumns: '100%',
+        alignContent: 'stretch',
+      }}
+    >
       <StyledTabList {...tabListProps} ref={ref} isNested={props.isNested}>
         {[...state.collection].map((item: Node<TabItemProps>) => (
           <Tab
@@ -200,7 +202,7 @@ const Tabs: FC<TabsProps> = props => {
         key={state.selectedItem?.key}
         state={state}
       />
-    </StyledTabsContainer>
+    </div>
   );
 };
 
