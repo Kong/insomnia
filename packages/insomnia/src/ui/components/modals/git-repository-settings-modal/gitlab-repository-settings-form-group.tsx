@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useInterval, useLocalStorage } from 'react-use';
-import styled from 'styled-components';
 
 import type { GitRepository } from '../../../../models/git-repository';
 import {
@@ -53,28 +52,6 @@ export const GitLabRepositorySetupFormGroup = (props: Props) => {
   );
 };
 
-const AccountViewContainer = styled.div({
-  display: 'flex',
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  border: '1px solid var(--hl-sm)',
-  borderRadius: 'var(--radius-md)',
-  padding: 'var(--padding-sm)',
-  boxSizing: 'border-box',
-});
-
-const AccountDetails = styled.div({
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--padding-sm)',
-});
-
-const AvatarImg = styled.img({
-  borderRadius: 'var(--radius-md)',
-  width: 16,
-  height: 16,
-});
-
 const Avatar = ({ src }: { src: string }) => {
   const [imageSrc, setImageSrc] = useState('');
 
@@ -101,28 +78,11 @@ const Avatar = ({ src }: { src: string }) => {
   }, [src]);
 
   return imageSrc ? (
-    <AvatarImg src={imageSrc} />
+    <img src={imageSrc} className="rounded-md w-8 h-8" />
   ) : (
     <i className="fas fa-user-circle" />
   );
 };
-
-const Details = styled.div({
-  display: 'flex',
-  flexDirection: 'column',
-});
-
-const AuthorizationFormContainer = styled.div({
-  display: 'flex',
-  placeContent: 'center',
-  placeItems: 'center',
-  flexDirection: 'column',
-  height: '100%',
-  border: '1px solid var(--hl-sm)',
-  borderRadius: 'var(--radius-md)',
-  padding: 'var(--padding-sm)',
-  boxSizing: 'border-box',
-});
 
 export interface GitLabUserResult {
   id: number;
@@ -218,10 +178,20 @@ const GitLabRepositoryForm = ({
           </label>
         </div>
       )}
-      <AccountViewContainer>
-        <AccountDetails>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          border: '1px solid var(--hl-sm)',
+          borderRadius: 'var(--radius-md)',
+          padding: 'var(--padding-sm)',
+          boxSizing: 'border-box',
+        }}
+      >
+        <div className="flex gap-2 items-center">
           <Avatar src={user?.avatar_url ?? ''} />
-          <Details>
+          <div className='flex flex-col'>
             <span
               style={{
                 fontSize: 'var(--font-size-lg)',
@@ -236,8 +206,8 @@ const GitLabRepositoryForm = ({
             >
               {user?.commit_email ?? user?.public_email ?? user?.email}
             </span>
-          </Details>
-        </AccountDetails>
+          </div>
+        </div>
         <Button
           type="button"
           onClick={event => {
@@ -257,7 +227,7 @@ const GitLabRepositoryForm = ({
         >
           Sign out
         </Button>
-      </AccountViewContainer>
+      </div>
 
       {error && (
         <p className="notice error margin-bottom-sm">
@@ -295,7 +265,19 @@ const GitLabSignInForm = ({ token }: GitLabSignInFormProps) => {
   }, [authUrl]);
 
   return !authUrl ? (<div />) : (
-    <AuthorizationFormContainer>
+    <div
+      style={{
+        display: 'flex',
+        placeContent: 'center',
+        placeItems: 'center',
+        flexDirection: 'column',
+        height: '100%',
+        border: '1px solid var(--hl-sm)',
+        borderRadius: 'var(--radius-md)',
+        padding: 'var(--padding-sm)',
+        boxSizing: 'border-box',
+      }}
+    >
       <a
         href={authUrl}
         onClick={() => {
@@ -345,6 +327,6 @@ const GitLabSignInForm = ({ token }: GitLabSignInFormProps) => {
           </label>
         </form>
       )}
-    </AuthorizationFormContainer>
+    </div>
   );
 };
