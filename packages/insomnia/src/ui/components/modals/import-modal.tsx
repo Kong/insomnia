@@ -105,36 +105,6 @@ const Fieldset = styled.fieldset({
   },
 });
 
-const FileInput = styled.input({
-  display: 'none',
-});
-
-const FileInputLabel = styled.label({
-  padding: 'var(--padding-sm)',
-  borderRadius: 'var(--radius-md)',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--padding-sm)',
-  border: '1px solid var(--hl-md)',
-  backgroundColor: 'var(--hl-xs)',
-  flexWrap: 'wrap',
-});
-
-const FileView = styled.div({
-  backgroundColor: 'var(--color-bg)',
-  borderRadius: 'var(--radius-md)',
-  textOverflow: 'ellipsis',
-  overflow: 'hidden',
-  whiteSpace: 'nowrap',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: 'var(--padding-md)',
-  gap: 'var(--padding-sm)',
-  width: '100%',
-});
-
 const FileField: FC = () => {
   const id = useId();
   const dropRef = useRef<HTMLLabelElement>(null);
@@ -154,7 +124,8 @@ const FileField: FC = () => {
   });
   return (
     <div>
-      <FileInput
+      <input
+        style={{ display: 'none' }}
         onChange={e => setSelectedFile(e.currentTarget.files?.[0])}
         accept={[
           '',
@@ -172,10 +143,17 @@ const FileField: FC = () => {
         id={id}
         type="file"
       />
-      <FileInputLabel
+      <label
         {...dropProps}
         style={{
-          border: isDropTarget ? '1px solid var(--color-surprise)' : undefined,
+          padding: 'var(--padding-sm)',
+          borderRadius: 'var(--radius-md)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--padding-sm)',
+          backgroundColor: 'var(--hl-xs)',
+          flexWrap: 'wrap',
+          border: isDropTarget ? '1px solid var(--color-surprise)' : '1px solid var(--hl-md)',
         }}
         htmlFor={id}
       >
@@ -209,16 +187,32 @@ const FileField: FC = () => {
         )}
         {selectedFile && (
           <Fragment key={selectedFile.name}>
-            <FileView key={selectedFile.path}>
+            <div
+              key={selectedFile.path}
+              style={{
+                backgroundColor: 'var(--color-bg)',
+                borderRadius: 'var(--radius-md)',
+                textOverflow: 'ellipsis',
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 'var(--padding-md)',
+                gap: 'var(--padding-sm)',
+                width: '100%',
+              }}
+            >
               <div>
                 <i className="fa fa-file fa-xl" />
               </div>
               {selectedFile.name}
-            </FileView>
+            </div>
             <input type="hidden" name="filePath" value={selectedFile.path} />
           </Fragment>
         )}
-      </FileInputLabel>
+      </label>
     </div>
   );
 };
