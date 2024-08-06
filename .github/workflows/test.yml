@@ -55,7 +55,7 @@ jobs:
         env:
           GIT_SYNC_SMOKE_TEST_TOKEN: ${{ secrets.GIT_SYNC_SMOKE_TEST_TOKEN }}
         run: |
-          GIT_SYNC_SMOKE_TEST_TOKEN="$env:GIT_SYNC_SMOKE_TEST_TOKEN" npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
+          GIT_SYNC_SMOKE_TEST_TOKEN=$GIT_SYNC_SMOKE_TEST_TOKEN npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
 
       # This step should always run even when previous steps fail
       - name: Upload smoke test traces
