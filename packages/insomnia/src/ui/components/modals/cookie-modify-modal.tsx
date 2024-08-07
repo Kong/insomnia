@@ -2,6 +2,7 @@ import clone from 'clone';
 import { isValid } from 'date-fns';
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
+import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router-dom';
 import { useFetcher, useParams } from 'react-router-dom';
 import { Cookie as ToughCookie } from 'tough-cookie';
@@ -13,7 +14,6 @@ import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 export interface CookieModifyModalOptions {
   cookie: Cookie;
@@ -82,10 +82,23 @@ export const CookieModifyModal = ((props: ModalProps & CookieModifyModalOptions)
         <ModalHeader>Edit Cookie</ModalHeader>
         <ModalBody className="cookie-modify">
           {activeCookieJar && cookie && (
-            <Tabs aria-label="Cookie modify tabs">
-              <TabItem key="friendly" title="Friendly">
-                <PanelContainer className="pad">
-                  <div className="form-row">
+            <Tabs aria-label='Cookie modify tabs' className="flex-1 w-full h-full flex flex-col">
+              <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+                <Tab
+                  className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+                  id='friendly'
+                >
+                  Friendly
+                </Tab>
+                <Tab
+                  className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+                  id='raw'
+                >
+                  Raw
+                </Tab>
+              </TabList>
+              <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='friendly'>
+                <div className="form-row">
                     <div className="form-control form-control--outlined">
                       <label data-testid="CookieKey">
                         Key
@@ -134,9 +147,8 @@ export const CookieModifyModal = ((props: ModalProps & CookieModifyModalOptions)
                       Expires
                       <input type="datetime-local" defaultValue={localDateTime} onChange={event => handleCookieUpdate(Object.assign({}, cookie, { expires: event.target.value }))} />
                     </label>
-                  </div>
-                </PanelContainer>
-                <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
+                </div>
+                <div className="grid grid-cols-2 gap-2 w-full">
                   <label>
                     Secure
                     <input
@@ -158,10 +170,9 @@ export const CookieModifyModal = ((props: ModalProps & CookieModifyModalOptions)
                     />
                   </label>
                 </div>
-              </TabItem>
-              <TabItem key="raw" title="Raw">
-                <PanelContainer className="pad">
-                  <div className="form-control form-control--outlined">
+              </TabPanel>
+              <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='raw'>
+                <div className="form-control form-control--outlined">
                     <label>
                       Raw Cookie String
                       <input
@@ -184,8 +195,7 @@ export const CookieModifyModal = ((props: ModalProps & CookieModifyModalOptions)
                       />
                     </label>
                   </div>
-                </PanelContainer>
-              </TabItem>
+              </TabPanel>
             </Tabs>
           )}
         </ModalBody>

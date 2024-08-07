@@ -269,7 +269,7 @@ export const OAuth2Auth: FC = () => {
               <td />
               <td className="wide">
                 <div className="pad-top text-right">
-                  <button className="btn btn--clicky" onClick={initNewOAuthSession}>
+                  <button className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]" onClick={initNewOAuthSession}>
                     Clear OAuth 2 session
                   </button>
                 </div>
@@ -455,7 +455,7 @@ const OAuth2Tokens: FC = () => {
       <div className='pad-top text-right'>
         {token ? (
           <button
-            className="btn btn--clicky"
+            className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]"
             disabled={!token}
             onClick={() => {
               if (token) {
@@ -469,7 +469,7 @@ const OAuth2Tokens: FC = () => {
         ) : null}
         &nbsp;&nbsp;
         <button
-          className="btn btn--clicky"
+          className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]"
           onClick={async () => {
             setError('');
             setLoading(true);

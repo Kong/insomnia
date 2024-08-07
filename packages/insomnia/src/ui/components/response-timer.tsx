@@ -55,7 +55,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
 
       <div className="pad">
         <button
-          className="btn btn--clicky"
+          className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]"
           onClick={handleCancel}
         >
           Cancel Request
