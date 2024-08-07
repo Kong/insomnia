@@ -88,14 +88,12 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
 
   useEffect(() => {
     if (gitRepository?.uri && gitRepository?._id && gitChangesFetcher.state === 'idle' && !gitChangesFetcher.data && gitRepoDataFetcher.data) {
-      console.log('[git:fetcher] Fetching git changes');
       gitChangesFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/changes`);
     }
   }, [gitChangesFetcher, gitRepoDataFetcher.data, gitRepository?._id, gitRepository?.uri, organizationId, projectId, workspaceId]);
 
   useEffect(() => {
     if (gitRepository?.uri && gitRepository?._id && gitCanPushFetcher.state === 'idle' && !gitCanPushFetcher.data && gitRepoDataFetcher.data) {
-      console.log('[git:fetcher] Fetching git can push');
       gitCanPushFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/can-push`);
     }
   }, [gitCanPushFetcher, gitRepoDataFetcher.data, gitRepository?._id, gitRepository?.uri, organizationId, projectId, workspaceId]);
