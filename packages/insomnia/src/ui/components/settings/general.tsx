@@ -30,7 +30,7 @@ export const General: FC = () => {
 
   return (
     <div className="relative p-4">
-      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Application</h2>
+      <h2 className='font-bold pt-2 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Application</h2>
 
       <div className="">
         <div>
