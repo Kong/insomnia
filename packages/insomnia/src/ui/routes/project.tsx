@@ -69,7 +69,6 @@ import {
 } from '../../models/project';
 import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
-import type { Compare, Status } from '../../sync/types';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { showModal } from '../../ui/components/modals';
 import { AskModal } from '../../ui/components/modals/ask-modal';
@@ -265,8 +264,8 @@ export interface InsomniaFile {
   workspace?: Workspace;
   apiSpec?: ApiSpec;
   syncData?: {
-    status: Status;
-    compare: Compare;
+    hasUncommittedChanges: boolean;
+    hasUnpushedChanges: boolean;
   } | null;
 }
 
@@ -1014,6 +1013,10 @@ const ProjectRoute: FC = () => {
     }
   }, [projectId]);
 
+  const showUnCommitOrUnpushIndicator = useMemo(() => {
+    return filesWithPresence.some(file => file?.syncData?.hasUncommittedChanges || file?.syncData?.hasUnpushedChanges);
+  }, [filesWithPresence]);
+
   return (
     <ErrorBoundary>
       <Fragment>
@@ -1125,6 +1128,7 @@ const ProjectRoute: FC = () => {
                       >
                         <div className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]">
                           <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+                          {(showUnCommitOrUnpushIndicator && item._id === activeProject?._id) && <div className='rounded-full bg-[--color-warning] w-3 h-3 flex-shrink-0' />}
                           <Icon
                             icon={
                               isRemoteProject(item) ? 'globe-americas' : 'laptop'
@@ -1456,6 +1460,13 @@ const ProjectRoute: FC = () => {
                                 />
                                 <span className="truncate">
                                   {item.lastCommit}
+                                </span>
+                              </div>
+                            )}
+                            {(item.syncData?.hasUncommittedChanges || item.syncData?.hasUnpushedChanges) && (
+                              <div className="text-sm text-[--color-warning]">
+                                <span>
+                                  {item.syncData?.hasUncommittedChanges ? 'Uncommitted changes' : 'Unpushed changes'}
                                 </span>
                               </div>
                             )}
