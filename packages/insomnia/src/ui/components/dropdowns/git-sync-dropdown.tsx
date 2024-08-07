@@ -104,6 +104,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
     if (gitChangesFetcher.data && gitCanPushFetcher.data) {
       const { canPush } = gitCanPushFetcher.data;
       const { changes } = gitChangesFetcher.data;
+      // update workspace meta with git sync data, use for show unpushed changes on collection card
       models.workspaceMeta.updateByParentId(workspaceId, {
         syncData: {
           hasUncommittedChanges: changes.length > 0,
