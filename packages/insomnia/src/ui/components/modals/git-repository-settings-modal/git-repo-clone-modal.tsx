@@ -1,4 +1,5 @@
-import React, { type Key, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { docsGitSync } from '../../../../common/documentation';
@@ -8,7 +9,6 @@ import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
 import { ModalBody } from '../../base/modal-body';
 import { ModalFooter } from '../../base/modal-footer';
 import { ModalHeader } from '../../base/modal-header';
-import { PanelContainer, TabItem, Tabs } from '../../base/tabs';
 import { ErrorBoundary } from '../../error-boundary';
 import { HelpTooltip } from '../../help-tooltip';
 import { showAlert } from '..';
@@ -79,31 +79,48 @@ export const GitRepositoryCloneModal = (props: ModalProps) => {
       <ModalBody>
         <ErrorBoundary>
           <Tabs
-            aria-label="Git repository settings tabs"
             selectedKey={selectedTab}
-            onSelectionChange={(key: Key) => setTab(key as OauthProviderName)}
+            onSelectionChange={key => {
+              setTab(key as OauthProviderName);
+            }}
+            aria-label='Git repository settings tabs'
+            className="flex-1 w-full h-full flex flex-col"
           >
-            <TabItem key='github' title={<div className="flex gap-2 items-center"><i className="fa fa-github" /> GitHub</div>}>
-              <PanelContainer className="pad pad-top-sm">
-                <GitHubRepositorySetupFormGroup
-                  onSubmit={onSubmit}
-                />
-              </PanelContainer>
-            </TabItem>
-            <TabItem key='gitlab' title={<div className="flex gap-2 items-center"><i className="fa fa-gitlab" /> GitLab</div>}>
-              <PanelContainer className="pad pad-top-sm">
-                <GitLabRepositorySetupFormGroup
-                  onSubmit={onSubmit}
-                />
-              </PanelContainer>
-            </TabItem>
-            <TabItem key='custom' title={<div className="flex gap-2 items-center"><i className="fa fa-code-fork" /> Git</div>}>
-              <PanelContainer className="pad pad-top-sm">
-                <CustomRepositorySettingsFormGroup
-                  onSubmit={onSubmit}
-                />
-              </PanelContainer>
-            </TabItem>
+            <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+              <Tab
+                className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+                id='github'
+              >
+                <div className="flex gap-2 items-center"><i className="fa fa-github" /> GitHub</div>
+              </Tab>
+              <Tab
+                className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+                id='gitlab'
+              >
+                <div className="flex gap-2 items-center"><i className="fa fa-gitlab" /> GitLab</div>
+              </Tab>
+              <Tab
+                className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+                id='custom'
+              >
+                <div className="flex gap-2 items-center"><i className="fa fa-code-fork" /> Git</div>
+              </Tab>
+            </TabList>
+            <TabPanel className='w-full h-full overflow-y-auto py-2' id='github'>
+              <GitHubRepositorySetupFormGroup
+                onSubmit={onSubmit}
+              />
+            </TabPanel>
+            <TabPanel className='w-full h-full overflow-y-auto py-2' id='gitlab'>
+              <GitLabRepositorySetupFormGroup
+                onSubmit={onSubmit}
+              />
+            </TabPanel>
+            <TabPanel className='w-full h-full overflow-y-auto py-2' id='custom'>
+              <CustomRepositorySettingsFormGroup
+                onSubmit={onSubmit}
+              />
+            </TabPanel>
           </Tabs>
         </ErrorBoundary>
       </ModalBody>
