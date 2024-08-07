@@ -110,7 +110,7 @@ export const ResponseHistoryDropdown = ({
           icon={active ? 'thumb-track' : 'empty'}
           onClick={() => handleSetActiveResponse(requestId, response)}
           label={
-            <>
+            <div className='leading-10'>
               <StatusTag
                 small
                 statusCode={response.statusCode}
@@ -138,7 +138,7 @@ export const ResponseHistoryDropdown = ({
                   title={'Request will not be restored with this response because it was created before this ability was added'}
                 />
                 : null}
-            </>
+            </div>
           }
         />
       </DropdownItem>
@@ -175,14 +175,14 @@ export const ResponseHistoryDropdown = ({
       >
         <DropdownItem aria-label='Delete Current Response'>
           <ItemContent
-            icon="fa-trash-o"
+            icon="trash-o"
             label="Delete Current Response"
             onClick={handleDeleteResponse}
           />
         </DropdownItem>
         <DropdownItem aria-label='Clear History'>
           <ItemContent
-            icon="fa-trash-o"
+            icon="trash-o"
             label="Clear History"
             onClick={handleDeleteResponses}
           />
