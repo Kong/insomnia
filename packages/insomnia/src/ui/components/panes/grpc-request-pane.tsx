@@ -1,4 +1,5 @@
 import React, { type FunctionComponent, useRef, useState } from 'react';
+import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useMount } from 'react-use';
 
@@ -16,7 +17,6 @@ import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/us
 import type { GrpcRequestState } from '../../routes/debug';
 import type { GrpcRequestLoaderData } from '../../routes/request';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
-import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
 import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
 import { OneLineEditor } from '../codemirror/one-line-editor';
@@ -122,6 +122,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     request_send: handleRequestSend,
   });
 
+  const messageTabs = [{ id: 'body', name: 'Body', text: activeRequest.body.text }, ...requestMessages.sort((a, b) => a.created - b.created).map((msg, index) => ({ ...msg, name: `Stream: ${index + 1}` }))];
+
   return (
     <>
       <Pane type="request">
@@ -219,8 +221,19 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
         </PaneHeader>
         <PaneBody>
           {methodType && (
-            <Tabs aria-label="Grpc request pane tabs">
-              <TabItem key="method-type" title={GrpcMethodTypeName[methodType]}>
+            <Tabs aria-label='Grpc request pane tabs' className="flex-1 w-full h-full flex flex-col">
+              <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+                <Tab
+                  className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+                  id='method-type'
+                >
+                  {GrpcMethodTypeName[methodType]}
+                </Tab>
+                <Tab className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300' id='headers'>
+                  Headers
+                </Tab>
+              </TabList>
+              <TabPanel className={'w-full h-full overflow-y-auto'} id='method-type'>
                 <>
                   {running && canClientStream(methodType) && (
                     <div className="flex flex-row justify-end box-border h-[var(--line-height-sm)] border-b border-[var(--hl-lg)] p-1">
@@ -256,51 +269,57 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                       </button>
                     </div>
                   )}
-                  <Tabs key={uniquenessKey} aria-label="Grpc tabbed messages tabs" isNested>
-                    {[
-                      <TabItem key="body" title="Body">
+                  <Tabs key={uniquenessKey} aria-label="Grpc tabbed messages tabs" className="flex-1 w-full h-full flex flex-col">
+                    <TabList items={messageTabs} className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]'>
+                      {item => (
+                        <Tab
+                          className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+                          id={item.id}
+                        >
+                          {item.name}
+                        </Tab>
+                      )}
+                    </TabList>
+                    <TabPanel id="body" className='w-full h-full overflow-y-auto'>
+                      <CodeEditor
+                        id="grpc-request-editor"
+                        ref={editorRef}
+                        defaultValue={activeRequest.body.text}
+                        onChange={text => patchRequest(requestId, { body: { text } })}
+                        mode="application/json"
+                        enableNunjucks
+                        showPrettifyButton={true}
+                      />
+                    </TabPanel>
+                    {messageTabs.filter(msg => msg.id !== 'body').map(m => (
+                      <TabPanel key={m.id} id={m.id} className='w-full h-full overflow-y-auto'>
                         <CodeEditor
-                          id="grpc-request-editor"
-                          ref={editorRef}
-                          defaultValue={activeRequest.body.text}
-                          onChange={text => patchRequest(requestId, { body: { text } })}
+                          id={'grpc-request-editor-tab' + m.id}
+                          defaultValue={m.text}
                           mode="application/json"
                           enableNunjucks
-                          showPrettifyButton={true}
+                          readOnly
+                          autoPrettify
                         />
-                      </TabItem>,
-                      ...requestMessages.sort((a, b) => a.created - b.created).map((m, index) => (
-                        <TabItem key={m.id} title={`Stream ${index + 1}`}>
-                          <CodeEditor
-                            id={'grpc-request-editor-tab' + m.id}
-                            defaultValue={m.text}
-                            mode="application/json"
-                            enableNunjucks
-                            readOnly
-                            autoPrettify
-                          />
-                        </TabItem>
-                      )),
-                    ]}
+                      </TabPanel>
+                    ))}
                   </Tabs>
                 </>
-              </TabItem>
-              <TabItem key="headers" title="Headers">
-                <PanelContainer className="tall wide">
-                  <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
-                    <KeyValueEditor
-                      namePlaceholder="header"
-                      valuePlaceholder="value"
-                      descriptionPlaceholder="description"
-                      pairs={activeRequest.metadata}
-                      isDisabled={running}
-                      handleGetAutocompleteNameConstants={getCommonHeaderNames}
-                      handleGetAutocompleteValueConstants={getCommonHeaderValues}
-                      onChange={(metadata: GrpcRequestHeader[]) => patchRequest(requestId, { metadata })}
-                    />
-                  </ErrorBoundary>
-                </PanelContainer>
-              </TabItem>
+              </TabPanel>
+              <TabPanel className={'w-full h-full overflow-y-auto'} id='headers'>
+                <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
+                  <KeyValueEditor
+                    namePlaceholder="header"
+                    valuePlaceholder="value"
+                    descriptionPlaceholder="description"
+                    pairs={activeRequest.metadata}
+                    isDisabled={running}
+                    handleGetAutocompleteNameConstants={getCommonHeaderNames}
+                    handleGetAutocompleteValueConstants={getCommonHeaderValues}
+                    onChange={(metadata: GrpcRequestHeader[]) => patchRequest(requestId, { metadata })}
+                  />
+                </ErrorBoundary>
+              </TabPanel>
             </Tabs>
           )}
           {!methodType && (
