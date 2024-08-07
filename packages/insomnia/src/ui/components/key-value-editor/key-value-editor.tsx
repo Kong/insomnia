@@ -100,7 +100,7 @@ export const KeyValueEditor: FC<Props> = ({
       pairsList.remove(id);
       const items = pairsList.items.filter(pair => pair.id !== id);
 
-      if (pairsList.items.length === 0) {
+      if (items.length === 0) {
         pairsList.append(createEmptyPair());
       }
 
