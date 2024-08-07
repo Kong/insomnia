@@ -1,5 +1,4 @@
 import { database as db } from '../common/database';
-import type { Compare, Status } from '../sync/types';
 import type { BaseModel } from './index';
 
 export const name = 'Workspace Meta';
@@ -21,8 +20,8 @@ export interface BaseWorkspaceMeta {
   parentId: string | null;
   pushSnapshotOnInitialize: boolean;
   syncData: {
-    status: Status;
-    compare: Compare;
+    hasUncommittedChanges: boolean;
+    hasUnpushedChanges: boolean;
   } | null;
 }
 
