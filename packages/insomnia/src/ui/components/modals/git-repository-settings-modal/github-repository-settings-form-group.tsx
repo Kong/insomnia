@@ -290,7 +290,6 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
         placeContent: 'center',
         placeItems: 'center',
         flexDirection: 'column',
-        height: '100%',
         border: '1px solid var(--hl-sm)',
         borderRadius: 'var(--radius-md)',
         padding: 'var(--padding-sm)',
