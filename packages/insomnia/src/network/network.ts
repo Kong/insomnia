@@ -2,7 +2,6 @@ import clone from 'clone';
 import fs from 'fs';
 import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
-import { Cookie as ToughCookie } from 'tough-cookie';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
