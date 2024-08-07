@@ -379,7 +379,7 @@ async function getAllLocalFiles({
       syncData: workspaceMeta?.syncData,
     };
   });
-
+  console.log(files);
   return files;
 }
 
