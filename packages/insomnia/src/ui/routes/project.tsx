@@ -1463,7 +1463,8 @@ const ProjectRoute: FC = () => {
                               </div>
                             )}
                             {(item.syncData?.hasUncommittedChanges || item.syncData?.hasUnpushedChanges) && (
-                              <div className="text-sm text-[--color-warning]">
+                              <div className="text-sm text-[--color-warning] flex items-center gap-2">
+                                <div className='rounded-full bg-[--color-warning] w-3 h-3 flex-shrink-0' />
                                 <span>
                                   {item.syncData?.hasUncommittedChanges ? 'Uncommitted changes' : 'Unpushed changes'}
                                 </span>
