@@ -1,11 +1,11 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
 import { useRootLoaderData } from '../../routes/root';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { AI } from '../settings/ai';
 import { BooleanSetting } from '../settings/boolean-setting';
 import { General } from '../settings/general';
@@ -53,71 +53,111 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
         </span>
       </ModalHeader>
       <ModalBody noScroll>
-        <Tabs aria-label="Insomnia Settings"  defaultSelectedKey={defaultTabKey}>
-          <TabItem key="general" title="General">
+        <Tabs
+          selectedKey={defaultTabKey}
+          onSelectionChange={key => {
+            setDefaultTabKey(key.toString());
+          }}
+          aria-label='Settings'
+          className="flex-1 w-full h-full flex flex-col"
+        >
+          <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+            <Tab
+              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+              id='general'
+            >
+              General
+            </Tab>
+            <Tab
+              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+              id='proxy'
+            >
+              Proxy
+            </Tab>
+            <Tab
+              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+              id='data'
+            >
+              Data
+            </Tab>
+            <Tab
+              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+              id='themes'
+            >
+              Themes
+            </Tab>
+            <Tab
+              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+              id='keyboard'
+            >
+              Keyboard
+            </Tab>
+            <Tab
+              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+              id='plugins'
+            >
+              Plugins
+            </Tab>
+            <Tab
+              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+              id='ai'
+            >
+              AI
+            </Tab>
+          </TabList>
+          <TabPanel className='w-full h-full overflow-y-auto' id='general'>
             <General />
-          </TabItem>
-          <TabItem key="proxy" title="Proxy">
-            <PanelContainer className="pad">
-              <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Network Proxy</h2>
+          </TabPanel>
+          <TabPanel className='w-full h-full overflow-y-auto p-4' id='proxy'>
+            <h2 className='font-bold pt-2 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Network Proxy</h2>
 
-              <BooleanSetting
-                label="Enable proxy"
-                setting="proxyEnabled"
-                help="If checked, enables a global network proxy on all requests sent through Insomnia. This proxy supports Basic Auth, digest, and NTLM authentication."
+            <BooleanSetting
+              label="Enable proxy"
+              setting="proxyEnabled"
+              help="If checked, enables a global network proxy on all requests sent through Insomnia. This proxy supports Basic Auth, digest, and NTLM authentication."
+            />
+
+            <div className="form-row pad-top-sm">
+              <MaskedSetting
+                label='Proxy for HTTP'
+                setting='httpProxy'
+                help="Enter a HTTP or SOCKS4/5 proxy starting with appropriate prefix from the following (http://, socks4://, socks5://)"
+                placeholder="localhost:8005"
+                disabled={!settings.proxyEnabled}
               />
-
-              <div className="form-row pad-top-sm">
-                <MaskedSetting
-                  label='Proxy for HTTP'
-                  setting='httpProxy'
-                  help="Enter a HTTP or SOCKS4/5 proxy starting with appropriate prefix from the following (http://, socks4://, socks5://)"
-                  placeholder="localhost:8005"
-                  disabled={!settings.proxyEnabled}
-                />
-                <MaskedSetting
-                  label='Proxy for HTTPS'
-                  setting='httpsProxy'
-                  help="Enter a HTTPS or SOCKS4/5 proxy starting with appropriate prefix from the following (https://, socks4://, socks5://)"
-                  placeholder="localhost:8005"
-                  disabled={!settings.proxyEnabled}
-                />
-                <TextSetting
-                  label="No proxy"
-                  setting="noProxy"
-                  help="Enter a comma-separated list of hostnames that don’t require a proxy."
-                  placeholder="localhost,127.0.0.1"
-                  disabled={!settings.proxyEnabled}
-                />
-              </div>
-            </PanelContainer>
-          </TabItem>
-          <TabItem key="data" title="Data">
-            <PanelContainer className="pad">
-              <ImportExport hideSettingsModal={() => modalRef.current?.hide()} />
-            </PanelContainer>
-          </TabItem>
-          <TabItem key="themes" title="Themes">
-            <PanelContainer className="pad">
-              <ThemePanel />
-            </PanelContainer>
-          </TabItem>
-          <TabItem key="keyboard" title="Keyboard">
-            <PanelContainer className="pad">
-              <Shortcuts />
-            </PanelContainer>
-          </TabItem>
-          <TabItem key="plugins" title="Plugins">
-            <PanelContainer className="pad">
-              <Plugins />
-            </PanelContainer>
-          </TabItem>
-          <TabItem key="ai" title="AI">
-            <PanelContainer className="pad">
-              <AI />
-            </PanelContainer>
-          </TabItem>
+              <MaskedSetting
+                label='Proxy for HTTPS'
+                setting='httpsProxy'
+                help="Enter a HTTPS or SOCKS4/5 proxy starting with appropriate prefix from the following (https://, socks4://, socks5://)"
+                placeholder="localhost:8005"
+                disabled={!settings.proxyEnabled}
+              />
+              <TextSetting
+                label="No proxy"
+                setting="noProxy"
+                help="Enter a comma-separated list of hostnames that don’t require a proxy."
+                placeholder="localhost,127.0.0.1"
+                disabled={!settings.proxyEnabled}
+              />
+            </div>
+          </TabPanel>
+          <TabPanel className='w-full h-full overflow-y-auto p-4' id='data'>
+            <ImportExport hideSettingsModal={() => modalRef.current?.hide()} />
+          </TabPanel>
+          <TabPanel className='w-full h-full overflow-y-auto p-4' id='themes'>
+            <ThemePanel />
+          </TabPanel>
+          <TabPanel className='w-full h-full overflow-y-auto p-4' id='keyboard'>
+            <Shortcuts />
+          </TabPanel>
+          <TabPanel className='w-full h-full overflow-y-auto p-4' id='plugins'>
+            <Plugins />
+          </TabPanel>
+          <TabPanel className='w-full h-full overflow-y-auto p-4' id='ai'>
+            <AI />
+          </TabPanel>
         </Tabs>
+
       </ModalBody>
     </Modal>
   );

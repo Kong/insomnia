@@ -1,6 +1,7 @@
 import classnames from 'classnames';
 import clone from 'clone';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
+import { Button } from 'react-aria-components';
 import { useMount } from 'react-use';
 
 import { database as db } from '../../../common/database';
@@ -20,7 +21,7 @@ import type {
 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { FileInputButton } from '../base/file-input-button';
 import { HelpTooltip } from '../help-tooltip';
 import { localTemplateTags } from './local-template-tags';
@@ -457,9 +458,9 @@ export const TagEditor: FC<Props> = props => {
                 <Dropdown
                   aria-label='Variable Dropdown'
                   triggerButton={
-                    <DropdownButton className="btn btn--clicky">
+                    <Button className="btn btn--clicky">
                       <i className="fa fa-gear" />
-                    </DropdownButton>
+                    </Button>
                   }
                 >
                   <DropdownSection

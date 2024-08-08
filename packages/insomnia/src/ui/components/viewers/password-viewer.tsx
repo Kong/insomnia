@@ -1,12 +1,6 @@
 import React, { type FC, useCallback, useEffect, useState } from 'react';
-import styled from 'styled-components';
 
 import { useRootLoaderData } from '../../routes/root';
-
-const EyeIcon = styled.i({
-  cursor: 'pointer',
-  paddingRight: 'var(--padding-xs)',
-});
 
 const MASK_CHARACTER = '•';
 /** randomly get anywhere between 4 and 11 mask characters on each invocation */
@@ -50,10 +44,7 @@ export const PasswordViewer: FC<{
 
   return (
     <span className="monospace">
-      <EyeIcon
-        className={`fa ${textVisible ? 'fa-eye' : 'fa-eye-slash'}`}
-        onClick={toggleVisible}
-      />
+      <i className={`fa ${textVisible ? 'fa-eye' : 'fa-eye-slash'} cursor-pointer pr-[--padding-xs]`} onClick={toggleVisible} />
       {textVisible ? <span className="selectable">{text}</span> : mask}
     </span>
   );

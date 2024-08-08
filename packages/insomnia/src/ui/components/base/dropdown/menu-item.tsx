@@ -3,30 +3,6 @@ import React from 'react';
 import { useRef } from 'react';
 import { useMenuItem } from 'react-aria';
 import type { TreeState } from 'react-stately';
-import styled from 'styled-components';
-
-interface StyledListItemProps {
-  isFocused?: boolean;
-  isDisabled?: boolean;
-}
-
-const StyledListItem = styled.li<StyledListItemProps>(({ isFocused, isDisabled }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  height: 'var(--line-height-xs)',
-  minWidth: '15rem',
-  fontSize: 'var(--font-size-md)',
-  textAlign: 'left',
-  margin: 0,
-  whiteSpace: 'nowrap',
-  color: 'var(--color-font)',
-  background: isFocused ? 'var(--hl-sm)' : 'transparent',
-  cursor: isDisabled ? 'not-allowed' : 'pointer',
-
-  '&:focus': {
-    outline: '0',
-  },
-}));
 
 interface Props<T> {
   item: Node<T>;
@@ -71,13 +47,12 @@ export const MenuItem = <T extends object>({
   }, state, ref);
 
   return (
-    <StyledListItem
+    <li
+      className={`flex items-center leading-10 text-left text-[--color-font] m-0 min-w-[15rem] whitespace-nowrap ${isFocused ? 'bg-[--hl-sm]' : 'bg-transparent'} ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'} hover:bg-[--hl-xs] focus:outline-0`}
       {...menuItemProps}
       ref={ref}
-      isFocused={isFocused}
-      isDisabled={isDisabled}
     >
       {item.rendered}
-    </StyledListItem>
+    </li>
   );
 };

@@ -94,7 +94,6 @@ import { RequestGroupPane } from '../components/panes/request-group-pane';
 import { RequestPane } from '../components/panes/request-pane';
 import { ResponsePane } from '../components/panes/response-pane';
 import { getMethodShortHand } from '../components/tags/method-tag';
-import { ConnectionCircle } from '../components/websockets/action-bar';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import { useExecutionState } from '../hooks/use-execution-state';
@@ -159,12 +158,12 @@ export const loader: LoaderFunction = async ({ params }) => {
 
 const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
   const readyState = useReadyState({ requestId, protocol: 'webSocket' });
-  return readyState ? <ConnectionCircle className='flex-shrink-0' data-testid="WebSocketSpinner__Connected" /> : null;
+  return readyState ? <div className='flex-shrink-0 bg-[--color-success] mr-[--padding-sm] w-2.5 h-2.5 rounded-full' data-testid="WebSocketSpinner__Connected" /> : null;
 };
 
 const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
   const readyState = useReadyState({ requestId, protocol: 'curl' });
-  return readyState ? <ConnectionCircle className='flex-shrink-0' data-testid="EventStreamSpinner__Connected" /> : null;
+  return readyState ? <div className='flex-shrink-0 bg-[--color-success] mr-[--padding-sm] w-2.5 h-2.5 rounded-full' data-testid="EventStreamSpinner__Connected" /> : null;
 };
 
 const getRequestNameOrFallback = (doc: Request | RequestGroup | GrpcRequest | WebSocketRequest): string => {
@@ -173,7 +172,7 @@ const getRequestNameOrFallback = (doc: Request | RequestGroup | GrpcRequest | We
 
 const RequestTiming = ({ requestId }: { requestId: string }) => {
   const { isExecuting } = useExecutionState({ requestId });
-  return isExecuting ? <ConnectionCircle className='flex-shrink-0' data-testid="WebSocketSpinner__Connected" /> : null;
+  return isExecuting ? <div className='flex-shrink-0 bg-[--color-success] mr-[--padding-sm] w-2.5 h-2.5 rounded-full' data-testid="WebSocketSpinner__Connected" /> : null;
 };
 
 export const Debug: FC = () => {
