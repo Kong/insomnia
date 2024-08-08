@@ -6003,8 +6003,8 @@ exports[`Fixtures > Import postman-env > basic-input.json 1`] = `
         "foo": "production",
       },
       "meta": {
-+       "postmanEnvScope": "environment",
-+     },
+        "postmanEnvScope": "environment",
+      },
       "name": "Production Env",
       "parentId": "__BASE_ENVIRONMENT_ID__",
     },
@@ -6026,8 +6026,8 @@ exports[`Fixtures > Import postman-env > no-name-input.json 1`] = `
         "foo-and-bar": "production-env",
       },
       "meta": {
-+       "postmanEnvScope": "environment",
-+     },
+        "postmanEnvScope": "environment",
+      },
       "name": "Postman Environment",
       "parentId": "__BASE_ENVIRONMENT_ID__",
     },
