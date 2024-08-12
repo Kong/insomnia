@@ -283,6 +283,7 @@ export interface ProjectLoaderData {
   projects: Project[];
   learningFeaturePromise?: Promise<LearningFeature>;
   remoteFilesPromise?: Promise<InsomniaFile[]>;
+  projectsSyncStatusPromise?: Promise<Record<string, boolean>>;
 }
 
 async function getAllLocalFiles({
@@ -503,6 +504,26 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   return learningFeature;
 };
 
+const checkSingleProjectSyncStatus = async (projectId: string) => {
+  const projectWorkspaces = await models.workspace.findByParentId(projectId);
+  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+    parentId: {
+      $in: projectWorkspaces.map(w => w._id),
+    },
+  });
+  return workspaceMetas.some(item => item.hasUncommittedChanges || item.hasUnpushedChanges);
+};
+
+const CheckAllProjectSyncStatus = async (projects: Project[]) => {
+  const taskList = projects.map(project => checkSingleProjectSyncStatus(project._id));
+  const res = await Promise.all(taskList);
+  const obj: Record<string, boolean> = {};
+  projects.forEach((project, index) => {
+    obj[project._id] = res[index];
+  });
+  return obj;
+};
+
 export const loader: LoaderFunction = async ({
   params,
 }) => {
@@ -552,6 +573,8 @@ export const loader: LoaderFunction = async ({
 
   const projects = sortProjects(organizationProjects);
 
+  const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
+
   return defer({
     localFiles,
     learningFeaturePromise,
@@ -572,6 +595,7 @@ export const loader: LoaderFunction = async ({
     mockServersCount: localFiles.filter(
       file => file.scope === 'mock-server'
     ).length,
+    projectsSyncStatusPromise,
   });
 };
 
@@ -588,6 +612,7 @@ const ProjectRoute: FC = () => {
     projectsCount,
     learningFeaturePromise,
     remoteFilesPromise,
+    projectsSyncStatusPromise,
   } = useLoaderData() as ProjectLoaderData;
   const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = useLocalStorage('learning-feature-dismissed', '');
   const { organizationId, projectId } = useParams() as {
@@ -596,6 +621,7 @@ const ProjectRoute: FC = () => {
   };
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
   const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
+  const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(projectsSyncStatusPromise);
 
   const allFiles = useMemo(() => {
     return remoteFiles ? [...localFiles, ...remoteFiles] : localFiles;
@@ -729,6 +755,7 @@ const ProjectRoute: FC = () => {
     return {
       ...project,
       presence: projectPresence,
+      hasUncommittedOrUnpushedChanges: checkAllProjectSyncStatus?.[project._id],
     };
   });
 
@@ -1011,10 +1038,6 @@ const ProjectRoute: FC = () => {
     }
   }, [projectId]);
 
-  const showUnCommitOrUnpushIndicator = useMemo(() => {
-    return filesWithPresence.some(file => file?.hasUncommittedChanges || file?.hasUnpushedChanges);
-  }, [filesWithPresence]);
-
   return (
     <ErrorBoundary>
       <Fragment>
@@ -1130,7 +1153,7 @@ const ProjectRoute: FC = () => {
                             icon={
                               isRemoteProject(item) ? 'globe-americas' : 'laptop'
                             }
-                            className={(showUnCommitOrUnpushIndicator && item._id === activeProject?._id) ? 'text-[--color-warning]' : ''}
+                            className={item.hasUncommittedOrUnpushedChanges ? 'text-[--color-warning]' : ''}
                           />
                           <span className="truncate">{item.name}</span>
                           <span className="flex-1" />
