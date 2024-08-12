@@ -10,10 +10,12 @@ import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
 import * as misc from '../../../common/misc';
 import type { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
-import type { NunjucksParsedTag } from '../../../templating/utils';
+import { extractNunjucksTagFromCoords, type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '../../hooks/use-editor-refresh';
 import { useRootLoaderData } from '../../routes/root';
+import { showModal } from '../modals';
+import { NunjucksModal } from '../modals/nunjucks-modal';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 export interface OneLineEditorProps {
   defaultValue: string;
@@ -225,8 +227,35 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   }, [onChange]);
 
   useEffect(() => {
-    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag }) =>
-      id === key && codeMirror.current?.replaceSelection(tag));
+    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag, nunjucksTag }) => {
+      if (id === key) {
+        console.log('enter context menu cmd');
+        if (nunjucksTag) {
+          const { type, template, range } = nunjucksTag as nunjucksTagContextMenuOptions;
+          switch (type) {
+            case 'edit':
+              showModal(NunjucksModal, {
+                template: template,
+                onDone: (template: string | null) => {
+                  const { from, to } = range;
+                  codeMirror.current?.replaceRange(template!, from, to);
+                },
+              });
+              return;
+
+            case 'delete':
+              const { from, to } = range;
+              codeMirror.current?.replaceRange('', from, to);
+              return;
+
+            default:
+              return;
+          };
+        } else {
+          codeMirror.current?.replaceSelection(tag);
+        }
+      }
+    });
     return () => {
       unsubscribe();
     };
@@ -255,7 +284,18 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           return;
         }
         event.preventDefault();
-        window.main.showContextMenu({ key: id });
+        const target = event.target as HTMLElement;
+        // right click on nunjucks tag
+        if (target?.classList?.contains('nunjucks-tag')) {
+          const { clientX, clientY } = event;
+          const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
+          if (nunjucksTag) {
+            // show context menu for nunjucks tag
+            window.main.showContextMenu({ key: id, nunjucksTag });
+          }
+        } else {
+          window.main.showContextMenu({ key: id });
+        }
       }}
     >
       <div className="editor__container input editor--single-line">

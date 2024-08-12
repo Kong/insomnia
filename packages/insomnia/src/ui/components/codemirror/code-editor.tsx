@@ -16,7 +16,7 @@ import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
 import * as misc from '../../../common/misc';
 import type { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
-import type { NunjucksParsedTag } from '../../../templating/utils';
+import { extractNunjucksTagFromCoords, type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '../../../templating/utils';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
@@ -26,6 +26,7 @@ import { Icon } from '../icon';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
+import { NunjucksModal } from '../modals/nunjucks-modal';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
 const TAB_SIZE = 4;
@@ -521,8 +522,34 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     }
   };
   useEffect(() => {
-    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag }) =>
-      id === key && codeMirror.current?.replaceSelection(tag));
+    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag, nunjucksTag }) => {
+      if (id === key) {
+        if (nunjucksTag) {
+          const { type, template, range } = nunjucksTag as nunjucksTagContextMenuOptions;
+          switch (type) {
+            case 'edit':
+              showModal(NunjucksModal, {
+                template: template,
+                onDone: (template: string | null) => {
+                  const { from, to } = range;
+                  codeMirror.current?.replaceRange(template!, from, to);
+                },
+              });
+              return;
+
+            case 'delete':
+              const { from, to } = range;
+              codeMirror.current?.replaceRange('', from, to);
+              return;
+
+            default:
+              return;
+          };
+        } else {
+          codeMirror.current?.replaceSelection(tag);
+        }
+      }
+    });
     return () => {
       unsubscribe();
     };
@@ -577,7 +604,18 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
           return;
         }
         event.preventDefault();
-        window.main.showContextMenu({ key: id });
+        const target = event.target as HTMLElement;
+        // right click on nunjucks tag
+        if (target?.classList?.contains('nunjucks-tag')) {
+          const { clientX, clientY } = event;
+          const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
+          if (nunjucksTag) {
+            // show context menu for nunjucks tag
+            window.main.showContextMenu({ key: id, nunjucksTag });
+          }
+        } else {
+          window.main.showContextMenu({ key: id });
+        }
       }}
     >
       <div
