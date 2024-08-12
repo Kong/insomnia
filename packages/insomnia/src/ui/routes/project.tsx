@@ -1127,11 +1127,11 @@ const ProjectRoute: FC = () => {
                       >
                         <div className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]">
                           <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
-                          {(showUnCommitOrUnpushIndicator && item._id === activeProject?._id) && <div className='rounded-full bg-[--color-warning] w-3 h-3 flex-shrink-0' />}
                           <Icon
                             icon={
                               isRemoteProject(item) ? 'globe-americas' : 'laptop'
                             }
+                            className={(showUnCommitOrUnpushIndicator && item._id === activeProject?._id) ? 'text-[--color-warning]' : ''}
                           />
                           <span className="truncate">{item.name}</span>
                           <span className="flex-1" />
