@@ -229,7 +229,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   useEffect(() => {
     const unsubscribe = window.main.on('context-menu-command', (_, { key, tag, nunjucksTag }) => {
       if (id === key) {
-        console.log('enter context menu cmd');
         if (nunjucksTag) {
           const { type, template, range } = nunjucksTag as nunjucksTagContextMenuOptions;
           switch (type) {
