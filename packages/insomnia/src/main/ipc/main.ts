@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/electron/main';
+import type { MarkerRange } from 'codemirror';
 import { app, BrowserWindow, type IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
@@ -37,7 +38,7 @@ export interface RendererToMainBridgeAPI {
   curl: CurlBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
-  showContextMenu: (options: { key: string }) => void;
+  showContextMenu: (options: { key: string; nunjucksTag?: { template: string; range: MarkerRange } }) => void;
   database: {
     caCertificate: {
       create: (options: { parentId: string; path: string }) => Promise<string>;
