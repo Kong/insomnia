@@ -340,12 +340,18 @@ export const syncDataLoader: LoaderFunction = async ({
       remoteBranchesCache[workspaceId] = remoteBranches;
       remoteCompareCache[workspaceId] = compare;
       remoteBackendProjectsCache[workspaceId] = remoteBackendProjects;
+
+      let hasUncommittedChanges = false;
+      if (status?.unstaged && Object.keys(status.unstaged).length > 0) {
+        hasUncommittedChanges = true;
+      }
+      if (status?.stage && Object.keys(status.stage).length > 0) {
+        hasUncommittedChanges = true;
+      }
       // update workspace meta with sync data, use for show unpushed changes on collection card
       models.workspaceMeta.updateByParentId(workspaceId, {
-        syncData: {
-          hasUncommittedChanges: Object.keys(status?.unstaged || {}).length > 0 || Object.keys(status?.stage || {}).length > 0,
-          hasUnpushedChanges: compare?.ahead > 0,
-        },
+        hasUncommittedChanges,
+        hasUnpushedChanges: compare?.ahead > 0,
       });
     } catch (e) { }
 

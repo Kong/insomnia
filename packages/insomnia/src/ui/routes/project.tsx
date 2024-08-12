@@ -263,10 +263,8 @@ export interface InsomniaFile {
   mockServer?: MockServer;
   workspace?: Workspace;
   apiSpec?: ApiSpec;
-  syncData?: {
-    hasUncommittedChanges: boolean;
-    hasUnpushedChanges: boolean;
-  } | null;
+  hasUncommittedChanges?: boolean;
+  hasUnpushedChanges?: boolean;
 }
 
 export interface ProjectIdLoaderData {
@@ -375,9 +373,11 @@ async function getAllLocalFiles({
       mockServer,
       apiSpec,
       workspace,
-      syncData: workspaceMeta?.syncData,
+      hasUncommittedChanges: workspaceMeta?.hasUncommittedChanges,
+      hasUnpushedChanges: workspaceMeta?.hasUnpushedChanges,
     };
   });
+  console.log('fls', files);
   return files;
 }
 
@@ -1013,7 +1013,7 @@ const ProjectRoute: FC = () => {
   }, [projectId]);
 
   const showUnCommitOrUnpushIndicator = useMemo(() => {
-    return filesWithPresence.some(file => file?.syncData?.hasUncommittedChanges || file?.syncData?.hasUnpushedChanges);
+    return filesWithPresence.some(file => file?.hasUncommittedChanges || file?.hasUnpushedChanges);
   }, [filesWithPresence]);
 
   return (
@@ -1462,11 +1462,11 @@ const ProjectRoute: FC = () => {
                                 </span>
                               </div>
                             )}
-                            {(item.syncData?.hasUncommittedChanges || item.syncData?.hasUnpushedChanges) && (
+                            {(item.hasUncommittedChanges || item.hasUnpushedChanges) && (
                               <div className="text-sm text-[--color-warning] flex items-center gap-2">
                                 <div className='rounded-full bg-[--color-warning] w-3 h-3 flex-shrink-0' />
                                 <span>
-                                  {item.syncData?.hasUncommittedChanges ? 'Uncommitted changes' : 'Unpushed changes'}
+                                  {item.hasUncommittedChanges ? 'Uncommitted changes' : 'Unpushed changes'}
                                 </span>
                               </div>
                             )}

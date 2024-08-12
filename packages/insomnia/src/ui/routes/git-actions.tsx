@@ -302,7 +302,10 @@ export const gitChangesLoader: LoaderFunction = async ({
   const branch = await GitVCS.getCurrentBranch();
   try {
     const { changes, statusNames } = await getGitChanges(GitVCS, workspace);
-
+    // update workspace meta with git sync data, use for show uncommit changes on collection card
+    models.workspaceMeta.updateByParentId(workspaceId, {
+      hasUncommittedChanges: changes.length > 0,
+    });
     return {
       branch,
       changes,
@@ -338,6 +341,10 @@ export const canPushLoader: LoaderFunction = async ({ params }): Promise<GitCanP
   let canPush = false;
   try {
     canPush = await GitVCS.canPush(gitRepository.credentials);
+    // update workspace meta with git sync data, use for show unpushed changes on collection card
+    models.workspaceMeta.update(workspaceMeta, {
+      hasUnpushedChanges: canPush,
+    });
   } catch (err) { }
 
   return { canPush };
