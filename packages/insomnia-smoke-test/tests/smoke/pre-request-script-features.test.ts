@@ -364,8 +364,6 @@ test.describe('pre-request features tests', async () => {
 
         await page.getByLabel('Request Collection').getByTestId('test proxies manipulation').press('Enter');
 
-        await page.waitForTimeout(500);
-
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
