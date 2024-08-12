@@ -263,6 +263,8 @@ export interface InsomniaFile {
   mockServer?: MockServer;
   workspace?: Workspace;
   apiSpec?: ApiSpec;
+  hasUncommittedChanges?: boolean;
+  hasUnpushedChanges?: boolean;
 }
 
 export interface ProjectIdLoaderData {
@@ -371,9 +373,10 @@ async function getAllLocalFiles({
       mockServer,
       apiSpec,
       workspace,
+      hasUncommittedChanges: workspaceMeta?.hasUncommittedChanges,
+      hasUnpushedChanges: workspaceMeta?.hasUnpushedChanges,
     };
   });
-
   return files;
 }
 
@@ -1008,6 +1011,10 @@ const ProjectRoute: FC = () => {
     }
   }, [projectId]);
 
+  const showUnCommitOrUnpushIndicator = useMemo(() => {
+    return filesWithPresence.some(file => file?.hasUncommittedChanges || file?.hasUnpushedChanges);
+  }, [filesWithPresence]);
+
   return (
     <ErrorBoundary>
       <Fragment>
@@ -1123,6 +1130,7 @@ const ProjectRoute: FC = () => {
                             icon={
                               isRemoteProject(item) ? 'globe-americas' : 'laptop'
                             }
+                            className={(showUnCommitOrUnpushIndicator && item._id === activeProject?._id) ? 'text-[--color-warning]' : ''}
                           />
                           <span className="truncate">{item.name}</span>
                           <span className="flex-1" />
@@ -1450,6 +1458,14 @@ const ProjectRoute: FC = () => {
                                 />
                                 <span className="truncate">
                                   {item.lastCommit}
+                                </span>
+                              </div>
+                            )}
+                            {(item.hasUncommittedChanges || item.hasUnpushedChanges) && (
+                              <div className="text-sm text-[--color-warning] flex items-center gap-2">
+                                <div className='rounded-full bg-[--color-warning] w-3 h-3 flex-shrink-0' />
+                                <span>
+                                  {item.hasUncommittedChanges ? 'Uncommitted changes' : 'Unpushed changes'}
                                 </span>
                               </div>
                             )}
