@@ -444,7 +444,10 @@ export class ImportPostman {
     // It is a business logic decision to remove the "Authorization" header.
     // If you think about it, this makes sense because if you've used Insomnia to fill out an Authorization form (e.g. Basic Auth), you wouldn't then also want the header to be added separately.
     // If users want to manually set up these headers they still absolutely can, of course, but we try to keep things simple and help users out.
-    const headers = originalHeaders.filter(h => !isAuthorizationHeader(h));
+    // const headers = originalHeaders.filter(h => !isAuthorizationHeader(h));
+
+    // preserve the original headers according to requirements from 'Progressive' INS-4269
+    const headers = originalHeaders;
 
     if (!authentication) {
       if (authorizationHeader) {
