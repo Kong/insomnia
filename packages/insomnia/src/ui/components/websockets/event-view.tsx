@@ -1,7 +1,6 @@
 import fs from 'fs';
 import React, { type FC, useCallback } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
-import styled from 'styled-components';
 
 import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import type { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';
@@ -15,26 +14,6 @@ import { WebSocketPreviewModeDropdown } from './websocket-preview-dropdown';
 interface Props<T extends WebSocketEvent> {
   event: T;
 }
-
-const PreviewPane = styled.div({
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100%',
-});
-
-const PreviewPaneButtons = styled.div({
-  display: 'flex',
-  flexDirection: 'row',
-  boxSizing: 'border-box',
-  height: 'var(--line-height-sm)',
-  borderBottom: '1px solid var(--hl-lg)',
-  padding: 'var(--padding-sm) var(--padding-md)',
-});
-
-const PreviewPaneContents = styled.div({
-  padding: 'var(--padding-sm)',
-  flexGrow: 1,
-});
 
 export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent>> = ({ event }) => {
   const { requestId } = useParams() as { requestId: string };
@@ -90,16 +69,16 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   const { activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   return (
-    <PreviewPane>
-      <PreviewPaneButtons>
+    <div className="flex flex-col h-full">
+      <div className="flex flex-row box-border h-8 border-b border-gray-300 p-2">
         <WebSocketPreviewModeDropdown
           download={handleDownloadResponseBody}
           copyToClipboard={handleCopyResponseToClipboard}
           previewMode={previewMode}
           setPreviewMode={previewMode => patchRequestMeta(requestId, { previewMode })}
         />
-      </PreviewPaneButtons>
-      <PreviewPaneContents>
+      </div>
+      <div className="flex-grow p-4">
         <CodeEditor
           id="websocket-body-preview"
           hideLineNumbers
@@ -108,8 +87,8 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
           uniquenessKey={event._id}
           readOnly
         />
-      </PreviewPaneContents>
-    </PreviewPane>
+      </div>
+    </div>
   );
 };
 

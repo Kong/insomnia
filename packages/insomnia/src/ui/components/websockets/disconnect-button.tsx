@@ -1,51 +1,7 @@
 import React, { type FC } from 'react';
-import styled from 'styled-components';
+import { Button } from 'react-aria-components';
 
-import { Dropdown as OriginalDropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
-
-const SplitButton = styled.div({
-  borderRadius: 'var(--radius-sm)',
-  overflow: 'hidden',
-  display: 'flex',
-  color: 'var(--color-font-surprise)',
-});
-const Dropdown = styled(OriginalDropdown)({
-  display: 'flex',
-  textAlign: 'center',
-  borderLeft: '1px solid var(--hl-md)',
-  background: 'var(--color-danger)',
-  ':hover': {
-    opacity: 0.9,
-  },
-});
-const StyledDropdownButton = styled(DropdownButton)({
-  paddingRight: 'var(--padding-xs)',
-  paddingLeft: 'var(--padding-xs)',
-});
-const ActionButton = styled.button({
-  paddingRight: 'var(--padding-md)',
-  paddingLeft: 'var(--padding-md)',
-  background: 'var(--color-danger)',
-  ':hover': {
-    opacity: 0.9,
-  },
-});
-const Connections = styled.div({
-  display: 'flex',
-  justifyContent: 'space-evenly',
-  width: 25,
-});
-const Connection = styled.div<{ size?: number }>(({ size = 10 }) => ({
-  borderRadius: '50%',
-  width: size,
-  height: size,
-  background: 'var(--color-success)',
-}));
-const TextWrapper = styled.div({
-  textAlign: 'left',
-  width: '100%',
-  paddingLeft: 'var(--padding-xs)',
-});
+import { Dropdown as OriginalDropdown, DropdownItem, ItemContent } from '../base/dropdown';
 
 export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
   const handleCloseThisRequest = () => {
@@ -55,49 +11,71 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
     window.main.webSocket.closeAll();
   };
   return (
-    <SplitButton>
-      <ActionButton
+    <div
+      style={{
+        borderRadius: 'var(--radius-sm)',
+        overflow: 'hidden',
+        display: 'flex',
+        color: 'var(--color-font-surprise)',
+      }}
+    >
+      <button
         type="button"
+        style={{
+          paddingRight: 'var(--padding-md)',
+          paddingLeft: 'var(--padding-md)',
+          background: 'var(--color-danger)',
+        }}
         onClick={handleCloseThisRequest}
       >
         Disconnect
-      </ActionButton>
-      <Dropdown
-        key="dropdown"
+      </button>
+      <OriginalDropdown
         className="tall"
+        style={{
+          display: 'flex',
+          textAlign: 'center',
+          borderLeft: '1px solid var(--hl-md)',
+          background: 'var(--color-danger)',
+        }}
+        key="dropdown"
         data-testid="DisconnectDropdown__Dropdown"
         aria-label='Disconnect Dropdown'
         triggerButton={
-          <StyledDropdownButton
+          <Button
+            style={{
+              paddingRight: 'var(--padding-xs)',
+              paddingLeft: 'var(--padding-xs)',
+            }}
             name="DisconnectDropdown__DropdownButton"
           >
             <i className="fa fa-caret-down" />
-          </StyledDropdownButton>
+          </Button>
         }
       >
         <DropdownItem aria-label='Disconnect this request'>
           <ItemContent onClick={handleCloseThisRequest}>
-            <Connections>
-              <Connection />
-            </Connections>
-            <TextWrapper>
+            <div className="flex justify-evenly w-[25px]">
+              <div className='rounded-[50%] w-[10px] h-[10px] bg-success' />
+            </div>
+            <div className="text-left w-full pl-[--padding-xs]">
               Disconnect this request
-            </TextWrapper>
+            </div>
           </ItemContent>
         </DropdownItem>
         <DropdownItem aria-label='Disconnect all requests'>
           <ItemContent onClick={handleCloseAllRequests}>
-            <Connections>
-              <Connection size={5} />
-              <Connection size={5} />
-              <Connection size={5} />
-            </Connections>
-            <TextWrapper>
+            <div className="flex justify-evenly w-[25px]">
+              <div className='rounded-[50%] w-[5px] h-[5px] bg-success' />
+              <div className='rounded-[50%] w-[5px] h-[5px] bg-success' />
+              <div className='rounded-[50%] w-[5px] h-[5px] bg-success' />
+            </div>
+            <div className="text-left w-full pl-[--padding-xs]">
               Disconnect all requests
-            </TextWrapper>
+            </div>
           </ItemContent>
         </DropdownItem>
-      </Dropdown>
-    </SplitButton>
+      </OriginalDropdown>
+    </div>
   );
 };

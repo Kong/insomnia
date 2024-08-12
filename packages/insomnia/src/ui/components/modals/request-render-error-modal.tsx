@@ -52,7 +52,7 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
               Failed to render <strong>{fullPath}</strong> prior to sending
             </p>
             <div className="pad-top-sm">
-              <Link button href={docsTemplateTags} className="btn btn--clicky">
+              <Link button href={docsTemplateTags} className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]">
                 Templating Documentation <i className="fa fa-external-link" />
               </Link>
             </div>

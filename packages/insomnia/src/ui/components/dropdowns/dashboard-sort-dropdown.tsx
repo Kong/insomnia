@@ -1,7 +1,8 @@
 import React, { type FC } from 'react';
+import { Button } from 'react-aria-components';
 
 import { DASHBOARD_SORT_ORDERS, type DashboardSortOrder, dashboardSortOrderName } from '../../../common/constants';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 
 interface DashboardSortDropdownProps {
   value: DashboardSortOrder;
@@ -14,13 +15,9 @@ export const DashboardSortDropdown: FC<DashboardSortDropdownProps> = ({ onSelect
       aria-label='Dashboard Sort Dropdown'
       className="margin-left"
       triggerButton={
-        <DropdownButton
-          variant='outlined'
-          removePaddings={false}
-          disableHoverBehavior={false}
-        >
+        <Button>
           <i className="fa fa-sort" />
-        </DropdownButton>
+        </Button>
       }
     >
       {DASHBOARD_SORT_ORDERS.map(order => (

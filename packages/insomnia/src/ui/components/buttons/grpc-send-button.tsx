@@ -1,7 +1,7 @@
 import React, { type FunctionComponent } from 'react';
+import { Button } from 'react-aria-components';
 
 import type { GrpcMethodType } from '../../../main/ipc/grpc';
-import { Button, type ButtonProps } from '../themed-button';
 
 interface Props {
   running: boolean;
@@ -10,37 +10,12 @@ interface Props {
   handleCancel: () => void;
 }
 
-const buttonProps: ButtonProps = {
-  className: 'tall',
-  bg: 'surprise',
-  size: 'medium',
-  variant: 'contained',
-  radius: '0',
-};
-
 export const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, handleStart, handleCancel }) => {
-  if (running) {
-    return (
-      <Button
-        style={{
-          borderRadius: 'var(--radius-sm)',
-        }}
-        {...buttonProps}
-        onClick={handleCancel}
-      >
-        Cancel
-      </Button>
-    );
-  }
-
   if (!methodType) {
     return (
       <Button
-        style={{
-          borderRadius: 'var(--radius-sm)',
-        }}
-        {...buttonProps}
-        disabled
+        className='px-5 rounded-l-sm'
+        isDisabled
       >
         Send
       </Button>
@@ -49,13 +24,10 @@ export const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, 
 
   return (
     <Button
-      style={{
-        borderRadius: 'var(--radius-sm)',
-      }}
-      {...buttonProps}
-      onClick={handleStart}
+      className='px-5 ml-1 text-[--color-font-surprise] bg-[--color-surprise] hover:brightness-75 focus:brightness-75 rounded-l-sm'
+      onPress={running ? handleCancel : handleStart}
     >
-      {methodType === 'unary' ? 'Send' : 'Start'}
+      {running ? 'Cancel' : methodType === 'unary' ? 'Send' : 'Start'}
     </Button>
   );
 };

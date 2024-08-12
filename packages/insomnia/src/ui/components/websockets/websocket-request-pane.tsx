@@ -2,7 +2,6 @@ import React, { type FC, Fragment, useEffect, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton, Toolbar } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
-import styled from 'styled-components';
 
 import { CONTENT_TYPE_JSON } from '../../../common/constants';
 import * as models from '../../../models';
@@ -29,47 +28,25 @@ import { MarkdownEditor } from '../markdown-editor';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
-import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
+import { Pane } from '../panes/pane';
 import { RenderedQueryString } from '../rendered-query-string';
 import { WebSocketActionBar } from './action-bar';
 
 const supportedAuthTypes: AuthTypes[] = ['apikey', 'basic', 'bearer'];
 
-const SendMessageForm = styled.form({
-  width: '100%',
-  height: '100%',
-  position: 'relative',
-  boxSizing: 'border-box',
-});
-
-const SendButton = styled.button<{ isConnected: boolean }>(({ isConnected }) => ({
-  padding: '0 var(--padding-md)',
-  marginLeft: 'var(--padding-xs)',
-  height: '100%',
-  border: '1px solid var(--hl-lg)',
-  borderRadius: 'var(--radius-md)',
-  background: isConnected ? 'var(--color-surprise)' : 'inherit',
-  color: isConnected ? 'var(--color-font-surprise)' : 'inherit',
-  ':hover': {
-    filter: 'brightness(0.8)',
-  },
-}));
-
-const PaneHeader = styled(OriginalPaneHeader)({
-  '&&': { alignItems: 'stretch' },
-});
-const PaneReadOnlyBannerContainer = styled.div({
-  paddingTop: 'var(--padding-md)',
-  paddingLeft: 'var(--padding-md)',
-  paddingRight: 'var(--padding-md)',
-});
 const PaneReadOnlyBanner = () => {
   return (
-    <PaneReadOnlyBannerContainer>
+    <div
+      style={{
+        paddingTop: 'var(--padding-md)',
+        paddingLeft: 'var(--padding-md)',
+        paddingRight: 'var(--padding-md)',
+      }}
+    >
       <p className="notice info no-margin-top no-margin-bottom">
         This section is now locked since the connection has already been established. To change these settings, please disconnect first.
       </p>
-    </PaneReadOnlyBannerContainer>
+    </div>
   );
 };
 
@@ -167,12 +144,13 @@ const WebSocketRequestForm: FC<FormProps> = ({
   // To allow for disabling rendering of messages based on a per-request setting.
   // Same as with regular requests
   return (
-    <SendMessageForm
+    <form
       id="websocketMessageForm"
       onSubmit={event => {
         event.preventDefault();
         interpolateOpenAndSend(editorRef.current?.getValue() || '');
       }}
+      className="w-full h-full relative box-border"
     >
       <CodeEditor
         id="websocket-message-editor"
@@ -182,8 +160,9 @@ const WebSocketRequestForm: FC<FormProps> = ({
         ref={editorRef}
         onChange={upsertPayloadWithValue}
         enableNunjucks
+        className="w-full"
       />
-    </SendMessageForm>
+    </form>
   );
 };
 
@@ -286,7 +265,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
 
   return (
     <Pane type="request">
-      <PaneHeader>
+      <header className="pane__header theme--pane__header !items-stretch">
         <WebSocketActionBar
           key={uniqueKey}
           request={activeRequest}
@@ -295,7 +274,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           readyState={readyState}
           onChange={url => patchRequest(requestId, { url })}
         />
-      </PaneHeader>
+      </header>
       <Tabs aria-label='Websocket request pane tabs' className="flex-1 w-full h-full flex flex-col">
         <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
           <Tab
@@ -448,13 +427,22 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
         <TabPanel className='w-full flex-1 flex flex-col' id='content-type'>
           <Toolbar className="w-full flex-shrink-0 px-2 border-b border-solid border-[--hl-md] py-2 h-[--line-height-sm] flex items-center gap-2 justify-between">
             <WebSocketPreviewMode previewMode={previewMode} onSelect={changeMode} />
-            <SendButton
+            <button
+              className='hover:brightness-75'
+              style={{
+                padding: '0 var(--padding-md)',
+                marginLeft: 'var(--padding-xs)',
+                height: '100%',
+                border: '1px solid var(--hl-lg)',
+                borderRadius: 'var(--radius-md)',
+                background: readyState ? 'var(--color-surprise)' : 'inherit',
+                color: readyState ? 'var(--color-font-surprise)' : 'inherit',
+              }}
               type="submit"
               form="websocketMessageForm"
-              isConnected={readyState}
             >
               Send
-            </SendButton>
+            </button>
           </Toolbar>
           <WebSocketRequestForm
             key={uniqueKey}

@@ -115,7 +115,7 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
             <div className="form-control form-control--no-label width-auto">
               <button
                 disabled={!workspaceToCopyTo}
-                className="btn btn--clicky"
+                className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]"
                 onClick={handleCopyToWorkspace}
               >
                 Copy
@@ -124,7 +124,7 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
             <div className="form-control form-control--no-label width-auto">
               <button
                 disabled={!workspaceToCopyTo}
-                className="btn btn--clicky"
+                className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]"
                 onClick={handleMoveToWorkspace}
               >
                 Move

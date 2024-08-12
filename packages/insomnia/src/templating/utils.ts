@@ -1,6 +1,5 @@
-import objectPath from 'objectpath';
-
 import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
+import objectPath from './third_party/objectPath';
 
 export interface NunjucksParsedTagArg {
   type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model';

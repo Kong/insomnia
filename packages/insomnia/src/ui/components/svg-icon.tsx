@@ -1,5 +1,4 @@
-import React, { Component, type CSSProperties, type NamedExoticComponent, type ReactNode, type SVGProps } from 'react';
-import styled from 'styled-components';
+import React, { type NamedExoticComponent, type SVGProps } from 'react';
 import type { ValueOf } from 'type-fest';
 
 import { SvgIcnArrowRight } from './assets/svgr/IcnArrowRight';
@@ -136,129 +135,106 @@ export const IconEnum = {
   empty: 'empty',
 } as const;
 
+const icons: Record<IconId, [ThemeKeys, NamedExoticComponent<SVGProps<SVGSVGElement>>]> = {
+  [IconEnum.arrowRight]: [ThemeEnum.highlight, SvgIcnArrowRight],
+  [IconEnum.bitbucket]: [ThemeEnum.default, SvgIcnBitbucketLogo],
+  [IconEnum.brackets]: [ThemeEnum.default, SvgIcnBrackets],
+  [IconEnum.bug]: [ThemeEnum.default, SvgIcnBug],
+  [IconEnum.burgerMenu]: [ThemeEnum.default, SvgIcnBurgerMenu],
+  [IconEnum.checkmark]: [ThemeEnum.default, SvgIcnCheckmark],
+  [IconEnum.chevronDown]: [ThemeEnum.default, SvgIcnChevronDown],
+  [IconEnum.chevronUp]: [ThemeEnum.default, SvgIcnChevronUp],
+  [IconEnum.clock]: [ThemeEnum.default, SvgIcnClock],
+  [IconEnum.cookie]: [ThemeEnum.default, SvgIcnCookie],
+  [IconEnum.draftingCompass]: [ThemeEnum.default, SvgIcnDraftingCompass],
+  [IconEnum.dragGrip]: [ThemeEnum.default, SvgIcnDragGrip],
+  [IconEnum.elevator]: [ThemeEnum.default, SvgIcnElevator],
+  [IconEnum.ellipsesCircle]: [ThemeEnum.default, SvgIcnEllipsisCircle],
+  [IconEnum.ellipsis]: [ThemeEnum.default, SvgIcnEllipsis],
+  [IconEnum.empty]: [ThemeEnum.default, SvgIcnEmpty],
+  [IconEnum.error]: [ThemeEnum.danger, SvgIcnErrors],
+  [IconEnum.file]: [ThemeEnum.default, SvgIcnFile],
+  [IconEnum.folderOpen]: [ThemeEnum.default, SvgIcnFolderOpen],
+  [IconEnum.folder]: [ThemeEnum.default, SvgIcnFolder],
+  [IconEnum.gear]: [ThemeEnum.default, SvgIcnGear],
+  [IconEnum.gitBranch]: [ThemeEnum.default, SvgIcnGitBranch],
+  [IconEnum.github]: [ThemeEnum.default, SvgIcnGithubLogo],
+  [IconEnum.gitlabLogo]: [ThemeEnum.default, SvgIcnGitlabLogo],
+  [IconEnum.globe]: [ThemeEnum.default, SvgIcnGlobe],
+  [IconEnum.gui]: [ThemeEnum.default, SvgIcnGui],
+  [IconEnum.heart]: [ThemeEnum.surprise, SvgIcnHeart],
+  [IconEnum.home]: [ThemeEnum.default, SvgIcnHome],
+  [IconEnum.indentation]: [ThemeEnum.default, SvgIcnIndentation],
+  [IconEnum.info]: [ThemeEnum.highlight, SvgIcnInfo],
+  [IconEnum.jump]: [ThemeEnum.default, SvgIcnJump],
+  [IconEnum.key]: [ThemeEnum.default, SvgIcnKey],
+  [IconEnum.laptop]: [ThemeEnum.default, SvgIcnLaptop],
+  [IconEnum.minusCircleFill]: [ThemeEnum.default, SvgIcnMinusCircleFill],
+  [IconEnum.minusCircle]: [ThemeEnum.default, SvgIcnMinusCircle],
+  [IconEnum.placeholder]: [ThemeEnum.default, SvgIcnPlaceholder],
+  [IconEnum.play]: [ThemeEnum.default, SvgIcnPlay],
+  [IconEnum.plus]: [ThemeEnum.default, SvgIcnPlus],
+  [IconEnum.prohibited]: [ThemeEnum.default, SvgIcnProhibited],
+  [IconEnum.questionFill]: [ThemeEnum.default, SvgIcnQuestionFill],
+  [IconEnum.question]: [ThemeEnum.default, SvgIcnQuestion],
+  [IconEnum.search]: [ThemeEnum.default, SvgIcnSearch],
+  [IconEnum.secCert]: [ThemeEnum.default, SvgIcnSecCert],
+  [IconEnum.success]: [ThemeEnum.success, SvgIcnSuccess],
+  [IconEnum.sync]: [ThemeEnum.default, SvgIcnSync],
+  [IconEnum.trashcan]: [ThemeEnum.default, SvgIcnTrashcan],
+  [IconEnum.triangle]: [ThemeEnum.default, SvgIcnTriangle],
+  [IconEnum.user]: [ThemeEnum.default, SvgIcnUser],
+  [IconEnum.vial]: [ThemeEnum.default, SvgIcnVial],
+  [IconEnum.warningCircle]: [ThemeEnum.default, SvgIcnWarningCircle],
+  [IconEnum.warning]: [ThemeEnum.notice, SvgIcnWarning],
+  [IconEnum.x]: [ThemeEnum.default, SvgIcnX],
+  [IconEnum.disconnected]: [ThemeEnum.default, SvgIcnDisconnected],
+  [IconEnum.receive]: [ThemeEnum.default, SvgIcnReceive],
+  [IconEnum.sent]: [ThemeEnum.default, SvgIcnSent],
+  [IconEnum.checkmarkCircle]: [ThemeEnum.default, SvgIcnCheckmarkCircle],
+  [IconEnum.systemEvent]: [ThemeEnum.default, SvgIcnSystemEvent],
+};
+
 export type IconId = ValueOf<typeof IconEnum>;
 
-export interface SvgIconProps {
+function getThemeClassName(theme: ThemeKeys) {
+  switch (theme) {
+    case ThemeEnum.danger:
+    case ThemeEnum.info:
+    case ThemeEnum.notice:
+    case ThemeEnum.success:
+    case ThemeEnum.surprise:
+    case ThemeEnum.warning:
+      return `fill-${theme} text-${theme}`;
+    case ThemeEnum.highlight:
+      return 'fill-hl text-danger';
+    case ThemeEnum.default:
+    default:
+      return 'fill-current text-current';
+  }
+}
+
+export const SvgIcon = ({
+  icon,
+  label,
+  className,
+  style,
+}: {
   icon: IconId;
-  label?: ReactNode;
+  label?: string;
   className?: string;
-  style?: CSSProperties;
-}
+  style?: React.CSSProperties;
+}) => {
+  const [iconTheme, IconComponent] = icons[icon];
 
-const SvgIconStyled = styled.div<{
-  $theme: ThemeKeys;
-  $hasLabel: boolean;
-}>`
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-
-  svg {
-    flex-shrink: 0;
-    user-select: none;
-    ${({ $hasLabel }) => ($hasLabel ? 'margin-right: var(--padding-xs);' : null)}
-    ${({ $theme }) => {
-    switch ($theme) {
-      case ThemeEnum.danger:
-      case ThemeEnum.info:
-      case ThemeEnum.notice:
-      case ThemeEnum.success:
-      case ThemeEnum.surprise:
-      case ThemeEnum.warning:
-        return `fill: var(--color-${$theme}); color: var(--color-font-${$theme});`;
-
-      case ThemeEnum.highlight:
-        return 'fill: var(--hl); color: var(--color-font-danger);';
-
-      case ThemeEnum.default:
-      default:
-        return 'fill: var(--color-font); color: var(--color-font);';
-    }
-  }}
+  if (!IconComponent || !iconTheme) {
+    return null;
   }
-`;
 
-export class SvgIcon extends Component<SvgIconProps> {
-  static icons: Record<IconId, [ThemeKeys, NamedExoticComponent<SVGProps<SVGSVGElement>>]> = {
-    [IconEnum.arrowRight]: [ThemeEnum.highlight, SvgIcnArrowRight],
-    [IconEnum.bitbucket]: [ThemeEnum.default, SvgIcnBitbucketLogo],
-    [IconEnum.brackets]: [ThemeEnum.default, SvgIcnBrackets],
-    [IconEnum.bug]: [ThemeEnum.default, SvgIcnBug],
-    [IconEnum.burgerMenu]: [ThemeEnum.default, SvgIcnBurgerMenu],
-    [IconEnum.checkmark]: [ThemeEnum.default, SvgIcnCheckmark],
-    [IconEnum.chevronDown]: [ThemeEnum.default, SvgIcnChevronDown],
-    [IconEnum.chevronUp]: [ThemeEnum.default, SvgIcnChevronUp],
-    [IconEnum.clock]: [ThemeEnum.default, SvgIcnClock],
-    [IconEnum.cookie]: [ThemeEnum.default, SvgIcnCookie],
-    [IconEnum.draftingCompass]: [ThemeEnum.default, SvgIcnDraftingCompass],
-    [IconEnum.dragGrip]: [ThemeEnum.default, SvgIcnDragGrip],
-    [IconEnum.elevator]: [ThemeEnum.default, SvgIcnElevator],
-    [IconEnum.ellipsesCircle]: [ThemeEnum.default, SvgIcnEllipsisCircle],
-    [IconEnum.ellipsis]: [ThemeEnum.default, SvgIcnEllipsis],
-    [IconEnum.empty]: [ThemeEnum.default, SvgIcnEmpty],
-    [IconEnum.error]: [ThemeEnum.danger, SvgIcnErrors],
-    [IconEnum.file]: [ThemeEnum.default, SvgIcnFile],
-    [IconEnum.folderOpen]: [ThemeEnum.default, SvgIcnFolderOpen],
-    [IconEnum.folder]: [ThemeEnum.default, SvgIcnFolder],
-    [IconEnum.gear]: [ThemeEnum.default, SvgIcnGear],
-    [IconEnum.gitBranch]: [ThemeEnum.default, SvgIcnGitBranch],
-    [IconEnum.github]: [ThemeEnum.default, SvgIcnGithubLogo],
-    [IconEnum.gitlabLogo]: [ThemeEnum.default, SvgIcnGitlabLogo],
-    [IconEnum.globe]: [ThemeEnum.default, SvgIcnGlobe],
-    [IconEnum.gui]: [ThemeEnum.default, SvgIcnGui],
-    [IconEnum.heart]: [ThemeEnum.surprise, SvgIcnHeart],
-    [IconEnum.home]: [ThemeEnum.default, SvgIcnHome],
-    [IconEnum.indentation]: [ThemeEnum.default, SvgIcnIndentation],
-    [IconEnum.info]: [ThemeEnum.highlight, SvgIcnInfo],
-    [IconEnum.jump]: [ThemeEnum.default, SvgIcnJump],
-    [IconEnum.key]: [ThemeEnum.default, SvgIcnKey],
-    [IconEnum.laptop]: [ThemeEnum.default, SvgIcnLaptop],
-    [IconEnum.minusCircleFill]: [ThemeEnum.default, SvgIcnMinusCircleFill],
-    [IconEnum.minusCircle]: [ThemeEnum.default, SvgIcnMinusCircle],
-    [IconEnum.placeholder]: [ThemeEnum.default, SvgIcnPlaceholder],
-    [IconEnum.play]: [ThemeEnum.default, SvgIcnPlay],
-    [IconEnum.plus]: [ThemeEnum.default, SvgIcnPlus],
-    [IconEnum.prohibited]: [ThemeEnum.default, SvgIcnProhibited],
-    [IconEnum.questionFill]: [ThemeEnum.default, SvgIcnQuestionFill],
-    [IconEnum.question]: [ThemeEnum.default, SvgIcnQuestion],
-    [IconEnum.search]: [ThemeEnum.default, SvgIcnSearch],
-    [IconEnum.secCert]: [ThemeEnum.default, SvgIcnSecCert],
-    [IconEnum.success]: [ThemeEnum.success, SvgIcnSuccess],
-    [IconEnum.sync]: [ThemeEnum.default, SvgIcnSync],
-    [IconEnum.trashcan]: [ThemeEnum.default, SvgIcnTrashcan],
-    [IconEnum.triangle]: [ThemeEnum.default, SvgIcnTriangle],
-    [IconEnum.user]: [ThemeEnum.default, SvgIcnUser],
-    [IconEnum.vial]: [ThemeEnum.default, SvgIcnVial],
-    [IconEnum.warningCircle]: [ThemeEnum.default, SvgIcnWarningCircle],
-    [IconEnum.warning]: [ThemeEnum.notice, SvgIcnWarning],
-    [IconEnum.x]: [ThemeEnum.default, SvgIcnX],
-    [IconEnum.disconnected]: [ThemeEnum.default, SvgIcnDisconnected],
-    [IconEnum.receive]: [ThemeEnum.default, SvgIcnReceive],
-    [IconEnum.sent]: [ThemeEnum.default, SvgIcnSent],
-    [IconEnum.checkmarkCircle]: [ThemeEnum.default, SvgIcnCheckmarkCircle],
-    [IconEnum.systemEvent]: [ThemeEnum.default, SvgIcnSystemEvent],
-  };
-
-  render() {
-    const { icon, label, className, style } = this.props;
-
-    if (!SvgIcon.icons[icon]) {
-      throw new Error(
-        `Invalid icon "${icon}" used. Must be one of ${Object.values(IconEnum).join('|')}`,
-      );
-    }
-
-    const [theme, Svg] = SvgIcon.icons[icon];
-    return (
-      <SvgIconStyled
-        className={className}
-        style={style}
-        $theme={theme}
-        $hasLabel={!!label}
-      >
-        <Svg />
-        {label}
-      </SvgIconStyled>
-    );
-  }
-}
+  return (
+    <div className={`inline-flex items-center whitespace-nowrap ${label ? 'mr-[var(--padding-xs)]' : ''}`}>
+      <IconComponent className={`${getThemeClassName(iconTheme)} ${className}`} style={style} />
+      {label && <span>{label}</span>}
+    </div>
+  );
+};

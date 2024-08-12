@@ -1,7 +1,7 @@
-import React, { type Key, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
+import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
-import styled from 'styled-components';
 
 import { docsGitSync } from '../../../../common/documentation';
 import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
@@ -10,19 +10,12 @@ import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
 import { ModalBody } from '../../base/modal-body';
 import { ModalFooter } from '../../base/modal-footer';
 import { ModalHeader } from '../../base/modal-header';
-import { PanelContainer, TabItem, Tabs } from '../../base/tabs';
 import { ErrorBoundary } from '../../error-boundary';
 import { HelpTooltip } from '../../help-tooltip';
 import { showAlert } from '..';
 import { CustomRepositorySettingsFormGroup } from './custom-repository-settings-form-group';
 import { GitHubRepositorySetupFormGroup } from './github-repository-settings-form-group';
 import { GitLabRepositorySetupFormGroup } from './gitlab-repository-settings-form-group';
-
-const TabPill = styled.div({
-  display: 'flex',
-  gap: 'var(--padding-xs)',
-  alignItems: 'center',
-});
 
 export const GitRepositorySettingsModal = (props: ModalProps & {
   gitRepository?: GitRepository;
@@ -94,35 +87,52 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
         <ModalBody>
           <ErrorBoundary>
             <Tabs
-              isDisabled={isLoading || hasGitRepository}
-              aria-label="Git repository settings tabs"
               selectedKey={selectedTab}
-              onSelectionChange={(key: Key) => setTab(key as OauthProviderName)}
+              isDisabled={isLoading || hasGitRepository}
+              onSelectionChange={key => {
+                setTab(key as OauthProviderName);
+              }}
+              aria-label='Git repository settings tabs'
+              className="flex-1 w-full h-full flex flex-col"
             >
-              <TabItem key='github' title={<TabPill><i className="fa fa-github" /> GitHub</TabPill>}>
-                <PanelContainer className="pad pad-top-sm">
-                  <GitHubRepositorySetupFormGroup
-                    uri={gitRepository?.uri}
-                    onSubmit={onSubmit}
-                  />
-                </PanelContainer>
-              </TabItem>
-              <TabItem key='gitlab' title={<TabPill><i className="fa fa-gitlab" /> GitLab</TabPill>}>
-                <PanelContainer className="pad pad-top-sm">
-                  <GitLabRepositorySetupFormGroup
-                    uri={gitRepository?.uri}
-                    onSubmit={onSubmit}
-                  />
-                </PanelContainer>
-              </TabItem>
-              <TabItem key='custom' title={<TabPill><i className="fa fa-code-fork" /> Git</TabPill>}>
-                <PanelContainer className="pad pad-top-sm">
-                  <CustomRepositorySettingsFormGroup
-                    gitRepository={gitRepository}
-                    onSubmit={onSubmit}
-                  />
-                </PanelContainer>
-              </TabItem>
+              <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+                <Tab
+                  className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+                  id='github'
+                >
+                  <div className="flex gap-2 items-center"><i className="fa fa-github" /> GitHub</div>
+                </Tab>
+                <Tab
+                  className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+                  id='gitlab'
+                >
+                  <div className="flex gap-2 items-center"><i className="fa fa-gitlab" /> GitLab</div>
+                </Tab>
+                <Tab
+                  className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+                  id='custom'
+                >
+                  <div className="flex gap-2 items-center"><i className="fa fa-code-fork" /> Git</div>
+                </Tab>
+              </TabList>
+              <TabPanel className='w-full h-full overflow-y-auto py-2' id='github'>
+                <GitHubRepositorySetupFormGroup
+                  uri={gitRepository?.uri}
+                  onSubmit={onSubmit}
+                />
+              </TabPanel>
+              <TabPanel className='w-full h-full overflow-y-auto py-2' id='gitlab'>
+                <GitLabRepositorySetupFormGroup
+                  uri={gitRepository?.uri}
+                  onSubmit={onSubmit}
+                />
+              </TabPanel>
+              <TabPanel className='w-full h-full overflow-y-auto py-2' id='custom'>
+                <CustomRepositorySettingsFormGroup
+                  gitRepository={gitRepository}
+                  onSubmit={onSubmit}
+                />
+              </TabPanel>
             </Tabs>
           </ErrorBoundary>
         </ModalBody>

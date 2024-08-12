@@ -2,7 +2,6 @@ import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef,
 import { Button } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData, useSearchParams } from 'react-router-dom';
 import { useInterval } from 'react-use';
-import styled from 'styled-components';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -20,23 +19,13 @@ import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import type { ConnectActionParams, RequestLoaderData, SendActionParams } from '../routes/request';
 import { useRootLoaderData } from '../routes/root';
 import type { WorkspaceLoaderData } from '../routes/workspace';
-import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
+import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
 import { OneLineEditor, type OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
 import { VariableMissingErrorModal } from './modals/variable-missing-error-modal';
-
-const StyledDropdownButton = styled(DropdownButton)({
-  '&:hover:not(:disabled)': {
-    backgroundColor: 'var(--color-surprise)',
-  },
-
-  '&:focus:not(:disabled)': {
-    backgroundColor: 'var(--color-surprise)',
-  },
-});
 
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
@@ -283,16 +272,15 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                   aria-label="Request Options"
                   closeOnSelect={false}
                   triggerButton={
-                    <StyledDropdownButton
-                      className="urlbar__send-context rounded-r-sm"
+                    <Button
+                      className="urlbar__send-context rounded-r-sm enabled:hover:!bg-[--color-surprise] enabled:focus:!bg-[--color-surprise]"
                       style={{
                         borderTopRightRadius: '0.125rem',
                         borderBottomRightRadius: '0.125rem',
                       }}
-                      removeBorderRadius={true}
                     >
                       <i className="fa fa-caret-down" />
-                    </StyledDropdownButton>
+                    </Button>
                   }
                 >
                   <DropdownSection
