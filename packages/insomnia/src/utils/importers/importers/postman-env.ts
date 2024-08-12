@@ -20,12 +20,12 @@ type Data = {
   [key in EnvVar['key']]: EnvVar['value'];
 };
 
-const POSTMAN_ENV_TYPE: Record<string, string> = {
-  'GLOBAL': 'globals',
-  'ENVIRONMENT': 'environment',
+export enum POSTMAN_ENV_TYPE {
+  GLOBAL = 'globals',
+  ENVIRONMENT = 'environment',
 };
 
-const validPostmanEnvTypeList = Object.keys(POSTMAN_ENV_TYPE).map(key => POSTMAN_ENV_TYPE[key]);
+const validPostmanEnvTypeList = Object.values(POSTMAN_ENV_TYPE) as string[];
 
 export const convert: Converter<Data> = rawData => {
   try {
