@@ -71,7 +71,6 @@ export type MainOnChannels =
 export type RendererOnChannels =
   'clear-all-models'
   | 'clear-model'
-  | 'nunjucks-context-menu-command'
   | 'context-menu-command'
   | 'grpc.data'
   | 'grpc.end'
