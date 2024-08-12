@@ -377,7 +377,6 @@ async function getAllLocalFiles({
       hasUnpushedChanges: workspaceMeta?.hasUnpushedChanges,
     };
   });
-  console.log('fls', files);
   return files;
 }
 
