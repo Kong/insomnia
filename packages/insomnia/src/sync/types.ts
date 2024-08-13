@@ -107,3 +107,8 @@ export interface Status {
   stage: Stage;
   unstaged: Record<DocumentKey, StageEntry>;
 }
+
+export interface Compare {
+  ahead: number;
+  behind: number;
+}

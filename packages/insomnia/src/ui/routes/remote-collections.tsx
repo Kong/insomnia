@@ -19,6 +19,7 @@ import type { WebSocketRequest } from '../../models/websocket-request';
 import { scopeToActivity, type Workspace } from '../../models/workspace';
 import type {
   BackendProject,
+  Compare,
   Snapshot,
   Status,
   StatusCandidate,
@@ -250,14 +251,11 @@ interface SyncData {
   historyCount: number;
   status: Status;
   syncItems: StatusCandidate[];
-  compare: {
-    ahead: number;
-    behind: number;
-  };
+  compare: Compare;
 }
 
 const remoteBranchesCache: Record<string, string[]> = {};
-const remoteCompareCache: Record<string, { ahead: number; behind: number }> =
+const remoteCompareCache: Record<string, Compare> =
   {};
 const remoteBackendProjectsCache: Record<string, BackendProject[]> = {};
 
@@ -332,17 +330,29 @@ export const syncDataLoader: LoaderFunction = async ({
       remoteBranches = (
         remoteBranchesCache[workspaceId] || (await vcs.getRemoteBranchNames())
       ).sort();
-      compare =
-      remoteCompareCache[workspaceId] || (await vcs.compareRemoteBranch());
-    const remoteBackendProjects =
-      remoteBackendProjectsCache[workspaceId] ||
-      (await vcs.remoteBackendProjects({
-        teamId: project.parentId,
-        teamProjectId: project.remoteId,
-      }));
-    remoteBranchesCache[workspaceId] = remoteBranches;
-    remoteCompareCache[workspaceId] = compare;
-    remoteBackendProjectsCache[workspaceId] = remoteBackendProjects;
+      compare = remoteCompareCache[workspaceId] || (await vcs.compareRemoteBranch());
+      const remoteBackendProjects =
+        remoteBackendProjectsCache[workspaceId] ||
+        (await vcs.remoteBackendProjects({
+          teamId: project.parentId,
+          teamProjectId: project.remoteId,
+        }));
+      remoteBranchesCache[workspaceId] = remoteBranches;
+      remoteCompareCache[workspaceId] = compare;
+      remoteBackendProjectsCache[workspaceId] = remoteBackendProjects;
+
+      let hasUncommittedChanges = false;
+      if (status?.unstaged && Object.keys(status.unstaged).length > 0) {
+        hasUncommittedChanges = true;
+      }
+      if (status?.stage && Object.keys(status.stage).length > 0) {
+        hasUncommittedChanges = true;
+      }
+      // update workspace meta with sync data, use for show unpushed changes on collection card
+      models.workspaceMeta.updateByParentId(workspaceId, {
+        hasUncommittedChanges,
+        hasUnpushedChanges: compare?.ahead > 0,
+      });
     } catch (e) { }
 
     return {
