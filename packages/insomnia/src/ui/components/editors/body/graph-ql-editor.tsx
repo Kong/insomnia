@@ -340,7 +340,7 @@ export const GraphQLEditor: FC<Props> = ({
     } catch (error) {
       console.warn('failed to parse', error);
       if (isString(query) && query.trim() === '') {
-        // update request body
+        // update request body when query is empty
         onChange(getGraphQLContent(state.body, query, ''));
       };
       setState(state => ({
