@@ -29,39 +29,41 @@ const MillisecondTimer = () => {
 };
 export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRequestId, steps }) => {
   return (
-    <div className="overlay theme--transparent-overlay-darker">
-      <div className="timer-list w-full">
-        {steps.map((record: TimingStep) => (
-          <div
-            key={`${activeRequestId}-${record.stepName}`}
-            className='flex w-full leading-8'
-          >
-            <div className='w-3/4 ml-1 text-left content-center leading-8'>
-              <span className="leading-8">
-                {
-                  record.duration ?
-                    (<i className="fa fa-circle-check fa-2x mr-2 text-green-500" />) :
-                    (<i className="fa fa-spinner fa-spin fa-2x mr-2" />)
-                }
-              </span>
-              <span className="inline-block align-top">
-                {record.stepName}
-              </span>
+    <div className="flex overlay theme--transparent-overlay-darker w-full h-full">
+      <div className="m-auto w-[60%] min-w-96">
+        <div className="timer-list mx-auto">
+          {steps.map((record: TimingStep) => (
+            <div
+              key={`${activeRequestId}-${record.stepName}`}
+              className='flex w-full leading-8'
+            >
+              <div className='w-3/4 ml-1 text-left text-md content-center leading-8'>
+                <span className="leading-8">
+                  {
+                    record.duration ?
+                      (<i className="fa fa-circle-check fa-1x mr-2 text-green-500" />) :
+                      (<i className="fa fa-spinner fa-spin fa-1x mr-2" />)
+                  }
+                </span>
+                <span className="inline-block align-top text-clip">
+                  {record.stepName}
+                </span>
+              </div>
+              <div className='w-1/4 mr-1 text-right leading-8'>
+                {record.duration ? `${((record.duration) / 1000).toFixed(1)} s` : (<MillisecondTimer />)}
+              </div>
             </div>
-            <div className='w-1/4 mr-1 text-right leading-8'>
-              {record.duration ? `${((record.duration) / 1000).toFixed(1)} s` : (<MillisecondTimer />)}
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      <div className="pad">
-        <button
-          className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]"
-          onClick={handleCancel}
-        >
-          Cancel Request
-        </button>
+        <div className="pad text-center">
+          <button
+            className="btn btn--clicky"
+            onClick={handleCancel}
+          >
+            Cancel Request
+          </button>
+        </div>
       </div>
     </div>
   );
