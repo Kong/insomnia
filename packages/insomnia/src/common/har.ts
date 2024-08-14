@@ -12,6 +12,7 @@ import { getAuthHeader } from '../network/authentication';
 import * as plugins from '../plugins';
 import * as pluginContexts from '../plugins/context/index';
 import { RenderError } from '../templating/index';
+import { parseGraphQLReqeustBody } from '../utils/graph-ql';
 import { smartEncodeUrl } from '../utils/url/querystring';
 import { getAppVersion } from './constants';
 import { jarFromCookies } from './cookies';
@@ -176,6 +177,7 @@ export async function exportHarWithRequest(
       renderResult.request,
       renderResult.context,
     );
+    parseGraphQLReqeustBody(renderedRequest);
     return exportHarWithRenderedRequest(renderedRequest, addContentLength);
   } catch (err) {
     if (err instanceof RenderError) {
