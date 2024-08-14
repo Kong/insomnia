@@ -63,5 +63,9 @@
     "type-fest": "^4.15.0",
     "typescript": "^5.4.4",
     "vitest": "^2.0.4"
+  },
+  "dependencies": {
+    "@types/decompress": "^4.2.7",
+    "decompress": "^4.2.1"
   }
 }

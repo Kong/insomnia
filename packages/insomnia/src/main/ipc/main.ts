@@ -15,6 +15,7 @@ import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { addExecutionStep, completeExecutionStep, getExecution, startExecution, type StepName, type TimingStep } from '../network/request-timing';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { ipcMainHandle, ipcMainOn, ipcMainOnce, type RendererOnChannels } from './electron';
+import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
 
 export interface RendererToMainBridgeAPI {
@@ -50,6 +51,7 @@ export interface RendererToMainBridgeAPI {
   startExecution: (options: { requestId: string }) => void;
   completeExecutionStep: (options: { requestId: string }) => void;
   landingPageRendered: (landingPage: LandingPage, tags?: Record<string, string>) => void;
+  extractJsonFileFromPostmanDataDumpArchive: (archivePath: string) => Promise<any>;
 }
 export function registerMainHandlers() {
   ipcMainOn('addExecutionStep', (_, options: { requestId: string; stepName: StepName }) => {
@@ -134,4 +136,6 @@ export function registerMainHandlers() {
       unit: 'millisecond',
     });
   });
+
+  ipcMainHandle('extractJsonFileFromPostmanDataDumpArchive', extractPostmanDataDumpHandler);
 }
