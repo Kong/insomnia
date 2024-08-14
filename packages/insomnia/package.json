@@ -1,6 +1,6 @@
 {
   "name": "insomnia",
-  "version": "9.3.4-beta.1",
+  "version": "9.3.4-beta.0",
   "productName": "Insomnia",
   "private": true,
   "description": "The Collaborative API Design Tool",
@@ -22,6 +22,8 @@
     "build:main.min.js": "cross-env NODE_ENV=development esr esbuild.main.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "package": "npm run build:app && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js",
+    "package:windows:unpacked": "npm run build:app && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --dir",
+    "package:windows:dist": "cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --prepackaged ./dist/win-unpacked",
     "start": "concurrently -n browser,main --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "start:dev-server": "vite dev",
     "start:electron": "cross-env NODE_ENV=development esr esbuild.main.ts && electron --inspect=5858 .",

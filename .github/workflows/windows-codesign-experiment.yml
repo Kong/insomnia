@@ -1,0 +1,90 @@
+name: Windows CodeSign Build experiment
+# This workflow bakes executables of the major platforms for Testing purposes
+on:
+  merge_group:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+  pull_request:
+    types:
+      - opened
+      - synchronize
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  PR_NUMBER: ${{ github.event.number }}
+jobs:
+  build-and-upload-artifacts:
+    timeout-minutes: 15
+    # Skip jobs for release PRs
+    # windows on recurring should be portable
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: "windows-latest"
+            build-targets: "squirrel"
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install packages
+        run: npm ci
+      
+      - name: Package unpacked
+        shell: bash
+        run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:unpacked -w insomnia
+
+      - name: Code-sign unpacked .exe
+        uses: sslcom/esigner-codesign@develop
+        with:
+          command: sign
+          username: ${{secrets.ES_USERNAME}}
+          password: ${{secrets.ES_PASSWORD}}
+          credential_id: ${{secrets.ES_CREDENTIAL_ID}}
+          totp_secret: ${{secrets.ES_TOTP_SECRET}}
+          file_path: packages/insomnia/dist/win-unpacked/Insomnia.exe
+          override: true
+
+      - name: Package dist
+        shell: bash
+        run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
+
+      - name: Code-sign Windows Installer artifact
+        uses: sslcom/esigner-codesign@develop
+        with:
+          command: sign
+          username: ${{secrets.ES_USERNAME}}
+          password: ${{secrets.ES_PASSWORD}}
+          credential_id: ${{secrets.ES_CREDENTIAL_ID}}
+          totp_secret: ${{secrets.ES_TOTP_SECRET}}
+          file_path: packages/insomnia/dist/squirrel-windows/Insomnia.Core-9.3.4-beta.0.exe
+          override: true
+      
+      - name: Upload smoke test traces
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-package-critical-test-traces-${{ github.run_number }}
+          path: packages/insomnia-smoke-test/traces
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-artifacts-${{ github.run_number }}
+          path: |
+            packages/insomnia/dist/*.exe
+            packages/insomnia/dist/*.tar.gz
+            packages/insomnia/dist/*.zip
