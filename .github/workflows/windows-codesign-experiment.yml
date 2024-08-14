@@ -85,6 +85,4 @@ jobs:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-artifacts-${{ github.run_number }}
           path: |
-            packages/insomnia/dist/*.exe
-            packages/insomnia/dist/*.tar.gz
-            packages/insomnia/dist/*.zip
+            packages/insomnia/dist/squirrel-windows/*.exe
