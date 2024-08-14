@@ -39,6 +39,15 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   await expect(statusTag).toContainText('200 OK');
 
+  // Export GraphQL request
+  await page.getByTestId('Dropdown-GraphQL-request-with-number').click();
+  await page.getByText('Copy as cURL').click();
+  const handle = await page.evaluateHandle(() => navigator.clipboard.readText());
+  const clipboardContent = await handle.jsonValue();
+  const exepctResult = JSON.stringify({ query: 'query($inputVar:Int){echoNum(intVar:$inputVar)}', variables: { inputVar: 3 } });
+  // expect exported curl body to be JSON string
+  expect(clipboardContent.split('--data ')[1]?.replace(/[\n\s\']/g, '')).toContain(exepctResult);
+
   const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
     has: page.locator('.CodeMirror-activeline'),
   });
