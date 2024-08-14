@@ -94,7 +94,7 @@ jobs:
           password: ${{secrets.ES_PASSWORD}}
           credential_id: ${{secrets.ES_CREDENTIAL_ID}}
           totp_secret: ${{secrets.ES_TOTP_SECRET}}
-          file_path: ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist/squirrel-windows/Insomnia.Core-${{ env.RELEASE_VERSION }}.exe
+          file_path: ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.exe
           override: true
 
       - name: Create Tag and Release
@@ -117,10 +117,7 @@ jobs:
         with:
           release_id: ${{ steps.core_tag_and_release.outputs.id }}
           tag_name: ${{ env.RELEASE_CORE_TAG }}
-          file: "./artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia/dist/squirrel-windows/*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json"
-          # /github/workspace/artifacts/windows-latest-artifacts/***/dist/squirrel-windows/Insomnia.Core-9.3.0-beta.1.exe
-          # /github/workspace/artifacts/windows-latest-artifacts/***/dist/squirrel-windows/Insomnia.Core-9.3.0-beta.1-full.nupkg
-          # /github/workspace/artifacts/windows-latest-artifacts/***/dist/squirrel-windows/RELEASES
+          file: "./artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json"
           # /home/runner/work/***/***/artifacts/macos-13-artifacts/***/dist/Insomnia.Core-9.3.0-alpha.7.dmg
           # /home/runner/work/***/***/artifacts/ubuntu-latest-artifacts/***/dist/Insomnia.Core-9.3.0-alpha.7.deb
           # /home/runner/work/***/***/artifacts/ubuntu-latest-artifacts/***-inso/artifacts/inso-linux-9.3.0-alpha.7.tar.xz

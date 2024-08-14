@@ -166,7 +166,6 @@ jobs:
           name: ${{ matrix.os }}-artifacts
           path: |
             packages/insomnia/dist/*.exe
-            packages/insomnia/dist/squirrel-windows/*
             packages/insomnia/dist/*.zip
             packages/insomnia/dist/*.dmg
             packages/insomnia/dist/*.snap
