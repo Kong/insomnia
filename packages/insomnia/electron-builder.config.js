@@ -1,3 +1,5 @@
+const { faL } = require('@fortawesome/free-solid-svg-icons');
+
 const BINARY_PREFIX = 'Insomnia.Core';
 
 // NOTE: USE_HARD_LINKS
@@ -93,12 +95,20 @@ const config = {
       {
         target: 'squirrel',
       },
+      {
+        target: 'nsis',
+      },
     ],
   },
   squirrelWindows: {
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
     iconUrl:
       'https://github.com/kong/insomnia/blob/develop/packages/insomnia/src/icons/icon.ico?raw=true',
+  },
+  nsis: {
+    oneClick: false,
+    perMachine: false,
+    artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
   },
   portable: {
     artifactName: `${BINARY_PREFIX}-\${version}-portable.\${ext}`,

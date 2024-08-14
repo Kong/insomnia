@@ -29,7 +29,7 @@ jobs:
           - os: "macos-latest"
             build-targets: "zip"
           - os: "windows-latest"
-            build-targets: "portable"
+            build-targets: "nsis"
           - os: "ubuntu-latest"
             build-targets: "tar.gz"
     steps:
