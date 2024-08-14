@@ -41,7 +41,7 @@ jobs:
 
       - name: Install packages
         run: npm ci
-      
+
       - name: Package unpacked
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:unpacked -w insomnia
@@ -69,9 +69,9 @@ jobs:
           password: ${{secrets.ES_PASSWORD}}
           credential_id: ${{secrets.ES_CREDENTIAL_ID}}
           totp_secret: ${{secrets.ES_TOTP_SECRET}}
-          file_path: packages/insomnia/dist/squirrel-windows/Insomnia.Core-9.3.4-beta.0.exe
+          file_path: packages/insomnia/dist/squirrel-windows/Insomnia.Core-9.3.4-beta.1.exe
           override: true
-      
+
       - name: Upload smoke test traces
         uses: actions/upload-artifact@v4
         with:
