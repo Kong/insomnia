@@ -368,6 +368,10 @@ test.describe('pre-request features tests', async () => {
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
+        // close the alert modal
+        await page.getByRole('code').getByText('Error: Couldn\'t connect to').click();
+        await page.getByRole('button', { name: 'Ok', exact: true }).click();
+
         // verify
         await page.getByRole('tab', { name: 'Console' }).click();
         await expect(responsePane).toContainText('localhost:2222'); // original proxy

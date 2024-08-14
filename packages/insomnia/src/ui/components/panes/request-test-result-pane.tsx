@@ -7,13 +7,16 @@ import { fuzzyMatch } from '../../../common/misc';
 
 type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
 
-interface RequestTestResultRowsProps {
+const filterClassnames = 'mx-1 w-[6rem] text-center rounded-md h-[--line-height-xxs] text-sm cursor-pointer outline-none select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
+const activeFilterClassnames = 'text-white mx-1 w-[6rem] text-center rounded-md h-[--line-height-xxs] text-sm cursor-pointer outline-none select-none px-2 py-1 bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
+
+export interface RequestTestResultRowsProps {
   requestTestResults: RequestTestResult[];
   resultFilter: string;
   targetTests: string;
 }
 
-const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
+export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
   requestTestResults,
   resultFilter,
   targetTests,
@@ -103,13 +106,9 @@ export const RequestTestResultPane: FC<Props> = ({
 
   const noTestFoundPage = (
     <div className="text-center mt-5">
-      <div className="">No test results found</div>
+      <div className="">No test result found</div>
       <div className="text-sm text-neutral-400">
-        <b>
-          <a href="https://docs.insomnia.rest/insomnia/after-response-script">
-            Add test cases
-          </a>
-        </b> using scripting and run the request.
+        Add test cases in scripts and run them to see results.
       </div>
     </div>
   );
@@ -123,13 +122,13 @@ export const RequestTestResultPane: FC<Props> = ({
   const selectSkippedTests = () => setTargetTests('skipped');
 
   return <>
-    <div className='h-full flex flex-col divide-y divide-solid divide-[--hl-md]'>
+    <div className='test-result-pane h-full flex flex-col divide-y divide-solid divide-[--hl-md]'>
       <div className='h-[calc(100%-var(--line-height-sm))]'>
-        <Toolbar className="flex items-center h-[--line-height-sm] flex-row text-[var(--font-size-sm)] box-border overflow-x-auto border-solid border-b border-b-[--hl-md]">
-          <button className="rounded-3xl btn btn--clicky-small mx-1 my-auto" onClick={selectAllTests} >All</button>
-          <button className="rounded-3xl btn btn--clicky-small mx-1 my-auto" onClick={selectPassedTests} >Passed</button>
-          <button className="rounded-3xl btn btn--clicky-small mx-1 my-auto" onClick={selectFailedTests} >Failed</button>
-          <button className="rounded-3xl btn btn--clicky-small mx-1 my-auto" onClick={selectSkippedTests} >Skipped</button>
+        <Toolbar className="flex items-center h-[--line-height-sm] flex-row text-[var(--font-size-sm)] box-border overflow-x-auto border-solid border-b border-b-[--hl-md] pl-2">
+          <button className={targetTests === 'all' ? activeFilterClassnames : filterClassnames} onClick={selectAllTests} >All</button>
+          <button className={targetTests === 'passed' ? activeFilterClassnames : filterClassnames} onClick={selectPassedTests} >Passed</button>
+          <button className={targetTests === 'failed' ? activeFilterClassnames : filterClassnames} onClick={selectFailedTests} >Failed</button>
+          <button className={targetTests === 'skipped' ? activeFilterClassnames : filterClassnames} onClick={selectSkippedTests} >Skipped</button>
         </Toolbar>
         <div className="overflow-y-auto w-auto overflow-x-auto h-[calc(100%-var(--line-height-sm))]">
           <RequestTestResultRows

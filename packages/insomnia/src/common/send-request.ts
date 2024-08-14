@@ -86,7 +86,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
   return async function sendRequest(requestId: string) {
     const requestData = await fetchInsoRequestData(requestId, environmentId);
 
-    const mutatedContext = await tryToExecutePreRequestScript(requestData, requestData.workspace._id);
+    const mutatedContext = await tryToExecutePreRequestScript({ ...requestData, ancestors: [] }, requestData.workspace._id);
 
     if (mutatedContext === null) {
       console.error('Time out while executing pre-request script');
@@ -94,14 +94,16 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     }
     const ignoreUndefinedEnvVariable = true;
     // NOTE: inso ignores active environment, using the one passed in
-    const renderedResult = await tryToInterpolateRequest(
-      mutatedContext.request,
-      mutatedContext.environment,
-      'send',
-      undefined,
-      mutatedContext.baseEnvironment,
+
+    const renderedResult = await tryToInterpolateRequest({
+      request: mutatedContext.request,
+      environment: mutatedContext.environment,
+      purpose: 'send',
+      extraInfo: undefined,
+      baseEnvironment: mutatedContext.baseEnvironment,
+      userUploadEnv: undefined,
       ignoreUndefinedEnvVariable,
-    );
+    });
     // skip plugins
     const renderedRequest = renderedResult.request;
 

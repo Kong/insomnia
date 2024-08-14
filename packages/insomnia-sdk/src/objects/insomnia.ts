@@ -6,8 +6,8 @@ import type { Settings } from 'insomnia/src/models/settings';
 import { toPreRequestAuth } from './auth';
 import { CookieObject } from './cookies';
 import { Environment, Variables } from './environments';
+import { Execution } from './execution';
 import type { RequestContext } from './interfaces';
-import { unsupportedError } from './properties';
 import { Request as ScriptRequest, type RequestOptions, toScriptRequestBody } from './request';
 import { RequestInfo } from './request-info';
 import { Response as ScriptResponse } from './response';
@@ -25,15 +25,16 @@ export class InsomniaObject {
     public cookies: CookieObject;
     public info: RequestInfo;
     public response?: ScriptResponse;
+    public execution: Execution;
 
     private clientCertificates: ClientCertificate[];
     private _expect = expect;
     private _test = test;
     private _skip = skip;
 
+    private iterationData: Environment;
     // TODO: follows will be enabled after Insomnia supports them
     private globals: Environment;
-    private _iterationData: Environment;
     private _settings: Settings;
 
     private requestTestResults: RequestTestResult[];
@@ -50,6 +51,7 @@ export class InsomniaObject {
             clientCertificates: ClientCertificate[];
             cookies: CookieObject;
             requestInfo: RequestInfo;
+            execution: Execution;
             response?: ScriptResponse;
         },
     ) {
@@ -57,10 +59,11 @@ export class InsomniaObject {
         this.environment = rawObj.environment;
         this.baseEnvironment = rawObj.baseEnvironment;
         this.collectionVariables = this.baseEnvironment; // collectionVariables is mapped to baseEnvironment
-        this._iterationData = rawObj.iterationData;
+        this.iterationData = rawObj.iterationData;
         this.variables = rawObj.variables;
         this.cookies = rawObj.cookies;
         this.response = rawObj.response;
+        this.execution = rawObj.execution;
 
         this.info = rawObj.requestInfo;
         this.request = rawObj.request;
@@ -97,11 +100,6 @@ export class InsomniaObject {
     }
 
     // TODO: remove this after enabled iterationData
-    get iterationData() {
-        throw unsupportedError('iterationData', 'environment');
-    }
-
-    // TODO: remove this after enabled iterationData
     get settings() {
         return undefined;
     }
@@ -111,7 +109,7 @@ export class InsomniaObject {
             globals: this.globals.toObject(),
             environment: this.environment.toObject(),
             baseEnvironment: this.baseEnvironment.toObject(),
-            iterationData: this._iterationData.toObject(),
+            iterationData: this.iterationData.toObject(),
             variables: this.variables.toObject(),
             request: this.request,
             settings: this.settings,
@@ -120,6 +118,7 @@ export class InsomniaObject {
             info: this.info.toObject(),
             response: this.response ? this.response.toObject() : undefined,
             requestTestResults: this.requestTestResults,
+            execution: this.execution.toObject(),
         };
     };
 }
@@ -144,14 +143,15 @@ export async function initInsomniaObject(
     if (rawObj.baseEnvironment.id === rawObj.environment.id) {
         log('warning: No environment is selected, modification of insomnia.environment will be applied to the base environment.');
     }
-    // TODO: update "iterationData" name when it is supported
-    const iterationData = new Environment('iterationData', rawObj.iterationData);
+    // Mapping rule for the environment user uploaded in collection runner
+    const iterationData = rawObj.iterationData ?
+        new Environment(rawObj.iterationData.name, rawObj.iterationData.data) : new Environment('iterationData', {});
     const cookies = new CookieObject(rawObj.cookieJar);
     // TODO: update follows when post-request script and iterationData are introduced
     const requestInfo = new RequestInfo({
         eventName: 'prerequest',
-        iteration: 1,
-        iterationCount: 1,
+        iteration: rawObj.requestInfo.iteration || 1,
+        iterationCount: rawObj.requestInfo.iterationCount || 0,
         requestName: rawObj.request.name,
         requestId: rawObj.request._id,
     });
@@ -216,6 +216,7 @@ export async function initInsomniaObject(
             .filter(param => !param.disabled)
             .map(param => ({ key: param.name, value: param.value }))
     );
+
     const reqOpt: RequestOptions = {
         name: rawObj.request.name,
         url: reqUrl,
@@ -230,21 +231,23 @@ export async function initInsomniaObject(
         pathParameters: rawObj.request.pathParameters,
     };
     const request = new ScriptRequest(reqOpt);
+    const execution = new Execution({ location: rawObj.execution.location });
 
     const responseBody = await readBodyFromPath(rawObj.response);
     const response = rawObj.response ? toScriptResponse(request, rawObj.response, responseBody) : undefined;
 
     return new InsomniaObject({
-            globals,
-            environment,
-            baseEnvironment,
-            iterationData,
-            variables,
-            request,
-            settings: rawObj.settings,
-            clientCertificates: rawObj.clientCertificates,
-            cookies,
-            requestInfo,
-            response,
+        globals,
+        environment,
+        baseEnvironment,
+        iterationData,
+        variables,
+        request,
+        settings: rawObj.settings,
+        clientCertificates: rawObj.clientCertificates,
+        cookies,
+        requestInfo,
+        response,
+        execution,
     });
 };

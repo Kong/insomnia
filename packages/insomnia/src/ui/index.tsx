@@ -44,6 +44,7 @@ const Debug = lazy(() => import('./routes/debug'));
 const Design = lazy(() => import('./routes/design'));
 const MockServer = lazy(() => import('./routes/mock-server'));
 const Environments = lazy(() => import('./routes/environments'));
+const Runner = lazy(() => import('./routes/runner'));
 
 initializeSentry();
 initializeLogging();
@@ -456,6 +457,30 @@ async function renderApp() {
                                       (
                                         await import('./routes/request-group')
                                       ).updateRequestGroupMetaAction(...args),
+                                  },
+                                  {
+                                    path: 'runner',
+                                    loader: async (...args) =>
+                                      (
+                                        await import('./routes/runner')
+                                      ).collectionRunnerStatusLoader(...args),
+                                    element:
+                                      <Suspense fallback={<AppLoadingIndicator />}>
+                                        <Runner />
+                                      </Suspense>,
+                                    action: async (...args) =>
+                                      (
+                                        await import('./routes/runner')
+                                      ).runCollectionAction(...args),
+                                    children: [
+                                      {
+                                        path: 'run/',
+                                        action: async (...args) =>
+                                          (
+                                            await import('./routes/runner')
+                                          ).runCollectionAction(...args),
+                                      },
+                                    ],
                                   },
                                 ],
                               },

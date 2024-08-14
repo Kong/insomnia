@@ -31,6 +31,7 @@ import {
   type LoaderFunction,
   type NavigateFunction,
   NavLink,
+  Outlet,
   redirect,
   useFetcher,
   useFetchers,
@@ -137,7 +138,7 @@ const INITIAL_GRPC_REQUEST_STATE = {
   error: undefined,
   methods: [],
 };
-export const loader: LoaderFunction = async ({ params }) => {
+export const loader: LoaderFunction = async ({ params, request }) => {
   if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
     invariant(workspaceId, 'Workspace ID is required');
@@ -149,7 +150,11 @@ export const loader: LoaderFunction = async ({ params }) => {
     invariant(activeWorkspaceMeta, 'Workspace meta not found');
     const activeRequestId = activeWorkspaceMeta.activeRequestId;
     const activeRequest = activeRequestId ? await models.request.getById(activeRequestId) : null;
-    if (activeRequest) {
+    // TODO(george): we should remove this after enabling the sidebar for the runner
+    const startOfQuery = request.url.indexOf('?');
+    const urlWithoutQuery = startOfQuery > 0 ? request.url.slice(0, startOfQuery) : request.url;
+    const isDisplayingRunner = urlWithoutQuery.endsWith('/runner');
+    if (activeRequest && !isDisplayingRunner) {
       return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`);
     }
   }
@@ -483,8 +488,8 @@ export const Debug: FC = () => {
       // If the target is a folder and we insert after it we want to add that item to the folder
       const isMovingItemInsideFolder = isRequestGroup(targetItem.doc) && event.target.dropPosition === 'after';
       if (isMovingItemInsideFolder) {
-      // there is no item before we move the item to the beginning
-      // If there are children find the first child key and use a lower one
+        // there is no item before we move the item to the beginning
+        // If there are children find the first child key and use a lower one
         // otherwise use whatever
         const children = collection.filter(r => r.doc.parentId === targetId);
 
@@ -723,6 +728,10 @@ export const Debug: FC = () => {
     }
   }, [settings.forceVerticalLayout, direction]);
 
+  const onRunCollection = () => {
+    navigate(`/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/${activeWorkspace._id}/debug/runner`);
+  };
+
   useEffect(() => {
     if (isScratchpad(activeWorkspace)) {
       window.main.landingPageRendered(LandingPage.Scratchpad);
@@ -735,21 +744,26 @@ export const Debug: FC = () => {
       <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={10} collapsible>
         <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
           <div className="flex flex-col items-start">
-            <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 border-solid border-[--hl-md] border-b p-[--padding-sm] font-bold w-full'>
-              <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
-                <NavLink
-                  data-testid="project"
-                  className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                  to={`/organization/${organizationId}/project/${activeProject._id}`}
-                >
-                  <Icon className='text-xs' icon="chevron-left" />
-                </NavLink>
-                <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
-              </Breadcrumb>
-              <Breadcrumb className="flex truncate select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
-                <WorkspaceDropdown />
-              </Breadcrumb>
-            </Breadcrumbs>
+            <div className='flex w-full'>
+              <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 border-solid border-[--hl-md] border-b p-[--padding-sm] font-bold w-full'>
+                <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+                  <NavLink
+                    data-testid="project"
+                    className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    to={`/organization/${organizationId}/project/${activeProject._id}`}
+                  >
+                    <Icon className='text-xs' icon="chevron-left" />
+                  </NavLink>
+                  <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
+                </Breadcrumb>
+                <Breadcrumb className="flex truncate select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+                  <WorkspaceDropdown />
+                </Breadcrumb>
+                <Breadcrumb className="flex text-sm truncate select-none items-center justify-self-end ml-auto mr-2.5 gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+                  <Icon icon='circle-play' onClick={onRunCollection} className="cursor-pointer" data-testid="run-collection-btn-quick" />
+                </Breadcrumb>
+              </Breadcrumbs>
+            </div>
             <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
               <div className="flex w-full items-center gap-2 justify-between">
                 <EnvironmentPicker
@@ -1137,25 +1151,28 @@ export const Debug: FC = () => {
               </ErrorBoundary>
             ) : null}
           </Panel>
-          {activeRequest ? (<>
-            <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
-            <Panel id="pane-two" minSize={10} className='pane-two theme--pane'>
-              <ErrorBoundary showAlert>
-                {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
-                  <GrpcResponsePane grpcState={grpcState} />
-                )}
-                {isRealtimeRequest && (
-                  <RealtimeResponsePane requestId={activeRequest._id} />
-                )}
-                {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
-                  <ResponsePane activeRequestId={activeRequest._id} />
-                )}
-              </ErrorBoundary>
-            </Panel>
-          </>) : null}
+          {
+            activeRequest ? (<>
+              <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
+              <Panel id="pane-two" minSize={10} className='pane-two theme--pane'>
+                <ErrorBoundary showAlert>
+                  {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
+                    <GrpcResponsePane grpcState={grpcState} />
+                  )}
+                  {isRealtimeRequest && (
+                    <RealtimeResponsePane requestId={activeRequest._id} />
+                  )}
+                  {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
+                    <ResponsePane activeRequestId={activeRequest._id} />
+                  )}
+                </ErrorBoundary>
+              </Panel>
+            </>) : null
+          }
+          <Outlet />
         </PanelGroup>
       </Panel>
-    </PanelGroup>
+    </PanelGroup >
   );
 };
 
