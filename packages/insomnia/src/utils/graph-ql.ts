@@ -1,8 +1,7 @@
 import { CONTENT_TYPE_GRAPHQL } from '../common/constants';
 import type { RenderedRequest } from '../common/render';
 
-// parse graphql request body since we save entire query variables as string rather then stringified json string
-// see: https://linear.app/insomnia/issue/INS-4281/[bug]-graphql-issues
+// parse graphql request body since we save entire query variables as string rather then stringified json string. - INS-4281
 export function parseGraphQLReqeustBody(renderedRequest: RenderedRequest) {
   if (renderedRequest && renderedRequest.body?.text && renderedRequest.body?.mimeType === CONTENT_TYPE_GRAPHQL) {
     try {

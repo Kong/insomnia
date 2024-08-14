@@ -58,7 +58,7 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
     content.variables = variables.length ? variables : undefined;
   }
 
-  // Set empty content after user has deleted the query and variables, see https://konghq.atlassian.net/browse/INS-132
+  // Set empty content after user has deleted the query and variables - NS-132
   if (!content.query && !content.variables) {
     return '';
   }
