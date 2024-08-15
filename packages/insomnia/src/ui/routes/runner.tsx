@@ -1,5 +1,5 @@
 import type { RequestTestResult } from 'insomnia-sdk';
-import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { type ActionFunction, redirect, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
@@ -11,16 +11,16 @@ import type { TimingStep } from '../../main/network/request-timing';
 import * as models from '../../models';
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
-// import type { RunnerTestResult } from '../../models/runner-test-result';
+import type { RunnerTestResult } from '../../models/runner-test-result';
 import { invariant } from '../../utils/invariant';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
 import { Icon } from '../components/icon';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
-// import { RequestTestResultPane } from '../components/panes/request-test-result-pane';
-// import { RunnerResultHistoryPane } from '../components/panes/runner-result-history-pane';
+import { RequestTestResultPane } from '../components/panes/request-test-result-pane';
+import { RunnerResultHistoryPane } from '../components/panes/runner-result-history-pane';
 import { ResponseTimer } from '../components/response-timer';
-// import { getTimeAndUnit } from '../components/tags/time-tag';
+import { getTimeAndUnit } from '../components/tags/time-tag';
 import { type RunnerSource, sendActionImp } from './request';
 import { useRootLoaderData } from './root';
 import type { Child, WorkspaceLoaderData } from './workspace';
@@ -184,29 +184,29 @@ export const Runner: FC<{}> = () => {
     }
   };
 
-  // const [testHistory, setTestHistory] = useState<RunnerTestResult[]>([]);
-  // useEffect(() => {
-  //   const readResults = async () => {
-  //     const results = await models.runnerTestResult.findByParentId(workspaceId) || [];
-  //     setTestHistory(results);
-  //   };
-  //   readResults();
-  // }, [workspaceId]);
+  const [testHistory, setTestHistory] = useState<RunnerTestResult[]>([]);
+  useEffect(() => {
+    const readResults = async () => {
+      const results = await models.runnerTestResult.findByParentId(workspaceId) || [];
+      setTestHistory(results);
+    };
+    readResults();
+  }, [workspaceId]);
 
   const [isRunning, setIsRunning] = useState(false);
   const [timingSteps, setTimingSteps] = useState<TimingStep[]>([]);
-  // const [totalTime, setTotalTime] = useState({
-  //   duration: 0,
-  //   unit: 'ms',
-  // });
+  const [totalTime, setTotalTime] = useState({
+    duration: 0,
+    unit: 'ms',
+  });
 
-  // const [executionResult, setExecutionResult] = useState<RunnerTestResult | null>(null);
-  // const gotoExecutionResult = useCallback(async (executionId: string) => {
-  //   const result = await models.runnerTestResult.getById(executionId);
-  //   if (result) {
-  //     setExecutionResult(result);
-  //   }
-  // }, [setExecutionResult]);
+  const [executionResult, setExecutionResult] = useState<RunnerTestResult | null>(null);
+  const gotoExecutionResult = useCallback(async (executionId: string) => {
+    const result = await models.runnerTestResult.getById(executionId);
+    if (result) {
+      setExecutionResult(result);
+    }
+  }, [setExecutionResult]);
 
   useInterval(() => {
     const refreshPanes = async () => {
@@ -217,23 +217,23 @@ export const Runner: FC<{}> = () => {
         setIsRunning(isRunning);
 
         if (isRunning) {
-          // const duration = Date.now() - latestTimingSteps[latestTimingSteps.length - 1].startedAt;
-          // const { number: durationNumber, unit: durationUnit } = getTimeAndUnit(duration);
+          const duration = Date.now() - latestTimingSteps[latestTimingSteps.length - 1].startedAt;
+          const { number: durationNumber, unit: durationUnit } = getTimeAndUnit(duration);
 
           setTimingSteps(latestTimingSteps);
-          // setTotalTime({
-          //   duration: durationNumber,
-          //   unit: durationUnit,
-          // });
+          setTotalTime({
+            duration: durationNumber,
+            unit: durationUnit,
+          });
         } else {
           if (onTestEnd) {
-            // const results = await models.runnerTestResult.findByParentId(workspaceId) || [];
-            // setTestHistory(results);
-            // if (results.length > 0) {
-            //   const latestResult = results[results.length - 1];
-            //   setExecutionResult(latestResult);
-            // }
-            // setOnTestEnd(false);
+            const results = await models.runnerTestResult.findByParentId(workspaceId) || [];
+            setTestHistory(results);
+            if (results.length > 0) {
+              const latestResult = results[results.length - 1];
+              setExecutionResult(latestResult);
+            }
+            setOnTestEnd(false);
           }
         }
       }
@@ -242,32 +242,32 @@ export const Runner: FC<{}> = () => {
     refreshPanes();
   }, 1000);
 
-  // const { passedTestCount, totalTestCount, testResultCountTagColor } = useMemo(() => {
-  //   let passedTestCount = 0;
-  //   let totalTestCount = 0;
+  const { passedTestCount, totalTestCount, testResultCountTagColor } = useMemo(() => {
+    let passedTestCount = 0;
+    let totalTestCount = 0;
 
-  //   if (!isRunning) {
-  //     if (executionResult?.results) {
-  //       executionResult.results.forEach(result => {
-  //         if (result.status === 'passed') {
-  //           passedTestCount++;
-  //         }
-  //         totalTestCount++;
-  //       });
-  //     }
-  //   }
+    if (!isRunning) {
+      if (executionResult?.results) {
+        executionResult.results.forEach(result => {
+          if (result.status === 'passed') {
+            passedTestCount++;
+          }
+          totalTestCount++;
+        });
+      }
+    }
 
-  //   const testResultCountTagColor = totalTestCount > 0 ?
-  //     passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600' :
-  //     'bg-[var(--hl-sm)]';
+    const testResultCountTagColor = totalTestCount > 0 ?
+      passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600' :
+      'bg-[var(--hl-sm)]';
 
-  //   return { passedTestCount, totalTestCount, testResultCountTagColor };
-  // }, [executionResult, isRunning]);
+    return { passedTestCount, totalTestCount, testResultCountTagColor };
+  }, [executionResult, isRunning]);
 
   const [selectedTab, setSelectedTab] = React.useState<Key>('test-results');
-  // const gotoTestResultsTab = useCallback(() => {
-  //   setSelectedTab('test-results');
-  // }, [setSelectedTab]);
+  const gotoTestResultsTab = useCallback(() => {
+    setSelectedTab('test-results');
+  }, [setSelectedTab]);
 
   const disabledKeys = useMemo(() => {
     return isRunning ? allKeys : [];
@@ -518,13 +518,13 @@ export const Runner: FC<{}> = () => {
           <Panel id="pane-two" className='pane-two theme--pane'>
             <PaneHeader className="row-spaced">
               <Heading className="flex items-center w-full h-[--line-height-sm] pl-3 border-solid scro border-b border-b-[--hl-md]">
-                {/* {
+                {
                   executionResult?.duration ?
                     <div className="bg-info tag" >
                       <strong>{`${totalTime.duration} ${totalTime.unit}`}</strong>
                     </div> :
                     <span className="font-bold">Collection Runner</span>
-                } */}
+                }
               </Heading>
             </PaneHeader>
             <Tabs selectedKey={selectedTab} onSelectionChange={setSelectedTab} aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
@@ -537,12 +537,12 @@ export const Runner: FC<{}> = () => {
                     <span>
                       Tests
                     </span>
-                    {/* <span
+                    <span
                       className={`rounded-sm ml-1 px-1 ${testResultCountTagColor}`}
                       style={{ color: 'white' }}
                     >
                       {`${passedTestCount} / ${totalTestCount}`}
-                    </span> */}
+                    </span>
                   </div>
                 </Tab>
                 <Tab
@@ -562,7 +562,7 @@ export const Runner: FC<{}> = () => {
                 <></>
               </TabPanel>
               <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='history'>
-                {/* <RunnerResultHistoryPane history={testHistory} gotoExecutionResult={gotoExecutionResult} gotoTestResultsTab={gotoTestResultsTab} /> */}
+                <RunnerResultHistoryPane history={testHistory} gotoExecutionResult={gotoExecutionResult} gotoTestResultsTab={gotoTestResultsTab} />
               </TabPanel>
               <TabPanel
                 className='w-full flex-1 flex flex-col overflow-y-auto'
@@ -577,7 +577,7 @@ export const Runner: FC<{}> = () => {
                     />
                   </div>
                 }
-                {/* {!isRunning && <ErrorBoundary showAlert><RequestTestResultPane requestTestResults={executionResult?.results || []} /></ErrorBoundary>} */}
+                {!isRunning && <ErrorBoundary showAlert><RequestTestResultPane requestTestResults={executionResult?.results || []} /></ErrorBoundary>}
               </TabPanel>
             </Tabs>
 
@@ -686,16 +686,6 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   }
   window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
   window.main.completeExecutionStep({ requestId: workspaceId });
-
-  // await models.runnerTestResult.create({
-  //     parentId: workspaceId,
-  //     source: 'runner',
-  //     // environmentId: string;
-  //     iterations: testCtx.iterations,
-  //     duration: testCtx.duration,
-  //     avgRespTime: testCtx.duration / requests.length,
-  //     results: testCtx.results,
-  // });
 
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?test-end`);
 };
