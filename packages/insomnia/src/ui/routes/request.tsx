@@ -378,8 +378,16 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       shouldPromptForPathAfterResponse,
       ignoreUndefinedEnvVariable,
     });
-  } catch (e) {
-    console.log('[request] Failed to send request', e);
+  } catch (err) {
+    console.log('[request] Failed to send request', err);
+    const e = err.error;
+
+    if (err.response && err.requestMeta && err.response._id) {
+      // this part is for persisting useful info (e.g. timeline) for debugging, even there is an error
+      const response = await models.response.getById(err.response._id) || await models.response.create(e.response, err.maxHistoryResponses);
+      await models.requestMeta.update(e.requestMeta, { activeResponseId: response._id });
+    }
+
     window.main.completeExecutionStep({ requestId });
     const url = new URL(request.url);
     url.searchParams.set('error', e);
@@ -433,11 +441,16 @@ export const sendActionImp = async ({
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
   window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
+
   const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId, userUploadEnv);
-  window.main.completeExecutionStep({ requestId });
-  if (mutatedContext === null) {
-    return null;
+  if ('error' in mutatedContext) {
+    throw {
+      error: mutatedContext.error,
+    };
   }
+
+  window.main.completeExecutionStep({ requestId });
+
   // disable after-response script here to avoiding rendering it
   // @TODO This should be handled in a better way. Maybe remove the key from the request object we pass in tryToInterpolateRequest
   const afterResponseScript = mutatedContext.request.afterResponseScript ? `${mutatedContext.request.afterResponseScript}` : undefined;
@@ -469,6 +482,9 @@ export const sendActionImp = async ({
     }
   }
 
+  const requestMeta = await models.requestMeta.getByParentId(requestId);
+  invariant(requestMeta, 'RequestMeta not found');
+
   window.main.addExecutionStep({ requestId, stepName: 'Sending request' });
   const response = await sendCurlAndWriteTimeline(
     renderedRequest,
@@ -479,11 +495,16 @@ export const sendActionImp = async ({
     requestData.responseId
   );
   window.main.completeExecutionStep({ requestId });
+  if ('error' in response) {
+    throw {
+      response: await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context),
+      maxHistoryResponses: requestData.settings.maxHistoryResponses,
+      requestMeta,
+      error: response.error,
+    };
+  }
 
-  const requestMeta = await models.requestMeta.getByParentId(requestId);
-  invariant(requestMeta, 'RequestMeta not found');
   const baseResponsePatch = await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context);
-
   const is2XXWithBodyPath = baseResponsePatch.statusCode && baseResponsePatch.statusCode >= 200 && baseResponsePatch.statusCode < 300 && baseResponsePatch.bodyPath;
   const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
 
@@ -494,12 +515,21 @@ export const sendActionImp = async ({
     ...mutatedContext,
     response,
   });
+  if ('error' in postMutatedContext) {
+    throw {
+      response: await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context),
+      maxHistoryResponses: requestData.settings.maxHistoryResponses,
+      requestMeta,
+      error: postMutatedContext.error,
+    };
+  }
+
   window.main.completeExecutionStep({ requestId });
 
-  const preTestResults = mutatedContext.requestTestResults.map(
+  const preTestResults = (mutatedContext.requestTestResults || []).map(
     (result: RequestTestResult): RequestTestResult => ({ ...result, category: 'pre-request' }),
   );
-  const postTestResults = postMutatedContext?.requestTestResults.map(
+  const postTestResults = (postMutatedContext?.requestTestResults || []).map(
     (result: RequestTestResult): RequestTestResult => ({ ...result, category: 'after-response' }),
   ) || [];
   if (testResultCollector) {

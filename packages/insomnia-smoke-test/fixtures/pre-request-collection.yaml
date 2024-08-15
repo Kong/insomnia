@@ -38,6 +38,32 @@ resources:
     description: ""
     scope: collection
     _type: workspace
+  - _id: req_244fe815da6c4342a17f0cfd99cf648c
+    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
+    modified: 1707809218855
+    created: 1707808697304
+    url: http://127.0.0.1:4010/echo
+    name: Long running task - post
+    description: ""
+    method: GET
+    body: {}
+    preRequestScript: ''
+    afterResponseScript: |-
+      function delay(ms) {
+          return new Promise(resolve => setTimeout(resolve, ms));
+      }
+
+      async function printAfterDelay() {
+          console.log("Delaying");
+          await delay(3000);
+          console.log("Delayed");
+      }
+
+      await printAfterDelay();
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/8.6.1
   - _id: req_244fe815da6c4342a17f0cfd98cf648c
     parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
     modified: 1707809218855

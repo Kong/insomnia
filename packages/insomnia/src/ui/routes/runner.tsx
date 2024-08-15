@@ -592,7 +592,7 @@ export const Runner: FC<{}> = () => {
                       Tests
                     </span>
                     <span
-                      className={`rounded-sm ml-1 px-1 ${testResultCountTagColor}`}
+                      className={`test-result-count rounded-sm ml-1 px-1 ${testResultCountTagColor}`}
                       style={{ color: 'white' }}
                     >
                       {`${passedTestCount} / ${totalTestCount}`}

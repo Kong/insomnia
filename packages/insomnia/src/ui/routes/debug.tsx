@@ -757,7 +757,7 @@ export const Debug: FC = () => {
                   <WorkspaceDropdown />
                 </Breadcrumb>
                 <Breadcrumb className="flex text-sm truncate select-none items-center justify-self-end ml-auto mr-2.5 gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
-                  <Icon icon='circle-play' onClick={onRunCollection} className="cursor-pointer" />
+                  <Icon icon='circle-play' onClick={onRunCollection} className="cursor-pointer" data-testid="run-collection-btn-quick" />
                 </Breadcrumb>
               </Breadcrumbs>
             </div>
