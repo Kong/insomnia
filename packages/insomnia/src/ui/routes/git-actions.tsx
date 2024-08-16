@@ -361,8 +361,11 @@ export const canPushLoader: LoaderFunction = async ({ params }): Promise<GitCanP
 };
 
 // Actions
-type CloneGitActionResult =
+export type CloneGitActionResult =
   | Response
+  | {
+    workspaces: Workspace[];
+  }
   | {
       errors?: string[];
     };
@@ -495,7 +498,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
 
   // Stop the DB from pushing updates to the UI temporarily
   const bufferId = await database.bufferChanges();
-  let workspaceId = '';
+  let workspaceId = formData.get('workspaceId')?.toString() || '';
   let scope: 'design' | 'collection' = WorkspaceScopeKeys.design;
   // If no workspace exists we create a new one
   if (!(await containsInsomniaWorkspaceDir(fsClient))) {
@@ -522,7 +525,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
   } else {
     // Clone all entities from the repository
     const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
-    const workspaces = await fsClient.promises.readdir(workspaceBase);
+    const workspaces: string[] = await fsClient.promises.readdir(workspaceBase);
 
     if (workspaces.length === 0) {
       window.main.trackSegmentEvent({
@@ -537,27 +540,27 @@ export const cloneGitRepoAction: ActionFunction = async ({
       };
     }
 
-    if (workspaces.length > 1) {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.vcsSyncComplete, properties: {
-          ...vcsSegmentEventProperties(
-            'git',
-            'clone',
-            'multiple workspaces found'
-          ),
-          providerName,
-        },
-      });
+    if (workspaces.length > 1 && !workspaceId) {
+      const allWorkspaces = await Promise.all(workspaces.map(async workspaceFileName => {
+        const workspacePath = path.join(workspaceBase, workspaceFileName);
+        const workspaceYaml = await fsClient.promises.readFile(workspacePath);
 
+        const workspace = YAML.parse(workspaceYaml.toString());
+
+        return workspace as Workspace;
+      }));
       return {
-        errors: ['Multiple workspaces found in repository. Expected one.'],
+        workspaces: allWorkspaces,
       };
     }
 
     // Only one workspace
-    const workspacePath = path.join(workspaceBase, workspaces[0]);
-    const workspaceJson = await fsClient.promises.readFile(workspacePath);
-    const workspace = YAML.parse(workspaceJson.toString());
+    const selectedWorkspace = workspaces.find(workspaceFileName => {
+      return workspaceFileName.includes(workspaceId);
+    }) || workspaces[0];
+    const workspacePath = path.join(workspaceBase, selectedWorkspace);
+    const workspaceYaml = await fsClient.promises.readFile(workspacePath);
+    const workspace = YAML.parse(workspaceYaml.toString());
     scope = (workspace.scope === WorkspaceScopeKeys.collection) ? WorkspaceScopeKeys.collection : WorkspaceScopeKeys.design;
     // Check if the workspace already exists
     const existingWorkspace = await models.workspace.getById(workspace._id);
@@ -574,6 +577,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
       return redirect(`/organization/${organizationId}/project/${project._id}/workspace/${existingWorkspace._id}/debug`);
     }
 
+    const allWorkspaces = [];
     // Loop over all model folders in root
     for (const modelType of await fsClient.promises.readdir(GIT_INSOMNIA_DIR)) {
       const modelDir = path.join(GIT_INSOMNIA_DIR, modelType);
@@ -587,9 +591,21 @@ export const cloneGitRepoAction: ActionFunction = async ({
           doc.parentId = project._id;
           doc.scope = scope;
           const workspace = await database.upsert(doc);
-          workspaceId = workspace._id;
+          allWorkspaces.push(workspace);
+          workspaceId = workspaceId || workspace._id;
         } else {
           await database.upsert(doc);
+        }
+      }
+    }
+
+    // Remove files for other workspaces
+    for (const workspace of allWorkspaces) {
+      if (workspace._id !== workspaceId) {
+        const allRelatedRecords = await database.withDescendants(workspace);
+
+        for (const record of allRelatedRecords) {
+          await database.remove(record);
         }
       }
     }

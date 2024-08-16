@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
+import { Heading, ListBox, ListBoxItem, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { docsGitSync } from '../../../../common/documentation';
 import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
+import type { CloneGitActionResult } from '../../../routes/git-actions';
+import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../../../routes/project';
 import { Link } from '../../base/link';
 import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
 import { ModalBody } from '../../base/modal-body';
@@ -11,6 +13,7 @@ import { ModalFooter } from '../../base/modal-footer';
 import { ModalHeader } from '../../base/modal-header';
 import { ErrorBoundary } from '../../error-boundary';
 import { HelpTooltip } from '../../help-tooltip';
+import { Icon } from '../../icon';
 import { showAlert } from '..';
 import { CustomRepositorySettingsFormGroup } from './custom-repository-settings-form-group';
 import { GitHubRepositorySetupFormGroup } from './github-repository-settings-form-group';
@@ -19,7 +22,8 @@ import { GitLabRepositorySetupFormGroup } from './gitlab-repository-settings-for
 export const GitRepositoryCloneModal = (props: ModalProps) => {
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
   const modalRef = useRef<ModalHandle>(null);
-  const cloneGitRepositoryFetcher = useFetcher();
+  const cloneGitRepositoryFetcher = useFetcher<CloneGitActionResult>();
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
 
   const [selectedTab, setTab] = useState<OauthProviderName>('github');
 
@@ -45,6 +49,7 @@ export const GitRepositoryCloneModal = (props: ModalProps) => {
         authorName: author?.name || '',
         authorEmail: author?.email || '',
         ...credentials,
+        workspaceId: selectedWorkspaceId || '',
       },
       {
         action: `/organization/${organizationId}/project/${projectId}/git/clone`,
@@ -54,10 +59,12 @@ export const GitRepositoryCloneModal = (props: ModalProps) => {
   };
 
   const isSubmitting = cloneGitRepositoryFetcher.state === 'submitting';
-  const errors = cloneGitRepositoryFetcher.data?.errors as (Error | string)[];
+  const errors = cloneGitRepositoryFetcher.data && 'errors' in cloneGitRepositoryFetcher.data && cloneGitRepositoryFetcher.data.errors;
+  const workspaces = cloneGitRepositoryFetcher.data && 'workspaces' in cloneGitRepositoryFetcher.data && cloneGitRepositoryFetcher.data.workspaces;
+
   useEffect(() => {
     if (errors && errors.length) {
-      const errorMessage = errors.map(e => e instanceof Error ? e.message : typeof e === 'string' && e).join(', ');
+      const errorMessage = errors.join(', ');
 
       showAlert({
         title: 'Error Cloning Repository',
@@ -77,6 +84,33 @@ export const GitRepositoryCloneModal = (props: ModalProps) => {
         </HelpTooltip>
       </ModalHeader>
       <ModalBody>
+        {workspaces && workspaces.length > 0 && (
+          <>
+            <Heading className='text-xl mb-2'>Choose which file you want to clone:</Heading>
+            <ListBox
+              onAction={key => {
+                setSelectedWorkspaceId(key.toString());
+              }}
+              items={workspaces.map(workspace => ({
+                id: workspace._id,
+                ...workspace,
+                isSelected: workspace._id === selectedWorkspaceId,
+              }))}
+            >
+              {item => (
+                <ListBoxItem className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors">
+                  <div className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
+                    <Icon icon={scopeToIconMap[item.scope]} />
+                  </div>
+                  <span>{item.name}</span>
+                  <span className='text-[--hl]'>{scopeToLabelMap[item.scope]}</span>
+                  {item.isSelected && <i className="fa fa-check text-[--color-success]" />}
+                </ListBoxItem>
+              )}
+            </ListBox>
+          </>
+        )
+        }
         <ErrorBoundary>
           <Tabs
             selectedKey={selectedTab}
@@ -84,7 +118,7 @@ export const GitRepositoryCloneModal = (props: ModalProps) => {
               setTab(key as OauthProviderName);
             }}
             aria-label='Git repository settings tabs'
-            className="flex-1 w-full h-full flex flex-col"
+            className={`flex-1 w-full h-full flex flex-col ${workspaces && workspaces.length > 0 ? 'hidden' : ''}`}
           >
             <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
               <Tab

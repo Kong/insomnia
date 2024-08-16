@@ -86,7 +86,7 @@ export const loader: LoaderFunction = async ({
 }): Promise<LoaderData> => {
   const { workspaceId } = params;
   invariant(workspaceId, 'Workspace ID is required');
-  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+  const apiSpec = await models.apiSpec.getOrCreateForParentId(workspaceId);
   invariant(apiSpec, 'API spec not found');
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
