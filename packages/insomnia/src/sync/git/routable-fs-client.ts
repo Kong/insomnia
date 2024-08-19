@@ -17,11 +17,19 @@ export function routableFSClient(
   const execMethod = async (method: Methods, filePath: string, ...args: any[]) => {
     filePath = path.normalize(filePath);
 
-    for (const prefix of Object.keys(otherFS)) {
-      if (filePath.indexOf(path.normalize(prefix)) === 0) {
-        // TODO: remove non-null assertion
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return otherFS[prefix].promises[method]!(filePath, ...args);
+    try {
+      for (const prefix of Object.keys(otherFS)) {
+        if (filePath.indexOf(path.normalize(prefix)) === 0) {
+      // TODO: remove non-null assertion
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const result = otherFS[prefix].promises[method]!(filePath, ...args);
+
+          return result;
+        }
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message !== 'EXTERNAL_WORKSPACE') {
+        throw err;
       }
     }
 

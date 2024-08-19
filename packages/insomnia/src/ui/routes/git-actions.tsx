@@ -587,6 +587,13 @@ export const cloneGitRepoAction: ActionFunction = async ({
         const docPath = path.join(modelDir, docFileName);
         const docYaml = await fsClient.promises.readFile(docPath);
         const doc: models.BaseModel = YAML.parse(docYaml.toString());
+        const existingRecord = await database.get(doc.type, doc._id);
+
+        // Skip existing records
+        if (existingRecord) {
+          continue;
+        }
+
         if (isWorkspace(doc)) {
           doc.parentId = project._id;
           doc.scope = scope;
@@ -603,7 +610,6 @@ export const cloneGitRepoAction: ActionFunction = async ({
     for (const workspace of allWorkspaces) {
       if (workspace._id !== workspaceId) {
         const allRelatedRecords = await database.withDescendants(workspace);
-
         for (const record of allRelatedRecords) {
           await database.remove(record);
         }

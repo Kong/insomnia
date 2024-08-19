@@ -63,12 +63,19 @@ export class NeDBClient {
     // isomorphic-git may have just deleted the workspace from the FS. This
     // happens frequently during branch checkouts and merges
     //
-    // if (doc.type !== models.workspace.type) {
-    //   const ancestors = await db.withAncestors(doc);
-    //   if (!ancestors.find(isWorkspace)) {
-    //     throw new Error(`Not found under workspace ${filePath}`);
-    //   }
-    // }
+    if (doc.type !== models.workspace.type) {
+      const ancestors = await db.withAncestors(doc);
+      const workspace = ancestors.find(isWorkspace);
+
+      if (workspace?._id !== this._workspaceId) {
+        throw new Error('EXTERNAL_WORKSPACE');
+      }
+    }
+
+    if (doc.type === models.workspace.type && doc._id !== this._workspaceId) {
+      throw new Error('EXTERNAL_WORKSPACE');
+    }
+
     const raw = Buffer.from(YAML.stringify(doc), 'utf8');
 
     if (options.encoding) {
@@ -95,6 +102,10 @@ export class NeDBClient {
 
     if (type !== doc.type) {
       throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
+    }
+
+    if (isWorkspace(doc) && doc._id !== this._workspaceId) {
+      throw new Error('EXTERNAL_WORKSPACE');
     }
 
     if (isWorkspace(doc)) {
