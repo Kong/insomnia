@@ -36,6 +36,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       INSO_PACKAGE_NAME: insomnia-inso
+      INSOMNIA_PACKAGE_NAME: insomnia
       INSO_DOCKER_TAR: inso-docker-image.tar
     strategy:
       fail-fast: false
@@ -66,6 +67,11 @@ jobs:
       - name: Install packages
         run: npm ci
 
+      - name: Setup Inso CLI version env var
+        run: |
+          echo "INSO_VERSION=$(jq .version ./packages/${{ env.INSO_PACKAGE_NAME }}/package.json -rj)" >> $GITHUB_ENV
+          echo "INSOMNIA_VERSION=$(jq .version ./packages/${{ env.INSOMNIA_PACKAGE_NAME }}/package.json -rj)" >> $GITHUB_ENV
+
       # If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
       - name: Package app (MacOS only)
         if: matrix.os == 'macos-13'
@@ -78,16 +84,50 @@ jobs:
           CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
           CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
 
-      - name: Package app (Windows and Linux)
-        if: matrix.os != 'macos-13'
+      - name: Package app (Linux only)
+        if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: npm run app-package
         env:
           NODE_OPTIONS: '--max_old_space_size=6144'
 
-      - name: Setup Inso CLI version env var
-        run:
-          echo "INSO_VERSION=$(jq .version ./packages/${{ env.INSO_PACKAGE_NAME }}/package.json -rj)" >> $GITHUB_ENV
+      # creates unpacked electron-builder contents that can be signed afterwards
+      - name: Package unpacked app (Windows only)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:unpacked -w insomnia
+
+      # signs unpacked electron-builder contents, in this case only the .exe
+      - name: Code-sign unpacked .exe (Windows only)
+        if: matrix.os == 'windows-latest'
+        uses: sslcom/esigner-codesign@develop
+        with:
+          command: sign
+          username: ${{secrets.ES_USERNAME}}
+          password: ${{secrets.ES_PASSWORD}}
+          credential_id: ${{secrets.ES_CREDENTIAL_ID}}
+          totp_secret: ${{secrets.ES_TOTP_SECRET}}
+          file_path: packages/insomnia/dist/win-unpacked/Insomnia.exe
+          override: true
+
+      # re-packages the now code-signed electron-builder contents into a squirrel installer
+      - name: Package dist app (Windows only)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
+
+      # code-signs the windows installer
+      - name: Code-sign Windows Installer artifact (Windows only)
+        if: matrix.os == 'windows-latest'
+        uses: sslcom/esigner-codesign@develop
+        with:
+          command: sign
+          username: ${{secrets.ES_USERNAME}}
+          password: ${{secrets.ES_PASSWORD}}
+          credential_id: ${{secrets.ES_CREDENTIAL_ID}}
+          totp_secret: ${{secrets.ES_TOTP_SECRET}}
+          file_path: packages/insomnia/dist/squirrel-windows/Insomnia.Core-${{ env.INSOMNIA_VERSION }}.exe
+          override: true
 
       - name: Package inso
         run: |
@@ -191,7 +231,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get release version
-        id: release_version
+        id: release_version_pr
         shell: bash
         run: |
            echo "version=${BRANCH/release\//}" >> $GITHUB_OUTPUT
@@ -210,15 +250,15 @@ jobs:
 
             You can update the changelog.md in this branch, run git log to get the latest changes:
             ```bash
-            git log --no-merges --oneline --pretty=format:'* %s by @%an' --since="<last release tag>" --until="release/${{ steps.release_version.outputs.version }}"
+            git log --no-merges --oneline --pretty=format:'* %s by @%an' --since="<last release tag>" --until="release/${{ steps.release_version_pr.outputs.version }}"
             ```
 
             When ready to publish, trigger [Publish](https://github.com/${{ github.repository }}/actions/workflows/release-publish.yml) workflow with these variables:
-            - Release version (`version`): `${{ steps.release_version.outputs.version }}`
+            - Release version (`version`): `${{ steps.release_version_pr.outputs.version }}`
 
             Alternatively, you can trigger the workflow from [Github CLI](https://cli.github.com/):
             ```bash
-            gh workflow run release-publish.yml -f version=${{ steps.release_version.outputs.version }} --repo ${{ github.repository }}
+            gh workflow run release-publish.yml -f version=${{ steps.release_version_pr.outputs.version }} --repo ${{ github.repository }}
             ```
 
             Release notes will be generated automatically based on the commit messages during publish. Remove any unwanted notes manually afterwards.
