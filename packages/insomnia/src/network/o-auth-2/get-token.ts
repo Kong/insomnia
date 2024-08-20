@@ -332,7 +332,7 @@ const sendAccessTokenRequest = async (requestOrGroupId: string, authentication: 
     parentId: requestOrGroupId,
   });
 
-  const renderResult = await tryToInterpolateRequest(newRequest, environment._id);
+  const renderResult = await tryToInterpolateRequest({ request: newRequest, environment: environment._id });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
   const response = await sendCurlAndWriteTimeline(

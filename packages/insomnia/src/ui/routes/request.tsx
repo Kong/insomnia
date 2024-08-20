@@ -16,6 +16,7 @@ import type { TimingStep } from '../../main/network/request-timing';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
 import type { CookieJar } from '../../models/cookie-jar';
+import type { UserUploadEnvironment } from '../../models/environment';
 import { type GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import type { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
@@ -416,6 +417,7 @@ export interface RunnerContextForRequest {
 export const sendActionImp = async ({
   requestId,
   workspaceId,
+  userUploadEnv,
   shouldPromptForPathAfterResponse,
   ignoreUndefinedEnvVariable,
   testResultCollector,
@@ -425,12 +427,12 @@ export const sendActionImp = async ({
   shouldPromptForPathAfterResponse: boolean | undefined;
   ignoreUndefinedEnvVariable: boolean | undefined;
   testResultCollector?: RunnerContextForRequest;
+    userUploadEnv?: UserUploadEnvironment;
 }) => {
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
-
   window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
-  const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId);
+  const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId, userUploadEnv);
   window.main.completeExecutionStep({ requestId });
   if (mutatedContext === null) {
     return null;
@@ -441,14 +443,15 @@ export const sendActionImp = async ({
   mutatedContext.request.afterResponseScript = '';
 
   window.main.addExecutionStep({ requestId, stepName: 'Rendering request' });
-  const renderedResult = await tryToInterpolateRequest(
-    mutatedContext.request,
-    mutatedContext.environment,
-    'send',
-    undefined,
-    mutatedContext.baseEnvironment,
+  const renderedResult = await tryToInterpolateRequest({
+    request: mutatedContext.request,
+    environment: mutatedContext.environment,
+    purpose: 'send',
+    extraInfo: undefined,
+    baseEnvironment: mutatedContext.baseEnvironment,
+    userUploadEnv: mutatedContext.userUploadEnv,
     ignoreUndefinedEnvVariable,
-  );
+  });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
   window.main.completeExecutionStep({ requestId });
 
@@ -577,7 +580,7 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
   }
   );
 
-  const renderResult = await tryToInterpolateRequest(req, environment._id, 'send');
+  const renderResult = await tryToInterpolateRequest({ request: req, environment: environment._id, purpose: 'send' });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
   window.main.completeExecutionStep({ requestId: req._id });

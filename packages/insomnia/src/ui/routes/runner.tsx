@@ -1,5 +1,6 @@
 import type { RequestTestResult } from 'insomnia-sdk';
-import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import porderedJSON from 'json-order';
+import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { type ActionFunction, redirect, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
@@ -7,8 +8,10 @@ import { useListData } from 'react-stately';
 import { useInterval } from 'react-use';
 
 import { Tooltip } from '../../../src/ui/components/tooltip';
+import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../common/constants';
 import type { TimingStep } from '../../main/network/request-timing';
 import * as models from '../../models';
+import type { UserUploadEnvironment } from '../../models/environment';
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import type { RunnerTestResult } from '../../models/runner-test-result';
@@ -16,6 +19,7 @@ import { invariant } from '../../utils/invariant';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
 import { Icon } from '../components/icon';
+import { UploadDataModal, type UploadDataType } from '../components/modals/upload-runner-data-modal';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { RequestTestResultPane } from '../components/panes/request-test-result-pane';
 import { RunnerResultHistoryPane } from '../components/panes/runner-result-history-pane';
@@ -46,8 +50,9 @@ export const Runner: FC<{}> = () => {
   };
   const { settings } = useRootLoaderData();
   const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const iterationDataInput = useRef<HTMLInputElement>(null);
-  const [iterationFilePath, setIterationFilePath] = useState<File | undefined>(undefined);
+  const [file, setFile] = useState<File | null>(null);
+  const [uploadData, setUploadData] = useState<UploadDataType[]>([]);
+  const [isUploadDataModalOpen, setUploadDataModalOpen] = useState(false);
 
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
   useEffect(() => {
@@ -155,11 +160,25 @@ export const Runner: FC<{}> = () => {
     const selected = new Set(reqList.selectedKeys);
     const requests = Array.from(reqList.items)
       .filter(item => selected.has(item.id));
+    // convert uploadData to environment data
+    const userUploadEnvs = uploadData.map(data => {
+      const orderedJson = porderedJSON.parse<UploadDataType>(
+        JSON.stringify(data),
+        JSON_ORDER_PREFIX,
+        JSON_ORDER_SEPARATOR,
+      );
+      return {
+        name: file!.name,
+        data: orderedJson.object,
+        dataPropertyOrder: orderedJson.map || null,
+      };
+    });
 
     submit(
       {
         requests,
         iterations,
+        userUploadEnvs,
         delay,
       },
       {
@@ -192,6 +211,13 @@ export const Runner: FC<{}> = () => {
     };
     readResults();
   }, [workspaceId]);
+
+  useEffect(() => {
+    if (uploadData.length >= 1) {
+      // update iteration number from upload data length
+      setIterations(uploadData.length);
+    }
+  }, [uploadData]);
 
   const [isRunning, setIsRunning] = useState(false);
   const [timingSteps, setTimingSteps] = useState<TimingStep[]>([]);
@@ -326,27 +352,16 @@ export const Runner: FC<{}> = () => {
                         <span className="mr-1 border">Delay (ms)</span>
                       </span>
                       <span className="mr-6 text-sm">
-                        <input
-                          placeholder='Select file'
-                          disabled={isRunning}
-                          value={iterationFilePath?.path}
-                          name='Data'
-                          onClick={() => iterationDataInput.current?.click()}
-                          type='text'
-                          className={inputStyle}
-                        />
-                        <input
-                          onChange={e => setIterationFilePath(e.currentTarget.files?.[0])}
-                          type='file'
-                          accept={[
-                            '',
-                            'csv',
-                            'json',
-                          ].join(',')}
-                          ref={iterationDataInput}
-                          style={{ display: 'none' }}
-                        />
+                        <Button
+                          onPress={() => setUploadDataModalOpen(true)}
+                          className={`${inputStyle} w-9 text-center`}
+                        >
+                          <Icon icon="upload" />
+                        </Button>
                         <span className="mr-1 border">Data</span>
+                        {file && (
+                          <span className="ml-1 align-middle w-3 h-3 bg-green-500 rounded-full inline-block" />
+                        )}
                       </span>
                     </div>
                     <div className="w-[100px]">
@@ -511,6 +526,16 @@ export const Runner: FC<{}> = () => {
                     </div>
                   </TabPanel>
                 </Tabs>
+                {isUploadDataModalOpen && (
+                  <UploadDataModal
+                    onUploadFile={(file, uploadData) => {
+                      setFile(file);
+                      setUploadData(uploadData);
+                    }}
+                    userUploadData={uploadData}
+                    onClose={() => setUploadDataModalOpen(false)}
+                  />
+                )}
               </Pane>
             </ErrorBoundary>
           </Panel>
@@ -627,14 +652,14 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   invariant(organizationId, 'Organization id is required');
   invariant(projectId, 'Project id is required');
   invariant(workspaceId, 'Workspace id is required');
-  const { requests, iterations, delay } = await request.json();
+  const { requests, iterations, delay, userUploadEnvs } = await request.json();
   const source: RunnerSource = 'runner';
 
   let testCtx = {
     source,
     environmentId: '',
     iterations,
-    iterationData: {},
+    iterationData: userUploadEnvs,
     duration: 1, // TODO: disable this
     testCount: 0,
     avgRespTime: 0,
@@ -651,6 +676,17 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   for (let i = 0; i < iterations; i++) {
     for (let j = 0; j < requests.length; j++) {
       const targetRequest = requests[j];
+      const getCurIterationUserUploadData = (curIteration: number): UserUploadEnvironment | undefined => {
+        if (Array.isArray(userUploadEnvs) && userUploadEnvs.length > 0) {
+          const uploadDataLength = userUploadEnvs.length;
+          if (uploadDataLength >= curIteration + 1) {
+            return userUploadEnvs[curIteration];
+          };
+          return userUploadEnvs[(curIteration + 1) % uploadDataLength];
+        }
+        return undefined;
+      };
+
       window.main.updateLatestStepName({ requestId: workspaceId, stepName: `Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"` });
 
       const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(
@@ -672,6 +708,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       await sendActionImp({
         requestId: targetRequest.id,
         workspaceId,
+        userUploadEnv: getCurIterationUserUploadData(i),
         shouldPromptForPathAfterResponse: false,
         ignoreUndefinedEnvVariable: true,
         testResultCollector: resultCollector,
@@ -684,6 +721,16 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       };
     }
   }
+
+  await models.runnerTestResult.create({
+    parentId: workspaceId,
+    source: testCtx.source,
+    // environmentId: string;
+    iterations: testCtx.iterations,
+    duration: testCtx.duration,
+    avgRespTime: testCtx.avgRespTime,
+    results: testCtx.results,
+  });
   window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
   window.main.completeExecutionStep({ requestId: workspaceId });
 

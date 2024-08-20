@@ -89,7 +89,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       responseId,
     } = await fetchInsoRequestData(requestId);
     // NOTE: inso ignores active environment, using the one passed in
-    const renderResult = await tryToInterpolateRequest(request, environmentId, 'send');
+    const renderResult = await tryToInterpolateRequest({ request, environment: environmentId, purpose: 'send' });
     const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
