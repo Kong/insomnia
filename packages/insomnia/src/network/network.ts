@@ -22,7 +22,7 @@ import * as models from '../models';
 import type { CaCertificate } from '../models/ca-certificate';
 import type { ClientCertificate } from '../models/client-certificate';
 import type { CookieJar } from '../models/cookie-jar';
-import type { Environment } from '../models/environment';
+import type { Environment, UserUploadEnvironment } from '../models/environment';
 import type { MockRoute } from '../models/mock-route';
 import type { MockServer } from '../models/mock-server';
 import type { Request, RequestAuthentication, RequestHeader, RequestParameter } from '../models/request';
@@ -147,7 +147,7 @@ export const tryToExecutePreRequestScript = async ({
   clientCertificates,
   timelinePath,
   responseId,
-}: Awaited<ReturnType<typeof fetchRequestData>>, workspaceId: string) => {
+}: Awaited<ReturnType<typeof fetchRequestData>>, workspaceId: string, userUploadEnv?: UserUploadEnvironment) => {
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
@@ -177,6 +177,7 @@ export const tryToExecutePreRequestScript = async ({
       settings,
       cookieJar,
       globals: activeGlobalEnvironment,
+      userUploadEnv,
       requestTestResults: new Array<RequestTestResult>(),
     };
   }
@@ -192,6 +193,7 @@ export const tryToExecutePreRequestScript = async ({
     clientCertificates,
     cookieJar,
     globals: activeGlobalEnvironment,
+    userUploadEnv,
   });
   if (!mutatedContext?.request) {
     // exiy early if there was a problem with the pre-request script
@@ -209,6 +211,7 @@ export const tryToExecutePreRequestScript = async ({
     globals: mutatedContext.globals,
     cookieJar: mutatedContext.cookieJar,
     requestTestResults: mutatedContext.requestTestResults,
+    userUploadEnv: mutatedContext.userUploadEnv,
   };
 };
 
@@ -268,7 +271,7 @@ export async function savePatchesMadeByScript(
 }
 
 export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
-  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response, globals } = context;
+  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response, globals, userUploadEnv } = context;
   invariant(script, 'script must be provided');
 
   const settings = await models.settings.get();
@@ -306,6 +309,10 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         cookieJar,
         response,
         globals: globals?.data || undefined,
+        iterationData: userUploadEnv ? {
+          name: userUploadEnv.name,
+          data: userUploadEnv.data || {},
+        } : undefined,
       },
     });
     // @TODO This looks overly complicated and could be simplified.
@@ -315,6 +322,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       request: Request;
       environment: Record<string, any>;
       baseEnvironment: Record<string, any>;
+      iterationData: Record<string, any>;
       settings: Settings;
       clientCertificates: ClientCertificate[];
       cookieJar: CookieJar;
@@ -349,6 +357,16 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       globals.dataPropertyOrder = globalEnvPropertyOrder.map;
     }
 
+    if (userUploadEnv) {
+      const userUploadEnvPropertyOrder = orderedJSON.parse(
+        JSON.stringify(output.iterationData.data || {}),
+        JSON_ORDER_PREFIX,
+        JSON_ORDER_SEPARATOR,
+      );
+      userUploadEnv.data = output.iterationData.data;
+      userUploadEnv.dataPropertyOrder = userUploadEnvPropertyOrder.map;
+    }
+
     return {
       request: output.request,
       environment,
@@ -357,6 +375,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       clientCertificates: output.clientCertificates,
       cookieJar: output.cookieJar,
       globals,
+      userUploadEnv,
       requestTestResults: output.requestTestResults,
     };
   } catch (err) {
@@ -398,6 +417,7 @@ type RequestAndContextAndResponse = RequestContextForScript & {
 type RequestAndContextAndOptionalResponse = RequestContextForScript & {
   script: string;
   response?: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
+  userUploadEnv?: UserUploadEnvironment;
 };
 
 export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
@@ -429,19 +449,30 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
   return postMutatedContext;
 }
 
-export const tryToInterpolateRequest = async (
-  request: Request,
-  environment: string | Environment,
-  purpose?: RenderPurpose,
-  extraInfo?: ExtraRenderInfo,
-  baseEnvironment?: Environment,
-  ignoreUndefinedEnvVariable?: boolean,
+export const tryToInterpolateRequest = async ({
+  request,
+  environment,
+  purpose,
+  extraInfo,
+  baseEnvironment,
+  userUploadEnv,
+  ignoreUndefinedEnvVariable,
+}: {
+  request: Request;
+  environment: string | Environment;
+  purpose?: RenderPurpose;
+  extraInfo?: ExtraRenderInfo;
+  baseEnvironment?: Environment;
+  userUploadEnv?: UserUploadEnvironment;
+  ignoreUndefinedEnvVariable?: boolean;
+}
 ) => {
   try {
     return await getRenderedRequestAndContext({
       request: request,
       environment,
       baseEnvironment,
+      userUploadEnv,
       purpose,
       extraInfo,
       ignoreUndefinedEnvVariable,
