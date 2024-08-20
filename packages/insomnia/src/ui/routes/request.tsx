@@ -431,14 +431,12 @@ export const sendActionImp = async ({
 }) => {
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
-  console.log(`Before: userUploadEnv ${JSON.stringify(userUploadEnv)}`);
   window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
   const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId, userUploadEnv);
   window.main.completeExecutionStep({ requestId });
   if (mutatedContext === null) {
     return null;
   }
-  console.log(`After pre-request script: userUploadEnv ${JSON.stringify(mutatedContext.userUploadEnv)}`);
   // disable after-response script here to avoiding rendering it
   // @TODO This should be handled in a better way. Maybe remove the key from the request object we pass in tryToInterpolateRequest
   const afterResponseScript = mutatedContext.request.afterResponseScript ? `${mutatedContext.request.afterResponseScript}` : undefined;
@@ -455,7 +453,6 @@ export const sendActionImp = async ({
     ignoreUndefinedEnvVariable,
   });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
-  console.log(`Render result in body userUploadEnv : ${renderedResult.request.body.text}`);
   window.main.completeExecutionStep({ requestId });
 
   // TODO: remove this temporary hack to support GraphQL variables in the request body properly

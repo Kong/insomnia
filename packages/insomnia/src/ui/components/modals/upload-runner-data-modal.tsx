@@ -14,9 +14,9 @@ import {
   TableHeader,
 } from 'react-aria-components';
 
-import type { UploadDataType } from '../../routes/runner';
 import { Icon } from '../icon';
 
+export type UploadDataType = Record<string, any>;
 export interface UploadDataModalProps {
   onUploadFile: (file: File, data: UploadDataType[]) => void;
   onClose: () => void;
@@ -62,7 +62,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
           const csvHeaders = csvRows[0];
           const csvContentRows = csvRows.slice(1, csvRows.length);
           const uploadData = csvContentRows.map(contentRow => csvHeaders.reduce((acc: UploadDataType, cur, idx) => {
-            acc[cur] = contentRow[idx];
+            acc[cur] = contentRow[idx] ?? '';
             return acc;
           }, {}));
           setUploadDataHeaders(csvHeaders);
@@ -74,6 +74,9 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
         setInvalidFileReason(`Uploaded file is unsupported ${file.type}`);
       }
     };
+    reader.onerror = () => {
+      setInvalidFileReason(`Failed to read file ${reader.error?.message}`);
+    };
     reader.readAsText(file);
   };
 
@@ -83,7 +86,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
     const filteredUploadData: UploadDataType[] = [];
     uploadData.forEach(data => {
       // filter none object value in json array
-      if (data && typeof data === 'object' && !Array.isArray(data)) {
+      if (data && typeof data === 'object' && !Array.isArray(data) && data !== null) {
         filteredUploadData.push(data);
         // add unique json data keys into jsonDataHeader
         dataHeaders = new Set([...dataHeaders, ...Object.keys(data)]);
@@ -139,7 +142,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
                 <FileTrigger
                   allowsMultiple={false}
                   onSelect={handleFileSelect}
-                  acceptedFileTypes={['.csv', '.json']}
+                  // acceptedFileTypes={['.csv', '.json']}
                 >
                   <Button className="flex flex-1 flex-shrink-0 border-solid border border-[--hl-`sm] py-1 gap-2 items-center justify-center px-2 aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent transition-all text-base">
                     <Icon icon="upload" />
