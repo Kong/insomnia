@@ -60,6 +60,7 @@ export function chunkArray<T>(arr: T[], chunkSize: number) {
 export class VCS {
   _store: Store;
   _driver: BaseDriver;
+  // stored by key `/projects/${project.id}/meta.json`
   _backendProject: BackendProject | null;
   _conflictHandler?: ConflictHandler | null;
   _stageByBackendProjectId: Record<string, Stage> = {};
@@ -191,6 +192,7 @@ export class VCS {
     return this._getBlob(entry.blob);
   }
 
+  // similar to git status, returns staged and unstaged changes
   async status(candidates: StatusCandidate[]) {
     const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
     const branch = await this._getCurrentBranch();
@@ -258,6 +260,7 @@ export class VCS {
     };
   }
 
+  /** add new stage entries to this._stageByBackendProjectId and save added and modified entries to blob */
   async stage(stageEntries: StageEntry[]) {
     const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
     const blobsToStore: Record<string, string> = {};
@@ -947,6 +950,7 @@ export class VCS {
     return allSnapshots;
   }
 
+  // push snapshots to the backend's current branch
   async _queryPushSnapshots(allSnapshots: Snapshot[]) {
     const { accountId } = await this._assertSession();
 
@@ -1033,6 +1037,7 @@ export class VCS {
     return result;
   }
 
+  // upload blobs to the backend
   async _queryPushBlobs(allIds: string[]) {
     const symmetricKey = await this._getBackendProjectSymmetricKey();
 
