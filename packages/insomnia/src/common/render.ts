@@ -456,7 +456,7 @@ export async function getRenderContext(
 
   // Get Keys from user upload environment
   if (userUploadEnv) {
-    getKeySource(userUploadEnv.data || {}, inKey, 'uploadData');
+    getKeySource(userUploadEnv.data || {}, inKey, userUploadEnv.name || 'uploadData');
   }
 
   // Add meta data helper function

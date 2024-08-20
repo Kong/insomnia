@@ -68,7 +68,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
           setUploadDataHeaders(csvHeaders);
           setUploadData(uploadData);
         } else {
-          setInvalidFileReason('CSV file must have at least two rows for varibale names and values');
+          setInvalidFileReason('CSV file must contain at least two rows with first row as variable names');
         }
       } else {
         setInvalidFileReason(`Uploaded file is unsupported ${file.type}`);
