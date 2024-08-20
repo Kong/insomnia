@@ -263,6 +263,8 @@ export interface InsomniaFile {
   mockServer?: MockServer;
   workspace?: Workspace;
   apiSpec?: ApiSpec;
+  hasUncommittedChanges?: boolean;
+  hasUnpushedChanges?: boolean;
 }
 
 export interface ProjectIdLoaderData {
@@ -281,6 +283,7 @@ export interface ProjectLoaderData {
   projects: Project[];
   learningFeaturePromise?: Promise<LearningFeature>;
   remoteFilesPromise?: Promise<InsomniaFile[]>;
+  projectsSyncStatusPromise?: Promise<Record<string, boolean>>;
 }
 
 async function getAllLocalFiles({
@@ -371,9 +374,10 @@ async function getAllLocalFiles({
       mockServer,
       apiSpec,
       workspace,
+      hasUncommittedChanges: workspaceMeta?.hasUncommittedChanges,
+      hasUnpushedChanges: workspaceMeta?.hasUnpushedChanges,
     };
   });
-
   return files;
 }
 
@@ -500,6 +504,26 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   return learningFeature;
 };
 
+const checkSingleProjectSyncStatus = async (projectId: string) => {
+  const projectWorkspaces = await models.workspace.findByParentId(projectId);
+  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+    parentId: {
+      $in: projectWorkspaces.map(w => w._id),
+    },
+  });
+  return workspaceMetas.some(item => item.hasUncommittedChanges || item.hasUnpushedChanges);
+};
+
+const CheckAllProjectSyncStatus = async (projects: Project[]) => {
+  const taskList = projects.map(project => checkSingleProjectSyncStatus(project._id));
+  const res = await Promise.all(taskList);
+  const obj: Record<string, boolean> = {};
+  projects.forEach((project, index) => {
+    obj[project._id] = res[index];
+  });
+  return obj;
+};
+
 export const loader: LoaderFunction = async ({
   params,
 }) => {
@@ -549,6 +573,8 @@ export const loader: LoaderFunction = async ({
 
   const projects = sortProjects(organizationProjects);
 
+  const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
+
   return defer({
     localFiles,
     learningFeaturePromise,
@@ -569,6 +595,7 @@ export const loader: LoaderFunction = async ({
     mockServersCount: localFiles.filter(
       file => file.scope === 'mock-server'
     ).length,
+    projectsSyncStatusPromise,
   });
 };
 
@@ -585,6 +612,7 @@ const ProjectRoute: FC = () => {
     projectsCount,
     learningFeaturePromise,
     remoteFilesPromise,
+    projectsSyncStatusPromise,
   } = useLoaderData() as ProjectLoaderData;
   const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = useLocalStorage('learning-feature-dismissed', '');
   const { organizationId, projectId } = useParams() as {
@@ -593,6 +621,7 @@ const ProjectRoute: FC = () => {
   };
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
   const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
+  const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(projectsSyncStatusPromise);
 
   const allFiles = useMemo(() => {
     return remoteFiles ? [...localFiles, ...remoteFiles] : localFiles;
@@ -726,6 +755,7 @@ const ProjectRoute: FC = () => {
     return {
       ...project,
       presence: projectPresence,
+      hasUncommittedOrUnpushedChanges: checkAllProjectSyncStatus?.[project._id],
     };
   });
 
@@ -1123,6 +1153,7 @@ const ProjectRoute: FC = () => {
                             icon={
                               isRemoteProject(item) ? 'globe-americas' : 'laptop'
                             }
+                            className={item.hasUncommittedOrUnpushedChanges ? 'text-[--color-warning]' : ''}
                           />
                           <span className="truncate">{item.name}</span>
                           <span className="flex-1" />
@@ -1450,6 +1481,14 @@ const ProjectRoute: FC = () => {
                                 />
                                 <span className="truncate">
                                   {item.lastCommit}
+                                </span>
+                              </div>
+                            )}
+                            {(item.hasUncommittedChanges || item.hasUnpushedChanges) && (
+                              <div className="text-sm text-[--color-warning] flex items-center gap-2">
+                                <div className='rounded-full bg-[--color-warning] w-3 h-3 flex-shrink-0' />
+                                <span>
+                                  {item.hasUncommittedChanges ? 'Uncommitted changes' : 'Unpushed changes'}
                                 </span>
                               </div>
                             )}

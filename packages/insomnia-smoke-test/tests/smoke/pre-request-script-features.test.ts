@@ -361,6 +361,8 @@ test.describe('pre-request features tests', async () => {
         await page.locator('[name="httpsProxy"]').fill('localhost:2222');
         await page.locator('[name="noProxy"]').fill('http://a.com,https://b.com');
         await page.locator('.app').press('Escape');
+        // add 1s timeout to ensure noProxy settings is applied - INS-4155
+        await page.waitForTimeout(1000);
 
         await page.getByLabel('Request Collection').getByTestId('test proxies manipulation').press('Enter');
 

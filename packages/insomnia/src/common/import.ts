@@ -17,6 +17,7 @@ import {
 } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { convert, type InsomniaImporter } from '../utils/importers/convert';
+import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
 import { database as db } from './database';
 import { generateId } from './misc';
@@ -159,6 +160,19 @@ export async function importResourcesToProject({ projectId }: { projectId: strin
     await importResourcesToNewWorkspace(projectId, postmanTopLevelFolder);
     return { resources };
   }
+  // if the resource is postman environment,
+  if (ResourceCache.type.id === postmanEnvImporterId && resources.find(isEnvironment)) {
+    await Promise.all(resources.filter(isEnvironment).map(resource =>
+      importResourcesToNewWorkspace(projectId, {
+        name: resource.name,
+        scope: 'environment',
+        // __BASE_ENVIRONMENT_ID__ is the default parentId for environment imported by postman env importer, we use it to indicate the new workspace id
+        _id: '__BASE_ENVIRONMENT_ID__',
+      } as Workspace)
+    ));
+    return { resources };
+  }
+
   // No workspace, so create one
   if (!resources.find(isWorkspace)) {
     await importResourcesToNewWorkspace(projectId);

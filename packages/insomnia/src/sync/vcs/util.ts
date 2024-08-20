@@ -7,6 +7,7 @@ import { deleteKeys, resetKeys, shouldIgnoreKey } from '../ignore-keys';
 import { deterministicStringify } from '../lib/deterministicStringify';
 import type {
   Branch,
+  Compare,
   DocumentKey,
   MergeConflict,
   Snapshot,
@@ -241,10 +242,7 @@ export function threeWayMerge(
 export function compareBranches(
   a: Branch | null,
   b: Branch | null,
-): {
-  ahead: number;
-  behind: number;
-} {
+): Compare {
   const snapshotsA = a ? a.snapshots : [];
   const snapshotsB = b ? b.snapshots : [];
   const latestA = snapshotsA[snapshotsA.length - 1] || null;
