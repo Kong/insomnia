@@ -14,6 +14,7 @@ import {
   sendCurlAndWriteTimeline,
   tryToExecutePreRequestScript,
   tryToInterpolateRequest,
+  tryToTransformRequestWithPlugins,
 } from '../network/network';
 import { invariant } from '../utils/invariant';
 import { database } from './database';
@@ -94,16 +95,16 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     }
     const ignoreUndefinedEnvVariable = true;
     // NOTE: inso ignores active environment, using the one passed in
-    const renderedResult = await tryToInterpolateRequest(
-      mutatedContext.request,
-      mutatedContext.environment,
-      'send',
-      undefined,
-      mutatedContext.baseEnvironment,
+
+    const renderResult = await tryToInterpolateRequest({
+      request: mutatedContext.request,
+      environment: mutatedContext.environment,
+      purpose: 'send',
+      extraInfo: undefined,
+      baseEnvironment: mutatedContext.baseEnvironment,
       ignoreUndefinedEnvVariable,
-    );
-    // skip plugins
-    const renderedRequest = renderedResult.request;
+    });
+    const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,

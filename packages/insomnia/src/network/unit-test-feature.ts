@@ -16,7 +16,7 @@ export function getSendRequestCallback() {
       timelinePath,
       responseId,
     } = await fetchRequestData(requestId);
-    const renderResult = await tryToInterpolateRequest(request, environment._id, 'send');
+    const renderResult = await tryToInterpolateRequest({ request, environment: environment._id, purpose: 'send' });
     const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
     // TODO: remove this temporary hack to support GraphQL variables in the request body properly

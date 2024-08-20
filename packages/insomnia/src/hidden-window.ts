@@ -102,6 +102,10 @@ const runScript = async (
       name: context.baseEnvironment.name,
       data: mutatedContextObject.baseEnvironment,
     },
+    iterationData: context.iterationData ? {
+      name: context.iterationData.name,
+      data: mutatedContextObject.iterationData,
+    } : undefined,
     request: updatedRequest,
     settings: updatedSettings,
     clientCertificates: updatedCertificates,
