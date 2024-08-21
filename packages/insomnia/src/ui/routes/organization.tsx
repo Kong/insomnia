@@ -838,16 +838,36 @@ const OrganizationRoute = () => {
                       }
 
                       if (action === 'new-organization') {
-                        if (currentPlan?.type !== 'enterprise-member') {
+                        // If user is in the scratchpad workspace redirect them to the login page
+                        if (isScratchpadWorkspace) {
                           window.main.openInBrowser(
-                            `${getAppWebsiteBaseURL()}/app/organization/create`,
+                            getLoginUrl(),
                           );
-                        } else {
+                        }
+
+                        if (!currentPlan) {
+                          return;
+                        }
+
+                        // If user has a team or enterprise member plan show them an alert
+                        if (currentPlan.type === 'enterprise-member') {
                           showAlert({
                             title: 'Could not create new organization.',
                             message: 'Your Insomnia account is tied to the enterprise corporate account. Please ask the owner of the enterprise billing to create one for you.',
                           });
                         }
+
+                        // If user has a free or individual plan redirect them to the landing page
+                        if (['free', 'individual'].includes(currentPlan.type)) {
+                          window.main.openInBrowser(
+                            `${getAppWebsiteBaseURL()}/app/landing-page`,
+                          );
+                        }
+
+                        // If user has a team or enterprise plan redirect them to the create organization page
+                        window.main.openInBrowser(
+                          `${getAppWebsiteBaseURL()}/app/dashboard/organizations?create_org=true`,
+                        );
                       }
                     }}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
