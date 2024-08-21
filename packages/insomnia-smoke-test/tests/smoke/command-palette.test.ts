@@ -10,8 +10,7 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
   const text = await loadFixture('smoke-test-collection.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-  await page.getByRole('button', { name: 'Create in project' }).click();
-  await page.getByRole('menuitemradio', { name: 'Import' }).click();
+  await page.getByLabel('Import').click();
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
@@ -20,8 +19,7 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
   const swaggerDoc = await loadFixture('swagger2.yaml');
   await app.evaluate(async ({ clipboard }, swaggerDoc) => clipboard.writeText(swaggerDoc), swaggerDoc);
 
-  await page.getByRole('button', { name: 'Create in project' }).click();
-  await page.getByRole('menuitemradio', { name: 'Import' }).click();
+  await page.getByLabel('Import').click();
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();

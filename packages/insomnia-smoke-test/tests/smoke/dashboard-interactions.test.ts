@@ -19,6 +19,7 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).toContainText('This is an empty project, to get started create your first resource:');
 
       // Rename Project
+      await page.getByRole('row', { name: 'My Project' }).focus();
       await page.getByRole('row', { name: 'My Project' }).getByRole('button', { name: 'Project Actions' }).click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       await page.getByPlaceholder('My Project').click();
@@ -33,6 +34,7 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).toContainText('My Project123');
 
       // Delete project
+      await page.getByRole('row', { name: 'My Project' }).focus();
       await page.getByRole('row', { name: 'My Project' }).getByRole('button', { name: 'Project Actions' }).click();
       await page.getByRole('menuitemradio', { name: 'Delete' }).click();
       await page.getByRole('button', { name: 'Delete' }).click();
@@ -52,10 +54,9 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).not.toContainText('Git Sync');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
-      await page.getByRole('button', { name: 'Create in project' }).click();
       const text = await loadFixture('multiple-workspaces.yaml');
       await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-      await page.getByRole('menuitemradio', { name: 'Import' }).click();
+      await page.getByLabel('Import').click();
       await page.locator('[data-test-id="import-from-clipboard"]').click();
       await page.getByRole('button', { name: 'Scan' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
