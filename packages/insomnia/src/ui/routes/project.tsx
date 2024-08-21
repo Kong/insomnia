@@ -1146,7 +1146,7 @@ const ProjectRoute: FC = () => {
                               isRemoteProject(item) ? 'globe-americas' : 'laptop'
                             }
                           />
-                          <span className={item.hasUncommittedOrUnpushedChanges ? 'text-[--color-warning] truncate' : 'truncate'}>{item.name}</span>
+                          <span className={'truncate'}>{item.name}</span>
                           <span className="flex-1" />
                           {item.presence.length > 0 && <AvatarGroup
                             size="small"
@@ -1419,9 +1419,9 @@ const ProjectRoute: FC = () => {
                               </div>
                               <span>{item.label}</span>
                             </div>
-                            {(item.hasUncommittedChanges || item.hasUnpushedChanges) && <div className='flex items-center justify-center'>
+                            {/* {(item.hasUncommittedChanges || item.hasUnpushedChanges) && <div className='flex items-center justify-center'>
                               <Icon icon="circle" className='group-focus:hidden group-hover:hidden w-2 h-2' color="var(--color-warning)" />
-                            </div>}
+                            </div>} */}
                             <span className="flex-1" />
                             {item.presence.length > 0 && (
                               <AvatarGroup
@@ -1490,7 +1490,7 @@ const ProjectRoute: FC = () => {
                               </div>
                             )}
                             {(item.hasUncommittedChanges || item.hasUnpushedChanges) && (
-                              <div className="text-sm text-[--color-warning] flex items-center gap-2">
+                              <div className="text-sm text-[rgba(var(--color-warning-rgb),0.8)] flex items-center gap-2">
                                 <span>
                                   {item.hasUncommittedChanges ? 'Uncommitted changes' : 'Unpushed changes'}
                                 </span>

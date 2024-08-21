@@ -33,7 +33,7 @@ interface Props {
   project: Project;
   organizationId: string;
   storage: 'cloud_only' | 'local_only' | 'cloud_plus_local';
-  hasUncommittedOrUnpushedChanges: boolean;
+  hasUncommittedOrUnpushedChanges?: boolean;
 }
 
 interface ProjectActionItem {
