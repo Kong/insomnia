@@ -21,7 +21,6 @@ import {
 import { useFetcher } from 'react-router-dom';
 
 import {
-  isDefaultOrganizationProject,
   isRemoteProject,
   type Project,
 } from '../../../models/project';
@@ -62,7 +61,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage, h
       icon: 'gear',
       action: () => setIsProjectSettingsModalOpen(true),
     },
-    ...!isDefaultOrganizationProject(project) ? [{
+    {
       id: 'delete',
       name: 'Delete',
       icon: 'trash',
@@ -86,7 +85,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage, h
           },
         });
       },
-    }] satisfies ProjectActionItem[] : [],
+    },
   ];
 
   useEffect(() => {

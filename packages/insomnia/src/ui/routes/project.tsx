@@ -1837,4 +1837,6 @@ const ProjectRoute: FC = () => {
   );
 };
 
+ProjectRoute.displayName = 'ProjectRoute';
+
 export default ProjectRoute;
