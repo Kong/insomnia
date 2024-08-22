@@ -20,28 +20,34 @@ export function routableFSClient(
     try {
       for (const prefix of Object.keys(otherFS)) {
         if (filePath.indexOf(path.normalize(prefix)) === 0) {
-      // TODO: remove non-null assertion
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const result = otherFS[prefix].promises[method]!(filePath, ...args);
+          // TODO: remove non-null assertion
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const result = await otherFS[prefix].promises[method]!(filePath, ...args);
 
           return result;
         }
       }
     } catch (err) {
-      if (err instanceof Error && err.message !== 'EXTERNAL_WORKSPACE') {
-        throw err;
-      }
+      throw err;
     }
 
     // Uncomment this to debug operations
-    // console.log('[routablefs] Executing', method, filePath, { args });
+    console.log('[routablefs] Executing', method, filePath, { args });
     // Fallback to default if no prefix matched
     // TODO: remove non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const result = await defaultFS.promises[method]!(filePath, ...args);
-    // Uncomment this to debug operations
-    // console.log('[routablefs] Executing', method, filePath, { args }, { result });
-    return result;
+    try {
+      const result = await defaultFS.promises[method]!(filePath, ...args);
+      // Uncomment this to debug operations
+      // console.log('[routablefs] Executing', method, filePath, { args }, { result });
+      return result;
+    } catch (e) {
+      if (e instanceof Error && e.message.startsWith('ENNOENT') && method === 'writeFile') {
+        console.log(`[routablefs] Creating directory for ${filePath}`);
+        await defaultFS.promises.mkdir!(path.dirname(filePath), { recursive: true });
+        return defaultFS.promises[method]!(filePath, ...args);
+      }
+    }
   };
 
   // @ts-expect-error -- TSCONVERSION declare and initialize together to avoid an error
