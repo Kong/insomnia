@@ -28,6 +28,7 @@ import type { WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecuteAfterResponseScript, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import { RenderErrorSubType } from '../../templating';
+import { parseGraphQLReqeustBody } from '../../utils/graph-ql';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
@@ -396,17 +397,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     window.main.completeExecutionStep({ requestId });
 
     // TODO: remove this temporary hack to support GraphQL variables in the request body properly
-    if (renderedRequest && renderedRequest.body?.text && renderedRequest.body?.mimeType === 'application/graphql') {
-      try {
-        const parsedBody = JSON.parse(renderedRequest.body.text);
-        if (typeof parsedBody.variables === 'string') {
-          parsedBody.variables = JSON.parse(parsedBody.variables);
-          renderedRequest.body.text = JSON.stringify(parsedBody, null, 2);
-        }
-      } catch (e) {
-        console.error('Failed to parse GraphQL variables', e);
-      }
-    }
+    parseGraphQLReqeustBody(renderedRequest);
 
     window.main.addExecutionStep({ requestId, stepName: 'Sending request' });
     const response = await sendCurlAndWriteTimeline(

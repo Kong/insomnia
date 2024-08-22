@@ -8,11 +8,11 @@ test('can use node-libcurl, httpsnippet, hidden browser window', async ({ app, p
   const responseBody = page.locator('[data-testid="CodeEditor"]:visible', {
     has: page.locator('.CodeMirror-activeline'),
   });
-  await page.getByRole('button', { name: 'Create in project' }).click();
+
   const text = await loadFixture('smoke-test-collection.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-  await page.getByRole('menuitemradio', { name: 'Import' }).click();
+  await page.getByLabel('Import').click();
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
@@ -42,8 +42,7 @@ test('can use external modules in scripts ', async ({ app, page }) => {
 
   // import collection
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-  await page.getByRole('button', { name: 'Create in project' }).click();
-  await page.getByRole('menuitemradio', { name: 'Import' }).click();
+  await page.getByLabel('Import').click();
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();

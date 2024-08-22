@@ -1,3 +1,5 @@
+import type { EditorFromTextArea, MarkerRange } from 'codemirror';
+
 import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
 import objectPath from './third_party/objectPath';
 
@@ -35,6 +37,8 @@ export interface NunjucksParsedTag {
   description?: string;
   disablePreview?: (arg0: NunjucksParsedTagArg[]) => boolean;
 }
+
+export type NunjucksTagContextMenuAction = 'edit' | 'delete';
 
 interface Key {
   name: string;
@@ -283,4 +287,29 @@ export function extractVariableKey(text: string = '', line: number, column: numb
   const regexVariable = /{{\s*([^ }]+)\s*[^}]*\s*}}/;
   const res = errorText?.match(regexVariable);
   return res?.[1] || '';
+}
+
+export function extractNunjucksTagFromCoords(
+  coordinates: { left: number; top: number },
+  cm: React.MutableRefObject<EditorFromTextArea | null>
+): { range: MarkerRange; template: string } | void {
+  if (cm && cm.current) {
+    const { left, top } = coordinates;
+    // get position from left and right position
+    const textMarkerPos = cm.current.coordsChar({ left, top });
+    // get textMarker from position
+    const textMarker = cm.current?.getDoc().findMarksAt(textMarkerPos)[0];
+    if (textMarker) {
+      const range = textMarker.find() as MarkerRange;
+      return {
+        range,
+        // @ts-expect-error __template shoule be property of nunjucks tag markText
+        template: textMarker.__template || '',
+      };
+    }
+  }
+}
+
+export interface nunjucksTagContextMenuOptions extends Exclude<ReturnType<typeof extractNunjucksTagFromCoords>, void> {
+  type: NunjucksTagContextMenuAction;
 }

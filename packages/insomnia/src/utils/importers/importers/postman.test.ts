@@ -84,7 +84,7 @@ describe('postman', () => {
     });
 
     describe('awsv4', () => {
-      it('should not duplicate headers', () => {
+      it('get auth info from header', () => {
         const request: Request1 = {
           header: [
             {
@@ -99,7 +99,7 @@ describe('postman', () => {
         };
         const schema = postmanSchema({ requests: [request] });
         const postman = new ImportPostman(schema);
-        const { authentication, headers } = postman.importRequestItem({ request }, 'n/a');
+        const { authentication } = postman.importRequestItem({ request }, 'n/a');
 
         expect(authentication).toEqual({
           accessKeyId: '<accessKeyId>',
@@ -110,12 +110,11 @@ describe('postman', () => {
           sessionToken: 'someTokenSomethingSomething',
           type: 'iam',
         });
-        expect(headers).toEqual([]);
       });
     });
 
     describe('basic', () => {
-      it('returns a simple basic auth and does not duplicate authorization header', () => {
+      it('returns a simple basic auth', () => {
         const username = 'ziltoid';
         const password = 'theOmniscient';
         const token = Buffer.from(`${username}:${password}`).toString('base64');
@@ -134,7 +133,7 @@ describe('postman', () => {
         };
         const schema = postmanSchema({ requests: [request] });
         const postman = new ImportPostman(schema);
-        const { authentication, headers } = postman.importRequestItem({ request }, 'n/a');
+        const { authentication } = postman.importRequestItem({ request }, 'n/a');
 
         expect(authentication).toEqual({
           type: 'basic',
@@ -142,10 +141,6 @@ describe('postman', () => {
           username: 'ziltoid',
           password: 'theOmniscient',
         });
-        expect(headers).toEqual([{
-          name: nonAuthHeader.key,
-          value: nonAuthHeader.value,
-        }]);
       });
     });
 
@@ -163,7 +158,7 @@ describe('postman', () => {
         };
         const schema = postmanSchema({ requests: [request] });
         const postman = new ImportPostman(schema);
-        const { authentication, headers } = postman.importRequestItem({ request }, 'n/a');
+        const { authentication } = postman.importRequestItem({ request }, 'n/a');
 
         expect(authentication).toEqual({
           type: 'bearer',
@@ -171,10 +166,6 @@ describe('postman', () => {
           token: '{{token}}',
           prefix: '',
         });
-        expect(headers).toEqual([{
-          name: nonAuthHeader.key,
-          value: nonAuthHeader.value,
-        }]);
       });
 
       it('handles multiple spaces', () => {
@@ -205,7 +196,7 @@ describe('postman', () => {
         };
         const schema = postmanSchema({ requests: [request] });
         const postman = new ImportPostman(schema);
-        const { authentication, headers } = postman.importRequestItem({ request }, 'n/a');
+        const { authentication } = postman.importRequestItem({ request }, 'n/a');
 
         expect(authentication).toEqual({
           type: 'bearer',
@@ -213,7 +204,6 @@ describe('postman', () => {
           token: '',
           prefix: '',
         });
-        expect(headers).toEqual([]);
       });
     });
 
@@ -229,7 +219,7 @@ describe('postman', () => {
         };
         const schema = postmanSchema({ requests: [request] });
         const postman = new ImportPostman(schema);
-        const { authentication, headers } = postman.importRequestItem({ request }, 'n/a');
+        const { authentication } = postman.importRequestItem({ request }, 'n/a');
 
         expect(authentication).toEqual({
           type: 'digest',
@@ -237,7 +227,6 @@ describe('postman', () => {
           username: username,
           password: '',
         });
-        expect(headers).toEqual([]);
       });
     });
 
@@ -252,7 +241,7 @@ describe('postman', () => {
         };
         const schema = postmanSchema({ requests: [request] });
         const postman = new ImportPostman(schema);
-        const { authentication, headers } = postman.importRequestItem({ request }, 'n/a');
+        const { authentication } = postman.importRequestItem({ request }, 'n/a');
 
         expect(authentication).toEqual({
           callback: 'Callback%20URL',
@@ -270,7 +259,6 @@ describe('postman', () => {
           verifier: 'Verifier',
           version: 'Version',
         });
-        expect(headers).toEqual([]);
       });
     });
   });

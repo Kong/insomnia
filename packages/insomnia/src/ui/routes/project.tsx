@@ -263,6 +263,8 @@ export interface InsomniaFile {
   mockServer?: MockServer;
   workspace?: Workspace;
   apiSpec?: ApiSpec;
+  hasUncommittedChanges?: boolean;
+  hasUnpushedChanges?: boolean;
 }
 
 export interface ProjectIdLoaderData {
@@ -281,6 +283,7 @@ export interface ProjectLoaderData {
   projects: Project[];
   learningFeaturePromise?: Promise<LearningFeature>;
   remoteFilesPromise?: Promise<InsomniaFile[]>;
+  projectsSyncStatusPromise?: Promise<Record<string, boolean>>;
 }
 
 async function getAllLocalFiles({
@@ -371,9 +374,10 @@ async function getAllLocalFiles({
       mockServer,
       apiSpec,
       workspace,
+      hasUncommittedChanges: workspaceMeta?.hasUncommittedChanges,
+      hasUnpushedChanges: workspaceMeta?.hasUnpushedChanges,
     };
   });
-
   return files;
 }
 
@@ -500,6 +504,26 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   return learningFeature;
 };
 
+const checkSingleProjectSyncStatus = async (projectId: string) => {
+  const projectWorkspaces = await models.workspace.findByParentId(projectId);
+  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+    parentId: {
+      $in: projectWorkspaces.map(w => w._id),
+    },
+  });
+  return workspaceMetas.some(item => item.hasUncommittedChanges || item.hasUnpushedChanges);
+};
+
+const CheckAllProjectSyncStatus = async (projects: Project[]) => {
+  const taskList = projects.map(project => checkSingleProjectSyncStatus(project._id));
+  const res = await Promise.all(taskList);
+  const obj: Record<string, boolean> = {};
+  projects.forEach((project, index) => {
+    obj[project._id] = res[index];
+  });
+  return obj;
+};
+
 export const loader: LoaderFunction = async ({
   params,
 }) => {
@@ -549,6 +573,8 @@ export const loader: LoaderFunction = async ({
 
   const projects = sortProjects(organizationProjects);
 
+  const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
+
   return defer({
     localFiles,
     learningFeaturePromise,
@@ -569,6 +595,7 @@ export const loader: LoaderFunction = async ({
     mockServersCount: localFiles.filter(
       file => file.scope === 'mock-server'
     ).length,
+    projectsSyncStatusPromise,
   });
 };
 
@@ -585,6 +612,7 @@ const ProjectRoute: FC = () => {
     projectsCount,
     learningFeaturePromise,
     remoteFilesPromise,
+    projectsSyncStatusPromise,
   } = useLoaderData() as ProjectLoaderData;
   const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = useLocalStorage('learning-feature-dismissed', '');
   const { organizationId, projectId } = useParams() as {
@@ -593,6 +621,7 @@ const ProjectRoute: FC = () => {
   };
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
   const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
+  const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(projectsSyncStatusPromise);
 
   const allFiles = useMemo(() => {
     return remoteFiles ? [...localFiles, ...remoteFiles] : localFiles;
@@ -726,6 +755,7 @@ const ProjectRoute: FC = () => {
     return {
       ...project,
       presence: projectPresence,
+      hasUncommittedOrUnpushedChanges: checkAllProjectSyncStatus?.[project._id],
     };
   });
 
@@ -913,14 +943,6 @@ const ProjectRoute: FC = () => {
         action: createNewGlobalEnvironment,
       },
       {
-      id: 'import',
-      name: 'Import',
-      icon: 'file-import',
-      action: () => {
-        setImportModalType('file');
-      },
-    },
-    {
       id: 'git-clone',
       name: 'Git Clone',
       icon: 'code-fork',
@@ -1124,14 +1146,14 @@ const ProjectRoute: FC = () => {
                               isRemoteProject(item) ? 'globe-americas' : 'laptop'
                             }
                           />
-                          <span className="truncate">{item.name}</span>
+                          <span className={'truncate'}>{item.name}</span>
                           <span className="flex-1" />
                           {item.presence.length > 0 && <AvatarGroup
                             size="small"
                             maxAvatars={3}
                             items={item.presence}
                           />}
-                          {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} storage={storage} />}
+                          {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown hasUncommittedOrUnpushedChanges={item.hasUncommittedOrUnpushedChanges} organizationId={organizationId} project={item} storage={storage} />}
                         </div>
                       </GridListItem>
                     );
@@ -1339,6 +1361,17 @@ const ProjectRoute: FC = () => {
                       </Menu>
                     </Popover>
                   </MenuTrigger>
+
+                  <Button
+                    onPress={() => {
+                      setImportModalType('file');
+                    }}
+                    aria-label="Import"
+                    className="flex items-center justify-center px-4 gap-2 h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  >
+                    <Icon icon="file-import" /> Import
+                  </Button>
+
                 </div>
 
                 <div className='flex-1 overflow-y-auto'>
@@ -1386,6 +1419,9 @@ const ProjectRoute: FC = () => {
                               </div>
                               <span>{item.label}</span>
                             </div>
+                            {/* {(item.hasUncommittedChanges || item.hasUnpushedChanges) && <div className='flex items-center justify-center'>
+                              <Icon icon="circle" className='group-focus:hidden group-hover:hidden w-2 h-2' color="var(--color-warning)" />
+                            </div>} */}
                             <span className="flex-1" />
                             {item.presence.length > 0 && (
                               <AvatarGroup
@@ -1450,6 +1486,13 @@ const ProjectRoute: FC = () => {
                                 />
                                 <span className="truncate">
                                   {item.lastCommit}
+                                </span>
+                              </div>
+                            )}
+                            {(item.hasUncommittedChanges || item.hasUnpushedChanges) && (
+                              <div className="text-sm text-[rgba(var(--color-warning-rgb),0.8)] flex items-center gap-2">
+                                <span>
+                                  {item.hasUncommittedChanges ? 'Uncommitted changes' : 'Unpushed changes'}
                                 </span>
                               </div>
                             )}

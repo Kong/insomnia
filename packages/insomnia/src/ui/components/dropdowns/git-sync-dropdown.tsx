@@ -9,6 +9,8 @@ import type { GitRepository } from '../../../models/git-repository';
 import { deleteGitRepository } from '../../../models/helpers/git-repository-operations';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import type {
+  GitCanPushLoaderData,
+  GitChangesLoaderData,
   GitFetchLoaderData,
   GitRepoLoaderData,
   GitStatusResult,
@@ -56,6 +58,8 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   const gitRepoDataFetcher = useFetcher<GitRepoLoaderData>();
   const gitFetchFetcher = useFetcher<GitFetchLoaderData>();
   const gitStatusFetcher = useFetcher<GitStatusResult>();
+  const gitChangesFetcher = useFetcher<GitChangesLoaderData>();
+  const gitCanPushFetcher = useFetcher<GitCanPushLoaderData>();
 
   const loadingPush = gitPushFetcher.state === 'loading';
   const loadingPull = gitPullFetcher.state === 'loading';
@@ -80,6 +84,18 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
     projectId,
     workspaceId,
   ]);
+
+  useEffect(() => {
+    if (gitRepository?.uri && gitRepository?._id && gitChangesFetcher.state === 'idle' && !gitChangesFetcher.data && gitRepoDataFetcher.data) {
+      gitChangesFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/changes`);
+    }
+  }, [gitChangesFetcher, gitRepoDataFetcher.data, gitRepository?._id, gitRepository?.uri, organizationId, projectId, workspaceId]);
+
+  useEffect(() => {
+    if (gitRepository?.uri && gitRepository?._id && gitCanPushFetcher.state === 'idle' && !gitCanPushFetcher.data && gitRepoDataFetcher.data) {
+      gitCanPushFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/can-push`);
+    }
+  }, [gitCanPushFetcher, gitRepoDataFetcher.data, gitRepository?._id, gitRepository?.uri, organizationId, projectId, workspaceId]);
 
   // Only fetch the repo status if we have a repo uri and we don't have the status already
   const shouldFetchGitRepoStatus = Boolean(gitRepository?.uri && gitRepository?._id && gitStatusFetcher.state === 'idle' && !gitStatusFetcher.data && gitRepoDataFetcher.data);

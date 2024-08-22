@@ -136,8 +136,8 @@ const defaultRegistry: HotKeyRegistry = {
     ],
   },
   request_showDelete: {
-    macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.delete.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.delete.keyCode }],
+    macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.backspace.keyCode }],
+    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.backspace.keyCode }],
   },
   request_showCreateFolder: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.n.keyCode }],
