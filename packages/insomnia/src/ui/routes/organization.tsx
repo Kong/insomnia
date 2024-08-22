@@ -852,7 +852,7 @@ const OrganizationRoute = () => {
                         // If user has a team or enterprise member plan show them an alert
                         if (currentPlan.type === 'enterprise-member') {
                           showAlert({
-                            title: 'Could not create new organization.',
+                            title: 'Cannot create new organization.',
                             message: 'Your Insomnia account is tied to the enterprise corporate account. Please ask the owner of the enterprise billing to create one for you.',
                           });
                         }
