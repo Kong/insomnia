@@ -293,7 +293,13 @@ export const gitChangesLoader: LoaderFunction = async ({
 
   const repoId = workspaceMeta?.gitRepositoryId;
 
-  invariant(repoId, 'Workspace is not linked to a git repository');
+  if (!repoId) {
+    return {
+      branch: '',
+      changes: [],
+      statusNames: {},
+    };
+  }
 
   const gitRepository = await models.gitRepository.getById(repoId);
 
@@ -333,7 +339,11 @@ export const canPushLoader: LoaderFunction = async ({ params }): Promise<GitCanP
 
   const repoId = workspaceMeta?.gitRepositoryId;
 
-  invariant(repoId, 'Workspace is not linked to a git repository');
+  if (!repoId) {
+    return {
+      canPush: false,
+    };
+  }
 
   const gitRepository = await models.gitRepository.getById(repoId);
 
