@@ -64,6 +64,17 @@ resources:
     headers:
       - name: User-Agent
         value: insomnia/8.6.1
+    authentication: {}
+    metaSortKey: -1707809028499
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
   - _id: req_244fe815da6c4342a17f0cfd98cf648c
     parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
     modified: 1707809218855

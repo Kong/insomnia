@@ -384,8 +384,9 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
 
     if (err.response && err.requestMeta && err.response._id) {
       // this part is for persisting useful info (e.g. timeline) for debugging, even there is an error
-      const response = await models.response.getById(err.response._id) || await models.response.create(e.response, err.maxHistoryResponses);
-      await models.requestMeta.update(e.requestMeta, { activeResponseId: response._id });
+      const existingResponse = await models.response.getById(err.response._id);
+      const response = existingResponse || await models.response.create(err.response, err.maxHistoryResponses);
+      await models.requestMeta.update(err.requestMeta, { activeResponseId: response._id });
     }
 
     window.main.completeExecutionStep({ requestId });
