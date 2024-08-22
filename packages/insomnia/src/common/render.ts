@@ -558,7 +558,7 @@ export async function getRenderedRequestAndContext(
     extraInfo,
     purpose,
     ignoreUndefinedEnvVariable,
-  }: RenderRequestOptions
+  }: RenderRequestOptions,
 ): Promise<RequestAndContext> {
   const ancestors = await getRenderContextAncestors(request);
   const workspace = ancestors.find(isWorkspace);

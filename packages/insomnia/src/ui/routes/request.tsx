@@ -422,21 +422,41 @@ export const sendActionImp = async ({
   shouldPromptForPathAfterResponse,
   ignoreUndefinedEnvVariable,
   testResultCollector,
+  iteration,
+  iterationCount,
 }: {
   requestId: string;
   workspaceId: string;
   shouldPromptForPathAfterResponse: boolean | undefined;
   ignoreUndefinedEnvVariable: boolean | undefined;
   testResultCollector?: RunnerContextForRequest;
+    iteration?: number;
+    iterationCount?: number;
     userUploadEnv?: UserUploadEnvironment;
 }) => {
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
   window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
-  const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId, userUploadEnv);
+  const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId, userUploadEnv, iteration, iterationCount);
   window.main.completeExecutionStep({ requestId });
   if (mutatedContext === null) {
     return null;
+  }
+  if (mutatedContext.execution?.skipRequest) {
+    // cancel request running if skipRequest in pre-request script
+    const responseId = requestData.responseId;
+    const responsePatch = {
+      _id: responseId,
+      parentId: requestId,
+      environemntId: requestData.environment,
+      statusMessage: 'Cancelled',
+      error: 'Request was cancelled by pre-request script',
+    };
+    // create and update response to activeResponse
+    await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
+    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: responseId });
+    window.main.completeExecutionStep({ requestId });
+    return mutatedContext;
   }
   // disable after-response script here to avoiding rendering it
   // @TODO This should be handled in a better way. Maybe remove the key from the request object we pass in tryToInterpolateRequest
@@ -528,7 +548,7 @@ export const sendActionImp = async ({
   if (!shouldWriteToFile) {
     const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
     await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-    return null;
+    return mutatedContext;
   }
 
   if (requestMeta.downloadPath) {

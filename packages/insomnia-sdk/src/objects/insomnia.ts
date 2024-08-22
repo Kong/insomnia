@@ -6,6 +6,7 @@ import type { Settings } from 'insomnia/src/models/settings';
 import { toPreRequestAuth } from './auth';
 import { CookieObject } from './cookies';
 import { Environment, Variables } from './environments';
+import { Execution } from './execution';
 import type { RequestContext } from './interfaces';
 import { Request as ScriptRequest, type RequestOptions, toScriptRequestBody } from './request';
 import { RequestInfo } from './request-info';
@@ -24,6 +25,7 @@ export class InsomniaObject {
     public cookies: CookieObject;
     public info: RequestInfo;
     public response?: ScriptResponse;
+    public execution: Execution;
 
     private clientCertificates: ClientCertificate[];
     private _expect = expect;
@@ -49,6 +51,7 @@ export class InsomniaObject {
             clientCertificates: ClientCertificate[];
             cookies: CookieObject;
             requestInfo: RequestInfo;
+            execution: Execution;
             response?: ScriptResponse;
         },
     ) {
@@ -60,6 +63,7 @@ export class InsomniaObject {
         this.variables = rawObj.variables;
         this.cookies = rawObj.cookies;
         this.response = rawObj.response;
+        this.execution = rawObj.execution;
 
         this.info = rawObj.requestInfo;
         this.request = rawObj.request;
@@ -114,6 +118,7 @@ export class InsomniaObject {
             info: this.info.toObject(),
             response: this.response ? this.response.toObject() : undefined,
             requestTestResults: this.requestTestResults,
+            execution: this.execution.toObject(),
         };
     };
 }
@@ -145,8 +150,8 @@ export async function initInsomniaObject(
     // TODO: update follows when post-request script and iterationData are introduced
     const requestInfo = new RequestInfo({
         eventName: 'prerequest',
-        iteration: 1,
-        iterationCount: 1,
+        iteration: rawObj.requestInfo.iteration || 1,
+        iterationCount: rawObj.requestInfo.iterationCount || 0,
         requestName: rawObj.request.name,
         requestId: rawObj.request._id,
     });
@@ -211,6 +216,7 @@ export async function initInsomniaObject(
             .filter(param => !param.disabled)
             .map(param => ({ key: param.name, value: param.value }))
     );
+
     const reqOpt: RequestOptions = {
         name: rawObj.request.name,
         url: reqUrl,
@@ -225,21 +231,23 @@ export async function initInsomniaObject(
         pathParameters: rawObj.request.pathParameters,
     };
     const request = new ScriptRequest(reqOpt);
+    const execution = new Execution({ location: rawObj.execution.location });
 
     const responseBody = await readBodyFromPath(rawObj.response);
     const response = rawObj.response ? toScriptResponse(request, rawObj.response, responseBody) : undefined;
 
     return new InsomniaObject({
-            globals,
-            environment,
-            baseEnvironment,
-            iterationData,
-            variables,
-            request,
-            settings: rawObj.settings,
-            clientCertificates: rawObj.clientCertificates,
-            cookies,
-            requestInfo,
-            response,
+        globals,
+        environment,
+        baseEnvironment,
+        iterationData,
+        variables,
+        request,
+        settings: rawObj.settings,
+        clientCertificates: rawObj.clientCertificates,
+        cookies,
+        requestInfo,
+        response,
+        execution,
     });
 };

@@ -4,6 +4,8 @@ import type { Request } from 'insomnia/src/models/request';
 import type { Settings } from 'insomnia/src/models/settings';
 import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
 
+import type { ExecutionOption } from './execution';
+import type { RequestInfoOption } from './request-info';
 import type { RequestTestResult } from './test';
 
 export interface IEnvironment {
@@ -26,4 +28,6 @@ export interface RequestContext {
     // only for the after-response script
     response?: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError;
     requestTestResults?: RequestTestResult[];
+    requestInfo: RequestInfoOption;
+    execution: ExecutionOption;
 }
