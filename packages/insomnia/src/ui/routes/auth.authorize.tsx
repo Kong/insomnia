@@ -1,12 +1,11 @@
 import React, { Fragment } from 'react';
-import { Heading } from 'react-aria-components';
+import { Button, Heading } from 'react-aria-components';
 import { type ActionFunction, redirect, useFetcher, useFetchers, useNavigate } from 'react-router-dom';
 
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { getLoginUrl, submitAuthCode } from '../auth-session-provider';
 import { Icon } from '../components/icon';
-import { Button } from '../components/themed-button';
 
 export const action: ActionFunction = async ({
   request,
@@ -141,11 +140,8 @@ const Authorize = () => {
       )}
       <div className='flex justify-center w-full'>
         <Button
-          variant="text"
-          style={{
-            gap: 'var(--padding-xs)',
-          }}
-          onClick={() => {
+          className="flex items-center gap-2"
+          onPress={() => {
             navigate('/auth/login');
           }}
         >

@@ -33,6 +33,7 @@ interface Props {
   project: Project;
   organizationId: string;
   storage: 'cloud_only' | 'local_only' | 'cloud_plus_local';
+  hasUncommittedOrUnpushedChanges?: boolean;
 }
 
 interface ProjectActionItem {
@@ -42,7 +43,7 @@ interface ProjectActionItem {
   action: (projectId: string, projectName: string) => void;
 }
 
-export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage }) => {
+export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage, hasUncommittedOrUnpushedChanges }) => {
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] =
     useState(false);
   const deleteProjectFetcher = useFetcher();
@@ -128,10 +129,15 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
           </Tooltip>
         </TooltipTrigger>
       }
+      {hasUncommittedOrUnpushedChanges && (
+        <div className='aspect-square h-6 flex items-center justify-center'>
+          <Icon icon="circle" className='group-focus:hidden group-hover:hidden w-2 h-2' color="var(--color-warning)" />
+        </div>
+      )}
       <MenuTrigger>
         <Button
           aria-label="Project Actions"
-          className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="opacity-0 hidden items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 group-focus:flex group-hover:flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
         >
           <Icon icon="caret-down" />
         </Button>

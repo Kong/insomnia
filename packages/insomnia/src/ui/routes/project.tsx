@@ -943,14 +943,6 @@ const ProjectRoute: FC = () => {
         action: createNewGlobalEnvironment,
       },
       {
-      id: 'import',
-      name: 'Import',
-      icon: 'file-import',
-      action: () => {
-        setImportModalType('file');
-      },
-    },
-    {
       id: 'git-clone',
       name: 'Git Clone',
       icon: 'code-fork',
@@ -1153,16 +1145,15 @@ const ProjectRoute: FC = () => {
                             icon={
                               isRemoteProject(item) ? 'globe-americas' : 'laptop'
                             }
-                            className={item.hasUncommittedOrUnpushedChanges ? 'text-[--color-warning]' : ''}
                           />
-                          <span className="truncate">{item.name}</span>
+                          <span className={'truncate'}>{item.name}</span>
                           <span className="flex-1" />
                           {item.presence.length > 0 && <AvatarGroup
                             size="small"
                             maxAvatars={3}
                             items={item.presence}
                           />}
-                          {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} storage={storage} />}
+                          {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown hasUncommittedOrUnpushedChanges={item.hasUncommittedOrUnpushedChanges} organizationId={organizationId} project={item} storage={storage} />}
                         </div>
                       </GridListItem>
                     );
@@ -1370,6 +1361,17 @@ const ProjectRoute: FC = () => {
                       </Menu>
                     </Popover>
                   </MenuTrigger>
+
+                  <Button
+                    onPress={() => {
+                      setImportModalType('file');
+                    }}
+                    aria-label="Import"
+                    className="flex items-center justify-center px-4 gap-2 h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  >
+                    <Icon icon="file-import" /> Import
+                  </Button>
+
                 </div>
 
                 <div className='flex-1 overflow-y-auto'>
@@ -1417,6 +1419,9 @@ const ProjectRoute: FC = () => {
                               </div>
                               <span>{item.label}</span>
                             </div>
+                            {/* {(item.hasUncommittedChanges || item.hasUnpushedChanges) && <div className='flex items-center justify-center'>
+                              <Icon icon="circle" className='group-focus:hidden group-hover:hidden w-2 h-2' color="var(--color-warning)" />
+                            </div>} */}
                             <span className="flex-1" />
                             {item.presence.length > 0 && (
                               <AvatarGroup
@@ -1485,8 +1490,7 @@ const ProjectRoute: FC = () => {
                               </div>
                             )}
                             {(item.hasUncommittedChanges || item.hasUnpushedChanges) && (
-                              <div className="text-sm text-[--color-warning] flex items-center gap-2">
-                                <div className='rounded-full bg-[--color-warning] w-3 h-3 flex-shrink-0' />
+                              <div className="text-sm text-[rgba(var(--color-warning-rgb),0.8)] flex items-center gap-2">
                                 <span>
                                   {item.hasUncommittedChanges ? 'Uncommitted changes' : 'Unpushed changes'}
                                 </span>

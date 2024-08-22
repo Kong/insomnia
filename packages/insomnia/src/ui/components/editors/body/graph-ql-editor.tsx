@@ -45,12 +45,11 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
     content.variables = optionalProps.variables;
   }
 
-  if (query) {
+  if (isString(query)) {
     content.query = query;
   }
 
   // The below items are optional; should be set to undefined if present and empty
-  const isString = (value?: string): value is string => typeof value === 'string' || (value as unknown) instanceof String;
   if (isString(operationName)) {
     content.operationName = operationName.length ? operationName : undefined;
   }
@@ -59,9 +58,15 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
     content.variables = variables.length ? variables : undefined;
   }
 
+  // Set empty content after user has deleted the query and variables - INS-132
+  if (!content.query && !content.variables) {
+    return '';
+  }
+
   return JSON.stringify(content);
 }
 
+const isString = (value?: string): value is string => typeof value === 'string' || (value as unknown) instanceof String;
 const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode => def.kind === Kind.OPERATION_DEFINITION;
 
 const fetchGraphQLSchemaForRequest = async ({
@@ -334,6 +339,10 @@ export const GraphQLEditor: FC<Props> = ({
       }));
     } catch (error) {
       console.warn('failed to parse', error);
+      if (isString(query) && query.trim() === '') {
+        // update request body when query is empty
+        onChange(getGraphQLContent(state.body, query, ''));
+      };
       setState(state => ({
         ...state,
         documentAST: null,

@@ -74,7 +74,7 @@ const getCookies = 'const cookies = insomnia.response.cookies.toObject();';
 
 const checkStatus200 =
   `insomnia.test('Check if status is 200', () => {
-    insomnia.expect(insomnia.response.status).to.eql(200);
+    insomnia.expect(insomnia.response.code).to.eql(200);
 });`;
 
 const expectToEqual = 'insomnia.expect(200).to.eql(200);';
