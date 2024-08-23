@@ -412,6 +412,7 @@ export interface RunnerContextForRequest {
   duration: number; // millisecond
   size: number;
   results: RequestTestResult[];
+  responseId: string;
 }
 
 export const sendActionImp = async ({
@@ -511,6 +512,7 @@ export const sendActionImp = async ({
     testResultCollector.duration = timingSteps.reduce((acc: number, cur: TimingStep) => {
       return acc + (cur.duration || 0);
     }, 0);
+    testResultCollector.responseId = response._id;
   }
   const responsePatch = postMutatedContext ?
     {
