@@ -285,7 +285,7 @@ export const Runner: FC<{}> = () => {
             const results = await models.runnerTestResult.findByParentId(workspaceId) || [];
             setTestHistory(results.reverse());
             if (results.length > 0) {
-              const latestResult = results[results.length - 1];
+              const latestResult = results[0];
               setExecutionResult(latestResult);
             }
             setOnTestEnd(false);
