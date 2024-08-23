@@ -27,6 +27,7 @@ export const action: ActionFunction = async ({
     event: SegmentEvent.loginSuccess,
   });
   window.localStorage.setItem('hasUserLoggedInBefore', 'true');
+
   return redirect('/organization');
 };
 
