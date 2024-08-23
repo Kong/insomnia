@@ -27,12 +27,6 @@ export const action: ActionFunction = async ({
     event: SegmentEvent.loginSuccess,
   });
   window.localStorage.setItem('hasUserLoggedInBefore', 'true');
-  const specificOrgRedirectAfterAuthorize = window.localStorage.getItem('specificOrgRedirectAfterAuthorize');
-  if (specificOrgRedirectAfterAuthorize && specificOrgRedirectAfterAuthorize !== '') {
-    window.localStorage.removeItem('specificOrgRedirectAfterAuthorize');
-    return redirect(`/organization/${specificOrgRedirectAfterAuthorize}`);
-  }
-
   return redirect('/organization');
 };
 
