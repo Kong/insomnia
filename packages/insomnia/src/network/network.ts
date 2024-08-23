@@ -20,7 +20,7 @@ import type { HeaderResult, ResponsePatch } from '../main/network/libcurl-promis
 import * as models from '../models';
 import type { CaCertificate } from '../models/ca-certificate';
 import type { ClientCertificate } from '../models/client-certificate';
-import type { CookieJar } from '../models/cookie-jar';
+import type { Cookie, CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import type { MockRoute } from '../models/mock-route';
 import type { MockServer } from '../models/mock-server';
@@ -218,6 +218,7 @@ export async function savePatchesMadeByScript(
   environment: Environment,
   baseEnvironment: Environment,
   activeGlobalEnvironment: Environment | undefined,
+  responseCookies?: Cookie[],
 ) {
   if (!mutatedContext) {
     return;
@@ -225,9 +226,10 @@ export async function savePatchesMadeByScript(
 
   // persist updated cookieJar if needed
   if (mutatedContext.cookieJar) {
+    // merge cookies from response to the cookiejar, or cookies from response will not be persisted
     await models.cookieJar.update(
       mutatedContext.cookieJar,
-      { cookies: mutatedContext.cookieJar.cookies },
+      { cookies: [...(responseCookies || []), ...mutatedContext.cookieJar.cookies] },
     );
   }
   // when base environment is activated, `mutatedContext.environment` points to it
@@ -416,7 +418,15 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
   if (!postMutatedContext?.request) {
     return null;
   }
-  await savePatchesMadeByScript(postMutatedContext, context.environment, context.baseEnvironment, context.globals);
+
+  // cookies from response should also be persisted
+  const respondedWithoutError = context.response && !('error' in context.response);
+  if (respondedWithoutError) {
+    const resp = context.response as sendCurlAndWriteTimelineResponse;
+    await savePatchesMadeByScript(postMutatedContext, context.environment, context.baseEnvironment, context.globals, resp.cookies);
+  } else {
+    await savePatchesMadeByScript(postMutatedContext, context.environment, context.baseEnvironment, context.globals);
+  }
 
   return postMutatedContext;
 }
@@ -472,6 +482,7 @@ export interface sendCurlAndWriteTimelineResponse extends ResponsePatch {
   parentId: string;
   timelinePath: string;
   statusMessage: string;
+  cookies: Cookie[];
 }
 
 export async function sendCurlAndWriteTimeline(
@@ -550,6 +561,7 @@ export async function sendCurlAndWriteTimeline(
     httpVersion: lastRedirect.version,
     statusCode: lastRedirect.code,
     statusMessage: lastRedirect.reason,
+    cookies,
     ...patch,
   };
 }
