@@ -891,7 +891,7 @@ export class ImportPostman {
   };
 }
 
-export const convert: Converter = rawData => {
+export const convert: Converter = (rawData, extProp = {}) => {
   requestCount = 1;
   requestGroupCount = 1;
 
@@ -905,7 +905,11 @@ export const convert: Converter = rawData => {
       const list = new ImportPostman(collection).importCollection();
       // make import order play nice with existing pattern of descending negavitve numbers (technically ascending) eg. -3, -2, -1
       const now = Date.now();
-      const ordered = list.map((item, index) => ({ ...item, metaSortKey: -1 * (now - index) }));
+      const ordered = list.map((item, index) => ({
+        ...item,
+        metaSortKey: -1 * (now - index),
+        ...extProp,
+      }));
       return ordered;
     }
   } catch (error) {
