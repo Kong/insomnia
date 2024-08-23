@@ -14,50 +14,50 @@ import storage_options from '../images/onboarding/storage_options.png';
 
 const features = [
   {
-    id: 'prerequest_scripts',
+    id: 'collection_runner',
     icon: 'code',
-    title: 'Pre-request scripting',
+    title: 'New Collection Runner',
     description:
-      'Insomnia finally ships with pre-request scripting for more complex flows, including Postman compatibility so it\'s easier to migrate your collections to Insomnia.',
+      'You can run tests for an entire collection using the new Collection Runner! And it\'s unlimited for every Insomnia user.',
     image: prerequest_scripts,
   },
   {
-    id: 'api_mocking',
+    id: 'test_results',
     icon: 'clone',
-    title: 'Native API mocking',
+    title: 'Test Results',
     description:
-      'In addition to collections, design documents and tests you can now also create API mocks to accelerate development and simulate APIs.',
+      'In the previous v9.x we introduced full scripting support, and now we are introducing the ability to visualize test results when executing a request.',
     image: mocks,
   },
   {
-    id: 'storage_control',
+    id: 'invite_control',
     icon: 'database',
-    title: 'Storage control',
+    title: 'Invite Control',
     description:
-      'With this enterprise capabillity you can mandate that data in an organization is stored only locally, on Git or in the cloud for every collaborator.',
+      'With this enterprise capability you can create invite rules to determine what domains can be invited to join an organization.',
     image: storage_options,
   },
   {
-    id: 'diff_editor',
+    id: 'unpushed_notifications',
     icon: 'file-invoice',
-    title: 'New diff editor',
-    description: 'When synchronizing your data on Git or in the Cloud, it\'s now very easy to understand all the updates before pushing them.',
+    title: 'Unpushed notifications',
+    description: 'You can now see indicators for changes that have not been committed - or have not been pushed - inside your projects and files.',
     image: diff_view,
   },
   {
-    id: 'global_search',
+    id: 'offline_experience',
     icon: 'search',
-    title: 'Global search',
+    title: 'Offline experience',
     description:
-      'You can now search for documents and collections across one or more organizations from one place, simply by using the new global search.',
+      'In the previous Insomnia v9.x we significantly improved the performance of the application, and in this one are making the offline experience even better.',
     image: global_search,
   },
   {
-    id: 'auto_pull',
+    id: 'multiple_owners',
     icon: 'download',
-    title: 'Auto-pulling of files',
+    title: 'Multiple owners',
     description:
-      'To simplify collaboration in Insomnia, we are introducing auto-pulling of files in the dashboard without having to explicitly pull each file.',
+      'With this enterprise feature, we are finally introducing the ability to have multiple co-owners for an enterprise organization account.',
     image: auto_pull,
   },
 ] satisfies {
