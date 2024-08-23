@@ -23,7 +23,7 @@ const MillisecondTimer = ({ startedAt }: { startedAt: number }) => {
         clearInterval(interval);
       }
     };
-  }, []);
+  }, [startedAt]);
   const ms = (milliseconds / 1000);
   return ms > 0 ? `${ms.toFixed(1)} s` : '0 s';
 };
