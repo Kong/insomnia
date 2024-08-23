@@ -8,11 +8,11 @@ interface Props {
   steps: TimingStep[];
 }
 // triggers a 100 ms render in order to show a incrementing counter
-const MillisecondTimer = () => {
+const MillisecondTimer = ({ startedAt }: { startedAt: number }) => {
   const [milliseconds, setMilliseconds] = useState(0);
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    const loadStartTime = Date.now();
+    const loadStartTime = startedAt || Date.now();
     interval = setInterval(() => {
       const delta = Date.now() - loadStartTime;
       setMilliseconds(delta);
@@ -27,10 +27,11 @@ const MillisecondTimer = () => {
   const ms = (milliseconds / 1000);
   return ms > 0 ? `${ms.toFixed(1)} s` : '0 s';
 };
+
 export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRequestId, steps }) => {
   return (
     <div className="flex overlay theme--transparent-overlay-darker w-full h-full">
-      <div className="m-auto w-[60%] min-w-96">
+      <div className="m-auto w-[60%] min-w-[400px]">
         <div className="timer-list mx-auto">
           {steps.map((record: TimingStep) => (
             <div
@@ -50,7 +51,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
                 </span>
               </div>
               <div className='w-1/4 mr-1 text-right leading-8'>
-                {record.duration ? `${((record.duration) / 1000).toFixed(1)} s` : (<MillisecondTimer />)}
+                {record.duration ? `${((record.duration) / 1000).toFixed(1)} s` : (<MillisecondTimer startedAt={record.startedAt} />)}
               </div>
             </div>
           ))}
