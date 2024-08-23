@@ -54,6 +54,7 @@
     "dompurify": "^3.0.11",
     "electron-context-menu": "^3.6.1",
     "electron-log": "^4.4.8",
+    "fastq": "^1.17.1",
     "grpc-reflection-js": "jackkav/grpc-reflection-js#remove-lodash-set",
     "hawk": "9.0.2",
     "hkdf": "^0.0.2",
@@ -89,6 +90,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@fortawesome/react-fontawesome": "^0.2.0",
     "@getinsomnia/api-client": "0.0.4",
+    "@sentry/electron": "^5.1.0",
     "@stoplight/spectral-core": "^1.18.3",
     "@stoplight/spectral-formats": "^1.6.0",
     "@stoplight/spectral-ruleset-bundler": "1.5.2",
@@ -129,6 +131,7 @@
     "@types/vkbeautify": "^0.99.4",
     "@types/ws": "^8.5.10",
     "@vitejs/plugin-react": "^4.2.1",
+    "@xmldom/xmldom": "^0.8.10",
     "autoprefixer": "^10.4.19",
     "buffer": "^6.0.3",
     "classnames": "^2.5.1",
@@ -176,9 +179,7 @@
     "vite": "^5.2.8",
     "vkbeautify": "^0.99.3",
     "ws": "^8.17.1",
-    "@xmldom/xmldom": "^0.8.10",
-    "xpath": "0.0.34",
-    "@sentry/electron": "^5.1.0"
+    "xpath": "0.0.34"
   },
   "dev": {
     "dev-server-port": 3334

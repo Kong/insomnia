@@ -96,5 +96,6 @@ test('can cancel requests', async ({ app, page }) => {
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
   await page.getByRole('button', { name: 'Cancel Request' }).click();
+  await page.getByRole('button', { name: 'Ok', exact: true }).click();
   await page.click('text=Request was cancelled');
 });
