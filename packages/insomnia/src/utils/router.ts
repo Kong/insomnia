@@ -77,9 +77,9 @@ export const getInitialEntry = async () => {
   // Otherwise if the user is not logged in and has not logged in before, then show the login
   // Otherwise if the user is logged in, then show the organization
   try {
-    const hasSeenOnboardingV9 = Boolean(window.localStorage.getItem('hasSeenOnboardingV9'));
+    const hasSeenOnboardingV10 = Boolean(window.localStorage.getItem('hasSeenOnboardingV10'));
 
-    if (!hasSeenOnboardingV9) {
+    if (!hasSeenOnboardingV10) {
       return '/onboarding';
     }
 

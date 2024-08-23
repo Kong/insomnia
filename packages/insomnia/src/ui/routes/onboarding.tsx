@@ -163,7 +163,7 @@ const Onboarding = () => {
             <InsomniaLogo className="transform translate-x-[-50%] translate-y-[-50%] absolute top-0 left-1/2 w-16 h-16" />
             <div className="text-[--color-font] flex flex-col gap-6 h-full">
               <h1 className="text-xl text-center">
-                🚀 Welcome to Insomnia 9!
+                🚀 Welcome to Insomnia 10!
               </h1>
               <div>
                 <p>
@@ -188,7 +188,7 @@ const Onboarding = () => {
                 <Link
                   className="hover:no-underline bg-[--color-surprise] text-sm hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                   to={window.localStorage.getItem('prefers-project-type') ? '/organization' : '/onboarding/migrate'}
-                  onClick={() => window.localStorage.setItem('hasSeenOnboardingV9', 'true')}
+                  onClick={() => window.localStorage.setItem('hasSeenOnboardingV10', 'true')}
                 >
                   Continue
                 </Link>
