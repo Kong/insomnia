@@ -21,6 +21,7 @@ export interface BaseRunnerTestResult {
   duration: number; // millisecond
   avgRespTime: number; // millisecond
   results: RequestTestResult[];
+  responseIds: string[];
 }
 
 export type RunnerTestResult = BaseModel & BaseRunnerTestResult;
@@ -37,6 +38,7 @@ export function init() {
     duration: 0,
     avgRespTime: 0,
     results: [],
+    responseIds: [],
   };
 }
 

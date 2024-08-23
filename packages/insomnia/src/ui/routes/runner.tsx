@@ -9,6 +9,7 @@ import { useInterval } from 'react-use';
 
 import { Tooltip } from '../../../src/ui/components/tooltip';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../common/constants';
+import type { ResponseTimelineEntry } from '../../main/network/libcurl-promise';
 import type { TimingStep } from '../../main/network/request-timing';
 import * as models from '../../models';
 import type { UserUploadEnvironment } from '../../models/environment';
@@ -25,12 +26,32 @@ import { RequestTestResultPane } from '../components/panes/request-test-result-p
 import { RunnerResultHistoryPane } from '../components/panes/runner-result-history-pane';
 import { ResponseTimer } from '../components/response-timer';
 import { getTimeAndUnit } from '../components/tags/time-tag';
+import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
 import { type RunnerSource, sendActionImp } from './request';
 import { useRootLoaderData } from './root';
 import type { Child, WorkspaceLoaderData } from './workspace';
 
 const inputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
 const iterationInputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
+
+// TODO: improve the performance for a lot of logs
+async function aggregateAllTimelines(testResult: RunnerTestResult) {
+  const responseIds = testResult.responseIds;
+  let timelines = new Array<ResponseTimelineEntry>();
+
+  for (let i = 0; i < responseIds.length; i++) {
+    const respId = responseIds[i];
+    const resp = await models.response.getById(respId);
+    if (resp) {
+      const timeline = models.response.getTimeline(resp, true) as unknown as ResponseTimelineEntry[];
+      timelines = [...timelines, ...timeline];
+    } else {
+      console.error(`failed to read response for ${respId}`);
+    }
+  }
+
+  return timelines;
+}
 
 export const Runner: FC<{}> = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -154,9 +175,6 @@ export const Runner: FC<{}> = () => {
 
   const submit = useSubmit();
   const onRun = () => {
-    // set to null so that the result pane will not be always occupied by the selected result item
-    // setGotoExecutionResultId(null);
-
     const selected = new Set(reqList.selectedKeys);
     const requests = Array.from(reqList.items)
       .filter(item => selected.has(item.id));
@@ -227,12 +245,23 @@ export const Runner: FC<{}> = () => {
   });
 
   const [executionResult, setExecutionResult] = useState<RunnerTestResult | null>(null);
+  const [timelines, setTimelines] = useState<ResponseTimelineEntry[]>([]);
   const gotoExecutionResult = useCallback(async (executionId: string) => {
     const result = await models.runnerTestResult.getById(executionId);
     if (result) {
       setExecutionResult(result);
     }
   }, [setExecutionResult]);
+
+  useEffect(() => {
+    const refreshTimeline = async () => {
+      if (executionResult) {
+        const mergedTimelines = await aggregateAllTimelines(executionResult);
+        setTimelines(mergedTimelines);
+      }
+    };
+    refreshTimeline();
+  }, [executionResult]);
 
   useInterval(() => {
     const refreshPanes = async () => {
@@ -584,7 +613,10 @@ export const Runner: FC<{}> = () => {
                 </Tab>
               </TabList>
               <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='console'>
-                <></>
+                <ResponseTimelineViewer
+                  key={workspaceId}
+                  timeline={timelines}
+                />
               </TabPanel>
               <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='history'>
                 <RunnerResultHistoryPane history={testHistory} gotoExecutionResult={gotoExecutionResult} gotoTestResultsTab={gotoTestResultsTab} />
@@ -665,6 +697,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     avgRespTime: 0,
     results: new Array<RequestTestResult>(),
     done: false,
+    responseIds: new Array<string>(),
   };
 
   window.main.startExecution({ requestId: workspaceId });
@@ -704,6 +737,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
         duration: 1,
         size: 0,
         results: new Array<RequestTestResult>(),
+        responseId: '',
       };
       await sendActionImp({
         requestId: targetRequest.id,
@@ -718,6 +752,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
         ...testCtx,
         duration: testCtx.duration + resultCollector.duration,
         results: [...testCtx.results, ...resultCollector.results],
+        responseIds: [...testCtx.responseIds, resultCollector.responseId],
       };
     }
   }
@@ -730,7 +765,9 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     duration: testCtx.duration,
     avgRespTime: testCtx.avgRespTime,
     results: testCtx.results,
+    responseIds: testCtx.responseIds,
   });
+
   window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
   window.main.completeExecutionStep({ requestId: workspaceId });
 
