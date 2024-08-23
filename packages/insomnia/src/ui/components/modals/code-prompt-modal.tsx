@@ -1,8 +1,9 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { Button } from 'react-aria-components';
 
 import { NunjucksEnabledProvider } from '../../context/nunjucks/nunjucks-enabled-context';
 import { CopyButton } from '../base/copy-button';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -135,10 +136,10 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
           <Dropdown
             aria-label='Select a mode'
             triggerButton={
-              <DropdownButton className="!hover:no-underline !bg-transparent !hover:bg-opacity-90 !border !border-solid !border-[--hl-md] !py-2 !px-3 !text-[--color-font] !transition-colors !rounded-sm">
+              <Button className="!hover:no-underline !bg-transparent !hover:bg-opacity-90 !border !border-solid !border-[--hl-md] !py-2 !px-3 !text-[--color-font] !transition-colors !rounded-sm">
                 {MODES[mode]}
                 <i className="fa fa-caret-down space-left" />
-              </DropdownButton>
+              </Button>
             }
           >
             <DropdownSection

@@ -444,7 +444,10 @@ export class ImportPostman {
     // It is a business logic decision to remove the "Authorization" header.
     // If you think about it, this makes sense because if you've used Insomnia to fill out an Authorization form (e.g. Basic Auth), you wouldn't then also want the header to be added separately.
     // If users want to manually set up these headers they still absolutely can, of course, but we try to keep things simple and help users out.
-    const headers = originalHeaders.filter(h => !isAuthorizationHeader(h));
+    // const headers = originalHeaders.filter(h => !isAuthorizationHeader(h));
+
+    // preserve the original headers according to requirements from 'Progressive' INS-4269
+    const headers = originalHeaders;
 
     if (!authentication) {
       if (authorizationHeader) {
@@ -888,7 +891,7 @@ export class ImportPostman {
   };
 }
 
-export const convert: Converter = rawData => {
+export const convert: Converter = (rawData, extProp = {}) => {
   requestCount = 1;
   requestGroupCount = 1;
 
@@ -902,7 +905,11 @@ export const convert: Converter = rawData => {
       const list = new ImportPostman(collection).importCollection();
       // make import order play nice with existing pattern of descending negavitve numbers (technically ascending) eg. -3, -2, -1
       const now = Date.now();
-      const ordered = list.map((item, index) => ({ ...item, metaSortKey: -1 * (now - index) }));
+      const ordered = list.map((item, index) => ({
+        ...item,
+        metaSortKey: -1 * (now - index),
+        ...extProp,
+      }));
       return ordered;
     }
   } catch (error) {

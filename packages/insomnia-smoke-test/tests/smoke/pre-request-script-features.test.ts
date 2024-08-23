@@ -13,8 +13,7 @@ test.describe('pre-request features tests', async () => {
         const text = await loadFixture('pre-request-collection.yaml');
         await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-        await page.getByRole('button', { name: 'Create in project' }).click();
-        await page.getByRole('menuitemradio', { name: 'Import' }).click();
+        await page.getByLabel('Import').click();
         await page.locator('[data-test-id="import-from-clipboard"]').click();
         await page.getByRole('button', { name: 'Scan' }).click();
         await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
@@ -361,6 +360,8 @@ test.describe('pre-request features tests', async () => {
         await page.locator('[name="httpsProxy"]').fill('localhost:2222');
         await page.locator('[name="noProxy"]').fill('http://a.com,https://b.com');
         await page.locator('.app').press('Escape');
+        // add 1s timeout to ensure noProxy settings is applied - INS-4155
+        await page.waitForTimeout(1000);
 
         await page.getByLabel('Request Collection').getByTestId('test proxies manipulation').press('Enter');
 
@@ -448,8 +449,7 @@ test.describe('unhappy paths', async () => {
         const text = await loadFixture('pre-request-collection.yaml');
         await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-        await page.getByRole('button', { name: 'Create in project' }).click();
-        await page.getByRole('menuitemradio', { name: 'Import' }).click();
+        await page.getByLabel('Import').click();
         await page.locator('[data-test-id="import-from-clipboard"]').click();
         await page.getByRole('button', { name: 'Scan' }).click();
         await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();

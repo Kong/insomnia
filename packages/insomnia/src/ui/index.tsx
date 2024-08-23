@@ -854,6 +854,11 @@ async function renderApp() {
                                       (await import('./routes/git-actions')).gitChangesLoader(...args),
                                   },
                                   {
+                                    path: 'can-push',
+                                    loader: async (...args) =>
+                                      (await import('./routes/git-actions')).canPushLoader(...args),
+                                  },
+                                  {
                                     path: 'log',
                                     loader: async (...args) =>
                                       (await import('./routes/git-actions')).gitLogLoader(...args),

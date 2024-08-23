@@ -19,6 +19,8 @@ export interface BaseWorkspaceMeta {
   gitRepositoryId: string | null;
   parentId: string | null;
   pushSnapshotOnInitialize: boolean;
+  hasUncommittedChanges: boolean;
+  hasUnpushedChanges: boolean;
 }
 
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
@@ -40,6 +42,8 @@ export function init(): BaseWorkspaceMeta {
     gitRepositoryId: null,
     parentId: null,
     pushSnapshotOnInitialize: false,
+    hasUncommittedChanges: false,
+    hasUnpushedChanges: false,
   };
 }
 

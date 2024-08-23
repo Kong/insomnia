@@ -13,7 +13,11 @@ export interface BaseUserSession {
   encPrivateKey: AESMessage;
 };
 
-export type UserSession = BaseModel & BaseUserSession;
+export interface HashedUserSession {
+  hashedAccountId: string;
+}
+
+export type UserSession = BaseModel & BaseUserSession & HashedUserSession;
 export const name = 'UserSession';
 export const type = 'UserSession';
 export const prefix = 'usr';

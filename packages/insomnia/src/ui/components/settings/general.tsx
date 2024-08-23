@@ -30,7 +30,7 @@ export const General: FC = () => {
 
   return (
     <div className="relative p-4">
-      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Application</h2>
+      <h2 className='font-bold pt-2 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Application</h2>
 
       <div className="">
         <div>
@@ -252,7 +252,7 @@ export const General: FC = () => {
           help="If checked, clears the OAuth session every time Insomnia is relaunched."
         />
         <button
-          className="btn btn--clicky pointer"
+          className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs] pointer"
           style={{
             padding: 0,
           }}
@@ -315,14 +315,16 @@ export const General: FC = () => {
         <>
           <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Network Activity</h2>
           <BooleanSetting
-            descriptions={[
-              `Help Kong improve its products by sending anonymous data about features and plugins used, hardware and software configuration, statistics on number of requests, ${strings.collection.plural.toLowerCase()}, ${strings.document.plural.toLowerCase()}, etc.`,
-              'Please note that this will not include personal data or any sensitive information, such as request data, names, etc.',
-            ]}
             label="Send Anonymous Usage Statistics"
             setting="enableAnalytics"
             disabled={isLoggedIn}
           />
+          <div className="text-sm opacity-50 pl-5 py-2">
+            Help Kong improve its products by sending anonymous data about features and plugins used, hardware and software configuration, statistics on number of requests, {strings.collection.plural.toLowerCase()}, {strings.document.plural.toLowerCase()}, etc.
+          </div>
+          <div className="text-sm opacity-50 pl-5 py-2">
+            Please note that this will not include personal data or any sensitive information, such as request data, names, etc.
+          </div>
         </>
       )
       }

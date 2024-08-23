@@ -1,7 +1,8 @@
 import React, { type FC } from 'react';
+import { Button } from 'react-aria-components';
 
 import { getPreviewModeName, PREVIEW_MODES, type PreviewMode } from '../../../common/constants';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
 interface Props {
   download: () => void;
@@ -20,10 +21,10 @@ export const WebSocketPreviewModeDropdown: FC<Props> = ({
     <Dropdown
       aria-label="Websocket Preview Mode Dropdown"
       triggerButton={
-        <DropdownButton className="tall">
+        <Button className="tall">
           {getPreviewModeName(previewMode)}
           <i className="fa fa-caret-down space-left" />
-        </DropdownButton>
+        </Button>
       }
     >
       <DropdownSection

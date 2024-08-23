@@ -6,14 +6,12 @@ import { test } from '../../playwright/test';
 test('can render schema and send GraphQL requests', async ({ app, page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  await page.getByRole('button', { name: 'Create in project' }).click();
-
   // Copy the collection with the graphql query to clipboard
   const text = await loadFixture('graphql.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
   // Import from clipboard
-  await page.getByRole('menuitemradio', { name: 'Import' }).click();
+  await page.getByLabel('Import').click();
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
@@ -39,6 +37,15 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   await expect(statusTag).toContainText('200 OK');
 
+  // Export GraphQL request
+  await page.getByTestId('Dropdown-GraphQL-request-with-number').click();
+  await page.getByText('Copy as cURL').click();
+  const handle = await page.evaluateHandle(() => navigator.clipboard.readText());
+  const clipboardContent = await handle.jsonValue();
+  const exepctResult = JSON.stringify({ query: 'query($inputVar:Int){echoNum(intVar:$inputVar)}', variables: { inputVar: 3 } });
+  // expect exported curl body to be JSON string
+  expect(clipboardContent.split('--data ')[1]?.replace(/[\n\s\']/g, '')).toContain(exepctResult);
+
   const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
     has: page.locator('.CodeMirror-activeline'),
   });
@@ -48,14 +55,12 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
 test('can render schema and send GraphQL requests with object variables', async ({ app, page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  await page.getByRole('button', { name: 'Create in project' }).click();
-
   // Copy the collection with the graphql query to clipboard
   const text = await loadFixture('graphql.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
   // Import from clipboard
-  await page.getByRole('menuitemradio', { name: 'Import' }).click();
+  await page.getByLabel('Import').click();
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
@@ -90,14 +95,12 @@ test('can render schema and send GraphQL requests with object variables', async 
 test('can render numeric environment', async ({ app, page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  await page.getByRole('button', { name: 'Create in project' }).click();
-
   // Copy the collection with the graphql query to clipboard
   const text = await loadFixture('graphql.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
   // Import from clipboard
-  await page.getByRole('menuitemradio', { name: 'Import' }).click();
+  await page.getByLabel('Import').click();
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
@@ -132,11 +135,9 @@ test('can render numeric environment', async ({ app, page }) => {
 test('can send GraphQL requests after editing and prettifying query', async ({ app, page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  await page.getByRole('button', { name: 'Create in project' }).click();
-
   const text = await loadFixture('graphql.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-  await page.getByRole('menuitemradio', { name: 'Import' }).click();
+  await page.getByLabel('Import').click();
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();

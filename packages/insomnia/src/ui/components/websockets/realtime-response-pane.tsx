@@ -3,7 +3,6 @@ import React, { type FC, useEffect, useState } from 'react';
 import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useRouteLoaderData } from 'react-router-dom';
-import styled from 'styled-components';
 
 import { getSetCookieHeaders } from '../../../common/misc';
 import type { CurlEvent } from '../../../main/network/curl';
@@ -16,7 +15,7 @@ import type { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
-import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
+import { Pane, PaneHeader } from '../panes/pane';
 import { PlaceholderResponsePane } from '../panes/placeholder-response-pane';
 import { SvgIcon } from '../svg-icon';
 import { SizeTag } from '../tags/size-tag';
@@ -29,17 +28,13 @@ import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { EventLogView } from './event-log-view';
 import { EventView } from './event-view';
 
-const PaneHeader = styled(OriginalPaneHeader)({
-  '&&': { justifyContent: 'unset' },
-});
-
 export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
   const { activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData | WebSocketRequestLoaderData;
 
   if (!activeResponse) {
     return (
       <Pane type="response">
-        <PaneHeader />
+        <PaneHeader className='!justify-normal' />
         <PlaceholderResponsePane />
       </Pane>
     );

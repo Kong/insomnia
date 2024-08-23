@@ -1,6 +1,6 @@
 import React, { type FC, useEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useNavigation, useParams } from 'react-router-dom';
 
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
@@ -10,6 +10,7 @@ import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
+import { Icon } from '../icon';
 
 interface WorkspaceDuplicateModalProps extends ModalProps {
   workspace: Workspace;
@@ -20,6 +21,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
   const { organizationId } = useParams<{organizationId: string}>();
   const { Form } = useFetcher();
   const modalRef = useRef<ModalHandle>(null);
+  const navigation = useNavigation();
   useEffect(() => {
     modalRef.current?.show();
   }, []);
@@ -57,8 +59,8 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
           </Form>
         </ModalBody>
         <ModalFooter>
-          <button type="submit" form="workspace-duplicate-form" className="btn">
-            Duplicate
+          <button type="submit" disabled={navigation.state !== 'idle'} form="workspace-duplicate-form" className="btn">
+            {navigation.state !== 'idle' && <Icon icon='spinner' className='animate-spin' />} Duplicate
           </button>
         </ModalFooter>
       </Modal>

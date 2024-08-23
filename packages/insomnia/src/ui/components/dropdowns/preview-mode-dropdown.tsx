@@ -1,5 +1,6 @@
 import fs from 'fs';
 import React, { type FC, useCallback } from 'react';
+import { Button } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
@@ -9,7 +10,7 @@ import { isRequest } from '../../../models/request';
 import { isResponse } from '../../../models/response';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import type { RequestLoaderData } from '../../routes/request';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
 interface Props {
   download: (pretty: boolean) => any;
@@ -90,10 +91,10 @@ export const PreviewModeDropdown: FC<Props> = ({
     <Dropdown
       aria-label='Preview Mode Dropdown'
       triggerButton={
-        <DropdownButton className="tall !text-[--hl]">
+        <Button className="text-[--hl]">
           {getPreviewModeName(previewMode)}
           <i className="fa fa-caret-down space-left" />
-        </DropdownButton>
+        </Button>
       }
     >
       <DropdownSection

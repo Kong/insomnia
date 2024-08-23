@@ -33,6 +33,10 @@ jobs:
       - name: Install packages
         run: npm ci
 
+      - name: Audit packages
+        # having issues with moderate severity vulnerabilities
+        run: npm audit --audit-level none
+
       - name: Lint
         run: npm run lint
 

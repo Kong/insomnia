@@ -1,6 +1,5 @@
 // Left from @marckong here: slightly modified from this PR - https://github.com/Kong/insomnia-website/pull/41
 import React, { forwardRef, memo, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
-import styled from 'styled-components';
 
 import { animateTrailPaths, internals, random } from './trail-lines-animation';
 
@@ -72,17 +71,6 @@ function renderPaths({
   );
 }
 
-const Lines = styled('svg')<{ reverse?: boolean }>(({ reverse = false }) => ({
-  pointerEvents: 'none',
-  maskSize: 'var(--trail-lines-width, auto) var(--trail-lines-height, auto)',
-  maskPosition: 'top right',
-  maskImage: 'linear-gradient(-90deg, rgba(0, 0, 0, 1) 80%, transparent)',
-  WebkitMaskSize: 'var(--trail-lines-width, auto) var(--trail-lines-height, auto)',
-  WebkitMaskPosition: 'top right',
-  WebkitMaskImage: 'linear-gradient(-90deg, rgba(0, 0, 0, 1) 80%, transparent)',
-  transform: reverse ? 'scaleX(-1)' : 'none',
-}));
-
 interface Props {
   id: string;
   reverse?: boolean;
@@ -124,14 +112,21 @@ const TrailLines = forwardRef<TrailsLineHandle, Props>(
     }, [refRoot, showPaths, totalActiveLines]);
 
     return (
-      <Lines
-        reverse={reverse}
+      <svg
         ref={refRoot}
-        className="TrailLines"
+        className={`pointer-events-none ${reverse ? 'transform scale-x-[-1]' : ''}`}
         viewBox={`0 0 ${width} ${height}`}
         width={width}
         height={height}
         preserveAspectRatio="xMaxYMid slice"
+        style={{
+          maskSize: 'var(--trail-lines-width, auto) var(--trail-lines-height, auto)',
+          maskPosition: 'top right',
+          maskImage: 'linear-gradient(-90deg, rgba(0, 0, 0, 1) 80%, transparent)',
+          WebkitMaskSize: 'var(--trail-lines-width, auto) var(--trail-lines-height, auto)',
+          WebkitMaskPosition: 'top right',
+          WebkitMaskImage: 'linear-gradient(-90deg, rgba(0, 0, 0, 1) 80%, transparent)',
+        }}
       >
         <defs>
           <linearGradient id={`${id}-lgradient-base-lines`}>
@@ -168,7 +163,7 @@ const TrailLines = forwardRef<TrailsLineHandle, Props>(
           </radialGradient>
         </defs>
         {showPaths && renderPaths({ id, width, height, totalLines })}
-      </Lines>
+      </svg>
     );
   }
 );

@@ -11,12 +11,10 @@ test.describe('gRPC interactions', () => {
   let streamMessage: Locator;
 
   test.beforeEach(async ({ app, page }) => {
-    await page.getByRole('button', { name: 'Create in project' }).click();
-
     const text = await loadFixture('grpc.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-    await page.getByRole('menuitemradio', { name: 'Import' }).click();
+    await page.getByLabel('Import').click();
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();

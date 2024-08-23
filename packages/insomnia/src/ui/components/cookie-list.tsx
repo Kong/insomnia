@@ -1,11 +1,12 @@
 import { isValid } from 'date-fns';
 import React, { type FC, useCallback, useState } from 'react';
+import { Button } from 'react-aria-components';
 import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
 import { cookieToString } from '../../common/cookies';
 import type { Cookie } from '../../models/cookie-jar';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
+import { Dropdown, DropdownItem, ItemContent } from './base/dropdown';
 import { PromptButton } from './base/prompt-button';
 import { Icon } from './icon';
 import { CookieModifyModal } from './modals/cookie-modify-modal';
@@ -113,13 +114,11 @@ export const CookieList: FC<CookieListProps> = ({
             <Dropdown
               aria-label='Cookie Actions Dropdown'
               triggerButton={
-                <DropdownButton
-                  title="Add cookie"
+                <Button
                   className="btn btn--super-super-compact btn--outlined txt-md"
-                  disableHoverBehavior={false}
                 >
                   Actions <i className="fa fa-caret-down" />
-                </DropdownButton>
+                </Button>
               }
             >
               <DropdownItem aria-label='Add Cookie'>
@@ -154,9 +153,9 @@ export const CookieList: FC<CookieListProps> = ({
     {cookies.length === 0 && <div className="pad faint italic text-center">
       <p>I couldn't find any cookies for you.</p>
       <p className='pt-4'>
-        <button className="btn btn--clicky" onClick={addCookie}>
+        <Button className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]" onPress={addCookie}>
           <Icon icon="plus" /> Add Cookie
-        </button>
+        </Button>
       </p>
     </div>}
   </div>;

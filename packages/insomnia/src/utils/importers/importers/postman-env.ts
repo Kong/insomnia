@@ -20,13 +20,20 @@ type Data = {
   [key in EnvVar['key']]: EnvVar['value'];
 };
 
+export enum POSTMAN_ENV_TYPE {
+  GLOBAL = 'globals',
+  ENVIRONMENT = 'environment',
+};
+
+const validPostmanEnvTypeList = Object.values(POSTMAN_ENV_TYPE) as string[];
+
 export const convert: Converter<Data> = rawData => {
   try {
     const { _postman_variable_scope, name, values } = JSON.parse(
       rawData,
     ) as Environment;
 
-    if (_postman_variable_scope !== 'environment') {
+    if (!validPostmanEnvTypeList.includes(_postman_variable_scope)) {
       return null;
     }
 
@@ -44,6 +51,9 @@ export const convert: Converter<Data> = rawData => {
             [key]: value,
           };
         }, {}),
+        meta: {
+          postmanEnvScope: _postman_variable_scope,
+        },
       },
     ];
   } catch (error) {

@@ -2,7 +2,7 @@ import type { IpcMainEvent, IpcMainInvokeEvent, MenuItemConstructorOptions, Open
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'electron';
 
 import { fnOrString } from '../../common/misc';
-import type { NunjucksParsedTagArg } from '../../templating/utils';
+import { extractNunjucksTagFromCoords, type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '../../templating/utils';
 import { localTemplateTags } from '../../ui/components/templating/local-template-tags';
 import { invariant } from '../../utils/invariant';
 
@@ -27,7 +27,8 @@ export type HandleChannels =
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
-  | 'writeFile';
+  | 'writeFile'
+  | 'extractJsonFileFromPostmanDataDumpArchive';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
@@ -111,50 +112,78 @@ const getTemplateValue = (arg: NunjucksParsedTagArg) => {
   return arg.defaultValue;
 };
 export function registerElectronHandlers() {
-  ipcMainOn('show-context-menu', (event, options) => {
+  ipcMainOn('show-context-menu', (event, options: { key: string; nunjucksTag: ReturnType<typeof extractNunjucksTagFromCoords> }) => {
+    const { key, nunjucksTag } = options;
+    const sendNunjuckTagContextMsg = (type: NunjucksTagContextMenuAction) => {
+      event.sender.send('context-menu-command', { key, nunjucksTag: { ...nunjucksTag, type } });
+    };
     try {
-      const template: MenuItemConstructorOptions[] = [
-        {
-          role: 'cut',
-        },
-        {
-          role: 'copy',
-        },
-        {
-          role: 'paste',
-        },
-        { type: 'separator' },
-        ...localTemplateTags
-          // sort alphabetically
-          .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
-          .map(l => {
-            const actions = l.templateTag.args?.[0];
-            const additionalArgs = l.templateTag.args?.slice(1);
-            const hasSubmenu = actions?.options?.length;
-            return {
-              label: fnOrString(l.templateTag.displayName),
-              ...(!hasSubmenu ?
-                {
+      const baseTemplate: MenuItemConstructorOptions[] = nunjucksTag ?
+        [
+          {
+            label: 'Edit',
+            click: () => sendNunjuckTagContextMsg('edit'),
+          },
+          {
+            label: 'Copy',
+            click: () => {
+              clipboard.writeText(nunjucksTag.template);
+            },
+          },
+          {
+            label: 'Cut',
+            click: () => {
+              clipboard.writeText(nunjucksTag.template);
+              sendNunjuckTagContextMsg('delete');
+            },
+          },
+          {
+            label: 'Delete',
+            click: () => sendNunjuckTagContextMsg('delete'),
+          },
+          { type: 'separator' },
+        ] :
+        [
+          {
+            role: 'cut',
+          },
+          {
+            role: 'copy',
+          },
+          {
+            role: 'paste',
+          },
+          { type: 'separator' },
+        ];
+      const localTemplate: MenuItemConstructorOptions[] = localTemplateTags
+        // sort alphabetically
+        .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
+        .map(l => {
+          const actions = l.templateTag.args?.[0];
+          const additionalArgs = l.templateTag.args?.slice(1);
+          const hasSubmenu = actions?.options?.length;
+          return {
+            label: fnOrString(l.templateTag.displayName),
+            ...(!hasSubmenu ?
+              {
+                click: () => {
+                  const tag = `{% ${l.templateTag.name} ${l.templateTag.args?.map(getTemplateValue).join(', ')} %}`;
+                  event.sender.send('context-menu-command', { key, tag });
+                },
+              } :
+              {
+                submenu: actions?.options?.map(action => ({
+                  label: fnOrString(action.displayName),
                   click: () => {
-                    const tag = `{% ${l.templateTag.name} ${l.templateTag.args?.map(getTemplateValue).join(', ')} %}`;
-                    event.sender.send('context-menu-command', { key: options.key, tag });
+                    const additionalTagFields = additionalArgs.length ? ', ' + additionalArgs.map(getTemplateValue).join(', ') : '';
+                    const tag = `{% ${l.templateTag.name} '${action.value}'${additionalTagFields} %}`;
+                    event.sender.send('context-menu-command', { key, tag });
                   },
-                } :
-                {
-                  submenu: actions?.options?.map(action => ({
-                    label: fnOrString(action.displayName),
-                    click: () => {
-                      const additionalTagFields = additionalArgs.length ? ', ' + additionalArgs.map(getTemplateValue).join(', ') : '';
-                      const tag = `{% ${l.templateTag.name} '${action.value}'${additionalTagFields} %}`;
-                      event.sender.send('context-menu-command', { key: options.key, tag });
-                    },
-                  })),
-                }),
-            };
-          }),
-
-      ];
-      const menu = Menu.buildFromTemplate(template);
+                })),
+              }),
+          };
+        });
+      const menu = Menu.buildFromTemplate([...baseTemplate, ...localTemplate]);
       const win = BrowserWindow.fromWebContents(event.sender);
       invariant(win, 'expected window');
       menu.popup({ window: win });

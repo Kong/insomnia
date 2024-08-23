@@ -1,5 +1,4 @@
 import React, { type FC, Fragment, useMemo } from 'react';
-import styled from 'styled-components';
 import { URL } from 'url';
 
 import type { ResponseHeader } from '../../../models/response';
@@ -21,12 +20,6 @@ const validateURL = ({ value }: ResponseHeader) => {
 
 const headerAsString = (header: ResponseHeader) => `${header.name}: ${header.value}`;
 
-const StyledTableDataCell = styled.td.attrs({
-  className: 'force-wrap',
-})({
-  width: '50%',
-});
-
 export const ResponseHeadersViewer: FC<Props> = ({ headers }) => {
   const headersString = useMemo(() => headers.map(headerAsString).join('\n'), [headers]);
 
@@ -42,12 +35,12 @@ export const ResponseHeadersViewer: FC<Props> = ({ headers }) => {
         <tbody>
           {headers.map(header => (
             <tr className="selectable" key={headerAsString(header)}>
-              <StyledTableDataCell>
+              <td className='force-wrap w-1/2'>
                 {header.name}
-              </StyledTableDataCell>
-              <StyledTableDataCell>
+              </td>
+              <td className='force-wrap w-1/2'>
                 {validateURL(header) ? <Link href={header.value}>{header.value}</Link> : header.value}
-              </StyledTableDataCell>
+              </td>
             </tr>
           ))}
         </tbody>

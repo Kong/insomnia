@@ -16,7 +16,8 @@ import {
   type WebSocketRequest,
 } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
-import { convert, type InsomniaImporter } from '../utils/importers/convert';
+import { convert, convertPostmanDataDump, type InsomniaImporter } from '../utils/importers/convert';
+import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
 import { database as db } from './database';
 import { generateId } from './misc';
@@ -66,6 +67,27 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
   }
 }
 
+export interface PostmanDataDumpRawData {
+  collectionList: string[];
+  envList: string[];
+}
+
+export async function getFilesFromPostmanExportedDataDump(filePath: string): Promise<PostmanDataDumpRawData> {
+  let res;
+  try {
+    res = await window.main.extractJsonFileFromPostmanDataDumpArchive(filePath);
+  } catch (err) {
+    throw new Error('Extract failed');
+  }
+  if (res && res.data) {
+    return res.data;
+  } else if (res?.err) {
+    throw new Error(res.err);
+  } else {
+    throw new Error('Extract failed');
+  }
+}
+
 export interface ScanResult {
   requests?: (Request | WebSocketRequest | GrpcRequest)[];
   workspaces?: Workspace[];
@@ -79,21 +101,31 @@ export interface ScanResult {
   errors: string[];
 }
 
-let ResourceCache: {
-  content: string;
-  resources: BaseModel[];
+interface ExtendedBaseModel extends BaseModel {
+  meta?: Record<string, any>;
+}
+
+type ResourceCacheType = {
+  content: string | PostmanDataDumpRawData;
+  resources: ExtendedBaseModel[];
   type: InsomniaImporter;
-} | null = null;
+} | null;
+
+let ResourceCache: ResourceCacheType = null;
 
 export async function scanResources({
   content,
 }: {
-  content: string;
+  content: string | PostmanDataDumpRawData;
 }): Promise<ScanResult> {
   let results: ConvertResult | null = null;
 
   try {
-    results = (await convert(content)) as unknown as ConvertResult;
+    if (typeof content !== 'string') {
+      results = (await convertPostmanDataDump(content)) as unknown as ConvertResult;
+    } else {
+      results = (await convert(content)) as unknown as ConvertResult;
+    }
   } catch (err: unknown) {
     if (err instanceof Error) {
       return {
@@ -152,6 +184,23 @@ export async function importResourcesToProject({ projectId }: { projectId: strin
   invariant(ResourceCache, 'No resources to import');
   const resources = ResourceCache.resources;
   const bufferId = await db.bufferChanges();
+
+  // postman data dump contains multiple collections and envs, we create a new workspace for each collection and env
+  if (ResourceCache.type.id === 'postman-data-dump') {
+    const workspaces = resources.filter(isWorkspace);
+    workspaces.forEach(async workspace => {
+      // here we use workspaceUuid to identify which workspace the resources belong to
+      const { workspaceUuid } = workspace;
+      await importResourcesToNewWorkspace(projectId, workspace, {
+        ...ResourceCache,
+        resources: resources.filter(r => r?.meta?.workspaceUuid === workspaceUuid),
+      } as ResourceCacheType);
+    });
+    await importEnvResourcesToRespectiveWorkspaces(resources, projectId);
+    return { resources };
+  }
+
+  // if the resource is postman collection
   const postmanTopLevelFolder = resources.find(
     resource => isRequestGroup(resource) && resource.parentId === '__WORKSPACE_ID__'
   ) as Workspace | undefined;
@@ -159,18 +208,27 @@ export async function importResourcesToProject({ projectId }: { projectId: strin
     await importResourcesToNewWorkspace(projectId, postmanTopLevelFolder);
     return { resources };
   }
+
+  // if the resource is postman environment,
+  if (ResourceCache.type.id === postmanEnvImporterId && resources.find(isEnvironment)) {
+    await importEnvResourcesToRespectiveWorkspaces(resources, projectId);
+    return { resources };
+  }
+
   // No workspace, so create one
   if (!resources.find(isWorkspace)) {
     await importResourcesToNewWorkspace(projectId);
     return { resources };
   }
-  // One or more workspaces
+
+  // One or more workspaces, add all resources to all workspaces, this could import duplicately
   const r = await Promise.all(resources.filter(isWorkspace)
     .map(resource => importResourcesToNewWorkspace(projectId, resource)));
 
   await db.flushChanges(bufferId);
   return { resources: r.flat() };
 }
+
 export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId: string }) => {
   invariant(ResourceCache, 'No resources to import');
   const resources = ResourceCache.resources;
@@ -260,21 +318,28 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
     workspace: existingWorkspace,
   };
 };
+
 export const isApiSpecImport = ({ id }: Pick<InsomniaImporter, 'id'>) =>
   id === 'openapi3' || id === 'swagger2';
-const importResourcesToNewWorkspace = async (projectId: string, workspaceToImport?: Workspace) => {
-  invariant(ResourceCache, 'No resources to import');
-  const resources = ResourceCache.resources;
+
+// use customResourceCache if you do not want to import from the global ResourceCache
+const importResourcesToNewWorkspace = async (projectId: string, workspaceToImport?: Workspace, customResourceCache?: ResourceCacheType) => {
+  if (!customResourceCache) {
+    customResourceCache = ResourceCache;
+  }
+
+  invariant(customResourceCache, 'No resources to import');
+  const resources = customResourceCache.resources;
   const ResourceIdMap = new Map();
   // in order to support import from api spec yaml
-  if (ResourceCache?.type?.id && isApiSpecImport(ResourceCache.type)) {
+  if (customResourceCache?.type?.id && isApiSpecImport(customResourceCache.type)) {
     const newWorkspace = await models.workspace.create({
       name: workspaceToImport?.name,
       scope: 'design',
       parentId: projectId,
     });
     models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
-      contents: ResourceCache.content,
+      contents: customResourceCache.content as string | undefined,
       contentType: 'yaml',
       fileName: workspaceToImport?.name,
     });
@@ -369,3 +434,18 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
     workspace: newWorkspace,
   };
 };
+
+function importEnvResourcesToRespectiveWorkspaces(resources: BaseModel[], projectId: string) {
+  // create a new workspace for each environment, so we need to pass third argument here
+  return Promise.all(resources.filter(isEnvironment).map(resource =>
+    importResourcesToNewWorkspace(projectId, {
+      name: resource.name,
+      scope: 'environment',
+      // __BASE_ENVIRONMENT_ID__ is the default parentId for environment imported by postman env importer, we use it to indicate the new workspace id
+      _id: '__BASE_ENVIRONMENT_ID__',
+    } as Workspace, {
+      ...ResourceCache,
+      resources: [resource],
+    } as ResourceCacheType)
+  ));
+}

@@ -23,7 +23,7 @@ import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInt
 import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
 import { useRootLoaderData } from '../../../routes/root';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
 import { CodeEditor, type CodeEditorHandle } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import type { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
@@ -45,12 +45,11 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
     content.variables = optionalProps.variables;
   }
 
-  if (query) {
+  if (isString(query)) {
     content.query = query;
   }
 
   // The below items are optional; should be set to undefined if present and empty
-  const isString = (value?: string): value is string => typeof value === 'string' || (value as unknown) instanceof String;
   if (isString(operationName)) {
     content.operationName = operationName.length ? operationName : undefined;
   }
@@ -59,9 +58,15 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
     content.variables = variables.length ? variables : undefined;
   }
 
+  // Set empty content after user has deleted the query and variables - INS-132
+  if (!content.query && !content.variables) {
+    return '';
+  }
+
   return JSON.stringify(content);
 }
 
+const isString = (value?: string): value is string => typeof value === 'string' || (value as unknown) instanceof String;
 const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode => def.kind === Kind.OPERATION_DEFINITION;
 
 const fetchGraphQLSchemaForRequest = async ({
@@ -334,6 +339,10 @@ export const GraphQLEditor: FC<Props> = ({
       }));
     } catch (error) {
       console.warn('failed to parse', error);
+      if (isString(query) && query.trim() === '') {
+        // update request body when query is empty
+        onChange(getGraphQLContent(state.body, query, ''));
+      };
       setState(state => ({
         ...state,
         documentAST: null,
@@ -478,9 +487,9 @@ export const GraphQLEditor: FC<Props> = ({
           aria-label='Operations Dropdown'
           isDisabled={!state.operations.length}
           triggerButton={
-            <DropdownButton className="btn btn--compact text-[var(--hl)] p-[var(--padding-xs)] h-full">
+            <Button className="btn btn--compact text-[--hl] p-[--padding-xs] h-full">
               {state.body.operationName || 'Operations'}
-            </DropdownButton>
+            </Button>
           }
         >
           {state.operations.map(operationName => (
@@ -498,13 +507,11 @@ export const GraphQLEditor: FC<Props> = ({
         <Dropdown
           aria-label='Schema Dropdown'
           triggerButton={
-            <DropdownButton
-              className="btn btn--compact text-[var(--hl)] p-[var(--padding-xs)] h-full"
-              disableHoverBehavior={false}
-              removeBorderRadius
+            <Button
+              className="btn btn--compact text-[--hl] p-[--padding-xs] h-full"
             >
               <span>schema <i className="fa fa-wrench" /></span>
-            </DropdownButton>
+            </Button>
           }
         >
           <DropdownItem aria-label='Show Documentation'>

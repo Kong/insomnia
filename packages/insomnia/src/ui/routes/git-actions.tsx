@@ -302,7 +302,10 @@ export const gitChangesLoader: LoaderFunction = async ({
   const branch = await GitVCS.getCurrentBranch();
   try {
     const { changes, statusNames } = await getGitChanges(GitVCS, workspace);
-
+    // update workspace meta with git sync data, use for show uncommit changes on collection card
+    models.workspaceMeta.updateByParentId(workspaceId, {
+      hasUncommittedChanges: changes.length > 0,
+    });
     return {
       branch,
       changes,
@@ -316,6 +319,35 @@ export const gitChangesLoader: LoaderFunction = async ({
       statusNames: {},
     };
   }
+};
+
+export interface GitCanPushLoaderData {
+  canPush: boolean;
+}
+
+export const canPushLoader: LoaderFunction = async ({ params }): Promise<GitCanPushLoaderData> => {
+  const { workspaceId } = params;
+  invariant(workspaceId, 'Workspace ID is required');
+
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+
+  const repoId = workspaceMeta?.gitRepositoryId;
+
+  invariant(repoId, 'Workspace is not linked to a git repository');
+
+  const gitRepository = await models.gitRepository.getById(repoId);
+
+  invariant(gitRepository, 'Git Repository not found');
+  let canPush = false;
+  try {
+    canPush = await GitVCS.canPush(gitRepository.credentials);
+    // update workspace meta with git sync data, use for show unpushed changes on collection card
+    models.workspaceMeta.update(workspaceMeta, {
+      hasUnpushedChanges: canPush,
+    });
+  } catch (err) { }
+
+  return { canPush };
 };
 
 // Actions

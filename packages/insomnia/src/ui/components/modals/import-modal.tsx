@@ -1,6 +1,7 @@
 import React, {
   type FC,
   Fragment,
+  type PropsWithChildren,
   type ReactNode,
   useEffect,
   useId,
@@ -10,7 +11,6 @@ import React, {
 import { OverlayContainer, useDrop } from 'react-aria';
 import { Heading } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
-import styled from 'styled-components';
 
 import { isScratchpadProject } from '../../../models/project';
 import { SegmentEvent } from '../../analytics';
@@ -22,46 +22,20 @@ import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalHeader } from '../base/modal-header';
 import { Button } from '../themed-button';
 
-const Pill = styled.div({
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--padding-xs)',
-  padding: 'var(--padding-sm)',
-  borderRadius: 'var(--radius-md)',
-  fontSize: 'var(--font-size-xs)',
-});
-
-const RadioGroup = styled.div({
-  display: 'flex',
-  padding: 'var(--padding-xs)',
-  border: '1px solid var(--hl-md)',
-  borderRadius: 'var(--radius-md)',
-  backgroundColor: 'var(--hl-xs)',
-  'input[type="radio"]:checked ~ label': {
-    backgroundColor: 'var(--color-bg)',
-    boxShadow: '0 0 5px 1px var(--hl-xs)',
-  },
-});
-
-const RadioLabel = styled.label({
-  padding: 'var(--padding-sm)',
-  borderRadius: 'var(--radius-md)',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--padding-sm)',
-});
-
-const RadioInput = styled.input({
-  position: 'absolute',
-  width: '1px',
-  height: '1px',
-  padding: '0',
-  margin: '-1px',
-  overflow: 'hidden',
-  clip: 'rect(0,0,0,0)',
-  whiteSpace: 'nowrap',
-  borderWidth: '0',
-});
+const Pill: FC<PropsWithChildren> = ({ children }) => (
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 'var(--padding-xs)',
+      padding: 'var(--padding-sm)',
+      borderRadius: 'var(--radius-md)',
+      fontSize: 'var(--font-size-xs)',
+    }}
+  >
+    {children}
+  </div>
+);
 
 const Radio: FC<{
   name: string;
@@ -73,8 +47,8 @@ const Radio: FC<{
 }> = ({ name, value, onChange, children, checked, defaultChecked }) => {
   const id = useId();
   return (
-    <div>
-      <RadioInput
+    <div className="has-[:checked]:bg-[--color-bg]">
+      <input
         id={id}
         type="radio"
         name={name}
@@ -82,50 +56,32 @@ const Radio: FC<{
         value={value}
         defaultChecked={defaultChecked}
         onChange={onChange}
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          padding: '0',
+          margin: '-1px',
+          overflow: 'hidden',
+          clip: 'rect(0,0,0,0)',
+          whiteSpace: 'nowrap',
+          borderWidth: '0',
+        }}
       />
-      <RadioLabel data-test-id={`import-from-${value}`} htmlFor={id}>{children}</RadioLabel>
+      <label
+        style={{
+          padding: 'var(--padding-sm)',
+          borderRadius: 'var(--radius-md)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--padding-sm)',
+        }}
+        data-test-id={`import-from-${value}`}
+        htmlFor={id}
+      >{children}</label>
     </div>
   );
 };
-
-const Fieldset = styled.fieldset({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 'var(--padding-md)',
-  legend: {
-    marginBottom: 'var(--padding-xs)',
-  },
-});
-
-const FileInput = styled.input({
-  display: 'none',
-});
-
-const FileInputLabel = styled.label({
-  padding: 'var(--padding-sm)',
-  borderRadius: 'var(--radius-md)',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--padding-sm)',
-  border: '1px solid var(--hl-md)',
-  backgroundColor: 'var(--hl-xs)',
-  flexWrap: 'wrap',
-});
-
-const FileView = styled.div({
-  backgroundColor: 'var(--color-bg)',
-  borderRadius: 'var(--radius-md)',
-  textOverflow: 'ellipsis',
-  overflow: 'hidden',
-  whiteSpace: 'nowrap',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: 'var(--padding-md)',
-  gap: 'var(--padding-sm)',
-  width: '100%',
-});
 
 const FileField: FC = () => {
   const id = useId();
@@ -146,7 +102,8 @@ const FileField: FC = () => {
   });
   return (
     <div>
-      <FileInput
+      <input
+        style={{ display: 'none' }}
         onChange={e => setSelectedFile(e.currentTarget.files?.[0])}
         accept={[
           '',
@@ -164,10 +121,17 @@ const FileField: FC = () => {
         id={id}
         type="file"
       />
-      <FileInputLabel
+      <label
         {...dropProps}
         style={{
-          border: isDropTarget ? '1px solid var(--color-surprise)' : undefined,
+          padding: 'var(--padding-sm)',
+          borderRadius: 'var(--radius-md)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--padding-sm)',
+          backgroundColor: 'var(--hl-xs)',
+          flexWrap: 'wrap',
+          border: isDropTarget ? '1px solid var(--color-surprise)' : '1px solid var(--hl-md)',
         }}
         htmlFor={id}
       >
@@ -201,16 +165,32 @@ const FileField: FC = () => {
         )}
         {selectedFile && (
           <Fragment key={selectedFile.name}>
-            <FileView key={selectedFile.path}>
+            <div
+              key={selectedFile.path}
+              style={{
+                backgroundColor: 'var(--color-bg)',
+                borderRadius: 'var(--radius-md)',
+                textOverflow: 'ellipsis',
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 'var(--padding-md)',
+                gap: 'var(--padding-sm)',
+                width: '100%',
+              }}
+            >
               <div>
                 <i className="fa fa-file fa-xl" />
               </div>
               {selectedFile.name}
-            </FileView>
+            </div>
             <input type="hidden" name="filePath" value={selectedFile.path} />
           </Fragment>
         )}
-      </FileInputLabel>
+      </label>
     </div>
   );
 };
@@ -443,6 +423,7 @@ export const ImportModal: FC<ImportModalProps> = ({
           />
         ) : (
           <ScanResourcesForm
+            isImportToWorkspace={!!defaultWorkspaceId}
             from={from}
             errors={scanResourcesFetcher.data?.errors}
             onSubmit={e => {
@@ -460,10 +441,12 @@ export const ImportModal: FC<ImportModalProps> = ({
 };
 
 const ScanResourcesForm = ({
+  isImportToWorkspace,
   onSubmit,
   from,
   errors,
 }: {
+  isImportToWorkspace: boolean;
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
   from?: ImportModalProps['from'];
   errors?: string[];
@@ -484,8 +467,28 @@ const ScanResourcesForm = ({
           gap: 'var(--padding-sm)',
         }}
       >
-        <Fieldset>
-          <RadioGroup>
+        <input
+          type='hidden'
+          name='isImportToWorkspace'
+          value={isImportToWorkspace ? '1' : '0'}
+          style={{ display: 'none' }}
+        />
+        <fieldset
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--padding-md)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              padding: 'var(--padding-xs)',
+              border: '1px solid var(--hl-md)',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'var(--hl-xs)',
+            }}
+          >
             <Radio
               onChange={() => setImportFrom('file')}
               name="importFrom"
@@ -513,8 +516,8 @@ const ScanResourcesForm = ({
               <i className="fa fa-clipboard" />
               Clipboard
             </Radio>
-          </RadioGroup>
-        </Fieldset>
+          </div>
+        </fieldset>
         {importFrom === 'file' && <FileField />}
         {importFrom === 'uri' && (
           <div className="form-control form-control--outlined">
@@ -611,12 +614,6 @@ const ScanResourcesForm = ({
   );
 };
 
-const ImportTypeTitle = styled.div({
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--padding-sm)',
-});
-
 const ImportResourcesForm = ({
   scanResult,
   defaultProjectId,
@@ -662,7 +659,13 @@ const ImportResourcesForm = ({
           <thead>
             <tr className="table--no-outline-row">
               <th>
-                <ImportTypeTitle>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--padding-sm)',
+                  }}
+                >
                   {scanResult.type?.id.includes('insomnia') && (
                     <Fragment>
                       <InsomniaIcon width={24} height={24} />
@@ -706,7 +709,7 @@ const ImportResourcesForm = ({
                     </Fragment>
                   )}{' '}
                   resources to be imported:
-                </ImportTypeTitle>
+                </div>
               </th>
             </tr>
           </thead>
