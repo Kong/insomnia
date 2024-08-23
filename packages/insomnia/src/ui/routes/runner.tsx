@@ -225,7 +225,7 @@ export const Runner: FC<{}> = () => {
   useEffect(() => {
     const readResults = async () => {
       const results = await models.runnerTestResult.findByParentId(workspaceId) || [];
-      setTestHistory(results);
+      setTestHistory(results.reverse());
     };
     readResults();
   }, [workspaceId]);
@@ -283,7 +283,7 @@ export const Runner: FC<{}> = () => {
         } else {
           if (onTestEnd) {
             const results = await models.runnerTestResult.findByParentId(workspaceId) || [];
-            setTestHistory(results);
+            setTestHistory(results.reverse());
             if (results.length > 0) {
               const latestResult = results[results.length - 1];
               setExecutionResult(latestResult);
@@ -339,7 +339,7 @@ export const Runner: FC<{}> = () => {
               <Pane type="request">
                 <PaneHeader>
                   <Heading className="flex items-center w-full h-[--line-height-sm] pl-[--padding-md]">
-                    <div className="w-full text-left">
+                    <div className="w-full text-left min-w-[400px]">
                       <span className="mr-6 text-sm">
                         <input
                           value={iterations}
@@ -399,7 +399,7 @@ export const Runner: FC<{}> = () => {
                         className="rounded-sm text-center mr-1 bg-[--color-surprise] text-[--color-font-surprise]"
                         onClick={onRun}
                         style={{ width: '92px', height: '30px' }} // try to make its width same as "Send button"
-                        disabled={isRunning}
+                        disabled={Array.from(reqList.selectedKeys).length === 0 || isRunning}
                       >
                         Run
                       </button>
@@ -453,10 +453,9 @@ export const Runner: FC<{}> = () => {
                           const parentFolders = item.ancestorNames.map((parentFolderName: string, i: number) => {
                             // eslint-disable-next-line react/no-array-index-key
                             return <TooltipTrigger key={`parent-folder-${i}=${parentFolderName}`} >
-                              <i className="fa fa-folder fa-1x h-4 mr-0.3 text-[--color-font]" />
-                              <i className="fa fa-caret-right fa-1x h-4 mr-0.3 text-[--color-font]-50  opacity-50" />
                               <Tooltip message={parentFolderName}>
-                                {''}
+                                <i className="fa fa-folder fa-1x h-4 mr-0.3 text-[--color-font]" />
+                                <i className="fa fa-caret-right fa-1x h-4 mr-0.3 text-[--color-font]-50  opacity-50" />
                               </Tooltip>
                             </TooltipTrigger>;
                           });
@@ -592,7 +591,7 @@ export const Runner: FC<{}> = () => {
                       Tests
                     </span>
                     <span
-                      className={`rounded-sm ml-1 px-1 ${testResultCountTagColor}`}
+                      className={`test-result-count rounded-sm ml-1 px-1 ${testResultCountTagColor}`}
                       style={{ color: 'white' }}
                     >
                       {`${passedTestCount} / ${totalTestCount}`}
