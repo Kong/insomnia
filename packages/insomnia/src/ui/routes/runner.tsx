@@ -1,4 +1,4 @@
-import type { RequestTestResult } from 'insomnia-sdk';
+import type { RequestContext, RequestTestResult } from 'insomnia-sdk';
 import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
@@ -706,8 +706,18 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   });
 
   for (let i = 0; i < iterations; i++) {
+    // nextRequestIdOrName is used to manual set next request in iteration from pre-request script
+    let nextRequestIdOrName = '';
     for (let j = 0; j < requests.length; j++) {
-      const targetRequest = requests[j];
+      const targetRequest = requests[j] as { name: string; id: string; url: string };
+      if (nextRequestIdOrName !== '') {
+        if (targetRequest.id === nextRequestIdOrName || targetRequest.name.trim() === nextRequestIdOrName.trim()) {
+          // reset nextRequestIdOrName when request name or id meets;
+          nextRequestIdOrName = '';
+        } else {
+          continue;
+        }
+      }
       const getCurIterationUserUploadData = (curIteration: number): UserUploadEnvironment | undefined => {
         if (Array.isArray(userUploadEnvs) && userUploadEnvs.length > 0) {
           const uploadDataLength = userUploadEnvs.length;
@@ -738,14 +748,19 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
         results: new Array<RequestTestResult>(),
         responseId: '',
       };
-      await sendActionImp({
+      const mutatedContext = await sendActionImp({
         requestId: targetRequest.id,
         workspaceId,
+        iteration: i + 1,
+        iterationCount: iterations,
         userUploadEnv: getCurIterationUserUploadData(i),
         shouldPromptForPathAfterResponse: false,
         ignoreUndefinedEnvVariable: true,
         testResultCollector: resultCollector,
-      });
+      }) as RequestContext | null;
+      if (mutatedContext?.execution?.nextRequestIdOrName) {
+        nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
+      };
 
       testCtx = {
         ...testCtx,
