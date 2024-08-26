@@ -1,9 +1,6 @@
-// import crypto from 'crypto';
-// import type { RequestTestResult } from 'insomnia-sdk';
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
 
-// import { fuzzyMatch } from '../../../common/misc';
 import type { BaseRunnerTestResult, RunnerResultPerRequest } from '../../../models/runner-test-result';
 import { RequestTestResultRows } from './request-test-result-pane';
 
@@ -11,90 +8,6 @@ type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
 
 const filterClassnames = 'mx-1 w-[6rem] text-center rounded-md h-[--line-height-xxs] text-sm cursor-pointer outline-none select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
 const activeFilterClassnames = 'text-white mx-1 w-[6rem] text-center rounded-md h-[--line-height-xxs] text-sm cursor-pointer outline-none select-none px-2 py-1 bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
-
-// interface RunnerTestResultRowsProps {
-//   results: RunnerResultPerRequest[];
-//   resultFilter: string;
-//   targetTests: string;
-// }
-
-// const RunnerTestResultRows: FC<RunnerTestResultRowsProps> = ({
-//   results,
-//   resultFilter,
-//   targetTests,
-// }: RunnerTestResultRowsProps) => {
-//   const testResultRows = results
-//     .filter(result => {
-//       switch (targetTests) {
-//         case 'all':
-//           return true;
-//         case 'passed':
-//           return result.status === 'passed';
-//         case 'failed':
-//           return result.status === 'failed';
-//         case 'skipped':
-//           return result.status === 'skipped';
-//         default:
-//           throw Error(`unexpected target test type ${targetTests}`);
-//       }
-//     })
-//     .filter(result => {
-//       if (resultFilter.trim() === '') {
-//         return true;
-//       }
-
-//       return Boolean(fuzzyMatch(
-//         resultFilter,
-//         result.testCase,
-//         { splitSpace: false, loose: true }
-//       )?.indexes);
-//     })
-//     .map((result, i: number) => {
-//       const key = crypto
-//         .createHash('sha1')
-//         .update(`${result.testCase}"-${i}`)
-//         .digest('hex');
-
-//       const statusText = {
-//         passed: 'PASS',
-//         failed: 'FAIL',
-//         skipped: 'SKIP',
-//       }[result.status];
-//       const statusTagColor = {
-//         passed: 'bg-lime-600',
-//         failed: 'bg-red-600',
-//         skipped: 'bg-slate-600',
-//       }[result.status];
-
-//       const executionTime = <span className={result.executionTime < 300 ? 'text-white-500' : 'text-red-500'} >
-//         {result.executionTime === 0 ? '< 0.1' : `${result.executionTime.toFixed(1)}`}
-//       </span>;
-//       const statusTag = <div className={`text-xs rounded p-[2px] inline-block w-16 text-center font-semibold ${statusTagColor}`}>
-//         {statusText}
-//       </div >;
-//       const message = <>
-//         <span className='capitalize'>{result.testCase}</span>
-//         <span className='text-neutral-400'>{result.errorMessage ? ' | ' + result.errorMessage : ''}</span>
-//       </>;
-//       const testCategory = result.category === 'pre-request' ? 'Pre-request Test' :
-//         result.category === 'after-response' ? 'After-response Test' : 'Unknown';
-
-//       return (
-//         <div key={key} data-testid="test-result-row">
-//           <div className="flex w-full my-3 text-base">
-//             <div className="leading-4 m-auto mx-1">
-//               <span className="mr-2 ml-2" >{statusTag}</span>
-//             </div>
-//             <div className="leading-4 mr-2">
-//               <div className='mr-2 my-1 w-auto text-nowrap'>{message}</div>
-//               <div className='text-sm text-neutral-400 my-1'>{`${testCategory} (`}{executionTime}{' ms)'}</div>
-//             </div>
-//           </div>
-//         </div>);
-//     });
-
-//   return <>{testResultRows}</>;
-// };
 
 interface Props {
   result: BaseRunnerTestResult | null;

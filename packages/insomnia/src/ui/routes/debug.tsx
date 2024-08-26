@@ -150,7 +150,7 @@ export const loader: LoaderFunction = async ({ params, request }) => {
     invariant(activeWorkspaceMeta, 'Workspace meta not found');
     const activeRequestId = activeWorkspaceMeta.activeRequestId;
     const activeRequest = activeRequestId ? await models.request.getById(activeRequestId) : null;
-    const isDisplayingRunner = request.url.endsWith('/runner') || request.url.endsWith('/runner?test-end');
+    const isDisplayingRunner = request.url.endsWith('/runner') || request.url.endsWith('/runner?refresh-pane');
     if (activeRequest && !isDisplayingRunner) {
       return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`);
     }

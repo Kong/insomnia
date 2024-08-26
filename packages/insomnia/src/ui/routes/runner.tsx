@@ -16,6 +16,7 @@ import type { UserUploadEnvironment } from '../../models/environment';
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import type { RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
+import { cancelRequestById } from '../../network/cancellation';
 import { invariant } from '../../utils/invariant';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
@@ -55,11 +56,11 @@ async function aggregateAllTimelines(testResult: RunnerTestResult) {
 
 export const Runner: FC<{}> = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [onTestEnd, setOnTestEnd] = useState(false);
-  if (searchParams.has('test-end')) {
-    setOnTestEnd(true);
+  const [shouldRefresh, setShouldRefresh] = useState(false);
+  if (searchParams.has('refresh-pane')) {
+    setShouldRefresh(true);
     // clean up params
-    searchParams.delete('test-end');
+    searchParams.delete('refresh-pane');
     setSearchParams({});
   }
 
@@ -281,14 +282,14 @@ export const Runner: FC<{}> = () => {
             unit: durationUnit,
           });
         } else {
-          if (onTestEnd) {
+          if (shouldRefresh) {
             const results = await models.runnerTestResult.findByParentId(workspaceId) || [];
             setTestHistory(results.reverse());
             if (results.length > 0) {
               const latestResult = results[0];
               setExecutionResult(latestResult);
             }
-            setOnTestEnd(false);
+            setShouldRefresh(false);
           }
         }
       }
@@ -625,7 +626,7 @@ export const Runner: FC<{}> = () => {
                 {isRunning &&
                   <div className="h-full w-full text-md flex items-center">
                     <ResponseTimer
-                      handleCancel={() => { }}
+                      handleCancel={() => cancelRunning(workspaceId)}
                       activeRequestId={workspaceId}
                       steps={timingSteps}
                     />
@@ -672,6 +673,33 @@ const RequestItem = (
   );
 };
 
+const runningRunners = new Map<string, string>();
+function startRunning(workspaceId: string) {
+  runningRunners.set(workspaceId, '');
+}
+
+function stopRunning(workspaceId: string) {
+  runningRunners.delete(workspaceId);
+}
+
+function updateRunning(workspaceId: string, requestId: string) {
+  runningRunners.set(workspaceId, requestId);
+}
+
+function getRunning(workspaceId: string) {
+  return runningRunners.get(workspaceId);
+}
+
+function cancelRunning(workspaceId: string) {
+  const activeRequest = getRunning(workspaceId);
+  if (activeRequest) {
+    cancelRequestById(activeRequest);
+    window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
+    window.main.completeExecutionStep({ requestId: workspaceId });
+    stopRunning(workspaceId);
+  }
+}
+
 export interface runCollectionActionParams {
   requests: { id: string; name: string }[];
 }
@@ -702,117 +730,124 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     requestId: workspaceId,
     stepName: 'Initializing',
   });
+  startRunning(workspaceId);
 
   interface RequestType {
     name: string;
     id: string;
     url: string;
   };
-  for (let i = 0; i < iterations; i++) {
-    // nextRequestIdOrName is used to manual set next request in iteration from pre-request script
-    let nextRequestIdOrName = '';
-    let iterationResults: RunnerResultPerRequest[] = [];
 
-    for (let j = 0; j < requests.length; j++) {
-      const targetRequest = requests[j] as RequestType;
-      if (nextRequestIdOrName !== '') {
-        if (targetRequest.id === nextRequestIdOrName ||
-          // find the last request with matched name in case mulitple requests with same name in collection runner
-          (targetRequest.name.trim() === nextRequestIdOrName.trim() && j === requests.findLastIndex((req: RequestType) => req.name.trim() === nextRequestIdOrName.trim()))
-        ) {
-          // reset nextRequestIdOrName when request name or id meets;
-          nextRequestIdOrName = '';
-        } else {
-          continue;
+  try {
+    for (let i = 0; i < iterations; i++) {
+      // nextRequestIdOrName is used to manual set next request in iteration from pre-request script
+      let nextRequestIdOrName = '';
+      let iterationResults: RunnerResultPerRequest[] = [];
+
+      for (let j = 0; j < requests.length; j++) {
+        const targetRequest = requests[j] as RequestType;
+        updateRunning(workspaceId, targetRequest.id);
+        if (nextRequestIdOrName !== '') {
+          if (targetRequest.id === nextRequestIdOrName ||
+            // find the last request with matched name in case mulitple requests with same name in collection runner
+            (targetRequest.name.trim() === nextRequestIdOrName.trim() && j === requests.findLastIndex((req: RequestType) => req.name.trim() === nextRequestIdOrName.trim()))
+          ) {
+            // reset nextRequestIdOrName when request name or id meets;
+            nextRequestIdOrName = '';
+          } else {
+            continue;
+          }
         }
+
+        const getCurIterationUserUploadData = (curIteration: number): UserUploadEnvironment | undefined => {
+          if (Array.isArray(userUploadEnvs) && userUploadEnvs.length > 0) {
+            const uploadDataLength = userUploadEnvs.length;
+            if (uploadDataLength >= curIteration + 1) {
+              return userUploadEnvs[curIteration];
+            };
+            return userUploadEnvs[(curIteration + 1) % uploadDataLength];
+          }
+          return undefined;
+        };
+
+        window.main.updateLatestStepName({ requestId: workspaceId, stepName: `Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"` });
+
+        const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(
+          targetRequest.id,
+          { lastActive: Date.now() },
+        );
+        invariant(activeRequestMeta, 'Request meta not found');
+
+        await new Promise(resolve => setTimeout(resolve, delay));
+        const resultCollector = {
+          requestId: targetRequest.id,
+          requestName: targetRequest.name,
+          requestUrl: targetRequest.url,
+          responseReason: '',
+          duration: 1,
+          size: 0,
+          results: new Array<RequestTestResult>(),
+          responseId: '',
+        };
+        const mutatedContext = await sendActionImp({
+          requestId: targetRequest.id,
+          workspaceId,
+          iteration: i + 1,
+          iterationCount: iterations,
+          userUploadEnv: getCurIterationUserUploadData(i),
+          shouldPromptForPathAfterResponse: false,
+          ignoreUndefinedEnvVariable: true,
+          testResultCollector: resultCollector,
+        }) as RequestContext | null;
+        if (mutatedContext?.execution?.nextRequestIdOrName) {
+          nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
+        };
+
+        const requestResults: RunnerResultPerRequest = {
+          requestName: targetRequest.name,
+          requestUrl: targetRequest.url,
+          responseCode: 0, // TODO: collect response
+          results: resultCollector.results,
+        };
+
+        iterationResults = [...iterationResults, requestResults];
+        testCtx = {
+          ...testCtx,
+          duration: testCtx.duration + resultCollector.duration,
+          responseIds: [...testCtx.responseIds, resultCollector.responseId],
+        };
       }
-      const getCurIterationUserUploadData = (curIteration: number): UserUploadEnvironment | undefined => {
-        if (Array.isArray(userUploadEnvs) && userUploadEnvs.length > 0) {
-          const uploadDataLength = userUploadEnvs.length;
-          if (uploadDataLength >= curIteration + 1) {
-            return userUploadEnvs[curIteration];
-          };
-          return userUploadEnvs[(curIteration + 1) % uploadDataLength];
-        }
-        return undefined;
-      };
 
-      window.main.updateLatestStepName({ requestId: workspaceId, stepName: `Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"` });
-
-      const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(
-        targetRequest.id,
-        { lastActive: Date.now() },
-      );
-      invariant(activeRequestMeta, 'Request meta not found');
-
-      await new Promise(resolve => setTimeout(resolve, delay));
-      const resultCollector = {
-        requestId: targetRequest.id,
-        requestName: targetRequest.name,
-        requestUrl: targetRequest.url,
-        responseReason: '',
-        duration: 1,
-        size: 0,
-        results: new Array<RequestTestResult>(),
-        responseId: '',
-      };
-      const mutatedContext = await sendActionImp({
-        requestId: targetRequest.id,
-        workspaceId,
-        iteration: i + 1,
-        iterationCount: iterations,
-        userUploadEnv: getCurIterationUserUploadData(i),
-        shouldPromptForPathAfterResponse: false,
-        ignoreUndefinedEnvVariable: true,
-        testResultCollector: resultCollector,
-      }) as RequestContext | null;
-      if (mutatedContext?.execution?.nextRequestIdOrName) {
-        nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
-      };
-
-      const requestResults: RunnerResultPerRequest = {
-        requestName: targetRequest.name,
-        requestUrl: targetRequest.url,
-        responseCode: 0, // TODO: collect response
-        results: resultCollector.results,
-      };
-
-      iterationResults = [...iterationResults, requestResults];
       testCtx = {
         ...testCtx,
-        duration: testCtx.duration + resultCollector.duration,
-        responseIds: [...testCtx.responseIds, resultCollector.responseId],
+        iterationResults: [...testCtx.iterationResults, iterationResults],
       };
     }
 
-    testCtx = {
-      ...testCtx,
-      iterationResults: [...testCtx.iterationResults, iterationResults],
-    };
+    await models.runnerTestResult.create({
+      parentId: workspaceId,
+      source: testCtx.source,
+      // environmentId: string;
+      iterations: testCtx.iterations,
+      duration: testCtx.duration,
+      avgRespTime: testCtx.avgRespTime,
+      iterationResults: testCtx.iterationResults,
+      responseIds: testCtx.responseIds,
+    });
+
+    window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
+    window.main.completeExecutionStep({ requestId: workspaceId });
+  } catch (e) {
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane`);
+  } finally {
+    cancelRunning(workspaceId);
   }
 
-  await models.runnerTestResult.create({
-    parentId: workspaceId,
-    source: testCtx.source,
-    // environmentId: string;
-    iterations: testCtx.iterations,
-    duration: testCtx.duration,
-    avgRespTime: testCtx.avgRespTime,
-    iterationResults: testCtx.iterationResults,
-    responseIds: testCtx.responseIds,
-  });
-
-  window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
-  window.main.completeExecutionStep({ requestId: workspaceId });
-
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?test-end`);
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane`);
 };
 
 export const collectionRunnerStatusLoader: ActionFunction = async ({ params }) => {
   const { workspaceId } = params;
   invariant(workspaceId, 'Workspace id is required');
-
-  // const status = getCollectionRunnerStatus(workspaceId);
-  // return { ...status };
   return null;
 };
