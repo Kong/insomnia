@@ -1,6 +1,9 @@
+import path from 'node:path';
+
 import type { ActionFunction } from 'react-router-dom';
 
-import { fetchImportContentFromURI, importResourcesToProject, importResourcesToWorkspace, scanResources, type ScanResult } from '../../common/import';
+import type { PostmanDataDumpRawData } from '../../common/import';
+import { fetchImportContentFromURI, getFilesFromPostmanExportedDataDump, importResourcesToProject, importResourcesToWorkspace, scanResources, type ScanResult } from '../../common/import';
 import * as models from '../../models';
 import { invariant } from '../../utils/invariant';
 
@@ -32,6 +35,33 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
         errors: ['File is required'],
       };
     }
+
+    // import from postman data dump
+    if (path.extname(filePath) === '.zip') {
+      if (formData.get('isImportToWorkspace') === '1') {
+        return {
+          errors: ['Please import postman data dump in project level'],
+        };
+      }
+      let postmanDataDumpRawData: PostmanDataDumpRawData;
+      try {
+        postmanDataDumpRawData = await getFilesFromPostmanExportedDataDump(filePath);
+      } catch (err) {
+        return {
+          errors: [err.message],
+        };
+      }
+
+      if (postmanDataDumpRawData.collectionList.length === 0 && postmanDataDumpRawData.envList.length === 0) {
+        return {
+          errors: ['No content to import'],
+        };
+      }
+
+      const result = await scanResources({ content: postmanDataDumpRawData });
+      return result;
+    }
+
     const uri = `file://${filePath}`;
 
     content = await fetchImportContentFromURI({
@@ -59,7 +89,6 @@ export interface ImportResourcesActionResult {
 
 export const importResourcesAction: ActionFunction = async ({ request }): Promise<ImportResourcesActionResult> => {
   const formData = await request.formData();
-
   const organizationId = formData.get('organizationId');
   const projectId = formData.get('projectId');
   const workspaceId = formData.get('workspaceId');

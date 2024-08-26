@@ -97,6 +97,7 @@ const main: Window['main'] = {
     landingPage,
     tags,
   }),
+  extractJsonFileFromPostmanDataDumpArchive: archivePath => ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {

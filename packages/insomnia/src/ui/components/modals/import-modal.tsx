@@ -423,6 +423,7 @@ export const ImportModal: FC<ImportModalProps> = ({
           />
         ) : (
           <ScanResourcesForm
+            isImportToWorkspace={!!defaultWorkspaceId}
             from={from}
             errors={scanResourcesFetcher.data?.errors}
             onSubmit={e => {
@@ -440,10 +441,12 @@ export const ImportModal: FC<ImportModalProps> = ({
 };
 
 const ScanResourcesForm = ({
+  isImportToWorkspace,
   onSubmit,
   from,
   errors,
 }: {
+  isImportToWorkspace: boolean;
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
   from?: ImportModalProps['from'];
   errors?: string[];
@@ -464,6 +467,12 @@ const ScanResourcesForm = ({
           gap: 'var(--padding-sm)',
         }}
       >
+        <input
+          type='hidden'
+          name='isImportToWorkspace'
+          value={isImportToWorkspace ? '1' : '0'}
+          style={{ display: 'none' }}
+        />
         <fieldset
           style={{
             display: 'flex',
