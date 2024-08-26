@@ -1,6 +1,6 @@
 import clone from 'clone';
 import fs from 'fs';
-import type { ExecutionOption, RequestContext, RequestTestResult } from 'insomnia-sdk';
+import type { RequestContext, RequestTestResult } from 'insomnia-sdk';
 import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
 
@@ -40,8 +40,9 @@ import {
   smartEncodeUrl,
 } from '../utils/url/querystring';
 import { getAuthHeader, getAuthObjectOrNull, getAuthQueryParams, isAuthEnabled } from './authentication';
-import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
+import { cancellableCurlRequest } from './cancellation';
 import { filterClientCertificates } from './certificate';
+import { runScriptConcurrently, type TransformedExecuteScriptContext } from './concurrency';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
 export const getOrInheritAuthentication = ({ request, requestGroups }: { request: Request | WebSocketRequest; requestGroups: RequestGroup[] }): RequestAuthentication | {} => {
@@ -204,11 +205,20 @@ export const tryToExecutePreRequestScript = async (
     iterationCount,
     ancestors,
     eventName: 'prerequest',
+    settings,
   });
-  if (!mutatedContext?.request) {
-    // exiy early if there was a problem with the pre-request script
-    // TODO: improve error message?
-    return null;
+  if (!mutatedContext || 'error' in mutatedContext) {
+    return {
+      error: `Execute pre-request script failed: ${mutatedContext?.error}`,
+      request,
+      environment,
+      baseEnvironment,
+      clientCertificates,
+      settings,
+      cookieJar,
+      globals: activeGlobalEnvironment,
+      requestTestResults: new Array<RequestTestResult>(),
+    };
   }
   await savePatchesMadeByScript(mutatedContext, environment, baseEnvironment, activeGlobalEnvironment);
   return {
@@ -230,7 +240,7 @@ export const tryToExecutePreRequestScript = async (
 //  - If no global environment is seleted, no operation
 //  - If one global environment is selected, it persists content to the selected global environment (base or sub).
 export async function savePatchesMadeByScript(
-  mutatedContext: Awaited<ReturnType<typeof tryToExecuteScript>>,
+  mutatedContext: TransformedExecuteScriptContext,
   environment: Environment,
   baseEnvironment: Environment,
   activeGlobalEnvironment: Environment | undefined,
@@ -292,16 +302,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     .map(doc => doc.name);
 
   try {
-    const timeout = settings.timeout || 5000;
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => {
-        reject(new Error('Timeout: Hidden browser window is not responding'));
-        // Add one extra second to ensure the hidden browser window has had a chance to return its timeout
-        // TODO: restart the hidden browser window
-      }, timeout + 2000);
-    });
-
-    const executionPromise = cancellableRunScript({
+    const output = await runScriptConcurrently({
       script,
       context: {
         request,
@@ -338,21 +339,9 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         },
       },
     });
-    // @TODO This looks overly complicated and could be simplified.
-    // If the timeout promise finishes first the execution promise is still running while it should be cancelled.
-    // Since the execution promise is cancellable and uses an abort controller we should add the timeout to the controller instead
-    const output = await Promise.race([timeoutPromise, executionPromise]) as {
-      request: Request;
-      environment: Record<string, any>;
-      baseEnvironment: Record<string, any>;
-      iterationData: Record<string, any>;
-      settings: Settings;
-      clientCertificates: ClientCertificate[];
-      cookieJar: CookieJar;
-      globals: Record<string, any>;
-      requestTestResults: RequestTestResult[];
-      execution: ExecutionOption;
-    };
+    if ('error' in output) {
+      return { error: `Script executor returns error: ${output.error}` };
+    }
     console.log('[network] script execution succeeded', output);
 
     const envPropertyOrder = orderedJSON.parse(
@@ -377,17 +366,17 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
-      globals.data = output.globals;
+      globals.data = output.globals || {};
       globals.dataPropertyOrder = globalEnvPropertyOrder.map;
     }
 
     if (userUploadEnv) {
       const userUploadEnvPropertyOrder = orderedJSON.parse(
-        JSON.stringify(output.iterationData.data || {}),
+        JSON.stringify(output?.iterationData?.data || {}),
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
-      userUploadEnv.data = output.iterationData.data;
+      userUploadEnv.data = output?.iterationData?.data || {};
       userUploadEnv.dataPropertyOrder = userUploadEnvPropertyOrder.map;
     }
 
@@ -420,7 +409,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     };
     const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
     models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
-    return null;
+    return { error: err };
   }
 };
 
@@ -434,6 +423,7 @@ interface RequestContextForScript {
   cookieJar: CookieJar;
   ancestors: (Request | RequestGroup | Workspace | Project | MockRoute | MockServer)[];
   globals?: Environment; // there could be no global environment
+  settings: Settings;
 }
 
 type RequestAndContextAndResponse = RequestContextForScript & {
@@ -466,8 +456,11 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
   }
   const joinedScript = [...folderScripts].join('\n');
   const postMutatedContext = await tryToExecuteScript({ script: joinedScript, ...context, eventName: 'test' });
-  if (!postMutatedContext?.request) {
-    return null;
+  if (!postMutatedContext || 'error' in postMutatedContext) {
+    return {
+      error: `Execute after-response script failed: ${postMutatedContext?.error}`,
+      ...context,
+    };
   }
   await savePatchesMadeByScript(postMutatedContext, context.environment, context.baseEnvironment, context.globals);
 

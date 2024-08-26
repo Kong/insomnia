@@ -122,7 +122,7 @@ export const RequestTestResultPane: FC<Props> = ({
   const selectSkippedTests = () => setTargetTests('skipped');
 
   return <>
-    <div className='h-full flex flex-col divide-y divide-solid divide-[--hl-md]'>
+    <div className='test-result-pane h-full flex flex-col divide-y divide-solid divide-[--hl-md]'>
       <div className='h-[calc(100%-var(--line-height-sm))]'>
         <Toolbar className="flex items-center h-[--line-height-sm] flex-row text-[var(--font-size-sm)] box-border overflow-x-auto border-solid border-b border-b-[--hl-md] pl-2">
           <button className={targetTests === 'all' ? activeFilterClassnames : filterClassnames} onClick={selectAllTests} >All</button>

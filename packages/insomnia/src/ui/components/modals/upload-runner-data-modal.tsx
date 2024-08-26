@@ -119,7 +119,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
       className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-start justify-center bg-black/30"
     >
       <Modal
-        className="flex max-h-[75%] flex-col w-full max-w-3xl rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] bg-[--color-bg] text-[--color-font] m-24"
+        className="max-h-[75%] overflow-auto flex flex-col w-full max-w-3xl rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] bg-[--color-bg] text-[--color-font] m-24"
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
