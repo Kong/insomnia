@@ -23,7 +23,7 @@ export interface UploadDataModalProps {
   userUploadData: UploadDataType[];
 }
 
-const rowHeaderStyle = 'sticky p-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none';
+const rowHeaderStyle = 'sticky top-[-8px] p-2 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none';
 const rowCellStyle = 'whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none';
 
 export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: UploadDataModalProps) => {
@@ -119,7 +119,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
       className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-start justify-center bg-black/30"
     >
       <Modal
-        className="flex flex-col w-full max-w-3xl rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] bg-[--color-bg] text-[--color-font] m-24"
+        className="flex max-h-[75%] flex-col w-full max-w-3xl rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] bg-[--color-bg] text-[--color-font] m-24"
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
@@ -138,11 +138,11 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className='rounded flex-1 w-full overflow-hidden basis-12 flex flex-col gap-6 select-none overflow-y-auto'>
+              <div className='rounded grow shrink-0 w-full overflow-hidden basis-12 flex flex-col gap-6 select-none overflow-y-auto'>
                 <FileTrigger
                   allowsMultiple={false}
                   onSelect={handleFileSelect}
-                  // acceptedFileTypes={['.csv', '.json']}
+                  acceptedFileTypes={['.csv', '.json']}
                 >
                   <Button className="flex flex-1 flex-shrink-0 border-solid border border-[--hl-`sm] py-1 gap-2 items-center justify-center px-2 aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent transition-all text-base">
                     <Icon icon="upload" />
@@ -156,7 +156,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
                 </div>
               }
               {uploadData.length > 1 &&
-                <div className='overflow-x-auto py-2'>
+                <div className='overflow-auto py-2 flex-1'>
                   <Heading className='text-xl margin-bottom-sm'>Data Preview</Heading>
                   <Table
                     aria-label='Data Preview Table'

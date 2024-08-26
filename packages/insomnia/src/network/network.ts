@@ -1,6 +1,6 @@
 import clone from 'clone';
 import fs from 'fs';
-import type { ExecutionOption, RequestTestResult } from 'insomnia-sdk';
+import type { ExecutionOption, RequestContext, RequestTestResult } from 'insomnia-sdk';
 import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
 
@@ -154,8 +154,8 @@ export const tryToExecutePreRequestScript = async (
   }: Awaited<ReturnType<typeof fetchRequestData>>,
   workspaceId: string,
   userUploadEnv?: UserUploadEnvironment,
-  iterationCount?: number,
   iteration?: number,
+  iterationCount?: number,
 ) => {
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
@@ -203,6 +203,7 @@ export const tryToExecutePreRequestScript = async (
     iteration,
     iterationCount,
     ancestors,
+    eventName: 'prerequest',
   });
   if (!mutatedContext?.request) {
     // exiy early if there was a problem with the pre-request script
@@ -280,7 +281,7 @@ export async function savePatchesMadeByScript(
 }
 
 export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
-  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response, globals, userUploadEnv, iteration, iterationCount, ancestors } = context;
+  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response, globals, userUploadEnv, iteration, iterationCount, ancestors, eventName } = context;
   invariant(script, 'script must be provided');
 
   const settings = await models.settings.get();
@@ -322,7 +323,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         settings,
         cookieJar,
         requestInfo: {
-          eventName: 'prerequest',
+          eventName: eventName === 'prerequest' ? 'prerequest' : 'test',
           iterationCount,
           iteration,
         },
@@ -445,6 +446,7 @@ type RequestAndContextAndOptionalResponse = RequestContextForScript & {
   userUploadEnv?: UserUploadEnvironment;
   iteration?: number;
   iterationCount?: number;
+  eventName?: RequestContext['requestInfo']['eventName'];
 };
 
 export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
@@ -463,7 +465,7 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
     };
   }
   const joinedScript = [...folderScripts].join('\n');
-  const postMutatedContext = await tryToExecuteScript({ script: joinedScript, ...context });
+  const postMutatedContext = await tryToExecuteScript({ script: joinedScript, ...context, eventName: 'test' });
   if (!postMutatedContext?.request) {
     return null;
   }

@@ -711,7 +711,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     let nextRequestIdOrName = '';
     for (let j = 0; j < requests.length; j++) {
       const targetRequest = requests[j] as { name: string; id: string; url: string };
-      if (typeof nextRequestIdOrName === 'string' && nextRequestIdOrName !== '') {
+      if (nextRequestIdOrName !== '') {
         if (targetRequest.id === nextRequestIdOrName || targetRequest.name.trim() === nextRequestIdOrName.trim()) {
           // reset nextRequestIdOrName when request name or id meets;
           nextRequestIdOrName = '';
@@ -752,7 +752,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       const mutatedContext = await sendActionImp({
         requestId: targetRequest.id,
         workspaceId,
-        iteration: i,
+        iteration: i + 1,
         iterationCount: iterations,
         userUploadEnv: getCurIterationUserUploadData(i),
         shouldPromptForPathAfterResponse: false,
