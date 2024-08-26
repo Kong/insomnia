@@ -1,5 +1,5 @@
 import type { Snippet } from 'codemirror';
-import { CookieObject, Environment, InsomniaObject, Request as ScriptRequest, RequestInfo, Url, Variables } from 'insomnia-sdk';
+import { CookieObject, Environment, Execution, InsomniaObject, Request as ScriptRequest, RequestInfo, Url, Variables } from 'insomnia-sdk';
 import React, { type FC, useRef } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Section, Toolbar } from 'react-aria-components';
 
@@ -506,6 +506,9 @@ export const RequestScriptEditor: FC<Props> = ({
         iterationCount: 1,
         requestName: '',
         requestId: '',
+      }),
+      execution: new Execution({
+        location: ['path'],
       }),
     }),
     'insomnia',

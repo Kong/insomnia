@@ -1,6 +1,6 @@
 import clone from 'clone';
 import fs from 'fs';
-import { type RequestTestResult } from 'insomnia-sdk';
+import type { RequestContext, RequestTestResult } from 'insomnia-sdk';
 import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
 
@@ -25,7 +25,8 @@ import type { Cookie, CookieJar } from '../models/cookie-jar';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
 import type { MockRoute } from '../models/mock-route';
 import type { MockServer } from '../models/mock-server';
-import type { Request, RequestAuthentication, RequestHeader, RequestParameter } from '../models/request';
+import { isProject, type Project } from '../models/project';
+import { isRequest, type Request, type RequestAuthentication, type RequestHeader, type RequestParameter } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
 import type { Settings } from '../models/settings';
 import type { WebSocketRequest } from '../models/websocket-request';
@@ -107,10 +108,11 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
 export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
   invariant(request, 'failed to find request ' + requestId);
-  const ancestors = await db.withAncestors<Request | RequestGroup | Workspace | MockRoute | MockServer>(request, [
+  const ancestors = await db.withAncestors<Request | RequestGroup | Workspace | Project | MockRoute | MockServer>(request, [
     models.request.type,
     models.requestGroup.type,
     models.workspace.type,
+    models.project.type,
     models.mockRoute.type,
     models.mockServer.type,
   ]);
@@ -138,17 +140,24 @@ export const fetchRequestData = async (requestId: string) => {
   const responseId = generateId('res');
   const responsesDir = pathJoin((process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
-  return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
+  return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId, ancestors };
 };
 
-export const tryToExecutePreRequestScript = async ({
-  request,
-  environment,
-  settings,
-  clientCertificates,
-  timelinePath,
-  responseId,
-}: Awaited<ReturnType<typeof fetchRequestData>>, workspaceId: string, userUploadEnv?: UserUploadEnvironment): Promise<TransformedExecuteScriptContext>  => {
+export const tryToExecutePreRequestScript = async (
+  {
+    request,
+    environment,
+    settings,
+    clientCertificates,
+    timelinePath,
+    responseId,
+    ancestors,
+  }: Awaited<ReturnType<typeof fetchRequestData>>,
+  workspaceId: string,
+  userUploadEnv?: UserUploadEnvironment,
+  iteration?: number,
+  iterationCount?: number,
+) => {
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
@@ -158,10 +167,7 @@ export const tryToExecutePreRequestScript = async ({
     activeGlobalEnvironment = await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId) || undefined;
   }
 
-  const requestGroups = await db.withAncestors<Request | RequestGroup>(request, [
-    models.requestGroup.type,
-  ]) as (Request | RequestGroup)[];
-
+  const requestGroups = ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
   const folderScripts = requestGroups.reverse()
     .filter(group => group?.preRequestScript)
     .map((group, i) => `const fn${i} = async ()=>{
@@ -195,6 +201,10 @@ export const tryToExecutePreRequestScript = async ({
     cookieJar,
     globals: activeGlobalEnvironment,
     userUploadEnv,
+    iteration,
+    iterationCount,
+    ancestors,
+    eventName: 'prerequest',
     settings,
   });
   if (!mutatedContext || 'error' in mutatedContext) {
@@ -210,7 +220,6 @@ export const tryToExecutePreRequestScript = async ({
       requestTestResults: new Array<RequestTestResult>(),
     };
   }
-
   await savePatchesMadeByScript(mutatedContext, environment, baseEnvironment, activeGlobalEnvironment);
   return {
     request: mutatedContext.request,
@@ -222,6 +231,7 @@ export const tryToExecutePreRequestScript = async ({
     cookieJar: mutatedContext.cookieJar,
     requestTestResults: mutatedContext.requestTestResults,
     userUploadEnv: mutatedContext.userUploadEnv,
+    execution: mutatedContext.execution,
   };
 };
 
@@ -282,11 +292,16 @@ export async function savePatchesMadeByScript(
   }
 }
 
-export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse): Promise<TransformedExecuteScriptContext | { error: string }> => {
-  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response, globals, userUploadEnv } = context;
+export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
+  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response, globals, userUploadEnv, iteration, iterationCount, ancestors, eventName } = context;
   invariant(script, 'script must be provided');
 
   const settings = await models.settings.get();
+  // location is the complete path of a request, including project, collection and folder(if have).
+  const requestLocation = ancestors
+    .filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc) || isProject(doc))
+    .reverse()
+    .map(doc => doc.name);
 
   try {
     const output = await runScriptConcurrently({
@@ -310,12 +325,20 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         clientCertificates,
         settings,
         cookieJar,
+        requestInfo: {
+          eventName: eventName === 'prerequest' ? 'prerequest' : 'test',
+          iterationCount,
+          iteration,
+        },
         response,
         globals: globals?.data || undefined,
         iterationData: userUploadEnv ? {
           name: userUploadEnv.name,
           data: userUploadEnv.data || {},
         } : undefined,
+        execution: {
+          location: requestLocation,
+        },
       },
     });
     if ('error' in output) {
@@ -369,6 +392,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       globals,
       userUploadEnv,
       requestTestResults: output.requestTestResults,
+      execution: output.execution,
     };
   } catch (err) {
     await fs.promises.appendFile(
@@ -399,6 +423,7 @@ interface RequestContextForScript {
   baseEnvironment: Environment;
   clientCertificates: ClientCertificate[];
   cookieJar: CookieJar;
+  ancestors: (Request | RequestGroup | Workspace | Project | MockRoute | MockServer)[];
   globals?: Environment; // there could be no global environment
   settings: Settings;
 }
@@ -411,13 +436,13 @@ type RequestAndContextAndOptionalResponse = RequestContextForScript & {
   script: string;
   response?: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
   userUploadEnv?: UserUploadEnvironment;
+  iteration?: number;
+  iterationCount?: number;
+  eventName?: RequestContext['requestInfo']['eventName'];
 };
 
-export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse): Promise<TransformedExecuteScriptContext> {
-  const requestGroups = await db.withAncestors<Request | RequestGroup>(context.request, [
-    models.requestGroup.type,
-  ]) as (Request | RequestGroup)[];
-
+export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
+  const requestGroups = context.ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
   const folderScripts = requestGroups.reverse()
     .filter(group => group?.afterResponseScript)
     .map((group, i) => `const fn${i} = async ()=>{
@@ -432,8 +457,7 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
     };
   }
   const joinedScript = [...folderScripts].join('\n');
-
-  const postMutatedContext = await tryToExecuteScript({ script: joinedScript, ...context });
+  const postMutatedContext = await tryToExecuteScript({ script: joinedScript, ...context, eventName: 'test' });
   if (!postMutatedContext || 'error' in postMutatedContext) {
     return {
       error: `Execute after-response script failed: ${postMutatedContext?.error}`,

@@ -107,6 +107,7 @@ const runScript = async (
       data: mutatedContextObject.iterationData,
     } : undefined,
     request: updatedRequest,
+    execution: mutatedContextObject.execution,
     settings: updatedSettings,
     clientCertificates: updatedCertificates,
     cookieJar: updatedCookieJar,
