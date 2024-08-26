@@ -1,10 +1,9 @@
-import classnames from 'classnames';
-import React, { type FC, Fragment, useEffect, useRef, useState } from 'react';
-import { Button } from 'react-aria-components';
+import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import React, { type FC, useEffect, useState } from 'react';
+import { Button, Collection, Menu, MenuItem, MenuTrigger, Popover, Section, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
-import { docsGitSync } from '../../../common/documentation';
 import type { GitRepository } from '../../../models/git-repository';
 import { deleteGitRepository } from '../../../models/helpers/git-repository-operations';
 import { getOauth2FormatName } from '../../../sync/git/utils';
@@ -17,21 +16,12 @@ import type {
   PullFromGitRemoteResult,
   PushToGitRemoteResult,
 } from '../../routes/git-actions';
-import {
-  Dropdown,
-  type DropdownHandle,
-  DropdownItem,
-  DropdownSection,
-  ItemContent,
-} from '../base/dropdown';
-import { Link } from '../base/link';
-import { HelpTooltip } from '../help-tooltip';
+import { Icon } from '../icon';
 import { showAlert } from '../modals';
 import { GitBranchesModal } from '../modals/git-branches-modal';
 import { GitLogModal } from '../modals/git-log-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { GitStagingModal } from '../modals/git-staging-modal';
-import { Tooltip } from '../tooltip';
 
 interface Props {
   gitRepository: GitRepository | null;
@@ -44,7 +34,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
     projectId: string;
     workspaceId: string;
   };
-  const dropdownRef = useRef<DropdownHandle>(null);
 
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] =
     useState(false);
@@ -166,13 +155,13 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
     );
   }
 
-  let iconClassName = 'fa-brands fa-git-alt';
+  let iconClassName: IconProp = ['fab', 'git-alt'];
   const providerName = getOauth2FormatName(gitRepository?.credentials);
   if (providerName === 'github') {
-    iconClassName = 'fa fa-github';
+    iconClassName = ['fab', 'github'];
   }
   if (providerName === 'gitlab') {
-    iconClassName = 'fa fa-gitlab';
+    iconClassName = ['fab', 'gitlab'];
   }
 
   const isLoading =
@@ -189,22 +178,28 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       ? gitRepoDataFetcher.data
       : { branches: [], branch: '' };
 
-  let dropdown: React.ReactNode = null;
   const { revalidate } = useRevalidator();
 
-  const currentBranchActions = [
+  const currentBranchActions: {
+    id: string;
+    label: string;
+    icon: IconName;
+    isDisabled?: boolean;
+    action: () => void;
+  }[] = (isSynced ? [
     {
-      id: 1,
+      id: 'commit',
       icon: 'check',
+      isDisabled: gitChangesFetcher.data?.changes.length === 0,
       label: 'Commit',
-      onClick: () => setIsGitStagingModalOpen(true),
+      action: () => setIsGitStagingModalOpen(true),
     },
     {
-      id: 2,
-      stayOpenAfterClick: true,
-      icon: loadingPull ? 'refresh fa-spin' : 'cloud-download',
+      id: 'pull',
+      icon: loadingPull ? 'refresh' : 'cloud-download',
       label: 'Pull',
-      onClick: async () => {
+      isDisabled: false,
+      action: async () => {
         gitPullFetcher.submit(
           {},
           {
@@ -215,24 +210,25 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       },
     },
     {
-      id: 3,
-      stayOpenAfterClick: true,
-      icon: loadingPush ? 'refresh fa-spin' : 'cloud-upload',
+      id: 'push',
+      icon: loadingPush ? 'refresh' : 'cloud-upload',
       label: 'Push',
-      onClick: () => handlePush({ force: false }),
+      isDisabled: !gitCanPushFetcher.data?.canPush,
+      action: () => handlePush({ force: false }),
     },
     {
-      id: 4,
-      icon: 'clock-o',
-      label: <span>History</span>,
-      onClick: () => setIsGitLogModalOpen(true),
+      id: 'history',
+      icon: 'clock',
+      isDisabled: false,
+      label: 'History',
+      action: () => setIsGitLogModalOpen(true),
     },
     {
-      id: 5,
-      stayOpenAfterClick: true,
-      icon: loadingFetch ? 'refresh fa-spin' : 'refresh',
+      id: 'fetch',
+      icon: loadingFetch ? 'refresh' : 'refresh',
+      isDisabled: false,
       label: 'Fetch',
-      onClick: () => {
+      action: () => {
         gitFetchFetcher.submit(
           {},
           {
@@ -242,7 +238,36 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
         );
       },
     },
-  ];
+    ] : []);
+
+  const gitSyncActions: {
+    id: string;
+    label: string;
+    icon: IconName;
+    isDisabled?: boolean;
+    action: () => void;
+  }[] = (isSynced ? [
+    {
+      id: 'repository-settings',
+      label: 'Repository Settings',
+      isDisabled: false,
+      icon: 'wrench',
+      action: () => setIsGitRepoSettingsModalOpen(true),
+    },
+    {
+      id: 'branches',
+      label: 'Branches',
+      isDisabled: false,
+      icon: 'code-branch',
+      action: () => setIsGitBranchesModalOpen(true),
+    },
+  ] : [{
+    id: 'connect',
+    label: 'Connect Repository',
+    icon: 'plug',
+    isDisabled: false,
+    action: () => setIsGitRepoSettingsModalOpen(true),
+  }]);
 
   useInterval(() => {
     gitFetchFetcher.submit(
@@ -258,280 +283,174 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
 
   const commitToolTipMsg = status?.localChanges ? 'Local changes made' : 'No local changes made';
 
-  if (isSynced) {
-    dropdown = (
-      <Dropdown
-        dataTestId='git-dropdown'
-        className="w-full h-[--line-height-sm]"
-        ref={dropdownRef}
-        triggerButton={
-          <Button
-            aria-label='Git Sync'
-            className="w-full rounded-0 !justify-start h-[--line-height-sm] box-border"
-            isDisabled={isLoading}
-          >
-            <div className="flex justify-start items-center gap-[--padding-xs] w-full">
-              {iconClassName && (
-                <i className={classnames('space-right', iconClassName)} />
-              )}
-              <div className="ellipsis">{currentBranch}</div>
+  const switchToInsomniaSyncList: {
+    id: string;
+    label: string;
+    icon: IconProp;
+    isDisabled?: boolean;
+    action: () => void;
+  }[] = isInsomniaSyncEnabled ? [
+    {
+      id: 'switch-to-git-repo',
+      label: 'Switch to Insomnia Sync',
+      icon: 'cloud',
+      action: async () => {
+        gitRepository && await deleteGitRepository(gitRepository);
+        revalidate();
+        },
+      },
+    ] : [];
 
-              <div
-                style={{
-                  opacity: loadingStatus ? 0.5 : 1,
-                }}
-              >
-                <Tooltip message={commitToolTipMsg}>
-                  <span
-                    style={{
-                      opacity: status?.localChanges ? 1 : 0.5,
-                      color: status?.localChanges ? 'var(--color-notice)' : 'var(--color-hl)',
-                    }}
-                  ><i className={`fa fa-${isLoading ? 'refresh fa-spin' : 'cube'} space-left`} /></span>
-                </Tooltip>
-              </div>
-            </div>
-
-          </Button>
+  const branchesActionList: {
+    id: string;
+    label: string;
+    icon: IconName;
+    isDisabled?: boolean;
+    isActive: boolean;
+    action: () => void;
+  }[] = isSynced ? branches.map(branch => ({
+    id: branch,
+    label: branch,
+    isActive: branch === currentBranch,
+    icon: 'code-branch',
+    action: async () => {
+      gitCheckoutFetcher.submit(
+        {
+          branch,
+        },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/checkout`,
+          method: 'post',
         }
-      >
-        <DropdownSection
-          items={isInsomniaSyncEnabled ? [{
-            value: 'Use Insomnia Sync',
-            id: 'use-insomnia-sync',
-          }] : []}
-        >
-          {item => (
-            <DropdownItem
-              key={item.id}
-              textValue='Use Insomnia Sync'
-              aria-label='Use Insomnia Sync'
-            >
-              <Button
-                onPress={async () => {
-                  if (gitRepository) {
-                    await deleteGitRepository(gitRepository);
-                    revalidate();
-                  }
-                }}
-                className="w-full flex justify-center items-center gap-[--padding-sm] mx-0 my-[--padding-sm]"
-              >
-                <i className="fa fa-cloud" /> Use Insomnia Sync
-              </Button>
-            </DropdownItem>
-          )}
-        </DropdownSection>
-        <DropdownSection
-          title={
-            <span>
-              Git Sync
-              <HelpTooltip>
-                Sync and collaborate with Git{' '}
-                <Link href={docsGitSync}>
-                  <span className="no-wrap">
-                    <br />
-                    Documentation <i className="fa fa-external-link" />
-                  </span>
-                </Link>
-              </HelpTooltip>
-            </span>
-          }
-        >
-          <DropdownItem textValue="Settings">
-            <ItemContent
-              icon="wrench"
-              label="Repository Settings"
-              onClick={() => {
-                setIsGitRepoSettingsModalOpen(true);
-              }}
-            />
-          </DropdownItem>
+      );
+    },
+  })) : [];
 
-          <DropdownItem textValue="Branches">
-            {currentBranch && (
-              <ItemContent
-                icon="code-fork"
-                label="Branches"
-                onClick={() => {
-                  setIsGitBranchesModalOpen(true);
-                }}
-              />
-            )}
-          </DropdownItem>
-        </DropdownSection>
-
-        <DropdownSection
-          title="Branches"
-          items={currentBranch ? branches.map(b => ({ branch: b })) : []}
-        >
-          {({ branch }) => {
-            const isCurrentBranch = branch === currentBranch;
-
-            return (
-              <DropdownItem key={branch} textValue={branch}>
-                <ItemContent
-                  className={classnames({ bold: isCurrentBranch })}
-                  icon={branch === currentBranch ? 'tag' : 'empty'}
-                  label={branch}
-                  isDisabled={isCurrentBranch}
-                  onClick={async () => {
-                    gitCheckoutFetcher.submit(
-                      {
-                        branch,
-                      },
-                      {
-                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/checkout`,
-                        method: 'post',
-                      }
-                    );
-                  }}
-                />
-              </DropdownItem>
-            );
-          }}
-        </DropdownSection>
-
-        <DropdownSection
-          title={currentBranch}
-          items={currentBranch ? currentBranchActions : []}
-        >
-          {({ id, ...action }) => (
-            <DropdownItem
-              key={id}
-              textValue={
-                typeof action.label === 'string' ? action.label : `${id}`
-              }
-            >
-              <ItemContent {...action} />
-            </DropdownItem>
-          )}
-        </DropdownSection>
-      </Dropdown>
-    );
-  } else {
-    dropdown = (
-        <Dropdown
-          dataTestId='git-dropdown'
-          className="w-full h-[--line-height-sm]"
-          ref={dropdownRef}
-          triggerButton={
-            <Button
-              aria-label='Git Sync'
-              style={{
-                width: '100%',
-                borderRadius: '0',
-                justifyContent: 'flex-start !important',
-                height: 'var(--line-height-sm)',
-                border: 'none',
-              }}
-              isDisabled={isLoading}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: 'var(--padding-xs)',
-                  width: '100%',
-                }}
-              >
-                {iconClassName && (
-                  <i className={classnames('space-right', iconClassName)} />
-                )}
-                <span className="ellipsis">Git Sync</span>
-              </div>
-
-            </Button>
-          }
-        >
-          <DropdownSection
-            items={isInsomniaSyncEnabled ? [{
-              value: 'Use Insomnia Sync',
-              id: 'use-insomnia-sync',
-            }] : []}
-          >
-            {item => (
-              <DropdownItem
-                key={item.id}
-                aria-label='Use Insomnia Sync'
-              >
-                <Button
-                  onPress={async () => {
-                    if (gitRepository) {
-                      await deleteGitRepository(gitRepository);
-                      revalidate();
-                    }
-                  }}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: 'var(--padding-sm)',
-                    margin: '0 var(--padding-sm)',
-                  }}
-                >
-                  <i className="fa fa-cloud" /> Use Insomnia Sync
-                </Button>
-              </DropdownItem>
-            )}
-          </DropdownSection>
-          <DropdownSection
-            title={
-              <span>
-                Git Sync
-                <HelpTooltip>
-                  Sync and collaborate with Git{' '}
-                  <Link href={docsGitSync}>
-                    <span className="no-wrap">
-                      <br />
-                      Documentation <i className="fa fa-external-link" />
-                    </span>
-                  </Link>
-                </HelpTooltip>
-              </span>
-            }
-          >
-            <DropdownItem textValue="Settings">
-              <ItemContent
-                icon="wrench"
-                label="Setup Git Sync"
-                onClick={() => {
-                  setIsGitRepoSettingsModalOpen(true);
-                }}
-              />
-            </DropdownItem>
-          </DropdownSection>
-      </Dropdown>
-    );
-  }
+  const allSyncMenuActionList = [...switchToInsomniaSyncList, ...gitSyncActions, ...branchesActionList, ...currentBranchActions];
 
   return (
-    <Fragment>
-      {dropdown}
+    <>
+      <MenuTrigger>
+        <div className="flex items-center h-[--line-height-sm] w-full aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+          <Button
+            data-testId="git-dropdown"
+            aria-label="Git Sync"
+            className="flex-1 flex h-full items-center gap-2 truncate px-[--padding-md]"
+          >
+            <Icon
+              icon={isLoading ? 'refresh' : iconClassName}
+              className={`w-5 ${isLoading ? 'animate-spin' : ''}`}
+            />
+            <span className='truncate'>{isSynced ? currentBranch : 'Not synced'}</span>
+          </Button>
+          <TooltipTrigger>
+            <Button className="px-[--padding-md] h-full">
+              <Icon icon={loadingStatus ? 'refresh' : 'cube'} className={`transition-colors ${isLoading ? 'animate-pulse' : loadingStatus ? 'animate-spin' : 'opacity-50'}`} />
+            </Button>
+            <Tooltip
+              placement="top end"
+              offset={8}
+              className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+            >
+              {commitToolTipMsg}
+            </Tooltip>
+          </TooltipTrigger>
+        </div>
+        <Popover className="min-w-max max-w-lg overflow-hidden" placement='top end' offset={8}>
+          <Menu
+            aria-label="Git Sync Menu"
+            selectionMode="single"
+            disabledKeys={allSyncMenuActionList.filter(item => item?.isDisabled).map(item => item.id)}
+            onAction={key => {
+              const item = allSyncMenuActionList.find(item => item.id === key);
+              console.log('onAction', key, item);
+              item?.action();
+            }}
+            className="border max-w-lg select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+          >
+            <Section className='border-b border-solid border-[--hl-sm] pb-2 empty:pb-0 empty:border-none'>
+              <Collection items={switchToInsomniaSyncList}>
+                {item => (
+                  <MenuItem
+                    textValue={item.label}
+                    className={'group aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent disabled:cursor-not-allowed focus:outline-none transition-colors'}
+                    aria-label={item.label}
+                  >
+                    <div className="px-4 text-[--color-font-surprise] w-full bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 group-pressed:opacity-80 group-hover:bg-opacity-80 group-focus:bg-opacity-80 group-focus:ring-inset group-hover:ring-inset focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                      <Icon icon={item.icon} />
+                      <div>{item.label}</div>
+                    </div>
+                  </MenuItem>
+                )}
+              </Collection>
+            </Section>
+            <Section className='border-b border-solid border-[--hl-sm] pb-2 empty:pb-0 empty:border-none'>
+              <Collection items={gitSyncActions}>
+                {item => (
+                  <MenuItem
+                    className={'aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors'}
+                    aria-label={item.label}
+                  >
+                    <Icon icon={item.icon} />
+                    <span>{item.label}</span>
+                  </MenuItem>
+                )}
+              </Collection>
+            </Section>
+            <Section className='border-b border-solid border-[--hl-sm] pb-2 empty:pb-0 empty:border-none'>
+              <Collection items={branchesActionList}>
+                {item => (
+                  <MenuItem
+                    className={`aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item.isActive ? 'font-bold' : ''}`}
+                    aria-label={item.label}
+                  >
+                    <Icon icon={item.icon} className={item.isActive ? 'text-[--color-success]' : ''} />
+                    <span className='truncate'>{item.label}</span>
+                  </MenuItem>
+                )}
+              </Collection>
+            </Section>
+            <Section>
+              <Collection items={currentBranchActions}>
+                {item => (
+                  <MenuItem
+                    className={'aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors'}
+                    aria-label={item.label}
+                  >
+                    <Icon icon={item.icon} />
+                    <span>{item.label}</span>
+                  </MenuItem>
+                )}
+              </Collection>
+            </Section>
+          </Menu>
+        </Popover>
+      </MenuTrigger>
       {isGitRepoSettingsModalOpen && (
         <GitRepositorySettingsModal
           gitRepository={gitRepository ?? undefined}
           onHide={() => setIsGitRepoSettingsModalOpen(false)}
         />
       )}
-      {isGitBranchesModalOpen && (
+      {isGitBranchesModalOpen && gitRepository && (
         <GitBranchesModal
-          branches={branches}
           gitRepository={gitRepository}
-          activeBranch={currentBranch}
           onHide={() => setIsGitBranchesModalOpen(false)}
+          activeBranch={currentBranch}
+          branches={branches}
         />
       )}
-      {isGitLogModalOpen && (
+      {isGitLogModalOpen && gitRepository && (
         <GitLogModal
           branch={currentBranch}
           onHide={() => setIsGitLogModalOpen(false)}
         />
       )}
-      {isGitStagingModalOpen && (
-        <GitStagingModal onHide={() => setIsGitStagingModalOpen(false)} />
+      {isGitStagingModalOpen && gitRepository && (
+        <GitStagingModal
+          onHide={() => setIsGitStagingModalOpen(false)}
+        />
       )}
-    </Fragment>
+    </>
   );
 };

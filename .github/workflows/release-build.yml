@@ -66,6 +66,10 @@ jobs:
       - name: Install packages
         run: npm ci
 
+      - name: Setup Inso CLI version env var
+        run: |
+          echo "INSO_VERSION=$(jq .version ./packages/${{ env.INSO_PACKAGE_NAME }}/package.json -rj)" >> $GITHUB_ENV
+
       # If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
       - name: Package app (MacOS only)
         if: matrix.os == 'macos-13'
@@ -78,16 +82,50 @@ jobs:
           CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
           CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
 
-      - name: Package app (Windows and Linux)
-        if: matrix.os != 'macos-13'
+      - name: Package app (Linux only)
+        if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: npm run app-package
         env:
           NODE_OPTIONS: '--max_old_space_size=6144'
 
-      - name: Setup Inso CLI version env var
-        run:
-          echo "INSO_VERSION=$(jq .version ./packages/${{ env.INSO_PACKAGE_NAME }}/package.json -rj)" >> $GITHUB_ENV
+      # creates unpacked electron-builder contents that can be signed afterwards
+      - name: Package unpacked app (Windows only)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:unpacked -w insomnia
+
+      # signs unpacked electron-builder contents, in this case only the .exe
+      - name: Code-sign unpacked .exe (Windows only)
+        if: matrix.os == 'windows-latest'
+        uses: sslcom/esigner-codesign@develop
+        with:
+          command: sign
+          username: ${{secrets.ES_USERNAME}}
+          password: ${{secrets.ES_PASSWORD}}
+          credential_id: ${{secrets.ES_CREDENTIAL_ID}}
+          totp_secret: ${{secrets.ES_TOTP_SECRET}}
+          file_path: packages/insomnia/dist/win-unpacked/Insomnia.exe
+          override: true
+
+      # re-packages the now code-signed electron-builder contents into a squirrel installer
+      - name: Package dist app (Windows only)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
+
+      # code-signs the windows installer
+      - name: Code-sign Windows Installer artifact (Windows only)
+        if: matrix.os == 'windows-latest'
+        uses: sslcom/esigner-codesign@develop
+        with:
+          command: sign
+          username: ${{secrets.ES_USERNAME}}
+          password: ${{secrets.ES_PASSWORD}}
+          credential_id: ${{secrets.ES_CREDENTIAL_ID}}
+          totp_secret: ${{secrets.ES_TOTP_SECRET}}
+          file_path: packages/insomnia/dist/squirrel-windows/Insomnia.Core-${{ env.INSO_VERSION }}.exe
+          override: true
 
       - name: Package inso
         run: |

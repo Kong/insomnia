@@ -277,6 +277,12 @@ export const indexLoader: LoaderFunction = async () => {
     const personalOrganizationId = personalOrganization.id;
     await migrateProjectsUnderOrganization(personalOrganizationId, sessionId);
 
+    const specificOrgRedirectAfterAuthorize = window.localStorage.getItem('specificOrgRedirectAfterAuthorize');
+    if (specificOrgRedirectAfterAuthorize && specificOrgRedirectAfterAuthorize !== '') {
+      window.localStorage.removeItem('specificOrgRedirectAfterAuthorize');
+      return redirect(`/organization/${specificOrgRedirectAfterAuthorize}`);
+    }
+
     if (personalOrganization) {
       return redirect(`/organization/${personalOrganizationId}`);
     }
