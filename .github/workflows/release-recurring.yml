@@ -30,7 +30,7 @@ jobs:
             build-targets: "zip"
           - os: "windows-latest"
             build-targets: "portable"
-          - os: "ubuntu-latest"
+          - os: "ubuntu-20.04"
             build-targets: "tar.gz"
     steps:
       - name: Checkout branch

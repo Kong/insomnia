@@ -19,7 +19,7 @@ env:
 jobs:
   publish:
     timeout-minutes: 15
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     outputs:
       NOTARY_REPOSITORY: ${{ env.NOTARY_REPOSITORY }}
       INSO_BINARY_ARTIFACTS_SUBJECTS_AS_FILE: ${{ steps.cli_binary_hashes.outputs.handle }}
@@ -111,8 +111,8 @@ jobs:
           # /github/workspace/artifacts/windows-latest-artifacts/***/dist/squirrel-windows/Insomnia.Core-9.3.0-beta.1-full.nupkg
           # /github/workspace/artifacts/windows-latest-artifacts/***/dist/squirrel-windows/RELEASES
           # /home/runner/work/***/***/artifacts/macos-13-artifacts/***/dist/Insomnia.Core-9.3.0-alpha.7.dmg
-          # /home/runner/work/***/***/artifacts/ubuntu-latest-artifacts/***/dist/Insomnia.Core-9.3.0-alpha.7.deb
-          # /home/runner/work/***/***/artifacts/ubuntu-latest-artifacts/***-inso/artifacts/inso-linux-9.3.0-alpha.7.tar.xz
+          # /home/runner/work/***/***/artifacts/ubuntu-20.04-artifacts/***/dist/Insomnia.Core-9.3.0-alpha.7.deb
+          # /home/runner/work/***/***/artifacts/ubuntu-20.04-artifacts/***-inso/artifacts/inso-linux-9.3.0-alpha.7.tar.xz
           # /home/runner/work/***/***/artifacts/macos-13-artifacts/***-inso/artifacts/inso-macos-13-9.3.0-alpha.7.pkg
           # /home/runner/work/***/***/artifacts/image-inso-Linux-sbom.spdx.json/image-inso-Linux-sbom.spdx.json
           # /home/runner/work/***/***/artifacts/sbom.cyclonedx.json/sbom.cyclonedx.json
@@ -155,7 +155,7 @@ jobs:
 
       - name: Load the Inso CLI Docker Archive
         run: |
-          docker load -i ./artifacts/ubuntu-latest-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
+          docker load -i ./artifacts/ubuntu-20.04-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
           docker image ls
 
       - name: Login to Docker Hub
@@ -247,7 +247,7 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE_NEW }}
         with:
-          snap: artifacts/ubuntu-latest-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap
+          snap: artifacts/ubuntu-20.04-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap
           release: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       - name: Upload .deb to pulp and/or cloudsmith (stable only)
@@ -267,7 +267,7 @@ jobs:
           entrypoint: /entrypoint.sh
           args: >
             release
-            --file artifacts/ubuntu-latest-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.deb
+            --file artifacts/ubuntu-20.04-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.deb
             --dist-name ubuntu
             --dist-version focal
             --package-type insomnia
