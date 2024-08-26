@@ -15,15 +15,15 @@ import * as models from '../../models';
 import type { UserUploadEnvironment } from '../../models/environment';
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
-import type { RunnerTestResult } from '../../models/runner-test-result';
+import type { RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
 import { invariant } from '../../utils/invariant';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
 import { Icon } from '../components/icon';
 import { UploadDataModal, type UploadDataType } from '../components/modals/upload-runner-data-modal';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
-import { RequestTestResultPane } from '../components/panes/request-test-result-pane';
 import { RunnerResultHistoryPane } from '../components/panes/runner-result-history-pane';
+import { RunnerTestResultPane } from '../components/panes/runner-test-result-pane';
 import { ResponseTimer } from '../components/response-timer';
 import { getTimeAndUnit } from '../components/tags/time-tag';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
@@ -302,13 +302,17 @@ export const Runner: FC<{}> = () => {
     let totalTestCount = 0;
 
     if (!isRunning) {
-      if (executionResult?.results) {
-        executionResult.results.forEach(result => {
-          if (result.status === 'passed') {
-            passedTestCount++;
+      if (executionResult?.iterationResults) {
+        for (let i = 0; i < executionResult.iterationResults.length; i++) { // iterations
+          for (let j = 0; j < executionResult.iterationResults[i].length; j++) { // requests
+            for (let k = 0; k < executionResult.iterationResults[i][j].results.length; k++) { // test cases
+              if (executionResult.iterationResults[i][j].results[k].status === 'passed') {
+                passedTestCount++;
+              }
+              totalTestCount++;
+            }
           }
-          totalTestCount++;
-        });
+        }
       }
     }
 
@@ -627,7 +631,7 @@ export const Runner: FC<{}> = () => {
                     />
                   </div>
                 }
-                {!isRunning && <ErrorBoundary showAlert><RequestTestResultPane requestTestResults={executionResult?.results || []} /></ErrorBoundary>}
+                {!isRunning && <ErrorBoundary showAlert><RunnerTestResultPane result={executionResult} /></ErrorBoundary>}
               </TabPanel>
             </Tabs>
 
@@ -688,7 +692,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     duration: 1, // TODO: disable this
     testCount: 0,
     avgRespTime: 0,
-    results: new Array<RequestTestResult>(),
+    iterationResults: new Array<RunnerResultPerRequest[]>(),
     done: false,
     responseIds: new Array<string>(),
   };
@@ -707,6 +711,8 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   for (let i = 0; i < iterations; i++) {
     // nextRequestIdOrName is used to manual set next request in iteration from pre-request script
     let nextRequestIdOrName = '';
+    let iterationResults: RunnerResultPerRequest[] = [];
+
     for (let j = 0; j < requests.length; j++) {
       const targetRequest = requests[j] as RequestType;
       if (nextRequestIdOrName !== '') {
@@ -764,13 +770,25 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
         nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
       };
 
+      const requestResults: RunnerResultPerRequest = {
+        requestName: targetRequest.name,
+        requestUrl: targetRequest.url,
+        responseCode: 0, // TODO: collect response
+        results: resultCollector.results,
+      };
+
+      iterationResults = [...iterationResults, requestResults];
       testCtx = {
         ...testCtx,
         duration: testCtx.duration + resultCollector.duration,
-        results: [...testCtx.results, ...resultCollector.results],
         responseIds: [...testCtx.responseIds, resultCollector.responseId],
       };
     }
+
+    testCtx = {
+      ...testCtx,
+      iterationResults: [...testCtx.iterationResults, iterationResults],
+    };
   }
 
   await models.runnerTestResult.create({
@@ -780,7 +798,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     iterations: testCtx.iterations,
     duration: testCtx.duration,
     avgRespTime: testCtx.avgRespTime,
-    results: testCtx.results,
+    iterationResults: testCtx.iterationResults,
     responseIds: testCtx.responseIds,
   });
 

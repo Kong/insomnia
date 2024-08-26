@@ -14,14 +14,23 @@ export const canDuplicate = false;
 
 export const canSync = false;
 
+export interface RunnerResultPerRequest {
+  results: RequestTestResult[];
+  requestName: string;
+  requestUrl: string;
+  responseCode: number;
+  // TODO: add request name, url, etc
+}
+
 export interface BaseRunnerTestResult {
   source: RunnerSource;
   // environmentId: string;
   iterations: number;
   duration: number; // millisecond
   avgRespTime: number; // millisecond
-  results: RequestTestResult[];
+  iterationResults: RunnerResultPerRequest[][];
   responseIds: string[];
+  version: '1';
 }
 
 export type RunnerTestResult = BaseModel & BaseRunnerTestResult;
@@ -37,7 +46,7 @@ export function init() {
     iterations: 0,
     duration: 0,
     avgRespTime: 0,
-    results: [],
+    iterationResults: [],
     responseIds: [],
   };
 }
