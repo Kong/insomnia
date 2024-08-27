@@ -73,7 +73,7 @@ export const Runner: FC<{}> = () => {
   const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [file, setFile] = useState<File | null>(null);
   const [uploadData, setUploadData] = useState<UploadDataType[]>([]);
-  const [isUploadDataModalOpen, setUploadDataModalOpen] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
   useEffect(() => {
@@ -339,7 +339,7 @@ export const Runner: FC<{}> = () => {
               <Pane type="request">
                 <PaneHeader>
                   <Heading className="flex items-center w-full h-[--line-height-sm] pl-[--padding-md]">
-                    <div className="w-full text-left min-w-[400px]">
+                    <div className="w-full h-full text-left min-w-[400px]">
                       <span className="mr-6 text-sm">
                         <input
                           value={iterations}
@@ -380,18 +380,12 @@ export const Runner: FC<{}> = () => {
                         />
                         <span className="mr-1 border">Delay (ms)</span>
                       </span>
-                      <span className="mr-6 text-sm">
-                        <Button
-                          onPress={() => setUploadDataModalOpen(true)}
-                          className={`${inputStyle} w-9 text-center`}
-                        >
-                          <Icon icon="upload" />
-                        </Button>
-                        <span className="mr-1 border">Data</span>
-                        {file && (
-                          <span className="ml-1 align-middle w-3 h-3 bg-green-500 rounded-full inline-block" />
-                        )}
-                      </span>
+                      <Button
+                        onPress={() => setShowUploadModal(true)}
+                        className="py-0.5 px-1 border-[--hl-sm] h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ring-1 ring-transparent transition-all text-sm"
+                      >
+                        <Icon icon={file ? 'eye' : 'upload'} /> {file ? 'View Data' : 'Upload Data'}
+                      </Button>
                     </div>
                     <div className="w-[100px]">
                       <button
@@ -554,14 +548,14 @@ export const Runner: FC<{}> = () => {
                     </div>
                   </TabPanel>
                 </Tabs>
-                {isUploadDataModalOpen && (
+                {showUploadModal && (
                   <UploadDataModal
                     onUploadFile={(file, uploadData) => {
                       setFile(file);
                       setUploadData(uploadData);
                     }}
                     userUploadData={uploadData}
-                    onClose={() => setUploadDataModalOpen(false)}
+                    onClose={() => setShowUploadModal(false)}
                   />
                 )}
               </Pane>
@@ -705,13 +699,21 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     stepName: 'Initializing',
   });
 
+  interface RequestType {
+    name: string;
+    id: string;
+    url: string;
+  };
   for (let i = 0; i < iterations; i++) {
     // nextRequestIdOrName is used to manual set next request in iteration from pre-request script
     let nextRequestIdOrName = '';
     for (let j = 0; j < requests.length; j++) {
-      const targetRequest = requests[j] as { name: string; id: string; url: string };
+      const targetRequest = requests[j] as RequestType;
       if (nextRequestIdOrName !== '') {
-        if (targetRequest.id === nextRequestIdOrName || targetRequest.name.trim() === nextRequestIdOrName.trim()) {
+        if (targetRequest.id === nextRequestIdOrName ||
+          // find the last request with matched name in case mulitple requests with same name in collection runner
+          (targetRequest.name.trim() === nextRequestIdOrName.trim() && j === requests.findLastIndex((req: RequestType) => req.name.trim() === nextRequestIdOrName.trim()))
+        ) {
           // reset nextRequestIdOrName when request name or id meets;
           nextRequestIdOrName = '';
         } else {
