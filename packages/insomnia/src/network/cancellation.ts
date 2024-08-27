@@ -1,4 +1,4 @@
-import type { RequestContext } from 'insomnia-sdk';
+import type { CookieJar, RequestContext } from 'insomnia-sdk';
 
 import type { CurlRequestOptions, CurlRequestOutput } from '../main/network/libcurl-promise';
 import { runScript as nodejsRunScript } from '../scriptExecutor';
@@ -38,18 +38,26 @@ export const cancellableExecution = async (options: { id: string; fn: Promise<an
 };
 
 export const cancellableRunScript = async (options: { script: string; context: RequestContext }) => {
+  const request = options.context.request;
+  const requestId = request._id;
   const controller = new AbortController();
   const cancelRequest = () => {
     // TODO: implement cancelPreRequestScript on hiddenBrowserWindow side?
     controller.abort();
   };
-  cancelRequestFunctionMap.set(options.id, cancelRequest);
-
+  cancelRequestFunctionMap.set(requestId, cancelRequest);
   try {
-    return await cancellablePromise({
+    const result = await cancellablePromise({
       signal: controller.signal,
       fn: process.type === 'renderer' ? window.main.hiddenBrowserWindow.runScript(options) : nodejsRunScript(options),
     });
+
+    return result as {
+      request: Request;
+      environment: object;
+      baseEnvironment: object;
+      cookieJar: CookieJar;
+    };
   } catch (err) {
     if (err.name === 'AbortError') {
       throw new Error('Request was cancelled');
@@ -57,7 +65,7 @@ export const cancellableRunScript = async (options: { script: string; context: R
     console.log('[network] Error', err);
     throw err;
   } finally {
-    cancelRequestFunctionMap.delete(options.id);
+    cancelRequestFunctionMap.delete(requestId);
   }
 };
 
