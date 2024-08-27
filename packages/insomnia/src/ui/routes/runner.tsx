@@ -380,14 +380,12 @@ export const Runner: FC<{}> = () => {
                         />
                         <span className="mr-1 border">Delay (ms)</span>
                       </span>
-                      <span className="mr-6 text-sm">
-                        <Button
-                          onPress={() => setShowUploadModal(true)}
-                          className="py-0.5 px-1 border-[--hl-sm] h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                        >
-                          <Icon icon={file ? 'eye' : 'upload'} /> {file ? 'View Data' : 'Upload Data'}
-                        </Button>
-                      </span>
+                      <Button
+                        onPress={() => setShowUploadModal(true)}
+                        className="py-0.5 px-1 border-[--hl-sm] h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ring-1 ring-transparent transition-all text-sm"
+                      >
+                        <Icon icon={file ? 'eye' : 'upload'} /> {file ? 'View Data' : 'Upload Data'}
+                      </Button>
                     </div>
                     <div className="w-[100px]">
                       <button
