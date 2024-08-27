@@ -39,14 +39,14 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
               className='flex w-full leading-8'
             >
               <div className='w-3/4 ml-1 text-left text-md content-center leading-8'>
-                <span className="leading-8">
+                <span className="leading-8 w-1/5">
                   {
                     record.duration ?
                       (<i className="fa fa-circle-check fa-1x mr-2 text-green-500" />) :
                       (<i className="fa fa-spinner fa-spin fa-1x mr-2" />)
                   }
                 </span>
-                <span className="inline-block align-top text-clip">
+                <span className="inline-block align-top text-clip w-4/5">
                   {record.stepName}
                 </span>
               </div>

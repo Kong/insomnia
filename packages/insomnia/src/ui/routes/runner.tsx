@@ -15,15 +15,17 @@ import * as models from '../../models';
 import type { UserUploadEnvironment } from '../../models/environment';
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
-import type { RunnerTestResult } from '../../models/runner-test-result';
+import type { ResponseInfo, RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
+import { cancelRequestById } from '../../network/cancellation';
 import { invariant } from '../../utils/invariant';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
 import { Icon } from '../components/icon';
+import { showAlert } from '../components/modals';
 import { UploadDataModal, type UploadDataType } from '../components/modals/upload-runner-data-modal';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
-import { RequestTestResultPane } from '../components/panes/request-test-result-pane';
 import { RunnerResultHistoryPane } from '../components/panes/runner-result-history-pane';
+import { RunnerTestResultPane } from '../components/panes/runner-test-result-pane';
 import { ResponseTimer } from '../components/response-timer';
 import { getTimeAndUnit } from '../components/tags/time-tag';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
@@ -36,17 +38,25 @@ const iterationInputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-
 
 // TODO: improve the performance for a lot of logs
 async function aggregateAllTimelines(testResult: RunnerTestResult) {
-  const responseIds = testResult.responseIds;
+  const responsesInfo = testResult.responsesInfo;
   let timelines = new Array<ResponseTimelineEntry>();
 
-  for (let i = 0; i < responseIds.length; i++) {
-    const respId = responseIds[i];
-    const resp = await models.response.getById(respId);
+  for (let i = 0; i < responsesInfo.length; i++) {
+    const respInfo = responsesInfo[i];
+    const resp = await models.response.getById(respInfo.responseId);
     if (resp) {
       const timeline = models.response.getTimeline(resp, true) as unknown as ResponseTimelineEntry[];
-      timelines = [...timelines, ...timeline];
+      timelines = [
+        ...timelines,
+        {
+          value: `------ Start of request (${respInfo.originalRequestName}) ------\n\n\n`,
+          name: 'Text',
+          timestamp: Date.now(),
+        },
+        ...timeline,
+      ];
     } else {
-      console.error(`failed to read response for ${respId}`);
+      console.error(`failed to read response for the request ${respInfo.originalRequestName}`);
     }
   }
 
@@ -55,11 +65,26 @@ async function aggregateAllTimelines(testResult: RunnerTestResult) {
 
 export const Runner: FC<{}> = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [onTestEnd, setOnTestEnd] = useState(false);
-  if (searchParams.has('test-end')) {
-    setOnTestEnd(true);
+  const [shouldRefresh, setShouldRefresh] = useState(false);
+  if (searchParams.has('refresh-pane')) {
+    setShouldRefresh(true);
     // clean up params
-    searchParams.delete('test-end');
+    searchParams.delete('refresh-pane');
+    setSearchParams({});
+  }
+  if (searchParams.has('error')) {
+    showAlert({
+      title: 'Unexpected Runner Failure',
+      message: (
+        <div>
+          <p>The runner failed due to an unhandled error:</p>
+          <code className="wide selectable">
+            <pre>{searchParams.get('error')}</pre>
+          </code>
+        </div>
+      ),
+    });
+    searchParams.delete('error');
     setSearchParams({});
   }
 
@@ -281,14 +306,14 @@ export const Runner: FC<{}> = () => {
             unit: durationUnit,
           });
         } else {
-          if (onTestEnd) {
+          if (shouldRefresh) {
             const results = await models.runnerTestResult.findByParentId(workspaceId) || [];
             setTestHistory(results.reverse());
             if (results.length > 0) {
               const latestResult = results[0];
               setExecutionResult(latestResult);
             }
-            setOnTestEnd(false);
+            setShouldRefresh(false);
           }
         }
       }
@@ -302,13 +327,17 @@ export const Runner: FC<{}> = () => {
     let totalTestCount = 0;
 
     if (!isRunning) {
-      if (executionResult?.results) {
-        executionResult.results.forEach(result => {
-          if (result.status === 'passed') {
-            passedTestCount++;
+      if (executionResult?.iterationResults) {
+        for (let i = 0; i < executionResult.iterationResults.length; i++) { // iterations
+          for (let j = 0; j < executionResult.iterationResults[i].length; j++) { // requests
+            for (let k = 0; k < executionResult.iterationResults[i][j].results.length; k++) { // test cases
+              if (executionResult.iterationResults[i][j].results[k].status === 'passed') {
+                passedTestCount++;
+              }
+              totalTestCount++;
+            }
           }
-          totalTestCount++;
-        });
+        }
       }
     }
 
@@ -475,7 +504,8 @@ export const Runner: FC<{}> = () => {
                             name='ignore-undefined-env'
                             onChange={() => { }}
                             type="checkbox"
-                            disabled={isRunning}
+                            disabled={true}
+                            checked
                           />
                           Ignore undefined environments
                           <HelpTooltip className="space-left">Undefined environments will not be rendered for all requests.</HelpTooltip>
@@ -487,7 +517,8 @@ export const Runner: FC<{}> = () => {
                             name='persist-response'
                             onChange={() => { }}
                             type="checkbox"
-                            disabled={isRunning}
+                            disabled={true}
+                            checked
                           />
                           Persist responses for a session
                           <HelpTooltip className="space-left">Enabling this will impact performance while responses are saved for other purposes.</HelpTooltip>
@@ -499,9 +530,9 @@ export const Runner: FC<{}> = () => {
                             name='log-off'
                             onChange={() => { }}
                             type="checkbox"
-                            disabled={isRunning}
+                            disabled={true}
                           />
-                          Turn off logs duration run
+                          Turn off logs during run
                           <HelpTooltip className="space-left">Disabling this will improve the performance while logs are not saved.</HelpTooltip>
                         </label>
                       </div>
@@ -511,7 +542,8 @@ export const Runner: FC<{}> = () => {
                             name='stop-on-error'
                             onChange={() => { }}
                             type="checkbox"
-                            disabled={isRunning}
+                            disabled={true}
+                            checked
                           />
                           Stop run if an error occurs
                         </label>
@@ -520,7 +552,8 @@ export const Runner: FC<{}> = () => {
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
-                            disabled={isRunning}
+                            disabled={true}
+                            checked
                           />
                           Keep variable values
                           <HelpTooltip className="space-left">Enabling this will persist generated values.</HelpTooltip>
@@ -530,7 +563,7 @@ export const Runner: FC<{}> = () => {
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
-                            disabled={isRunning}
+                            disabled={true}
                           />
                           Run collection without using stored cookies
                         </label>
@@ -539,7 +572,8 @@ export const Runner: FC<{}> = () => {
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
-                            disabled={isRunning}
+                            disabled={true}
+                            checked
                           />
                           Save cookies after collection run
                           <HelpTooltip className="space-left">Cookies in the running will be saved to the cookie manager.</HelpTooltip>
@@ -621,13 +655,13 @@ export const Runner: FC<{}> = () => {
                 {isRunning &&
                   <div className="h-full w-full text-md flex items-center">
                     <ResponseTimer
-                      handleCancel={() => { }}
+                      handleCancel={() => cancelExecution(workspaceId)}
                       activeRequestId={workspaceId}
                       steps={timingSteps}
                     />
                   </div>
                 }
-                {!isRunning && <ErrorBoundary showAlert><RequestTestResultPane requestTestResults={executionResult?.results || []} /></ErrorBoundary>}
+                {!isRunning && <ErrorBoundary showAlert><RunnerTestResultPane result={executionResult} /></ErrorBoundary>}
               </TabPanel>
             </Tabs>
 
@@ -668,6 +702,36 @@ const RequestItem = (
   );
 };
 
+// This is required for tracking the active request for one runner execution
+// Then in runner cancellation, both the active request and the runner execution will be canceled
+// TODO(george): Potentially it could be merged with maps in request-timing.ts and cancellation.ts
+const runnerExecutions = new Map<string, string>();
+function startExecution(workspaceId: string) {
+  runnerExecutions.set(workspaceId, '');
+}
+
+function stopExecution(workspaceId: string) {
+  runnerExecutions.delete(workspaceId);
+}
+
+function updateExecution(workspaceId: string, requestId: string) {
+  runnerExecutions.set(workspaceId, requestId);
+}
+
+function getExecution(workspaceId: string) {
+  return runnerExecutions.get(workspaceId);
+}
+
+function cancelExecution(workspaceId: string) {
+  const activeRequest = getExecution(workspaceId);
+  if (activeRequest) {
+    cancelRequestById(activeRequest);
+    window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
+    window.main.completeExecutionStep({ requestId: workspaceId });
+    stopExecution(workspaceId);
+  }
+}
+
 export interface runCollectionActionParams {
   requests: { id: string; name: string }[];
 }
@@ -688,9 +752,9 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     duration: 1, // TODO: disable this
     testCount: 0,
     avgRespTime: 0,
-    results: new Array<RequestTestResult>(),
+    iterationResults: new Array<RunnerResultPerRequest[]>(),
     done: false,
-    responseIds: new Array<string>(),
+    responsesInfo: new Array<ResponseInfo>(),
   };
 
   window.main.startExecution({ requestId: workspaceId });
@@ -698,103 +762,140 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     requestId: workspaceId,
     stepName: 'Initializing',
   });
+  startExecution(workspaceId);
 
   interface RequestType {
     name: string;
     id: string;
     url: string;
   };
-  for (let i = 0; i < iterations; i++) {
-    // nextRequestIdOrName is used to manual set next request in iteration from pre-request script
-    let nextRequestIdOrName = '';
-    for (let j = 0; j < requests.length; j++) {
-      const targetRequest = requests[j] as RequestType;
-      if (nextRequestIdOrName !== '') {
-        if (targetRequest.id === nextRequestIdOrName ||
-          // find the last request with matched name in case mulitple requests with same name in collection runner
-          (targetRequest.name.trim() === nextRequestIdOrName.trim() && j === requests.findLastIndex((req: RequestType) => req.name.trim() === nextRequestIdOrName.trim()))
-        ) {
-          // reset nextRequestIdOrName when request name or id meets;
-          nextRequestIdOrName = '';
-        } else {
-          continue;
-        }
+
+  try {
+    for (let i = 0; i < iterations; i++) {
+      // nextRequestIdOrName is used to manual set next request in iteration from pre-request script
+      let nextRequestIdOrName = '';
+
+      const runningStatus = getExecution(workspaceId);
+      if (runningStatus) {
+        throw 'The runner has been canceled';
       }
-      const getCurIterationUserUploadData = (curIteration: number): UserUploadEnvironment | undefined => {
-        if (Array.isArray(userUploadEnvs) && userUploadEnvs.length > 0) {
-          const uploadDataLength = userUploadEnvs.length;
-          if (uploadDataLength >= curIteration + 1) {
-            return userUploadEnvs[curIteration];
-          };
-          return userUploadEnvs[(curIteration + 1) % uploadDataLength];
+
+      let iterationResults: RunnerResultPerRequest[] = [];
+
+      for (let j = 0; j < requests.length; j++) {
+        const targetRequest = requests[j] as RequestType;
+
+        if (nextRequestIdOrName !== '') {
+          if (targetRequest.id === nextRequestIdOrName ||
+            // find the last request with matched name in case mulitple requests with same name in collection runner
+            (targetRequest.name.trim() === nextRequestIdOrName.trim() && j === requests.findLastIndex((req: RequestType) => req.name.trim() === nextRequestIdOrName.trim()))
+          ) {
+            // reset nextRequestIdOrName when request name or id meets;
+            nextRequestIdOrName = '';
+          } else {
+            continue;
+          }
         }
-        return undefined;
-      };
+        updateExecution(workspaceId, targetRequest.id);
 
-      window.main.updateLatestStepName({ requestId: workspaceId, stepName: `Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"` });
+        const getCurIterationUserUploadData = (curIteration: number): UserUploadEnvironment | undefined => {
+          if (Array.isArray(userUploadEnvs) && userUploadEnvs.length > 0) {
+            const uploadDataLength = userUploadEnvs.length;
+            if (uploadDataLength >= curIteration + 1) {
+              return userUploadEnvs[curIteration];
+            };
+            return userUploadEnvs[(curIteration + 1) % uploadDataLength];
+          }
+          return undefined;
+        };
 
-      const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(
-        targetRequest.id,
-        { lastActive: Date.now() },
-      );
-      invariant(activeRequestMeta, 'Request meta not found');
+        window.main.updateLatestStepName({ requestId: workspaceId, stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"` });
 
-      await new Promise(resolve => setTimeout(resolve, delay));
-      const resultCollector = {
-        requestId: targetRequest.id,
-        requestName: targetRequest.name,
-        requestUrl: targetRequest.url,
-        responseReason: '',
-        duration: 1,
-        size: 0,
-        results: new Array<RequestTestResult>(),
-        responseId: '',
-      };
-      const mutatedContext = await sendActionImp({
-        requestId: targetRequest.id,
-        workspaceId,
-        iteration: i + 1,
-        iterationCount: iterations,
-        userUploadEnv: getCurIterationUserUploadData(i),
-        shouldPromptForPathAfterResponse: false,
-        ignoreUndefinedEnvVariable: true,
-        testResultCollector: resultCollector,
-      }) as RequestContext | null;
-      if (mutatedContext?.execution?.nextRequestIdOrName) {
-        nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
-      };
+        const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(
+          targetRequest.id,
+          { lastActive: Date.now() },
+        );
+        invariant(activeRequestMeta, 'Request meta not found');
+
+        await new Promise(resolve => setTimeout(resolve, delay));
+        const resultCollector = {
+          requestId: targetRequest.id,
+          requestName: targetRequest.name,
+          requestUrl: targetRequest.url,
+          responseReason: '',
+          duration: 1,
+          size: 0,
+          results: new Array<RequestTestResult>(),
+          responseId: '',
+        };
+        const mutatedContext = await sendActionImp({
+          requestId: targetRequest.id,
+          workspaceId,
+          iteration: i + 1,
+          iterationCount: iterations,
+          userUploadEnv: getCurIterationUserUploadData(i),
+          shouldPromptForPathAfterResponse: false,
+          ignoreUndefinedEnvVariable: true,
+          testResultCollector: resultCollector,
+        }) as RequestContext | null;
+        if (mutatedContext?.execution?.nextRequestIdOrName) {
+          nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
+        };
+
+        const requestResults: RunnerResultPerRequest = {
+          requestName: targetRequest.name,
+          requestUrl: targetRequest.url,
+          responseCode: 0, // TODO: collect response
+          results: resultCollector.results,
+        };
+
+        iterationResults = [...iterationResults, requestResults];
+        testCtx = {
+          ...testCtx,
+          duration: testCtx.duration + resultCollector.duration,
+          responsesInfo: [
+            ...testCtx.responsesInfo,
+            {
+              responseId: resultCollector.responseId,
+              originalRequestId: targetRequest.id,
+              originalRequestName: targetRequest.name,
+            },
+          ],
+        };
+      }
 
       testCtx = {
         ...testCtx,
-        duration: testCtx.duration + resultCollector.duration,
-        results: [...testCtx.results, ...resultCollector.results],
-        responseIds: [...testCtx.responseIds, resultCollector.responseId],
+        iterationResults: [...testCtx.iterationResults, iterationResults],
       };
     }
+
+    window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
+    window.main.completeExecutionStep({ requestId: workspaceId });
+  } catch (e) {
+    // the error could be from third party
+    const errMsg = encodeURIComponent(e.error || e);
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane&error=${errMsg}`);
+  } finally {
+    await models.runnerTestResult.create({
+      parentId: workspaceId,
+      source: testCtx.source,
+      // environmentId: string;
+      iterations: testCtx.iterations,
+      duration: testCtx.duration,
+      avgRespTime: testCtx.avgRespTime,
+      iterationResults: testCtx.iterationResults,
+      responsesInfo: testCtx.responsesInfo,
+    });
+
+    cancelExecution(workspaceId);
   }
 
-  await models.runnerTestResult.create({
-    parentId: workspaceId,
-    source: testCtx.source,
-    // environmentId: string;
-    iterations: testCtx.iterations,
-    duration: testCtx.duration,
-    avgRespTime: testCtx.avgRespTime,
-    results: testCtx.results,
-    responseIds: testCtx.responseIds,
-  });
-
-  window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
-  window.main.completeExecutionStep({ requestId: workspaceId });
-
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?test-end`);
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane`);
 };
 
 export const collectionRunnerStatusLoader: ActionFunction = async ({ params }) => {
   const { workspaceId } = params;
   invariant(workspaceId, 'Workspace id is required');
-
-  // const status = getCollectionRunnerStatus(workspaceId);
-  // return { ...status };
   return null;
 };

@@ -150,7 +150,10 @@ export const loader: LoaderFunction = async ({ params, request }) => {
     invariant(activeWorkspaceMeta, 'Workspace meta not found');
     const activeRequestId = activeWorkspaceMeta.activeRequestId;
     const activeRequest = activeRequestId ? await models.request.getById(activeRequestId) : null;
-    const isDisplayingRunner = request.url.endsWith('/runner') || request.url.endsWith('/runner?test-end');
+    // TODO(george): we should remove this after enabling the sidebar for the runner
+    const startOfQuery = request.url.indexOf('?');
+    const urlWithoutQuery = startOfQuery > 0 ? request.url.slice(0, startOfQuery) : request.url;
+    const isDisplayingRunner = urlWithoutQuery.endsWith('/runner');
     if (activeRequest && !isDisplayingRunner) {
       return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`);
     }
