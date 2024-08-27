@@ -775,11 +775,6 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       // nextRequestIdOrName is used to manual set next request in iteration from pre-request script
       let nextRequestIdOrName = '';
 
-      const runningStatus = getExecution(workspaceId);
-      if (runningStatus) {
-        throw 'The runner has been canceled';
-      }
-
       let iterationResults: RunnerResultPerRequest[] = [];
 
       for (let j = 0; j < requests.length; j++) {
