@@ -380,7 +380,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     });
   } catch (err) {
     console.log('[request] Failed to send request', err);
-    const e = err.error;
+    const e = err.error || err;
 
     if (err.response && err.requestMeta && err.response._id) {
       // this part is for persisting useful info (e.g. timeline) for debugging, even there is an error

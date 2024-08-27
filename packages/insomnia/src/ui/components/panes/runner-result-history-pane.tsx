@@ -1,5 +1,4 @@
 import { format } from 'date-fns';
-import type { RequestTestResult } from 'insomnia-sdk';
 import React, { type FC } from 'react';
 import { Cell, Column, ColumnResizer, ResizableTableContainer, Row, Table, TableBody, TableHeader, TooltipTrigger } from 'react-aria-components';
 
@@ -23,32 +22,39 @@ export const RunnerResultHistoryPane: FC<Props> = ({
     let failedCount = 0;
     let skippedCount = 0;
 
-    runnerResult.results.forEach((result: RequestTestResult) => {
-      if (result.status === 'failed') {
-        failedCount++;
+    for (let i = 0; i < runnerResult.iterationResults.length; i++) { // iterations
+      for (let j = 0; j < runnerResult.iterationResults[i].length; j++) { // requests
+        for (let k = 0; k < runnerResult.iterationResults[i][j].results.length; k++) { // test cases
+          const result = runnerResult.iterationResults[i][j].results[k];
+
+          if (result.status === 'failed') {
+            failedCount++;
+          }
+          if (result.status === 'skipped') {
+            skippedCount++;
+          }
+          if (result.status === 'passed') {
+            passedCount++;
+          }
+        }
       }
-      if (result.status === 'skipped') {
-        skippedCount++;
-      }
-      if (result.status === 'passed') {
-        passedCount++;
-      }
-    });
+    }
+
     // const startedAt = new Date(runnerResult.created).toString(); // TODO: should be endedat
     const { number: durationNumber, unit: durationUnit } = getTimeAndUnit(runnerResult.duration);
-    const createdAt = format(runnerResult.created, 'yyyy-MM-dd HH:MM:ss');
+    const createdAt = format(runnerResult.created, 'yyyy-MM-dd HH:mm:ss');
 
     return (
       <Row
         key={runnerResult._id}
-        className="leading-9 hover:bg-neutral-900"
+        className="cursor-pointer leading-9 hover:bg-neutral-900"
         style={{ 'outline': 'none' }}
         onAction={() => {
           gotoExecutionResult(runnerResult._id);
           gotoTestResultsTab();
         }}
       >
-        <Cell className="capitalize cursor-pointer hover:underline">
+        <Cell className="capitalize hover:underline">
           {failedCount === 0 ?
             <i className="fa fa-circle-check fa-1x mr-2 text-green-500" /> :
             <i className="fa fa-circle-xmark fa-1x mr-2 text-red-500" />}

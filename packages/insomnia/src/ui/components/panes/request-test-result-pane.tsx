@@ -10,13 +10,13 @@ type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
 const filterClassnames = 'mx-1 w-[6rem] text-center rounded-md h-[--line-height-xxs] text-sm cursor-pointer outline-none select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
 const activeFilterClassnames = 'text-white mx-1 w-[6rem] text-center rounded-md h-[--line-height-xxs] text-sm cursor-pointer outline-none select-none px-2 py-1 bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
 
-interface RequestTestResultRowsProps {
+export interface RequestTestResultRowsProps {
   requestTestResults: RequestTestResult[];
   resultFilter: string;
   targetTests: string;
 }
 
-const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
+export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
   requestTestResults,
   resultFilter,
   targetTests,
@@ -106,9 +106,9 @@ export const RequestTestResultPane: FC<Props> = ({
 
   const noTestFoundPage = (
     <div className="text-center mt-5">
-      <div className="">No test results found</div>
+      <div className="">No test result found</div>
       <div className="text-sm text-neutral-400">
-        Run the tests to see the results.
+        Add test cases in scripts and run them to see results.
       </div>
     </div>
   );
