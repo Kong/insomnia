@@ -339,7 +339,7 @@ export const Runner: FC<{}> = () => {
               <Pane type="request">
                 <PaneHeader>
                   <Heading className="flex items-center w-full h-[--line-height-sm] pl-[--padding-md]">
-                    <div className="w-full text-left min-w-[400px]">
+                    <div className="w-full h-full text-left min-w-[400px]">
                       <span className="mr-6 text-sm">
                         <input
                           value={iterations}
