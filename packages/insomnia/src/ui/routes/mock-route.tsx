@@ -117,6 +117,9 @@ export const MockRouteRoute = () => {
         method: 'PUT',
         organizationId,
         sessionId: userSession.id,
+        headers: {
+          'insomnia-mock-method': mockRoute.method,
+        },
         data: mockRouteToHar({
           statusCode: mockRoute.statusCode,
           statusText: mockRoute.statusText,
