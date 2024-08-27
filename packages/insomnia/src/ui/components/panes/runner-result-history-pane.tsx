@@ -47,14 +47,14 @@ export const RunnerResultHistoryPane: FC<Props> = ({
     return (
       <Row
         key={runnerResult._id}
-        className="leading-9 hover:bg-neutral-900"
+        className="cursor-pointer leading-9 hover:bg-neutral-900"
         style={{ 'outline': 'none' }}
         onAction={() => {
           gotoExecutionResult(runnerResult._id);
           gotoTestResultsTab();
         }}
       >
-        <Cell className="capitalize cursor-pointer hover:underline">
+        <Cell className="capitalize hover:underline">
           {failedCount === 0 ?
             <i className="fa fa-circle-check fa-1x mr-2 text-green-500" /> :
             <i className="fa fa-circle-xmark fa-1x mr-2 text-red-500" />}

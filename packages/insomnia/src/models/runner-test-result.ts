@@ -22,6 +22,12 @@ export interface RunnerResultPerRequest {
   // TODO: add request name, url, etc
 }
 
+export interface ResponseInfo {
+  responseId: string;
+  originalRequestName: string;
+  originalRequestId: string;
+}
+
 export interface BaseRunnerTestResult {
   source: RunnerSource;
   // environmentId: string;
@@ -29,7 +35,7 @@ export interface BaseRunnerTestResult {
   duration: number; // millisecond
   avgRespTime: number; // millisecond
   iterationResults: RunnerResultPerRequest[][];
-  responseIds: string[];
+  responsesInfo: ResponseInfo[];
   version: '1';
 }
 
@@ -47,7 +53,7 @@ export function init() {
     duration: 0,
     avgRespTime: 0,
     iterationResults: [],
-    responseIds: [],
+    responsesInfo: [],
   };
 }
 

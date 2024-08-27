@@ -44,7 +44,7 @@ export const RunnerTestResultPane: FC<Props> = ({
         const key = `request-test-result-${i}`;
         return <div key={key}>
           <div className="pl-3">
-            <span className="">
+            <span>
               {requestTestResult.requestName}
             </span>
             <span className="text-sm text-neutral-400">

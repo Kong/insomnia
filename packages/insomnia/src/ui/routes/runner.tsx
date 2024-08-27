@@ -15,12 +15,13 @@ import * as models from '../../models';
 import type { UserUploadEnvironment } from '../../models/environment';
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
-import type { RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
+import type { ResponseInfo, RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
 import { cancelRequestById } from '../../network/cancellation';
 import { invariant } from '../../utils/invariant';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
 import { Icon } from '../components/icon';
+import { showAlert } from '../components/modals';
 import { UploadDataModal, type UploadDataType } from '../components/modals/upload-runner-data-modal';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { RunnerResultHistoryPane } from '../components/panes/runner-result-history-pane';
@@ -37,17 +38,25 @@ const iterationInputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-
 
 // TODO: improve the performance for a lot of logs
 async function aggregateAllTimelines(testResult: RunnerTestResult) {
-  const responseIds = testResult.responseIds;
+  const responsesInfo = testResult.responsesInfo;
   let timelines = new Array<ResponseTimelineEntry>();
 
-  for (let i = 0; i < responseIds.length; i++) {
-    const respId = responseIds[i];
-    const resp = await models.response.getById(respId);
+  for (let i = 0; i < responsesInfo.length; i++) {
+    const respInfo = responsesInfo[i];
+    const resp = await models.response.getById(respInfo.responseId);
     if (resp) {
       const timeline = models.response.getTimeline(resp, true) as unknown as ResponseTimelineEntry[];
-      timelines = [...timelines, ...timeline];
+      timelines = [
+        ...timelines,
+        {
+          value: `------ Start of request (${respInfo.originalRequestName}) ------\n\n\n`,
+          name: 'Text',
+          timestamp: Date.now(),
+        },
+        ...timeline,
+      ];
     } else {
-      console.error(`failed to read response for ${respId}`);
+      console.error(`failed to read response for the request ${respInfo.originalRequestName}`);
     }
   }
 
@@ -61,6 +70,21 @@ export const Runner: FC<{}> = () => {
     setShouldRefresh(true);
     // clean up params
     searchParams.delete('refresh-pane');
+    setSearchParams({});
+  }
+  if (searchParams.has('error')) {
+    showAlert({
+      title: 'Unexpected Runner Failure',
+      message: (
+        <div>
+          <p>The runner failed due to an unhandled error:</p>
+          <code className="wide selectable">
+            <pre>{searchParams.get('error')}</pre>
+          </code>
+        </div>
+      ),
+    });
+    searchParams.delete('error');
     setSearchParams({});
   }
 
@@ -480,7 +504,8 @@ export const Runner: FC<{}> = () => {
                             name='ignore-undefined-env'
                             onChange={() => { }}
                             type="checkbox"
-                            disabled={isRunning}
+                            disabled={true}
+                            checked
                           />
                           Ignore undefined environments
                           <HelpTooltip className="space-left">Undefined environments will not be rendered for all requests.</HelpTooltip>
@@ -492,7 +517,8 @@ export const Runner: FC<{}> = () => {
                             name='persist-response'
                             onChange={() => { }}
                             type="checkbox"
-                            disabled={isRunning}
+                            disabled={true}
+                            checked
                           />
                           Persist responses for a session
                           <HelpTooltip className="space-left">Enabling this will impact performance while responses are saved for other purposes.</HelpTooltip>
@@ -504,9 +530,9 @@ export const Runner: FC<{}> = () => {
                             name='log-off'
                             onChange={() => { }}
                             type="checkbox"
-                            disabled={isRunning}
+                            disabled={true}
                           />
-                          Turn off logs duration run
+                          Turn off logs during run
                           <HelpTooltip className="space-left">Disabling this will improve the performance while logs are not saved.</HelpTooltip>
                         </label>
                       </div>
@@ -516,7 +542,8 @@ export const Runner: FC<{}> = () => {
                             name='stop-on-error'
                             onChange={() => { }}
                             type="checkbox"
-                            disabled={isRunning}
+                            disabled={true}
+                            checked
                           />
                           Stop run if an error occurs
                         </label>
@@ -525,7 +552,8 @@ export const Runner: FC<{}> = () => {
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
-                            disabled={isRunning}
+                            disabled={true}
+                            checked
                           />
                           Keep variable values
                           <HelpTooltip className="space-left">Enabling this will persist generated values.</HelpTooltip>
@@ -535,7 +563,7 @@ export const Runner: FC<{}> = () => {
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
-                            disabled={isRunning}
+                            disabled={true}
                           />
                           Run collection without using stored cookies
                         </label>
@@ -544,7 +572,8 @@ export const Runner: FC<{}> = () => {
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
-                            disabled={isRunning}
+                            disabled={true}
+                            checked
                           />
                           Save cookies after collection run
                           <HelpTooltip className="space-left">Cookies in the running will be saved to the cookie manager.</HelpTooltip>
@@ -626,7 +655,7 @@ export const Runner: FC<{}> = () => {
                 {isRunning &&
                   <div className="h-full w-full text-md flex items-center">
                     <ResponseTimer
-                      handleCancel={() => cancelRunning(workspaceId)}
+                      handleCancel={() => cancelExecution(workspaceId)}
                       activeRequestId={workspaceId}
                       steps={timingSteps}
                     />
@@ -673,30 +702,33 @@ const RequestItem = (
   );
 };
 
-const runningRunners = new Map<string, string>();
-function startRunning(workspaceId: string) {
-  runningRunners.set(workspaceId, '');
+// This is required for tracking the active request for one runner execution
+// Then in runner cancellation, both the active request and the runner execution will be canceled
+// TODO(george): Potentially it could be merged with maps in request-timing.ts and cancellation.ts
+const runnerExecutions = new Map<string, string>();
+function startExecution(workspaceId: string) {
+  runnerExecutions.set(workspaceId, '');
 }
 
-function stopRunning(workspaceId: string) {
-  runningRunners.delete(workspaceId);
+function stopExecution(workspaceId: string) {
+  runnerExecutions.delete(workspaceId);
 }
 
-function updateRunning(workspaceId: string, requestId: string) {
-  runningRunners.set(workspaceId, requestId);
+function updateExecution(workspaceId: string, requestId: string) {
+  runnerExecutions.set(workspaceId, requestId);
 }
 
-function getRunning(workspaceId: string) {
-  return runningRunners.get(workspaceId);
+function getExecution(workspaceId: string) {
+  return runnerExecutions.get(workspaceId);
 }
 
-function cancelRunning(workspaceId: string) {
-  const activeRequest = getRunning(workspaceId);
+function cancelExecution(workspaceId: string) {
+  const activeRequest = getExecution(workspaceId);
   if (activeRequest) {
     cancelRequestById(activeRequest);
     window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
     window.main.completeExecutionStep({ requestId: workspaceId });
-    stopRunning(workspaceId);
+    stopExecution(workspaceId);
   }
 }
 
@@ -722,7 +754,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     avgRespTime: 0,
     iterationResults: new Array<RunnerResultPerRequest[]>(),
     done: false,
-    responseIds: new Array<string>(),
+    responsesInfo: new Array<ResponseInfo>(),
   };
 
   window.main.startExecution({ requestId: workspaceId });
@@ -730,7 +762,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     requestId: workspaceId,
     stepName: 'Initializing',
   });
-  startRunning(workspaceId);
+  startExecution(workspaceId);
 
   interface RequestType {
     name: string;
@@ -742,11 +774,17 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     for (let i = 0; i < iterations; i++) {
       // nextRequestIdOrName is used to manual set next request in iteration from pre-request script
       let nextRequestIdOrName = '';
+
+      const runningStatus = getExecution(workspaceId);
+      if (runningStatus) {
+        throw 'The runner has been canceled';
+      }
+
       let iterationResults: RunnerResultPerRequest[] = [];
 
       for (let j = 0; j < requests.length; j++) {
         const targetRequest = requests[j] as RequestType;
-        updateRunning(workspaceId, targetRequest.id);
+
         if (nextRequestIdOrName !== '') {
           if (targetRequest.id === nextRequestIdOrName ||
             // find the last request with matched name in case mulitple requests with same name in collection runner
@@ -758,6 +796,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
             continue;
           }
         }
+        updateExecution(workspaceId, targetRequest.id);
 
         const getCurIterationUserUploadData = (curIteration: number): UserUploadEnvironment | undefined => {
           if (Array.isArray(userUploadEnvs) && userUploadEnvs.length > 0) {
@@ -770,7 +809,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
           return undefined;
         };
 
-        window.main.updateLatestStepName({ requestId: workspaceId, stepName: `Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"` });
+        window.main.updateLatestStepName({ requestId: workspaceId, stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"` });
 
         const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(
           targetRequest.id,
@@ -814,7 +853,14 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
         testCtx = {
           ...testCtx,
           duration: testCtx.duration + resultCollector.duration,
-          responseIds: [...testCtx.responseIds, resultCollector.responseId],
+          responsesInfo: [
+            ...testCtx.responsesInfo,
+            {
+              responseId: resultCollector.responseId,
+              originalRequestId: targetRequest.id,
+              originalRequestName: targetRequest.name,
+            },
+          ],
         };
       }
 
@@ -824,6 +870,13 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       };
     }
 
+    window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
+    window.main.completeExecutionStep({ requestId: workspaceId });
+  } catch (e) {
+    // the error could be from third party
+    const errMsg = encodeURIComponent(e.error || e);
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane&error=${errMsg}`);
+  } finally {
     await models.runnerTestResult.create({
       parentId: workspaceId,
       source: testCtx.source,
@@ -832,15 +885,10 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       duration: testCtx.duration,
       avgRespTime: testCtx.avgRespTime,
       iterationResults: testCtx.iterationResults,
-      responseIds: testCtx.responseIds,
+      responsesInfo: testCtx.responsesInfo,
     });
 
-    window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
-    window.main.completeExecutionStep({ requestId: workspaceId });
-  } catch (e) {
-    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane`);
-  } finally {
-    cancelRunning(workspaceId);
+    cancelExecution(workspaceId);
   }
 
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane`);
