@@ -718,13 +718,21 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     stepName: 'Initializing',
   });
 
+  interface RequestType {
+    name: string;
+    id: string;
+    url: string;
+  };
   for (let i = 0; i < iterations; i++) {
     // nextRequestIdOrName is used to manual set next request in iteration from pre-request script
     let nextRequestIdOrName = '';
     for (let j = 0; j < requests.length; j++) {
-      const targetRequest = requests[j] as { name: string; id: string; url: string };
+      const targetRequest = requests[j] as RequestType;
       if (nextRequestIdOrName !== '') {
-        if (targetRequest.id === nextRequestIdOrName || targetRequest.name.trim() === nextRequestIdOrName.trim()) {
+        if (targetRequest.id === nextRequestIdOrName ||
+          // find the last request with matched name in case mulitple requests with same name in collection runner
+          (targetRequest.name.trim() === nextRequestIdOrName.trim() && j === requests.findLastIndex((req: RequestType) => req.name.trim() === nextRequestIdOrName.trim()))
+        ) {
           // reset nextRequestIdOrName when request name or id meets;
           nextRequestIdOrName = '';
         } else {
