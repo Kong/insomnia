@@ -377,6 +377,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId);
     window.main.completeExecutionStep({ requestId });
     if (mutatedContext === null) {
+      console.error('[scripting] Failed to execute pre-request script');
       return null;
     }
     // disable after-response script here to avoiding rendering it

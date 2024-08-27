@@ -1,0 +1,67 @@
+_type: export
+__export_format: 4
+__export_date: 2024-08-05T10:12:24.557Z
+__export_source: insomnia.desktop.app:v9.3.3
+resources:
+  - _id: req_51dfc16d0f324a799e46aad52ffd0cd2
+    parentId: wrk_cfacae2b022e49c8851c2376674cc890
+    modified: 1722852690008
+    created: 1722852503814
+    url: localhost:4010/echo
+    name: sendRequest
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/9.3.3
+    authentication: {}
+    preRequestScript: |-
+      
+      const resp = await new Promise((resolve, reject) => {
+        insomnia.sendRequest(
+          'http://localhost:4010/echo',
+          (err, resp) => {
+            err != null ? reject(err) : resolve(resp);
+          }
+        );
+      });
+
+      console.log("we did it: "+resp.code)
+    metaSortKey: -1722852503814
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_cfacae2b022e49c8851c2376674cc890
+    parentId: null
+    modified: 1722852498102
+    created: 1722852498102
+    name: send request script
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: env_fa53fdd70393dd67a77da3c45c26f2b75ecbc1f2
+    parentId: wrk_cfacae2b022e49c8851c2376674cc890
+    modified: 1722852666754
+    created: 1722852498103
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: {}
+    color: null
+    isPrivate: false
+    metaSortKey: 1722852498103
+    _type: environment
+  - _id: jar_fa53fdd70393dd67a77da3c45c26f2b75ecbc1f2
+    parentId: wrk_cfacae2b022e49c8851c2376674cc890
+    modified: 1722852666753
+    created: 1722852498104
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
