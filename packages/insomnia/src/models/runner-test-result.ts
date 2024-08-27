@@ -54,6 +54,7 @@ export function init() {
     avgRespTime: 0,
     iterationResults: [],
     responsesInfo: [],
+    version: '1',
   };
 }
 

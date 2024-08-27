@@ -42,7 +42,7 @@ export const RunnerResultHistoryPane: FC<Props> = ({
 
     // const startedAt = new Date(runnerResult.created).toString(); // TODO: should be endedat
     const { number: durationNumber, unit: durationUnit } = getTimeAndUnit(runnerResult.duration);
-    const createdAt = format(runnerResult.created, 'yyyy-MM-dd HH:MM:ss');
+    const createdAt = format(runnerResult.created, 'yyyy-MM-dd HH:mm:ss');
 
     return (
       <Row
