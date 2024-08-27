@@ -73,7 +73,7 @@ export const Runner: FC<{}> = () => {
   const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [file, setFile] = useState<File | null>(null);
   const [uploadData, setUploadData] = useState<UploadDataType[]>([]);
-  const [showUploadModal, setShowUploadModal] = useState<{ show: boolean; preview: boolean }>({ show: false, preview: false });
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
   useEffect(() => {
@@ -382,27 +382,11 @@ export const Runner: FC<{}> = () => {
                       </span>
                       <span className="mr-6 text-sm">
                         <Button
-                          onPress={() => setShowUploadModal({ show: true, preview: false })}
-                          className={`${inputStyle} w-9 text-center`}
+                          onPress={() => setShowUploadModal(true)}
+                          className="py-0.5 px-1 border-[--hl-sm] h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                         >
-                          <Icon icon="upload" />
+                          <Icon icon={file ? 'eye' : 'upload'} /> {file ? 'View Data' : 'Upload Data'}
                         </Button>
-                        <span className="mr-1 border">Data</span>
-                        {file && (
-                          <TooltipTrigger>
-                            <Tooltip
-                              position="top"
-                              message="Click to preview data"
-                            >
-                              <Button
-                                className='ml-1'
-                                onPress={() => setShowUploadModal({ show: true, preview: true })}
-                              >
-                                <Icon icon="eye" className='text-green-500' />
-                              </Button>
-                            </Tooltip>
-                          </TooltipTrigger>
-                        )}
                       </span>
                     </div>
                     <div className="w-[100px]">
@@ -566,15 +550,14 @@ export const Runner: FC<{}> = () => {
                     </div>
                   </TabPanel>
                 </Tabs>
-                {showUploadModal.show && (
+                {showUploadModal && (
                   <UploadDataModal
                     onUploadFile={(file, uploadData) => {
                       setFile(file);
                       setUploadData(uploadData);
                     }}
-                    isPrview={showUploadModal.preview}
                     userUploadData={uploadData}
-                    onClose={() => setShowUploadModal(prev => ({ ...prev, show: false }))}
+                    onClose={() => setShowUploadModal(false)}
                   />
                 )}
               </Pane>
