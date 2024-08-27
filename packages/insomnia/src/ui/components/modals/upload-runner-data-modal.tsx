@@ -21,12 +21,13 @@ export interface UploadDataModalProps {
   onUploadFile: (file: File, data: UploadDataType[]) => void;
   onClose: () => void;
   userUploadData: UploadDataType[];
+  isPrview?: boolean;
 }
 
-const rowHeaderStyle = 'sticky top-[-8px] p-2 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none';
+const rowHeaderStyle = 'sticky normal-case top-[-8px] p-2 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none';
 const rowCellStyle = 'whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none';
 
-export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: UploadDataModalProps) => {
+export const UploadDataModal = ({ onUploadFile, onClose, userUploadData, isPrview = false }: UploadDataModalProps) => {
   const [file, setUploadFile] = useState<File | null>(null);
   const [uploadDataHeaders, setUploadDataHeaders] = useState<string[]>([]);
   const [uploadData, setUploadData] = useState<UploadDataType[]>([]);
@@ -130,7 +131,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
           {({ close }) => (
             <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
               <div className='flex gap-2 items-center justify-between'>
-                <Heading slot="title" className='text-2xl'>Upload Data</Heading>
+                <Heading slot="title" className='text-2xl'>{isPrview ? 'Preview Data' : 'Upload Data'}</Heading>
                 <Button
                   className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   onPress={close}
@@ -138,18 +139,20 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className='rounded grow shrink-0 w-full overflow-hidden basis-12 flex flex-col gap-6 select-none overflow-y-auto'>
-                <FileTrigger
-                  allowsMultiple={false}
-                  onSelect={handleFileSelect}
-                  acceptedFileTypes={['.csv', '.json']}
-                >
-                  <Button className="flex flex-1 flex-shrink-0 border-solid border border-[--hl-`sm] py-1 gap-2 items-center justify-center px-2 aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent transition-all text-base">
-                    <Icon icon="upload" />
-                    <span>{userUploadData.length > 0 ? 'Change Data File' : 'Select Data File'}</span>
-                  </Button>
-                </FileTrigger>
-              </div>
+              {!isPrview &&
+                <div className='rounded grow shrink-0 w-full overflow-hidden basis-12 flex flex-col gap-6 select-none overflow-y-auto'>
+                  <FileTrigger
+                    allowsMultiple={false}
+                    onSelect={handleFileSelect}
+                    acceptedFileTypes={['.csv', '.json']}
+                  >
+                    <Button className="flex flex-1 flex-shrink-0 border-solid border border-[--hl-`sm] py-1 gap-2 items-center justify-center px-2 aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent transition-all text-base">
+                      <Icon icon="upload" />
+                      <span>{uploadData.length > 0 ? 'Change Data File' : 'Select Data File'}</span>
+                    </Button>
+                  </FileTrigger>
+                </div>
+              }
               {invalidFileReason !== '' &&
                 <div className="notice error margin-top-sm">
                   <p>{invalidFileReason}</p>
@@ -157,7 +160,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
               }
               {uploadData.length > 1 &&
                 <div className='overflow-auto py-2 flex-1'>
-                  <Heading className='text-xl margin-bottom-sm'>Data Preview</Heading>
+                  {!isPrview && <Heading className='text-xl margin-bottom-sm'>Data Preview</Heading>}
                   <Table
                     aria-label='Data Preview Table'
                     className="min-w-full table-auto"
@@ -206,15 +209,17 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
                   </Table>
                 </div>
               }
-              <div className="flex justify-end mt-2">
-                <Button
-                  isDisabled={uploadData.length < 1}
-                  className="hover:no-underline flex items-center gap-2 bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-                  onPress={handleUploadData}
-                >
-                  Upload
-                </Button>
-              </div>
+              {!isPrview &&
+                <div className="flex justify-end mt-2">
+                  <Button
+                    isDisabled={uploadData.length < 1}
+                    className="hover:no-underline flex items-center gap-2 bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                    onPress={handleUploadData}
+                  >
+                    Upload
+                  </Button>
+                </div>
+              }
             </div>
           )}
         </Dialog>

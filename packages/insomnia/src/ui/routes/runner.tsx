@@ -73,7 +73,7 @@ export const Runner: FC<{}> = () => {
   const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [file, setFile] = useState<File | null>(null);
   const [uploadData, setUploadData] = useState<UploadDataType[]>([]);
-  const [isUploadDataModalOpen, setUploadDataModalOpen] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState<{ show: boolean; preview: boolean }>({ show: false, preview: false });
 
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
   useEffect(() => {
@@ -382,14 +382,26 @@ export const Runner: FC<{}> = () => {
                       </span>
                       <span className="mr-6 text-sm">
                         <Button
-                          onPress={() => setUploadDataModalOpen(true)}
+                          onPress={() => setShowUploadModal({ show: true, preview: false })}
                           className={`${inputStyle} w-9 text-center`}
                         >
                           <Icon icon="upload" />
                         </Button>
                         <span className="mr-1 border">Data</span>
                         {file && (
-                          <span className="ml-1 align-middle w-3 h-3 bg-green-500 rounded-full inline-block" />
+                          <TooltipTrigger>
+                            <Tooltip
+                              position="top"
+                              message="Click to preview data"
+                            >
+                              <Button
+                                className='ml-1'
+                                onPress={() => setShowUploadModal({ show: true, preview: true })}
+                              >
+                                <Icon icon="eye" className='text-green-500' />
+                              </Button>
+                            </Tooltip>
+                          </TooltipTrigger>
                         )}
                       </span>
                     </div>
@@ -554,14 +566,15 @@ export const Runner: FC<{}> = () => {
                     </div>
                   </TabPanel>
                 </Tabs>
-                {isUploadDataModalOpen && (
+                {showUploadModal.show && (
                   <UploadDataModal
                     onUploadFile={(file, uploadData) => {
                       setFile(file);
                       setUploadData(uploadData);
                     }}
+                    isPrview={showUploadModal.preview}
                     userUploadData={uploadData}
-                    onClose={() => setUploadDataModalOpen(false)}
+                    onClose={() => setShowUploadModal(prev => ({ ...prev, show: false }))}
                   />
                 )}
               </Pane>
