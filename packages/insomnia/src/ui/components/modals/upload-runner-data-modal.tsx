@@ -18,12 +18,12 @@ import { Icon } from '../icon';
 
 export type UploadDataType = Record<string, any>;
 export interface UploadDataModalProps {
-  onUploadFile: (file: File, data: UploadDataType[]) => void;
+  onUploadFile: (file: File | null, data: UploadDataType[]) => void;
   onClose: () => void;
   userUploadData: UploadDataType[];
 }
 
-const rowHeaderStyle = 'sticky top-[-8px] p-2 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none';
+const rowHeaderStyle = 'sticky normal-case top-[-8px] p-2 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none';
 const rowCellStyle = 'whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none';
 
 export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: UploadDataModalProps) => {
@@ -103,6 +103,11 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
     onClose();
   };
 
+  const handleClearData = () => {
+    onUploadFile(null, []);
+    onClose();
+  };
+
   useEffect(() => {
     if (userUploadData.length > 0) {
       genPreviewTableData(userUploadData);
@@ -130,7 +135,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
           {({ close }) => (
             <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
               <div className='flex gap-2 items-center justify-between'>
-                <Heading slot="title" className='text-2xl'>Upload Data</Heading>
+                <Heading slot="title" className='text-2xl'>{userUploadData.length > 0 ? 'Update Data' : 'Preview Data'}</Heading>
                 <Button
                   className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   onPress={close}
@@ -146,7 +151,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
                 >
                   <Button className="flex flex-1 flex-shrink-0 border-solid border border-[--hl-`sm] py-1 gap-2 items-center justify-center px-2 aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent transition-all text-base">
                     <Icon icon="upload" />
-                    <span>{userUploadData.length > 0 ? 'Change Data File' : 'Select Data File'}</span>
+                    <span>{uploadData.length > 0 ? 'Change Data File' : 'Select Data File'}</span>
                   </Button>
                 </FileTrigger>
               </div>
@@ -207,9 +212,17 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
                 </div>
               }
               <div className="flex justify-end mt-2">
+                {userUploadData.length > 0 &&
+                  <Button
+                    className="hover:no-underline flex items-center gap-2 hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                    onPress={handleClearData}
+                  >
+                    Remove Data
+                  </Button>
+                }
                 <Button
                   isDisabled={uploadData.length < 1}
-                  className="hover:no-underline flex items-center gap-2 bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                  className="hover:no-underline ml-4 flex items-center gap-2 bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                   onPress={handleUploadData}
                 >
                   Upload
