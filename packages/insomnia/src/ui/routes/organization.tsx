@@ -849,25 +849,23 @@ const OrganizationRoute = () => {
                           return;
                         }
 
-                        // If user has a team or enterprise member plan show them an alert
                         if (currentPlan.type === 'enterprise-member') {
+                          // If user has a team or enterprise member plan show them an alert
                           showAlert({
                             title: 'Cannot create new organization.',
                             message: 'Your Insomnia account is tied to the enterprise corporate account. Please ask the owner of the enterprise billing to create one for you.',
                           });
-                        }
-
-                        // If user has a free or individual plan redirect them to the landing page
-                        if (['free', 'individual'].includes(currentPlan.type)) {
+                        } else if (['free', 'individual'].includes(currentPlan.type)) {
+                          // If user has a free or individual plan redirect them to the landing page
                           window.main.openInBrowser(
                             `${getAppWebsiteBaseURL()}/app/landing-page`,
                           );
+                        } else {
+                          // If user has a team or enterprise plan redirect them to the create organization page
+                          window.main.openInBrowser(
+                            `${getAppWebsiteBaseURL()}/app/dashboard/organizations?create_org=true`,
+                          );
                         }
-
-                        // If user has a team or enterprise plan redirect them to the create organization page
-                        window.main.openInBrowser(
-                          `${getAppWebsiteBaseURL()}/app/dashboard/organizations?create_org=true`,
-                        );
                       }
                     }}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
