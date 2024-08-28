@@ -218,7 +218,7 @@ export const syncProjects = async (organizationId: string) => {
   const user = await models.userSession.getOrCreate();
   const teamProjects = await getAllTeamProjects(organizationId);
   // ensure we don't sync projects in the wrong place
-  if (teamProjects.length > 0 && user.id && !isScratchpadOrganizationId(organizationId)) {
+  if (Array.isArray(teamProjects) && user.id && !isScratchpadOrganizationId(organizationId)) {
     await syncTeamProjects({
       organizationId,
       teamProjects,
