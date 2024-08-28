@@ -58,7 +58,9 @@ jobs:
           echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
 
       - name: Package Inso CLI binary
-        run: npm run inso-package
+        run: |
+          npm run build -w insomnia-inso
+          npm run package -w insomnia-inso
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
