@@ -59,16 +59,6 @@ export class NeDBClient {
     // When git is reading from NeDb, reset keys we wish to ignore to their original values
     resetKeys(doc);
 
-    // It would be nice to be able to add this check here but we can't since
-    // isomorphic-git may have just deleted the workspace from the FS. This
-    // happens frequently during branch checkouts and merges
-    //
-    // if (doc.type !== models.workspace.type) {
-    //   const ancestors = await db.withAncestors(doc);
-    //   if (!ancestors.find(isWorkspace)) {
-    //     throw new Error(`Not found under workspace ${filePath}`);
-    //   }
-    // }
     const raw = Buffer.from(YAML.stringify(doc), 'utf8');
 
     if (options.encoding) {

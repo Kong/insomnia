@@ -6,6 +6,8 @@ export const createGitRepository = async (workspaceId: string, repo: Partial<Git
   const meta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
   await models.workspaceMeta.update(meta, {
     gitRepositoryId: newRepo._id,
+    // @TODO Get the main/master branch name here
+    cachedGitRepositoryBranch: 'main',
   });
 };
 
