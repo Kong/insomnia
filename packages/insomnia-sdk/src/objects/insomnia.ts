@@ -149,7 +149,7 @@ export async function initInsomniaObject(
     const cookies = new CookieObject(rawObj.cookieJar);
     // TODO: update follows when post-request script and iterationData are introduced
     const requestInfo = new RequestInfo({
-        eventName: 'prerequest',
+        eventName: rawObj.requestInfo.eventName || 'prerequest',
         iteration: rawObj.requestInfo.iteration || 1,
         iterationCount: rawObj.requestInfo.iterationCount || 0,
         requestName: rawObj.request.name,

@@ -433,6 +433,8 @@ interface RequestContextForScript {
 
 type RequestAndContextAndResponse = RequestContextForScript & {
   response: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
+  iteration?: number;
+  iterationCount?: number;
 };
 
 type RequestAndContextAndOptionalResponse = RequestContextForScript & {

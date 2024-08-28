@@ -525,6 +525,8 @@ export const sendActionImp = async ({
     ...requestData,
     ...mutatedContext,
     response,
+    iteration,
+    iterationCount,
   });
   if ('error' in postMutatedContext) {
     throw {
