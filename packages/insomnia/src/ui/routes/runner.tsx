@@ -778,6 +778,10 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
 
       for (let j = 0; j < requests.length; j++) {
         const targetRequest = requests[j] as RequestType;
+        // TODO: we might find a better way to do runner cancellation
+        if (getExecution(workspaceId) === undefined) {
+          throw 'Runner has been stopped';
+        }
 
         if (nextRequestIdOrName !== '') {
           if (targetRequest.id === nextRequestIdOrName ||
