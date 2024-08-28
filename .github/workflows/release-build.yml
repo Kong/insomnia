@@ -124,8 +124,10 @@ jobs:
           password: ${{secrets.ES_PASSWORD}}
           credential_id: ${{secrets.ES_CREDENTIAL_ID}}
           totp_secret: ${{secrets.ES_TOTP_SECRET}}
-          file_path: packages/insomnia/dist/squirrel-windows/Insomnia.Core-${{ env.INSO_VERSION }}.exe
+          file_path: packages/insomnia/dist/squirrel-windows/Insomnia.Core-$env:VERSION.exe
           override: true
+        env:
+          VERSION: ${{ env.INSO_VERSION }}
 
       - name: Package inso
         run: |
