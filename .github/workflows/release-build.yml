@@ -70,6 +70,7 @@ jobs:
         run: |
           echo "INSO_VERSION=$(jq .version ./packages/${{ env.INSO_PACKAGE_NAME }}/package.json -rj)" >> $GITHUB_ENV
 
+
       # If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
       - name: Package app (MacOS only)
         if: matrix.os == 'macos-13'
@@ -114,6 +115,14 @@ jobs:
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
 
+
+      - name: Setup Insomnia version env var (Windows only)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh  # Use PowerShell shell
+        run: |
+          $insomniaVersion = jq -r '.version' "./packages/insomnia/package.json"
+          echo "INSOMNIA_VERSION=$insomniaVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       # code-signs the windows installer
       - name: Code-sign Windows Installer artifact (Windows only)
         if: matrix.os == 'windows-latest'
@@ -124,10 +133,10 @@ jobs:
           password: ${{secrets.ES_PASSWORD}}
           credential_id: ${{secrets.ES_CREDENTIAL_ID}}
           totp_secret: ${{secrets.ES_TOTP_SECRET}}
-          file_path: packages/insomnia/dist/squirrel-windows/Insomnia.Core-$env:VERSION.exe
+          file_path: ${{ env.CODESIGN_FILE_PATH}}
           override: true
         env:
-          VERSION: ${{ env.INSO_VERSION }}
+          CODESIGN_FILE_PATH: packages/insomnia/dist/squirrel-windows/Insomnia.Core-${{ env.INSOMNIA_VERSION }}.exe
 
       - name: Package inso
         run: |
