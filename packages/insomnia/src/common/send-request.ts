@@ -57,6 +57,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       models.requestGroup.type,
       models.workspace.type,
     ]);
+
     const workspaceDoc = ancestors.find(isWorkspace);
     const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
     const workspace = await models.workspace.getById(workspaceId);
@@ -80,14 +81,12 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
     const timelinePath = path.join(responsesDir, responseId + '.timeline');
 
-    return { request, settings, clientCertificates, caCert, environment, activeEnvironmentId, workspace, timelinePath, responseId };
+    return { request, settings, clientCertificates, caCert, environment, activeEnvironmentId, workspace, timelinePath, responseId, ancestors };
   };
   // Return callback helper to send requests
   return async function sendRequest(requestId: string) {
     const requestData = await fetchInsoRequestData(requestId, environmentId);
-
-    const mutatedContext = await tryToExecutePreRequestScript({ ...requestData, ancestors: [] }, requestData.workspace._id);
-
+    const mutatedContext = await tryToExecutePreRequestScript(requestData, requestData.workspace._id);
     if (mutatedContext === null) {
       console.error('Time out while executing pre-request script');
       return null;

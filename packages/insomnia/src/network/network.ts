@@ -40,7 +40,7 @@ import {
   smartEncodeUrl,
 } from '../utils/url/querystring';
 import { getAuthHeader, getAuthObjectOrNull, getAuthQueryParams, isAuthEnabled } from './authentication';
-import { cancellableCurlRequest } from './cancellation';
+import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
 import { runScriptConcurrently, type TransformedExecuteScriptContext } from './concurrency';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
@@ -304,7 +304,8 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     .map(doc => doc.name);
 
   try {
-    const output = await runScriptConcurrently({
+    const fn = process.type === 'renderer' ? runScriptConcurrently : cancellableRunScript;
+    const output = await fn({
       script,
       context: {
         request,
