@@ -16,7 +16,6 @@ import type { UserUploadEnvironment } from '../../models/environment';
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import type { ResponseInfo, RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
-import { cancelRequestById } from '../../network/cancellation';
 import { invariant } from '../../utils/invariant';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
@@ -725,7 +724,7 @@ function getExecution(workspaceId: string) {
 function cancelExecution(workspaceId: string) {
   const activeRequest = getExecution(workspaceId);
   if (activeRequest) {
-    cancelRequestById(activeRequest);
+    // TODO: should also try to cancel the request but the cancellation is not idempotent
     window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
     window.main.completeExecutionStep({ requestId: workspaceId });
     stopExecution(workspaceId);
