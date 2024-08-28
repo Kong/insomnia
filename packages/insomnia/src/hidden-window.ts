@@ -102,11 +102,17 @@ const runScript = async (
       name: context.baseEnvironment.name,
       data: mutatedContextObject.baseEnvironment,
     },
+    iterationData: context.iterationData ? {
+      name: context.iterationData.name,
+      data: mutatedContextObject.iterationData,
+    } : undefined,
     request: updatedRequest,
+    execution: mutatedContextObject.execution,
     settings: updatedSettings,
     clientCertificates: updatedCertificates,
     cookieJar: updatedCookieJar,
     globals: mutatedContextObject.globals,
+    requestTestResults: mutatedContextObject.requestTestResults,
   };
 };
 

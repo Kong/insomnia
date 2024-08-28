@@ -44,6 +44,7 @@ const main: Window['main'] = {
   startExecution: options => ipcRenderer.send('startExecution', options),
   addExecutionStep: options => ipcRenderer.send('addExecutionStep', options),
   completeExecutionStep: options => ipcRenderer.send('completeExecutionStep', options),
+  updateLatestStepName: options => ipcRenderer.send('updateLatestStepName', options),
   getExecution: options => ipcRenderer.invoke('getExecution', options),
   loginStateChange: () => ipcRenderer.send('loginStateChange'),
   restart: () => ipcRenderer.send('restart'),

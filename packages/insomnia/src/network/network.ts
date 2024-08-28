@@ -1,5 +1,6 @@
 import clone from 'clone';
 import fs from 'fs';
+import type { RequestContext, RequestTestResult } from 'insomnia-sdk';
 import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
 
@@ -21,10 +22,11 @@ import * as models from '../models';
 import type { CaCertificate } from '../models/ca-certificate';
 import type { ClientCertificate } from '../models/client-certificate';
 import type { Cookie, CookieJar } from '../models/cookie-jar';
-import type { Environment } from '../models/environment';
+import type { Environment, UserUploadEnvironment } from '../models/environment';
 import type { MockRoute } from '../models/mock-route';
 import type { MockServer } from '../models/mock-server';
-import type { Request, RequestAuthentication, RequestHeader, RequestParameter } from '../models/request';
+import { isProject, type Project } from '../models/project';
+import { isRequest, type Request, type RequestAuthentication, type RequestHeader, type RequestParameter } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
 import type { Settings } from '../models/settings';
 import type { WebSocketRequest } from '../models/websocket-request';
@@ -40,6 +42,7 @@ import {
 import { getAuthHeader, getAuthObjectOrNull, getAuthQueryParams, isAuthEnabled } from './authentication';
 import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
+import { runScriptConcurrently, type TransformedExecuteScriptContext } from './concurrency';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
 export const getOrInheritAuthentication = ({ request, requestGroups }: { request: Request | WebSocketRequest; requestGroups: RequestGroup[] }): RequestAuthentication | {} => {
@@ -105,10 +108,11 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
 export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
   invariant(request, 'failed to find request ' + requestId);
-  const ancestors = await db.withAncestors<Request | RequestGroup | Workspace | MockRoute | MockServer>(request, [
+  const ancestors = await db.withAncestors<Request | RequestGroup | Workspace | Project | MockRoute | MockServer>(request, [
     models.request.type,
     models.requestGroup.type,
     models.workspace.type,
+    models.project.type,
     models.mockRoute.type,
     models.mockServer.type,
   ]);
@@ -136,17 +140,24 @@ export const fetchRequestData = async (requestId: string) => {
   const responseId = generateId('res');
   const responsesDir = pathJoin((process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
-  return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
+  return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId, ancestors };
 };
 
-export const tryToExecutePreRequestScript = async ({
-  request,
-  environment,
-  settings,
-  clientCertificates,
-  timelinePath,
-  responseId,
-}: Awaited<ReturnType<typeof fetchRequestData>>, workspaceId: string) => {
+export const tryToExecutePreRequestScript = async (
+  {
+    request,
+    environment,
+    settings,
+    clientCertificates,
+    timelinePath,
+    responseId,
+    ancestors,
+  }: Awaited<ReturnType<typeof fetchRequestData>>,
+  workspaceId: string,
+  userUploadEnv?: UserUploadEnvironment,
+  iteration?: number,
+  iterationCount?: number,
+) => {
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
@@ -156,10 +167,7 @@ export const tryToExecutePreRequestScript = async ({
     activeGlobalEnvironment = await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId) || undefined;
   }
 
-  const requestGroups = await db.withAncestors<Request | RequestGroup>(request, [
-    models.requestGroup.type,
-  ]) as (Request | RequestGroup)[];
-
+  const requestGroups = ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
   const folderScripts = requestGroups.reverse()
     .filter(group => group?.preRequestScript)
     .map((group, i) => `const fn${i} = async ()=>{
@@ -176,6 +184,8 @@ export const tryToExecutePreRequestScript = async ({
       settings,
       cookieJar,
       globals: activeGlobalEnvironment,
+      userUploadEnv,
+      requestTestResults: new Array<RequestTestResult>(),
     };
   }
   const joinedScript = [...folderScripts].join('\n');
@@ -190,13 +200,26 @@ export const tryToExecutePreRequestScript = async ({
     clientCertificates,
     cookieJar,
     globals: activeGlobalEnvironment,
+    userUploadEnv,
+    iteration,
+    iterationCount,
+    ancestors,
+    eventName: 'prerequest',
+    settings,
   });
-  if (!mutatedContext?.request) {
-    // exiy early if there was a problem with the pre-request script
-    // TODO: improve error message?
-    return null;
+  if (!mutatedContext || 'error' in mutatedContext) {
+    return {
+      error: `Execute pre-request script failed: ${mutatedContext?.error}`,
+      request,
+      environment,
+      baseEnvironment,
+      clientCertificates,
+      settings,
+      cookieJar,
+      globals: activeGlobalEnvironment,
+      requestTestResults: new Array<RequestTestResult>(),
+    };
   }
-
   await savePatchesMadeByScript(mutatedContext, environment, baseEnvironment, activeGlobalEnvironment);
   return {
     request: mutatedContext.request,
@@ -206,6 +229,9 @@ export const tryToExecutePreRequestScript = async ({
     settings: mutatedContext.settings || settings,
     globals: mutatedContext.globals,
     cookieJar: mutatedContext.cookieJar,
+    requestTestResults: mutatedContext.requestTestResults,
+    userUploadEnv: mutatedContext.userUploadEnv,
+    execution: mutatedContext.execution,
   };
 };
 
@@ -214,7 +240,7 @@ export const tryToExecutePreRequestScript = async ({
 //  - If no global environment is seleted, no operation
 //  - If one global environment is selected, it persists content to the selected global environment (base or sub).
 export async function savePatchesMadeByScript(
-  mutatedContext: Awaited<ReturnType<typeof tryToExecuteScript>>,
+  mutatedContext: TransformedExecuteScriptContext,
   environment: Environment,
   baseEnvironment: Environment,
   activeGlobalEnvironment: Environment | undefined,
@@ -267,22 +293,19 @@ export async function savePatchesMadeByScript(
 }
 
 export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
-  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response, globals } = context;
+  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response, globals, userUploadEnv, iteration, iterationCount, ancestors, eventName } = context;
   invariant(script, 'script must be provided');
 
   const settings = await models.settings.get();
+  // location is the complete path of a request, including project, collection and folder(if have).
+  const requestLocation = ancestors
+    .filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc) || isProject(doc))
+    .reverse()
+    .map(doc => doc.name);
 
   try {
-    const timeout = settings.timeout || 5000;
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => {
-        reject(new Error('Timeout: Hidden browser window is not responding'));
-        // Add one extra second to ensure the hidden browser window has had a chance to return its timeout
-        // TODO: restart the hidden browser window
-      }, timeout + 2000);
-    });
-
-    const executionPromise = cancellableRunScript({
+    const fn = process.type === 'renderer' ? runScriptConcurrently : cancellableRunScript;
+    const originalOutput = await fn({
       script,
       context: {
         request,
@@ -303,23 +326,28 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         clientCertificates,
         settings,
         cookieJar,
+        requestInfo: {
+          eventName: eventName === 'prerequest' ? 'prerequest' : 'test',
+          iterationCount,
+          iteration,
+        },
         response,
         globals: globals?.data || undefined,
+        iterationData: userUploadEnv ? {
+          name: userUploadEnv.name,
+          data: userUploadEnv.data || {},
+        } : undefined,
+        execution: {
+          location: requestLocation,
+        },
       },
     });
-    // @TODO This looks overly complicated and could be simplified.
-    // If the timeout promise finishes first the execution promise is still running while it should be cancelled.
-    // Since the execution promise is cancellable and uses an abort controller we should add the timeout to the controller instead
-    const output = await Promise.race([timeoutPromise, executionPromise]) as {
-      request: Request;
-      environment: Record<string, any>;
-      baseEnvironment: Record<string, any>;
-      settings: Settings;
-      clientCertificates: ClientCertificate[];
-      cookieJar: CookieJar;
-      globals: Record<string, any>;
-    };
-    console.log('[network] script execution succeeded', output);
+    if ('error' in originalOutput) {
+      return { error: `Script executor returns error: ${originalOutput.error}` };
+    }
+    console.log('[network] script execution succeeded', originalOutput);
+
+    const output = originalOutput as RequestContext;
 
     const envPropertyOrder = orderedJSON.parse(
       JSON.stringify(output.environment.data),
@@ -343,8 +371,18 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
-      globals.data = output.globals;
+      globals.data = output.globals || {};
       globals.dataPropertyOrder = globalEnvPropertyOrder.map;
+    }
+
+    if (userUploadEnv) {
+      const userUploadEnvPropertyOrder = orderedJSON.parse(
+        JSON.stringify(output?.iterationData?.data || {}),
+        JSON_ORDER_PREFIX,
+        JSON_ORDER_SEPARATOR,
+      );
+      userUploadEnv.data = output?.iterationData?.data || {};
+      userUploadEnv.dataPropertyOrder = userUploadEnvPropertyOrder.map;
     }
 
     return {
@@ -355,6 +393,9 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       clientCertificates: output.clientCertificates,
       cookieJar: output.cookieJar,
       globals,
+      userUploadEnv,
+      requestTestResults: output.requestTestResults,
+      execution: output.execution,
     };
   } catch (err) {
     await fs.promises.appendFile(
@@ -373,7 +414,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     };
     const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
     models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
-    return null;
+    return { error: err };
   }
 };
 
@@ -385,23 +426,28 @@ interface RequestContextForScript {
   baseEnvironment: Environment;
   clientCertificates: ClientCertificate[];
   cookieJar: CookieJar;
+  ancestors: (Request | RequestGroup | Workspace | Project | MockRoute | MockServer)[];
   globals?: Environment; // there could be no global environment
+  settings: Settings;
 }
 
 type RequestAndContextAndResponse = RequestContextForScript & {
   response: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
+  iteration?: number;
+  iterationCount?: number;
 };
 
 type RequestAndContextAndOptionalResponse = RequestContextForScript & {
   script: string;
   response?: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
+  userUploadEnv?: UserUploadEnvironment;
+  iteration?: number;
+  iterationCount?: number;
+  eventName?: RequestContext['requestInfo']['eventName'];
 };
 
 export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
-  const requestGroups = await db.withAncestors<Request | RequestGroup>(context.request, [
-    models.requestGroup.type,
-  ]) as (Request | RequestGroup)[];
-
+  const requestGroups = context.ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
   const folderScripts = requestGroups.reverse()
     .filter(group => group?.afterResponseScript)
     .map((group, i) => `const fn${i} = async ()=>{
@@ -410,13 +456,18 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
       await fn${i}();
   `);
   if (folderScripts.length === 0) {
-    return context;
+    return {
+      ...context,
+      requestTestResults: new Array<RequestTestResult>(),
+    };
   }
   const joinedScript = [...folderScripts].join('\n');
-
-  const postMutatedContext = await tryToExecuteScript({ script: joinedScript, ...context });
-  if (!postMutatedContext?.request) {
-    return null;
+  const postMutatedContext = await tryToExecuteScript({ script: joinedScript, ...context, eventName: 'test' });
+  if (!postMutatedContext || 'error' in postMutatedContext) {
+    return {
+      error: `Execute after-response script failed: ${postMutatedContext?.error}`,
+      ...context,
+    };
   }
 
   // cookies from response should also be persisted
@@ -431,19 +482,30 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
   return postMutatedContext;
 }
 
-export const tryToInterpolateRequest = async (
-  request: Request,
-  environment: string | Environment,
-  purpose?: RenderPurpose,
-  extraInfo?: ExtraRenderInfo,
-  baseEnvironment?: Environment,
-  ignoreUndefinedEnvVariable?: boolean,
+export const tryToInterpolateRequest = async ({
+  request,
+  environment,
+  purpose,
+  extraInfo,
+  baseEnvironment,
+  userUploadEnv,
+  ignoreUndefinedEnvVariable,
+}: {
+  request: Request;
+  environment: string | Environment;
+  purpose?: RenderPurpose;
+  extraInfo?: ExtraRenderInfo;
+  baseEnvironment?: Environment;
+  userUploadEnv?: UserUploadEnvironment;
+  ignoreUndefinedEnvVariable?: boolean;
+}
 ) => {
   try {
     return await getRenderedRequestAndContext({
       request: request,
       environment,
       baseEnvironment,
+      userUploadEnv,
       purpose,
       extraInfo,
       ignoreUndefinedEnvVariable,

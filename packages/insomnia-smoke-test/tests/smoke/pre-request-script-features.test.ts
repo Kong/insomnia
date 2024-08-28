@@ -368,6 +368,10 @@ test.describe('pre-request features tests', async () => {
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
+        // close the alert modal
+        await page.getByRole('code').getByText('Error: Couldn\'t connect to').click();
+        await page.getByRole('button', { name: 'Ok', exact: true }).click();
+
         // verify
         await page.getByRole('tab', { name: 'Console' }).click();
         await expect(responsePane).toContainText('localhost:2222'); // original proxy
@@ -400,19 +404,19 @@ test.describe('pre-request features tests', async () => {
         await expect(responsePane).toContainText('fixtures/certificates/fake.pfx'); // original proxy
     });
 
-    test('insomnia.test and insomnia.expect can work together ', async ({ page }) => {
-        const responsePane = page.getByTestId('response-pane');
-
+    test('pre: insomnia.test and insomnia.expect can work together', async ({ page }) => {
         await page.getByLabel('Request Collection').getByTestId('insomnia.test').press('Enter');
 
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
         // verify
-        await page.getByRole('tab', { name: 'Console' }).click();
+        await page.getByRole('tab', { name: 'Tests' }).click();
 
-        await expect(responsePane).toContainText('✓ happy tests');
-        await expect(responsePane).toContainText('✕ unhappy tests: AssertionError: expected 199 to deeply equal 200');
+        const rows = page.getByTestId('test-result-row');
+        await expect(rows.first()).toContainText('PASS');
+        await expect(rows.nth(1)).toContainText('FAIL');
+        await expect(rows.nth(1)).toContainText('AssertionError:');
     });
 
     test('environment and baseEnvironment can be persisted', async ({ page }) => {

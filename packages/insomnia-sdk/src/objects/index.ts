@@ -8,3 +8,5 @@ export * from './cookies';
 export * from './console';
 export * from './request-info';
 export * from './async_objects';
+export * from './test';
+export * from './execution';
