@@ -16,6 +16,7 @@ import type { UserUploadEnvironment } from '../../models/environment';
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import type { ResponseInfo, RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
+import { cancelRequestById } from '../../network/cancellation';
 import { invariant } from '../../utils/invariant';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
@@ -31,7 +32,6 @@ import { ResponseTimelineViewer } from '../components/viewers/response-timeline-
 import { type RunnerSource, sendActionImp } from './request';
 import { useRootLoaderData } from './root';
 import type { Child, WorkspaceLoaderData } from './workspace';
-import { cancelRequestById } from '../../network/cancellation';
 
 const inputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
 const iterationInputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
