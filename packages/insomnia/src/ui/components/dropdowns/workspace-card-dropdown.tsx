@@ -112,13 +112,16 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           </Button>
         }
       >
-        <DropdownItem aria-label='Move'>
-          <ItemContent
-            label="Move"
-            icon="arrow-right-arrow-left"
-            onClick={() => setIsMoveModalOpen(true)}
-          />
-        </DropdownItem>
+        {/* Do not show move option for mock because mock url changes after move */}
+        {workspace.scope !== WorkspaceScopeKeys.mockServer && (
+          <DropdownItem aria-label='Move'>
+            <ItemContent
+              label="Move"
+              icon="arrow-right-arrow-left"
+              onClick={() => setIsMoveModalOpen(true)}
+            />
+          </DropdownItem>
+        )}
         <DropdownItem aria-label='Duplicate'>
           <ItemContent
             label="Duplicate"

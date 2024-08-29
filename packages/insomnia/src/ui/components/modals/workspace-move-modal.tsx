@@ -1,4 +1,4 @@
-import React, { type FC, useEffect, useRef, useState } from 'react';
+import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useParams } from 'react-router-dom';
 
@@ -10,6 +10,7 @@ import * as models from '../../../models/index';
 import type { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { useOrganizationLoaderData } from '../../routes/organization';
+import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '../../routes/project';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -18,6 +19,7 @@ import { Icon } from '../icon';
 
 interface WorkspaceMoveModalProps extends ModalProps {
   workspace: Workspace;
+  onHide: MouseEventHandler<HTMLButtonElement>;
 }
 
 export const WorkspaceMoveModal: FC<WorkspaceMoveModalProps> = ({ workspace, onHide }) => {
@@ -36,29 +38,35 @@ export const WorkspaceMoveModal: FC<WorkspaceMoveModalProps> = ({ workspace, onH
     })();
   }, [selectedOrgId]);
   const fetcher = useFetcher();
+
   const modalRef = useRef<ModalHandle>(null);
   useEffect(() => {
     modalRef.current?.show();
   }, []);
-  const formRef = useRef(null);
 
   return (
     <OverlayContainer onClick={e => e.stopPropagation()}>
       <Modal onHide={onHide} ref={modalRef}>
-        <ModalHeader>{`Move ${workspace && getWorkspaceLabel(workspace).singular}`}</ModalHeader>
+        <ModalHeader>Move file</ModalHeader>
         <ModalBody className="wide">
-          <p>You can move {getWorkspaceLabel(workspace).singular.toLowerCase()} {workspace.name} to a different location:</p>
+          <p className='mb-6'>You can move the following file to a different location:</p>
+          <div className="flex gap-2 px-[--padding-md] items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent">
+            <div className={`${scopeToBgColorMap[workspace.scope]} ${scopeToTextColorMap[workspace.scope]} px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
+              <Icon icon={scopeToIconMap[workspace.scope]} />
+            </div>
+            <span>{workspace.name}</span>
+            <span className='text-[--hl]'>{getWorkspaceLabel(workspace).singular}</span>
+          </div>
           <fetcher.Form
             action={`/organization/${organizationId}/project/${workspace.parentId}/workspace/${workspace._id}/move`}
             method='post'
             id="workspace-move-form"
             className="wide pad"
-            ref={formRef}
           >
             <input name="workspaceId" value={workspace._id} readOnly className="hidden" />
             <div className="form-control form-control--outlined">
               <label>
-                Select organization
+                Organization:
                 <select name="orgId" value={selectedOrgId} onChange={e => setSelectedOrgId(e.target.value)}>
                   {organizations.map(({ id, display_name }) => (
                     <option key={id} value={id}>
@@ -70,7 +78,7 @@ export const WorkspaceMoveModal: FC<WorkspaceMoveModalProps> = ({ workspace, onH
             </div>
             <div className="form-control form-control--outlined">
               <label>
-                {strings.project.singular} to move into
+                {strings.project.singular}:
                 <select name="projectId" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
                   {projectOptions.map(project => (
                     <option key={project._id} value={project._id}>
@@ -90,20 +98,34 @@ export const WorkspaceMoveModal: FC<WorkspaceMoveModalProps> = ({ workspace, onH
                 Cannot move into the same project
               </p>
             )}
+            {fetcher.data?.error && (
+              <p className="notice error margin-bottom-sm mt-6">
+                {fetcher.data.error}
+              </p>
+            )}
           </fetcher.Form>
         </ModalBody>
         <ModalFooter>
-          <button
-            disabled={
-              fetcher.state !== 'idle'
-              || selectedProjectId === currentProjectId
-              || !selectedProjectId
-            }
-            form="workspace-move-form"
-            className="btn"
-          >
-            {fetcher.state !== 'idle' && <Icon icon='spinner' className='animate-spin' />} Move
-          </button>
+          <div>
+            <button
+              type="button"
+              onClick={onHide}
+              className="btn btn--no-background"
+            >
+              Cancel
+            </button>
+            <button
+              disabled={
+                fetcher.state !== 'idle'
+                || selectedProjectId === currentProjectId
+                || !selectedProjectId
+              }
+              form="workspace-move-form"
+              className="btn"
+            >
+              {fetcher.state !== 'idle' && <Icon icon='spinner' className='animate-spin' />} Move
+            </button>
+          </div>
         </ModalFooter>
       </Modal>
     </OverlayContainer>

@@ -409,17 +409,10 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
 };
 
-async function deleteWorkspace(
-  workspace: Workspace | null,
-  project: Project | null,
-) {
-  invariant(workspace, 'Workspace not found');
-  invariant(project, 'Project not found');
-
+async function deleteWorkspaceFromCloud(workspace: Workspace, project: Project) {
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
   const isGitSync = !!workspaceMeta.gitRepositoryId;
 
-  // delete old workspace
   if (isRemoteProject(project) && !isGitSync) {
     try {
       const vcs = VCSInstance();
@@ -431,8 +424,29 @@ async function deleteWorkspace(
       };
     }
   }
+
+  return null;
+}
+
+async function deleteWorkspaceFromLocal(workspace: Workspace) {
   await models.stats.incrementDeletedRequestsForDescendents(workspace);
   await models.workspace.remove(workspace);
+}
+
+async function deleteWorkspace(
+  workspace: Workspace | null,
+  project: Project | null,
+) {
+  invariant(workspace, 'Workspace not found');
+  invariant(project, 'Project not found');
+
+  const ret = await deleteWorkspaceFromCloud(workspace, project);
+  if (ret?.error) {
+    return ret;
+  }
+
+  await deleteWorkspaceFromLocal(workspace);
+
   return null;
 }
 
@@ -557,16 +571,25 @@ export const moveWorkspaceAction: ActionFunction = async ({ request }) => {
 
   // Can not move workspace to the same project
   if (oldWorkspace?.parentId === newProjectId) {
-    throw new Error('Can not move workspace to the same project');
+    return {
+      error: 'Can not move workspace to the same project',
+    };
   }
-
-  const newProject = await models.project.getById(newProjectId) as Project;
-
-  duplicateWorkspace(oldWorkspace, newProject, oldWorkspace.name, true);
 
   const oldProject = await models.project.getById(oldWorkspace.parentId) as Project;
 
-  await deleteWorkspace(oldWorkspace, oldProject);
+  // first try to delete the workspace from the cloud, current user may not have permission to delete the workspace
+  const ret = await deleteWorkspaceFromCloud(oldWorkspace, oldProject);
+  if (ret?.error) {
+    return ret;
+  }
+
+  // then duplicate the workspace to the new project
+  const newProject = await models.project.getById(newProjectId) as Project;
+  await duplicateWorkspace(oldWorkspace, newProject, oldWorkspace.name, true);
+
+  // finally delete the workspace from local
+  await deleteWorkspaceFromLocal(oldWorkspace);
 
   return redirect(`/organization/${newOrgId}/project/${newProjectId}`);
 };

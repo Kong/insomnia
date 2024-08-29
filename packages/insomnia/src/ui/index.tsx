@@ -1149,8 +1149,6 @@ async function renderApp() {
 
   // Store the last location in local storage
   router.subscribe(({ location, navigation }) => {
-    // use this line to debug navigation, just leave it here commented out
-    // console.log('navigating', location.pathname, navigation.location?.pathname);
     const match = matchPath(
       {
         path: '/organization/:organizationId',
