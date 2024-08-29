@@ -161,7 +161,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       if (requestFileDescriptor && responseBodyPath) {
         closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath);
       }
-      curl.close();
+      curl.isOpen && curl.close();
     };
 
     // set up response writer
@@ -211,7 +211,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
         elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000,
         url: curl.getInfo(Curl.info.EFFECTIVE_URL) as string,
       };
-      curl.close();
+      curl.isOpen && curl.close();
       await waitForStreamToFinish(responseBodyWriteStream);
 
       const headerResults = _parseHeaders(rawHeaders);
@@ -221,7 +221,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.on('error', () => responseBodyWriteStream.end());
     curl.on('error', async (err, code) => {
       const elapsedTime = curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000;
-      curl.close();
+      curl.isOpen && curl.close();
       await waitForStreamToFinish(responseBodyWriteStream);
 
       let error = err + '';
