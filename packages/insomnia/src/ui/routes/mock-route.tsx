@@ -283,6 +283,7 @@ export const MockRouteRoute = () => {
           </TabPanel>
           <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='headers'>
             <MockResponseHeadersEditor
+              key={mockRoute._id + mockRoute.name}
               onBlur={onBlurTriggerUpsert}
               bulk={false}
             />
@@ -294,6 +295,7 @@ export const MockRouteRoute = () => {
                   <label htmlFor="mock-response-status-code-editor">
                     <small>Status Code</small>
                     <input
+                      key={mockRoute._id + mockRoute.name}
                       id="mock-response-status-code-editor"
                       type="number"
                       defaultValue={mockRoute.statusCode}
@@ -309,6 +311,7 @@ export const MockRouteRoute = () => {
                   <label htmlFor="mock-response-status-text-editor">
                     <small>Status Text</small>
                     <input
+                      key={mockRoute._id + mockRoute.name}
                       id="mock-response-status-text-editor"
                       type="string"
                       defaultValue={mockRoute.statusText}
