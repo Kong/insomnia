@@ -343,7 +343,7 @@ const closeCurlConnection = (
   }
 };
 
-const closeAllCurlConnections = (): void => CurlConnections.forEach(curl => curl.close());
+const closeAllCurlConnections = (): void => CurlConnections.forEach(curl => curl.isOpen && curl.close());
 
 const findMany = async (
   options: { responseId: string }
