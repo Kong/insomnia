@@ -1,6 +1,5 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     electron-31-nixpkgs.url = "github:nixos/nixpkgs/a04eac9c5aa7f82e02d6e9e0b203b6eb5704c141";
     node-20-16-nixpkgs.url = "github:nixos/nixpkgs/8a977702729f2d763adc3e214513d517dcb94d9b";
   };
