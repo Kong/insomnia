@@ -181,6 +181,7 @@ export const TagEditor: FC<Props> = props => {
     if (event.currentTarget.type === 'number') {
       return updateArg(parseFloat(event.currentTarget.value), argIndex);
     } else if (event.currentTarget.type === 'checkbox') {
+      // @ts-expect-error -- TSCONVERSION .checked doesn't exist on HTMLSelectElement
       return updateArg(event.currentTarget.checked, argIndex);
     } else {
       return updateArg(event.currentTarget.value, argIndex);
