@@ -106,11 +106,12 @@ export const MockResponseExtractor = () => {
               onComplete: async name => {
                 invariant(activeResponse, 'Active response must be defined');
                 const body = await fs.readFile(activeResponse.bodyPath);
-                const hasRouteInServer = mockServerAndRoutes.find(s => s._id === selectedMockServer)?.routes.find(r => r.name === name);
+                const hasRouteInServer = mockServerAndRoutes.find(s => s._id === selectedMockServer)?.routes
+                  .find(r => r.name === name && r.method.toUpperCase() === 'GET');
                 if (hasRouteInServer) {
                   showModal(AlertModal, {
                     title: 'Error',
-                    message: `Path "${name}" must be unique. Please enter a different name.`,
+                    message: `Path "${name}" and method must be unique. Please enter a different name.`,
                   });
                   return;
                 };
