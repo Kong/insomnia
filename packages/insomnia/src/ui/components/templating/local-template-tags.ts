@@ -621,9 +621,6 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             } else {
               // if either global environment or collection environment changed, resend the request
               shouldResend = response.environmentId !== environmentId || response.globalEnvironmentId !== globalEnvironmentId;
-              if (shouldResend) {
-                console.log('resend due to env change');
-              }
             }
             break;
 
@@ -632,7 +629,6 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
               shouldResend = true;
             } else if (response.environmentId !== environmentId || response.globalEnvironmentId !== globalEnvironmentId) {
               // if either global environment or collection environment changed, resend the request
-              console.log('resend due to env change');
               shouldResend = true;
             } else {
               const ageSeconds = (Date.now() - response.created) / 1000;
