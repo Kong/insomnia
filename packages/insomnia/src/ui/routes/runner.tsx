@@ -21,7 +21,6 @@ import { invariant } from '../../utils/invariant';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
 import { Icon } from '../components/icon';
-import { showAlert } from '../components/modals';
 import { UploadDataModal, type UploadDataType } from '../components/modals/upload-runner-data-modal';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { RunnerResultHistoryPane } from '../components/panes/runner-result-history-pane';
@@ -37,56 +36,92 @@ const inputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-sm border
 const iterationInputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
 
 // TODO: improve the performance for a lot of logs
-async function aggregateAllTimelines(testResult: RunnerTestResult) {
-  const responsesInfo = testResult.responsesInfo;
+async function aggregateAllTimelines(errorMsg: string | null, testResult: RunnerTestResult) {
   let timelines = new Array<ResponseTimelineEntry>();
 
-  for (let i = 0; i < responsesInfo.length; i++) {
-    const respInfo = responsesInfo[i];
-    const resp = await models.response.getById(respInfo.responseId);
-    if (resp) {
-      const timeline = models.response.getTimeline(resp, true) as unknown as ResponseTimelineEntry[];
-      timelines = [
-        ...timelines,
-        {
-          value: `------ Start of request (${respInfo.originalRequestName}) ------\n\n\n`,
-          name: 'Text',
-          timestamp: Date.now(),
-        },
-        ...timeline,
-      ];
-    } else {
-      console.error(`failed to read response for the request ${respInfo.originalRequestName}`);
+  if (errorMsg) {
+    timelines = [
+      {
+        value: errorMsg,
+        name: 'Text',
+        timestamp: Date.now(),
+      },
+    ];
+  } else {
+    const responsesInfo = testResult.responsesInfo;
+
+    for (let i = 0; i < responsesInfo.length; i++) {
+      const respInfo = responsesInfo[i];
+      const resp = await models.response.getById(respInfo.responseId);
+
+      if (resp) {
+        const timeline = models.response.getTimeline(resp, true) as unknown as ResponseTimelineEntry[];
+        timelines = [
+          ...timelines,
+          {
+            value: `------ Start of request (${respInfo.originalRequestName}) ------\n\n\n`,
+            name: 'Text',
+            timestamp: Date.now(),
+          },
+          ...timeline,
+        ];
+      } else {
+        console.error(`failed to read response for the request ${respInfo.originalRequestName}`);
+      }
     }
   }
 
   return timelines;
 }
 
+interface RunnerSettings {
+  iterations: number;
+  delay: number;
+  iterationData: UploadDataType[];
+  file: File | null;
+}
+
+let tempRunnerSettings: RunnerSettings = {
+  iterations: 1,
+  delay: 0,
+  iterationData: [],
+  file: null,
+};
+
+function getTempRunnerSettings(): RunnerSettings | undefined {
+  return tempRunnerSettings;
+}
+
+function updateTempRunnerSettings(settings: Partial<RunnerSettings>) {
+  tempRunnerSettings = {
+    ...tempRunnerSettings,
+    ...settings,
+  };
+}
+
 export const Runner: FC<{}> = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [shouldRefresh, setShouldRefresh] = useState(false);
-  if (searchParams.has('refresh-pane')) {
-    setShouldRefresh(true);
-    // clean up params
-    searchParams.delete('refresh-pane');
+  const [errorMsg, setErrorMsg] = useState<null | string>(null);
+
+  if (searchParams.has('refresh-pane') || searchParams.has('error')) {
+    if (searchParams.has('refresh-pane')) {
+      setShouldRefresh(true);
+      searchParams.delete('refresh-pane');
+    }
+    if (searchParams.has('error')) {
+      setErrorMsg(searchParams.get('error'));
+      searchParams.delete('error');
+    }
+
     setSearchParams({});
   }
-  if (searchParams.has('error')) {
-    showAlert({
-      title: 'Unexpected Runner Failure',
-      message: (
-        <div>
-          <p>The runner failed due to an unhandled error:</p>
-          <code className="wide selectable">
-            <pre>{searchParams.get('error')}</pre>
-          </code>
-        </div>
-      ),
-    });
-    searchParams.delete('error');
-    setSearchParams({});
-  }
+
+  const tempRunnerSettings = getTempRunnerSettings();
+  const [iterations, setIterations] = useState(tempRunnerSettings?.iterations || 1);
+  const [delay, setDelay] = useState(tempRunnerSettings?.delay || 0);
+  const [uploadData, setUploadData] = useState<UploadDataType[]>(tempRunnerSettings?.iterationData || []);
+  const [file, setFile] = useState<File | null>(tempRunnerSettings?.file || null);
 
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
@@ -96,8 +131,6 @@ export const Runner: FC<{}> = () => {
   };
   const { settings } = useRootLoaderData();
   const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const [file, setFile] = useState<File | null>(null);
-  const [uploadData, setUploadData] = useState<UploadDataType[]>([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
 
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
@@ -122,8 +155,6 @@ export const Runner: FC<{}> = () => {
     }
   }, [settings.forceVerticalLayout, direction]);
 
-  const [iterations, setIterations] = useState(1);
-  const [delay, setDelay] = useState(0);
   const getEntityById = new Map<string, Child>();
   const requestRows = collection
     .filter(item => {
@@ -258,7 +289,10 @@ export const Runner: FC<{}> = () => {
   useEffect(() => {
     if (uploadData.length >= 1) {
       // update iteration number from upload data length
-      setIterations(uploadData.length);
+      setIterations(uploadData.length); // also update the localStorage
+      updateTempRunnerSettings({
+        iterations: uploadData.length,
+      });
     }
   }, [uploadData]);
 
@@ -281,12 +315,12 @@ export const Runner: FC<{}> = () => {
   useEffect(() => {
     const refreshTimeline = async () => {
       if (executionResult) {
-        const mergedTimelines = await aggregateAllTimelines(executionResult);
+        const mergedTimelines = await aggregateAllTimelines(errorMsg, executionResult);
         setTimelines(mergedTimelines);
       }
     };
     refreshTimeline();
-  }, [executionResult]);
+  }, [executionResult, errorMsg]);
 
   useInterval(() => {
     const refreshPanes = async () => {
@@ -368,53 +402,79 @@ export const Runner: FC<{}> = () => {
               <Pane type="request">
                 <PaneHeader>
                   <Heading className="flex items-center w-full h-[--line-height-sm] pl-[--padding-md]">
-                    <div className="w-full h-full text-left min-w-[400px]">
-                      <span className="mr-6 text-sm">
-                        <input
-                          value={iterations}
-                          name='Iterations'
-                          disabled={isRunning}
-                          onChange={e => {
-                            try {
-                              const iterCount = parseInt(e.target.value, 10);
-                              if (iterCount > 0) {
-                                setIterations(iterCount);
+                    <div className="w-full h-full text-left overflow-hidden">
+                      <div className="h-full min-w-[500px]">
+                        <span className="mr-6 text-sm">
+                          <input
+                            value={iterations}
+                            name='Iterations'
+                            disabled={isRunning}
+                            onChange={e => {
+                              try {
+                                const iterCount = parseInt(e.target.value, 10);
+                                if (iterCount > 0) {
+                                  setIterations(iterCount); // also update the localStorage
+                                  updateTempRunnerSettings({
+                                    iterations: iterCount,
+                                  });
+                                }
+                              } catch (ex) {
+                                // no op
                               }
-                            } catch (ex) {
-                              // no op
-                            }
-                          }}
-                          type='number'
-                          className={iterationInputStyle}
-                        />
-                        <span className="border">Iterations</span>
-                      </span>
-                      <span className="mr-6 text-sm">
-                        <input
-                          value={delay}
-                          disabled={isRunning}
-                          name='Delay'
-                          onChange={e => {
-                            try {
-                              const delay = parseInt(e.target.value, 10);
-                              if (delay >= 0) {
-                                setDelay(delay);
+                            }}
+                            type='number'
+                            className={iterationInputStyle}
+                          />
+                          <span className="border">Iterations</span>
+                        </span>
+                        <span className="mr-6 text-sm">
+                          <input
+                            value={delay}
+                            disabled={isRunning}
+                            name='Delay'
+                            onChange={e => {
+                              try {
+                                const delay = parseInt(e.target.value, 10);
+                                if (delay >= 0) {
+                                  setDelay(delay); // also update the localStorage
+                                  updateTempRunnerSettings({
+                                    delay: delay,
+                                  });
+                                }
+                              } catch (ex) {
+                                // no op
                               }
-                            } catch (ex) {
-                              // no op
-                            }
+                            }}
+                            type='number'
+                            className={inputStyle}
+                          />
+                          <span className="mr-1 border">Delay (ms)</span>
+                        </span>
+                        <Button
+                          onPress={() => setShowUploadModal(true)}
+                          className="py-0.5 px-1 border-[--hl-sm] h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ring-1 ring-transparent transition-all text-sm mr-6"
+                          isDisabled={isRunning}
+                        >
+                          <Icon icon={file ? 'eye' : 'upload'} /> {file ? 'View Data' : 'Upload Data'}
+                        </Button>
+                        <Button
+                          onPress={() => {
+                            updateTempRunnerSettings({
+                              iterations: 1,
+                              delay: 0,
+                              iterationData: [],
+                            });
+                            setIterations(1);
+                            setDelay(0);
+                            setUploadData([]);
+                            setFile(null);
                           }}
-                          type='number'
-                          className={inputStyle}
-                        />
-                        <span className="mr-1 border">Delay (ms)</span>
-                      </span>
-                      <Button
-                        onPress={() => setShowUploadModal(true)}
-                        className="py-0.5 px-1 border-[--hl-sm] h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ring-1 ring-transparent transition-all text-sm"
-                      >
-                        <Icon icon={file ? 'eye' : 'upload'} /> {file ? 'View Data' : 'Upload Data'}
-                      </Button>
+                          className="py-0.5 px-1 border-[--hl-sm] h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ring-1 ring-transparent transition-all text-sm"
+                          isDisabled={isRunning}
+                        >
+                          <Icon icon="rotate-right" /> Reset
+                        </Button>
+                      </div>
                     </div>
                     <div className="w-[100px]">
                       <button
@@ -586,7 +646,11 @@ export const Runner: FC<{}> = () => {
                   <UploadDataModal
                     onUploadFile={(file, uploadData) => {
                       setFile(file);
-                      setUploadData(uploadData);
+                      setUploadData(uploadData); // also update the localstorage
+                      updateTempRunnerSettings({
+                        iterationData: uploadData,
+                        file,
+                      });
                     }}
                     userUploadData={uploadData}
                     onClose={() => setShowUploadModal(false)}
@@ -723,10 +787,10 @@ function getExecution(workspaceId: string) {
 }
 
 function cancelExecution(workspaceId: string) {
-  const activeRequest = getExecution(workspaceId);
-  if (activeRequest) {
-    // TODO: should also try to cancel the request but the cancellation is not idempotent
-    cancelRequestById(activeRequest);
+  const activeRequestId = getExecution(workspaceId);
+  if (activeRequestId) {
+    cancelRequestById(activeRequestId);
+    window.main.completeExecutionStep({ requestId: activeRequestId });
     window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
     window.main.completeExecutionStep({ requestId: workspaceId });
     stopExecution(workspaceId);
@@ -874,10 +938,11 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     window.main.completeExecutionStep({ requestId: workspaceId });
   } catch (e) {
     // the error could be from third party
-    cancelExecution(workspaceId);
     const errMsg = encodeURIComponent(e.error || e);
     return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane&error=${errMsg}`);
   } finally {
+    cancelExecution(workspaceId);
+
     await models.runnerTestResult.create({
       parentId: workspaceId,
       source: testCtx.source,
@@ -888,8 +953,6 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       iterationResults: testCtx.iterationResults,
       responsesInfo: testCtx.responsesInfo,
     });
-
-    // cancelExecution(workspaceId);
   }
 
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane`);
