@@ -29,19 +29,19 @@
         "type": "indirect"
       }
     },
-    "node-20-16-nixpkgs": {
+    "nixpkgs-unstable": {
       "locked": {
-        "lastModified": 1723649821,
-        "narHash": "sha256-1NHEc1dRGObdqqc4hXLIN3J62U68lOv/stpDvrLPzxY=",
+        "lastModified": 1725194671,
+        "narHash": "sha256-tLGCFEFTB5TaOKkpfw3iYT9dnk4awTP/q4w+ROpMfuw=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "8a977702729f2d763adc3e214513d517dcb94d9b",
+        "rev": "b833ff01a0d694b910daca6e2ff4a3f26dee478c",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
+        "ref": "nixpkgs-unstable",
         "repo": "nixpkgs",
-        "rev": "8a977702729f2d763adc3e214513d517dcb94d9b",
         "type": "github"
       }
     },
@@ -49,7 +49,7 @@
       "inputs": {
         "electron-31-nixpkgs": "electron-31-nixpkgs",
         "nixpkgs": "nixpkgs",
-        "node-20-16-nixpkgs": "node-20-16-nixpkgs"
+        "nixpkgs-unstable": "nixpkgs-unstable"
       }
     }
   },
