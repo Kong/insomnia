@@ -478,6 +478,7 @@ export async function getRenderContext(
       return p ? p.value : null;
     },
     getEnvironmentId: () => subEnvironmentId,
+    getGlobalEnvironmentId: () => subGlobalEnvironment?._id || rootGlobalEnvironment?._id,
     // It is possible for a project to not exist because this code path can be reached via Inso which has no concept of a project.
     getProjectId: () => project?._id,
   };
@@ -499,6 +500,7 @@ interface BaseRenderContext {
   getPurpose: () => string | undefined;
   getExtraInfo: (key: string) => string | null;
   getEnvironmentId: () => string | undefined;
+  getGlobalEnvironmentId: () => string | undefined;
   getProjectId: () => string | undefined;
 }
 interface RenderGrpcRequestOptions extends BaseRenderContextOptions, RenderRequest<GrpcRequest> {

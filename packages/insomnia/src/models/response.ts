@@ -28,6 +28,7 @@ export type Compression = 'zip' | null | '__NEEDS_MIGRATION__' | undefined;
 
 export interface BaseResponse {
   environmentId: string | null;
+  globalEnvironmentId: string | null;
   statusCode: number;
   statusMessage: string;
   httpVersion: string;
@@ -83,6 +84,7 @@ export function init(): BaseResponse {
     // so they don't show up at all when filtering is on.
     environmentId: '__LEGACY__',
     requestTestResults: [],
+    globalEnvironmentId: null,
   };
 }
 
