@@ -173,6 +173,9 @@ const HistoryViewWrapperComponentFactory = ({ mockServer, mockRoute }: { mockSer
         origin: mockbinUrl,
         path: `/bin/log/${compoundId}`,
         method: 'GET',
+        headers: {
+          'insomnia-mock-method': mockRoute.method,
+        },
         sessionId: userSession.id,
       });
       if (res?.log) {
@@ -184,7 +187,7 @@ const HistoryViewWrapperComponentFactory = ({ mockServer, mockRoute }: { mockSer
       // network erros will be managed by the upsert trigger, so we can ignore them here
       console.log({ mockbinUrl, e });
     }
-  }, [mockRoute.name, mockRoute.parentId, mockServer.url, mockServer.useInsomniaCloud, userSession.id]);
+  }, [mockRoute.method, mockRoute.name, mockRoute.parentId, mockServer.url, mockServer.useInsomniaCloud, userSession.id]);
   // refetches logs whenever the path changes, or a response is recieved, or tenseconds elapses or history tab is click
   // chatgpt: answer my called
   useInterval(() => {
