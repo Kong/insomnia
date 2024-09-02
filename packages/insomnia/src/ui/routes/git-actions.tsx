@@ -352,7 +352,7 @@ export const canPushLoader: LoaderFunction = async ({ params }): Promise<GitCanP
   try {
     canPush = await GitVCS.canPush(gitRepository.credentials);
     // update workspace meta with git sync data, use for show unpushed changes on collection card
-    models.workspaceMeta.update(workspaceMeta, {
+    models.workspaceMeta.updateByParentId(workspaceId, {
       hasUnpushedChanges: canPush,
     });
   } catch (err) { }
