@@ -26,6 +26,21 @@ export interface UploadDataModalProps {
 const rowHeaderStyle = 'sticky normal-case top-[-8px] p-2 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none';
 const rowCellStyle = 'whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none';
 
+export const genPreviewTableData = (uploadData: UploadDataType[]) => {
+  // generate header and body data for preview table from upload data
+  let dataHeaders: Set<string> = new Set();
+  const filteredUploadData: UploadDataType[] = [];
+  uploadData.forEach(data => {
+    // filter none object value in json array
+    if (data && typeof data === 'object' && !Array.isArray(data) && data !== null) {
+      filteredUploadData.push(data);
+      // add unique json data keys into jsonDataHeader
+      dataHeaders = new Set([...dataHeaders, ...Object.keys(data)]);
+    }
+  });
+  return { data: filteredUploadData, headers: Array.from(dataHeaders) };
+};
+
 export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: UploadDataModalProps) => {
   const [file, setUploadFile] = useState<File | null>(null);
   const [uploadDataHeaders, setUploadDataHeaders] = useState<string[]>([]);
@@ -48,7 +63,13 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
         try {
           const jsonDataContent = JSON.parse(content);
           if (Array.isArray(jsonDataContent)) {
-            genPreviewTableData(jsonDataContent);
+            const { data, headers } = genPreviewTableData(jsonDataContent);
+            if (headers.length > 0 && data.length > 0) {
+              setUploadDataHeaders(headers);
+              setUploadData(data);
+            } else {
+              setInvalidFileReason('Invalid JSON file uploaded, JSON file do not contain any key-value pair.');
+            }
           } else {
             setInvalidFileReason('Invalid JSON file uploaded, JSON file must be array of key-value pairs.');
           }
@@ -80,22 +101,6 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
     reader.readAsText(file);
   };
 
-  const genPreviewTableData = (uploadData: UploadDataType[]) => {
-    // generate header and body data for preview table from upload data
-    let dataHeaders: Set<string> = new Set();
-    const filteredUploadData: UploadDataType[] = [];
-    uploadData.forEach(data => {
-      // filter none object value in json array
-      if (data && typeof data === 'object' && !Array.isArray(data) && data !== null) {
-        filteredUploadData.push(data);
-        // add unique json data keys into jsonDataHeader
-        dataHeaders = new Set([...dataHeaders, ...Object.keys(data)]);
-      }
-    });
-    setUploadDataHeaders(Array.from(dataHeaders));
-    setUploadData(filteredUploadData);
-  };
-
   const handleUploadData = () => {
     if (file && uploadData.length >= 1) {
       onUploadFile(file, uploadData);
@@ -110,8 +115,10 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
 
   useEffect(() => {
     if (userUploadData.length > 0) {
-      genPreviewTableData(userUploadData);
-    }
+      const { data, headers } = genPreviewTableData(userUploadData);
+      setUploadDataHeaders(headers);
+      setUploadData(data);
+    };
   }, [userUploadData]);
 
   return (
@@ -160,7 +167,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
                   <p>{invalidFileReason}</p>
                 </div>
               }
-              {uploadData.length > 1 &&
+              {uploadData.length > 0 &&
                 <div className='overflow-auto py-2 flex-1'>
                   <Heading className='text-xl margin-bottom-sm'>Data Preview</Heading>
                   <Table
