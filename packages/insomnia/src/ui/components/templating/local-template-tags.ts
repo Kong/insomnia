@@ -611,8 +611,6 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         const environmentId = context.context.getEnvironmentId?.() || null;
         const globalEnvironmentId = context.context.getGlobalEnvironmentId?.() || null;
         let response: Response = await context.util.models.response.getLatestForRequestId(id, environmentId);
-        console.log(`current env ${environmentId} current global env ${globalEnvironmentId}`);
-        console.log(`response env ${response?.environmentId} response global env ${response?.globalEnvironmentId}`);
 
         switch (resendBehavior) {
           case 'no-history':
