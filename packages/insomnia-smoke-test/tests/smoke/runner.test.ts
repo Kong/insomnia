@@ -1,6 +1,6 @@
-import { expect } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
-import { loadFixture } from '../../playwright/paths';
+import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';;
 
 test.describe('runner features tests', async () => {
@@ -17,6 +17,41 @@ test.describe('runner features tests', async () => {
 
         await page.getByLabel('Runner').click();
     });
+
+    const verifyResultRows = async (
+        page: Page,
+        expectedPassed: number,
+        expectedSkipped: number,
+        expectedTotal: number,
+        expectedTestOrder: string[],
+        iteration: number = 1,
+    ) => {
+        let passedResultCount = 0;
+        let failedResultCount = 0;
+        let skippedResultCount = 0;
+
+        const testResults = page.getByTestId(`runner-test-result-iteration-${iteration}`).getByTestId('test-result-row');
+        const testResultCount = await testResults.count();
+
+        for (let i = 0; i < testResultCount; i++) {
+            const resultMsg = await testResults.nth(i).textContent();
+            if (resultMsg?.startsWith('PASS')) {
+                passedResultCount++;
+            }
+            if (resultMsg?.startsWith('FAIL')) {
+                failedResultCount++;
+            }
+            if (resultMsg?.startsWith('SKIP')) {
+                skippedResultCount++;
+            }
+
+            const expectedResultText = expectedTestOrder[i];
+            expect(resultMsg).toContain(expectedResultText);
+        }
+        expect(passedResultCount).toEqual(expectedPassed);
+        expect(skippedResultCount).toEqual(expectedSkipped);
+        expect(passedResultCount + failedResultCount + skippedResultCount).toEqual(expectedTotal);
+    };
 
     test('run collection runner', async ({ page }) => {
         await page.getByTestId('run-collection-btn-quick').click();
@@ -59,39 +94,45 @@ test.describe('runner features tests', async () => {
             'req2-post-check',
         ];
 
-        const verifyResultRows = async (
-            expectedPassed: number,
-            expectedSkipped: number,
-            expectedTotal: number,
-            expectedTestOrder: string[],
-        ) => {
-            let passedResultCount = 0;
-            let failedResultCount = 0;
-            let skippedResultCount = 0;
+        await verifyResultRows(page, 6, 1, 8, expectedTestOrder);
+    });
 
-            const testResults = page.getByTestId('test-result-row');
-            const testResultCount = await testResults.count();
+    test('run collection runner with data upload', async ({ page }) => {
+        await page.getByTestId('run-collection-btn-quick').click();
 
-            for (let i = 0; i < testResultCount; i++) {
-                const resultMsg = await testResults.nth(i).textContent();
-                if (resultMsg?.startsWith('PASS')) {
-                    passedResultCount++;
-                }
-                if (resultMsg?.startsWith('FAIL')) {
-                    failedResultCount++;
-                }
-                if (resultMsg?.startsWith('SKIP')) {
-                    skippedResultCount++;
-                }
+        // upload data
+        await page.getByText('Upload Data').click();
+        const uploadDataPath = getFixturePath('files/runner-data.json');
+        const fileChooserPromise = page.waitForEvent('filechooser');
+        await page.getByText('Select Data File').click();
+        const fileChooser = await fileChooserPromise;
+        await fileChooser.setFiles(uploadDataPath);
+        await page.getByRole('dialog').getByText('Upload').click();
+        // check iteration number match json data length
+        expect(await page.locator('input[name="Iterations"]').inputValue()).toBe('2');
 
-                const expectedResultText = expectedTestOrder[i];
-                expect(resultMsg).toContain(expectedResultText);
-            }
+        // select requests to test
+        await page.locator('text=Select All').click();
 
-            expect(passedResultCount).toEqual(expectedPassed);
-            expect(skippedResultCount).toEqual(expectedSkipped);
-            expect(passedResultCount + failedResultCount + skippedResultCount).toEqual(expectedTotal);
-        };
-        await verifyResultRows(6, 1, 8, expectedTestOrder);
+        // send
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
+        // check result
+        await page.getByText('ITERATIONS 1').click();
+        for (let i = 1; i <= 2; i++) {
+            const testId = `runner-test-result-iteration-${i}`;
+            const iterationTestResultElement = page.getByTestId(testId);
+            expect(iterationTestResultElement).toBeVisible();
+            // req2 should be skipped from pre-request script
+            expect(iterationTestResultElement).not.toContainText('req2');
+        }
+        await verifyResultRows(page, 4, 1, 6, [
+            'folder-pre-check',
+            'req1-pre-check',
+            'req1-pre-check-skipped',
+            'folder-post-check',
+            'req1-post-check',
+            'expected 200 to deeply equal 201',
+        ]);
+
     });
 });
