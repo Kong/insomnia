@@ -59,14 +59,20 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
         timelines = [
           ...timelines,
           {
-            value: `------ Start of request (${respInfo.originalRequestName}) ------\n\n\n`,
+            value: `------ Start of request (${respInfo.originalRequestName}) ------`,
             name: 'Text',
             timestamp: Date.now(),
           },
           ...timeline,
         ];
       } else {
-        console.error(`failed to read response for the request ${respInfo.originalRequestName}`);
+        timelines = [
+          {
+            value: `failed to read response for the request ${respInfo.originalRequestName}`,
+            name: 'Text',
+            timestamp: Date.now(),
+          },
+        ];
       }
     }
   }
@@ -81,23 +87,13 @@ interface RunnerSettings {
   file: File | null;
 }
 
+// TODO: remove this when the suite management is introduced
 let tempRunnerSettings: RunnerSettings = {
   iterations: 1,
   delay: 0,
   iterationData: [],
   file: null,
 };
-
-function getTempRunnerSettings(): RunnerSettings | undefined {
-  return tempRunnerSettings;
-}
-
-function updateTempRunnerSettings(settings: Partial<RunnerSettings>) {
-  tempRunnerSettings = {
-    ...tempRunnerSettings,
-    ...settings,
-  };
-}
 
 export const Runner: FC<{}> = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -117,7 +113,6 @@ export const Runner: FC<{}> = () => {
     setSearchParams({});
   }
 
-  const tempRunnerSettings = getTempRunnerSettings();
   const [iterations, setIterations] = useState(tempRunnerSettings?.iterations || 1);
   const [delay, setDelay] = useState(tempRunnerSettings?.delay || 0);
   const [uploadData, setUploadData] = useState<UploadDataType[]>(tempRunnerSettings?.iterationData || []);
@@ -289,10 +284,11 @@ export const Runner: FC<{}> = () => {
   useEffect(() => {
     if (uploadData.length >= 1) {
       // update iteration number from upload data length
-      setIterations(uploadData.length); // also update the localStorage
-      updateTempRunnerSettings({
+      setIterations(uploadData.length); // also update the temp settings
+      tempRunnerSettings = {
+        ...tempRunnerSettings,
         iterations: uploadData.length,
-      });
+      };
     }
   }, [uploadData]);
 
@@ -413,10 +409,11 @@ export const Runner: FC<{}> = () => {
                               try {
                                 const iterCount = parseInt(e.target.value, 10);
                                 if (iterCount > 0) {
-                                  setIterations(iterCount); // also update the localStorage
-                                  updateTempRunnerSettings({
+                                  setIterations(iterCount); // also update the temp settings
+                                  tempRunnerSettings = {
+                                    ...tempRunnerSettings,
                                     iterations: iterCount,
-                                  });
+                                  };
                                 }
                               } catch (ex) {
                                 // no op
@@ -436,10 +433,11 @@ export const Runner: FC<{}> = () => {
                               try {
                                 const delay = parseInt(e.target.value, 10);
                                 if (delay >= 0) {
-                                  setDelay(delay); // also update the localStorage
-                                  updateTempRunnerSettings({
-                                    delay: delay,
-                                  });
+                                  setDelay(delay); // also update the temp settings
+                                  tempRunnerSettings = {
+                                    ...tempRunnerSettings,
+                                    delay,
+                                  };
                                 }
                               } catch (ex) {
                                 // no op
@@ -459,11 +457,12 @@ export const Runner: FC<{}> = () => {
                         </Button>
                         <Button
                           onPress={() => {
-                            updateTempRunnerSettings({
+                            tempRunnerSettings = {
                               iterations: 1,
                               delay: 0,
                               iterationData: [],
-                            });
+                              file: null,
+                            };
                             setIterations(1);
                             setDelay(0);
                             setUploadData([]);
@@ -646,11 +645,12 @@ export const Runner: FC<{}> = () => {
                   <UploadDataModal
                     onUploadFile={(file, uploadData) => {
                       setFile(file);
-                      setUploadData(uploadData); // also update the localstorage
-                      updateTempRunnerSettings({
+                      setUploadData(uploadData); // also update the temp settings
+                      tempRunnerSettings = {
+                        ...tempRunnerSettings,
                         iterationData: uploadData,
                         file,
-                      });
+                      };
                     }}
                     userUploadData={uploadData}
                     onClose={() => setShowUploadModal(false)}
