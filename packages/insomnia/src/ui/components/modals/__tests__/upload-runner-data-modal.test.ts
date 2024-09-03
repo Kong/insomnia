@@ -44,6 +44,7 @@ describe('test generate table preview data ', () => {
         'value': 'value0',
       },
       'invalid',
+      undefined,
       [1, 2, 3],
       null,
     ];
@@ -62,6 +63,7 @@ describe('test generate table preview data ', () => {
     const uploadData = [
       'invalid',
       [1, 2, 3],
+      undefined,
       null,
     ];
     // @ts-expect-error test inalid input
