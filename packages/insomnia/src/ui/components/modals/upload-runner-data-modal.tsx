@@ -28,17 +28,17 @@ const rowCellStyle = 'whitespace-nowrap text-sm font-medium border-b border-soli
 
 export const genPreviewTableData = (uploadData: UploadDataType[]) => {
   // generate header and body data for preview table from upload data
-  let dataHeaders: Set<string> = new Set();
-  const filteredUploadData: UploadDataType[] = [];
-  uploadData.forEach(data => {
-    // filter none object value in json array
-    if (data && typeof data === 'object' && !Array.isArray(data) && data !== null) {
-      filteredUploadData.push(data);
-      // add unique json data keys into jsonDataHeader
-      dataHeaders = new Set([...dataHeaders, ...Object.keys(data)]);
+  let dataHeaders: string[] = [];
+  const filteredUploadData: UploadDataType[] = uploadData.filter(data => {
+    const isObjectData = data && typeof data === 'object' && !Array.isArray(data) && data !== null;
+    if (isObjectData) {
+      dataHeaders = dataHeaders.concat(Object.keys(data));
     }
+    return isObjectData;
   });
-  return { data: filteredUploadData, headers: Array.from(dataHeaders) };
+  // dedup data headers
+  const uniqueDataHeaders = [...new Set(dataHeaders)];
+  return { data: filteredUploadData, headers: uniqueDataHeaders };
 };
 
 export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: UploadDataModalProps) => {
