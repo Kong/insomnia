@@ -11,10 +11,29 @@ interface FetchConfig {
   retries?: number;
   origin?: string;
   headers?: Record<string, string>;
+  onlyResolveOnSuccess?: boolean;
+}
+
+export class ResponseFailError extends Error {
+  constructor(msg: string, response: Response) {
+    super(msg);
+    this.response = response;
+  };
+  response;
+  name = 'ResponseFailError';
 }
 
 // Adds headers, retries and opens deep links returned from the api
-export async function insomniaFetch<T = void>({ method, path, data, sessionId, organizationId, origin, headers }: FetchConfig): Promise<T> {
+export async function insomniaFetch<T = void>({
+  method,
+  path,
+  data,
+  sessionId,
+  organizationId,
+  origin,
+  headers,
+  onlyResolveOnSuccess = false,
+}: FetchConfig): Promise<T> {
   const config: RequestInit = {
     method,
     headers: {
@@ -39,6 +58,12 @@ export async function insomniaFetch<T = void>({ method, path, data, sessionId, o
     const uri = response.headers.get('x-insomnia-command');
     if (uri) {
       window.main.openDeepLink(uri);
+    }
+    if (onlyResolveOnSuccess && !response.ok) {
+      throw new ResponseFailError(
+        `${response.status} ${response.statusText}`,
+        response,
+      );
     }
     const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
     return isJson ? response.json() : response.text();

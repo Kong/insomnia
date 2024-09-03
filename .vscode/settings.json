@@ -15,4 +15,9 @@
   "[jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
+  "cSpell.words": [
+    "Dismissable",
+    "inso",
+    "xmark"
+  ],
 }
