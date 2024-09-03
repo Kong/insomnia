@@ -67,6 +67,7 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
         ];
       } else {
         timelines = [
+          ...timelines,
           {
             value: `failed to read response for the request ${respInfo.originalRequestName}`,
             name: 'Text',
