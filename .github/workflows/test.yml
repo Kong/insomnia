@@ -19,6 +19,18 @@ jobs:
   Test:
     timeout-minutes: 20
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test_suite:
+          - after-response script features tests
+          - Cookie editor
+          - design document operations
+          - Design interactions
+          - Environment Editor
+          - Plugins
+          - pre-request features tests
+          - test hidden window handling
+          - runner features tests
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -55,7 +67,7 @@ jobs:
       - name: Smoke test electron app
         run: |
           GIT_SYNC_SMOKE_TEST_TOKEN=${{env.GIT_SYNC_SMOKE_TEST_TOKEN}} \
-          npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
+          npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke -g ${{ matrix.test_suite }}
         env:
           GIT_SYNC_SMOKE_TEST_TOKEN: ${{ secrets.GIT_SYNC_SMOKE_TEST_TOKEN }}
 
