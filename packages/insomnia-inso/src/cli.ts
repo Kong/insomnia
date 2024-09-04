@@ -300,7 +300,7 @@ export const go = (args?: string[]) => {
     .description('Run Insomnia request collection, identifier can be a workspace id')
     .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
     .option('-e, --env <identifier>', 'environment to use', '')
-    .option('-b, --bail', 'abort ("bail") after first test failure', false)
+    .option('-b, --bail', 'abort ("bail") after first non-200 response', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
     .action(async (identifier, cmd: { env: string; disableCertValidation: true; requestNamePattern: string; bail: boolean }) => {
       const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();

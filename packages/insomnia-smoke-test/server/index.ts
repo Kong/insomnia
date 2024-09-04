@@ -39,12 +39,13 @@ app.get('/builds/check/*', (_req, res) => {
 });
 
 async function echoHandler(req: any, res: any) {
-  res.status(200).send({
+  const stringified = JSON.stringify({
     method: req.method,
     headers: req.headers,
     data: req.body.toString(),
     cookies: req.cookies,
-  });
+  }, null, 2);
+  res.status(200).send(stringified);
 };
 
 app.get('/echo', rawParser, echoHandler);
