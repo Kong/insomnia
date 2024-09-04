@@ -402,9 +402,9 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         </div>}
         {hasUntrackedProjects && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
           <div className='flex flex-col gap-1'>
-            <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="cancel" /> Untracked projects ({untrackedProjects.length})</Heading>
+            <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="cancel" /> Orphaned projects ({untrackedProjects.length})</Heading>
             <p className='text-[--hl] text-sm'>
-              <Icon icon="info-circle" /> These projects are not associated with any organization in your account. You can move them to an organization below.
+              <Icon icon="info-circle" /> These projects are not associated to your current logged-in account. You can move them to an organization below.
             </p>
           </div>
           <div className='flex flex-col gap-1 overflow-y-auto divide-y divide-solid divide-[--hl-md]'>

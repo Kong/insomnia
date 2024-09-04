@@ -12,8 +12,8 @@ import {
   getOrInheritHeaders,
   responseTransform,
   sendCurlAndWriteTimeline,
+  tryToExecutePreRequestScript,
   tryToInterpolateRequest,
-  tryToTransformRequestWithPlugins,
 } from '../network/network';
 import { invariant } from '../utils/invariant';
 import { database } from './database';
@@ -49,7 +49,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     remove: [],
   });
   // This is separate to the fetchRequestData because it overrides environmentId
-  const fetchInsoRequestData = async (requestId: string) => {
+  const fetchInsoRequestData = async (requestId: string, overrideEnvironmentId: string) => {
     const request = await models.request.getById(requestId);
     invariant(request, 'failed to find request');
     const ancestors = await database.withAncestors<Request | RequestGroup | Workspace>(request, [
@@ -57,6 +57,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       models.requestGroup.type,
       models.workspace.type,
     ]);
+
     const workspaceDoc = ancestors.find(isWorkspace);
     const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
     const workspace = await models.workspace.getById(workspaceId);
@@ -72,39 +73,55 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
     const caCert = await models.caCertificate.findByParentId(workspaceId);
 
+    const environment = await models.environment.getById(overrideEnvironmentId);
+    invariant(environment, 'failed to find environment ' + overrideEnvironmentId);
+    const activeEnvironmentId = overrideEnvironmentId;
+
     const responseId = generateId('res');
     const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
     const timelinePath = path.join(responsesDir, responseId + '.timeline');
 
-    return { request, settings, clientCertificates, caCert, timelinePath, responseId };
+    return { request, settings, clientCertificates, caCert, environment, activeEnvironmentId, workspace, timelinePath, responseId, ancestors };
   };
   // Return callback helper to send requests
   return async function sendRequest(requestId: string) {
-    const {
-      request,
-      settings,
-      clientCertificates,
-      caCert,
-      timelinePath,
-      responseId,
-    } = await fetchInsoRequestData(requestId);
+    const requestData = await fetchInsoRequestData(requestId, environmentId);
+    const mutatedContext = await tryToExecutePreRequestScript(requestData, requestData.workspace._id);
+    if (mutatedContext === null) {
+      console.error('Time out while executing pre-request script');
+      return null;
+    }
+    const ignoreUndefinedEnvVariable = true;
     // NOTE: inso ignores active environment, using the one passed in
-    const renderResult = await tryToInterpolateRequest(request, environmentId, 'send');
-    const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+
+    const renderedResult = await tryToInterpolateRequest({
+      request: mutatedContext.request,
+      environment: mutatedContext.environment,
+      purpose: 'send',
+      extraInfo: undefined,
+      baseEnvironment: mutatedContext.baseEnvironment,
+      userUploadEnv: undefined,
+      ignoreUndefinedEnvVariable,
+    });
+    // skip plugins
+    const renderedRequest = renderedResult.request;
+
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
-      clientCertificates,
-      caCert,
-      settings,
-      timelinePath,
-      responseId,
+      mutatedContext.clientCertificates,
+      requestData.caCert,
+      mutatedContext.settings,
+      requestData.timelinePath,
+      requestData.responseId
     );
-    const res = await responseTransform(response, environmentId, renderedRequest, renderResult.context);
+    const res = await responseTransform(response, environmentId, renderedRequest, renderedResult.context);
+
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
+
     const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
     const bodyBuffer = await getBodyBuffer(res) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
-    return { status, statusMessage, data, headers, responseTime, timelinePath };
 
+    return { status, statusMessage, data, headers, responseTime, timelinePath: requestData.timelinePath };
   };
 }

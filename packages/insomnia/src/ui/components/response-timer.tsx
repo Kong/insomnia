@@ -8,11 +8,11 @@ interface Props {
   steps: TimingStep[];
 }
 // triggers a 100 ms render in order to show a incrementing counter
-const MillisecondTimer = () => {
+const MillisecondTimer = ({ startedAt }: { startedAt: number }) => {
   const [milliseconds, setMilliseconds] = useState(0);
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    const loadStartTime = Date.now();
+    const loadStartTime = startedAt || Date.now();
     interval = setInterval(() => {
       const delta = Date.now() - loadStartTime;
       setMilliseconds(delta);
@@ -23,43 +23,48 @@ const MillisecondTimer = () => {
         clearInterval(interval);
       }
     };
-  }, []);
+  }, [startedAt]);
   const ms = (milliseconds / 1000);
   return ms > 0 ? `${ms.toFixed(1)} s` : '0 s';
 };
+
 export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRequestId, steps }) => {
   return (
-    <div className="overlay theme--transparent-overlay-darker">
-      <div className="timer-list w-full">
-        {steps.map((record: TimingStep) => (
-          <div
-            key={`${activeRequestId}-${record.stepName}`}
-            className='flex w-full leading-8'
-          >
-            <div className='w-3/4 text-left content-center leading-8'>
-              <span className="leading-8">
-                {
-                  record.duration ?
-                    (<i className="fa fa-circle-check fa-2x mr-2 text-green-500" />) :
-                    (<i className="fa fa-spinner fa-spin fa-2x mr-2" />)
-                }
-              </span>
-              <span className="inline-block align-top">
-                {record.stepName}
-              </span>
+    <div className="flex overlay theme--transparent-overlay-darker w-full h-full">
+      <div className="m-auto w-[60%] min-w-[400px]">
+        <div className="timer-list mx-auto">
+          {steps.map((record: TimingStep) => (
+            <div
+              key={`${activeRequestId}-${record.stepName}`}
+              className='flex w-full leading-8'
+            >
+              <div className='w-3/4 ml-1 text-left text-md content-center leading-8'>
+                <span className="leading-8 w-1/5">
+                  {
+                    record.duration ?
+                      (<i className="fa fa-circle-check fa-1x mr-2 text-green-500" />) :
+                      (<i className="fa fa-spinner fa-spin fa-1x mr-2" />)
+                  }
+                </span>
+                <span className="inline-block align-top text-clip w-4/5">
+                  {record.stepName}
+                </span>
+              </div>
+              <div className='w-1/4 mr-1 text-right leading-8'>
+                {record.duration ? `${((record.duration) / 1000).toFixed(1)} s` : (<MillisecondTimer startedAt={record.startedAt} />)}
+              </div>
             </div>
-            {record.duration ? `${((record.duration) / 1000).toFixed(1)} s` : (<MillisecondTimer />)}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      <div className="pad">
-        <button
-          className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]"
-          onClick={handleCancel}
-        >
-          Cancel Request
-        </button>
+        <div className="pad text-center">
+          <button
+            className="btn btn--clicky"
+            onClick={handleCancel}
+          >
+            Cancel Request
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,32 +1,11 @@
 import * as fs from 'node:fs';
 
-import ajv from 'ajv';
-import chai from 'chai';
-import * as cheerio from 'cheerio';
-import cryptojs from 'crypto-js';
-import * as csvParseSync from 'csv-parse/sync';
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
-import { asyncTasksAllSettled, Collection as CollectionModule, OriginalPromise, ProxiedPromise, type RequestContext, resetAsyncTasks, stopMonitorAsyncTasks } from 'insomnia-sdk';
-import lodash from 'lodash';
-import moment from 'moment';
-import tv4 from 'tv4';
-import * as uuid from 'uuid';
-import xml2js from 'xml2js';
+import { asyncTasksAllSettled, OriginalPromise, ProxiedPromise, type RequestContext, resetAsyncTasks, stopMonitorAsyncTasks } from 'insomnia-sdk';
 
 import type { Compression } from './models/response';
-
-const externalModules = new Map<string, object>([
-  ['ajv', ajv],
-  ['chai', chai],
-  ['cheerio', cheerio],
-  ['crypto-js', cryptojs],
-  ['csv-parse/lib/sync', csvParseSync],
-  ['lodash', lodash],
-  ['moment', moment],
-  ['tv4', tv4],
-  ['uuid', uuid],
-  ['xml2js', xml2js],
-]);
+// this will also import lots of node_modules into the preload script, consider moving this file insomnia-sdk
+import { requireInterceptor } from './requireInterceptor';
 
 export interface HiddenBrowserWindowToMainBridgeAPI {
   requireInterceptor: (module: string) => any;
@@ -55,61 +34,7 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
     ipcRenderer.invoke('renderer-listener-ready');
     return () => ipcRenderer.removeListener('renderer-listener', rendererListener);
   },
-
-  requireInterceptor: (moduleName: string) => {
-    if (
-      [
-        // node.js modules
-        'path',
-        'assert',
-        'buffer',
-        'util',
-        'url',
-        'punycode',
-        'querystring',
-        'string_decoder',
-        'stream',
-        'timers',
-        'events',
-        // follows should be npm modules
-        // but they are moved to here to avoid introducing additional dependencies
-      ].includes(moduleName)
-    ) {
-      return require(moduleName);
-    } else if (
-      [
-        'atob',
-        'btoa',
-      ].includes(moduleName)
-    ) {
-      return moduleName === 'atob' ? atob : btoa;
-    } else if (
-      [
-        // external modules
-        'ajv',
-        'chai',
-        'cheerio',
-        'crypto-js',
-        'csv-parse/lib/sync',
-        'lodash',
-        'moment',
-        'tv4',
-        'uuid',
-        'xml2js',
-      ].includes(moduleName)
-    ) {
-      const externalModule = externalModules.get(moduleName);
-      if (!externalModule) {
-        throw Error(`no module is found for "${moduleName}"`);
-      }
-      return externalModule;
-    } else if (moduleName === 'insomnia-collection' || moduleName === 'postman-collection') {
-      return CollectionModule;
-    }
-
-    throw Error(`no module is found for "${moduleName}"`);
-  },
-
+  requireInterceptor,
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
   readCurlResponse: options => ipcRenderer.invoke('readCurlResponse', options),
   setBusy: busy => ipcRenderer.send('set-hidden-window-busy-status', busy),

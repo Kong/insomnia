@@ -563,17 +563,17 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             },
             {
               displayName: 'No History',
-              description: 'resend when no responses present',
+              description: 'resend once if there are no available responses',
               value: 'no-history',
             },
             {
               displayName: 'When Expired',
-              description: 'resend when existing response has expired',
+              description: 'resend the request if current response is older than Max age seconds',
               value: 'when-expired',
             },
             {
               displayName: 'Always',
-              description: 'resend request when needed',
+              description: 'always resend the request',
               value: 'always',
             },
           ],
@@ -607,17 +607,26 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           throw new Error(`Could not find request ${id}`);
         }
 
-        const environmentId = context.context.getEnvironmentId?.();
+        let shouldResend = false;
+        const environmentId = context.context.getEnvironmentId?.() || null;
+        const globalEnvironmentId = context.context.getGlobalEnvironmentId?.() || null;
         let response: Response = await context.util.models.response.getLatestForRequestId(id, environmentId);
 
-        let shouldResend = false;
         switch (resendBehavior) {
           case 'no-history':
-            shouldResend = !response;
+            if (!response) {
+              shouldResend = true;
+            } else {
+              // if either global environment or collection environment changed, resend the request
+              shouldResend = response.environmentId !== environmentId || response.globalEnvironmentId !== globalEnvironmentId;
+            }
             break;
 
           case 'when-expired':
             if (!response) {
+              shouldResend = true;
+            } else if (response.environmentId !== environmentId || response.globalEnvironmentId !== globalEnvironmentId) {
+              // if either global environment or collection environment changed, resend the request
               shouldResend = true;
             } else {
               const ageSeconds = (Date.now() - response.created) / 1000;

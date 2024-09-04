@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/kong/insomnia/issues"
   },
-  "version": "9.3.4-beta.1",
+  "version": "10.0.0-beta.0",
   "scripts": {
     "test:dev": "xvfb-maybe cross-env BUNDLE=dev playwright test",
     "test:build": "xvfb-maybe cross-env BUNDLE=build playwright test",
@@ -31,7 +31,6 @@
     "concurrently": "^7.0.0",
     "cross-env": "^7.0.3",
     "esbuild-runner": "2.2.2",
-    "execa": "^5.0.0",
     "express": "^4.19.2",
     "express-basic-auth": "^1.2.1",
     "graphql-http": "^1.22.0",

@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-inso",
-  "version": "9.3.4-beta.1",
+  "version": "10.0.0-beta.0",
   "homepage": "https://insomnia.rest",
   "description": "A CLI for Insomnia - The Collaborative API Design Tool",
   "author": "Kong <office@konghq.com>",
@@ -21,8 +21,7 @@
   },
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "test": "esr esbuild.ts && vitest run --exclude '**/cli.test.ts'",
-    "test:watch": "npm run test -- --watch",
+    "test:unit": "vitest run --exclude '**/cli.test.ts'",
     "test:bundle": "vitest cli.test.ts -t \"inso dev bundle\"",
     "test:binary": "vitest cli.test.ts -t \"inso packaged binary\"",
     "type-check": "tsc --noEmit --project tsconfig.json",
@@ -39,7 +38,6 @@
     "cross-env": "^7.0.3",
     "esbuild": "^0.20.2",
     "esbuild-runner": "^2.2.2",
-    "execa": "^5.0.0",
     "vitest": "^2.0.4"
   },
   "dependencies": {

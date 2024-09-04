@@ -838,15 +838,33 @@ const OrganizationRoute = () => {
                       }
 
                       if (action === 'new-organization') {
-                        if (currentPlan?.type !== 'enterprise-member') {
+                        // If user is in the scratchpad workspace redirect them to the login page
+                        if (isScratchpadWorkspace) {
                           window.main.openInBrowser(
-                            `${getAppWebsiteBaseURL()}/app/organization/create`,
+                            getLoginUrl(),
                           );
-                        } else {
+                        }
+
+                        if (!currentPlan) {
+                          return;
+                        }
+
+                        if (currentPlan.type === 'enterprise-member') {
+                          // If user has a team or enterprise member plan show them an alert
                           showAlert({
-                            title: 'Could not create new organization.',
+                            title: 'Cannot create new organization.',
                             message: 'Your Insomnia account is tied to the enterprise corporate account. Please ask the owner of the enterprise billing to create one for you.',
                           });
+                        } else if (['free', 'individual'].includes(currentPlan.type)) {
+                          // If user has a free or individual plan redirect them to the landing page
+                          window.main.openInBrowser(
+                            `${getAppWebsiteBaseURL()}/app/landing-page`,
+                          );
+                        } else {
+                          // If user has a team or enterprise plan redirect them to the create organization page
+                          window.main.openInBrowser(
+                            `${getAppWebsiteBaseURL()}/app/dashboard/organizations?create_org=true`,
+                          );
                         }
                       }
                     }}

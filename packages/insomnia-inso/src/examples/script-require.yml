@@ -1,0 +1,66 @@
+_type: export
+__export_format: 4
+__export_date: 2021-12-03T07:42:43.250Z
+__export_source: insomnia.desktop.app:v2021.6.0
+resources:
+  - _id: req_89dade2ee9ee42fbb22d588783a9df03
+    parentId: wrk_5b5ab67830944ffcbec47528366ef403
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: insomnia.request manipulation
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      const { Header } = require('insomnia-collection');
+      insomnia.request.method = 'GET';
+      insomnia.request.url.addQueryParams('k1=v1');
+      insomnia.request.headers.add(new Header({
+          key: 'Content-Type',
+          value: 'text/plain'
+      }));
+      insomnia.request.headers.add(new Header({
+          key: 'X-Hello',
+          value: 'hello'
+      }));
+      insomnia.request.body.update({
+          mode: 'raw',
+          raw: 'rawContent',
+      });
+    body:
+      mimeType: "application/json"
+      text: |-
+        {}
+    _type: request
+  - _id: wrk_5b5ab67830944ffcbec47528366ef403
+    parentId: null
+    modified: 1636140994423
+    created: 1636140994423
+    name: Minimal Collection 3
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: env_9e44ac71d3a51fc6a8951b8968e45c44c5236355
+    parentId: wrk_5b5ab67830944ffcbec47528366ef403
+    modified: 1720533288414
+    created: 1720533288414
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1720533288414
+    _type: environment

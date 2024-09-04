@@ -71,11 +71,12 @@ const MockServerRoute = () => {
             defaultValue: mockRoutes.find(s => s._id === id)?.name,
             submitName: 'Rename',
             onComplete: name => {
-              const hasRouteInServer = mockRoutes.filter(m => m._id !== id).find(m => m.name === name);
+              const hasRouteInServer = mockRoutes.filter(m => m._id !== id)
+                .find(m => m.name === name && m.method.toUpperCase() === mockRoutes.find(m => m._id !== id)?.method.toUpperCase());
               if (hasRouteInServer) {
                 showModal(AlertModal, {
                   title: 'Error',
-                  message: `Path "${name}" must be unique. Please enter a different name.`,
+                  message: `Path "${name}" and method must be unique. Please enter a different name.`,
                 });
                 return;
               };
@@ -198,11 +199,11 @@ const MockServerRoute = () => {
                 submitName: 'Create',
                 placeholder: '/path/to/resource',
                 onComplete: name => {
-                  const hasRouteInServer = mockRoutes.find(m => m.name === name);
+                  const hasRouteInServer = mockRoutes.find(m => m.name === name && m.method.toUpperCase() === 'GET');
                   if (hasRouteInServer) {
                     showModal(AlertModal, {
                       title: 'Error',
-                      message: `Path "${name}" must be unique. Please enter a different name.`,
+                      message: `Path "${name}" and must be unique. Please enter a different name.`,
                     });
                     return;
                   };
@@ -284,11 +285,11 @@ const MockServerRoute = () => {
                     ariaLabel="Mock route name"
                     className='hover:!bg-transparent'
                     onSubmit={name => {
-                      const hasRouteInServer = mockRoutes.filter(m => m._id !== item._id).find(m => m.name === name);
+                      const hasRouteInServer = mockRoutes.filter(m => m._id !== item._id).find(m => m.name === name && m.method.toUpperCase() === item.method.toUpperCase());
                       if (hasRouteInServer) {
                         showModal(AlertModal, {
                           title: 'Error',
-                          message: `Path "${name}" must be unique. Please enter a different name.`,
+                          message: `Path "${name}" and method must be unique. Please enter a different name.`,
                         });
                         return;
                       };

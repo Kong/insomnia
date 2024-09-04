@@ -11,7 +11,7 @@ interface Props {
   tooltipDelay?: number;
   steps?: TimingStep[];
 }
-const getTimeAndUnit = (milliseconds: number) => {
+export const getTimeAndUnit = (milliseconds: number) => {
   let unit = 'ms';
   let number = milliseconds;
 

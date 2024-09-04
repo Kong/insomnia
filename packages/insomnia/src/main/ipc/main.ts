@@ -12,7 +12,7 @@ import { backup, restoreBackup } from '../backup';
 import installPlugin from '../install-plugin';
 import type { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
-import { addExecutionStep, completeExecutionStep, getExecution, startExecution, type StepName, type TimingStep } from '../network/request-timing';
+import { addExecutionStep, completeExecutionStep, getExecution, startExecution, type TimingStep, updateLatestStepName } from '../network/request-timing';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { ipcMainHandle, ipcMainOn, ipcMainOnce, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
@@ -47,14 +47,15 @@ export interface RendererToMainBridgeAPI {
   };
   hiddenBrowserWindow: HiddenBrowserWindowBridgeAPI;
   getExecution: (options: { requestId: string }) => Promise<TimingStep[]>;
-  addExecutionStep: (options: { requestId: string; stepName: StepName }) => void;
+  addExecutionStep: (options: { requestId: string; stepName: string }) => void;
   startExecution: (options: { requestId: string }) => void;
   completeExecutionStep: (options: { requestId: string }) => void;
+  updateLatestStepName: (options: { requestId: string; stepName: string }) => void;
   landingPageRendered: (landingPage: LandingPage, tags?: Record<string, string>) => void;
   extractJsonFileFromPostmanDataDumpArchive: (archivePath: string) => Promise<any>;
 }
 export function registerMainHandlers() {
-  ipcMainOn('addExecutionStep', (_, options: { requestId: string; stepName: StepName }) => {
+  ipcMainOn('addExecutionStep', (_, options: { requestId: string; stepName: string }) => {
     addExecutionStep(options.requestId, options.stepName);
   });
   ipcMainOn('startExecution', (_, options: { requestId: string }) => {
@@ -62,6 +63,9 @@ export function registerMainHandlers() {
   });
   ipcMainOn('completeExecutionStep', (_, options: { requestId: string }) => {
     return completeExecutionStep(options.requestId);
+  });
+  ipcMainOn('updateLatestStepName', (_, options: { requestId: string; stepName: string }) => {
+    updateLatestStepName(options.requestId, options.stepName);
   });
   ipcMainHandle('getExecution', (_, options: { requestId: string }) => {
     return getExecution(options.requestId);

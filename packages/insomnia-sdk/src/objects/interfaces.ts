@@ -4,26 +4,30 @@ import type { Request } from 'insomnia/src/models/request';
 import type { Settings } from 'insomnia/src/models/settings';
 import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
 
+import type { ExecutionOption } from './execution';
+import type { RequestInfoOption } from './request-info';
+import type { RequestTestResult } from './test';
+
+export interface IEnvironment {
+    id: string;
+    name: string;
+    data: object;
+}
 export interface RequestContext {
     request: Request;
     timelinePath: string;
-    environment: {
-        id: string;
-        name: string;
-        data: object;
-    };
-    baseEnvironment: {
-        id: string;
-        name: string;
-        data: object;
-    };
+    environment: IEnvironment;
+    baseEnvironment: IEnvironment;
     collectionVariables?: object;
     globals?: object;
-    iterationData?: object;
+    iterationData?: Omit<IEnvironment, 'id'>;
     timeout: number;
     settings: Settings;
     clientCertificates: ClientCertificate[];
     cookieJar: InsomniaCookieJar;
     // only for the after-response script
     response?: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError;
+    requestTestResults?: RequestTestResult[];
+    requestInfo: RequestInfoOption;
+    execution: ExecutionOption;
 }

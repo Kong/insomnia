@@ -119,7 +119,7 @@ const fetchGraphQLSchemaForRequest = async ({
       responseId,
     } = await fetchRequestData(introspectionRequest._id);
 
-    const renderResult = await tryToInterpolateRequest(request, environment._id, 'send');
+    const renderResult = await tryToInterpolateRequest({ request, environment: environment._id, purpose: 'send' });
     const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
     const res = await sendCurlAndWriteTimeline(
       renderedRequest,

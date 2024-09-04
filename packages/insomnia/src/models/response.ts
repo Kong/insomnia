@@ -1,4 +1,5 @@
 import fs from 'fs';
+import type { RequestTestResult } from 'insomnia-sdk';
 import { Readable } from 'stream';
 import zlib from 'zlib';
 
@@ -27,6 +28,7 @@ export type Compression = 'zip' | null | '__NEEDS_MIGRATION__' | undefined;
 
 export interface BaseResponse {
   environmentId: string | null;
+  globalEnvironmentId: string | null;
   statusCode: number;
   statusMessage: string;
   httpVersion: string;
@@ -46,6 +48,7 @@ export interface BaseResponse {
   // Things from the request
   settingStoreCookies: boolean | null;
   settingSendCookies: boolean | null;
+  requestTestResults: RequestTestResult[];
 }
 
 export type Response = BaseModel & BaseResponse;
@@ -80,6 +83,8 @@ export function init(): BaseResponse {
     // Responses sent before environment filtering will have a special value
     // so they don't show up at all when filtering is on.
     environmentId: '__LEGACY__',
+    requestTestResults: [],
+    globalEnvironmentId: null,
   };
 }
 
@@ -224,7 +229,22 @@ export const getBodyStream = (
     return fs.createReadStream(response?.bodyPath);
   }
 };
+export const readCurlResponse = async (options: { bodyPath?: string; bodyCompression?: Compression }) => {
+  const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
+  const bodyBufferOrErrMsg = getBodyBuffer(options, readFailureMsg);
+  // TODO(jackkav): simplify the fail msg and reuse in other getBodyBuffer renderer calls
 
+  if (!bodyBufferOrErrMsg) {
+    return { body: '', error: readFailureMsg };
+  } else if (typeof bodyBufferOrErrMsg === 'string') {
+    if (bodyBufferOrErrMsg === readFailureMsg) {
+      return { body: '', error: readFailureMsg };
+    }
+    return { body: '', error: `unknown error in loading response body: ${bodyBufferOrErrMsg}` };
+  }
+
+  return { body: bodyBufferOrErrMsg.toString('utf8'), error: '' };
+};
 export const getBodyBuffer = (
   response?: { bodyPath?: string; bodyCompression?: Compression },
   readFailureValue?: string,
