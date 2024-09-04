@@ -7,7 +7,7 @@ resources:
     parentId: fld_7ca9aeafb2714bc287e33f643299c271
     modified: 1720533313731
     created: 1720531712225
-    url: http://localhost:4010/echo
+    url: https://localhost:4011/echo
     name: New Request
     description: ""
     method: GET
