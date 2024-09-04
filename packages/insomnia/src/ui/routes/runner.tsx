@@ -393,7 +393,7 @@ export const Runner: FC<{}> = () => {
       <Panel>
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
 
-          <Panel id="pane-one" className='pane-one theme--pane'>
+          <Panel id="pane-one" className='pane-one theme--pane' minSize={35} maxSize={90}>
             <ErrorBoundary showAlert>
 
               <Pane type="request">
