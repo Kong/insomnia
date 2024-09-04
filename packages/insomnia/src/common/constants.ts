@@ -127,7 +127,7 @@ export const getMockServiceBinURL = (serverId: string, path: string, customUrl?:
   }
   return customUrl + '/bin/' + serverId + path;
 };
-export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai.insomnia.rest';
+export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
 
 export const getUpdatesBaseURL = () => env.INSOMNIA_UPDATES_URL || 'https://updates.insomnia.rest';
 
