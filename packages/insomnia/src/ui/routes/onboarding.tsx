@@ -15,7 +15,7 @@ import storage_options from '../images/onboarding/storage_options.png';
 const features = [
   {
     id: 'collection_runner',
-    icon: 'code',
+    icon: 'circle-play',
     title: 'New Collection Runner',
     description:
       'You can run tests for an entire collection using the new Collection Runner! And it\'s unlimited for every Insomnia user.',
@@ -23,7 +23,7 @@ const features = [
   },
   {
     id: 'test_results',
-    icon: 'clone',
+    icon: 'square-poll-vertical',
     title: 'Test Results',
     description:
       'In the previous v9.x we introduced full scripting support, and now we are introducing the ability to visualize test results when executing a request.',
@@ -31,7 +31,7 @@ const features = [
   },
   {
     id: 'invite_control',
-    icon: 'database',
+    icon: 'lock',
     title: 'Invite Control',
     description:
       'With this enterprise capability you can create invite rules to determine what domains can be invited to join an organization.',
@@ -39,14 +39,14 @@ const features = [
   },
   {
     id: 'unpushed_notifications',
-    icon: 'file-invoice',
+    icon: 'bell',
     title: 'Unpushed notifications',
     description: 'You can now see indicators for changes that have not been committed - or have not been pushed - inside your projects and files.',
     image: diff_view,
   },
   {
     id: 'offline_experience',
-    icon: 'search',
+    icon: 'wifi',
     title: 'Offline experience',
     description:
       'In the previous Insomnia v9.x we significantly improved the performance of the application, and in this one are making the offline experience even better.',
@@ -54,7 +54,7 @@ const features = [
   },
   {
     id: 'multiple_owners',
-    icon: 'download',
+    icon: 'user-group',
     title: 'Multiple owners',
     description:
       'With this enterprise feature, we are finally introducing the ability to have multiple co-owners for an enterprise organization account.',
