@@ -83,7 +83,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         }
 
         const mergedParams = [...parameters, ...renderedAuthQueryParams];
-        const qs = buildQueryStringFromParams(mergedParams);
+        const qs = buildQueryStringFromParams(mergedParams, false, { encodeParams: request.settingEncodeUrl });
         const fullUrl = joinUrlAndQueryString(url, qs);
         const encoded = smartEncodeUrl(fullUrl, request.settingEncodeUrl, { strictNullHandling: true });
         setPreviewString(encoded === '' ? defaultPreview : encoded);

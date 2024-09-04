@@ -16,6 +16,8 @@ const URL_PATH_CHARACTER_WHITELIST = `${RFC_3986_GENERAL_DELIMITERS}${RFC_3986_S
 interface IQueryStringOptions {
   // Option to distingush between parameters with(&foo=) and without(&foo) equal signs. Both are converted to empty string by default.
   strictNullHandling?: boolean;
+  // Option to encode parameters, default to true, necessary to disable for request.settingEncodeUrl = false
+  encodeParams?: boolean;
 }
 type SearchParamsValueType = string;
 type StrictNullSearchParamsValueType = string | null;
@@ -81,7 +83,7 @@ export const buildQueryParameter = (
   options?: IQueryStringOptions
 ) => {
   strict = strict === undefined ? true : strict;
-  const { strictNullHandling = false } = options || {};
+  const { strictNullHandling = false, encodeParams = true } = options || {};
 
   // Skip non-name ones in strict mode
   if (strict && !param.name) {
@@ -95,6 +97,9 @@ export const buildQueryParameter = (
 
   // Keep equal sign if strictNullHandling and param value is empty string, see https://github.com/Kong/insomnia/issues/2111
   if (!strict || param.value || (strictNullHandling && param.value === '')) {
+    if(!encodeParams) {
+      return `${param.name}=${param.value}`;
+    }
     // Don't encode ',' in values
     const value = flexibleEncodeComponent(param.value || '').replace(/%2C/gi, ',');
     const name = flexibleEncodeComponent(param.name || '');
@@ -116,10 +121,10 @@ export const buildQueryStringFromParams = (
   options?: IQueryStringOptions
 ) => {
   strict = strict === undefined ? true : strict;
-  const { strictNullHandling = false } = options || {};
+  const { strictNullHandling = false, encodeParams = true } = options || {};
   const items = [];
   for (const param of parameters) {
-    const built = buildQueryParameter(param, strict, { strictNullHandling });
+    const built = buildQueryParameter(param, strict, { strictNullHandling, encodeParams });
     if (!built) {
       continue;
     }
