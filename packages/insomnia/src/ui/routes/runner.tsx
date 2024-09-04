@@ -456,24 +456,6 @@ export const Runner: FC<{}> = () => {
                         >
                           <Icon icon={file ? 'eye' : 'upload'} /> {file ? 'View Data' : 'Upload Data'}
                         </Button>
-                        <Button
-                          onPress={() => {
-                            tempRunnerSettings = {
-                              iterations: 1,
-                              delay: 0,
-                              iterationData: [],
-                              file: null,
-                            };
-                            setIterations(1);
-                            setDelay(0);
-                            setUploadData([]);
-                            setFile(null);
-                          }}
-                          className="py-0.5 px-1 border-[--hl-sm] h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ring-1 ring-transparent transition-all text-sm"
-                          isDisabled={isRunning}
-                        >
-                          <Icon icon="rotate-right" /> Reset
-                        </Button>
                       </div>
                     </div>
                     <div className="w-[100px]">
