@@ -22,7 +22,7 @@ window.bridge.onmessage(async (data, callback) => {
     callback(result);
   } catch (err) {
     console.error('error', err);
-    callback({ error: err.message });
+    callback({ error: err || err.message });
   } finally {
     window.bridge.setBusy(false);
   }
