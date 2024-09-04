@@ -106,7 +106,7 @@ jobs:
           password: ${{secrets.ES_PASSWORD}}
           credential_id: ${{secrets.ES_CREDENTIAL_ID}}
           totp_secret: ${{secrets.ES_TOTP_SECRET}}
-          file_path: packages/insomnia/dist/win-unpacked/Insomnia.exe
+          dir_path: packages/insomnia/dist/win-unpacked
           override: true
 
       # re-packages the now code-signed electron-builder contents into a squirrel installer
