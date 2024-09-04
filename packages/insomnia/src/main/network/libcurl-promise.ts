@@ -77,6 +77,7 @@ export interface ResponsePatch {
   contentType?: string;
   elapsedTime: number;
   environmentId?: string | null;
+  globalEnvironmentId?: string | null;
   error?: string;
   headers?: ResponseHeader[];
   httpVersion?: string;

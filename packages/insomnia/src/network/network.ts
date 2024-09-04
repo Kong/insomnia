@@ -130,6 +130,7 @@ export const fetchRequestData = async (requestId: string) => {
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && await models.environment.getById(activeEnvironmentId);
+  // no active environment in workspaceMeta, fallback to workspace root environment as active environment
   const environment = activeEnvironment || await models.environment.getOrCreateForParentId(workspace._id);
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
@@ -140,7 +141,7 @@ export const fetchRequestData = async (requestId: string) => {
   const responseId = generateId('res');
   const responsesDir = pathJoin((process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
-  return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId, ancestors };
+  return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId: activeEnvironmentId || environment._id, timelinePath, responseId, ancestors };
 };
 
 export const tryToExecutePreRequestScript = async (
@@ -408,6 +409,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       _id: responseId,
       parentId: requestId,
       environemntId: environment._id,
+      globalEnvironmentId: globals?._id,
       timelinePath,
       statusMessage: 'Error',
       error: err.message,
@@ -633,6 +635,7 @@ export const responseTransform = async (patch: ResponsePatch, environmentId: str
     ...patch,
     // important for filter by responses
     environmentId,
+    globalEnvironmentId: context?.getGlobalEnvironmentId?.() || null,
     bodyCompression: null,
     settingSendCookies: renderedRequest.settingSendCookies,
     settingStoreCookies: renderedRequest.settingStoreCookies,
