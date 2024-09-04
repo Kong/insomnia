@@ -859,12 +859,6 @@ async function renderApp() {
                                 ],
                               },
                               {
-                                path: 'move',
-                                action: async (...args) => (
-                                  await import('./routes/actions')
-                                ).moveWorkspaceAction(...args),
-                              },
-                              {
                                 path: 'duplicate',
                                 action: async (...args) =>
                                   (

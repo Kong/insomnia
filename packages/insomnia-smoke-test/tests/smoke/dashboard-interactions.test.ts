@@ -111,8 +111,6 @@ test.describe('Dashboard', async () => {
       await page.locator('input[name="name"]').fill('test123-duplicate');
       await page.click('[role="dialog"] button:has-text("Duplicate")');
 
-      await page.getByTestId('project').click();
-
       // Delete document
       await page.getByLabel('test123-duplicate').getByRole('button').click();
       await page.getByRole('menuitem', { name: 'Delete' }).click();
@@ -145,8 +143,6 @@ test.describe('Dashboard', async () => {
       await page.getByRole('menuitem', { name: 'Duplicate' }).click();
       await page.locator('input[name="name"]').fill('test123-duplicate');
       await page.click('[role="dialog"] button:has-text("Duplicate")');
-
-      await page.getByTestId('project').click();
 
       // Delete collection
       await page.getByLabel('test123-duplicate').getByRole('button').click();

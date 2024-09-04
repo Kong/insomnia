@@ -534,30 +534,8 @@ async function duplicateWorkspace(
   return newWorkspace;
 }
 
-export const duplicateWorkspaceAction: ActionFunction = async ({ request, params }) => {
-  const { organizationId } = params;
-  invariant(organizationId, 'Organization Id is required');
-  const formData = await request.formData();
-  const projectId = formData.get('projectId');
-  invariant(typeof projectId === 'string', 'Project ID is required');
-
-  const workspaceId = formData.get('workspaceId');
-  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-
-  const workspace = await models.workspace.getById(workspaceId);
-  const duplicateToProject = await models.project.getById(projectId);
-
-  const name = formData.get('name') || '';
-  invariant(typeof name === 'string', 'Name is required');
-
-  const newWorkspace = await duplicateWorkspace(workspace, duplicateToProject, name, false);
-
-  const activity = scopeToActivity(newWorkspace.scope);
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${newWorkspace._id}/${activity}`);
-};
-
-/** Move workspace to other project and automatically sync to cloud if needed  */
-export const moveWorkspaceAction: ActionFunction = async ({ request }) => {
+/** Duplicate workspace to other project and automatically sync to cloud if needed  */
+export const duplicateWorkspaceAction: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const oldWorkspaceId = formData.get('workspaceId') as string;
   invariant(oldWorkspaceId, 'Workspace ID is required');
@@ -565,33 +543,20 @@ export const moveWorkspaceAction: ActionFunction = async ({ request }) => {
   invariant(newOrgId, 'Org ID is required');
   const newProjectId = formData.get('projectId') as string;
   invariant(newProjectId, 'Project ID is required');
+  const newWorkspaceName = formData.get('name') as string;
 
   const oldWorkspace = await models.workspace.getById(oldWorkspaceId);
   invariant(oldWorkspace, 'Workspace not found');
 
-  // Can not move workspace to the same project
-  if (oldWorkspace?.parentId === newProjectId) {
-    return {
-      error: 'Can not move workspace to the same project',
-    };
-  }
-
-  const oldProject = await models.project.getById(oldWorkspace.parentId) as Project;
-
-  // first try to delete the workspace from the cloud, current user may not have permission to delete the workspace
-  const ret = await deleteWorkspaceFromCloud(oldWorkspace, oldProject);
-  if (ret?.error) {
-    return ret;
-  }
-
-  // then duplicate the workspace to the new project
+  // duplicate the workspace to the new project
   const newProject = await models.project.getById(newProjectId) as Project;
-  await duplicateWorkspace(oldWorkspace, newProject, oldWorkspace.name, true);
+  await duplicateWorkspace(oldWorkspace, newProject, newWorkspaceName || oldWorkspace.name, true);
 
-  // finally delete the workspace from local
-  await deleteWorkspaceFromLocal(oldWorkspace);
-
-  return redirect(`/organization/${newOrgId}/project/${newProjectId}`);
+  return {
+    success: true,
+    newOrgId,
+    newProjectId,
+  };
 };
 
 export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
