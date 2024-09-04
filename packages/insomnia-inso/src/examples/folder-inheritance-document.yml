@@ -106,6 +106,10 @@ resources:
     name: Returns 200
     code: |-
       const response1 = await insomnia.send();
+      const timelineString = await require('fs/promises').readFile(response1.timelinePath, 'utf8');
+      const timeline = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e).value).join(' ');
+      console.log(timeline);
+
       const body = JSON.parse(response1.data)
       console.log(body.headers)
       expect(response1.status).to.equal(200);
