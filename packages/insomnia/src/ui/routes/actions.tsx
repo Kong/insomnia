@@ -12,7 +12,7 @@ import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { getById, update } from '../../models/helpers/request-operations';
 import type { MockServer } from '../../models/mock-server';
-import { isRemoteProject } from '../../models/project';
+import { isRemoteProject, type Project } from '../../models/project';
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { isRequestGroupMeta } from '../../models/request-group-meta';
@@ -21,7 +21,7 @@ import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { isCollection, isEnvironment, scopeToActivity, type Workspace } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
-import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
+import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
@@ -409,28 +409,14 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
 };
 
-export const deleteWorkspaceAction: ActionFunction = async ({
-  params,
-  request,
-}) => {
-  const { organizationId, projectId } = params;
-  invariant(projectId, 'projectId is required');
+async function deleteWorkspaceFromCloud(workspace: Workspace, project: Project) {
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  const isGitSync = !!workspaceMeta.gitRepositoryId;
 
-  const project = await models.project.getById(projectId);
-  invariant(project, 'Project not found');
-
-  const formData = await request.formData();
-
-  const workspaceId = formData.get('workspaceId');
-  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-
-  const workspace = await models.workspace.getById(workspaceId);
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-  invariant(workspace, 'Workspace not found');
-  if (isRemoteProject(project) && !workspaceMeta.gitRepositoryId) {
+  if (isRemoteProject(project) && !isGitSync) {
     try {
       const vcs = VCSInstance();
-      await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, workspace.name);
+      await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
       await vcs.archiveProject();
     } catch (err) {
       return {
@@ -439,29 +425,63 @@ export const deleteWorkspaceAction: ActionFunction = async ({
     }
   }
 
+  return null;
+}
+
+async function deleteWorkspaceFromLocal(workspace: Workspace) {
   await models.stats.incrementDeletedRequestsForDescendents(workspace);
   await models.workspace.remove(workspace);
+}
 
-  return redirect(`/organization/${organizationId}/project/${projectId}`);
-};
+async function deleteWorkspace(
+  workspace: Workspace | null,
+  project: Project | null,
+) {
+  invariant(workspace, 'Workspace not found');
+  invariant(project, 'Project not found');
 
-export const duplicateWorkspaceAction: ActionFunction = async ({ request, params }) => {
-  const { organizationId } = params;
-  invariant(organizationId, 'Organization Id is required');
+  const ret = await deleteWorkspaceFromCloud(workspace, project);
+  if (ret?.error) {
+    return ret;
+  }
+
+  await deleteWorkspaceFromLocal(workspace);
+
+  return null;
+}
+
+export const deleteWorkspaceAction: ActionFunction = async ({
+  params,
+  request,
+}) => {
+  const { organizationId, projectId } = params;
+  invariant(projectId, 'projectId is required');
+
+  const project = await models.project.getById(projectId);
+
   const formData = await request.formData();
-  const projectId = formData.get('projectId');
-  invariant(typeof projectId === 'string', 'Project ID is required');
 
   const workspaceId = formData.get('workspaceId');
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
   const workspace = await models.workspace.getById(workspaceId);
+
+  const msgObj = await deleteWorkspace(workspace, project);
+
+  if (msgObj?.error) {
+    return msgObj;
+  }
+
+  return redirect(`/organization/${organizationId}/project/${projectId}`);
+};
+
+async function duplicateWorkspace(
+  workspace: Workspace | null,
+  duplicateToProject: Project | null,
+  newWorkspaceName: string,
+  needPushSnapshotOnInitialize: boolean = false,
+) {
   invariant(workspace, 'Workspace not found');
-
-  const name = formData.get('name') || '';
-  invariant(typeof name === 'string', 'Name is required');
-
-  const duplicateToProject = await models.project.getById(projectId);
   invariant(duplicateToProject, 'Project not found');
   async function duplicate(
     workspace: Workspace,
@@ -478,30 +498,65 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
     return newWorkspace;
   }
   const newWorkspace = await duplicate(workspace, {
-    name,
-    parentId: projectId,
+    name: newWorkspaceName,
+    parentId: duplicateToProject._id,
   });
-
   // Create default env, cookie jar, and meta
   await models.environment.getOrCreateForParentId(newWorkspace._id);
   await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
-  await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
 
-  try {
-    const { id } = await models.userSession.getOrCreate();
-    // Mark for sync if logged in and in the expected project
-    if (id) {
-      const vcs = VCSInstance();
-      await initializeLocalBackendProjectAndMarkForSync({
-        vcs: vcs.newInstance(),
-        workspace: newWorkspace,
-      });
+  const isGitSync = !!workspaceMeta.gitRepositoryId;
+
+  // Automatically sync to cloud if needed
+  if (isRemoteProject(duplicateToProject) && !isGitSync) {
+    try {
+      const { id } = await models.userSession.getOrCreate();
+      // Mark for sync if logged in and in the expected project
+      if (id) {
+        const vcs = VCSInstance().newInstance();
+        await initializeLocalBackendProjectAndMarkForSync({
+          vcs,
+          workspace: newWorkspace,
+        });
+        if (needPushSnapshotOnInitialize) {
+          await pushSnapshotOnInitialize({
+            vcs,
+            workspace: newWorkspace,
+            project: duplicateToProject,
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to initialize local backend project', e);
     }
-  } catch (e) {
-    console.warn('Failed to initialize local backend project', e);
   }
-  const activity = scopeToActivity(newWorkspace.scope);
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${newWorkspace._id}/${activity}`);
+  return newWorkspace;
+}
+
+/** Duplicate workspace to other project and automatically sync to cloud if needed  */
+export const duplicateWorkspaceAction: ActionFunction = async ({ request }) => {
+  const formData = await request.formData();
+  const oldWorkspaceId = formData.get('workspaceId') as string;
+  invariant(oldWorkspaceId, 'Workspace ID is required');
+  const newOrgId = formData.get('orgId') as string;
+  invariant(newOrgId, 'Org ID is required');
+  const newProjectId = formData.get('projectId') as string;
+  invariant(newProjectId, 'Project ID is required');
+  const newWorkspaceName = formData.get('name') as string;
+
+  const oldWorkspace = await models.workspace.getById(oldWorkspaceId);
+  invariant(oldWorkspace, 'Workspace not found');
+
+  // duplicate the workspace to the new project
+  const newProject = await models.project.getById(newProjectId) as Project;
+  await duplicateWorkspace(oldWorkspace, newProject, newWorkspaceName || oldWorkspace.name, true);
+
+  return {
+    success: true,
+    newOrgId,
+    newProjectId,
+  };
 };
 
 export const updateWorkspaceAction: ActionFunction = async ({ request }) => {

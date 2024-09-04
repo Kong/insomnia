@@ -38,7 +38,6 @@ export const WorkspaceDropdown: FC<{}> = () => {
     activeWorkspace,
     activeProject,
     activeMockServer,
-    projects,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
@@ -314,7 +313,6 @@ export const WorkspaceDropdown: FC<{}> = () => {
         <WorkspaceDuplicateModal
           onHide={() => setIsDuplicateModalOpen(false)}
           workspace={activeWorkspace}
-          projects={projects}
         />
       )}
       {isImportModalOpen && (
