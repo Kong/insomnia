@@ -228,6 +228,22 @@ export async function importResourcesToProject({ projectId }: { projectId: strin
   await db.flushChanges(bufferId);
   return { resources: r.flat() };
 }
+const updateIdsInString = (str: string, ResourceIdMap: Map<string, string>) => {
+  let newString = str;
+  for (const [idA, idB] of ResourceIdMap.entries()) {
+    newString = newString.replace(new RegExp(idA, 'g'), idB);
+  }
+  return newString;
+};
+
+const importRequestWithNewIds = (request: Request, ResourceIdMap: Map<string, string>) => {
+  const newRequestWithIdsUpdated = JSON.parse(updateIdsInString(JSON.stringify(request), ResourceIdMap));
+  return ({
+    ...newRequestWithIdsUpdated,
+    _id: ResourceIdMap.get(request._id),
+    parentId: ResourceIdMap.get(request.parentId),
+  });
+};
 
 export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId: string }) => {
   invariant(ResourceCache, 'No resources to import');
@@ -297,6 +313,8 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
           requestId: ResourceIdMap.get(resource.requestId),
           parentId: ResourceIdMap.get(resource.parentId),
         });
+      } else if (isRequest(resource)) {
+        await db.docCreate(model.type, importRequestWithNewIds(resource, ResourceIdMap));
       } else {
         await db.docCreate(model.type, {
           ...resource,
@@ -398,6 +416,8 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
           requestId: ResourceIdMap.get(resource.requestId),
           parentId: ResourceIdMap.get(resource.parentId),
         });
+      } else if (isRequest(resource)) {
+        await db.docCreate(model.type, importRequestWithNewIds(resource, ResourceIdMap));
       } else {
         await db.docCreate(model.type, {
           ...resource,
