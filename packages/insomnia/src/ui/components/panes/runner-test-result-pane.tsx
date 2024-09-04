@@ -59,7 +59,7 @@ export const RunnerTestResultPane: FC<Props> = ({
         </div>;
       });
 
-      return <div key={key} className="pt-6 pb-6 border-dashed border-b border-b-[--hl-md]">
+      return <div key={key} data-testid={key} className="pt-6 pb-6 border-dashed border-b border-b-[--hl-md]">
         <div className="uppercase font-bold pl-3 mb-3 leading-10"> Iterations {i + 1} </div>
         <div className='border-solid border-1 border-gray-600' />
         {resultByRequest}
