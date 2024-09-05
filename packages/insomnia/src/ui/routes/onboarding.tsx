@@ -36,6 +36,7 @@ const features = [
     description:
       'With this enterprise capability you can create invite rules to determine what domains can be invited to join an organization.',
     image: invite_control,
+    rounded: true,
   },
   {
     id: 'unpushed_notifications',
@@ -59,6 +60,7 @@ const features = [
     description:
       'With this enterprise feature, we are finally introducing the ability to have multiple co-owners for an enterprise organization account.',
     image: co_owner,
+    rounded: true,
   },
 ] satisfies {
   id: string;
@@ -66,6 +68,7 @@ const features = [
   title: string;
   description: string;
   image: string;
+  rounded?: boolean;
 }[];
 
 const FeatureWizardView = () => {
@@ -116,7 +119,10 @@ const FeatureWizardView = () => {
                       <span>{feature.description}</span>
                     </p>
                     <div className="h-32">
-                      <img className="max-h-32 aspect-auto" src={feature.image} />
+                      {feature.rounded ? (
+                        <img className="max-h-32 aspect-auto rounded-md" src={feature.image} />) : (
+                          <img className="max-h-32 aspect-auto" src={feature.image} />
+                      )}
                     </div>
                     <div className="flex w-full p-4 bottom-0 left-0 sticky justify-between text-sm font-normal bg-gradient-to-t from-[--color-bg] to-[rgba(var(--color-bg-rgb),80%)]">
                       {prevPath ? (
