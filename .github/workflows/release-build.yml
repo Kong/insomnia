@@ -96,6 +96,14 @@ jobs:
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:unpacked -w insomnia
 
+      - name: Move .dll and .exe files to /tosign (PowerShell)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          New-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -ItemType Directory -Force
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
+
       # signs unpacked electron-builder contents, in this case only the .exe
       - name: Code-sign unpacked .exe (Windows only)
         if: matrix.os == 'windows-latest'
@@ -106,8 +114,16 @@ jobs:
           password: ${{secrets.ES_PASSWORD}}
           credential_id: ${{secrets.ES_CREDENTIAL_ID}}
           totp_secret: ${{secrets.ES_TOTP_SECRET}}
-          dir_path: packages/insomnia/dist/win-unpacked
+          dir_path: packages/insomnia/dist/win-unpacked/tosign
           override: true
+
+      - name: Move .dll and .exe files back to win-unpacked and delete /tosign
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/tosign" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/tosign" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
+          Remove-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -Recurse -Force
 
       # re-packages the now code-signed electron-builder contents into a squirrel installer
       - name: Package dist app (Windows only)
