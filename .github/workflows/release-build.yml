@@ -101,8 +101,16 @@ jobs:
         shell: pwsh
         run: |
           New-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -ItemType Directory -Force
+          New-Item -Path "packages/insomnia/dist/win-unpacked/signed" -ItemType Directory -Force
           Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
           Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
+
+      - name: debug before
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          ls packages/insomnia/dist/win-unpacked/tosign
+          ls packages/insomnia/dist/win-unpacked/signed
 
       # signs unpacked electron-builder contents, in this case only the .exe
       - name: Code-sign unpacked .exe (Windows only)
@@ -115,15 +123,24 @@ jobs:
           credential_id: ${{secrets.ES_CREDENTIAL_ID}}
           totp_secret: ${{secrets.ES_TOTP_SECRET}}
           dir_path: packages/insomnia/dist/win-unpacked/tosign
+          output_path: packages/insomnia/dist/win-unpacked/signed
           override: true
+
+      - name: debug after
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          ls packages/insomnia/dist/win-unpacked/tosign
+          ls packages/insomnia/dist/win-unpacked/signed
 
       - name: Move .dll and .exe files back to win-unpacked and delete /tosign
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/tosign" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
-          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/tosign" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/signed" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/signed" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
           Remove-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -Recurse -Force
+          Remove-Item -Path "packages/insomnia/dist/win-unpacked/signed" -Recurse -Force
 
       # re-packages the now code-signed electron-builder contents into a squirrel installer
       - name: Package dist app (Windows only)
