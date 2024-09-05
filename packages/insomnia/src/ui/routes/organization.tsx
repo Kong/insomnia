@@ -104,7 +104,7 @@ const formatCurrentPlanType = (type: PersonalPlanType) => {
 };
 type PaymentSchedules = 'month' | 'year';
 
-interface CurrentPlan {
+export interface CurrentPlan {
   isActive: boolean;
   period: PaymentSchedules;
   planId: string;
