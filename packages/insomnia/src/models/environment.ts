@@ -20,6 +20,7 @@ export interface BaseEnvironment {
 }
 
 export type Environment = BaseModel & BaseEnvironment;
+export type UserUploadEnvironment = Pick<Environment, 'data' | 'dataPropertyOrder' | 'name'>;
 
 export const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => (
   model.type === type

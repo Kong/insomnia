@@ -1,7 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, type ReactNode, useCallback, useEffect, useState } from 'react';
 import { Button, Collection, Dialog, Header, Heading, Menu, MenuItem, MenuTrigger, Modal, ModalOverlay, Popover, Section } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
@@ -30,7 +30,7 @@ import { ImportModal } from '../modals/import-modal';
 import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 
-export const WorkspaceDropdown: FC = () => {
+export const WorkspaceDropdown: FC<{}> = () => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   invariant(organizationId, 'Expected organizationId');
   const { userSession } = useRootLoaderData();
@@ -38,7 +38,6 @@ export const WorkspaceDropdown: FC = () => {
     activeWorkspace,
     activeProject,
     activeMockServer,
-    projects,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
@@ -50,6 +49,7 @@ export const WorkspaceDropdown: FC = () => {
   const deleteWorkspaceFetcher = useFetcher();
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
+  const navigate = useNavigate();
 
   // after duplicate workspace, close the modal
   useEffect(() => {
@@ -163,6 +163,21 @@ export const WorkspaceDropdown: FC = () => {
           icon: <Icon icon='file-import' />,
           action: () => setIsImportModalOpen(true),
         }],
+      },
+      {
+        name: 'Runner',
+        id: 'runner',
+        icon: 'circle-play',
+        items: [
+          {
+            id: 'run',
+            name: 'Run Collection',
+            icon: <Icon icon='circle-play' />,
+            action: () => {
+              navigate(`/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/${activeWorkspace._id}/debug/runner`,);
+            },
+          },
+        ],
       },
       {
         name: 'Actions',
@@ -298,7 +313,6 @@ export const WorkspaceDropdown: FC = () => {
         <WorkspaceDuplicateModal
           onHide={() => setIsDuplicateModalOpen(false)}
           workspace={activeWorkspace}
-          projects={projects}
         />
       )}
       {isImportModalOpen && (

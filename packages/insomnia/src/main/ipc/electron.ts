@@ -68,6 +68,7 @@ export type MainOnChannels =
   | 'writeText'
   | 'addExecutionStep'
   | 'completeExecutionStep'
+  | 'updateLatestStepName'
   | 'startExecution';
 export type RendererOnChannels =
   'clear-all-models'

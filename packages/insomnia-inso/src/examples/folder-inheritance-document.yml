@@ -7,7 +7,7 @@ resources:
     parentId: fld_7ca9aeafb2714bc287e33f643299c271
     modified: 1720533313731
     created: 1720531712225
-    url: httpbin.org/anything
+    url: https://localhost:4011/echo
     name: New Request
     description: ""
     method: GET
@@ -106,11 +106,15 @@ resources:
     name: Returns 200
     code: |-
       const response1 = await insomnia.send();
-      // console.log(response1.data)
+      const timelineString = await require('fs/promises').readFile(response1.timelinePath, 'utf8');
+      const timeline = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e).value).join(' ');
+      console.log(timeline);
+
       const body = JSON.parse(response1.data)
+      console.log(body.headers)
       expect(response1.status).to.equal(200);
       expect(body.data).to.equal('bar')
-      expect(body.headers.Customheader).to.equal('jack')
-      expect(body.headers.Authorization).to.equal('Basic YWRtaW46cGFzc3dvcmQ=')
+      expect(body.headers.customheader).to.equal('jack')
+      expect(body.headers.authorization).to.equal('Basic YWRtaW46cGFzc3dvcmQ=')
     metaSortKey: -1720533328458
     _type: unit_test

@@ -2,6 +2,7 @@ import { test } from '../../playwright/test';
 
 test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)', async ({ page }) => {
     const gitSyncSmokeTestToken = process.env.GIT_SYNC_SMOKE_TEST_TOKEN;
+    test.setTimeout(60000);
 
     // read env variable to skip test
     if (!gitSyncSmokeTestToken) {
@@ -26,8 +27,8 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
     await page.getByLabel('Toggle preview').click();
 
     // switch branches
-    await page.getByTestId('git-dropdown').getByLabel('Git Sync').click();
-    await page.getByRole('button', { name: ' Branches' }).click();
+    await page.getByTestId('git-dropdown').click();
+    await page.getByText('Branches').click();
     await page.getByRole('cell', { name: 'main(current)' }).click();
     await page.getByRole('cell', { name: 'abc' }).click();
     await page.getByRole('row', { name: 'abc Checkout' }).getByRole('button').click();
@@ -37,8 +38,8 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
     // perform some changes and commit them
     await page.locator('pre').filter({ hasText: 'title: Endpoint Security' }).click();
     await page.getByRole('textbox').fill(' test');
-    await page.getByTestId('git-dropdown').getByLabel('Git Sync').click();
-    await page.getByRole('button', { name: ' Commit' }).click();
+    await page.getByTestId('git-dropdown').click();
+    await page.getByText('Commit').click();
     await page.getByText('Modified Objects').click();
     await page.getByText('ApiSpec').click();
     await page.getByPlaceholder('A descriptive message to').click();
@@ -49,35 +50,36 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
     await page.getByRole('button', { name: 'Close' }).click();
 
     // switch back to main branch, which should not have said changes
-    await page.getByTestId('git-dropdown').getByLabel('Git Sync').click();
-    await page.getByRole('button', { name: 'main' }).click();
-    await page.getByTestId('git-dropdown').getByLabel('Git Sync').click();
-    await page.getByRole('button', { name: ' Branches' }).click();
+    await page.getByTestId('git-dropdown').click();
+    await page.getByText('main').click();
+    await page.getByTestId('git-dropdown').click();
+    await page.getByText('Branches').click();
     await page.getByRole('cell', { name: 'main(current)' }).click();
     await page.getByRole('button', { name: 'Done' }).click();
     await page.getByTestId('CodeEditor').getByText('Endpoint Security').click();
 
     // switch to the branch with the changes and check if they are there
-    await page.getByTestId('git-dropdown').getByLabel('Git Sync').click();
-    await page.getByRole('button', { name: 'abc' }).click();
-    await page.getByTestId('git-dropdown').getByLabel('Git Sync').click();
-    await page.getByRole('button', { name: ' Branches' }).click();
+    await page.getByTestId('git-dropdown').click();
+    await page.getByText('abc').click();
+    await page.getByTestId('git-dropdown').click();
+    await page.getByText('Branches').click();
     await page.getByRole('cell', { name: 'abc(current)' }).click();
     await page.getByRole('button', { name: 'Done' }).click();
     await page.getByText('Endpoint Security test').click();
 
     // check git history
-    await page.getByTestId('git-dropdown').getByLabel('Git Sync').click();
-    await page.getByRole('button', { name: ' Fetch' }).click();
-    await page.getByTestId('git-dropdown').getByLabel('Git Sync').click();
-    await page.getByRole('button', { name: ' History' }).click();
+    await page.getByTestId('git-dropdown').click();
+    await page.getByText('Fetch').click();
+
+    await page.getByTestId('git-dropdown').click();
+    await page.getByText('History').click();
     await page.getByRole('cell', { name: 'example commit message' }).click();
     await page.getByRole('cell', { name: 'just now' }).click();
     await page.getByRole('button', { name: 'Done' }).click();
 
     // push changes test
-    await page.getByTestId('git-dropdown').getByLabel('Git Sync').click();
-    await page.getByRole('button', { name: ' Branches' }).click();
+    await page.getByTestId('git-dropdown').click();
+    await page.getByText('Branches').click();
     await page.getByRole('cell', { name: 'abc(current)' }).click();
     await page.getByRole('cell', { name: 'push-pull-test' }).click();
     await page.getByRole('row', { name: 'push-pull-test Checkout' }).getByRole('button').click();
@@ -89,8 +91,8 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
     await page.getByLabel('Name', { exact: true }).click();
     await page.getByLabel('Name', { exact: true }).fill(`My Folder ${testUUID}`);
     await page.getByRole('button', { name: 'Create', exact: true }).click();
-    await page.getByTestId('git-dropdown').getByLabel('Git Sync').click();
-    await page.getByRole('button', { name: ' Commit' }).click();
+    await page.getByTestId('git-dropdown').click();
+    await page.getByText('Commit').click();
     await page.getByRole('cell', { name: `My Folder ${testUUID}` }).locator('label').click();
     await page.getByPlaceholder('A descriptive message to').click();
     await page.getByPlaceholder('A descriptive message to').fill(`commit test ${testUUID}`);
@@ -98,13 +100,12 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
     await page.getByRole('button', { name: ' Commit' }).click();
     await page.getByText('No changes to commit.').click();
     await page.getByRole('button', { name: 'Close' }).click();
-    await page.getByTestId('git-dropdown').getByLabel('Git Sync').click();
-    await page.getByRole('button', { name: ' Push' }).click();
-    await page.getByTestId('git-dropdown').getByLabel('Git Sync').click();
-    await page.getByRole('button', { name: ' Fetch' }).click();
-    await page.getByTestId('git-dropdown').getByLabel('Git Sync').click();
-    await page.getByRole('button', { name: ' History' }).click();
+    await page.getByTestId('git-dropdown').click();
+    await page.getByText('Push', { exact: true }).click();
+    await page.getByTestId('git-dropdown').click();
+    await page.getByText('Fetch').click();
+    await page.getByTestId('git-dropdown').click();
+    await page.getByText('History').click();
     await page.getByRole('cell', { name: `commit test ${testUUID}` }).click();
     await page.getByRole('button', { name: 'Done' }).click();
-
 });

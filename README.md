@@ -1,7 +1,10 @@
 # Insomnia API Client
 
+![Stars](https://img.shields.io/github/stars/Kong/insomnia?style=flat-square)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/Kong/insomnia?style=flat-square)
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
 [![license](https://img.shields.io/github/license/Kong/insomnia.svg)](LICENSE)
+![Twitter Follow](https://img.shields.io/twitter/follow/GetInsomnia?style=social)
 
 Insomnia is an open-source, cross-platform API client for GraphQL, REST, WebSockets, Server-sent events (SSE), gRPC and any other HTTP compatible protocol.
 
@@ -9,20 +12,21 @@ With Insomnia you can:
 
 - **Debug APIs** using the most popular protocols and formats.
 - **Design APIs** using the native OpenAPI editor and visual preview.
-- **Test APIs** using native test suites.
-- **Mock APIs** using a server and routes.
+- **Test APIs** using native test suites and collection runner.
+- **Mock APIs** using a cloud or self-hosted mocking server.
 - **Build CI/CD pipelines** using the native Insomnia CLI for linting and testing.
-- **Collaborate with others** using the many collaboration features to share your projects.
+- **Collaborate with others** using the many collaboration features.
+- **And more** including the ability to use 3rd party plugins.
 
-And a lot more! The following storage options are supported for your projects, collections, specs and all other files:
+The following storage options are supported for your Insomnia projects, collections, design specs and all other resources:
 
-- **Local Vault**: for local storage of collections, design specs and every other resource.
-- **Cloud Sync**: for cloud collaboration, encrypted and free.
-- **Git Sync**: for Git storage of all files using any 3rd party Git repository.
+- **Local Vault**: for 100% local storage of collections, design specs and every other resource.
+- **Git Sync**: for Git storage using any 3rd party Git repository, without going through the cloud.
+- **Cloud Sync**: for cloud collaboration, optionally end-to-end encrypted (E2EE) in the cloud.
 
 ![Insomnia API Client](https://raw.githubusercontent.com/Kong/insomnia/develop/screenshots/main.png)
 
-## Get started
+## Get started for free
 
 Insomnia is available for Mac, Windows, and Linux and can be downloaded from the website:
 
@@ -30,17 +34,25 @@ Insomnia is available for Mac, Windows, and Linux and can be downloaded from the
 
 ## Account & Subscriptions
 
-You can use Insomnia without an account with **Scratch Pad**, or you can [create an account for free](https://insomnia.rest/pricing) to get access to the full capabilities of the product.
+You can use Insomnia without an account with the local **Scratch Pad**, or you can [create an account for free](https://insomnia.rest/pricing) to get access to the full capabilities of the product.
 
-Even with an account, Insomnia only stores your projects and files accordingly to the storage backend that you have selected, which can be Local Vault, Cloud Sync, Git Sync or any combination of them. As such you have
-the freedom to choose to store sensitive projects locally, while still being able to collaborate on others in the cloud or on Git. It's the best of both worlds.
+Even with an account, Insomnia only stores your projects and files accordingly to the **storage backend** that you have selected, which can be Local Vault, Cloud Sync, Git Sync or any combination of them. As such - for example - you have the freedom to choose to store sensitive projects 100% locally or in a Git repository, while still being able to collaborate on others in the cloud. It's the best of both worlds.
+
+For added security, Insomnia also offers a **Private Environments** feature, where your environments configuration is always stored locally and never in the cloud, independently from the storage option that you have chosen for your project.
 
 ## Premium features and support
 
-Kong Inc. offers commercial subscriptions that enhance Insomnia in a variety of ways. Some of those features include the ability to create organizations for your projects, Enterprise SSO with SAML and OIDC, RBAC when sharing
-our projects with others, AI capabilities to increase developer productivity when creating, testing and documenting APIs and a lot more.
+Insomnia has a very generous free plan that will be satisfactory for most users, but if you need to get access to premium capabilities like unlimited collaboration, the Git Sync feature, the ability to create organizations for your projects, using a 3rd party IDP for logins (SAML, OIDC) and many other features, then you can explore the other subscription plans.
 
-You can [explore all premium plans](https://insomnia.rest/pricing) and get started for free.
+You can [compare all subscription plans](https://insomnia.rest/pricing) and get started for free.
+
+## Why does Insomnia require an account?
+
+Insomnia does not require an account if you decide to use the local **Scratch Pad**, but to access most capabilities of the product we require an account. Your account data is securely stored in compliance with ISO27001, SOC 2 Type II, ISO27018, Gold CSA STAR regulations and in accordance to our terms of service and privacy policy.
+
+We require an account to sustainably build and improve the product, and to make sure we can continue to offer the many core capabilities in a free and open-source distribution. While open source software is free to use, it is unfortunately not free to build, and our ability to continue working on Insomnia is dependent on our ability to convert a subset of free users (that need premium features) to become paying customers of our product.
+
+If you are a user that cannot share API data like collections and design specifications to the cloud, this is still possible by selecting "Local Vault" as the storage of your Insomnia projects: having an Insomnia account is not tied to how you wish to store your sensitive API data.
 
 ## Bugs and Feature Requests
 
@@ -55,7 +67,7 @@ Please read through our [contributing guidelines](CONTRIBUTING.md) and [code of 
 
 ## Documentation
 
-Check out our open-source [Insomnia Documentation](https://docs.insomnia.rest/).
+Check out our official [Insomnia Documentation](https://docs.insomnia.rest/).
 
 ## Develop Insomnia
 

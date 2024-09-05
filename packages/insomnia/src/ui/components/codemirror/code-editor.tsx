@@ -17,6 +17,7 @@ import * as misc from '../../../common/misc';
 import type { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
 import { extractNunjucksTagFromCoords, type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '../../../templating/utils';
+import { ednPrettify } from '../../../utils/prettify/edn';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
@@ -237,6 +238,13 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
         return code;
       }
     };
+    const prettifyEDN = (code: string) => {
+      try {
+        return ednPrettify(code);
+      } catch (error) {
+        return code;
+      }
+    };
     if (typeof code !== 'string') {
       console.warn('Code editor was passed non-string value', code);
       return;
@@ -248,6 +256,8 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
         code = prettifyXML(code, filter);
       } else if (mode?.includes('json')) {
         code = prettifyJSON(code, filter);
+      } else if (mode?.includes('edn')) {
+        code = prettifyEDN(code);
       }
     }
     // this prevents codeMirror from needlessly setting the same thing repeatedly (which has the effect of moving the user's cursor and resetting the viewport scroll: a bad user experience)

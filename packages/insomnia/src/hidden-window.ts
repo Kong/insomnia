@@ -28,6 +28,8 @@ window.bridge.onmessage(async (data, callback) => {
   }
 });
 
+// This function is duplicated in scriptExecutor.ts to run in nodejs
+// TODO: consider removing this implementation and using only nodejs scripting
 const runScript = async (
   { script, context }: { script: string; context: RequestContext },
 ): Promise<RequestContext> => {
@@ -100,11 +102,17 @@ const runScript = async (
       name: context.baseEnvironment.name,
       data: mutatedContextObject.baseEnvironment,
     },
+    iterationData: context.iterationData ? {
+      name: context.iterationData.name,
+      data: mutatedContextObject.iterationData,
+    } : undefined,
     request: updatedRequest,
+    execution: mutatedContextObject.execution,
     settings: updatedSettings,
     clientCertificates: updatedCertificates,
     cookieJar: updatedCookieJar,
     globals: mutatedContextObject.globals,
+    requestTestResults: mutatedContextObject.requestTestResults,
   };
 };
 

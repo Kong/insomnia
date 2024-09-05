@@ -17,7 +17,7 @@ export function init() {
           responseId,
         } = await fetchRequestData(req._id);
 
-        const renderResult = await tryToInterpolateRequest(request, environment._id, 'send', extraInfo);
+        const renderResult = await tryToInterpolateRequest({ request, environment: environment._id, purpose: 'send', extraInfo });
         const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
         const response = await sendCurlAndWriteTimeline(
           renderedRequest,

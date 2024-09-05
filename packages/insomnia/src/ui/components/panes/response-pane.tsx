@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
-import React, { type FC, useCallback } from 'react';
+import React, { type FC, useCallback, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router-dom';
 
@@ -29,6 +29,7 @@ import { ResponseViewer } from '../viewers/response-viewer';
 import { BlankPane } from './blank-pane';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
+import { RequestTestResultPane } from './request-test-result-pane';
 
 interface Props {
   activeRequestId: string;
@@ -124,6 +125,21 @@ export const ResponsePane: FC<Props> = ({
     }
   }, [activeRequest, activeResponse]);
 
+  const { passedTestCount, totalTestCount } = useMemo(() => {
+    let passedTestCount = 0;
+    let totalTestCount = 0;
+    activeResponse?.requestTestResults.forEach(result => {
+      if (result.status === 'passed') {
+        passedTestCount++;
+      }
+      totalTestCount++;
+    });
+    return { passedTestCount, totalTestCount };
+  }, [activeResponse]);
+  const testResultCountTagColor = totalTestCount > 0 ?
+    passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600' :
+    'bg-[var(--hl-sm)]';
+
   if (!activeRequest) {
     return <BlankPane type="response" />;
   }
@@ -143,6 +159,7 @@ export const ResponsePane: FC<Props> = ({
 
   const timeline = models.response.getTimeline(activeResponse);
   const cookieHeaders = getSetCookieHeaders(activeResponse.headers);
+
   return (
     <Pane type="response">
       {!activeResponse ? null : (
@@ -182,6 +199,22 @@ export const ResponsePane: FC<Props> = ({
             {cookieHeaders.length > 0 && (
               <span className="p-2 aspect-square flex items-center justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{cookieHeaders.length}</span>
             )}
+          </Tab>
+          <Tab
+            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+            id='test-results'
+          >
+            <div>
+              <span>
+                Tests
+              </span>
+              <span
+                className={`rounded-sm ml-1 px-1 ${testResultCountTagColor}`}
+                style={{ color: 'text-[--hl]' }}
+              >
+                {`${passedTestCount} / ${totalTestCount}`}
+              </span>
+            </div>
           </Tab>
           <Tab
             className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
@@ -235,14 +268,18 @@ export const ResponsePane: FC<Props> = ({
             />
           </ErrorBoundary>
         </TabPanel>
-
+        <TabPanel
+          className='w-full flex-1 flex flex-col overflow-y-auto'
+          id='test-results'
+        >
+          <RequestTestResultPane requestTestResults={activeResponse.requestTestResults} />
+        </TabPanel>
         <TabPanel
           className='w-full flex-1 flex flex-col overflow-y-auto'
           id='mock-response'
         >
           <MockResponseExtractor />
         </TabPanel>
-
         <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='timeline'>
           <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
             <ResponseTimelineViewer

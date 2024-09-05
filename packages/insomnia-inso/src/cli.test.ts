@@ -31,8 +31,8 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/nedb -e env_env_ca046a --reporter min uts_fe901c',
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/git-repo -e env_env_ca046a uts_fe901c',
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/insomnia-v4/insomnia_v4.yaml -e env_env_0e4670 spc_3b2850',
-  // export file,request can inherit auth headers and variables from folder
-  '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/examples/folder-inheritance-document.yml spc_a8144e --verbose',
+  // export file, request can inherit auth headers and variables from folder, also test --disableCertValidation with local https smoke test server
+  '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/examples/folder-inheritance-document.yml spc_a8144e --verbose --disableCertValidation',
 
   // run collection
   // export file
@@ -49,31 +49,63 @@ const shouldReturnErrorCode = [
 ];
 
 describe('inso dev bundle', () => {
-  it.each(shouldReturnSuccessCode)('exit code should be 0: %p', async input => {
-    const result = await runCliFromRoot(input);
-    if (result.code !== 0) {
-      console.log(result);
-    }
-    expect(result.code).toBe(0);
+  describe('exit codes are consistent', () => {
+    it.each(shouldReturnSuccessCode)('exit code should be 0: %p', async input => {
+      const result = await runCliFromRoot(input);
+      if (result.code !== 0) {
+        console.log(result);
+      }
+      expect(result.code).toBe(0);
+    });
+    it.each(shouldReturnErrorCode)('exit code should be 1: %p', async input => {
+      const result = await runCliFromRoot(input);
+      if (result.code !== 1) {
+        console.log(result);
+      }
+      expect(result.code).toBe(1);
+    });
   });
-  it.each(shouldReturnErrorCode)('exit code should be 1: %p', async input => {
-    const result = await runCliFromRoot(input);
-    if (result.code !== 1) {
-      console.log(result);
-    }
-    expect(result.code).toBe(1);
-  });
-  it('logs response and timeline with verbose', async () => {
-    const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/minimal.yml wrk_5b5ab6 --verbose';
-    const result = await runCliFromRoot(input);
-    if (result.code !== 0) {
-      console.log(result);
-    }
-    // logs response object
-    expect(result.stdout).toContain('status: 200');
-    // logs timeline
-    expect(result.stdout).toContain('Preparing request to http://127.0.0.1:4010/');
-    // expect(result.stdout).toContain('foo bar baz');
+  describe('response and timeline has scripting effects', () => {
+    it('console log appears in timeline', async () => {
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/minimal.yml wrk_5b5ab6 --verbose';
+      const result = await runCliFromRoot(input);
+      if (result.code !== 0) {
+        console.log(result);
+      }
+      expect(result.stdout).toContain('status: 200');
+      expect(result.stdout).toContain('Preparing request to http://127.0.0.1:4010/');
+      expect(result.stdout).toContain('foo bar baz');
+    });
+
+    it('insomnia.request.addHeader works', async () => {
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/script-add-header.yml wrk_5b5ab6 --verbose';
+      const result = await runCliFromRoot(input);
+      if (result.code !== 0) {
+        console.log(result);
+      }
+      expect(result.stdout).toContain('status: 200');
+      expect(result.stdout).toContain('Preparing request to http://127.0.0.1:4010/');
+      expect(result.stdout).toContain('custom-test-header: test-header-value');
+    });
+
+    it('require("insomnia-collection") works', async () => {
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/script-require.yml wrk_5b5ab6 --verbose';
+      const result = await runCliFromRoot(input);
+      if (result.code !== 0) {
+        console.log(result);
+      }
+      expect(result.stdout).toContain('X-Hello: hello');
+      expect(result.stdout).toContain('GET /echo?k1=v1 HTTP/1.1');
+    });
+
+    it('insomnia.sendRequest works', async () => {
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/script-send-request.yml wrk_cfacae --verbose';
+      const result = await runCliFromRoot(input);
+      if (result.code !== 0) {
+        console.log(result);
+      }
+      expect(result.stdout).toContain('log: "we did it: 200"');
+    });
   });
 });
 
@@ -81,19 +113,40 @@ const packagedSuccessCodes = shouldReturnSuccessCode.map(x => x.replace('$PWD/pa
 const packagedErrorCodes = shouldReturnErrorCode.map(x => x.replace('$PWD/packages/insomnia-inso/bin/inso', '$PWD/packages/insomnia-inso/binaries/inso'));
 
 describe('inso packaged binary', () => {
-  it.each(packagedSuccessCodes)('exit code should be 0: %p', async input => {
-    const result = await runCliFromRoot(input);
-    if (result.code !== 0) {
-      console.log(result);
-    }
-    expect(result.code).toBe(0);
+  describe('exit codes are consistent', () => {
+    it.each(packagedSuccessCodes)('exit code should be 0: %p', async input => {
+      const result = await runCliFromRoot(input);
+      if (result.code !== 0) {
+        console.log(result);
+      }
+      expect(result.code).toBe(0);
+    });
+    it.each(packagedErrorCodes)('exit code should be 1: %p', async input => {
+      const result = await runCliFromRoot(input);
+      if (result.code !== 1) {
+        console.log(result);
+      }
+      expect(result.code).toBe(1);
+    });
   });
-  it.each(packagedErrorCodes)('exit code should be 1: %p', async input => {
-    const result = await runCliFromRoot(input);
-    if (result.code !== 1) {
-      console.log(result);
-    }
-    expect(result.code).toBe(1);
+});
+
+const helpCommands = [
+  '$PWD/packages/insomnia-inso/bin/inso -h',
+  '$PWD/packages/insomnia-inso/bin/inso --help',
+  '$PWD/packages/insomnia-inso/bin/inso help',
+  '$PWD/packages/insomnia-inso/bin/inso generate -h',
+  '$PWD/packages/insomnia-inso/bin/inso run -h',
+  '$PWD/packages/insomnia-inso/bin/inso run test -h',
+  '$PWD/packages/insomnia-inso/bin/inso lint -h',
+  '$PWD/packages/insomnia-inso/bin/inso lint spec -h',
+  '$PWD/packages/insomnia-inso/bin/inso export -h',
+  '$PWD/packages/insomnia-inso/bin/inso export spec -h',
+];
+describe('Snapshot for', () => {
+  it.each(helpCommands)('"inso %s"', async input => {
+    const { stdout } = await runCliFromRoot(input);
+    expect(stdout).toMatchSnapshot();
   });
 });
 

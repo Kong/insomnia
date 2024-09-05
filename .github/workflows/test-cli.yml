@@ -39,10 +39,13 @@ jobs:
       - name : Build Inso
         run: npm run build -w insomnia-inso
 
+      - name: Run Inso unit tests
+        run: npm run test:unit -w insomnia-inso
+
       - name: Start test server
         run: npm run serve -w insomnia-smoke-test & npx -y wait-on http://localhost:4010
 
-      - name: Run Inso bundle tests
+      - name: Run Inso bundle e2e tests
         run: npm run test:bundle -w insomnia-inso
 
       - name: Set Inso CLI variables
@@ -55,11 +58,13 @@ jobs:
           echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
 
       - name: Package Inso CLI binary
-        run: npm run inso-package
+        run: |
+          npm run build -w insomnia-inso
+          npm run package -w insomnia-inso
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
-      - name: Run Inso binary tests
+      - name: Run Inso binary e2e tests
         run: npm run test:binary -w insomnia-inso
 
       - name: Create Inso zip/tar/gz artifacts

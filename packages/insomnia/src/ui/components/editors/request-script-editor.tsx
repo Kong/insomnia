@@ -1,5 +1,5 @@
 import type { Snippet } from 'codemirror';
-import { CookieObject, Environment, InsomniaObject, Request as ScriptRequest, RequestInfo, Url, Variables } from 'insomnia-sdk';
+import { CookieObject, Environment, Execution, InsomniaObject, Request as ScriptRequest, RequestInfo, Url, Variables } from 'insomnia-sdk';
 import React, { type FC, useRef } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Section, Toolbar } from 'react-aria-components';
 
@@ -507,10 +507,10 @@ export const RequestScriptEditor: FC<Props> = ({
         requestName: '',
         requestId: '',
       }),
-    },
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      (_msg: string, _fn: () => void) => { }
-    ),
+      execution: new Execution({
+        location: ['path'],
+      }),
+    }),
     'insomnia',
   );
 

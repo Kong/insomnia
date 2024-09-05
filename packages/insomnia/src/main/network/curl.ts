@@ -12,7 +12,7 @@ import type { CookieJar } from '../../models/cookie-jar';
 import type { Environment } from '../../models/environment';
 import type { RequestAuthentication, RequestHeader } from '../../models/request';
 import type { Response } from '../../models/response';
-import { type Compression, getBodyBuffer } from '../../models/response';
+import { readCurlResponse } from '../../models/response';
 import { filterClientCertificates } from '../../network/certificate';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { invariant } from '../../utils/invariant';
@@ -343,7 +343,7 @@ const closeCurlConnection = (
   }
 };
 
-const closeAllCurlConnections = (): void => CurlConnections.forEach(curl => curl.close());
+const closeAllCurlConnections = (): void => CurlConnections.forEach(curl => curl.isOpen && curl.close());
 
 const findMany = async (
   options: { responseId: string }
@@ -378,23 +378,7 @@ export const registerCurlHandlers = () => {
   ipcMainOn('curl.closeAll', closeAllCurlConnections);
   ipcMainHandle('curl.readyState', (_, options: Parameters<typeof getCurlReadyState>[0]) => getCurlReadyState(options));
   ipcMainHandle('curl.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
+  ipcMainHandle('readCurlResponse', (_, options: Parameters<typeof readCurlResponse>[0]) => readCurlResponse(options));
 };
-
-ipcMainHandle('readCurlResponse', async (_, options: { bodyPath?: string; bodyCompression?: Compression }) => {
-  const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
-  const bodyBufferOrErrMsg = getBodyBuffer(options, readFailureMsg);
-  // TODO(jackkav): simplify the fail msg and reuse in other getBodyBuffer renderer calls
-
-  if (!bodyBufferOrErrMsg) {
-    return { body: '', error: readFailureMsg };
-  } else if (typeof bodyBufferOrErrMsg === 'string') {
-    if (bodyBufferOrErrMsg === readFailureMsg) {
-      return { body: '', error: readFailureMsg };
-    }
-    return { body: '', error: `unknown error in loading response body: ${bodyBufferOrErrMsg}` };
-  }
-
-  return { body: bodyBufferOrErrMsg.toString('utf8'), error: '' };
-});
 
 electron.app.on('window-all-closed', closeAllCurlConnections);

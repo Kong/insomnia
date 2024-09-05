@@ -26,7 +26,7 @@ test('can send requests', async ({ app, page }) => {
 
   await page.getByLabel('Create in collection').click();
   await page.getByRole('menuitemradio', { name: 'From Curl' }).click();
-  const curl = 'curl --request POST --url https://httpbin.org/status/200';
+  const curl = 'curl --request GET --url https://mock.insomnia.rest';
   await page.locator('.CodeMirror textarea').fill(curl);
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
@@ -96,5 +96,6 @@ test('can cancel requests', async ({ app, page }) => {
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
   await page.getByRole('button', { name: 'Cancel Request' }).click();
+  await page.getByRole('button', { name: 'Ok', exact: true }).click();
   await page.click('text=Request was cancelled');
 });

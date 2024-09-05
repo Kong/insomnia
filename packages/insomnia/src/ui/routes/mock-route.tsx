@@ -117,6 +117,9 @@ export const MockRouteRoute = () => {
         method: 'PUT',
         organizationId,
         sessionId: userSession.id,
+        headers: {
+          'insomnia-mock-method': mockRoute.method,
+        },
         data: mockRouteToHar({
           statusCode: mockRoute.statusCode,
           statusText: mockRoute.statusText,
@@ -148,13 +151,13 @@ export const MockRouteRoute = () => {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new-mock-send`,
         method: 'post',
       });
-
   const upsertMockbinHar = async (pathInput?: string) => {
-    const hasRouteInServer = mockRoutes.filter(m => m._id !== mockRoute._id).find(m => m.name === pathInput);
+    const hasRouteInServer = mockRoutes.filter(m => m._id !== mockRoute._id)
+      .find(m => m.name === pathInput && m.method.toUpperCase() === mockRoute.method.toUpperCase());
     if (hasRouteInServer) {
       showModal(AlertModal, {
         title: 'Error',
-        message: `Path "${pathInput}" must be unique. Please enter a different name.`,
+        message: `Path "${pathInput}" and method must be unique. Please enter a different name.`,
       });
       return;
     };
@@ -185,11 +188,12 @@ export const MockRouteRoute = () => {
     });
   };
   const onSend = async (pathInput: string) => {
-    const hasRouteInServer = mockRoutes.filter(m => m._id !== mockRoute._id).find(m => m.name === pathInput);
+    const hasRouteInServer = mockRoutes.filter(m => m._id !== mockRoute._id)
+      .find(m => m.name === pathInput && m.method.toUpperCase() === mockRoute.method.toUpperCase());
     if (hasRouteInServer) {
       showModal(AlertModal, {
         title: 'Error',
-        message: `Path "${pathInput}" must be unique. Please enter a different name.`,
+        message: `Path "${pathInput}" and method must be unique. Please enter a different name.`,
       });
       return;
     };
@@ -283,6 +287,7 @@ export const MockRouteRoute = () => {
           </TabPanel>
           <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='headers'>
             <MockResponseHeadersEditor
+              key={mockRoute._id + mockRoute.name}
               onBlur={onBlurTriggerUpsert}
               bulk={false}
             />
@@ -294,6 +299,7 @@ export const MockRouteRoute = () => {
                   <label htmlFor="mock-response-status-code-editor">
                     <small>Status Code</small>
                     <input
+                      key={mockRoute._id + mockRoute.name}
                       id="mock-response-status-code-editor"
                       type="number"
                       defaultValue={mockRoute.statusCode}
@@ -309,6 +315,7 @@ export const MockRouteRoute = () => {
                   <label htmlFor="mock-response-status-text-editor">
                     <small>Status Text</small>
                     <input
+                      key={mockRoute._id + mockRoute.name}
                       id="mock-response-status-text-editor"
                       type="string"
                       defaultValue={mockRoute.statusText}

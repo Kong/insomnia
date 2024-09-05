@@ -7,13 +7,13 @@ resources:
     parentId: wrk_5b5ab67830944ffcbec47528366ef403
     modified: 1636142586648
     created: 1636141100570
-    url: http://127.0.0.1:4010/basic/auth
-    name: basic auth by pre request script
+    url: http://127.0.0.1:4010
+    name: custom header by pre request script
     description: ""
     method: GET
     body: {}
     parameters: []
-    preRequestScript: "insomnia.request.addHeader({key: 'Authorization', value: 'Basic dXNlcjpwYXNz' });"
+    preRequestScript: "insomnia.request.addHeader({key: 'custom-test-header', value: 'test-header-value' });"
     metaSortKey: -1636141100570
     isPrivate: false
     settingStoreCookies: true

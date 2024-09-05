@@ -2,6 +2,7 @@ import { createWriteStream } from 'node:fs';
 import path from 'node:path';
 
 import * as contentDisposition from 'content-disposition';
+import type { RequestTestResult } from 'insomnia-sdk';
 import { extension as mimeExtension } from 'mime-types';
 import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
 
@@ -11,9 +12,11 @@ import { type ChangeBufferEvent, database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
 import { type RenderedRequest } from '../../common/render';
 import type { ResponsePatch } from '../../main/network/libcurl-promise';
+import type { TimingStep } from '../../main/network/request-timing';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
 import type { CookieJar } from '../../models/cookie-jar';
+import type { UserUploadEnvironment } from '../../models/environment';
 import { type GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import type { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
@@ -69,7 +72,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
   const activeWorkspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
   invariant(activeWorkspaceMeta, 'Active workspace meta not found');
   // NOTE: loaders shouldnt mutate data, this should be moved somewhere else
-  await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: requestId });
+  await models.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: requestId });
   if (isGrpcRequestId(requestId)) {
     return {
       activeRequest,
@@ -355,7 +358,6 @@ const writeToDownloadPath = (downloadPathAndName: string, responsePatch: Respons
       resolve(null);
     });
   });
-
 };
 
 export interface SendActionParams {
@@ -369,90 +371,25 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   invariant(typeof requestId === 'string', 'Request ID is required');
   invariant(workspaceId, 'Workspace ID is required');
   const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
+
   try {
-    window.main.startExecution({ requestId });
-    const requestData = await fetchRequestData(requestId);
-
-    window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
-    const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId);
-    window.main.completeExecutionStep({ requestId });
-    if (mutatedContext === null) {
-      return null;
-    }
-    // disable after-response script here to avoiding rendering it
-    // @TODO This should be handled in a better way. Maybe remove the key from the request object we pass in tryToInterpolateRequest
-    const afterResponseScript = mutatedContext.request.afterResponseScript ? `${mutatedContext.request.afterResponseScript}` : undefined;
-    mutatedContext.request.afterResponseScript = '';
-
-    window.main.addExecutionStep({ requestId, stepName: 'Rendering request' });
-    const renderedResult = await tryToInterpolateRequest(
-      mutatedContext.request,
-      mutatedContext.environment,
-      'send',
-      undefined,
-      mutatedContext.baseEnvironment,
+    return await sendActionImp({
+      requestId,
+      workspaceId,
+      shouldPromptForPathAfterResponse,
       ignoreUndefinedEnvVariable,
-    );
-    const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
-    window.main.completeExecutionStep({ requestId });
-
-    // TODO: remove this temporary hack to support GraphQL variables in the request body properly
-    parseGraphQLReqeustBody(renderedRequest);
-
-    window.main.addExecutionStep({ requestId, stepName: 'Sending request' });
-    const response = await sendCurlAndWriteTimeline(
-      renderedRequest,
-      mutatedContext.clientCertificates,
-      requestData.caCert,
-      mutatedContext.settings,
-      requestData.timelinePath,
-      requestData.responseId
-    );
-    window.main.completeExecutionStep({ requestId });
-
-    const requestMeta = await models.requestMeta.getByParentId(requestId);
-    invariant(requestMeta, 'RequestMeta not found');
-    const responsePatch = await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context);
-    const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
-    const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
-
-    mutatedContext.request.afterResponseScript = afterResponseScript;
-    window.main.addExecutionStep({ requestId, stepName: 'Executing after-response script' });
-    await tryToExecuteAfterResponseScript({
-      ...requestData,
-      ...mutatedContext,
-      response,
     });
-    window.main.completeExecutionStep({ requestId });
+  } catch (err) {
+    console.log('[request] Failed to send request', err);
+    const e = err.error || err;
 
-    if (!shouldWriteToFile) {
-      const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
-      await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-      return null;
+    if (err.response && err.requestMeta && err.response._id) {
+      // this part is for persisting useful info (e.g. timeline) for debugging, even there is an error
+      const existingResponse = await models.response.getById(err.response._id);
+      const response = existingResponse || await models.response.create(err.response, err.maxHistoryResponses);
+      await models.requestMeta.update(err.requestMeta, { activeResponseId: response._id });
     }
 
-    if (requestMeta.downloadPath) {
-      const header = getContentDispositionHeader(responsePatch.headers || []);
-      const name = header
-        ? contentDisposition.parse(header.value).parameters.filename
-        : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
-      return writeToDownloadPath(path.join(requestMeta.downloadPath, name), responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
-    } else {
-      const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
-      const { filePath } = await window.dialog.showSaveDialog({
-        title: 'Select Download Location',
-        buttonLabel: 'Save',
-        // NOTE: An error will be thrown if defaultPath is supplied but not a String
-        ...(defaultPath ? { defaultPath } : {}),
-      });
-      if (!filePath) {
-        return null;
-      }
-      window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-      return writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
-    }
-  } catch (e) {
-    console.log('[request] Failed to send request', e);
     window.main.completeExecutionStep({ requestId });
     const url = new URL(request.url);
     url.searchParams.set('error', e);
@@ -461,6 +398,201 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       url.searchParams.set('missingKey', e?.extraInfo?.missingKey);
     }
     return redirect(`${url.pathname}?${url.searchParams}`);
+  }
+};
+
+export type RunnerSource = 'runner';
+export interface CollectionRunnerContext {
+  source: RunnerSource;
+  environmentId: string;
+  iterations: number;
+  iterationData: object;
+  duration: number; // millisecond
+  testCount: number;
+  avgRespTime: number; // millisecond
+  results: RequestTestResult[];
+  done: boolean;
+}
+
+export interface RunnerContextForRequest {
+  requestId: string;
+  requestName: string;
+  requestUrl: string;
+  responseReason: string;
+  duration: number; // millisecond
+  size: number;
+  results: RequestTestResult[];
+  responseId: string;
+}
+
+export const sendActionImp = async ({
+  requestId,
+  workspaceId,
+  userUploadEnv,
+  shouldPromptForPathAfterResponse,
+  ignoreUndefinedEnvVariable,
+  testResultCollector,
+  iteration,
+  iterationCount,
+}: {
+  requestId: string;
+  workspaceId: string;
+  shouldPromptForPathAfterResponse: boolean | undefined;
+  ignoreUndefinedEnvVariable: boolean | undefined;
+  testResultCollector?: RunnerContextForRequest;
+    iteration?: number;
+    iterationCount?: number;
+    userUploadEnv?: UserUploadEnvironment;
+}) => {
+  window.main.startExecution({ requestId });
+  const requestData = await fetchRequestData(requestId);
+  window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
+  const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId, userUploadEnv, iteration, iterationCount);
+  if ('error' in mutatedContext) {
+    throw {
+      error: mutatedContext.error,
+    };
+  }
+  if (mutatedContext.execution?.skipRequest) {
+    // cancel request running if skipRequest in pre-request script
+    const responseId = requestData.responseId;
+    const responsePatch = {
+      _id: responseId,
+      parentId: requestId,
+      environemntId: requestData.environment,
+      statusMessage: 'Cancelled',
+      error: 'Request was cancelled by pre-request script',
+    };
+    // create and update response to activeResponse
+    await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
+    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: responseId });
+    window.main.completeExecutionStep({ requestId });
+    return mutatedContext;
+  }
+
+  window.main.completeExecutionStep({ requestId });
+
+  // disable after-response script here to avoiding rendering it
+  // @TODO This should be handled in a better way. Maybe remove the key from the request object we pass in tryToInterpolateRequest
+  const afterResponseScript = mutatedContext.request.afterResponseScript ? `${mutatedContext.request.afterResponseScript}` : undefined;
+  mutatedContext.request.afterResponseScript = '';
+
+  window.main.addExecutionStep({ requestId, stepName: 'Rendering request' });
+  const renderedResult = await tryToInterpolateRequest({
+    request: mutatedContext.request,
+    environment: mutatedContext.environment,
+    purpose: 'send',
+    extraInfo: undefined,
+    baseEnvironment: mutatedContext.baseEnvironment,
+    userUploadEnv: mutatedContext.userUploadEnv,
+    ignoreUndefinedEnvVariable,
+  });
+  const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
+  window.main.completeExecutionStep({ requestId });
+
+  // TODO: remove this temporary hack to support GraphQL variables in the request body properly
+  parseGraphQLReqeustBody(renderedRequest);
+
+  const requestMeta = await models.requestMeta.getByParentId(requestId);
+  invariant(requestMeta, 'RequestMeta not found');
+
+  window.main.addExecutionStep({ requestId, stepName: 'Sending request' });
+  const response = await sendCurlAndWriteTimeline(
+    renderedRequest,
+    mutatedContext.clientCertificates,
+    requestData.caCert,
+    mutatedContext.settings,
+    requestData.timelinePath,
+    requestData.responseId
+  );
+  window.main.completeExecutionStep({ requestId });
+  if ('error' in response) {
+    throw {
+      response: await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context),
+      maxHistoryResponses: requestData.settings.maxHistoryResponses,
+      requestMeta,
+      error: response.error,
+    };
+  }
+
+  const baseResponsePatch = await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context);
+  const is2XXWithBodyPath = baseResponsePatch.statusCode && baseResponsePatch.statusCode >= 200 && baseResponsePatch.statusCode < 300 && baseResponsePatch.bodyPath;
+  const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
+
+  mutatedContext.request.afterResponseScript = afterResponseScript;
+  window.main.addExecutionStep({ requestId, stepName: 'Executing after-response script' });
+  const postMutatedContext = await tryToExecuteAfterResponseScript({
+    ...requestData,
+    ...mutatedContext,
+    response,
+    iteration,
+    iterationCount,
+  });
+  if ('error' in postMutatedContext) {
+    throw {
+      response: await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context),
+      maxHistoryResponses: requestData.settings.maxHistoryResponses,
+      requestMeta,
+      error: postMutatedContext.error,
+    };
+  }
+
+  window.main.completeExecutionStep({ requestId });
+
+  const preTestResults = (mutatedContext.requestTestResults || []).map(
+    (result: RequestTestResult): RequestTestResult => ({ ...result, category: 'pre-request' }),
+  );
+  const postTestResults = (postMutatedContext?.requestTestResults || []).map(
+    (result: RequestTestResult): RequestTestResult => ({ ...result, category: 'after-response' }),
+  ) || [];
+  if (testResultCollector) {
+    testResultCollector.results = [
+      ...testResultCollector.results,
+      ...preTestResults,
+      ...postTestResults,
+    ];
+    const timingSteps = await window.main.getExecution({ requestId });
+    testResultCollector.duration = timingSteps.reduce((acc: number, cur: TimingStep) => {
+      return acc + (cur.duration || 0);
+    }, 0);
+    testResultCollector.responseId = response._id;
+  }
+  const responsePatch = postMutatedContext ?
+    {
+      ...baseResponsePatch,
+      // both pre-request and after-response test results are collected
+      requestTestResults: [
+        ...preTestResults,
+        ...postTestResults,
+      ],
+    }
+    : baseResponsePatch;
+
+  if (!shouldWriteToFile) {
+    const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
+    await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
+    return mutatedContext;
+  }
+
+  if (requestMeta.downloadPath) {
+    const header = getContentDispositionHeader(responsePatch.headers || []);
+    const name = header
+      ? contentDisposition.parse(header.value).parameters.filename
+      : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
+    return writeToDownloadPath(path.join(requestMeta.downloadPath, name), responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
+  } else {
+    const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
+    const { filePath } = await window.dialog.showSaveDialog({
+      title: 'Select Download Location',
+      buttonLabel: 'Save',
+      // NOTE: An error will be thrown if defaultPath is supplied but not a String
+      ...(defaultPath ? { defaultPath } : {}),
+    });
+    if (!filePath) {
+      return null;
+    }
+    window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
+    return writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
   }
 };
 
@@ -493,7 +625,7 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
   }
   );
 
-  const renderResult = await tryToInterpolateRequest(req, environment._id, 'send');
+  const renderResult = await tryToInterpolateRequest({ request: req, environment: environment._id, purpose: 'send' });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
   window.main.completeExecutionStep({ requestId: req._id });
