@@ -5,60 +5,62 @@ import { Link, Route, Routes, useLocation } from 'react-router-dom';
 import { LandingPage } from '../../common/sentry';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
-import auto_pull from '../images/onboarding/auto_pull.png';
-import diff_view from '../images/onboarding/diff_view.png';
-import global_search from '../images/onboarding/global_search.png';
-import mocks from '../images/onboarding/mocks.png';
-import prerequest_scripts from '../images/onboarding/prerequest_scripts.png';
-import storage_options from '../images/onboarding/storage_options.png';
+import collection_runner from '../images/onboarding/collection_runner.png';
+import co_owner from '../images/onboarding/coowner.png';
+import invite_control from '../images/onboarding/invite_control.png';
+import offline_experience from '../images/onboarding/offline_experience.png';
+import test_results from '../images/onboarding/test_results.png';
+import uncommitted_changes from '../images/onboarding/uncommited_changes.png';
 
 const features = [
   {
-    id: 'prerequest_scripts',
-    icon: 'code',
-    title: 'Pre-request scripting',
+    id: 'collection_runner',
+    icon: 'circle-play',
+    title: 'New Collection Runner',
     description:
-      'Insomnia finally ships with pre-request scripting for more complex flows, including Postman compatibility so it\'s easier to migrate your collections to Insomnia.',
-    image: prerequest_scripts,
+      'You can run tests for an entire collection using the new Collection Runner! And it\'s unlimited for every Insomnia user.',
+    image: collection_runner,
   },
   {
-    id: 'api_mocking',
-    icon: 'clone',
-    title: 'Native API mocking',
+    id: 'test_results',
+    icon: 'square-poll-vertical',
+    title: 'Test Results',
     description:
-      'In addition to collections, design documents and tests you can now also create API mocks to accelerate development and simulate APIs.',
-    image: mocks,
+      'In the previous v9.x we introduced full scripting support, and now we are introducing the ability to visualize test results when executing a request.',
+    image: test_results,
   },
   {
-    id: 'storage_control',
-    icon: 'database',
-    title: 'Storage control',
+    id: 'invite_control',
+    icon: 'lock',
+    title: 'Invite Control',
     description:
-      'With this enterprise capabillity you can mandate that data in an organization is stored only locally, on Git or in the cloud for every collaborator.',
-    image: storage_options,
+      'With this enterprise capability you can create invite rules to determine what domains can be invited to join an organization.',
+    image: invite_control,
+    rounded: true,
   },
   {
-    id: 'diff_editor',
-    icon: 'file-invoice',
-    title: 'New diff editor',
-    description: 'When synchronizing your data on Git or in the Cloud, it\'s now very easy to understand all the updates before pushing them.',
-    image: diff_view,
+    id: 'unpushed_notifications',
+    icon: 'bell',
+    title: 'Unpushed notifications',
+    description: 'You can now see indicators for changes that have not been committed - or have not been pushed - inside your projects and files.',
+    image: uncommitted_changes,
   },
   {
-    id: 'global_search',
-    icon: 'search',
-    title: 'Global search',
+    id: 'offline_experience',
+    icon: 'wifi',
+    title: 'Offline experience',
     description:
-      'You can now search for documents and collections across one or more organizations from one place, simply by using the new global search.',
-    image: global_search,
+      'In the previous Insomnia v9.x we significantly improved the performance of the application, and in this one are making the offline experience even better.',
+    image: offline_experience,
   },
   {
-    id: 'auto_pull',
-    icon: 'download',
-    title: 'Auto-pulling of files',
+    id: 'multiple_owners',
+    icon: 'user-group',
+    title: 'Multiple owners',
     description:
-      'To simplify collaboration in Insomnia, we are introducing auto-pulling of files in the dashboard without having to explicitly pull each file.',
-    image: auto_pull,
+      'With this enterprise feature, we are finally introducing the ability to have multiple co-owners for an enterprise organization account.',
+    image: co_owner,
+    rounded: true,
   },
 ] satisfies {
   id: string;
@@ -66,6 +68,7 @@ const features = [
   title: string;
   description: string;
   image: string;
+  rounded?: boolean;
 }[];
 
 const FeatureWizardView = () => {
@@ -116,7 +119,10 @@ const FeatureWizardView = () => {
                       <span>{feature.description}</span>
                     </p>
                     <div className="h-32">
-                      <img className="max-h-32 aspect-auto" src={feature.image} />
+                      {feature.rounded ? (
+                        <img className="max-h-32 aspect-auto rounded-md" src={feature.image} />) : (
+                          <img className="max-h-32 aspect-auto" src={feature.image} />
+                      )}
                     </div>
                     <div className="flex w-full p-4 bottom-0 left-0 sticky justify-between text-sm font-normal bg-gradient-to-t from-[--color-bg] to-[rgba(var(--color-bg-rgb),80%)]">
                       {prevPath ? (
@@ -163,7 +169,7 @@ const Onboarding = () => {
             <InsomniaLogo className="transform translate-x-[-50%] translate-y-[-50%] absolute top-0 left-1/2 w-16 h-16" />
             <div className="text-[--color-font] flex flex-col gap-6 h-full">
               <h1 className="text-xl text-center">
-                🚀 Welcome to Insomnia 9!
+                🚀 Welcome to Insomnia 10!
               </h1>
               <div>
                 <p>
@@ -188,7 +194,7 @@ const Onboarding = () => {
                 <Link
                   className="hover:no-underline bg-[--color-surprise] text-sm hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                   to={window.localStorage.getItem('prefers-project-type') ? '/organization' : '/onboarding/migrate'}
-                  onClick={() => window.localStorage.setItem('hasSeenOnboardingV9', 'true')}
+                  onClick={() => window.localStorage.setItem('hasSeenOnboardingV10', 'true')}
                 >
                   Continue
                 </Link>
