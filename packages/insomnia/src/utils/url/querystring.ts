@@ -97,7 +97,7 @@ export const buildQueryParameter = (
 
   // Keep equal sign if strictNullHandling and param value is empty string, see https://github.com/Kong/insomnia/issues/2111
   if (!strict || param.value || (strictNullHandling && param.value === '')) {
-    if(!encodeParams) {
+    if (!encodeParams) {
       return `${param.name}=${param.value}`;
     }
     // Don't encode ',' in values

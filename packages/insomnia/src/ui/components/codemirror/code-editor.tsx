@@ -17,6 +17,7 @@ import * as misc from '../../../common/misc';
 import type { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
 import { extractNunjucksTagFromCoords, type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '../../../templating/utils';
+import { ednPrettify } from '../../../utils/prettify/edn';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
@@ -29,7 +30,6 @@ import { showModal } from '../modals/index';
 import { NunjucksModal } from '../modals/nunjucks-modal';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
-import { ednPrettify } from '../../../utils/prettify/edn';
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
 
