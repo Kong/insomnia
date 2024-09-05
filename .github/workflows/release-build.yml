@@ -101,7 +101,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         uses: sslcom/esigner-codesign@develop
         with:
-          command: sign
+          command: batch_sign
           username: ${{secrets.ES_USERNAME}}
           password: ${{secrets.ES_PASSWORD}}
           credential_id: ${{secrets.ES_CREDENTIAL_ID}}
