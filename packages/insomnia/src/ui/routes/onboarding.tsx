@@ -5,12 +5,12 @@ import { Link, Route, Routes, useLocation } from 'react-router-dom';
 import { LandingPage } from '../../common/sentry';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
-import auto_pull from '../images/onboarding/auto_pull.png';
-import diff_view from '../images/onboarding/diff_view.png';
-import global_search from '../images/onboarding/global_search.png';
-import mocks from '../images/onboarding/mocks.png';
-import prerequest_scripts from '../images/onboarding/prerequest_scripts.png';
-import storage_options from '../images/onboarding/storage_options.png';
+import collection_runner from '../images/onboarding/collection_runner.png';
+import co_owner from '../images/onboarding/coowner.png';
+import invite_control from '../images/onboarding/invite_control.png';
+import offline_experience from '../images/onboarding/offline_experience.png';
+import test_results from '../images/onboarding/test_results.png';
+import uncommitted_changes from '../images/onboarding/uncommited_changes.png';
 
 const features = [
   {
@@ -19,7 +19,7 @@ const features = [
     title: 'New Collection Runner',
     description:
       'You can run tests for an entire collection using the new Collection Runner! And it\'s unlimited for every Insomnia user.',
-    image: prerequest_scripts,
+    image: collection_runner,
   },
   {
     id: 'test_results',
@@ -27,7 +27,7 @@ const features = [
     title: 'Test Results',
     description:
       'In the previous v9.x we introduced full scripting support, and now we are introducing the ability to visualize test results when executing a request.',
-    image: mocks,
+    image: test_results,
   },
   {
     id: 'invite_control',
@@ -35,14 +35,14 @@ const features = [
     title: 'Invite Control',
     description:
       'With this enterprise capability you can create invite rules to determine what domains can be invited to join an organization.',
-    image: storage_options,
+    image: invite_control,
   },
   {
     id: 'unpushed_notifications',
     icon: 'bell',
     title: 'Unpushed notifications',
     description: 'You can now see indicators for changes that have not been committed - or have not been pushed - inside your projects and files.',
-    image: diff_view,
+    image: uncommitted_changes,
   },
   {
     id: 'offline_experience',
@@ -50,7 +50,7 @@ const features = [
     title: 'Offline experience',
     description:
       'In the previous Insomnia v9.x we significantly improved the performance of the application, and in this one are making the offline experience even better.',
-    image: global_search,
+    image: offline_experience,
   },
   {
     id: 'multiple_owners',
@@ -58,7 +58,7 @@ const features = [
     title: 'Multiple owners',
     description:
       'With this enterprise feature, we are finally introducing the ability to have multiple co-owners for an enterprise organization account.',
-    image: auto_pull,
+    image: co_owner,
   },
 ] satisfies {
   id: string;
