@@ -147,7 +147,7 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
           renderString,
           mark,
           tok.string,
-          // use cached renderContext to avoid duplicated renderCotext call for every token refer: https://github.com/Kong/insomnia/issues/4645
+          // use cached renderContext to avoid duplicated renderCotext call for every token. Refer: https://github.com/Kong/insomnia/issues/4645
           renderContextCache,
           showVariableSourceAndValue,
         );
