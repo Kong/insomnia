@@ -5,6 +5,10 @@ import { describe, expect, it } from 'vitest';
 import { project, request, requestGroup, workspace } from '../../models';
 import * as importUtil from '../import';
 
+/*
+@vitest-environment jsdom
+*/
+
 describe('isApiSpecImport()', () => {
   it.each(['swagger2', 'openapi3'])(
     'should return true if spec id is %o',

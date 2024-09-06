@@ -4,7 +4,7 @@ import { type ApiSpec, isApiSpec } from '../models/api-spec';
 import { type CookieJar, isCookieJar } from '../models/cookie-jar';
 import { type BaseEnvironment, type Environment, isEnvironment } from '../models/environment';
 import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
-import { type BaseModel, getModel } from '../models/index';
+import { type BaseModel, getModel, userSession } from '../models/index';
 import * as models from '../models/index';
 import { isMockRoute, type MockRoute } from '../models/mock-route';
 import { isRequest, type Request } from '../models/request';
@@ -16,6 +16,7 @@ import {
   type WebSocketRequest,
 } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
+import type { CurrentPlan } from '../ui/routes/organization';
 import { convert, convertPostmanDataDump, type InsomniaImporter } from '../utils/importers/convert';
 import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
@@ -228,6 +229,11 @@ export async function importResourcesToProject({ projectId }: { projectId: strin
   await db.flushChanges(bufferId);
   return { resources: r.flat() };
 }
+const isTeamOrAbove = async () => {
+  const { accountId } = await userSession.getOrCreate();
+  const currentPlan = JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan || {};
+  return ['team', 'enterprise', 'enterprise-member'].includes(currentPlan?.type);
+};
 const updateIdsInString = (str: string, ResourceIdMap: Map<string, string>) => {
   let newString = str;
   for (const [idA, idB] of ResourceIdMap.entries()) {
@@ -235,11 +241,13 @@ const updateIdsInString = (str: string, ResourceIdMap: Map<string, string>) => {
   }
   return newString;
 };
-
-const importRequestWithNewIds = (request: Request, ResourceIdMap: Map<string, string>) => {
-  const newRequestWithIdsUpdated = JSON.parse(updateIdsInString(JSON.stringify(request), ResourceIdMap));
+const importRequestWithNewIds = (request: Request, ResourceIdMap: Map<string, string>, canTransform: boolean) => {
+  let transformedRequest = request;
+  if (canTransform) { // if not logged in, this wont run
+    transformedRequest = JSON.parse(updateIdsInString(JSON.stringify(request), ResourceIdMap));
+  }
   return ({
-    ...newRequestWithIdsUpdated,
+    ...transformedRequest,
     _id: ResourceIdMap.get(request._id),
     parentId: ResourceIdMap.get(request.parentId),
   });
@@ -292,6 +300,7 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
     model && ResourceIdMap.set(resource._id, generateId(model.prefix));
   }
 
+  const canTransform = await isTeamOrAbove();
   // Preserve optionalResource relationships
   for (const resource of optionalResources) {
     const model = getModel(resource.type);
@@ -314,7 +323,7 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
           parentId: ResourceIdMap.get(resource.parentId),
         });
       } else if (isRequest(resource)) {
-        await db.docCreate(model.type, importRequestWithNewIds(resource, ResourceIdMap));
+        await db.docCreate(model.type, importRequestWithNewIds(resource, ResourceIdMap, canTransform));
       } else {
         await db.docCreate(model.type, {
           ...resource,
@@ -398,6 +407,7 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
     model && ResourceIdMap.set(resource._id, generateId(model.prefix));
   }
 
+  const canTransform = await isTeamOrAbove();
   for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
     const model = getModel(resource.type);
 
@@ -417,7 +427,7 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
           parentId: ResourceIdMap.get(resource.parentId),
         });
       } else if (isRequest(resource)) {
-        await db.docCreate(model.type, importRequestWithNewIds(resource, ResourceIdMap));
+        await db.docCreate(model.type, importRequestWithNewIds(resource, ResourceIdMap, canTransform));
       } else {
         await db.docCreate(model.type, {
           ...resource,
