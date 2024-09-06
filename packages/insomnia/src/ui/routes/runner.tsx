@@ -22,6 +22,7 @@ import { invariant } from '../../utils/invariant';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
 import { Icon } from '../components/icon';
+import { showAlert } from '../components/modals';
 import { UploadDataModal, type UploadDataType } from '../components/modals/upload-runner-data-modal';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { RunnerResultHistoryPane } from '../components/panes/runner-result-history-pane';
@@ -32,7 +33,6 @@ import { ResponseTimelineViewer } from '../components/viewers/response-timeline-
 import { type RunnerSource, sendActionImp } from './request';
 import { useRootLoaderData } from './root';
 import type { Child, WorkspaceLoaderData } from './workspace';
-import { showAlert } from '../components/modals';
 
 const inputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
 const iterationInputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
