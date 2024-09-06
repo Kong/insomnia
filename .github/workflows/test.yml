@@ -34,8 +34,7 @@ jobs:
         run: npm ci
 
       - name: Audit packages
-        # having issues with moderate severity vulnerabilities
-        run: npm audit --audit-level none
+        run: npm audit
 
       - name: Lint
         run: npm run lint
