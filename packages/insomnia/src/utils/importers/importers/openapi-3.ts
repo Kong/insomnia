@@ -815,7 +815,7 @@ export const convert: Converter = async rawData => {
       },
     }) as OpenAPIV3.Document;
   } catch (err) {
-    console.log('[openapi-3] Import file validation failed', err);
+    console.log('[openapi-3] Import file validation failed', err.message);
   }
 
   // Import

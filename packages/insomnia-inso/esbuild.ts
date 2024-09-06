@@ -12,24 +12,6 @@ const config: BuildOptions = {
   sourcemap: true,
   format: 'cjs',
   tsconfig: 'tsconfig.json',
-  plugins: [
-    // taken from https://github.com/tjx666/awesome-vscode-extension-boilerplate/blob/main/scripts/esbuild.ts
-    {
-      name: 'umd2esm',
-      setup(build) {
-        build.onResolve({ filter: /^(vscode-.*|estree-walker|jsonc-parser)/ }, args => {
-          const pathUmdMay = require.resolve(args.path, {
-            paths: [args.resolveDir],
-          });
-          // Call twice the replace is to solve the problem of the path in Windows
-          const pathEsm = pathUmdMay
-            .replace('/umd/', '/esm/')
-            .replace('\\umd\\', '\\esm\\');
-          return { path: pathEsm };
-        });
-      },
-    },
-  ],
   define: {
     'process.env.DEFAULT_APP_NAME': JSON.stringify(isProd ? 'Insomnia' : 'insomnia-app'),
     'process.env.VERSION': JSON.stringify(isProd ? version : 'dev'),

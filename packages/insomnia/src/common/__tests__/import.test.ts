@@ -145,6 +145,7 @@ describe('importRaw()', () => {
     });
   });
 
+  // NOTE: this test spits out a lot of console logs becuase of validation errors during spec parsing
   it('should import an openapi collection to an existing workspace with scope design', async () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
