@@ -9,6 +9,7 @@ import { useInterval } from 'react-use';
 
 import { Tooltip } from '../../../src/ui/components/tooltip';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../common/constants';
+import { debounce } from '../../common/misc';
 import type { ResponseTimelineEntry } from '../../main/network/libcurl-promise';
 import type { TimingStep } from '../../main/network/request-timing';
 import * as models from '../../models';
@@ -31,6 +32,7 @@ import { ResponseTimelineViewer } from '../components/viewers/response-timeline-
 import { type RunnerSource, sendActionImp } from './request';
 import { useRootLoaderData } from './root';
 import type { Child, WorkspaceLoaderData } from './workspace';
+import { showAlert } from '../components/modals';
 
 const inputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
 const iterationInputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
@@ -108,6 +110,18 @@ export const Runner: FC<{}> = () => {
     }
     if (searchParams.has('error')) {
       setErrorMsg(searchParams.get('error'));
+      // TODO: this should be removed when we are able categorized errors better and display them in different ways.
+      showAlert({
+        title: 'Unexpected Runner Failure',
+        message: (
+          <div>
+            <p>The runner failed due to an unhandled error:</p>
+            <code className="wide selectable">
+              <pre>{searchParams.get('error')}</pre>
+            </code>
+          </div>
+        ),
+      });
       searchParams.delete('error');
     }
 
@@ -226,38 +240,41 @@ export const Runner: FC<{}> = () => {
   });
 
   const submit = useSubmit();
-  const onRun = () => {
-    const selected = new Set(reqList.selectedKeys);
-    const requests = Array.from(reqList.items)
-      .filter(item => selected.has(item.id));
-    // convert uploadData to environment data
-    const userUploadEnvs = uploadData.map(data => {
-      const orderedJson = porderedJSON.parse<UploadDataType>(
-        JSON.stringify(data),
-        JSON_ORDER_PREFIX,
-        JSON_ORDER_SEPARATOR,
-      );
-      return {
-        name: file!.name,
-        data: orderedJson.object,
-        dataPropertyOrder: orderedJson.map || null,
-      };
-    });
+  const onRun = debounce(
+    () => {
+      const selected = new Set(reqList.selectedKeys);
+      const requests = Array.from(reqList.items)
+        .filter(item => selected.has(item.id));
+      // convert uploadData to environment data
+      const userUploadEnvs = uploadData.map(data => {
+        const orderedJson = porderedJSON.parse<UploadDataType>(
+          JSON.stringify(data),
+          JSON_ORDER_PREFIX,
+          JSON_ORDER_SEPARATOR,
+        );
+        return {
+          name: file!.name,
+          data: orderedJson.object,
+          dataPropertyOrder: orderedJson.map || null,
+        };
+      });
 
-    submit(
-      {
-        requests,
-        iterations,
-        userUploadEnvs,
-        delay,
-      },
-      {
-        method: 'post',
-        encType: 'application/json',
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner/run/`,
-      }
-    );
-  };
+      submit(
+        {
+          requests,
+          iterations,
+          userUploadEnvs,
+          delay,
+        },
+        {
+          method: 'post',
+          encType: 'application/json',
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner/run/`,
+        }
+      );
+    },
+    1000,
+  );
 
   const navigate = useNavigate();
   const goToRequest = (requestId: string) => {
