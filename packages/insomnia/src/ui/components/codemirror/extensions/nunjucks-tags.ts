@@ -57,7 +57,7 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
 
   // Only mark up Nunjucks tokens that are in the viewport
   const vp = this.getViewport();
-  let renderContextCache: any;
+  let renderContextCache;
 
   for (let lineNo = vp.from; lineNo < vp.to; lineNo++) {
     const line = this.getLineTokens(lineNo);
