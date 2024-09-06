@@ -201,6 +201,10 @@ async function curlOutputToResponse(
     if (result.headerResults.length === 0) {
         throw Error('curlOutputToResponse: no header result is found');
     }
+    if (result.patch.error) {
+        throw result.patch.error;
+    }
+
     const lastRedirect = result.headerResults[result.headerResults.length - 1];
     if (!lastRedirect) {
         throw Error('curlOutputToResponse: the lastRedirect is not defined');
