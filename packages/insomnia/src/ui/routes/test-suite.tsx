@@ -284,7 +284,7 @@ const UnitTestItemView = ({
               ?.filter(x => !isNaN(x));
             let highestNumberedConstant = Math.max(...numbers);
             // if value is empty, highestNumberedConstant will be -Infinity, so setting it to zero
-            if (highestNumberedConstant == -Infinity) {
+            if (highestNumberedConstant === -Infinity) {
               highestNumberedConstant = 0;
             }
             const variableName = 'response' + (highestNumberedConstant + 1);
