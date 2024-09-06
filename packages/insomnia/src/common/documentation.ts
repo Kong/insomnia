@@ -11,6 +11,8 @@ export const docsIntroductionInsomnia = insomniaDocs('/insomnia/get-started');
 export const docsWorkingWithDesignDocs = insomniaDocs('/insomnia/design-documents');
 export const docsUnitTesting = insomniaDocs('/insomnia/unit-testing');
 export const docsIntroductionToInsoCLI = insomniaDocs('/inso-cli/introduction');
+export const docsPreRequestScript = insomniaDocs('/insomnia/pre-request-script');
+export const docsAfterResponseScript = insomniaDocs('/insomnia/after-response-script');
 
 export const docsGitAccessToken = {
   github: 'https://docs.github.com/github/authenticating-to-github/creating-a-personal-access-token',
@@ -36,5 +38,13 @@ export const documentationLinks = {
   introductionToInsoCLI: {
     title: 'Introduction to Inso CLI',
     url: docsIntroductionToInsoCLI,
+  },
+  introductionToPreRequestScript: {
+    title: 'Pre-request Script Overview',
+    url: docsPreRequestScript,
+  },
+  introductionToAfterResponseScript: {
+    title: 'After-Response Script Overview',
+    url: docsAfterResponseScript,
   },
 } as const;

@@ -12,6 +12,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
   handleRender: HandleRender,
   handleGetRenderContext: HandleGetRenderContext,
   showVariableSourceAndValue = false,
+  editorId = '',
 ) {
   if (!handleRender) {
     console.warn("enableNunjucksTags wasn't passed a render function");
@@ -23,6 +24,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
     handleRender,
     handleGetRenderContext,
     showVariableSourceAndValue,
+    editorId,
   );
 
   const debouncedRefreshFn = misc.debounce(refreshFn);
@@ -45,7 +47,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
 },
 );
 
-async function _highlightNunjucksTags(this: CodeMirror.Editor, render: any, renderContext: any, showVariableSourceAndValue: boolean) {
+async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRender, renderContext: HandleGetRenderContext, showVariableSourceAndValue: boolean, editorId: string) {
   const renderCacheKey = Math.random() + '';
 
   const renderString = (text: any) => render(text, renderCacheKey);
@@ -55,6 +57,7 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: any, rend
 
   // Only mark up Nunjucks tokens that are in the viewport
   const vp = this.getViewport();
+  let renderContextCache: any;
 
   for (let lineNo = vp.from; lineNo < vp.to; lineNo++) {
     const line = this.getLineTokens(lineNo);
@@ -98,6 +101,9 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: any, rend
       const isSameLine = cursor.line === lineNo;
       const isCursorInToken = isSameLine && cursor.ch > tok.start && cursor.ch < tok.end;
       const isFocused = this.hasFocus();
+      if (!renderContextCache) {
+        renderContextCache = await renderContext();
+      }
 
       // Show the token again if we're not inside of it.
       if (isFocused && isCursorInToken) {
@@ -141,7 +147,8 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: any, rend
           renderString,
           mark,
           tok.string,
-          renderContext,
+          // use cached renderContext to avoid duplicated renderCotext call for every token refer: https://github.com/Kong/insomnia/issues/4645
+          renderContextCache,
           showVariableSourceAndValue,
         );
       })();
@@ -162,6 +169,7 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: any, rend
         showModal(NunjucksModal, {
           // @ts-expect-error not a known property of TextMarkerOptions
           template: mark.__template,
+          editorId,
           onDone: (template: string | null) => {
             const pos = mark.find();
 
@@ -262,8 +270,14 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: any, rend
   }
 }
 
-async function _updateElementText(render: any, mark: any, text: any, renderContext: any, showVariableSourceAndValue: boolean) {
-  const el = mark.replacedWith;
+async function _updateElementText(
+  render: HandleRender,
+  mark: CodeMirror.TextMarker<CodeMirror.MarkerRange>,
+  text: string,
+  renderContext: HandleGetRenderContext | Awaited<ReturnType<HandleGetRenderContext>>,
+  showVariableSourceAndValue: boolean
+) {
+  const el = mark.replacedWith!;
   let innerHTML = '';
   let title = '';
   let dataIgnore = '';
@@ -312,7 +326,7 @@ async function _updateElementText(render: any, mark: any, text: any, renderConte
     } else {
       // Render if it's a variable
       title = await render(str);
-      const context = await renderContext();
+      const context = typeof renderContext === 'function' ? await renderContext() : renderContext;
       const con = context.context.getKeysContext();
       const contextForKey = con.keyContext[cleanedStr];
       // Only prefix the title with context, if context is found

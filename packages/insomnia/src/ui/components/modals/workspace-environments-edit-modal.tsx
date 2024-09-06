@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button, Dialog, DropIndicator, GridList, GridListItem, Heading, Label, ListBoxItem, Menu, MenuTrigger, Modal, ModalOverlay, Popover, Text, useDragAndDrop } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { docsTemplateTags } from '../../../common/documentation';
+import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
 import { debounce } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
 import { isRemoteProject } from '../../../models/project';
@@ -438,9 +438,17 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                 </div>
               </div>
               <div className='flex items-center gap-2 justify-between'>
-                <p className='text-sm italic'>
-                  * Environment data can be used for <a href={docsTemplateTags}>Nunjucks Templating</a> in your requests.
-                </p>
+                <div className='flex flex-col gap-1'>
+                  {/* Warning message when user uses response tag in environment variable and suggest to user after-response script INS-4243 */}
+                  {/{% *response *.* %}/.test(JSON.stringify(selectedEnvironment?.data)) &&
+                    <p className='text-sm italic warning'>
+                      <Icon icon="exclamation-circle" /><a href={docsAfterResponseScript}> We suggest to save your response into an environment variable using after-response script.</a>
+                    </p>
+                  }
+                  <p className='text-sm italic'>
+                    * Environment data can be used for <a href={docsTemplateTags}>Nunjucks Templating</a> in your requests.
+                  </p>
+                </div>
                 <Button
                   onPress={close}
                   className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
