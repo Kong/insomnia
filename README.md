@@ -31,7 +31,7 @@ The following storage options are supported for your Insomnia projects, collecti
 
 Insomnia is available for Mac, Windows, and Linux and can be downloaded from the website:
 
-**[https://insomnia.rest/download](https://insomnia.rest/download/)**
+**[https://insomnia.rest](https://insomnia.rest)**
 
 ## Account & Subscriptions
 
