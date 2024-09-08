@@ -53,7 +53,7 @@ Insomnia does not require an account if you decide to use the local **Scratch Pa
 
 We require an account to sustainably build and improve the product, and to make sure we can continue to offer the many core capabilities in a free and open-source distribution. While open source software is free to use, it is unfortunately not free to build, and our ability to continue working on Insomnia is dependent on our ability to convert a subset of free users (that need premium features) to become paying customers of our product.
 
-If you are a user that cannot share API data like collections and design specifications to the cloud, this is still possible by selecting "Local Vault" as the storage of your Insomnia projects: having an Insomnia account is not tied to how you wish to store your sensitive API data.
+If you are a user that cannot share API data like collections and design specifications to the cloud, this is still possible by selecting "Local Vault" as the storage of your Insomnia projects: having an Insomnia account is not tied to how you wish to store your sensitive API data (which can be stored 100% locally via Local Vault, on a 3rd party Git repository without any cloud storage via Git Sync, or in the cloud for ease of collaboration via Cloud Sync).
 
 ## Bugs and Feature Requests
 
