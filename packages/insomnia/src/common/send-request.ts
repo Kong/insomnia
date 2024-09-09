@@ -12,6 +12,7 @@ import {
   getOrInheritHeaders,
   responseTransform,
   sendCurlAndWriteTimeline,
+  tryToExecuteAfterResponseScript,
   tryToExecutePreRequestScript,
   tryToInterpolateRequest,
 } from '../network/network';
@@ -115,7 +116,19 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       requestData.responseId
     );
     const res = await responseTransform(response, environmentId, renderedRequest, renderedResult.context);
-
+    const postMutatedContext = await tryToExecuteAfterResponseScript({
+      ...requestData,
+      ...mutatedContext,
+      response,
+    });
+    // TODO: figure out how to handle this error
+    if ('error' in postMutatedContext) {
+      throw {
+        response: await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context),
+        error: postMutatedContext.error,
+      };
+    }
+    console.log('results', postMutatedContext.requestTestResults);
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
 
     const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
