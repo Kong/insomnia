@@ -468,7 +468,7 @@ export const Runner: FC<{}> = () => {
                         </span>
                         <Button
                           onPress={() => setShowUploadModal(true)}
-                          className="py-0.5 px-1 border-[--hl-sm] h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ring-1 ring-transparent transition-all text-sm mr-6"
+                          className="py-0.5 px-1 border-[--hl-sm] h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ring-1 ring-transparent transition-all text-sm mr-6"
                           isDisabled={isRunning}
                         >
                           <Icon icon={file ? 'eye' : 'upload'} /> {file ? 'View Data' : 'Upload Data'}

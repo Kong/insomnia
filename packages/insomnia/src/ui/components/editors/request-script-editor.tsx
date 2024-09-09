@@ -71,6 +71,11 @@ const findHeader =
     {},
 );`;
 const getCookies = 'const cookies = insomnia.response.cookies.toObject();';
+const skipRequest = 'insomnia.execution.skipRequest();';
+const setNextRequest = 'insomnia.execution.setNextRequest("ADD_REQUEST_NAME_OR_ID_HERE");';
+const activeReqPath = 'console.log(insomnia.execution.location);';
+const activeReqItem = 'console.log(insomnia.execution.location.current);';
+const activeReqInfo = 'console.log(insomnia.info);';
 
 const checkStatus200 =
   `insomnia.test('Check if status is 200', () => {
@@ -360,6 +365,31 @@ const miscMenu: SnippetMenuItem = {
       'id': 'delay',
       'name': 'Delay',
       'snippet': delay,
+    },
+    {
+      'id': 'skip-request',
+      'name': 'Skip request',
+      'snippet': skipRequest,
+    },
+    {
+      'id': 'set-next-request',
+      'name': 'Set next request (in Runner)',
+      'snippet': setNextRequest,
+    },
+    {
+      'id': 'active-request-info',
+      'name': 'Active request info',
+      'snippet': activeReqInfo,
+    },
+    {
+      'id': 'active-request-path',
+      'name': 'Active request path',
+      'snippet': activeReqPath,
+    },
+    {
+      'id': 'active-request-item',
+      'name': 'Active request item',
+      'snippet': activeReqItem,
     },
   ],
 };
