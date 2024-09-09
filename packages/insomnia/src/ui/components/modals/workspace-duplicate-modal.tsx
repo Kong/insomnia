@@ -23,7 +23,7 @@ interface WorkspaceDuplicateModalProps extends ModalProps {
 }
 
 export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ workspace, onHide }) => {
-  const { organizationId, projectId: currentProjectId } = useParams();
+  const { organizationId, projectId: currentProjectId, workspaceId } = useParams();
   const { organizations } = useOrganizationLoaderData();
   const [selectedOrgId, setSelectedOrgId] = useState(organizationId);
   const [projectOptions, setProjectOptions] = useState<models.BaseModel[]>([]);
@@ -51,11 +51,19 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
       const {
         newOrgId,
         newProjectId,
+        newWorkspaceId,
       } = fetcher.data;
-      navigate(`/organization/${newOrgId}/project/${newProjectId}`);
       onHide();
+      const baseUrl = `/organization/${newOrgId}/project/${newProjectId}`;
+      if (!workspaceId) {
+        // navigator to project view if duplicate in project view.
+        navigate(baseUrl);
+      } else {
+        // navigator to workspace view if duplicate in workspace view.
+        navigate(`${baseUrl}/workspace/${newWorkspaceId}/debug`);
+      }
     }
-  }, [fetcher.data, navigate, onHide]);
+  }, [fetcher.data, navigate, onHide, workspaceId]);
   const isBtnDisabled = fetcher.state !== 'idle'
     || !selectedProjectId
     || !newWorkspaceName;
