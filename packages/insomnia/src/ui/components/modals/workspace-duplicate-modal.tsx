@@ -1,6 +1,6 @@
 import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useNavigate, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { database } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
@@ -23,7 +23,7 @@ interface WorkspaceDuplicateModalProps extends ModalProps {
 }
 
 export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ workspace, onHide }) => {
-  const { organizationId, projectId: currentProjectId, workspaceId } = useParams();
+  const { organizationId, projectId: currentProjectId } = useParams();
   const { organizations } = useOrganizationLoaderData();
   const [selectedOrgId, setSelectedOrgId] = useState(organizationId);
   const [projectOptions, setProjectOptions] = useState<models.BaseModel[]>([]);
@@ -45,25 +45,6 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
     modalRef.current?.show();
   }, []);
 
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (fetcher.data?.success) {
-      const {
-        newOrgId,
-        newProjectId,
-        newWorkspaceId,
-      } = fetcher.data;
-      onHide();
-      const baseUrl = `/organization/${newOrgId}/project/${newProjectId}`;
-      if (!workspaceId) {
-        // navigator to project view if duplicate in project view.
-        navigate(baseUrl);
-      } else {
-        // navigator to workspace view if duplicate in workspace view.
-        navigate(`${baseUrl}/workspace/${newWorkspaceId}/debug`);
-      }
-    }
-  }, [fetcher.data, navigate, onHide, workspaceId]);
   const isBtnDisabled = fetcher.state !== 'idle'
     || !selectedProjectId
     || !newWorkspaceName;
