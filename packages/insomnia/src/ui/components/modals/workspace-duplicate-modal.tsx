@@ -1,6 +1,6 @@
 import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useNavigate, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { database } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
@@ -45,17 +45,6 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
     modalRef.current?.show();
   }, []);
 
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (fetcher.data?.success) {
-      const {
-        newOrgId,
-        newProjectId,
-      } = fetcher.data;
-      navigate(`/organization/${newOrgId}/project/${newProjectId}`);
-      onHide();
-    }
-  }, [fetcher.data, navigate, onHide]);
   const isBtnDisabled = fetcher.state !== 'idle'
     || !selectedProjectId
     || !newWorkspaceName;

@@ -550,13 +550,9 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request }) => {
 
   // duplicate the workspace to the new project
   const newProject = await models.project.getById(newProjectId) as Project;
-  await duplicateWorkspace(oldWorkspace, newProject, newWorkspaceName || oldWorkspace.name, true);
+  const newWorkspace = await duplicateWorkspace(oldWorkspace, newProject, newWorkspaceName || oldWorkspace.name, true);
+  return redirect(`/organization/${newOrgId}/project/${newProjectId}/workspace/${newWorkspace._id}/${scopeToActivity(newWorkspace.scope)}`);
 
-  return {
-    success: true,
-    newOrgId,
-    newProjectId,
-  };
 };
 
 export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
