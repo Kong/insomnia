@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 
+import { UpdateStatus, UpdateStatuses } from '../../common/constants';
 import { Icon } from './icon';
 
 export const CheckForUpdatesButton = () => {
   const [disabled, setDisabled] = useState(false);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState<UpdateStatus | null>(null);
+  const { statusIcon, label } = useUpdateStatus(status);
 
   useEffect(() => {
     const unsubscribe = window.main.on('updaterStatus',
-      (_e: Electron.IpcRendererEvent, status: string) => setStatus(status));
+      (_e: Electron.IpcRendererEvent, status: UpdateStatus) => setStatus(status));
     return () => {
       unsubscribe();
     };
@@ -25,8 +27,33 @@ export const CheckForUpdatesButton = () => {
         setDisabled(true);
       }}
     >
-      <Icon className={status && 'animate-spin'} icon="refresh" />
-      {status || 'Check now'}
+      {statusIcon && <Icon className={statusIcon === 'refresh' ? 'animate-spin' : ''} icon={statusIcon} />}
+      {label}
     </button>
   );
 };
+
+interface UseUpdateStatus {
+  statusIcon: 'refresh' | 'check' | null;
+  label: string;
+}
+function useUpdateStatus(status: UpdateStatus | null): UseUpdateStatus {
+  if (!status) {
+    return {
+      statusIcon: null,
+      label: 'Check now',
+    };
+  }
+
+  if (['BACKUP_IN_PROGRESS', 'DOWNLOADING', 'CHECKING'].includes(status)) {
+    return {
+      statusIcon: 'refresh',
+      label: UpdateStatuses[status],
+    };
+  }
+
+  return {
+    statusIcon: 'check',
+    label: UpdateStatuses[status],
+  };
+}
