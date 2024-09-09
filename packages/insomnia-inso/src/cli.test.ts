@@ -39,6 +39,8 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-smoke-test/fixtures/simple.yaml -e env_2eecf85b7f wrk_0702a5',
   // with regex filter
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-smoke-test/fixtures/simple.yaml -e env_2eecf85b7f --requestNamePattern "example http" wrk_0702a5',
+  // after-response script and test
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/after-response.yaml wrk_616795 --verbose',
 ];
 
 const shouldReturnErrorCode = [

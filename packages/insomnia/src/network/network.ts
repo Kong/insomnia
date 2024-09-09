@@ -346,8 +346,6 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     if ('error' in originalOutput) {
       return { error: `Script executor returns error: ${originalOutput.error}` };
     }
-    console.log('[network] script execution succeeded', originalOutput);
-
     const output = originalOutput as RequestContext;
 
     const envPropertyOrder = orderedJSON.parse(
