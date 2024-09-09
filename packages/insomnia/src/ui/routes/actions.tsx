@@ -553,12 +553,6 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request }) => {
   const newWorkspace = await duplicateWorkspace(oldWorkspace, newProject, newWorkspaceName || oldWorkspace.name, true);
   return redirect(`/organization/${newOrgId}/project/${newProjectId}/workspace/${newWorkspace._id}/${scopeToActivity(newWorkspace.scope)}`);
 
-  // return {
-  //   success: true,
-  //   newOrgId,
-  //   newProjectId,
-  //   newWorkspaceId: newWorkspace._id,
-  // };
 };
 
 export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
