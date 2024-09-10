@@ -33,10 +33,10 @@
     "esbuild-runner": "2.2.2",
     "express": "^4.19.2",
     "express-basic-auth": "^1.2.1",
-    "graphql-http": "^1.22.0",
     "faker": "^5.1.0",
     "graphql": "^16.8.1",
-    "oidc-provider": "^8.4.5",
+    "graphql-http": "^1.22.0",
+    "oidc-provider": "^6.31.1",
     "uuid": "^9.0.1",
     "ws": "^8.16.0",
     "xvfb-maybe": "^0.2.1"
