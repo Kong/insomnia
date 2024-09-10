@@ -583,18 +583,6 @@ export const EXPORT_TYPE_RUNNER_TEST_RESULT = 'runner_result';
 
 // (ms) curently server timeout is 30s
 export const INSOMNIA_FETCH_TIME_OUT = 30_000;
-
-export const UpdateStatuses: Record<string, string> = {
-  ERROR: 'ERROR',
-  UP_TO_DATE: 'UP_TO_DATE',
-  DOWNLOADING: 'DOWNLOADING',
-  BACKUP_IN_PROGRESS: 'BACKUP_IN_PROGRESS',
-  UPDATED: 'UPDATED',
-  CHECKING: 'CHECKING',
-  NOT_SUPPORTED: 'NOT_SUPPORTED',
-  DEFAULT: 'DEFAULT',
-};
-
 export type UpdateStatus = |
   'Update Error' |
   'Up to Date' |
