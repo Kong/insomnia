@@ -609,8 +609,20 @@ export const database = {
     return next([doc]);
   },
 
-  /** get all descendants of a document */
-  withDescendants: async function<T extends BaseModel>(doc: T | null, stopType: string | null = null): Promise<BaseModel[]> {
+  /**
+   * Get all descendants of a document.
+   *
+   * This function retrieves all descendant documents of a given document from the database.
+   * It performs a recursive search, starting from the provided document and continuing
+   * through all child documents, until no more descendants are found or a document of the
+   * specified stop type is encountered.
+   *
+   * @param doc - The document to start the search from. If null, the search starts from the root.
+   * @param stopType - An optional type of document to stop the search at. If a document of this type is encountered, its descendants are not included.
+   * @param queryTypes - An optional array of document types to query. If not provided, all types are queried.
+   * @returns A promise that resolves to an array of all descendant documents.
+   */
+  withDescendants: async function <T extends BaseModel>(doc: T | null, stopType: string | null = null, queryTypes: string[] = []): Promise<BaseModel[]> {
     if (db._empty) {
       return _send<BaseModel[]>('withDescendants', ...arguments);
     }
@@ -626,7 +638,9 @@ export const database = {
 
         const promises: Promise<BaseModel[]>[] = [];
 
-        for (const type of allTypes()) {
+        const types = queryTypes?.length ? queryTypes : allTypes();
+
+        for (const type of types) {
           // If the doc is null, we want to search for parentId === null
           const parentId = doc ? doc._id : null;
           const promise = database.find(type, { parentId });

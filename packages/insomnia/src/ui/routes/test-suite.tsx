@@ -365,7 +365,7 @@ export const loader: LoaderFunction = async ({
 
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
-  const workspaceEntities = await database.withDescendants(workspace);
+  const workspaceEntities = await database.withDescendants(workspace, models.request.type, [models.request.type, models.requestGroup.type]);
   const requests: Request[] = workspaceEntities.filter(isRequest);
 
   const unitTestSuite = await database.getWhere<UnitTestSuite>(models.unitTestSuite.type, {
