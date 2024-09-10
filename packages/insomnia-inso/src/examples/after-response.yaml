@@ -26,6 +26,12 @@ resources:
           insomnia.expect(JSON.parse(insomnia.response.body).headers.host)
       			.to.eql('localhost:4010');
       });
+      insomnia.test('Check if true still true', () => {
+          insomnia.expect(true).to.eql(true);
+      });
+      insomnia.test('Check if true is falsy', () => {
+          insomnia.expect(true).to.eql(!!0);
+      });
 
     settingStoreCookies: true
     settingSendCookies: true

@@ -128,13 +128,12 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
         error: postMutatedContext.error,
       };
     }
-    console.log('results', postMutatedContext.requestTestResults);
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
 
     const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
     const bodyBuffer = await getBodyBuffer(res) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
 
-    return { status, statusMessage, data, headers, responseTime, timelinePath: requestData.timelinePath };
+    return { status, statusMessage, data, headers, responseTime, timelinePath: requestData.timelinePath, testResults: postMutatedContext.requestTestResults };
   };
 }

@@ -7,6 +7,7 @@ import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consol
 import { cosmiconfig } from 'cosmiconfig';
 import fs from 'fs';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
+import type { RequestTestResult } from 'insomnia-sdk';
 import { generate, runTestsCli } from 'insomnia-testing';
 import { parseArgsStringToArgv } from 'string-argv';
 
@@ -28,9 +29,8 @@ export interface GlobalOptions {
   workingDir: string;
 };
 
-export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress';
-export const reporterTypes: TestReporter[] = ['dot', 'list', 'min', 'progress', 'spec'];
-export const reporterTypesSet = new Set(reporterTypes);
+export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress' | 'tap';
+export const reporterTypes: TestReporter[] = ['dot', 'list', 'min', 'progress', 'spec', 'tap'];
 
 export const loadCosmiConfig = async (configFile?: string, workingDir?: string) => {
   try {
@@ -165,6 +165,29 @@ const resolveSpecInDatabase = async (identifier: string, options: GlobalOptions)
 
 const localAppDir = getAppDataDir(getDefaultProductName());
 
+function convertToTAP(testCases?: RequestTestResult[]): string {
+  if (!testCases || testCases.length === 0) {
+    return '';
+  }
+  let tapOutput = 'TAP version 13\n';
+  const totalTests = testCases.length;
+
+  // Add the number of test cases
+  tapOutput += `1..${totalTests}\n`;
+
+  // Iterate through each test case and format it in TAP
+  testCases.forEach((test, index) => {
+    const testNumber = index + 1;
+    const testStatus = test.status === 'passed' ? 'ok' : 'not ok';
+    tapOutput += `${testStatus} ${testNumber} - ${test.testCase}\n`;
+
+    // Optional diagnostic information
+    // tapOutput += `# execution time: ${test.executionTime}\n`;
+    // tapOutput += `# category: ${test.category}\n`;
+  });
+
+  return tapOutput;
+}
 export const go = (args?: string[]) => {
 
   const program = new commander.Command();
@@ -241,7 +264,7 @@ export const go = (args?: string[]) => {
       } else {
         pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
       }
-      if (options.reporter && !reporterTypesSet.has(options.reporter)) {
+      if (options.reporter && !reporterTypes.find(r => r === options.reporter)) {
         logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
         return process.exit(1);
       }
@@ -325,10 +348,6 @@ export const go = (args?: string[]) => {
       } else {
         pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
       }
-      if (options.reporter && !reporterTypesSet.has(options.reporter)) {
-        logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
-        return process.exit(1);
-      }
 
       const db = await loadDb({
         pathToSearch,
@@ -384,6 +403,7 @@ export const go = (args?: string[]) => {
           const timelineString = await readFile(res.timelinePath, 'utf8');
           const timeline = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e).value).join(' ');
           logger.trace(timeline);
+          console.log(convertToTAP(res.testResults));
           if (res.status !== 200) {
             success = false;
             logger.error(`Request failed with status ${res.status}`);
