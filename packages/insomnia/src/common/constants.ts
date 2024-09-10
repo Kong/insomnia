@@ -594,14 +594,13 @@ export const UpdateStatuses: Record<string, string> = {
   NOT_SUPPORTED: 'NOT_SUPPORTED',
   DEFAULT: 'DEFAULT',
 };
-export const UpdateStatusText: Record<keyof typeof UpdateStatuses, string> = {
-  // TODO: consider how we would do internationlization/localization when we get time and space with peace and love
-  [UpdateStatuses.ERROR]: 'Update Error',
-  [UpdateStatuses.UP_TO_DATE]: 'Up to Date',
-  [UpdateStatuses.DOWNLOADING]: 'Downloading...',
-  [UpdateStatuses.BACKUP_IN_PROGRESS]: 'Performing backup...',
-  [UpdateStatuses.UPDATED]: 'Updated (Restart Required)',
-  [UpdateStatuses.CHECKING]: 'Checking',
-  [UpdateStatuses.NOT_SUPPORTED]: 'Updates Not Supported',
-  [UpdateStatuses.DEFAULT]: 'Check Now',
-};
+
+export type UpdateStatus = |
+  'Update Error' |
+  'Up to Date' |
+  'Downloading...' |
+  'Performing backup...' |
+  'Updated (Restart Required)' |
+  'Checking' |
+  'Updates Not Supported' |
+  'Check Now';

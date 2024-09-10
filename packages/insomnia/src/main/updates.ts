@@ -5,7 +5,7 @@ import {
   getAppId,
   getAppVersion,
   isDevelopment,
-  UpdateStatuses,
+  type UpdateStatus,
   UpdateURL,
 } from '../common/constants';
 import { delay } from '../common/misc';
@@ -41,7 +41,7 @@ const getUpdateUrl = (updateChannel: string): string | null => {
   return fullUrl.toString();
 };
 
-const _sendUpdateStatus = (status: keyof typeof UpdateStatuses) => {
+const _sendUpdateStatus = (status: UpdateStatus) => {
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send('updaterStatus', status);
   }
@@ -50,20 +50,20 @@ const _sendUpdateStatus = (status: keyof typeof UpdateStatuses) => {
 export const init = async () => {
   autoUpdater.on('error', error => {
     console.warn(`[updater] Error: ${error.message}`);
-    _sendUpdateStatus(UpdateStatuses.ERROR);
+    _sendUpdateStatus('Update Error');
   });
   autoUpdater.on('update-not-available', () => {
     console.log('[updater] Not Available');
-    _sendUpdateStatus(UpdateStatuses.UP_TO_DATE);
+    _sendUpdateStatus('Up to Date');
   });
   autoUpdater.on('update-available', () => {
     console.log('[updater] Update Available');
-    _sendUpdateStatus(UpdateStatuses.DOWNLOADING);
+    _sendUpdateStatus('Downloading...');
   });
   autoUpdater.on('update-downloaded', async (_error, releaseNotes, releaseName) => {
     console.log(`[updater] Downloaded ${releaseName}`);
-    _sendUpdateStatus(UpdateStatuses.BACKUP_IN_PROGRESS);
-    _sendUpdateStatus(UpdateStatuses.UPDATED);
+    _sendUpdateStatus('Performing backup...');
+    _sendUpdateStatus('Updated (Restart Required)');
 
     dialog.showMessageBox({
       type: 'info',
@@ -101,10 +101,10 @@ export const init = async () => {
   ipcMainOn('manualUpdateCheck', async () => {
     console.log('[updater] Manual update check');
     if (!updateUrl) {
-      _sendUpdateStatus(UpdateStatuses.NOT_SUPPORTED);
+      _sendUpdateStatus('Updates Not Supported');
       return;
     }
-    _sendUpdateStatus(UpdateStatuses.CHECKING);
+    _sendUpdateStatus('Checking');
     await delay(300); // Pacing
     _checkForUpdates(updateUrl);
   });
@@ -117,6 +117,6 @@ const _checkForUpdates = (updateUrl: string) => {
     autoUpdater.checkForUpdates();
   } catch (err) {
     console.warn('[updater] Failed to check for updates:', err.message);
-    _sendUpdateStatus(UpdateStatuses.ERROR);
+    _sendUpdateStatus('Update Error');
   }
 };

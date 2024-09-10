@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
 
-import { UpdateStatuses, UpdateStatusText } from '../../common/constants';
+import { type UpdateStatus } from '../../common/constants';
 import { Icon } from './icon';
 
 export const CheckForUpdatesButton = () => {
   const [disabled, setDisabled] = useState(false);
-  const [status, setStatus] = useState<keyof typeof UpdateStatuses>(UpdateStatuses.DEFAULT);
-  const { statusIcon, label } = useUpdateStatus(status);
+  const [status, setStatus] = useState<UpdateStatus>('Check Now');
+  const statusIcon = useUpdateStatusIcon(status);
 
   useEffect(() => {
     const unsubscribe = window.main.on('updaterStatus',
-      (_e: Electron.IpcRendererEvent, status: typeof UpdateStatuses[keyof typeof UpdateStatuses]) => {
+      (_e: Electron.IpcRendererEvent, status: UpdateStatus) => {
         setStatus(status);
     });
     return () => {
@@ -30,33 +30,20 @@ export const CheckForUpdatesButton = () => {
       }}
     >
       {statusIcon && <Icon className={statusIcon === 'refresh' ? 'animate-spin' : ''} icon={statusIcon} />}
-      {label}
+      {status}
     </button>
   );
 };
 
-interface UseUpdateStatus {
-  statusIcon: 'refresh' | 'check' | null;
-  label: string;
-}
-function useUpdateStatus(status: keyof typeof UpdateStatuses): UseUpdateStatus {
-  const label = UpdateStatusText[status];
-  if ([UpdateStatuses.BACKUP_IN_PROGRESS, UpdateStatuses.DOWNLOADING, UpdateStatuses.CHECKING].includes(status)) {
-    return {
-      statusIcon: 'refresh',
-      label,
-    };
+type UpdateStatusIcon = 'refresh' | 'check' | null;
+function useUpdateStatusIcon(status: UpdateStatus): UpdateStatusIcon {
+  if (['Performing backup...', 'Downloading...', 'Checking'].includes(status)) {
+    return 'refresh';
   }
 
-  if ([UpdateStatuses.UP_TO_DATE, UpdateStatuses.UPDATED].includes(status)) {
-    return {
-      statusIcon: 'check',
-      label,
-    };
+  if (['Up to Date', 'Updated (Restart Required)'].includes(status)) {
+    return 'check';
   }
 
-  return {
-    statusIcon: null,
-    label,
-  };
+  return null;
 }
