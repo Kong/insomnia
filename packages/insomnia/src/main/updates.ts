@@ -5,7 +5,7 @@ import {
   getAppId,
   getAppVersion,
   isDevelopment,
-  UpdateStatus,
+  UpdateStatuses,
   UpdateURL,
 } from '../common/constants';
 import { delay } from '../common/misc';
@@ -41,7 +41,7 @@ const getUpdateUrl = (updateChannel: string): string | null => {
   return fullUrl.toString();
 };
 
-const _sendUpdateStatus = (status: UpdateStatus) => {
+const _sendUpdateStatus = (status: keyof typeof UpdateStatuses) => {
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send('updaterStatus', status);
   }
@@ -50,20 +50,20 @@ const _sendUpdateStatus = (status: UpdateStatus) => {
 export const init = async () => {
   autoUpdater.on('error', error => {
     console.warn(`[updater] Error: ${error.message}`);
-    _sendUpdateStatus('ERROR');
+    _sendUpdateStatus(UpdateStatuses.ERROR);
   });
   autoUpdater.on('update-not-available', () => {
     console.log('[updater] Not Available');
-    _sendUpdateStatus('UP_TO_DATE');
+    _sendUpdateStatus(UpdateStatuses.UP_TO_DATE);
   });
   autoUpdater.on('update-available', () => {
     console.log('[updater] Update Available');
-    _sendUpdateStatus('DOWNLOADING');
+    _sendUpdateStatus(UpdateStatuses.DOWNLOADING);
   });
   autoUpdater.on('update-downloaded', async (_error, releaseNotes, releaseName) => {
     console.log(`[updater] Downloaded ${releaseName}`);
-    _sendUpdateStatus('BACKUP_IN_PROGRESS');
-    _sendUpdateStatus('UPDATED');
+    _sendUpdateStatus(UpdateStatuses.BACKUP_IN_PROGRESS);
+    _sendUpdateStatus(UpdateStatuses.UPDATED);
 
     dialog.showMessageBox({
       type: 'info',
@@ -78,11 +78,13 @@ export const init = async () => {
     });
   });
 
-  if (isUpdateSupported()) {
-    // perhaps disable this method of upgrading just incase it trigger before backup is complete
-    // on app start
-    const settings = await models.settings.get();
-    const updateUrl = getUpdateUrl(settings.updateChannel);
+  const settings = await models.settings.get();
+  const updateSupported = isUpdateSupported();
+  const updateUrl = updateSupported && getUpdateUrl(settings.updateChannel);
+
+  // perhaps disable this method of upgrading just incase it trigger before backup is complete
+  // on app start
+  if (updateSupported) {
     if (settings.updateAutomatically && updateUrl) {
       _checkForUpdates(updateUrl);
     }
@@ -94,21 +96,18 @@ export const init = async () => {
         _checkForUpdates(updateUrl);
       }
     }, CHECK_FOR_UPDATES_INTERVAL);
-
-    // on check now button pushed
-    ipcMainOn('manualUpdateCheck', async () => {
-      console.log('[updater] Manual update check');
-      const settings = await models.settings.get();
-      const updateUrl = isUpdateSupported() && getUpdateUrl(settings.updateChannel);
-      if (!updateUrl) {
-        _sendUpdateStatus('NOT_SUPPORTED');
-        return;
-      }
-      _sendUpdateStatus('CHECKING');
-      await delay(300); // Pacing
-      _checkForUpdates(updateUrl);
-    });
   }
+  // on check now button pushed
+  ipcMainOn('manualUpdateCheck', async () => {
+    console.log('[updater] Manual update check');
+    if (!updateUrl) {
+      _sendUpdateStatus(UpdateStatuses.NOT_SUPPORTED);
+      return;
+    }
+    _sendUpdateStatus(UpdateStatuses.CHECKING);
+    await delay(300); // Pacing
+    _checkForUpdates(updateUrl);
+  });
 };
 
 const _checkForUpdates = (updateUrl: string) => {
@@ -118,6 +117,6 @@ const _checkForUpdates = (updateUrl: string) => {
     autoUpdater.checkForUpdates();
   } catch (err) {
     console.warn('[updater] Failed to check for updates:', err.message);
-    _sendUpdateStatus('ERROR');
+    _sendUpdateStatus(UpdateStatuses.ERROR);
   }
 };

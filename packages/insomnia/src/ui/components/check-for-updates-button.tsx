@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 
-import { UpdateStatus, UpdateStatuses } from '../../common/constants';
+import { UpdateStatuses, UpdateStatusText } from '../../common/constants';
 import { Icon } from './icon';
 
 export const CheckForUpdatesButton = () => {
   const [disabled, setDisabled] = useState(false);
-  const [status, setStatus] = useState<UpdateStatus | null>(null);
+  const [status, setStatus] = useState<keyof typeof UpdateStatuses>(UpdateStatuses.DEFAULT);
   const { statusIcon, label } = useUpdateStatus(status);
 
   useEffect(() => {
     const unsubscribe = window.main.on('updaterStatus',
-      (_e: Electron.IpcRendererEvent, status: UpdateStatus) => setStatus(status));
+      (_e: Electron.IpcRendererEvent, status: typeof UpdateStatuses[keyof typeof UpdateStatuses]) => {
+        setStatus(status);
+    });
     return () => {
       unsubscribe();
     };
@@ -37,23 +39,24 @@ interface UseUpdateStatus {
   statusIcon: 'refresh' | 'check' | null;
   label: string;
 }
-function useUpdateStatus(status: UpdateStatus | null): UseUpdateStatus {
-  if (!status) {
+function useUpdateStatus(status: keyof typeof UpdateStatuses): UseUpdateStatus {
+  const label = UpdateStatusText[status];
+  if ([UpdateStatuses.BACKUP_IN_PROGRESS, UpdateStatuses.DOWNLOADING, UpdateStatuses.CHECKING].includes(status)) {
     return {
-      statusIcon: null,
-      label: 'Check now',
+      statusIcon: 'refresh',
+      label,
     };
   }
 
-  if (['BACKUP_IN_PROGRESS', 'DOWNLOADING', 'CHECKING'].includes(status)) {
+  if ([UpdateStatuses.UP_TO_DATE, UpdateStatuses.UPDATED].includes(status)) {
     return {
-      statusIcon: 'refresh',
-      label: UpdateStatuses[status],
+      statusIcon: 'check',
+      label,
     };
   }
 
   return {
-    statusIcon: 'check',
-    label: UpdateStatuses[status],
+    statusIcon: null,
+    label,
   };
 }

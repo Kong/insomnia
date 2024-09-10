@@ -584,14 +584,24 @@ export const EXPORT_TYPE_RUNNER_TEST_RESULT = 'runner_result';
 // (ms) curently server timeout is 30s
 export const INSOMNIA_FETCH_TIME_OUT = 30_000;
 
-export const UpdateStatuses = {
-  // TODO: consider how we would do internationlization/localization when we get time and space with peace and love
-  ERROR: 'Update Error',
-  UP_TO_DATE: 'Up to Date',
-  DOWNLOADING: 'Downloading...',
-  BACKUP_IN_PROGRESS: 'Performing backup...',
-  UPDATED: 'Updated (Restart Required)',
-  CHECKING: 'Checking',
-  NOT_SUPPORTED: 'Updates Not Supported',
+export const UpdateStatuses: Record<string, string> = {
+  ERROR: 'ERROR',
+  UP_TO_DATE: 'UP_TO_DATE',
+  DOWNLOADING: 'DOWNLOADING',
+  BACKUP_IN_PROGRESS: 'BACKUP_IN_PROGRESS',
+  UPDATED: 'UPDATED',
+  CHECKING: 'CHECKING',
+  NOT_SUPPORTED: 'NOT_SUPPORTED',
+  DEFAULT: 'DEFAULT',
 };
-export type UpdateStatus = keyof typeof UpdateStatuses;
+export const UpdateStatusText: Record<keyof typeof UpdateStatuses, string> = {
+  // TODO: consider how we would do internationlization/localization when we get time and space with peace and love
+  [UpdateStatuses.ERROR]: 'Update Error',
+  [UpdateStatuses.UP_TO_DATE]: 'Up to Date',
+  [UpdateStatuses.DOWNLOADING]: 'Downloading...',
+  [UpdateStatuses.BACKUP_IN_PROGRESS]: 'Performing backup...',
+  [UpdateStatuses.UPDATED]: 'Updated (Restart Required)',
+  [UpdateStatuses.CHECKING]: 'Checking',
+  [UpdateStatuses.NOT_SUPPORTED]: 'Updates Not Supported',
+  [UpdateStatuses.DEFAULT]: 'Check Now',
+};
