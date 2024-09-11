@@ -140,7 +140,9 @@ jobs:
         shell: pwsh  # Use PowerShell shell
         run: |
           $insomniaVersion = jq -r '.version' "./packages/insomnia/package.json"
+          $insoVersion = jq -r '.version' "./packages/insomnia-inso/package.json"
           echo "INSOMNIA_VERSION=$insomniaVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "INSO_VERSION=$insoVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       # code-signs the windows installer
       - name: Code-sign Windows Installer artifact (Windows only)
