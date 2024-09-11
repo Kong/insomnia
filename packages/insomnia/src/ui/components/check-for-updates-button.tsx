@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 
-import { type UpdateStatus } from '../../common/constants';
+import type { UpdateStatus } from '../../main/updates';
 import { Icon } from './icon';
+
+type UpdateStatusIcon = 'refresh' | 'check' | null;
 
 export const CheckForUpdatesButton = () => {
   const [disabled, setDisabled] = useState(false);
   const [status, setStatus] = useState<UpdateStatus>('Check Now');
-  const statusIcon = useUpdateStatusIcon(status);
 
   useEffect(() => {
     const unsubscribe = window.main.on('updaterStatus',
@@ -17,6 +18,14 @@ export const CheckForUpdatesButton = () => {
       unsubscribe();
     };
   });
+
+  let statusIcon: UpdateStatusIcon = null;
+  if (['Performing backup...', 'Downloading...', 'Checking'].includes(status)) {
+    statusIcon = 'refresh';
+  }
+  if (['Up to Date', 'Updated (Restart Required)'].includes(status)) {
+    statusIcon = 'check';
+  }
 
   return (
     <button
@@ -34,16 +43,3 @@ export const CheckForUpdatesButton = () => {
     </button>
   );
 };
-
-type UpdateStatusIcon = 'refresh' | 'check' | null;
-function useUpdateStatusIcon(status: UpdateStatus): UpdateStatusIcon {
-  if (['Performing backup...', 'Downloading...', 'Checking'].includes(status)) {
-    return 'refresh';
-  }
-
-  if (['Up to Date', 'Updated (Restart Required)'].includes(status)) {
-    return 'check';
-  }
-
-  return null;
-}

@@ -5,13 +5,23 @@ import {
   getAppId,
   getAppVersion,
   isDevelopment,
-  type UpdateStatus,
   UpdateURL,
 } from '../common/constants';
 import { delay } from '../common/misc';
 import * as models from '../models/index';
 import { invariant } from '../utils/invariant';
 import { ipcMainOn } from './ipc/electron';
+
+export type UpdateStatus = |
+  'Update Error' |
+  'Up to Date' |
+  'Downloading...' |
+  'Performing backup...' |
+  'Updated (Restart Required)' |
+  'Checking' |
+  'Updates Not Supported' |
+  'Check Now';
+
 const isUpdateSupported = () => {
   if (process.platform === 'linux') {
     console.log('[updater] Not supported on this platform', process.platform);
