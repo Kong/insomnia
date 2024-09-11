@@ -169,22 +169,22 @@ const logTestResult = (testResults: RequestTestResult[], reporter: TestReporter)
   if (!testResults || testResults.length === 0) {
     return '';
   }
-  switch (reporter) {
-    case 'dot':
-      return testResults.map(r => r.status === 'passed' ? '.' : 'F').join('');
-    case 'list':
-      return testResults.map(r => `${r.status === 'passed' ? '✅' : '❌'} ${r.testCase}`).join('\n');
-    case 'min':
-      return testResults.map(r => `${r.status === 'passed' ? '✅' : '❌'} ${r.testCase}`).join('\n');
-    case 'progress':
-      return testResults.map(r => `${r.status === 'passed' ? '✅' : '❌'} ${r.testCase}`).join('\n');
-    case 'spec':
-      return testResults.map(r => `${r.status === 'passed' ? '✅' : '❌'} ${r.testCase}`).join('\n');
-    case 'tap':
-      return convertToTAP(testResults);
-    default:
-      return testResults.map(r => `${r.status === 'passed' ? '✅' : '❌'} ${r.testCase}`).join('\n');
-  }
+  const fallbackReporter = testResults.map(r => `${r.status === 'passed' ? '✅' : '❌'} ${r.testCase}`).join('\n');
+
+  const reporterMap = {
+    dot: testResults.map(r => r.status === 'passed' ? '.' : 'F').join(''),
+    list: fallbackReporter,
+    min: ' ',
+    progress: `[${testResults.map(r => r.status === 'passed' ? '-' : 'x').join('')}]`,
+    spec: fallbackReporter,
+    tap: convertToTAP(testResults),
+  };
+
+  return `${reporterMap[reporter] || fallbackReporter}
+
+Total tests: ${testResults.length}
+Passed: ${testResults.filter(r => r.status === 'passed').length}
+Failed: ${testResults.filter(r => r.status === 'failed').length}`;
 };
 function convertToTAP(testCases: RequestTestResult[]): string {
   let tapOutput = 'TAP version 13\n';
