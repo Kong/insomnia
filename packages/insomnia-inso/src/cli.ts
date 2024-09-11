@@ -1,7 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import path from 'node:path';
-import { compose, Transform } from 'node:stream';
 
 import * as commander from 'commander';
 import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consola';
@@ -165,7 +164,7 @@ const resolveSpecInDatabase = async (identifier: string, options: GlobalOptions)
 };
 
 const localAppDir = getAppDataDir(getDefaultProductName());
-const logTestResult = (testResults: RequestTestResult[], reporter: TestReporter) => {
+const logTestResult = (reporter: TestReporter, testResults?: RequestTestResult[]) => {
   if (!testResults || testResults.length === 0) {
     return '';
   }
@@ -412,7 +411,7 @@ export const go = (args?: string[]) => {
           const timelineString = await readFile(res.timelinePath, 'utf8');
           const timeline = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e).value).join(' ');
           logger.trace(timeline);
-          console.log(logTestResult(res.testResults, options.reporter));
+          res.testResults?.length && console.log(logTestResult(options.reporter, res.testResults));
 
           if (res.status !== 200) {
             success = false;
