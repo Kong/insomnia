@@ -94,6 +94,9 @@ const main: Window['main'] = {
       port.postMessage({ ...options, type: 'runPreRequestScript' });
     }),
   },
+  runScriptInMain: {
+    runScript: options => ipcRenderer.invoke('runScriptInMain', options),
+  },
   landingPageRendered: (landingPage, tags) => ipcRenderer.send('landingPageRendered', {
     landingPage,
     tags,
