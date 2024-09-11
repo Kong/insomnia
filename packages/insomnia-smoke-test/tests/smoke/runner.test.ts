@@ -117,10 +117,11 @@ test.describe('runner features tests', async () => {
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
         // check result
-        await page.getByText('ITERATIONS 1').click();
+        await page.getByText('ITERATION 1').click();
         for (let i = 1; i <= 2; i++) {
             const testId = `runner-test-result-iteration-${i}`;
             const iterationTestResultElement = page.getByTestId(testId);
+            await iterationTestResultElement.click();
             expect(iterationTestResultElement).toBeVisible();
             // req2 should be skipped from pre-request script
             expect(iterationTestResultElement).not.toContainText('req2');

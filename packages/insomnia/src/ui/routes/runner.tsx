@@ -468,7 +468,7 @@ export const Runner: FC<{}> = () => {
                         </span>
                         <Button
                           onPress={() => setShowUploadModal(true)}
-                          className="py-0.5 px-1 border-[--hl-sm] h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ring-1 ring-transparent transition-all text-sm mr-6"
+                          className="py-0.5 px-1 border-[--hl-sm] h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ring-1 ring-transparent transition-all text-sm mr-6"
                           isDisabled={isRunning}
                         >
                           <Icon icon={file ? 'eye' : 'upload'} /> {file ? 'View Data' : 'Upload Data'}
@@ -547,7 +547,7 @@ export const Runner: FC<{}> = () => {
                             <RequestItem className='text-[--color-font] border border-solid border-transparent' style={{ 'outline': 'none' }}>
                               {parentFolderContainer}
                               <span className={`ml-2 uppercase text-xs http-method-${item.method}`}>{item.method}</span>
-                              <span className="ml-2 hover:underline cursor-pointer" style={{ color: 'white' }} onClick={() => goToRequest(item.id)}>{item.name}</span>
+                              <span className="ml-2 hover:underline cursor-pointer text-[--hl]" onClick={() => goToRequest(item.id)}>{item.name}</span>
                             </RequestItem>
                           );
                         }}
@@ -556,7 +556,7 @@ export const Runner: FC<{}> = () => {
                   </TabPanel>
                   <TabPanel className='w-full flex-1 flex align-center overflow-y-auto' id='advanced'>
                     <div className="p-4 w-full">
-                      <Heading className="w-full text-lg text-white h-[--line-height-sm] border-solid scro border-b border-b-[--hl-md]">Advanced Settings</Heading>
+                      <Heading className="w-full text-lg text-[--hl] h-[--line-height-sm] border-solid scro border-b border-b-[--hl-md]">Advanced Settings</Heading>
                       <div>
                         <label className="flex items-center gap-2">
                           <input

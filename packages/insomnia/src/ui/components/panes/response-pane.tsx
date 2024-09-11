@@ -210,7 +210,7 @@ export const ResponsePane: FC<Props> = ({
               </span>
               <span
                 className={`rounded-sm ml-1 px-1 ${testResultCountTagColor}`}
-                style={{ color: 'text-[--hl]' }}
+                style={{ color: 'white' }}
               >
                 {`${passedTestCount} / ${totalTestCount}`}
               </span>
