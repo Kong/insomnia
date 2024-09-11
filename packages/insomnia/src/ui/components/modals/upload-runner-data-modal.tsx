@@ -221,7 +221,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
               <div className="flex justify-end mt-2">
                 {userUploadData.length > 0 &&
                   <Button
-                    className="hover:no-underline flex items-center gap-2 hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                    className="hover:no-underline flex items-center gap-2 hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--hl] transition-colors rounded-sm"
                     onPress={handleClearData}
                   >
                     Remove Data

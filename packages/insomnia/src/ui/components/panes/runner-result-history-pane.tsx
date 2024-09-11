@@ -47,7 +47,7 @@ export const RunnerResultHistoryPane: FC<Props> = ({
     return (
       <Row
         key={runnerResult._id}
-        className="cursor-pointer leading-9 hover:bg-neutral-900"
+        className="cursor-pointer leading-9 hover:bg-[--hl-sm]"
         style={{ 'outline': 'none' }}
         onAction={() => {
           gotoExecutionResult(runnerResult._id);
