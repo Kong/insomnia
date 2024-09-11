@@ -487,7 +487,7 @@ export const GraphQLEditor: FC<Props> = ({
           aria-label='Operations Dropdown'
           isDisabled={!state.operations.length}
           triggerButton={
-            <Button className="btn btn--compact text-[--hl] p-[--padding-xs] h-full">
+            <Button className="btn btn--compact text-[--hl] p-[--padding-xs] bg-transparent h-full">
               {state.body.operationName || 'Operations'}
             </Button>
           }
@@ -508,7 +508,7 @@ export const GraphQLEditor: FC<Props> = ({
           aria-label='Schema Dropdown'
           triggerButton={
             <Button
-              className="btn btn--compact text-[--hl] p-[--padding-xs] h-full"
+              className="btn btn--compact text-[--hl] p-[--padding-xs] bg-transparent h-full"
             >
               <span>schema <i className="fa fa-wrench" /></span>
             </Button>
