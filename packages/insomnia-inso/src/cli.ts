@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import path from 'node:path';
+import { compose, Transform } from 'node:stream';
 
 import * as commander from 'commander';
 import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consola';
@@ -164,28 +165,38 @@ const resolveSpecInDatabase = async (identifier: string, options: GlobalOptions)
 };
 
 const localAppDir = getAppDataDir(getDefaultProductName());
-
-function convertToTAP(testCases?: RequestTestResult[]): string {
-  if (!testCases || testCases.length === 0) {
+const logTestResult = (testResults: RequestTestResult[], reporter: TestReporter) => {
+  if (!testResults || testResults.length === 0) {
     return '';
   }
+  switch (reporter) {
+    case 'dot':
+      return testResults.map(r => r.status === 'passed' ? '.' : 'F').join('');
+    case 'list':
+      return testResults.map(r => `${r.status === 'passed' ? '✅' : '❌'} ${r.testCase}`).join('\n');
+    case 'min':
+      return testResults.map(r => `${r.status === 'passed' ? '✅' : '❌'} ${r.testCase}`).join('\n');
+    case 'progress':
+      return testResults.map(r => `${r.status === 'passed' ? '✅' : '❌'} ${r.testCase}`).join('\n');
+    case 'spec':
+      return testResults.map(r => `${r.status === 'passed' ? '✅' : '❌'} ${r.testCase}`).join('\n');
+    case 'tap':
+      return convertToTAP(testResults);
+    default:
+      return testResults.map(r => `${r.status === 'passed' ? '✅' : '❌'} ${r.testCase}`).join('\n');
+  }
+};
+function convertToTAP(testCases: RequestTestResult[]): string {
   let tapOutput = 'TAP version 13\n';
   const totalTests = testCases.length;
-
   // Add the number of test cases
   tapOutput += `1..${totalTests}\n`;
-
   // Iterate through each test case and format it in TAP
   testCases.forEach((test, index) => {
     const testNumber = index + 1;
     const testStatus = test.status === 'passed' ? 'ok' : 'not ok';
     tapOutput += `${testStatus} ${testNumber} - ${test.testCase}\n`;
-
-    // Optional diagnostic information
-    // tapOutput += `# execution time: ${test.executionTime}\n`;
-    // tapOutput += `# category: ${test.category}\n`;
   });
-
   return tapOutput;
 }
 export const go = (args?: string[]) => {
@@ -236,10 +247,7 @@ export const go = (args?: string[]) => {
     .description('Run Insomnia unit test suites, identifier can be a test suite id or a API Spec id')
     .option('-e, --env <identifier>', 'environment to use', '')
     .option('-t, --testNamePattern <regex>', 'run tests that match the regex', '')
-    .option(
-      '-r, --reporter <reporter>',
-      `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`, defaultReporter
-    )
+    .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first test failure', false)
     .option('--keepFile', 'do not delete the generated test file', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
@@ -323,6 +331,7 @@ export const go = (args?: string[]) => {
     .description('Run Insomnia request collection, identifier can be a workspace id')
     .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
     .option('-e, --env <identifier>', 'environment to use', '')
+    .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first non-200 response', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
     .action(async (identifier, cmd: { env: string; disableCertValidation: true; requestNamePattern: string; bail: boolean }) => {
@@ -403,7 +412,8 @@ export const go = (args?: string[]) => {
           const timelineString = await readFile(res.timelinePath, 'utf8');
           const timeline = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e).value).join(' ');
           logger.trace(timeline);
-          console.log(convertToTAP(res.testResults));
+          console.log(logTestResult(res.testResults, options.reporter));
+
           if (res.status !== 200) {
             success = false;
             logger.error(`Request failed with status ${res.status}`);
