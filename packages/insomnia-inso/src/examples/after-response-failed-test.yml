@@ -1,0 +1,68 @@
+_type: export
+__export_format: 4
+__export_date: 2024-09-09T13:31:03.526Z
+__export_source: insomnia.desktop.app:v10.0.0-beta.2
+resources:
+  - _id: req_65f6ea71a1634669b5ddb74528145de7
+    parentId: wrk_6167950ae1354e41988471465940c1b5
+    modified: 1725888648103
+    created: 1725888487017
+    url: localhost:4010/echo
+    name: New Request
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/10.0.0-beta.2
+    authentication: {}
+    metaSortKey: -1725888487017
+    isPrivate: false
+    pathParameters: []
+    afterResponseScript: |+
+      insomnia.test('Check if status is 200', () => {
+          insomnia.expect(insomnia.response.code).to.eql(200);
+          insomnia.expect(JSON.parse(insomnia.response.body).headers.host)
+      			.to.eql('localhost:4010');
+      });
+      insomnia.test('Check if true still true', () => {
+          insomnia.expect(true).to.eql(true);
+      });
+      insomnia.test('Check if true is falsy', () => {
+          insomnia.expect(true).to.eql(!!0);
+      });
+
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_6167950ae1354e41988471465940c1b5
+    parentId: null
+    modified: 1725888480476
+    created: 1725888480476
+    name: after response test
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: env_af8d61e3630269b8a124b18968608f85797d57fc
+    parentId: wrk_6167950ae1354e41988471465940c1b5
+    modified: 1725888649920
+    created: 1725888480477
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: {}
+    color: null
+    isPrivate: false
+    metaSortKey: 1725888480477
+    _type: environment
+  - _id: jar_af8d61e3630269b8a124b18968608f85797d57fc
+    parentId: wrk_6167950ae1354e41988471465940c1b5
+    modified: 1725888649919
+    created: 1725888480477
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar

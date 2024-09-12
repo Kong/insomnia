@@ -1,6 +1,7 @@
 import Ajv from 'ajv';
 import deepEqual from 'deep-equal';
 import { RESPONSE_CODE_REASONS } from 'insomnia/src/common/constants';
+import { readCurlResponse } from 'insomnia/src/models/response';
 import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
 
 import { Cookie, type CookieOptions } from './cookies';
@@ -317,8 +318,8 @@ export async function readBodyFromPath(response: sendCurlAndWriteTimelineRespons
     } else if (!response.bodyPath) {
         return '';
     }
-
-    const readResponseResult = await window.bridge.readCurlResponse({
+    const nodejsReadCurlResponse = process.type === 'renderer' ? window.bridge.readCurlResponse : readCurlResponse;
+    const readResponseResult = await nodejsReadCurlResponse({
         bodyPath: response.bodyPath,
         bodyCompression: response.bodyCompression,
     });

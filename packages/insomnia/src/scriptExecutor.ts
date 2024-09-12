@@ -81,6 +81,7 @@ export const runScript = async (
     clientCertificates: updatedCertificates,
     cookieJar: updatedCookieJar,
     globals: mutatedContextObject.globals,
+    requestTestResults: mutatedContextObject.requestTestResults,
   };
 };
 

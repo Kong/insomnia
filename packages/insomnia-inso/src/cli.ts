@@ -7,6 +7,7 @@ import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consol
 import { cosmiconfig } from 'cosmiconfig';
 import fs from 'fs';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
+import type { RequestTestResult } from 'insomnia-sdk';
 import { generate, runTestsCli } from 'insomnia-testing';
 import { parseArgsStringToArgv } from 'string-argv';
 
@@ -28,11 +29,10 @@ export interface GlobalOptions {
   workingDir: string;
 };
 
-export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress';
-export const reporterTypes: TestReporter[] = ['dot', 'list', 'min', 'progress', 'spec'];
-export const reporterTypesSet = new Set(reporterTypes);
+export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress' | 'tap';
+export const reporterTypes: TestReporter[] = ['dot', 'list', 'min', 'progress', 'spec', 'tap'];
 
-export const loadCosmiConfig = async (configFile?: string, workingDir?: string) => {
+export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: string) => {
   try {
     const explorer = await cosmiconfig('inso');
     // set or detect .insorc in workingDir or cwd https://github.com/cosmiconfig/cosmiconfig?tab=readme-ov-file#explorersearch
@@ -164,7 +164,40 @@ const resolveSpecInDatabase = async (identifier: string, options: GlobalOptions)
 };
 
 const localAppDir = getAppDataDir(getDefaultProductName());
+const logTestResult = (reporter: TestReporter, testResults?: RequestTestResult[]) => {
+  if (!testResults || testResults.length === 0) {
+    return '';
+  }
+  const fallbackReporter = testResults.map(r => `${r.status === 'passed' ? '✅' : '❌'} ${r.testCase}`).join('\n');
 
+  const reporterMap = {
+    dot: testResults.map(r => r.status === 'passed' ? '.' : 'F').join(''),
+    list: fallbackReporter,
+    min: ' ',
+    progress: `[${testResults.map(r => r.status === 'passed' ? '-' : 'x').join('')}]`,
+    spec: fallbackReporter,
+    tap: convertToTAP(testResults),
+  };
+
+  return `${reporterMap[reporter] || fallbackReporter}
+
+Total tests: ${testResults.length}
+Passed: ${testResults.filter(r => r.status === 'passed').length}
+Failed: ${testResults.filter(r => r.status === 'failed').length}`;
+};
+function convertToTAP(testCases: RequestTestResult[]): string {
+  let tapOutput = 'TAP version 13\n';
+  const totalTests = testCases.length;
+  // Add the number of test cases
+  tapOutput += `1..${totalTests}\n`;
+  // Iterate through each test case and format it in TAP
+  testCases.forEach((test, index) => {
+    const testNumber = index + 1;
+    const testStatus = test.status === 'passed' ? 'ok' : 'not ok';
+    tapOutput += `${testStatus} ${testNumber} - ${test.testCase}\n`;
+  });
+  return tapOutput;
+}
 export const go = (args?: string[]) => {
 
   const program = new commander.Command();
@@ -213,22 +246,18 @@ export const go = (args?: string[]) => {
     .description('Run Insomnia unit test suites, identifier can be a test suite id or a API Spec id')
     .option('-e, --env <identifier>', 'environment to use', '')
     .option('-t, --testNamePattern <regex>', 'run tests that match the regex', '')
-    .option(
-      '-r, --reporter <reporter>',
-      `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`, defaultReporter
-    )
+    .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first test failure', false)
     .option('--keepFile', 'do not delete the generated test file', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
     .action(async (identifier, cmd: { env: string; testNamePattern: string; reporter: TestReporter; bail: true; keepFile: true; disableCertValidation: true }) => {
       const globals: GlobalOptions = program.optsWithGlobals();
       const commandOptions = { ...globals, ...cmd };
-      const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
+      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
 
       const options = {
         ...__configFile?.options || {},
         ...commandOptions,
-        ...(__configFile ? { __configFile } : {}),
       };
       logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
       options.ci && logger.setReporters([new BasicReporter()]);
@@ -241,7 +270,7 @@ export const go = (args?: string[]) => {
       } else {
         pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
       }
-      if (options.reporter && !reporterTypesSet.has(options.reporter)) {
+      if (options.reporter && !reporterTypes.find(r => r === options.reporter)) {
         logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
         return process.exit(1);
       }
@@ -300,19 +329,19 @@ export const go = (args?: string[]) => {
     .description('Run Insomnia request collection, identifier can be a workspace id')
     .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
     .option('-e, --env <identifier>', 'environment to use', '')
+    .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first non-200 response', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
     .action(async (identifier, cmd: { env: string; disableCertValidation: true; requestNamePattern: string; bail: boolean }) => {
       const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
 
       const commandOptions = { ...globals, ...cmd };
-      const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
+      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
 
       const options = {
         reporter: defaultReporter,
         ...__configFile?.options || {},
         ...commandOptions,
-        ...(__configFile ? { __configFile } : {}),
       };
       logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
       options.ci && logger.setReporters([new BasicReporter()]);
@@ -324,10 +353,6 @@ export const go = (args?: string[]) => {
         pathToSearch = localAppDir;
       } else {
         pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
-      }
-      if (options.reporter && !reporterTypesSet.has(options.reporter)) {
-        logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
-        return process.exit(1);
       }
 
       const db = await loadDb({
@@ -384,6 +409,16 @@ export const go = (args?: string[]) => {
           const timelineString = await readFile(res.timelinePath, 'utf8');
           const timeline = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e).value).join(' ');
           logger.trace(timeline);
+          if (res.testResults?.length) {
+            console.log(`
+Test results:`);
+            console.log(logTestResult(options.reporter, res.testResults));
+            const hasFailedTests = res.testResults.some(t => t.status === 'failed');
+            if (hasFailedTests) {
+              success = false;
+            }
+          }
+
           if (res.status !== 200) {
             success = false;
             logger.error(`Request failed with status ${res.status}`);
@@ -403,11 +438,10 @@ export const go = (args?: string[]) => {
     .action(async identifier => {
       const globals: GlobalOptions = program.optsWithGlobals();
       const commandOptions = globals;
-      const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
+      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
       const options = {
         ...__configFile?.options || {},
         ...commandOptions,
-        ...(__configFile ? { __configFile } : {}),
       };
       logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
       options.ci && logger.setReporters([new BasicReporter()]);
@@ -460,11 +494,10 @@ export const go = (args?: string[]) => {
     .action(async (identifier, cmd: { output: string; skipAnnotations: boolean }) => {
       const globals: GlobalOptions = program.optsWithGlobals();
       const commandOptions = { ...globals, ...cmd };
-      const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
+      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
       const options = {
         ...__configFile?.options || {},
         ...commandOptions,
-        ...(__configFile ? { __configFile } : {}),
       };
       options.printOptions && logger.log('Loaded options', options, '\n');
       let specContent = '';
@@ -499,12 +532,11 @@ export const go = (args?: string[]) => {
     .action(async (scriptName: string, cmd) => {
       const commandOptions = { ...program.optsWithGlobals(), ...cmd };
       // TODO: getAbsolutePath to working directory and use it to check from config file
-      const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
+      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
 
       const options = {
         ...__configFile?.options || {},
         ...commandOptions,
-        ...(__configFile ? { __configFile } : {}),
       };
       logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
       options.ci && logger.setReporters([new BasicReporter()]);

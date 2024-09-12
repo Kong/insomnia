@@ -12,6 +12,7 @@ import {
   getOrInheritHeaders,
   responseTransform,
   sendCurlAndWriteTimeline,
+  tryToExecuteAfterResponseScript,
   tryToExecutePreRequestScript,
   tryToInterpolateRequest,
 } from '../network/network';
@@ -115,13 +116,25 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       requestData.responseId
     );
     const res = await responseTransform(response, environmentId, renderedRequest, renderedResult.context);
-
+    const postMutatedContext = await tryToExecuteAfterResponseScript({
+      ...requestData,
+      ...mutatedContext,
+      response,
+    });
+    // TODO: figure out how to handle this error
+    if ('error' in postMutatedContext) {
+      console.error('[network] An error occurred while running after-response script for request named:', renderedRequest.name);
+      throw {
+        error: postMutatedContext.error,
+        response: await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context),
+      };
+    }
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
 
     const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
     const bodyBuffer = await getBodyBuffer(res) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
 
-    return { status, statusMessage, data, headers, responseTime, timelinePath: requestData.timelinePath };
+    return { status, statusMessage, data, headers, responseTime, timelinePath: requestData.timelinePath, testResults: postMutatedContext.requestTestResults };
   };
 }
