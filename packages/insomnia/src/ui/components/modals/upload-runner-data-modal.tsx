@@ -77,7 +77,8 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
           setInvalidFileReason('Upload JSON file can not be parsed');
         }
       } else if (file.type === 'text/csv') {
-        const csvRows = content.split('\n').map(row => row.split(','));
+        // Replace CRLF (Windows line break) and CR (Mac link break) with \n, then split into csv arrays
+        const csvRows = content.replace(/\r\n|\r/g, '\n').split('\n').map(row => row.split(','));
         // at least 2 rows required for csv
         if (csvRows.length > 1) {
           const csvHeaders = csvRows[0];
