@@ -102,6 +102,10 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
       const isCursorInToken = isSameLine && cursor.ch > tok.start && cursor.ch < tok.end;
       const isFocused = this.hasFocus();
       if (!renderContextCache) {
+        // renderContextCache is created if nunjuck tags have been found.
+        // for each nunjuck tag, it will call _updateElementText to update the text.
+        // In order to avoid duplicate renderContext function call for variable type tags, cache the renderContext result here
+        // The cache will not applied to mouseenter listeners since the context may change later.
         renderContextCache = await renderContext();
       }
 

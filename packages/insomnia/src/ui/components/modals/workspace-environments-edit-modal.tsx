@@ -1,5 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Dialog, DropIndicator, GridList, GridListItem, Heading, Label, ListBoxItem, Menu, MenuTrigger, Modal, ModalOverlay, Popover, Text, useDragAndDrop } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
@@ -7,6 +7,7 @@ import { docsAfterResponseScript, docsTemplateTags } from '../../../common/docum
 import { debounce } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
 import { isRemoteProject } from '../../../models/project';
+import { responseTagRegex } from '../../../templating/utils';
 import { useLoaderDeferData } from '../../hooks/use-loader-defer-data';
 import type { OrganizationFeatureLoaderData } from '../../routes/organization';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
@@ -54,6 +55,12 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
   const isUsingGitSync = Boolean(features.gitSync.enabled && (activeWorkspaceMeta?.gitRepositoryId || !isRemoteProject(activeProject)));
 
   const selectedEnvironment = [baseEnvironment, ...subEnvironments].find(env => env._id === selectedEnvironmentId);
+  const hasResponseTagEnvironmentVariable = useMemo(() => {
+    if (selectedEnvironment) {
+      return responseTagRegex.test(JSON.stringify(selectedEnvironment.data));
+    }
+    return false;
+  }, [selectedEnvironment]);
 
   const environmentActionsList: {
     id: string;
@@ -440,7 +447,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
               <div className='flex items-center gap-2 justify-between'>
                 <div className='flex flex-col gap-1'>
                   {/* Warning message when user uses response tag in environment variable and suggest to user after-response script INS-4243 */}
-                  {/{% *response *.* %}/.test(JSON.stringify(selectedEnvironment?.data)) &&
+                  {hasResponseTagEnvironmentVariable &&
                     <p className='text-sm italic warning'>
                       <Icon icon="exclamation-circle" /><a href={docsAfterResponseScript}> We suggest to save your response into an environment variable using after-response script.</a>
                     </p>

@@ -313,3 +313,5 @@ export function extractNunjucksTagFromCoords(
 export interface nunjucksTagContextMenuOptions extends Exclude<ReturnType<typeof extractNunjucksTagFromCoords>, void> {
   type: NunjucksTagContextMenuAction;
 }
+
+export const responseTagRegex = new RegExp('{% *response *.* %}');
