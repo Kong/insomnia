@@ -144,7 +144,6 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
           renderString,
           mark,
           tok.string,
-          // use renderContext with cache key so that it will share the same RenderContext Cache with renderString function
           renderContextWithCacheKey,
           showVariableSourceAndValue,
         );
@@ -156,7 +155,7 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
           renderString,
           mark,
           tok.string,
-          renderContext,
+          renderContextWithCacheKey,
           showVariableSourceAndValue,
         );
       });
