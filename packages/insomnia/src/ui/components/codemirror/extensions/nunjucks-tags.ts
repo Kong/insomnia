@@ -270,7 +270,7 @@ async function _updateElementText(
   render: HandleRender,
   mark: CodeMirror.TextMarker<CodeMirror.MarkerRange>,
   text: string,
-  renderContext: HandleGetRenderContext | Awaited<ReturnType<HandleGetRenderContext>>,
+  renderContext: HandleGetRenderContext,
   showVariableSourceAndValue: boolean
 ) {
   const el = mark.replacedWith!;
@@ -322,7 +322,7 @@ async function _updateElementText(
     } else {
       // Render if it's a variable
       title = await render(str);
-      const context = typeof renderContext === 'function' ? await renderContext() : renderContext;
+      const context = await renderContext();
       const con = context.context.getKeysContext();
       const contextForKey = con.keyContext[cleanedStr];
       // Only prefix the title with context, if context is found
