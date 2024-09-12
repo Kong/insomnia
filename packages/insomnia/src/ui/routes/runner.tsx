@@ -243,7 +243,6 @@ export const Runner: FC<{}> = () => {
   const submit = useSubmit();
   const onRun = debounce(
     () => {
-      // analytics event  collectionRunExecute
       window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute });
       const selected = new Set(reqList.selectedKeys);
       const requests = Array.from(reqList.items)
