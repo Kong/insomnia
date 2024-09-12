@@ -19,6 +19,7 @@ import { isRequestGroup } from '../../models/request-group';
 import type { ResponseInfo, RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
 import { cancelRequestById } from '../../network/cancellation';
 import { invariant } from '../../utils/invariant';
+import { SegmentEvent } from '../analytics';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
 import { Icon } from '../components/icon';
@@ -242,6 +243,8 @@ export const Runner: FC<{}> = () => {
   const submit = useSubmit();
   const onRun = debounce(
     () => {
+      // analytics event  collectionRunExecute
+      window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute });
       const selected = new Set(reqList.selectedKeys);
       const requests = Array.from(reqList.items)
         .filter(item => selected.has(item.id));
