@@ -411,7 +411,13 @@ export const go = (args?: string[]) => {
           const timelineString = await readFile(res.timelinePath, 'utf8');
           const timeline = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e).value).join(' ');
           logger.trace(timeline);
-          res.testResults?.length && console.log(logTestResult(options.reporter, res.testResults));
+          if (res.testResults?.length) {
+            console.log(logTestResult(options.reporter, res.testResults));
+            const hasFailedTests = res.testResults.some(t => t.status === 'failed');
+            if (hasFailedTests) {
+              success = false;
+            }
+          }
 
           if (res.status !== 200) {
             success = false;
