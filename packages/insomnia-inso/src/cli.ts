@@ -32,7 +32,7 @@ export interface GlobalOptions {
 export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress' | 'tap';
 export const reporterTypes: TestReporter[] = ['dot', 'list', 'min', 'progress', 'spec', 'tap'];
 
-export const loadCosmiConfig = async (configFile?: string, workingDir?: string) => {
+export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: string) => {
   try {
     const explorer = await cosmiconfig('inso');
     // set or detect .insorc in workingDir or cwd https://github.com/cosmiconfig/cosmiconfig?tab=readme-ov-file#explorersearch
@@ -253,12 +253,11 @@ export const go = (args?: string[]) => {
     .action(async (identifier, cmd: { env: string; testNamePattern: string; reporter: TestReporter; bail: true; keepFile: true; disableCertValidation: true }) => {
       const globals: GlobalOptions = program.optsWithGlobals();
       const commandOptions = { ...globals, ...cmd };
-      const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
+      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
 
       const options = {
         ...__configFile?.options || {},
         ...commandOptions,
-        ...(__configFile ? { __configFile } : {}),
       };
       logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
       options.ci && logger.setReporters([new BasicReporter()]);
@@ -337,13 +336,12 @@ export const go = (args?: string[]) => {
       const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
 
       const commandOptions = { ...globals, ...cmd };
-      const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
+      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
 
       const options = {
         reporter: defaultReporter,
         ...__configFile?.options || {},
         ...commandOptions,
-        ...(__configFile ? { __configFile } : {}),
       };
       logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
       options.ci && logger.setReporters([new BasicReporter()]);
@@ -438,11 +436,10 @@ export const go = (args?: string[]) => {
     .action(async identifier => {
       const globals: GlobalOptions = program.optsWithGlobals();
       const commandOptions = globals;
-      const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
+      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
       const options = {
         ...__configFile?.options || {},
         ...commandOptions,
-        ...(__configFile ? { __configFile } : {}),
       };
       logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
       options.ci && logger.setReporters([new BasicReporter()]);
@@ -495,11 +492,10 @@ export const go = (args?: string[]) => {
     .action(async (identifier, cmd: { output: string; skipAnnotations: boolean }) => {
       const globals: GlobalOptions = program.optsWithGlobals();
       const commandOptions = { ...globals, ...cmd };
-      const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
+      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
       const options = {
         ...__configFile?.options || {},
         ...commandOptions,
-        ...(__configFile ? { __configFile } : {}),
       };
       options.printOptions && logger.log('Loaded options', options, '\n');
       let specContent = '';
@@ -534,12 +530,11 @@ export const go = (args?: string[]) => {
     .action(async (scriptName: string, cmd) => {
       const commandOptions = { ...program.optsWithGlobals(), ...cmd };
       // TODO: getAbsolutePath to working directory and use it to check from config file
-      const __configFile = await loadCosmiConfig(commandOptions.config, commandOptions.workingDir);
+      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
 
       const options = {
         ...__configFile?.options || {},
         ...commandOptions,
-        ...(__configFile ? { __configFile } : {}),
       };
       logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
       options.ci && logger.setReporters([new BasicReporter()]);

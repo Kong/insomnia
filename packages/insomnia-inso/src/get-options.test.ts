@@ -1,15 +1,15 @@
 import path from 'path';
 import { describe, expect, it, vi } from 'vitest';
 
-import { loadCosmiConfig } from './cli';
+import { tryToReadInsoConfigFile } from './cli';
 
 vi.unmock('cosmiconfig');
 
 const fixturesDir = path.join('src', 'fixtures');
 
-describe('loadCosmiConfig()', () => {
+describe('tryToReadInsoConfigFile()', () => {
   it('should load .insorc-test.yaml config file in fixtures dir', async () => {
-    const result = await loadCosmiConfig(path.join(fixturesDir, '.insorc-test.yaml'));
+    const result = await tryToReadInsoConfigFile(path.join(fixturesDir, '.insorc-test.yaml'));
     expect(result).toEqual({
       options: {
       },
@@ -25,19 +25,19 @@ describe('loadCosmiConfig()', () => {
   it('should return empty object and report error if specified config file not found', async () => {
     const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
-    const result = await loadCosmiConfig('not-found.yaml');
+    const result = await tryToReadInsoConfigFile('not-found.yaml');
     expect(result).toEqual({});
     expect(consoleLogSpy).toHaveBeenCalledWith('Could not find config file at not-found.yaml.');
     expect(consoleErrorSpy).toHaveBeenCalled();
   });
 
   it('should return empty object if config file is blank', async () => {
-    const result = await loadCosmiConfig(path.join(fixturesDir, '.insorc-blank.yaml'));
+    const result = await tryToReadInsoConfigFile(path.join(fixturesDir, '.insorc-blank.yaml'));
     expect(result).toEqual({});
   });
 
   it('should return blank properties and ignore extra items if settings and scripts not found in file', async () => {
-    const result = await loadCosmiConfig(path.join(fixturesDir, '.insorc-missing-properties.yaml'));
+    const result = await tryToReadInsoConfigFile(path.join(fixturesDir, '.insorc-missing-properties.yaml'));
     expect(result).toEqual({
       options: {},
       scripts: {},
