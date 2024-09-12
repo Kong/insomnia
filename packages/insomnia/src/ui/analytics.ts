@@ -15,6 +15,7 @@ export enum SegmentEvent {
   requestBodyTypeSelect = 'Request Body Type Selected',
   requestCreate = 'Request Created',
   requestExecute = 'Request Executed',
+  collectionRunExecute = 'Collection Run Executed',
   projectLocalCreate = 'Local Project Created',
   projectLocalDelete = 'Local Project Deleted',
   selectScratchpad = 'Scratchpad Selected at Login',
