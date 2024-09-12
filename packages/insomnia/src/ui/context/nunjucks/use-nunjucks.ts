@@ -30,12 +30,12 @@ export const useNunjucks = () => {
     });
   }, [requestData?.activeRequest, workspaceData?.activeWorkspace, workspaceData?.activeEnvironment._id]);
 
-  const handleGetRenderContext: HandleGetRenderContext = useCallback(async () => {
-    const context = await fetchRenderContext();
+  const handleGetRenderContext: HandleGetRenderContext = useCallback(async (contextCacheKey?: string) => {
+    const context = contextCacheKey && getRenderContextPromiseCache[contextCacheKey] ?
+      await await getRenderContextPromiseCache[contextCacheKey] : await fetchRenderContext();
     const keys = getKeys(context, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME);
     return { context, keys };
   }, [fetchRenderContext]);
-
   /**
    * Heavily optimized render function
    *

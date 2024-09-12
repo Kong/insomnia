@@ -51,13 +51,13 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
   const renderCacheKey = Math.random() + '';
 
   const renderString = (text: any) => render(text, renderCacheKey);
+  const renderContextWithCacheKey = () => renderContext(renderCacheKey);
 
   const activeMarks: CodeMirror.TextMarker[] = [];
   const doc: CodeMirror.Doc = this.getDoc();
 
   // Only mark up Nunjucks tokens that are in the viewport
   const vp = this.getViewport();
-  let renderContextCache;
 
   for (let lineNo = vp.from; lineNo < vp.to; lineNo++) {
     const line = this.getLineTokens(lineNo);
@@ -101,13 +101,6 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
       const isSameLine = cursor.line === lineNo;
       const isCursorInToken = isSameLine && cursor.ch > tok.start && cursor.ch < tok.end;
       const isFocused = this.hasFocus();
-      if (!renderContextCache) {
-        // renderContextCache is created if any nunjuck tag has been found.
-        // For each nunjuck tag, it will call _updateElementText to update the text. This function will use renderContext to get context for text update.
-        // In order to avoid renderContext being called many times especially when there's numbers of env variables, we cache the renderContext result here.
-        // The cache will not applied to mouseenter listeners since the context may change later.
-        renderContextCache = await renderContext();
-      }
 
       // Show the token again if we're not inside of it.
       if (isFocused && isCursorInToken) {
@@ -151,8 +144,8 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
           renderString,
           mark,
           tok.string,
-          // use cached renderContext to avoid duplicated renderCotext call for every token. Refer: https://github.com/Kong/insomnia/issues/4645
-          renderContextCache,
+          // use renderContext with cache key so that it will share the same RenderContext Cache with renderString function
+          renderContextWithCacheKey,
           showVariableSourceAndValue,
         );
       })();
