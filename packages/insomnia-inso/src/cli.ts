@@ -410,6 +410,8 @@ export const go = (args?: string[]) => {
           const timeline = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e).value).join(' ');
           logger.trace(timeline);
           if (res.testResults?.length) {
+            console.log(`
+Test results:`);
             console.log(logTestResult(options.reporter, res.testResults));
             const hasFailedTests = res.testResults.some(t => t.status === 'failed');
             if (hasFailedTests) {
