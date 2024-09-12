@@ -31,6 +31,7 @@ import { RunnerTestResultPane } from '../components/panes/runner-test-result-pan
 import { ResponseTimer } from '../components/response-timer';
 import { getTimeAndUnit } from '../components/tags/time-tag';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
+import type { OrganizationLoaderData } from './organization';
 import { type RunnerSource, sendActionImp } from './request';
 import { useRootLoaderData } from './root';
 import type { Child, WorkspaceLoaderData } from './workspace';
@@ -103,6 +104,8 @@ export const Runner: FC<{}> = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [shouldRefresh, setShouldRefresh] = useState(false);
   const [errorMsg, setErrorMsg] = useState<null | string>(null);
+
+  const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
 
   if (searchParams.has('refresh-pane') || searchParams.has('error')) {
     if (searchParams.has('refresh-pane')) {
@@ -243,7 +246,7 @@ export const Runner: FC<{}> = () => {
   const submit = useSubmit();
   const onRun = debounce(
     () => {
-      window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute });
+      window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterations } });
       const selected = new Set(reqList.selectedKeys);
       const requests = Array.from(reqList.items)
         .filter(item => selected.has(item.id));
