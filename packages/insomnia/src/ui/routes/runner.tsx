@@ -19,7 +19,7 @@ import type { ResponseInfo, RunnerResultPerRequest, RunnerTestResult } from '../
 import { cancelRequestById } from '../../network/cancellation';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
-import { PreviewCLI } from '../components/cli-preview';
+import { CLIPreview } from '../components/cli-preview';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
 import { Icon } from '../components/icon';
@@ -717,7 +717,7 @@ export const Runner: FC<{}> = () => {
                 </Tab>
               </TabList>
               <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='cli'>
-                <PreviewCLI />
+                <CLIPreview />
               </TabPanel>
               <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='console'>
                 <ResponseTimelineViewer
