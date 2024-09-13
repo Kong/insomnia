@@ -41,9 +41,9 @@ export const loadEnvironment = (
     'Load sub environment with identifier `%s` from data store',
     identifier,
   );
-  const items = subEnvs.filter(
-    env => matchIdIsh(env, identifier) || env.name === identifier,
-  );
+  // Find the environment by identifier in sub environments or global environment id
+  const items = subEnvs.filter(env => matchIdIsh(env, identifier) || env.name === identifier)
+    || db.Environment.filter(env => matchIdIsh(env, identifier) || env.name === identifier);
   logger.trace('Found %d', items.length);
   return ensureSingle(items, 'sub environment');
 };

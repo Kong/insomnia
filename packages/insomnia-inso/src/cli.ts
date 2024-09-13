@@ -249,7 +249,9 @@ export const go = (args?: string[]) => {
     .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first test failure', false)
     .option('--keepFile', 'do not delete the generated test file', false)
-    .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
+    .option('-k, --disableCertValidation', 'disable certificate validation for requests with SSL', false)
+    // TODO: request selector
+    // .option('-i', 'request or folder to use')
     .action(async (identifier, cmd: { env: string; testNamePattern: string; reporter: TestReporter; bail: true; keepFile: true; disableCertValidation: true }) => {
       const globals: GlobalOptions = program.optsWithGlobals();
       const commandOptions = { ...globals, ...cmd };
@@ -290,6 +292,7 @@ export const go = (args?: string[]) => {
 
       // Find environment
       const workspaceId = suites[0].parentId;
+
       const environment = options.env ? loadEnvironment(db, workspaceId, options.env) : await promptEnvironment(db, !!options.ci, workspaceId);
 
       if (!environment) {
