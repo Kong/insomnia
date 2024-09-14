@@ -877,11 +877,19 @@ async function renderApp() {
                                     path: 'changes',
                                     loader: async (...args) =>
                                       (await import('./routes/git-actions')).gitChangesLoader(...args),
+                                    shouldRevalidate: () => {
+                                      // disable revalidation for this loader, we will fetch this loader periodically through fetcher.load in component
+                                      return false;
+                                    },
                                   },
                                   {
                                     path: 'can-push',
                                     loader: async (...args) =>
                                       (await import('./routes/git-actions')).canPushLoader(...args),
+                                    shouldRevalidate: () => {
+                                      // disable revalidation for this loader, we will fetch this loader periodically through fetcher.load in component
+                                      return false;
+                                    },
                                   },
                                   {
                                     path: 'log',
