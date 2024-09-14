@@ -9,7 +9,6 @@ import { useInterval } from 'react-use';
 
 import { Tooltip } from '../../../src/ui/components/tooltip';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../common/constants';
-import { debounce } from '../../common/misc';
 import type { ResponseTimelineEntry } from '../../main/network/libcurl-promise';
 import type { TimingStep } from '../../main/network/request-timing';
 import * as models from '../../models';
