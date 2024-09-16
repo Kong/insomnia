@@ -6,7 +6,8 @@ import { CopyButton } from './base/copy-button';
 import { CodeEditor } from './codemirror/code-editor';
 export const CLIPreview = () => {
   const { workspaceId } = useParams() as { workspaceId: string };
-  const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeEnvironment, activeWorkspaceMeta } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const isGitSyncCollection = activeWorkspaceMeta?.gitRepositoryId;
   const cliCommand = `inso run collection ${workspaceId.slice(0, 10)} -e ${activeEnvironment._id.slice(0, 10)}`;
   const githubAction = `name: Run Insomnia Collection
 on: push
@@ -37,16 +38,19 @@ jobs:
           </CopyButton>
         </div>
       </div>
-      <span>As Github Action</span>
-      <div className='flex-1 h-full'>
-        <CodeEditor
-          id="github-action-preview"
-          key={cliCommand}
-          mode="text/yaml"
-          defaultValue={githubAction}
-          readOnly
-        />
-      </div>
+      {isGitSyncCollection && (
+        <>
+          <span>As Github Action in a git sync repo</span>
+          <div className='flex-1 h-full'>
+            <CodeEditor
+              id="github-action-preview"
+              key={cliCommand}
+              mode="text/yaml"
+              defaultValue={githubAction}
+              readOnly
+            />
+          </div>
+        </>)}
     </div>
   );
 };
