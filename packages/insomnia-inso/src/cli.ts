@@ -252,7 +252,7 @@ export const go = (args?: string[]) => {
     .option('-k, --disableCertValidation', 'disable certificate validation for requests with SSL', false)
     // TODO: request selector
     // .option('-i', 'request or folder to use')
-    .action(async (identifier, cmd: { env: string; testNamePattern: string; reporter: TestReporter; bail: true; keepFile: true; disableCertValidation: true }) => {
+    .action(async (identifier, cmd: { env: string; testNamePattern: string; reporter: TestReporter; bail: boolean; keepFile: boolean; disableCertValidation: boolean; ci: boolean }) => {
       const globals: GlobalOptions = program.optsWithGlobals();
       const commandOptions = { ...globals, ...cmd };
       const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
@@ -335,7 +335,7 @@ export const go = (args?: string[]) => {
     .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first non-200 response', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
-    .action(async (identifier, cmd: { env: string; disableCertValidation: true; requestNamePattern: string; bail: boolean }) => {
+    .action(async (identifier, cmd: { env: string; disableCertValidation: boolean; requestNamePattern: string; bail: boolean }) => {
       const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
 
       const commandOptions = { ...globals, ...cmd };
@@ -363,6 +363,10 @@ export const go = (args?: string[]) => {
         filterTypes: [],
       });
 
+      const shouldFallbackToFirst = !identifier && options.ci && db.Workspace.length > 0;
+      if (shouldFallbackToFirst) {
+        identifier = db.Workspace[0]._id;
+      }
       const workspace = identifier ? loadWorkspace(db, identifier) : await promptWorkspace(db, !!options.ci);
 
       if (!workspace) {
