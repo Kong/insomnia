@@ -400,7 +400,7 @@ export const go = (args?: string[]) => {
     .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
     .option('-i, --item <requestid>', 'request or folder id to run', collect, [])
     .option('-e, --env <identifier>', 'environment to use', '')
-    .option('--delay-request <duration>', 'milliseconds to delay betwee requests', '0')
+    .option('--delay-request <duration>', 'milliseconds to delay between requests', '0')
     .option('-n, --iteration-count <count>', 'number of times to repeat', '1')
     .option('-d, --iteration-data <path/url>', 'file path or url (JSON or CSV)', '')
     .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}]`, defaultReporter)
