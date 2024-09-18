@@ -842,7 +842,15 @@ function cancelExecution(workspaceId: string) {
     stopExecution(workspaceId);
   }
 }
-
+const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], currentIteration?: number): UserUploadEnvironment | undefined => {
+  if (currentIteration === undefined || !Array.isArray(list) || list.length === 0) {
+    return undefined;
+  }
+  if (list.length >= currentIteration + 1) {
+    return list[currentIteration];
+  };
+  return list[(currentIteration + 1) % list.length];
+};
 export interface runCollectionActionParams {
   requests: { id: string; name: string }[];
 }
@@ -908,17 +916,6 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
         }
         updateExecution(workspaceId, targetRequest.id);
 
-        const getCurIterationUserUploadData = (curIteration: number): UserUploadEnvironment | undefined => {
-          if (Array.isArray(userUploadEnvs) && userUploadEnvs.length > 0) {
-            const uploadDataLength = userUploadEnvs.length;
-            if (uploadDataLength >= curIteration + 1) {
-              return userUploadEnvs[curIteration];
-            };
-            return userUploadEnvs[(curIteration + 1) % uploadDataLength];
-          }
-          return undefined;
-        };
-
         window.main.updateLatestStepName({ requestId: workspaceId, stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"` });
 
         const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(
@@ -943,7 +940,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
           workspaceId,
           iteration: i + 1,
           iterationCount: iterations,
-          userUploadEnv: getCurIterationUserUploadData(i),
+          userUploadEnv: wrapAroundIterationOverIterationData(userUploadEnvs, i),
           shouldPromptForPathAfterResponse: false,
           ignoreUndefinedEnvVariable: true,
           testResultCollector: resultCollector,

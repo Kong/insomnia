@@ -114,7 +114,7 @@ describe('inso dev bundle', () => {
     });
 
     it('iterationData and iterationCount args work', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -d packages/insomnia-smoke-test/fixtures/files/runner-data.json -w packages/insomnia-inso/src/examples/three-requests.yml -n 2 -i req_3fd28aabbb18447abab1f45e6ee4bdc1 --verbose';
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -d packages/insomnia-smoke-test/fixtures/files/runner-data.json -w packages/insomnia-inso/src/examples/three-requests.yml -n 2 -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -e env_86e135 --verbose';
       const result = await runCliFromRoot(input);
       if (result.code !== 0) {
         console.log(result);

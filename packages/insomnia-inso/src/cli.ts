@@ -189,7 +189,7 @@ const getRequestsToRunFromListOrWorkspace = (db: Database, workspaceId: string, 
   const allRequestGroupIds = getRequestGroupIdsRecursively([workspaceId]);
   return db.Request.filter(req => [workspaceId, ...allRequestGroupIds].includes(req.parentId));
 };
-// adds support for repeating args in commands.js eg. -i 1 -i 2 -i 3
+// adds support for repeating args in commander.js eg. -i 1 -i 2 -i 3
 const collect = (val: string, memo: string[]) => {
   memo.push(val);
   return memo;

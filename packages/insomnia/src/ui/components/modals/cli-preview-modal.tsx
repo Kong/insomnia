@@ -12,7 +12,7 @@ export const CLIPreviewModal = ({ onClose, requestIds, allSelected, iterations, 
   const workspaceIdOrRequestIds = allSelected ? workspaceId.slice(0, 10) : '-i ' + requestIds.join(' -i ');
   const iterationsArgument = iterations > 1 ? ` -n ${iterations}` : '';
   const delayArgument = delay > 0 ? ` --delay-request ${delay}` : '';
-  const iterationFilePath = filePath ? ` -d ${filePath}` : '';
+  const iterationFilePath = filePath ? ` -d "${filePath}"` : '';
   const cliCommand = `inso run collection ${workspaceIdOrRequestIds} -e ${activeEnvironment._id.slice(0, 10)}${iterationsArgument}${delayArgument}${iterationFilePath}`;
 
   return (
@@ -47,7 +47,7 @@ export const CLIPreviewModal = ({ onClose, requestIds, allSelected, iterations, 
               <div className="h-full w-full text-md flex-row p-2">
                 <div className="pb-4">Copy this command to run your collection in the terminal</div>
                 <div className="max-h-32 flex flex-col overflow-y-auto min-h-[2em] bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm]">
-                  <div className="flex justify-between overflow-auto relative h-full gap-[var(--padding-sm)] w-full text-center font-mono">
+                  <div className="flex justify-between overflow-auto relative h-full gap-[var(--padding-sm)] w-full font-mono">
                     <span>{cliCommand}</span>
 
                     <CopyButton

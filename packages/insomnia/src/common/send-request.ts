@@ -26,7 +26,15 @@ import { generateId } from './misc';
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
 type SettingsOverride = Pick<Settings, 'validateSSL'>;
-
+const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], currentIteration?: number): UserUploadEnvironment | undefined => {
+  if (currentIteration === undefined || !Array.isArray(list) || list.length === 0) {
+    return undefined;
+  }
+  if (list.length >= currentIteration + 1) {
+    return list[currentIteration];
+  };
+  return list[(currentIteration + 1) % list.length];
+};
 export async function getSendRequestCallbackMemDb(environmentId: string, memDB: any, settingsOverrides?: SettingsOverride, iterationData?: Record<string, any>[], iterationCount?: number) {
   // Initialize the DB in-memory and fill it with data if we're given one
   await database.init(
@@ -99,16 +107,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       dataPropertyOrder: orderedJson.map || null,
     };
   });
-  const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], curIteration?: number): UserUploadEnvironment | undefined => {
-    if (curIteration === undefined || !Array.isArray(list) || list.length === 0) {
-      return undefined;
-    }
-    const uploadDataLength = list.length;
-    if (uploadDataLength >= curIteration + 1) {
-      return list[curIteration];
-    };
-    return list[(curIteration + 1) % uploadDataLength];
-  };
+
   // Return callback helper to send requests
   return async function sendRequest(requestId: string, iteration?: number) {
     const requestData = await fetchInsoRequestData(requestId, environmentId);
