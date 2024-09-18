@@ -878,7 +878,7 @@ async function renderApp() {
                                     loader: async (...args) =>
                                       (await import('./routes/git-actions')).gitChangesLoader(...args),
                                     shouldRevalidate: ({ formAction }) => {
-                                      if (formAction?.includes('git/commit')) {
+                                      if (formAction?.includes('git')) {
                                         return true;
                                       }
                                       // disable revalidation for this loader, we will fetch this loader periodically through fetcher.load in component
@@ -890,7 +890,7 @@ async function renderApp() {
                                     loader: async (...args) =>
                                       (await import('./routes/git-actions')).canPushLoader(...args),
                                     shouldRevalidate: ({ formAction }) => {
-                                      if (formAction?.includes('git/push')) {
+                                      if (formAction?.includes('git')) {
                                         return true;
                                       }
                                       // disable revalidation for this loader, we will fetch this loader periodically through fetcher.load in component

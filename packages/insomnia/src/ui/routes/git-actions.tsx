@@ -1079,6 +1079,9 @@ export const pushToGitRemoteAction: ActionFunction = async ({
         providerName,
       },
     });
+    models.workspaceMeta.updateByParentId(workspaceId, {
+      hasUnpushedChanges: false,
+    });
   } catch (err: unknown) {
     if (err instanceof Errors.HttpError) {
       return {

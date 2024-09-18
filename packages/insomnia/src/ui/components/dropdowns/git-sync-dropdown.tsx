@@ -188,7 +188,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
     {
       id: 'commit',
       icon: 'check',
-      isDisabled: gitChangesFetcher.data?.changes.length === 0,
+      isDisabled: false,
       label: 'Commit',
       action: () => setIsGitStagingModalOpen(true),
     },
@@ -211,7 +211,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       id: 'push',
       icon: loadingPush ? 'refresh' : 'cloud-upload',
       label: 'Push',
-      isDisabled: !gitCanPushFetcher.data?.canPush,
+      isDisabled: false,
       action: () => handlePush({ force: false }),
     },
     {
