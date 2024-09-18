@@ -19,7 +19,7 @@ import type { ResponseInfo, RunnerResultPerRequest, RunnerTestResult } from '../
 import { cancelRequestById } from '../../network/cancellation';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../components/base/dropdown';
+import { Dropdown, DropdownItem, ItemContent } from '../components/base/dropdown';
 import { CLIPreview } from '../components/cli-preview';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
@@ -485,6 +485,7 @@ export const Runner: FC<{}> = () => {
                     </div>
                     <div className='flex p-1 self-stretch'>
                       <Button
+                        isDisabled={isDisabled}
                         className="px-5 ml-1 text-[--color-font-surprise] bg-[--color-surprise] hover:bg-opacity-90 focus:bg-opacity-90 rounded-l-sm"
                         onPress={onRun}
                       >
@@ -498,6 +499,7 @@ export const Runner: FC<{}> = () => {
                         closeOnSelect={false}
                         triggerButton={
                           <Button
+                            isDisabled={isDisabled}
                             className="px-1 bg-[--color-surprise] text-[--color-font-surprise] rounded-r-sm"
                             style={{
                               borderTopRightRadius: '0.125rem',
