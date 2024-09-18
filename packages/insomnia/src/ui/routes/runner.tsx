@@ -20,11 +20,11 @@ import { cancelRequestById } from '../../network/cancellation';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { Dropdown, DropdownItem, ItemContent } from '../components/base/dropdown';
-import { CLIPreview } from '../components/cli-preview';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
 import { Icon } from '../components/icon';
 import { showAlert } from '../components/modals';
+import { CLIPreviewModal } from '../components/modals/cli-preview-modal';
 import { UploadDataModal, type UploadDataType } from '../components/modals/upload-runner-data-modal';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { RunnerResultHistoryPane } from '../components/panes/runner-result-history-pane';
@@ -147,7 +147,7 @@ export const Runner: FC<{}> = () => {
   const { settings } = useRootLoaderData();
   const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [showUploadModal, setShowUploadModal] = useState(false);
-
+  const [showCLIModal, setShowCLIModal] = useState(false);
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
   useEffect(() => {
     if (settings.forceVerticalLayout) {
@@ -518,8 +518,7 @@ export const Runner: FC<{}> = () => {
                           <ItemContent
                             icon="code"
                             label="Run via CLI"
-                            onClick={async () => {
-                            }}
+                            onClick={() => setShowCLIModal(true)}
                           />
                         </DropdownItem>
                       </Dropdown>
@@ -679,6 +678,15 @@ export const Runner: FC<{}> = () => {
                     </div>
                   </TabPanel>
                 </Tabs>
+                {showCLIModal && (
+                  <CLIPreviewModal
+                    onClose={() => setShowCLIModal(false)}
+                    requests={reqList.items}
+                    iterations={iterations}
+                    delay={delay}
+                    uploadData={uploadData}
+                  />
+                )}
                 {showUploadModal && (
                   <UploadDataModal
                     onUploadFile={(file, uploadData) => {
@@ -747,9 +755,6 @@ export const Runner: FC<{}> = () => {
                   CLI
                 </Tab>
               </TabList>
-              <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='cli'>
-                <CLIPreview />
-              </TabPanel>
               <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='console'>
                 <ResponseTimelineViewer
                   key={workspaceId}
