@@ -112,6 +112,16 @@ describe('inso dev bundle', () => {
       }
       expect(result.stdout).toContain('log: "we did it: 200"');
     });
+
+    it('iterationData and iterationCount args work', async () => {
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -d packages/insomnia-smoke-test/fixtures/files/runner-data.json -w packages/insomnia-inso/src/examples/three-requests.yml -n 2 -i req_3fd28aabbb18447abab1f45e6ee4bdc1 --verbose';
+      const result = await runCliFromRoot(input);
+      if (result.code !== 0) {
+        console.log(result);
+      }
+      expect(result.stdout).toContain('expecting to see:file_value0');
+      expect(result.stdout).toContain('expecting to see:file_value1');
+    });
   });
 });
 

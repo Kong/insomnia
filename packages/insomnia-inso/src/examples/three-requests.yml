@@ -1,19 +1,23 @@
 _type: export
 __export_format: 4
-__export_date: 2024-09-18T11:18:05.334Z
+__export_date: 2024-09-18T13:31:59.297Z
 __export_source: insomnia.desktop.app:v10.0.0
 resources:
   - _id: req_3fd28aabbb18447abab1f45e6ee4bdc1
     parentId: wrk_c992d40ce76f4a3cb44c5fdb8435cbeb
-    modified: 1726658249601
+    modified: 1726666263873
     created: 1726658232232
     url: localhost:4010/echo
     name: "1"
     description: ""
     method: GET
-    body: {}
+    body:
+      mimeType: text/plain
+      text: expecting to see:{{value}}
     parameters: []
     headers:
+      - name: Content-Type
+        value: text/plain
       - name: User-Agent
         value: insomnia/10.0.0
     authentication: {}
@@ -85,11 +89,14 @@ resources:
     _type: request
   - _id: env_86e1354fb9909cdb109ccadf83c3353f3bb9bd09
     parentId: wrk_c992d40ce76f4a3cb44c5fdb8435cbeb
-    modified: 1726658198060
+    modified: 1726666211581
     created: 1726658198060
     name: Base Environment
-    data: {}
-    dataPropertyOrder: null
+    data:
+      value: 123
+    dataPropertyOrder:
+      "&":
+        - value
     color: null
     isPrivate: false
     metaSortKey: 1726658198060

@@ -1,7 +1,9 @@
+import orderedJSON from 'json-order';
 import path from 'path';
 
 import { type BaseModel, types as modelTypes } from '../models';
 import * as models from '../models';
+import type { UserUploadEnvironment } from '../models/environment';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import { getBodyBuffer } from '../models/response';
@@ -17,6 +19,7 @@ import {
   tryToInterpolateRequest,
 } from '../network/network';
 import { invariant } from '../utils/invariant';
+import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
 import { database } from './database';
 import { generateId } from './misc';
 
@@ -24,7 +27,7 @@ import { generateId } from './misc';
 // We want to give consumers the ability to override certain settings
 type SettingsOverride = Pick<Settings, 'validateSSL'>;
 
-export async function getSendRequestCallbackMemDb(environmentId: string, memDB: any, settingsOverrides?: SettingsOverride) {
+export async function getSendRequestCallbackMemDb(environmentId: string, memDB: any, settingsOverrides?: SettingsOverride, iterationData?: Record<string, any>[], iterationCount?: number) {
   // Initialize the DB in-memory and fill it with data if we're given one
   await database.init(
     modelTypes(),
@@ -84,10 +87,32 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
 
     return { request, settings, clientCertificates, caCert, environment, activeEnvironmentId, workspace, timelinePath, responseId, ancestors };
   };
+  const userUploadEnvs = iterationData?.map(data => {
+    const orderedJson = orderedJSON.parse<Record<string, any>>(
+      JSON.stringify(data),
+      JSON_ORDER_PREFIX,
+      JSON_ORDER_SEPARATOR,
+    );
+    return {
+      name: 'User Upload',
+      data: orderedJson.object,
+      dataPropertyOrder: orderedJson.map || null,
+    };
+  });
+  const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], curIteration?: number): UserUploadEnvironment | undefined => {
+    if (curIteration === undefined || !Array.isArray(list) || list.length === 0) {
+      return undefined;
+    }
+    const uploadDataLength = list.length;
+    if (uploadDataLength >= curIteration + 1) {
+      return list[curIteration];
+    };
+    return list[(curIteration + 1) % uploadDataLength];
+  };
   // Return callback helper to send requests
-  return async function sendRequest(requestId: string) {
+  return async function sendRequest(requestId: string, iteration?: number) {
     const requestData = await fetchInsoRequestData(requestId, environmentId);
-    const mutatedContext = await tryToExecutePreRequestScript(requestData, requestData.workspace._id);
+    const mutatedContext = await tryToExecutePreRequestScript(requestData, requestData.workspace._id, wrapAroundIterationOverIterationData(userUploadEnvs, iteration), iteration, iterationCount);
     if (mutatedContext === null) {
       console.error('Time out while executing pre-request script');
       return null;
@@ -101,7 +126,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       purpose: 'send',
       extraInfo: undefined,
       baseEnvironment: mutatedContext.baseEnvironment,
-      userUploadEnv: undefined,
+      userUploadEnv: mutatedContext.userUploadEnv,
       ignoreUndefinedEnvVariable,
     });
     // skip plugins

@@ -229,6 +229,44 @@ function convertToTAP(testCases: RequestTestResult[]): string {
   });
   return tapOutput;
 }
+const readFileFromPathOrUrl = async (pathOrUrl: string) => {
+  if (pathOrUrl.startsWith('http')) {
+    const response = await fetch(pathOrUrl);
+    return response.text();
+  }
+  return readFile(pathOrUrl, 'utf8');
+};
+
+const getIterationDataFromFileOrUrl = async (pathOrUrl: string): Promise<Record<string, string>[]> => {
+  const fileType = pathOrUrl.split('.').pop()?.toLowerCase();
+  const content = await readFileFromPathOrUrl(pathOrUrl);
+  if (fileType === 'json') {
+    try {
+      const jsonDataContent = JSON.parse(content);
+      if (Array.isArray(jsonDataContent)) {
+        return jsonDataContent.filter(data => data && typeof data === 'object' && !Array.isArray(data) && data !== null);
+      }
+      throw new Error('Invalid JSON file uploaded, JSON file must be array of key-value pairs.');
+    } catch (error) {
+      throw new Error('Upload JSON file can not be parsed');
+    }
+  } else if (fileType === 'csv') {
+    // Replace CRLF (Windows line break) and CR (Mac link break) with \n, then split into csv arrays
+    const csvRows = content.replace(/\r\n|\r/g, '\n').split('\n').map(row => row.split(','));
+    // at least 2 rows required for csv
+    if (csvRows.length > 1) {
+      const csvHeaders = csvRows[0];
+      const csvContentRows = csvRows.slice(1, csvRows.length);
+      return csvContentRows.map(contentRow => csvHeaders.reduce((acc: Record<string, any>, cur, idx) => {
+        acc[cur] = contentRow[idx] ?? '';
+        return acc;
+      }, {}));
+    }
+    throw new Error('CSV file must contain at least two rows with first row as variable names');
+  }
+  throw new Error(`Uploaded file is unsupported ${fileType}`);
+};
+
 export const go = (args?: string[]) => {
 
   const program = new commander.Command();
@@ -277,7 +315,7 @@ export const go = (args?: string[]) => {
     .description('Run Insomnia unit test suites, identifier can be a test suite id or a API Spec id')
     .option('-e, --env <identifier>', 'environment to use', '')
     .option('-t, --testNamePattern <regex>', 'run tests that match the regex', '')
-    .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`, defaultReporter)
+    .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}]`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first test failure', false)
     .option('--keepFile', 'do not delete the generated test file', false)
     .option('-k, --disableCertValidation', 'disable certificate validation for requests with SSL', false)
@@ -360,14 +398,15 @@ export const go = (args?: string[]) => {
   run.command('collection [identifier]')
     .description('Run Insomnia request collection, identifier can be a workspace id')
     .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
-    .option('-i, --item <identifier>', 'request or folder id to run', collect, [])
+    .option('-i, --item <requestid>', 'request or folder id to run', collect, [])
     .option('-e, --env <identifier>', 'environment to use', '')
     .option('--delay-request <duration>', 'milliseconds to delay betwee requests', '0')
     .option('-n, --iteration-count <count>', 'number of times to repeat', '1')
-    .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`, defaultReporter)
+    .option('-d, --iteration-data <path/url>', 'file path or url (JSON or CSV)', '')
+    .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}]`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first non-200 response', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
-    .action(async (identifier, cmd: { env: string; disableCertValidation: boolean; requestNamePattern: string; bail: boolean; item: string[]; delayRequest: string; iterationCount: string }) => {
+    .action(async (identifier, cmd: { env: string; disableCertValidation: boolean; requestNamePattern: string; bail: boolean; item: string[]; delayRequest: string; iterationCount: string; iterationData: string }) => {
       const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
 
       const commandOptions = { ...globals, ...cmd };
@@ -430,16 +469,17 @@ export const go = (args?: string[]) => {
       }
 
       try {
-        const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation });
-        let success = true;
         const iterationCount = parseInt(options.iterationCount, 10);
+        const iterationData = options.iterationData ? await getIterationDataFromFileOrUrl(options.iterationData) : undefined;
+        const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation }, iterationData, iterationCount);
+        let success = true;
         for (let i = 0; i < iterationCount; i++) {
           for (const req of requestsToRun) {
             if (options.bail && !success) {
               return;
             }
             logger.log(`Running request: ${req.name} ${req._id}`);
-            const res = await sendRequest(req._id);
+            const res = await sendRequest(req._id, i);
             if (!res) {
               logger.error('Timed out while running script');
               success = false;
