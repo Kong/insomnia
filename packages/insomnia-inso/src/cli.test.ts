@@ -41,6 +41,8 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-smoke-test/fixtures/simple.yaml -e env_2eecf85b7f --requestNamePattern "example http" wrk_0702a5',
   // after-response script and test
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/after-response.yml wrk_616795 --verbose',
+  // select request by id
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/three-requests.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -i req_6063adcdab5b409e9b4f00f47322df4a',
 ];
 
 const shouldReturnErrorCode = [
@@ -109,6 +111,16 @@ describe('inso dev bundle', () => {
         console.log(result);
       }
       expect(result.stdout).toContain('log: "we did it: 200"');
+    });
+
+    it('iterationData and iterationCount args work', async () => {
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -d packages/insomnia-smoke-test/fixtures/files/runner-data.json -w packages/insomnia-inso/src/examples/three-requests.yml -n 2 -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -e env_86e135 --verbose';
+      const result = await runCliFromRoot(input);
+      if (result.code !== 0) {
+        console.log(result);
+      }
+      expect(result.stdout).toContain('expecting to see:file_value0');
+      expect(result.stdout).toContain('expecting to see:file_value1');
     });
   });
 });

@@ -1,0 +1,110 @@
+_type: export
+__export_format: 4
+__export_date: 2024-09-18T13:31:59.297Z
+__export_source: insomnia.desktop.app:v10.0.0
+resources:
+  - _id: req_3fd28aabbb18447abab1f45e6ee4bdc1
+    parentId: wrk_c992d40ce76f4a3cb44c5fdb8435cbeb
+    modified: 1726666263873
+    created: 1726658232232
+    url: localhost:4010/echo
+    name: "1"
+    description: ""
+    method: GET
+    body:
+      mimeType: text/plain
+      text: expecting to see:{{value}}
+    parameters: []
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/10.0.0
+    authentication: {}
+    metaSortKey: -1726658232232
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_c992d40ce76f4a3cb44c5fdb8435cbeb
+    parentId: null
+    modified: 1726658198059
+    created: 1726658198059
+    name: Collection with 3 requests
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: req_6063adcdab5b409e9b4f00f47322df4a
+    parentId: wrk_c992d40ce76f4a3cb44c5fdb8435cbeb
+    modified: 1726658253319
+    created: 1726658253319
+    url: localhost:4010/echo
+    name: "2"
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/10.0.0
+    authentication: {}
+    metaSortKey: -1726273359624.5
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_766390ffa47a4fbba7a0e3f94a4582d9
+    parentId: wrk_c992d40ce76f4a3cb44c5fdb8435cbeb
+    modified: 1726658259060
+    created: 1726658259060
+    url: localhost:4010/echo
+    name: "3"
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/10.0.0
+    authentication: {}
+    metaSortKey: -1726080923320.75
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: env_86e1354fb9909cdb109ccadf83c3353f3bb9bd09
+    parentId: wrk_c992d40ce76f4a3cb44c5fdb8435cbeb
+    modified: 1726666211581
+    created: 1726658198060
+    name: Base Environment
+    data:
+      value: 123
+    dataPropertyOrder:
+      "&":
+        - value
+    color: null
+    isPrivate: false
+    metaSortKey: 1726658198060
+    _type: environment
+  - _id: jar_86e1354fb9909cdb109ccadf83c3353f3bb9bd09
+    parentId: wrk_c992d40ce76f4a3cb44c5fdb8435cbeb
+    modified: 1726658198060
+    created: 1726658198060
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar

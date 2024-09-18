@@ -19,10 +19,12 @@ import type { ResponseInfo, RunnerResultPerRequest, RunnerTestResult } from '../
 import { cancelRequestById } from '../../network/cancellation';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
+import { Dropdown, DropdownItem, ItemContent } from '../components/base/dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
 import { Icon } from '../components/icon';
 import { showAlert } from '../components/modals';
+import { CLIPreviewModal } from '../components/modals/cli-preview-modal';
 import { UploadDataModal, type UploadDataType } from '../components/modals/upload-runner-data-modal';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { RunnerResultHistoryPane } from '../components/panes/runner-result-history-pane';
@@ -145,7 +147,7 @@ export const Runner: FC<{}> = () => {
   const { settings } = useRootLoaderData();
   const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [showUploadModal, setShowUploadModal] = useState(false);
-
+  const [showCLIModal, setShowCLIModal] = useState(false);
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
   useEffect(() => {
     if (settings.forceVerticalLayout) {
@@ -410,7 +412,7 @@ export const Runner: FC<{}> = () => {
   const disabledKeys = useMemo(() => {
     return isRunning ? allKeys : [];
   }, [isRunning, allKeys]);
-
+  const isDisabled = isRunning || Array.from(reqList.selectedKeys).length === 0;
   return (
     <PanelGroup autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel>
@@ -481,16 +483,45 @@ export const Runner: FC<{}> = () => {
                         </Button>
                       </div>
                     </div>
-                    <div className="w-[100px]">
-                      <button
-                        type="button"
-                        className="rounded-sm text-center mr-1 bg-[--color-surprise] text-[--color-font-surprise]"
-                        onClick={onRun}
-                        style={{ width: '92px', height: '30px' }} // try to make its width same as "Send button"
-                        disabled={Array.from(reqList.selectedKeys).length === 0 || isRunning}
+                    <div className='flex p-1 self-stretch'>
+                      <Button
+                        isDisabled={isDisabled}
+                        className="px-5 ml-1 text-[--color-font-surprise] bg-[--color-surprise] hover:bg-opacity-90 focus:bg-opacity-90 rounded-l-sm"
+                        onPress={onRun}
                       >
                         Run
-                      </button>
+                      </Button>
+                      <Dropdown
+                        key="dropdown"
+                        className="flex"
+                        isDisabled={isDisabled}
+                        aria-label="Run Options"
+                        closeOnSelect={false}
+                        triggerButton={
+                          <Button
+                            isDisabled={isDisabled}
+                            className="px-1 bg-[--color-surprise] text-[--color-font-surprise] rounded-r-sm"
+                            style={{
+                              borderTopRightRadius: '0.125rem',
+                              borderBottomRightRadius: '0.125rem',
+                            }}
+                          >
+                            <i className="fa fa-caret-down" />
+                          </Button>
+                        }
+                      >
+
+                        <DropdownItem aria-label="send-now">
+                          <ItemContent icon="arrow-circle-o-right" label="Run" onClick={onRun} />
+                        </DropdownItem>
+                        <DropdownItem aria-label='Run via CLI'>
+                          <ItemContent
+                            icon="code"
+                            label="Run via CLI"
+                            onClick={() => setShowCLIModal(true)}
+                          />
+                        </DropdownItem>
+                      </Dropdown>
                     </div>
                   </Heading>
                 </PaneHeader>
@@ -526,7 +557,6 @@ export const Runner: FC<{}> = () => {
                     <PaneBody placeholder className='p-0'>
                       <GridList
                         id="runner-request-list"
-                        // style={{ height: virtualizer.getTotalSize() }}
                         items={reqList.items}
                         selectionMode="multiple"
                         selectedKeys={reqList.selectedKeys}
@@ -647,6 +677,16 @@ export const Runner: FC<{}> = () => {
                     </div>
                   </TabPanel>
                 </Tabs>
+                {showCLIModal && (
+                  <CLIPreviewModal
+                    onClose={() => setShowCLIModal(false)}
+                    requestIds={Array.from(reqList.selectedKeys) as string[]}
+                    allSelected={Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length}
+                    iterations={iterations}
+                    delay={delay}
+                    filePath={file?.path || ''}
+                  />
+                )}
                 {showUploadModal && (
                   <UploadDataModal
                     onUploadFile={(file, uploadData) => {
@@ -802,7 +842,15 @@ function cancelExecution(workspaceId: string) {
     stopExecution(workspaceId);
   }
 }
-
+const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], currentIteration?: number): UserUploadEnvironment | undefined => {
+  if (currentIteration === undefined || !Array.isArray(list) || list.length === 0) {
+    return undefined;
+  }
+  if (list.length >= currentIteration + 1) {
+    return list[currentIteration];
+  };
+  return list[(currentIteration + 1) % list.length];
+};
 export interface runCollectionActionParams {
   requests: { id: string; name: string }[];
 }
@@ -868,17 +916,6 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
         }
         updateExecution(workspaceId, targetRequest.id);
 
-        const getCurIterationUserUploadData = (curIteration: number): UserUploadEnvironment | undefined => {
-          if (Array.isArray(userUploadEnvs) && userUploadEnvs.length > 0) {
-            const uploadDataLength = userUploadEnvs.length;
-            if (uploadDataLength >= curIteration + 1) {
-              return userUploadEnvs[curIteration];
-            };
-            return userUploadEnvs[(curIteration + 1) % uploadDataLength];
-          }
-          return undefined;
-        };
-
         window.main.updateLatestStepName({ requestId: workspaceId, stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"` });
 
         const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(
@@ -903,7 +940,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
           workspaceId,
           iteration: i + 1,
           iterationCount: iterations,
-          userUploadEnv: getCurIterationUserUploadData(i),
+          userUploadEnv: wrapAroundIterationOverIterationData(userUploadEnvs, i),
           shouldPromptForPathAfterResponse: false,
           ignoreUndefinedEnvVariable: true,
           testResultCollector: resultCollector,

@@ -7,14 +7,14 @@ import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consol
 import { cosmiconfig } from 'cosmiconfig';
 import fs from 'fs';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
-import type { RequestTestResult } from 'insomnia-sdk';
+import { type RequestTestResult } from 'insomnia-sdk';
 import { generate, runTestsCli } from 'insomnia-testing';
 import { parseArgsStringToArgv } from 'string-argv';
 
 import packageJson from '../package.json';
 import { exportSpecification, writeFileWithCliOptions } from './commands/export-specification';
 import { getRuleSetFileFromFolderByFilename, lintSpecification } from './commands/lint-specification';
-import { loadDb } from './db';
+import { Database, loadDb } from './db';
 import { loadApiSpec, promptApiSpec } from './db/models/api-spec';
 import { loadEnvironment, promptEnvironment } from './db/models/environment';
 import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
@@ -162,7 +162,38 @@ const resolveSpecInDatabase = async (identifier: string, options: GlobalOptions)
   }
   return specFromDb.contents;
 };
+const getWorkspaceOrFallback = async (db: Database, identifier: string, ci: boolean) => {
+  if (identifier) {
+    return loadWorkspace(db, identifier);
+  }
+  if (ci && db.Workspace.length > 0) {
+    return db.Workspace[0];
+  }
+  return await promptWorkspace(db, !!ci);
+};
+const getRequestsToRunFromListOrWorkspace = (db: Database, workspaceId: string, item: string[]) => {
+  const getRequestGroupIdsRecursively = (from: string[]): string[] => {
+    const parentIds = db.RequestGroup.filter(rg => from.includes(rg.parentId)).map(rg => rg._id);
+    return [...parentIds, ...(parentIds.length > 0 ? getRequestGroupIdsRecursively(parentIds) : [])];
+  };
+  const hasItems = item.length > 0;
+  if (hasItems) {
+    const folderIds = item.filter(id => db.RequestGroup.find(rg => rg._id === id));
+    const allRequestGroupIds = getRequestGroupIdsRecursively(folderIds);
+    const folderRequests = db.Request.filter(req => allRequestGroupIds.includes(req.parentId));
+    const reqItems = db.Request.filter(req => item.includes(req._id));
 
+    return [...reqItems, ...folderRequests];
+  }
+
+  const allRequestGroupIds = getRequestGroupIdsRecursively([workspaceId]);
+  return db.Request.filter(req => [workspaceId, ...allRequestGroupIds].includes(req.parentId));
+};
+// adds support for repeating args in commander.js eg. -i 1 -i 2 -i 3
+const collect = (val: string, memo: string[]) => {
+  memo.push(val);
+  return memo;
+};
 const localAppDir = getAppDataDir(getDefaultProductName());
 const logTestResult = (reporter: TestReporter, testResults?: RequestTestResult[]) => {
   if (!testResults || testResults.length === 0) {
@@ -198,6 +229,44 @@ function convertToTAP(testCases: RequestTestResult[]): string {
   });
   return tapOutput;
 }
+const readFileFromPathOrUrl = async (pathOrUrl: string) => {
+  if (pathOrUrl.startsWith('http')) {
+    const response = await fetch(pathOrUrl);
+    return response.text();
+  }
+  return readFile(pathOrUrl, 'utf8');
+};
+
+const getIterationDataFromFileOrUrl = async (pathOrUrl: string): Promise<Record<string, string>[]> => {
+  const fileType = pathOrUrl.split('.').pop()?.toLowerCase();
+  const content = await readFileFromPathOrUrl(pathOrUrl);
+  if (fileType === 'json') {
+    try {
+      const jsonDataContent = JSON.parse(content);
+      if (Array.isArray(jsonDataContent)) {
+        return jsonDataContent.filter(data => data && typeof data === 'object' && !Array.isArray(data) && data !== null);
+      }
+      throw new Error('Invalid JSON file uploaded, JSON file must be array of key-value pairs.');
+    } catch (error) {
+      throw new Error('Upload JSON file can not be parsed');
+    }
+  } else if (fileType === 'csv') {
+    // Replace CRLF (Windows line break) and CR (Mac link break) with \n, then split into csv arrays
+    const csvRows = content.replace(/\r\n|\r/g, '\n').split('\n').map(row => row.split(','));
+    // at least 2 rows required for csv
+    if (csvRows.length > 1) {
+      const csvHeaders = csvRows[0];
+      const csvContentRows = csvRows.slice(1, csvRows.length);
+      return csvContentRows.map(contentRow => csvHeaders.reduce((acc: Record<string, any>, cur, idx) => {
+        acc[cur] = contentRow[idx] ?? '';
+        return acc;
+      }, {}));
+    }
+    throw new Error('CSV file must contain at least two rows with first row as variable names');
+  }
+  throw new Error(`Uploaded file is unsupported ${fileType}`);
+};
+
 export const go = (args?: string[]) => {
 
   const program = new commander.Command();
@@ -246,11 +315,11 @@ export const go = (args?: string[]) => {
     .description('Run Insomnia unit test suites, identifier can be a test suite id or a API Spec id')
     .option('-e, --env <identifier>', 'environment to use', '')
     .option('-t, --testNamePattern <regex>', 'run tests that match the regex', '')
-    .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`, defaultReporter)
+    .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}]`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first test failure', false)
     .option('--keepFile', 'do not delete the generated test file', false)
-    .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
-    .action(async (identifier, cmd: { env: string; testNamePattern: string; reporter: TestReporter; bail: true; keepFile: true; disableCertValidation: true }) => {
+    .option('-k, --disableCertValidation', 'disable certificate validation for requests with SSL', false)
+    .action(async (identifier, cmd: { env: string; testNamePattern: string; reporter: TestReporter; bail: boolean; keepFile: boolean; disableCertValidation: boolean; ci: boolean }) => {
       const globals: GlobalOptions = program.optsWithGlobals();
       const commandOptions = { ...globals, ...cmd };
       const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
@@ -290,6 +359,7 @@ export const go = (args?: string[]) => {
 
       // Find environment
       const workspaceId = suites[0].parentId;
+
       const environment = options.env ? loadEnvironment(db, workspaceId, options.env) : await promptEnvironment(db, !!options.ci, workspaceId);
 
       if (!environment) {
@@ -328,11 +398,15 @@ export const go = (args?: string[]) => {
   run.command('collection [identifier]')
     .description('Run Insomnia request collection, identifier can be a workspace id')
     .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
+    .option('-i, --item <requestid>', 'request or folder id to run', collect, [])
     .option('-e, --env <identifier>', 'environment to use', '')
-    .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`, defaultReporter)
+    .option('--delay-request <duration>', 'milliseconds to delay between requests', '0')
+    .option('-n, --iteration-count <count>', 'number of times to repeat', '1')
+    .option('-d, --iteration-data <path/url>', 'file path or url (JSON or CSV)', '')
+    .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}]`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first non-200 response', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
-    .action(async (identifier, cmd: { env: string; disableCertValidation: true; requestNamePattern: string; bail: boolean }) => {
+    .action(async (identifier, cmd: { env: string; disableCertValidation: boolean; requestNamePattern: string; bail: boolean; item: string[]; delayRequest: string; iterationCount: string; iterationData: string }) => {
       const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
 
       const commandOptions = { ...globals, ...cmd };
@@ -359,11 +433,21 @@ export const go = (args?: string[]) => {
         pathToSearch,
         filterTypes: [],
       });
-
-      const workspace = identifier ? loadWorkspace(db, identifier) : await promptWorkspace(db, !!options.ci);
-
+      if (identifier && options.item.length) {
+        logger.fatal('Providing both workspace and item list is not supported');
+        return process.exit(1);
+      }
+      if (options.item.length) {
+        const matches = [
+          ...db.Request.filter(req => options.item.includes(req._id)),
+          ...db.RequestGroup.filter(rg => options.item.includes(rg._id)),
+        ];
+        // overwrite identifier if found in request list parents
+        identifier = matches.find(req => req.parentId.startsWith('wrk_'))?.parentId;
+      }
+      const workspace = await getWorkspaceOrFallback(db, identifier, options.ci);
       if (!workspace) {
-        logger.fatal('No workspace found; cannot run requests.', identifier);
+        logger.fatal('No workspace found in the provided data store or fallbacks.');
         return process.exit(1);
       }
 
@@ -375,53 +459,51 @@ export const go = (args?: string[]) => {
         logger.fatal('No environment identified; cannot run requests without a valid environment.');
         return process.exit(1);
       }
-
-      const getRequestGroupIdsRecursively = (from: string[]): string[] => {
-        const parentIds = db.RequestGroup.filter(rg => from.includes(rg.parentId)).map(rg => rg._id);
-        return [...parentIds, ...(parentIds.length > 0 ? getRequestGroupIdsRecursively(parentIds) : [])];
-      };
-      const allRequestGroupIds = getRequestGroupIdsRecursively([workspaceId]);
-      let requests = db.Request.filter(req => [workspaceId, ...allRequestGroupIds].includes(req.parentId));
-
+      let requestsToRun = getRequestsToRunFromListOrWorkspace(db, workspaceId, options.item);
       if (options.requestNamePattern) {
-        requests = requests.filter(req => req.name.match(new RegExp(options.requestNamePattern)));
+        requestsToRun = requestsToRun.filter(req => req.name.match(new RegExp(options.requestNamePattern)));
       }
-      if (!requests.length) {
+      if (!requestsToRun.length) {
         logger.fatal('No requests identified; nothing to run.');
         return process.exit(1);
       }
 
       try {
-        const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation });
+        const iterationCount = parseInt(options.iterationCount, 10);
+        const iterationData = options.iterationData ? await getIterationDataFromFileOrUrl(options.iterationData) : undefined;
+        const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation }, iterationData, iterationCount);
         let success = true;
-        for (const req of requests) {
-          if (options.bail && !success) {
-            return;
-          }
-          logger.log(`Running request: ${req.name} ${req._id}`);
-          const res = await sendRequest(req._id);
-          if (!res) {
-            logger.error('Timed out while running script');
-            success = false;
-            continue;
-          }
-          logger.trace(res);
-          const timelineString = await readFile(res.timelinePath, 'utf8');
-          const timeline = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e).value).join(' ');
-          logger.trace(timeline);
-          if (res.testResults?.length) {
-            console.log(`
-Test results:`);
-            console.log(logTestResult(options.reporter, res.testResults));
-            const hasFailedTests = res.testResults.some(t => t.status === 'failed');
-            if (hasFailedTests) {
-              success = false;
+        for (let i = 0; i < iterationCount; i++) {
+          for (const req of requestsToRun) {
+            if (options.bail && !success) {
+              return;
             }
-          }
+            logger.log(`Running request: ${req.name} ${req._id}`);
+            const res = await sendRequest(req._id, i);
+            if (!res) {
+              logger.error('Timed out while running script');
+              success = false;
+              continue;
+            }
+            logger.trace(res);
+            const timelineString = await readFile(res.timelinePath, 'utf8');
+            const timeline = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e).value).join(' ');
+            logger.trace(timeline);
+            if (res.testResults?.length) {
+              console.log(`
+Test results:`);
+              console.log(logTestResult(options.reporter, res.testResults));
+              const hasFailedTests = res.testResults.some(t => t.status === 'failed');
+              if (hasFailedTests) {
+                success = false;
+              }
+            }
 
-          if (res.status !== 200) {
-            success = false;
-            logger.error(`Request failed with status ${res.status}`);
+            if (res.status !== 200) {
+              success = false;
+              logger.error(`Request failed with status ${res.status}`);
+            }
+            await new Promise(r => setTimeout(r, parseInt(options.delayRequest, 10)));
           }
         }
         return process.exit(success ? 0 : 1);

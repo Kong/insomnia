@@ -214,17 +214,20 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   });
 
   const buttonText = isEventStreamRequest(activeRequest) ? 'Connect' : (downloadPath ? 'Download' : 'Send');
+  const borderRadius = isEventStreamRequest(activeRequest) ? 'rounded-sm' : 'rounded-l-sm';
   const { url, method } = activeRequest;
   const isEventStreamOpen = useReadyState({ requestId: activeRequest._id, protocol: 'curl' });
   const isCancellable = currentInterval || currentTimeout || isEventStreamOpen;
   return (
-    <div className="urlbar">
-      <MethodDropdown
-        ref={methodDropdownRef}
-        onChange={method => patchRequest(requestId, { method })}
-        method={method}
-      />
-      <div className="urlbar__flex__right">
+    <div className="w-full flex justify-between self-stretch items-stretch">
+      <div className="flex items-center">
+        <MethodDropdown
+          ref={methodDropdownRef}
+          onChange={method => patchRequest(requestId, { method })}
+          method={method}
+        />
+      </div>
+      <div className="flex flex-1 p-1 items-center">
         <OneLineEditor
           id="request-url-bar"
           key={uniquenessKey}
@@ -239,11 +242,11 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           })}
           onPaste={onPaste}
         />
-        <div className='flex p-1'>
+        <div className='flex self-stretch'>
           {isCancellable ? (
             <button
               type="button"
-              className="urlbar__send-btn rounded-sm"
+              className="px-[--padding-md] bg-[--color-surprise] text-[--color-font-surprise] rounded-sm"
               onClick={() => {
                 if (isEventStreamRequest(activeRequest)) {
                   window.main.curl.close({ requestId: activeRequest._id });
@@ -257,23 +260,17 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
             </button>
           ) : (
             <>
-              <button
-                onClick={() => sendOrConnect()}
-                className={`urlbar__send-btn ${isEventStreamRequest(activeRequest) ? 'rounded-sm' : 'rounded-l-sm'}`}
-                type="button"
-              >
-                {buttonText}
-              </button>
+              <button onClick={() => sendOrConnect()} className={`px-[--padding-md] bg-[--color-surprise] text-[--color-font-surprise] ${borderRadius}`} type="button">{buttonText}</button>
               {isEventStreamRequest(activeRequest) ? null : (
                 <Dropdown
                   key="dropdown"
-                  className="tall"
+                  className="flex"
                   ref={dropdownRef}
                   aria-label="Request Options"
                   closeOnSelect={false}
                   triggerButton={
                     <Button
-                      className="urlbar__send-context rounded-r-sm enabled:hover:!bg-[--color-surprise] enabled:focus:!bg-[--color-surprise]"
+                      className="px-1 bg-[--color-surprise] text-[--color-font-surprise] rounded-r-sm"
                       style={{
                         borderTopRightRadius: '0.125rem',
                         borderBottomRightRadius: '0.125rem',

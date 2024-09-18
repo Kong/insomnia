@@ -27,9 +27,6 @@ export const loadEnvironment = (
 
   // Get the sub environments
   const baseWorkspaceEnv = loadBaseEnvironmentForWorkspace(db, workspaceId);
-  const subEnvs = db.Environment.filter(
-    env => env.parentId === baseWorkspaceEnv._id,
-  );
 
   // If no identifier, return base environment
   if (!identifier) {
@@ -41,11 +38,7 @@ export const loadEnvironment = (
     'Load sub environment with identifier `%s` from data store',
     identifier,
   );
-  const items = subEnvs.filter(
-    env => matchIdIsh(env, identifier) || env.name === identifier,
-  );
-  logger.trace('Found %d', items.length);
-  return ensureSingle(items, 'sub environment');
+  return db.Environment.find(env => matchIdIsh(env, identifier) || env.name === identifier);
 };
 
 export const promptEnvironment = async (
