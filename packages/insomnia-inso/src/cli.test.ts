@@ -41,6 +41,8 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-smoke-test/fixtures/simple.yaml -e env_2eecf85b7f --requestNamePattern "example http" wrk_0702a5',
   // after-response script and test
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/after-response.yml wrk_616795 --verbose',
+  // select request by id
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/three-requests.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -i req_6063adcdab5b409e9b4f00f47322df4a',
 ];
 
 const shouldReturnErrorCode = [
