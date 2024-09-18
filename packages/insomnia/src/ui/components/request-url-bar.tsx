@@ -258,14 +258,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
             >
               {isEventStreamRequest(activeRequest) ? 'Disconnect' : 'Cancel'}
             </button>
-          ) : (<>
-            <button
-              onClick={() => sendOrConnect()}
-                className={`px-[--padding-md] bg-[--color-surprise] text-[--color-font-surprise] ${borderRadius}`}
-                type="button"
-              >
-                {buttonText}
-              </button>
+          ) : (
+            <>
+              <button onClick={() => sendOrConnect()} className={`px-[--padding-md] bg-[--color-surprise] text-[--color-font-surprise] ${borderRadius}`} type="button">{buttonText}</button>
               {isEventStreamRequest(activeRequest) ? null : (
                 <Dropdown
                   key="dropdown"
