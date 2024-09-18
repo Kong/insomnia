@@ -681,7 +681,8 @@ export const Runner: FC<{}> = () => {
                 {showCLIModal && (
                   <CLIPreviewModal
                     onClose={() => setShowCLIModal(false)}
-                    requestIds={reqList.items.map(item => item.id)}
+                    requestIds={Array.from(reqList.selectedKeys) as string[]}
+                    allSelected={Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length}
                   />
                 )}
                 {showUploadModal && (
@@ -744,12 +745,6 @@ export const Runner: FC<{}> = () => {
                   id='console'
                 >
                   Console
-                </Tab>
-                <Tab
-                  className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-                  id='cli'
-                >
-                  CLI
                 </Tab>
               </TabList>
               <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='console'>
