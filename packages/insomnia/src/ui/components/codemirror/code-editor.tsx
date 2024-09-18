@@ -449,6 +449,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
         handleRender,
         handleGetRenderContext,
         settings.showVariableSourceAndValue,
+        id,
       );
     }
     // Make URLs clickable
@@ -469,7 +470,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
         codeMirror.current.foldCode(from, to);
       }
     }
-  }, [defaultValue, dynamicHeight, extraKeys, filter, getAutocompleteConstants, getAutocompleteSnippets, handleGetRenderContext, handleRender, hideGutters, hideLineNumbers, hintOptions, indentSize, indentWithTabs, infoOptions, jumpOptions, maybePrettifyAndSetValue, mode, noLint, noMatchBrackets, noStyleActiveLine, onClickLink, pinToBottom, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.editorLineWrapping, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, uniquenessKey, onPaste, persistState]);
+  }, [hideGutters, hideLineNumbers, placeholder, settings.editorLineWrapping, settings.editorKeyMap, settings.hotKeyRegistry, settings.autocompleteDelay, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, noLint, readOnly, noMatchBrackets, indentSize, hintOptions, infoOptions, dynamicHeight, jumpOptions, noStyleActiveLine, indentWithTabs, extraKeys, handleRender, mode, getAutocompleteConstants, getAutocompleteSnippets, persistState, maybePrettifyAndSetValue, defaultValue, filter, onClickLink, uniquenessKey, handleGetRenderContext, pinToBottom, onPaste, id]);
 
   const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();
@@ -540,6 +541,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
             case 'edit':
               showModal(NunjucksModal, {
                 template: template,
+                editorId: id,
                 onDone: (template: string | null) => {
                   const { from, to } = range;
                   codeMirror.current?.replaceRange(template!, from, to);

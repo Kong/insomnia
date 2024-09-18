@@ -12,6 +12,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
   handleRender: HandleRender,
   handleGetRenderContext: HandleGetRenderContext,
   showVariableSourceAndValue = false,
+  editorId = '',
 ) {
   if (!handleRender) {
     console.warn("enableNunjucksTags wasn't passed a render function");
@@ -23,6 +24,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
     handleRender,
     handleGetRenderContext,
     showVariableSourceAndValue,
+    editorId,
   );
 
   const debouncedRefreshFn = misc.debounce(refreshFn);
@@ -45,10 +47,11 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
 },
 );
 
-async function _highlightNunjucksTags(this: CodeMirror.Editor, render: any, renderContext: any, showVariableSourceAndValue: boolean) {
+async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRender, renderContext: HandleGetRenderContext, showVariableSourceAndValue: boolean, editorId: string) {
   const renderCacheKey = Math.random() + '';
 
   const renderString = (text: any) => render(text, renderCacheKey);
+  const renderContextWithCacheKey = () => renderContext(renderCacheKey);
 
   const activeMarks: CodeMirror.TextMarker[] = [];
   const doc: CodeMirror.Doc = this.getDoc();
@@ -141,7 +144,7 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: any, rend
           renderString,
           mark,
           tok.string,
-          renderContext,
+          renderContextWithCacheKey,
           showVariableSourceAndValue,
         );
       })();
@@ -152,7 +155,7 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: any, rend
           renderString,
           mark,
           tok.string,
-          renderContext,
+          renderContextWithCacheKey,
           showVariableSourceAndValue,
         );
       });
@@ -162,6 +165,7 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: any, rend
         showModal(NunjucksModal, {
           // @ts-expect-error not a known property of TextMarkerOptions
           template: mark.__template,
+          editorId,
           onDone: (template: string | null) => {
             const pos = mark.find();
 
@@ -262,8 +266,14 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: any, rend
   }
 }
 
-async function _updateElementText(render: any, mark: any, text: any, renderContext: any, showVariableSourceAndValue: boolean) {
-  const el = mark.replacedWith;
+async function _updateElementText(
+  render: HandleRender,
+  mark: CodeMirror.TextMarker<CodeMirror.MarkerRange>,
+  text: string,
+  renderContext: HandleGetRenderContext,
+  showVariableSourceAndValue: boolean
+) {
+  const el = mark.replacedWith!;
   let innerHTML = '';
   let title = '';
   let dataIgnore = '';
