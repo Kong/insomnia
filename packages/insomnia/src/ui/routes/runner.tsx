@@ -412,7 +412,7 @@ export const Runner: FC<{}> = () => {
   const disabledKeys = useMemo(() => {
     return isRunning ? allKeys : [];
   }, [isRunning, allKeys]);
-
+  const isDisabled = isRunning || Array.from(reqList.selectedKeys).length === 0;
   return (
     <PanelGroup autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel>
@@ -483,37 +483,45 @@ export const Runner: FC<{}> = () => {
                         </Button>
                       </div>
                     </div>
-                    <Dropdown
-                      key="dropdown"
-                      className="flex"
-                      isDisabled={Array.from(reqList.selectedKeys).length === 0 || isRunning}
-                      aria-label="Run Options"
-                      closeOnSelect={false}
-                      triggerButton={
-                        <Button
-                          className="px-1 bg-[--color-surprise] text-[--color-font-surprise] rounded-r-sm"
-                          style={{
-                            borderTopRightRadius: '0.125rem',
-                            borderBottomRightRadius: '0.125rem',
-                          }}
-                        >
-                          <i className="fa fa-caret-down" />
-                        </Button>
-                      }
-                    >
+                    <div className='flex p-1 self-stretch'>
+                      <Button
+                        className="px-5 ml-1 text-[--color-font-surprise] bg-[--color-surprise] hover:bg-opacity-90 focus:bg-opacity-90 rounded-l-sm"
+                        onPress={onRun}
+                      >
+                        Run
+                      </Button>
+                      <Dropdown
+                        key="dropdown"
+                        className="flex"
+                        isDisabled={isDisabled}
+                        aria-label="Run Options"
+                        closeOnSelect={false}
+                        triggerButton={
+                          <Button
+                            className="px-1 bg-[--color-surprise] text-[--color-font-surprise] rounded-r-sm"
+                            style={{
+                              borderTopRightRadius: '0.125rem',
+                              borderBottomRightRadius: '0.125rem',
+                            }}
+                          >
+                            <i className="fa fa-caret-down" />
+                          </Button>
+                        }
+                      >
 
-                      <DropdownItem aria-label="send-now">
-                        <ItemContent icon="arrow-circle-o-right" label="Run" onClick={onRun} />
-                      </DropdownItem>
-                      <DropdownItem aria-label='Run via CLI'>
-                        <ItemContent
-                          icon="code"
-                          label="Run via CLI"
-                          onClick={async () => {
-                          }}
-                        />
-                      </DropdownItem>
-                    </Dropdown>
+                        <DropdownItem aria-label="send-now">
+                          <ItemContent icon="arrow-circle-o-right" label="Run" onClick={onRun} />
+                        </DropdownItem>
+                        <DropdownItem aria-label='Run via CLI'>
+                          <ItemContent
+                            icon="code"
+                            label="Run via CLI"
+                            onClick={async () => {
+                            }}
+                          />
+                        </DropdownItem>
+                      </Dropdown>
+                    </div>
                   </Heading>
                 </PaneHeader>
                 <Tabs aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
