@@ -281,8 +281,6 @@ export const go = (args?: string[]) => {
     .option('-b, --bail', 'abort ("bail") after first test failure', false)
     .option('--keepFile', 'do not delete the generated test file', false)
     .option('-k, --disableCertValidation', 'disable certificate validation for requests with SSL', false)
-    // TODO: request selector
-    // .option('-i', 'request or folder to use')
     .action(async (identifier, cmd: { env: string; testNamePattern: string; reporter: TestReporter; bail: boolean; keepFile: boolean; disableCertValidation: boolean; ci: boolean }) => {
       const globals: GlobalOptions = program.optsWithGlobals();
       const commandOptions = { ...globals, ...cmd };

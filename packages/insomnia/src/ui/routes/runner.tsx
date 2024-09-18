@@ -557,7 +557,6 @@ export const Runner: FC<{}> = () => {
                     <PaneBody placeholder className='p-0'>
                       <GridList
                         id="runner-request-list"
-                        // style={{ height: virtualizer.getTotalSize() }}
                         items={reqList.items}
                         selectionMode="multiple"
                         selectedKeys={reqList.selectedKeys}
@@ -683,6 +682,8 @@ export const Runner: FC<{}> = () => {
                     onClose={() => setShowCLIModal(false)}
                     requestIds={Array.from(reqList.selectedKeys) as string[]}
                     allSelected={Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length}
+                    iterations={iterations}
+                    delay={delay}
                   />
                 )}
                 {showUploadModal && (
