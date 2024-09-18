@@ -684,6 +684,7 @@ export const Runner: FC<{}> = () => {
                     allSelected={Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length}
                     iterations={iterations}
                     delay={delay}
+                    filePath={file?.path || ''}
                   />
                 )}
                 {showUploadModal && (

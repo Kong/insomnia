@@ -6,14 +6,14 @@ import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { CopyButton } from '../base/copy-button';
 import { Icon } from '../icon';
 
-export const CLIPreviewModal = ({ onClose, requestIds, allSelected, iterations, delay }: { onClose: () => void; requestIds: string[]; allSelected: boolean; iterations: number; delay: number }) => {
+export const CLIPreviewModal = ({ onClose, requestIds, allSelected, iterations, delay, filePath }: { onClose: () => void; requestIds: string[]; allSelected: boolean; iterations: number; delay: number; filePath: string }) => {
   const { workspaceId } = useParams() as { workspaceId: string };
   const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-
   const workspaceIdOrRequestIds = allSelected ? workspaceId.slice(0, 10) : '-i ' + requestIds.join(' -i ');
   const iterationsArgument = iterations > 1 ? ` -n ${iterations}` : '';
   const delayArgument = delay > 0 ? ` --delay-request ${delay}` : '';
-  const cliCommand = `inso run collection ${workspaceIdOrRequestIds} -e ${activeEnvironment._id.slice(0, 10)}${iterationsArgument}${delayArgument}`;
+  const iterationFilePath = filePath ? ` -d ${filePath}` : '';
+  const cliCommand = `inso run collection ${workspaceIdOrRequestIds} -e ${activeEnvironment._id.slice(0, 10)}${iterationsArgument}${delayArgument}${iterationFilePath}`;
 
   return (
     <ModalOverlay
@@ -25,7 +25,7 @@ export const CLIPreviewModal = ({ onClose, requestIds, allSelected, iterations, 
       className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-start justify-center bg-black/30"
     >
       <Modal
-        className="max-h-[75%] overflow-auto flex flex-col w-full max-w-3xl rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] bg-[--color-bg] text-[--color-font] m-24"
+        className="max-h-[75%] overflow-auto flex flex-col w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] bg-[--color-bg] text-[--color-font] m-24"
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
