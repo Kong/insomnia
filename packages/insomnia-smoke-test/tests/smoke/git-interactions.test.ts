@@ -38,6 +38,8 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
     // perform some changes and commit them
     await page.locator('pre').filter({ hasText: 'title: Endpoint Security' }).click();
     await page.getByRole('textbox').fill(' test');
+    // make sure the changes are stored
+    await page.waitForTimeout(1000);
     await page.getByTestId('git-dropdown').click();
     await page.getByText('Commit').click();
     await page.getByText('Modified Objects').click();
