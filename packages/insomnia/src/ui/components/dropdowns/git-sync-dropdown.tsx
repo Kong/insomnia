@@ -74,17 +74,15 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
     workspaceId,
   ]);
 
-  useEffect(() => {
-    if (gitRepository?.uri && gitRepository?._id && gitChangesFetcher.state === 'idle' && !gitChangesFetcher.data && gitRepoDataFetcher.data) {
+  useInterval(() => {
+    // these 2 loaders have been disabled for revalidation, we manually revalidate them here to improve performance
+    if (gitRepository?.uri && gitRepository?._id && gitChangesFetcher.state === 'idle' && gitRepoDataFetcher.data) {
       gitChangesFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/changes`);
     }
-  }, [gitChangesFetcher, gitRepoDataFetcher.data, gitRepository?._id, gitRepository?.uri, organizationId, projectId, workspaceId]);
-
-  useEffect(() => {
-    if (gitRepository?.uri && gitRepository?._id && gitCanPushFetcher.state === 'idle' && !gitCanPushFetcher.data && gitRepoDataFetcher.data) {
+    if (gitRepository?.uri && gitRepository?._id && gitCanPushFetcher.state === 'idle' && gitRepoDataFetcher.data) {
       gitCanPushFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/can-push`);
     }
-  }, [gitCanPushFetcher, gitRepoDataFetcher.data, gitRepository?._id, gitRepository?.uri, organizationId, projectId, workspaceId]);
+  }, 30 * 1000);
 
   // Only fetch the repo status if we have a repo uri and we don't have the status already
   const shouldFetchGitRepoStatus = Boolean(gitRepository?.uri && gitRepository?._id && gitStatusFetcher.state === 'idle' && !gitStatusFetcher.data && gitRepoDataFetcher.data);
@@ -190,7 +188,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
     {
       id: 'commit',
       icon: 'check',
-      isDisabled: gitChangesFetcher.data?.changes.length === 0,
+      isDisabled: false,
       label: 'Commit',
       action: () => setIsGitStagingModalOpen(true),
     },
@@ -213,7 +211,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       id: 'push',
       icon: loadingPush ? 'refresh' : 'cloud-upload',
       label: 'Push',
-      isDisabled: !gitCanPushFetcher.data?.canPush,
+      isDisabled: false,
       action: () => handlePush({ force: false }),
     },
     {
