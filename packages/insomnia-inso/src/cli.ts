@@ -212,12 +212,12 @@ const logTestResult = (reporter: TestReporter, testResults?: RequestTestResult[]
     spec: fallbackReporter,
     tap: convertToTAP(testResults),
   };
-
+  const failures = '\n' + '\n' + '\n' + testResults.filter(r => r.status === 'failed').map(r => r.errorMessage).join('\n');
   return `${reporterMap[reporter] || fallbackReporter}
 
 Total tests: ${testResults.length}
 Passed: ${testResults.filter(r => r.status === 'passed').length}
-Failed: ${testResults.filter(r => r.status === 'failed').length}`;
+Failed: ${testResults.filter(r => r.status === 'failed').length}${failures}`;
 };
 function convertToTAP(testCases: RequestTestResult[]): string {
   let tapOutput = 'TAP version 13\n';
