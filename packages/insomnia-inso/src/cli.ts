@@ -362,7 +362,7 @@ export const go = (args?: string[]) => {
     .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
     .option('-i, --item <identifier>', 'request or folder id to run', collect, [])
     .option('-e, --env <identifier>', 'environment to use', '')
-    .option('--delay-request', 'milliseconds to delay betwee requests', '0')
+    .option('--delay-request <duration>', 'milliseconds to delay betwee requests', '0')
     .option('-n, --iteration-count <count>', 'number of times to repeat', '1')
     .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first non-200 response', false)
@@ -432,37 +432,39 @@ export const go = (args?: string[]) => {
       try {
         const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation });
         let success = true;
-        // TODO: support iteration count
-        for (const req of requestsToRun) {
-          if (options.bail && !success) {
-            return;
-          }
-          logger.log(`Running request: ${req.name} ${req._id}`);
-          const res = await sendRequest(req._id);
-          if (!res) {
-            logger.error('Timed out while running script');
-            success = false;
-            continue;
-          }
-          logger.trace(res);
-          const timelineString = await readFile(res.timelinePath, 'utf8');
-          const timeline = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e).value).join(' ');
-          logger.trace(timeline);
-          if (res.testResults?.length) {
-            console.log(`
-Test results:`);
-            console.log(logTestResult(options.reporter, res.testResults));
-            const hasFailedTests = res.testResults.some(t => t.status === 'failed');
-            if (hasFailedTests) {
-              success = false;
+        const iterationCount = parseInt(options.iterationCount, 10);
+        for (let i = 0; i < iterationCount; i++) {
+          for (const req of requestsToRun) {
+            if (options.bail && !success) {
+              return;
             }
-          }
+            logger.log(`Running request: ${req.name} ${req._id}`);
+            const res = await sendRequest(req._id);
+            if (!res) {
+              logger.error('Timed out while running script');
+              success = false;
+              continue;
+            }
+            logger.trace(res);
+            const timelineString = await readFile(res.timelinePath, 'utf8');
+            const timeline = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e).value).join(' ');
+            logger.trace(timeline);
+            if (res.testResults?.length) {
+              console.log(`
+Test results:`);
+              console.log(logTestResult(options.reporter, res.testResults));
+              const hasFailedTests = res.testResults.some(t => t.status === 'failed');
+              if (hasFailedTests) {
+                success = false;
+              }
+            }
 
-          if (res.status !== 200) {
-            success = false;
-            logger.error(`Request failed with status ${res.status}`);
+            if (res.status !== 200) {
+              success = false;
+              logger.error(`Request failed with status ${res.status}`);
+            }
+            await new Promise(r => setTimeout(r, parseInt(options.delayRequest, 10)));
           }
-          await new Promise(r => setTimeout(r, parseInt(options.delayRequest, 10)));
         }
         return process.exit(success ? 0 : 1);
       } catch (error) {
