@@ -362,10 +362,12 @@ export const go = (args?: string[]) => {
     .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
     .option('-i, --item <identifier>', 'request or folder id to run', collect, [])
     .option('-e, --env <identifier>', 'environment to use', '')
+    .option('--delay-request', 'milliseconds to delay betwee requests', '0')
+    .option('-n, --iteration-count <count>', 'number of times to repeat', '1')
     .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first non-200 response', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
-    .action(async (identifier, cmd: { env: string; disableCertValidation: boolean; requestNamePattern: string; bail: boolean; item: string[] }) => {
+    .action(async (identifier, cmd: { env: string; disableCertValidation: boolean; requestNamePattern: string; bail: boolean; item: string[]; delayRequest: string; iterationCount: string }) => {
       const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
 
       const commandOptions = { ...globals, ...cmd };
@@ -430,6 +432,7 @@ export const go = (args?: string[]) => {
       try {
         const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation });
         let success = true;
+        // TODO: support iteration count
         for (const req of requestsToRun) {
           if (options.bail && !success) {
             return;
@@ -459,6 +462,7 @@ Test results:`);
             success = false;
             logger.error(`Request failed with status ${res.status}`);
           }
+          await new Promise(r => setTimeout(r, parseInt(options.delayRequest, 10)));
         }
         return process.exit(success ? 0 : 1);
       } catch (error) {
