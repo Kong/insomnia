@@ -681,10 +681,7 @@ export const Runner: FC<{}> = () => {
                 {showCLIModal && (
                   <CLIPreviewModal
                     onClose={() => setShowCLIModal(false)}
-                    requests={reqList.items}
-                    iterations={iterations}
-                    delay={delay}
-                    uploadData={uploadData}
+                    requestIds={reqList.items.map(item => item.id)}
                   />
                 )}
                 {showUploadModal && (

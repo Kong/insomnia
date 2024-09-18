@@ -6,10 +6,11 @@ import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { CopyButton } from '../base/copy-button';
 import { Icon } from '../icon';
 
-export const CLIPreviewModal = ({ onClose }: { onClose: () => void }) => {
+export const CLIPreviewModal = ({ onClose, requestIds }: { onClose: () => void; requestIds: string[] }) => {
   const { workspaceId } = useParams() as { workspaceId: string };
   const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const cliCommand = `inso run collection ${workspaceId.slice(0, 10)} -e ${activeEnvironment._id.slice(0, 10)}`;
+  const workspaceIdOrRequestIds = requestIds.length > 0 ? '-i ' + requestIds.join(' -i ') : workspaceId.slice(0, 10);
+  const cliCommand = `inso run collection ${workspaceIdOrRequestIds} -e ${activeEnvironment._id.slice(0, 10)}`;
 
   return (
     <ModalOverlay
