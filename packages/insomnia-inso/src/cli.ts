@@ -17,7 +17,6 @@ import { getRuleSetFileFromFolderByFilename, lintSpecification } from './command
 import { Database, loadDb } from './db';
 import { loadApiSpec, promptApiSpec } from './db/models/api-spec';
 import { loadEnvironment, promptEnvironment } from './db/models/environment';
-import { BaseModel, Workspace } from './db/models/types';
 import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
 
@@ -167,7 +166,6 @@ const getWorkspaceOrFallback = async (db: Database, identifier: string, ci: bool
   if (identifier) {
     return loadWorkspace(db, identifier);
   }
-  // TODO if hasItems traverse up to workspace and get base env
   if (ci && db.Workspace.length > 0) {
     return db.Workspace[0];
   }
@@ -399,6 +397,14 @@ export const go = (args?: string[]) => {
       if (identifier && options.item.length) {
         logger.fatal('Providing both workspace and item list is not supported');
         return process.exit(1);
+      }
+      if (options.item.length) {
+        const matches = [
+          ...db.Request.filter(req => options.item.includes(req._id)),
+          ...db.RequestGroup.filter(rg => options.item.includes(rg._id)),
+        ];
+        // overwrite identifier if found in request list parents
+        identifier = matches.find(req => req.parentId.startsWith('wrk_'))?.parentId;
       }
       const workspace = await getWorkspaceOrFallback(db, identifier, options.ci);
       if (!workspace) {
