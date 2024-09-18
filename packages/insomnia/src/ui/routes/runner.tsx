@@ -1,10 +1,12 @@
+import type { Key as ReactTypeKey, Selection } from '@react-types/shared';
 import type { RequestContext, RequestTestResult } from 'insomnia-sdk';
 import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { type ActionFunction, redirect, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
-import { useListData } from 'react-stately';
+import type { SubmitTarget } from 'react-router-dom/dist/dom';
+import { type ListData, useListData } from 'react-stately';
 import { useInterval } from 'react-use';
 
 import { Tooltip } from '../../../src/ui/components/tooltip';
@@ -34,7 +36,7 @@ import { ResponseTimelineViewer } from '../components/viewers/response-timeline-
 import type { OrganizationLoaderData } from './organization';
 import { type RunnerSource, sendActionImp } from './request';
 import { useRootLoaderData } from './root';
-import type { Child, WorkspaceLoaderData } from './workspace';
+import type { Child, Collection, WorkspaceLoaderData } from './workspace';
 
 const inputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
 const iterationInputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
@@ -85,11 +87,21 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
   return timelines;
 }
 
+export interface RequestItemInfo {
+  id: string;
+  name: string;
+  ancestorNames: string[];
+  method: string;
+  url: string;
+  selected?: boolean;
+}
+
 interface RunnerSettings {
   iterations: number;
   delay: number;
   iterationData: UploadDataType[];
   file: File | null;
+  requests: RequestItemInfo[];
 }
 
 // TODO: remove this when the suite management is introduced
@@ -98,7 +110,93 @@ let tempRunnerSettings: RunnerSettings = {
   delay: 0,
   iterationData: [],
   file: null,
+  requests: [],
 };
+
+class RequestListDelegate {
+  constructor(
+    private reqList: ListData<RequestItemInfo>,
+  ) { }
+
+  public get items() {
+    return this.reqList.items;
+  }
+
+  public get selectedKeys() {
+    return this.reqList.selectedKeys;
+  }
+
+  setSelectedKeys = (selection: Selection) => {
+    this.reqList.setSelectedKeys(selection);
+
+    if (selection === 'all') {
+      tempRunnerSettings = {
+        ...tempRunnerSettings,
+        requests: tempRunnerSettings.requests.map(req => {
+          req.selected = true;
+          return req;
+        }),
+      };
+    } else {
+      const selectionSet = selection as Set<ReactTypeKey>;
+      tempRunnerSettings = {
+        ...tempRunnerSettings,
+        requests: tempRunnerSettings.requests.map(req => {
+          req.selected = selectionSet.has(req.id);
+          return req;
+        }),
+      };
+    }
+  };
+
+  moveBefore = (key: ReactTypeKey, keys: Iterable<ReactTypeKey>) => {
+    // this.reqList.moveBefore doesn't take effect immediately
+    // so this.reqList.items can't be assigned to tempRunnerSettings.requests directly
+    const movedItemKeys = new Set(keys);
+    const movedItems = this.reqList.items.filter(item => movedItemKeys.has(item.id));
+    const itemsWithoutMoved = this.reqList.items.filter(item => !movedItemKeys.has(item.id));
+
+    const targetKeyIndex = itemsWithoutMoved.findIndex(item => item.id === key);
+    if (targetKeyIndex < 0 || targetKeyIndex >= itemsWithoutMoved.length) {
+      return;
+    }
+
+    tempRunnerSettings = {
+      ...tempRunnerSettings,
+      requests: [
+        ...itemsWithoutMoved.slice(0, targetKeyIndex),
+        ...movedItems,
+        ...itemsWithoutMoved.slice(targetKeyIndex),
+      ],
+    };
+
+    this.reqList.moveBefore(key, keys);
+  };
+
+  moveAfter = (key: ReactTypeKey, keys: Iterable<ReactTypeKey>) => {
+    // this.reqList.moveAfter doesn't take effect immediately
+    // so this.reqList.items can't be assigned to tempRunnerSettings.requests directly
+    const movedItemKeys = new Set(keys);
+    const movedItems = this.reqList.items.filter(item => movedItemKeys.has(item.id));
+    const itemsWithoutMoved = this.reqList.items.filter(item => !movedItemKeys.has(item.id));
+
+    const targetKeyIndex = itemsWithoutMoved.findIndex(item => item.id === key);
+    if (targetKeyIndex < 0 || targetKeyIndex >= itemsWithoutMoved.length) {
+      return;
+    }
+
+    tempRunnerSettings = {
+      ...tempRunnerSettings,
+      requests: [
+        ...itemsWithoutMoved.slice(0, targetKeyIndex + 1),
+        ...movedItems,
+        ...itemsWithoutMoved.slice(targetKeyIndex + 1),
+      ],
+    };
+
+    this.reqList.moveAfter(key, keys);
+  };
+}
 
 export const Runner: FC<{}> = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -147,6 +245,7 @@ export const Runner: FC<{}> = () => {
   const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [showUploadModal, setShowUploadModal] = useState(false);
 
+  // this part is copied from the debug.tsx for consistent layout
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
   useEffect(() => {
     if (settings.forceVerticalLayout) {
@@ -169,36 +268,17 @@ export const Runner: FC<{}> = () => {
     }
   }, [settings.forceVerticalLayout, direction]);
 
-  const getEntityById = new Map<string, Child>();
-  const requestRows = collection
-    .filter(item => {
-      getEntityById.set(item.doc._id, item);
-      return isRequest(item.doc);
-    })
-    .map((item: Child) => {
-      const ancestorNames: string[] = [];
-      if (item.ancestors) {
-        item.ancestors.forEach(ancestorId => {
-          const ancestor = getEntityById.get(ancestorId);
-          if (ancestor && isRequestGroup(ancestor?.doc)) {
-            ancestorNames.push(ancestor?.doc.name);
-          }
-        });
-      }
+  const { mergedRequestList: latestRequestItems, getEntityById } = getMergedRequestList(collection, tempRunnerSettings.requests);
 
-      const requestDoc = item.doc as Request;
-      invariant('method' in item.doc, 'Only Request is supported at the moment');
-      return {
-        id: item.doc._id,
-        name: item.doc.name,
-        ancestorNames,
-        method: requestDoc.method,
-        url: item.doc.url,
-      };
-    });
-  const reqList = useListData({
-    initialItems: requestRows,
+  const initialSelectedKeys = tempRunnerSettings.requests
+    .filter(req => req.selected)
+    .map(req => req.id);
+  const reqListRaw = useListData({
+    initialItems: latestRequestItems,
+    initialSelectedKeys,
   });
+  const reqList = new RequestListDelegate(reqListRaw);
+
   const allKeys = reqList.items.map(item => item.id);
 
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
@@ -248,7 +328,7 @@ export const Runner: FC<{}> = () => {
     () => {
       window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterations } });
       const selected = new Set(reqList.selectedKeys);
-      const requests = Array.from(reqList.items)
+      const requests: object[] = Array.from(reqList.items)
         .filter(item => selected.has(item.id));
       // convert uploadData to environment data
       const userUploadEnvs = uploadData.map(data => {
@@ -270,7 +350,7 @@ export const Runner: FC<{}> = () => {
           iterations,
           userUploadEnvs,
           delay,
-        },
+        } as SubmitTarget,
         {
           method: 'post',
           encType: 'application/json',
@@ -802,10 +882,6 @@ function cancelExecution(workspaceId: string) {
   }
 }
 
-export interface runCollectionActionParams {
-  requests: { id: string; name: string }[];
-}
-
 export const runCollectionAction: ActionFunction = async ({ request, params }) => {
   const { organizationId, projectId, workspaceId } = params;
   invariant(organizationId, 'Organization id is required');
@@ -968,3 +1044,74 @@ export const collectionRunnerStatusLoader: ActionFunction = async ({ params }) =
   invariant(workspaceId, 'Workspace id is required');
   return null;
 };
+
+function getMergedRequestList(collection: Collection, savedRequestItems: RequestItemInfo[]): {
+  mergedRequestList: RequestItemInfo[];
+  getEntityById: Map<string, Child>;
+} {
+  const getEntityById = new Map<string, Child>();
+  const latestRequestItems = new Map<string, RequestItemInfo>();
+
+  collection
+    .filter(item => {
+      getEntityById.set(item.doc._id, item);
+      return isRequest(item.doc);
+    })
+    .map((item: Child) => {
+      const ancestorNames: string[] = [];
+      if (item.ancestors) {
+        item.ancestors.forEach(ancestorId => {
+          const ancestor = getEntityById.get(ancestorId);
+          if (ancestor && isRequestGroup(ancestor?.doc)) {
+            ancestorNames.push(ancestor?.doc.name);
+          }
+        });
+      }
+
+      const requestDoc = item.doc as Request;
+      invariant('method' in item.doc, 'Only Request is supported at the moment');
+
+      latestRequestItems.set(
+        item.doc._id,
+        {
+          id: item.doc._id,
+          name: item.doc.name,
+          ancestorNames,
+          method: requestDoc.method,
+          url: item.doc.url,
+        },
+      );
+    });
+
+  // handle removed items
+  const savedRequestItemsWithoutDeleted = savedRequestItems.filter(item => {
+    return latestRequestItems.has(item.id);
+  });
+
+  const savedRequestIds = new Set<string>();
+  savedRequestItemsWithoutDeleted.forEach(item => {
+    savedRequestIds.add(item.id);
+  });
+
+  // handle added items
+  let savedRequestItemsWithAdded = [...savedRequestItemsWithoutDeleted];
+  Array.from(latestRequestItems.values()).forEach(item => {
+    if (!savedRequestIds.has(item.id)) {
+      savedRequestItemsWithAdded = [
+        item,
+        ...savedRequestItemsWithAdded,
+      ];
+    }
+  });
+
+  // handle updated items
+  const updatedRequestItems = savedRequestItemsWithAdded.map(item => {
+    const latestItem = latestRequestItems.get(item.id);
+    return latestItem ? latestItem : item;
+  });
+
+  return {
+    mergedRequestList: updatedRequestItems,
+    getEntityById,
+  };
+}
