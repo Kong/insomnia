@@ -9,7 +9,6 @@ import { useInterval } from 'react-use';
 
 import { Tooltip } from '../../../src/ui/components/tooltip';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../common/constants';
-import { debounce } from '../../common/misc';
 import type { ResponseTimelineEntry } from '../../main/network/libcurl-promise';
 import type { TimingStep } from '../../main/network/request-timing';
 import * as models from '../../models';
@@ -244,42 +243,44 @@ export const Runner: FC<{}> = () => {
   });
 
   const submit = useSubmit();
-  const onRun = debounce(
-    () => {
-      window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterations } });
-      const selected = new Set(reqList.selectedKeys);
-      const requests = Array.from(reqList.items)
-        .filter(item => selected.has(item.id));
-      // convert uploadData to environment data
-      const userUploadEnvs = uploadData.map(data => {
-        const orderedJson = porderedJSON.parse<UploadDataType>(
-          JSON.stringify(data),
-          JSON_ORDER_PREFIX,
-          JSON_ORDER_SEPARATOR,
-        );
-        return {
-          name: file!.name,
-          data: orderedJson.object,
-          dataPropertyOrder: orderedJson.map || null,
-        };
-      });
+  const onRun = () => {
+    if (isRunning) {
+      return;
+    }
+    setIsRunning(true);
 
-      submit(
-        {
-          requests,
-          iterations,
-          userUploadEnvs,
-          delay,
-        },
-        {
-          method: 'post',
-          encType: 'application/json',
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner/run/`,
-        }
+    window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterations } });
+    const selected = new Set(reqList.selectedKeys);
+    const requests = Array.from(reqList.items)
+      .filter(item => selected.has(item.id));
+    // convert uploadData to environment data
+    const userUploadEnvs = uploadData.map(data => {
+      const orderedJson = porderedJSON.parse<UploadDataType>(
+        JSON.stringify(data),
+        JSON_ORDER_PREFIX,
+        JSON_ORDER_SEPARATOR,
       );
-    },
-    1000,
-  );
+      return {
+        name: file!.name,
+        data: orderedJson.object,
+        dataPropertyOrder: orderedJson.map || null,
+      };
+    });
+
+    submit(
+      {
+        requests,
+        iterations,
+        userUploadEnvs,
+        delay,
+      },
+      {
+        method: 'post',
+        encType: 'application/json',
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner/run/`,
+      }
+    );
+  };
 
   const navigate = useNavigate();
   const goToRequest = (requestId: string) => {
