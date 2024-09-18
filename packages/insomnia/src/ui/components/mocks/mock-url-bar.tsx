@@ -50,10 +50,9 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
     },
   });
   const isCancellable = currentInterval || currentTimeout;
-  return (<div className='w-full flex justify-between urlbar'>
+  return (<div className='w-full flex justify-between self-stretch'>
     <Dropdown
       ref={methodDropdownRef}
-      className="method-dropdown"
       triggerButton={
         <Button className="pad-right pad-left vertically-center hover:bg-[--color-surprise] focus:bg-[--color-surprise]">
           <span className={`http-method-${mockRoute.method}`}>{mockRoute.method}</span>{' '}
@@ -114,13 +113,13 @@ export const MockUrlBar = ({ onPathUpdate, onSend }: { onPathUpdate: (path: stri
       </Button>
       <Dropdown
         key="dropdown"
-        className="tall"
+        className="flex"
         ref={dropdownRef}
         aria-label="Request Options"
         closeOnSelect={false}
         triggerButton={
           <Button
-            className="urlbar__send-context rounded-r-sm enabled:hover:!bg-[--color-surprise] enabled:focus:!bg-[--color-surprise]"
+            className="px-1 bg-[--color-surprise] text-[--color-font-surprise] rounded-r-sm"
             style={{
               borderTopRightRadius: '0.125rem',
               borderBottomRightRadius: '0.125rem',

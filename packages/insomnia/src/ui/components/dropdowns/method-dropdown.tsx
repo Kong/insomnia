@@ -68,7 +68,6 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
   return (
     <Dropdown
       ref={ref}
-      className="method-dropdown"
       triggerButton={
         <Button className='pl-2'>
           <span className={`http-method-${method}`}>{method}</span>{' '}

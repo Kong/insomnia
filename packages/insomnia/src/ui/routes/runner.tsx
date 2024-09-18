@@ -19,6 +19,7 @@ import type { ResponseInfo, RunnerResultPerRequest, RunnerTestResult } from '../
 import { cancelRequestById } from '../../network/cancellation';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../components/base/dropdown';
 import { CLIPreview } from '../components/cli-preview';
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
@@ -482,17 +483,37 @@ export const Runner: FC<{}> = () => {
                         </Button>
                       </div>
                     </div>
-                    <div className="w-[100px]">
-                      <button
-                        type="button"
-                        className="rounded-sm text-center mr-1 bg-[--color-surprise] text-[--color-font-surprise]"
-                        onClick={onRun}
-                        style={{ width: '92px', height: '30px' }} // try to make its width same as "Send button"
-                        disabled={Array.from(reqList.selectedKeys).length === 0 || isRunning}
-                      >
-                        Run
-                      </button>
-                    </div>
+                    <Dropdown
+                      key="dropdown"
+                      className="flex"
+                      isDisabled={Array.from(reqList.selectedKeys).length === 0 || isRunning}
+                      aria-label="Run Options"
+                      closeOnSelect={false}
+                      triggerButton={
+                        <Button
+                          className="px-1 bg-[--color-surprise] text-[--color-font-surprise] rounded-r-sm"
+                          style={{
+                            borderTopRightRadius: '0.125rem',
+                            borderBottomRightRadius: '0.125rem',
+                          }}
+                        >
+                          <i className="fa fa-caret-down" />
+                        </Button>
+                      }
+                    >
+
+                      <DropdownItem aria-label="send-now">
+                        <ItemContent icon="arrow-circle-o-right" label="Run" onClick={onRun} />
+                      </DropdownItem>
+                      <DropdownItem aria-label='Run via CLI'>
+                        <ItemContent
+                          icon="code"
+                          label="Run via CLI"
+                          onClick={async () => {
+                          }}
+                        />
+                      </DropdownItem>
+                    </Dropdown>
                   </Heading>
                 </PaneHeader>
                 <Tabs aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
