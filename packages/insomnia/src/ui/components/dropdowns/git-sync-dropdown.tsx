@@ -331,7 +331,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       <MenuTrigger>
         <div className="flex items-center h-[--line-height-sm] w-full aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
           <Button
-            data-testId="git-dropdown"
+            data-testid="git-dropdown"
             aria-label="Git Sync"
             className="flex-1 flex h-full items-center gap-2 truncate px-[--padding-md]"
           >
