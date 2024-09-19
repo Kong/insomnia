@@ -62,7 +62,7 @@ export async function buildRenderContext(
     subEnvironment,
     rootGlobalEnvironment,
     subGlobalEnvironment,
-    userUploadEnv,
+    userUploadEnvironment,
     baseContext = {},
   }: {
     ancestors?: RenderContextAncestor[];
@@ -70,7 +70,7 @@ export async function buildRenderContext(
     subEnvironment?: Environment;
       rootGlobalEnvironment?: Environment | null;
       subGlobalEnvironment?: Environment | null;
-      userUploadEnv?: UserUploadEnvironment;
+      userUploadEnvironment?: UserUploadEnvironment;
     baseContext?: Record<string, any>;
   },
 ) {
@@ -130,10 +130,10 @@ export async function buildRenderContext(
   }
 
   // user upload env in collection runner has highest priority
-  if (userUploadEnv) {
+  if (userUploadEnvironment) {
     const ordered = orderedJSON.order(
-      userUploadEnv.data,
-      userUploadEnv.dataPropertyOrder,
+      userUploadEnvironment.data,
+      userUploadEnvironment.dataPropertyOrder,
       JSON_ORDER_SEPARATOR,
     );
     envObjects.push(ordered);
@@ -336,7 +336,7 @@ interface BaseRenderContextOptions {
   baseEnvironment?: Environment;
   rootGlobalEnvironment?: Environment;
   subGlobalEnvironment?: Environment;
-  userUploadEnv?: UserUploadEnvironment;
+  userUploadEnvironment?: UserUploadEnvironment;
   purpose?: RenderPurpose;
   extraInfo?: ExtraRenderInfo;
   ignoreUndefinedEnvVariable?: boolean;
@@ -350,7 +350,7 @@ export async function getRenderContext(
     request,
     environment,
     baseEnvironment,
-    userUploadEnv,
+    userUploadEnvironment,
     ancestors: _ancestors,
     purpose,
     extraInfo,
@@ -455,8 +455,8 @@ export async function getRenderContext(
   }
 
   // Get Keys from user upload environment
-  if (userUploadEnv) {
-    getKeySource(userUploadEnv.data || {}, inKey, userUploadEnv.name || 'uploadData');
+  if (userUploadEnvironment) {
+    getKeySource(userUploadEnvironment.data || {}, inKey, userUploadEnvironment.name || 'uploadData');
   }
 
   // Add meta data helper function
@@ -490,7 +490,7 @@ export async function getRenderContext(
     subGlobalEnvironment,
     rootEnvironment,
     subEnvironment: subEnvironment || undefined,
-    userUploadEnv,
+    userUploadEnvironment,
     baseContext,
   });
 }
@@ -556,7 +556,7 @@ export async function getRenderedRequestAndContext(
     request,
     environment,
     baseEnvironment,
-    userUploadEnv,
+    userUploadEnvironment,
     extraInfo,
     purpose,
     ignoreUndefinedEnvVariable,
@@ -566,7 +566,7 @@ export async function getRenderedRequestAndContext(
   const workspace = ancestors.find(isWorkspace);
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
-  const renderContext = await getRenderContext({ request, environment, ancestors, purpose, extraInfo, baseEnvironment, userUploadEnv });
+  const renderContext = await getRenderContext({ request, environment, ancestors, purpose, extraInfo, baseEnvironment, userUploadEnvironment });
 
   // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
   // https://github.com/kong/insomnia/issues/895

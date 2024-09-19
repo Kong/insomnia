@@ -430,7 +430,7 @@ export interface RunnerContextForRequest {
 export const sendActionImp = async ({
   requestId,
   workspaceId,
-  userUploadEnv,
+  userUploadEnvironment,
   shouldPromptForPathAfterResponse,
   ignoreUndefinedEnvVariable,
   testResultCollector,
@@ -444,12 +444,12 @@ export const sendActionImp = async ({
   testResultCollector?: RunnerContextForRequest;
     iteration?: number;
     iterationCount?: number;
-    userUploadEnv?: UserUploadEnvironment;
+    userUploadEnvironment?: UserUploadEnvironment;
 }) => {
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
   window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
-  const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId, userUploadEnv, iteration, iterationCount);
+  const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId, userUploadEnvironment, iteration, iterationCount);
   if ('error' in mutatedContext) {
     throw {
       error: mutatedContext.error,
@@ -486,7 +486,7 @@ export const sendActionImp = async ({
     purpose: 'send',
     extraInfo: undefined,
     baseEnvironment: mutatedContext.baseEnvironment,
-    userUploadEnv: mutatedContext.userUploadEnv,
+    userUploadEnvironment: mutatedContext.userUploadEnvironment,
     ignoreUndefinedEnvVariable,
   });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);

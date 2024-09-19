@@ -38,7 +38,7 @@ export interface TransformedExecuteScriptContext {
     globals?: Environment;
     cookieJar: CookieJar;
     requestTestResults?: RequestTestResult[];
-    userUploadEnv?: UserUploadEnvironment;
+    userUploadEnvironment?: UserUploadEnvironment;
 }
 
 interface Task {

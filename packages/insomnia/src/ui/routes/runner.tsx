@@ -906,7 +906,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
           workspaceId,
           iteration: i + 1,
           iterationCount,
-          userUploadEnv: wrapAroundIterationOverIterationData(userUploadEnvs, i),
+          userUploadEnvironment: wrapAroundIterationOverIterationData(userUploadEnvs, i),
           shouldPromptForPathAfterResponse: false,
           ignoreUndefinedEnvVariable: true,
           testResultCollector: resultCollector,

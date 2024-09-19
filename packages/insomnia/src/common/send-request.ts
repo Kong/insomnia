@@ -112,7 +112,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       purpose: 'send',
       extraInfo: undefined,
       baseEnvironment: mutatedContext.baseEnvironment,
-      userUploadEnv: mutatedContext.userUploadEnv,
+      userUploadEnvironment: mutatedContext.userUploadEnvironment,
       ignoreUndefinedEnvVariable,
     });
     // skip plugins
