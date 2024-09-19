@@ -31,7 +31,7 @@ resources:
       			.to.eql('localhost:4010');
       });
       insomnia.test('Check if response body contains value', () => {
-          insomnia.expect(insomnia.response.body).to.eql('expecting to see:123');
+          insomnia.expect(JSON.parse(insomnia.response.body).data).to.eql('expecting to see:123');
       });
     settingStoreCookies: true
     settingSendCookies: true
