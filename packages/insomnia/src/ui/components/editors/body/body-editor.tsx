@@ -1,4 +1,5 @@
 import clone from 'clone';
+import { type OperationTypeNode } from 'graphql';
 import { lookup } from 'mime-types';
 import React, { type FC, useCallback } from 'react';
 import { Toolbar } from 'react-aria-components';
@@ -49,11 +50,11 @@ export const BodyEditor: FC<Props> = ({
     patchRequest(requestId, { body });
   }, [patchRequest, request.body.mimeType, requestId]);
 
-  const handleGraphQLChange = useCallback((content: string) => {
+  const handleGraphQLChange = useCallback((content: string, operationType?: OperationTypeNode) => {
     const body = typeof CONTENT_TYPE_GRAPHQL !== 'string'
       ? { text: content }
       : { mimeType: CONTENT_TYPE_GRAPHQL.split(';')[0], text: content };
-    patchRequest(requestId, { body });
+    patchRequest(requestId, { body, operationType });
   }, [patchRequest, requestId]);
 
   const handleFormUrlEncodedChange = useCallback((params: RequestBodyParameter[]) => {

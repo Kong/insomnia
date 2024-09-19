@@ -2,6 +2,7 @@ import { createWriteStream } from 'node:fs';
 import path from 'node:path';
 
 import * as contentDisposition from 'content-disposition';
+import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws'
 import type { RequestTestResult } from 'insomnia-sdk';
 import { extension as mimeExtension } from 'mime-types';
 import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
@@ -22,13 +23,14 @@ import type { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
 import type { MockRoute } from '../../models/mock-route';
 import type { MockServer } from '../../models/mock-server';
+import { isGraphqlSubscriptionRequest } from '../../models/request';
 import { getPathParametersFromUrl, isEventStreamRequest, isRequest, type Request, type RequestAuthentication, type RequestBody, type RequestHeader, type RequestParameter } from '../../models/request';
 import { isRequestMeta, type RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
 import type { Response } from '../../models/response';
 import type { ResponseInfo, RunnerResultPerRequestPerIteration } from '../../models/runner-test-result';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../../models/websocket-request';
-import type { WebSocketResponse } from '../../models/websocket-response';
+import { isWebSocketResponse, type WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecuteAfterResponseScript, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import { RenderErrorSubType } from '../../templating';
@@ -86,8 +88,9 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
   const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
   invariant(activeRequestMeta, 'Request meta not found');
   const { filterResponsesByEnv } = await models.settings.get();
+  const isGraphqlWsRequest = isGraphqlSubscriptionRequest(activeRequest);
 
-  const responseModelName = isWebSocketRequestId(requestId) ? 'webSocketResponse' : 'response';
+  const responseModelName = isWebSocketRequestId(requestId) || isGraphqlWsRequest ? 'webSocketResponse' : 'response';
   const activeResponse = activeRequestMeta.activeResponseId
     ? await models[responseModelName].getById(activeRequestMeta.activeResponseId)
     : await models[responseModelName].getLatestForRequest(requestId, activeWorkspaceMeta.activeEnvironmentId);
@@ -104,6 +107,16 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
     ...mockServer,
     routes: mockRoutes.filter(route => route.parentId === mockServer._id),
   }));
+  if (isGraphqlWsRequest && activeResponse && !isWebSocketResponse(activeResponse)) {
+    return {
+      activeRequest,
+      activeRequestMeta,
+      activeResponse: null,
+      responses: [],
+      requestVersions: [],
+      mockServerAndRoutes,
+    } as RequestLoaderData | WebSocketRequestLoaderData;
+  }
   return {
     activeRequest,
     activeRequestMeta,
@@ -307,6 +320,29 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
       workspaceId,
       url: rendered.url,
       headers: rendered.headers,
+      authentication: rendered.authentication,
+      cookieJar: rendered.cookieJar,
+    });
+  }
+  if (isGraphqlSubscriptionRequest(req)) {
+    window.main.webSocket.open({
+      requestId,
+      workspaceId,
+      // replace url with ws/wss for graphql subscriptions
+      url: rendered.url.replace('http', 'ws').replace('https', 'wss'),
+      headers: [
+        ...rendered.headers,
+        // add graphql-transport-ws protocol for graphql subscription
+        {
+          name: 'sec-websocket-protocol',
+          value: GRAPHQL_TRANSPORT_WS_PROTOCOL,
+        },
+      ],
+      isGraphqlSubscriptionRequest: true,
+      // graphql-ws protocol needs to send ConnectionInit message first. Refer: https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md
+      initialPayload: JSON.stringify({
+        type: MessageType.ConnectionInit,
+      }),
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
     });

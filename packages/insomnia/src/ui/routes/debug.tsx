@@ -55,6 +55,7 @@ import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc
 import type { Project } from '../../models/project';
 import {
   isEventStreamRequest,
+  isGraphqlSubscriptionRequest,
   isRequest,
   isRequestId,
   type Request,
@@ -446,7 +447,7 @@ export const Debug: FC = () => {
 
   const isRealtimeRequest =
     activeRequest &&
-    (isWebSocketRequest(activeRequest) || isEventStreamRequest(activeRequest));
+    (isWebSocketRequest(activeRequest) || isEventStreamRequest(activeRequest) || isGraphqlSubscriptionRequest(activeRequest));
 
   const [searchParams, setSearchParams] = useSearchParams();
 

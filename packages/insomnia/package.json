@@ -79,7 +79,8 @@
     "tough-cookie": "^4.1.3",
     "uuid": "^9.0.1",
     "yaml": "^1.6.0",
-    "yaml-source-map": "^2.1.1"
+    "yaml-source-map": "^2.1.1",
+    "graphql-ws": "^5.16.0"
   },
   "devDependencies": {
     "@develohpanda/fluent-builder": "^2.1.2",
