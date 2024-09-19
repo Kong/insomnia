@@ -1,4 +1,3 @@
-import orderedJSON from 'json-order';
 import path from 'path';
 
 import { type BaseModel, types as modelTypes } from '../models';
@@ -19,7 +18,6 @@ import {
   tryToInterpolateRequest,
 } from '../network/network';
 import { invariant } from '../utils/invariant';
-import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
 import { database } from './database';
 import { generateId } from './misc';
 
@@ -35,7 +33,7 @@ const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], cu
   };
   return list[(currentIteration + 1) % list.length];
 };
-export async function getSendRequestCallbackMemDb(environmentId: string, memDB: any, settingsOverrides?: SettingsOverride, iterationData?: Record<string, any>[], iterationCount?: number) {
+export async function getSendRequestCallbackMemDb(environmentId: string, memDB: any, settingsOverrides?: SettingsOverride, iterationData?: UserUploadEnvironment[], iterationCount?: number) {
   // Initialize the DB in-memory and fill it with data if we're given one
   await database.init(
     modelTypes(),
@@ -95,23 +93,12 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
 
     return { request, settings, clientCertificates, caCert, environment, activeEnvironmentId, workspace, timelinePath, responseId, ancestors };
   };
-  const userUploadEnvs = iterationData?.map(data => {
-    const orderedJson = orderedJSON.parse<Record<string, any>>(
-      JSON.stringify(data),
-      JSON_ORDER_PREFIX,
-      JSON_ORDER_SEPARATOR,
-    );
-    return {
-      name: 'User Upload',
-      data: orderedJson.object,
-      dataPropertyOrder: orderedJson.map || null,
-    };
-  });
 
   // Return callback helper to send requests
   return async function sendRequest(requestId: string, iteration?: number) {
     const requestData = await fetchInsoRequestData(requestId, environmentId);
-    const mutatedContext = await tryToExecutePreRequestScript(requestData, requestData.workspace._id, wrapAroundIterationOverIterationData(userUploadEnvs, iteration), iteration, iterationCount);
+    const getCurrentRowOfIterationData = wrapAroundIterationOverIterationData(iterationData, iteration);
+    const mutatedContext = await tryToExecutePreRequestScript(requestData, requestData.workspace._id, getCurrentRowOfIterationData, iteration, iterationCount);
     if (mutatedContext === null) {
       console.error('Time out while executing pre-request script');
       return null;
@@ -125,7 +112,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       purpose: 'send',
       extraInfo: undefined,
       baseEnvironment: mutatedContext.baseEnvironment,
-      userUploadEnv: mutatedContext.userUploadEnv,
+      userUploadEnvironment: mutatedContext.userUploadEnvironment,
       ignoreUndefinedEnvVariable,
     });
     // skip plugins

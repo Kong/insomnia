@@ -26,6 +26,7 @@ import { getPathParametersFromUrl, isEventStreamRequest, isRequest, type Request
 import { isRequestMeta, type RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
 import type { Response } from '../../models/response';
+import type { ResponseInfo, RunnerResultPerRequestPerIteration } from '../../models/runner-test-result';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../../models/websocket-request';
 import type { WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
@@ -405,13 +406,14 @@ export type RunnerSource = 'runner';
 export interface CollectionRunnerContext {
   source: RunnerSource;
   environmentId: string;
-  iterations: number;
+  iterationCount: number;
   iterationData: object;
   duration: number; // millisecond
   testCount: number;
   avgRespTime: number; // millisecond
-  results: RequestTestResult[];
+  iterationResults: RunnerResultPerRequestPerIteration;
   done: boolean;
+  responsesInfo: ResponseInfo[];
 }
 
 export interface RunnerContextForRequest {
@@ -428,7 +430,7 @@ export interface RunnerContextForRequest {
 export const sendActionImp = async ({
   requestId,
   workspaceId,
-  userUploadEnv,
+  userUploadEnvironment,
   shouldPromptForPathAfterResponse,
   ignoreUndefinedEnvVariable,
   testResultCollector,
@@ -442,12 +444,12 @@ export const sendActionImp = async ({
   testResultCollector?: RunnerContextForRequest;
     iteration?: number;
     iterationCount?: number;
-    userUploadEnv?: UserUploadEnvironment;
+    userUploadEnvironment?: UserUploadEnvironment;
 }) => {
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
   window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
-  const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId, userUploadEnv, iteration, iterationCount);
+  const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId, userUploadEnvironment, iteration, iterationCount);
   if ('error' in mutatedContext) {
     throw {
       error: mutatedContext.error,
@@ -484,7 +486,7 @@ export const sendActionImp = async ({
     purpose: 'send',
     extraInfo: undefined,
     baseEnvironment: mutatedContext.baseEnvironment,
-    userUploadEnv: mutatedContext.userUploadEnv,
+    userUploadEnvironment: mutatedContext.userUploadEnvironment,
     ignoreUndefinedEnvVariable,
   });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);

@@ -6,9 +6,12 @@ import * as commander from 'commander';
 import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consola';
 import { cosmiconfig } from 'cosmiconfig';
 import fs from 'fs';
+import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
+import { UserUploadEnvironment } from 'insomnia/src/models/environment';
 import { type RequestTestResult } from 'insomnia-sdk';
 import { generate, runTestsCli } from 'insomnia-testing';
+import orderedJSON from 'json-order';
 import { parseArgsStringToArgv } from 'string-argv';
 
 import packageJson from '../package.json';
@@ -236,10 +239,13 @@ const readFileFromPathOrUrl = async (pathOrUrl: string) => {
   }
   return readFile(pathOrUrl, 'utf8');
 };
-
-const getIterationDataFromFileOrUrl = async (pathOrUrl: string): Promise<Record<string, string>[]> => {
+const pathToIterationData = async (pathOrUrl: string): Promise<UserUploadEnvironment[]> => {
   const fileType = pathOrUrl.split('.').pop()?.toLowerCase();
   const content = await readFileFromPathOrUrl(pathOrUrl);
+  const list = getListFromFileOrUrl(content, fileType);
+  return transformIterationDataToEnvironmentList(list);
+};
+const getListFromFileOrUrl = (content: string, fileType?: string): Record<string, string>[] => {
   if (fileType === 'json') {
     try {
       const jsonDataContent = JSON.parse(content);
@@ -265,6 +271,21 @@ const getIterationDataFromFileOrUrl = async (pathOrUrl: string): Promise<Record<
     throw new Error('CSV file must contain at least two rows with first row as variable names');
   }
   throw new Error(`Uploaded file is unsupported ${fileType}`);
+};
+
+const transformIterationDataToEnvironmentList = (list: Record<string, string>[]): UserUploadEnvironment[] => {
+  return list?.map(data => {
+    const orderedJson = orderedJSON.parse<Record<string, any>>(
+      JSON.stringify(data),
+      JSON_ORDER_PREFIX,
+      JSON_ORDER_SEPARATOR,
+    );
+    return {
+      name: 'User Upload',
+      data: orderedJson.object,
+      dataPropertyOrder: orderedJson.map || null,
+    };
+  });
 };
 
 export const go = (args?: string[]) => {
@@ -470,7 +491,7 @@ export const go = (args?: string[]) => {
 
       try {
         const iterationCount = parseInt(options.iterationCount, 10);
-        const iterationData = options.iterationData ? await getIterationDataFromFileOrUrl(options.iterationData) : undefined;
+        const iterationData = options.iterationData ? await pathToIterationData(options.iterationData) : undefined;
         const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation }, iterationData, iterationCount);
         let success = true;
         for (let i = 0; i < iterationCount; i++) {

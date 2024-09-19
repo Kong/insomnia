@@ -19,7 +19,6 @@ export interface RunnerResultPerRequest {
   requestName: string;
   requestUrl: string;
   responseCode: number;
-  // TODO: add request name, url, etc
 }
 
 export interface ResponseInfo {
@@ -28,15 +27,16 @@ export interface ResponseInfo {
   originalRequestId: string;
 }
 
+export type RunnerResultPerRequestPerIteration = RunnerResultPerRequest[][];
+
 export interface BaseRunnerTestResult {
   source: RunnerSource;
-  // environmentId: string;
   iterations: number;
   duration: number; // millisecond
   avgRespTime: number; // millisecond
-  iterationResults: RunnerResultPerRequest[][];
+  iterationResults: RunnerResultPerRequestPerIteration;
   responsesInfo: ResponseInfo[];
-  version: '1';
+  version: '1'; // We might want to add or remove result features in future
 }
 
 export type RunnerTestResult = BaseModel & BaseRunnerTestResult;
@@ -48,7 +48,6 @@ export const isRunnerTestResult = (model: Pick<BaseModel, 'type'>): model is Run
 export function init() {
   return {
     source: 'runner',
-    // environmentId: string;
     iterations: 0,
     duration: 0,
     avgRespTime: 0,
