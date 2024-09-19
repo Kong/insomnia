@@ -509,9 +509,10 @@ export const go = (args?: string[]) => {
               success = false;
               continue;
             }
-            logger.trace(res);
+            // logger.debug(res);
             const timelineString = await readFile(res.timelinePath, 'utf8');
-            const timeline = deserializeNDJSON(timelineString).map(e => e.value).join('\n');
+            const appendNewLineIfNeeded = (str: string) => str.endsWith('\n') ? str : str + '\n';
+            const timeline = deserializeNDJSON(timelineString).map(e => appendNewLineIfNeeded(e.value)).join('');
             logger.trace(timeline);
             if (res.testResults?.length) {
               console.log(`
