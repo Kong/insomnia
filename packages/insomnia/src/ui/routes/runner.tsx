@@ -1,4 +1,4 @@
-import type { RequestContext, RequestTestResult } from 'insomnia-sdk';
+import type { RequestContext } from 'insomnia-sdk';
 import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
@@ -15,7 +15,7 @@ import * as models from '../../models';
 import type { UserUploadEnvironment } from '../../models/environment';
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
-import type { ResponseInfo, RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
+import type { RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
 import { cancelRequestById } from '../../network/cancellation';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
@@ -33,7 +33,7 @@ import { ResponseTimer } from '../components/response-timer';
 import { getTimeAndUnit } from '../components/tags/time-tag';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
 import type { OrganizationLoaderData } from './organization';
-import { type RunnerSource, sendActionImp } from './request';
+import { type CollectionRunnerContext, type RunnerContextForRequest, type RunnerSource, sendActionImp } from './request';
 import { useRootLoaderData } from './root';
 import type { Child, WorkspaceLoaderData } from './workspace';
 
@@ -87,7 +87,7 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
 }
 
 interface RunnerSettings {
-  iterations: number;
+  iterationCount: number;
   delay: number;
   iterationData: UploadDataType[];
   file: File | null;
@@ -95,7 +95,7 @@ interface RunnerSettings {
 
 // TODO: remove this when the suite management is introduced
 let tempRunnerSettings: RunnerSettings = {
-  iterations: 1,
+  iterationCount: 1,
   delay: 0,
   iterationData: [],
   file: null,
@@ -133,7 +133,7 @@ export const Runner: FC<{}> = () => {
     setSearchParams({});
   }
 
-  const [iterations, setIterations] = useState(tempRunnerSettings?.iterations || 1);
+  const [iterationCount, setIterationCount] = useState(tempRunnerSettings?.iterationCount || 1);
   const [delay, setDelay] = useState(tempRunnerSettings?.delay || 0);
   const [uploadData, setUploadData] = useState<UploadDataType[]>(tempRunnerSettings?.iterationData || []);
   const [file, setFile] = useState<File | null>(tempRunnerSettings?.file || null);
@@ -251,7 +251,7 @@ export const Runner: FC<{}> = () => {
     }
     setIsRunning(true);
 
-    window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterations } });
+    window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount } });
     const selected = new Set(reqList.selectedKeys);
     const requests = Array.from(reqList.items)
       .filter(item => selected.has(item.id));
@@ -272,7 +272,7 @@ export const Runner: FC<{}> = () => {
     submit(
       {
         requests,
-        iterations,
+        iterationCount,
         userUploadEnvs,
         delay,
       },
@@ -309,11 +309,10 @@ export const Runner: FC<{}> = () => {
 
   useEffect(() => {
     if (uploadData.length >= 1) {
-      // update iteration number from upload data length
-      setIterations(uploadData.length); // also update the temp settings
+      setIterationCount(uploadData.length);
       tempRunnerSettings = {
         ...tempRunnerSettings,
-        iterations: uploadData.length,
+        iterationCount: uploadData.length,
       };
     }
   }, [uploadData]);
@@ -428,22 +427,19 @@ export const Runner: FC<{}> = () => {
                       <div className="h-full min-w-[500px]">
                         <span className="mr-6 text-sm">
                           <input
-                            value={iterations}
+                            value={iterationCount}
                             name='Iterations'
                             disabled={isRunning}
                             onChange={e => {
                               try {
-                                const iterCount = parseInt(e.target.value, 10);
-                                if (iterCount > 0) {
-                                  setIterations(iterCount); // also update the temp settings
+                                if (parseInt(e.target.value, 10) > 0) {
+                                  setIterationCount(parseInt(e.target.value, 10));
                                   tempRunnerSettings = {
                                     ...tempRunnerSettings,
-                                    iterations: iterCount,
+                                    iterationCount: parseInt(e.target.value, 10),
                                   };
                                 }
-                              } catch (ex) {
-                                // no op
-                              }
+                              } catch (ex) { }
                             }}
                             type='number'
                             className={iterationInputStyle}
@@ -682,7 +678,7 @@ export const Runner: FC<{}> = () => {
                     onClose={() => setShowCLIModal(false)}
                     requestIds={Array.from(reqList.selectedKeys) as string[]}
                     allSelected={Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length}
-                    iterations={iterations}
+                    iterationCount={iterationCount}
                     delay={delay}
                     filePath={file?.path || ''}
                   />
@@ -860,20 +856,20 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   invariant(organizationId, 'Organization id is required');
   invariant(projectId, 'Project id is required');
   invariant(workspaceId, 'Workspace id is required');
-  const { requests, iterations, delay, userUploadEnvs } = await request.json();
+  const { requests, iterationCount, delay, userUploadEnvs } = await request.json();
   const source: RunnerSource = 'runner';
 
-  let testCtx = {
+  let testCtx: CollectionRunnerContext = {
     source,
     environmentId: '',
-    iterations,
+    iterationCount,
     iterationData: userUploadEnvs,
     duration: 1, // TODO: disable this
     testCount: 0,
     avgRespTime: 0,
-    iterationResults: new Array<RunnerResultPerRequest[]>(),
+    iterationResults: [],
     done: false,
-    responsesInfo: new Array<ResponseInfo>(),
+    responsesInfo: [],
   };
 
   window.main.startExecution({ requestId: workspaceId });
@@ -890,11 +886,11 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   };
 
   try {
-    for (let i = 0; i < iterations; i++) {
+    for (let i = 0; i < iterationCount; i++) {
       // nextRequestIdOrName is used to manual set next request in iteration from pre-request script
       let nextRequestIdOrName = '';
 
-      let iterationResults: RunnerResultPerRequest[] = [];
+      let testResultsForOneIteration: RunnerResultPerRequest[] = [];
 
       for (let j = 0; j < requests.length; j++) {
         const targetRequest = requests[j] as RequestType;
@@ -925,21 +921,21 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
         invariant(activeRequestMeta, 'Request meta not found');
 
         await new Promise(resolve => setTimeout(resolve, delay));
-        const resultCollector = {
+        const resultCollector: RunnerContextForRequest = {
           requestId: targetRequest.id,
           requestName: targetRequest.name,
           requestUrl: targetRequest.url,
           responseReason: '',
           duration: 1,
           size: 0,
-          results: new Array<RequestTestResult>(),
+          results: [],
           responseId: '',
         };
         const mutatedContext = await sendActionImp({
           requestId: targetRequest.id,
           workspaceId,
           iteration: i + 1,
-          iterationCount: iterations,
+          iterationCount,
           userUploadEnv: wrapAroundIterationOverIterationData(userUploadEnvs, i),
           shouldPromptForPathAfterResponse: false,
           ignoreUndefinedEnvVariable: true,
@@ -956,7 +952,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
           results: resultCollector.results,
         };
 
-        iterationResults = [...iterationResults, requestResults];
+        testResultsForOneIteration = [...testResultsForOneIteration, requestResults];
         testCtx = {
           ...testCtx,
           duration: testCtx.duration + resultCollector.duration,
@@ -973,7 +969,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
 
       testCtx = {
         ...testCtx,
-        iterationResults: [...testCtx.iterationResults, iterationResults],
+        iterationResults: [...testCtx.iterationResults, testResultsForOneIteration],
       };
     }
 
@@ -990,7 +986,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       parentId: workspaceId,
       source: testCtx.source,
       // environmentId: string;
-      iterations: testCtx.iterations,
+      iterations: testCtx.iterationCount,
       duration: testCtx.duration,
       avgRespTime: testCtx.avgRespTime,
       iterationResults: testCtx.iterationResults,

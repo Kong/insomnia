@@ -28,13 +28,14 @@ export interface ResponseInfo {
   originalRequestId: string;
 }
 
+export type RunnerResultPerRequestPerIteration = RunnerResultPerRequest[][];
+
 export interface BaseRunnerTestResult {
   source: RunnerSource;
-  // environmentId: string;
   iterations: number;
   duration: number; // millisecond
   avgRespTime: number; // millisecond
-  iterationResults: RunnerResultPerRequest[][];
+  iterationResults: RunnerResultPerRequestPerIteration;
   responsesInfo: ResponseInfo[];
   version: '1';
 }
