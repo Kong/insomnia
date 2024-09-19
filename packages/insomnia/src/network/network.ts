@@ -652,7 +652,7 @@ export const responseTransform = async (patch: ResponsePatch, environmentId: str
 };
 export const transformUrl = (url: string, params: RequestParameter[], authentication: RequestAuthentication, shouldEncode: boolean) => {
   const authQueryParam = getAuthQueryParams(authentication);
-  const customUrl = joinUrlAndQueryString(url, buildQueryStringFromParams(authQueryParam ? params.concat([authQueryParam]) : params));
+  const customUrl = joinUrlAndQueryString(url, buildQueryStringFromParams(authQueryParam ? params.concat([authQueryParam]) : params, true, { strictNullHandling: true }));
   const isUnixSocket = customUrl.match(/https?:\/\/unix:\//);
   if (!isUnixSocket) {
     return { finalUrl: smartEncodeUrl(customUrl, shouldEncode, { strictNullHandling: true }) };
