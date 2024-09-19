@@ -560,12 +560,12 @@ export async function sendCurlAndWriteTimeline(
   const authentication = renderedRequest.authentication as RequestAuthentication;
 
   const { finalUrl, socketPath } = transformUrl(renderedRequest.url, renderedRequest.parameters, authentication, renderedRequest.settingEncodeUrl);
-  timelineStrings.push(JSON.stringify({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() }) + '\n');
-  timelineStrings.push(JSON.stringify({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() }) + '\n');
-  timelineStrings.push(JSON.stringify({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineStrings.push(JSON.stringify({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() }));
+  timelineStrings.push(JSON.stringify({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() }));
+  timelineStrings.push(JSON.stringify({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() }));
 
   if (!renderedRequest.settingSendCookies) {
-    timelineStrings.push(JSON.stringify({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() }) + '\n');
+    timelineStrings.push(JSON.stringify({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() }));
   }
   const authHeader = await getAuthHeader(renderedRequest, finalUrl);
   const requestOptions = {
@@ -586,7 +586,7 @@ export async function sendCurlAndWriteTimeline(
   const output = await nodejsCurlRequest(requestOptions);
 
   if ('error' in output) {
-    await fs.promises.appendFile(timelinePath, timelineStrings.join(''));
+    await fs.promises.appendFile(timelinePath, timelineStrings.join('\n'));
 
     return {
       _id: responseId,
@@ -601,17 +601,17 @@ export async function sendCurlAndWriteTimeline(
   }
   const { patch, debugTimeline, headerResults, responseBodyPath } = output;
   // todo: move to main process
-  debugTimeline.forEach(entry => timelineStrings.push(JSON.stringify(entry) + '\n'));
+  debugTimeline.forEach(entry => timelineStrings.push(JSON.stringify(entry)));
   // transform output
   const { cookies, rejectedCookies, totalSetCookies } = await extractCookies(headerResults, renderedRequest.cookieJar, finalUrl, renderedRequest.settingStoreCookies);
-  rejectedCookies.forEach(errorMessage => timelineStrings.push(JSON.stringify({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }) + '\n'));
+  rejectedCookies.forEach(errorMessage => timelineStrings.push(JSON.stringify({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() })));
   if (totalSetCookies) {
     await models.cookieJar.update(renderedRequest.cookieJar, { cookies });
-    timelineStrings.push(JSON.stringify({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() }) + '\n');
+    timelineStrings.push(JSON.stringify({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() }));
   }
   const lastRedirect = headerResults[headerResults.length - 1];
 
-  await fs.promises.appendFile(timelinePath, timelineStrings.join(''));
+  await fs.promises.appendFile(timelinePath, timelineStrings.join('\n'));
 
   return {
     _id: responseId,

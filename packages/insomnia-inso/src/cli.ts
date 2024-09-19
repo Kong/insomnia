@@ -9,6 +9,7 @@ import fs from 'fs';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
 import { UserUploadEnvironment } from 'insomnia/src/models/environment';
+import { deserializeNDJSON } from 'insomnia/src/utils/ndjson';
 import { type RequestTestResult } from 'insomnia-sdk';
 import { generate, runTestsCli } from 'insomnia-testing';
 import orderedJSON from 'json-order';
@@ -510,7 +511,7 @@ export const go = (args?: string[]) => {
             }
             logger.trace(res);
             const timelineString = await readFile(res.timelinePath, 'utf8');
-            const timeline = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e).value).join(' ');
+            const timeline = deserializeNDJSON(timelineString).map(e => e.value).join('\n');
             logger.trace(timeline);
             if (res.testResults?.length) {
               console.log(`
