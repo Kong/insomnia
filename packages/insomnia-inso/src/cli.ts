@@ -491,7 +491,7 @@ export const go = (args?: string[]) => {
 
       try {
         const iterationCount = parseInt(options.iterationCount, 10);
-        const iterationData = await pathToIterationData(options.iterationData);
+        const iterationData = options.iterationData ? await pathToIterationData(options.iterationData) : undefined;
         const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation }, iterationData, iterationCount);
         let success = true;
         for (let i = 0; i < iterationCount; i++) {
