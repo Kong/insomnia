@@ -10,5 +10,4 @@ export const deserializeNDJSON = (data: string): any[] => {
       return undefined;
     }
   }).filter(e => e !== undefined);
-
 };
