@@ -864,7 +864,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     environmentId: '',
     iterationCount,
     iterationData: userUploadEnvs,
-    duration: 1, // TODO: disable this
+    duration: 0,
     testCount: 0,
     avgRespTime: 0,
     iterationResults: [],
@@ -926,7 +926,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
           requestName: targetRequest.name,
           requestUrl: targetRequest.url,
           responseReason: '',
-          duration: 1,
+          duration: 0,
           size: 0,
           results: [],
           responseId: '',
@@ -985,7 +985,6 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     await models.runnerTestResult.create({
       parentId: workspaceId,
       source: testCtx.source,
-      // environmentId: string;
       iterations: testCtx.iterationCount,
       duration: testCtx.duration,
       avgRespTime: testCtx.avgRespTime,
