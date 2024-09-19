@@ -208,5 +208,7 @@ function parseJSON(value: string): unknown {
 function goodTry<T>(tryFn: () => T): T | undefined {
   try {
     return tryFn();
-  } catch { }
+  } catch {
+    return undefined;
+  }
 }
