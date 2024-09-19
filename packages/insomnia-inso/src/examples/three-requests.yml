@@ -24,6 +24,15 @@ resources:
     metaSortKey: -1726658232232
     isPrivate: false
     pathParameters: []
+    afterResponseScript: |+
+      insomnia.test('Check if status is 200', () => {
+          insomnia.expect(insomnia.response.code).to.eql(200);
+          insomnia.expect(JSON.parse(insomnia.response.body).headers.host)
+      			.to.eql('localhost:4010');
+      });
+      insomnia.test('Check if response body contains value', () => {
+          insomnia.expect(JSON.parse(insomnia.response.body).data).to.eql('expecting to see:123');
+      });
     settingStoreCookies: true
     settingSendCookies: true
     settingDisableRenderRequestBody: false
