@@ -78,7 +78,7 @@ describe('inso dev bundle', () => {
       if (result.code !== 0) {
         console.log(result);
       }
-      expect(result.stdout).toContain('status: 200');
+      expect(result.stdout).toContain('HTTP/1.1 200 OK');
       expect(result.stdout).toContain('Preparing request to http://127.0.0.1:4010/');
       expect(result.stdout).toContain('foo bar baz');
     });
@@ -89,7 +89,7 @@ describe('inso dev bundle', () => {
       if (result.code !== 0) {
         console.log(result);
       }
-      expect(result.stdout).toContain('status: 200');
+      expect(result.stdout).toContain('HTTP/1.1 200 OK');
       expect(result.stdout).toContain('Preparing request to http://127.0.0.1:4010/');
       expect(result.stdout).toContain('custom-test-header: test-header-value');
     });

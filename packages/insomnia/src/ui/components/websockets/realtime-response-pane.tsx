@@ -10,6 +10,7 @@ import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promis
 import type { WebSocketEvent } from '../../../main/network/websocket';
 import type { Response } from '../../../models/response';
 import type { WebSocketResponse } from '../../../models/websocket-response';
+import { deserializeNDJSON } from '../../../utils/ndjson';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
 import type { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
@@ -105,7 +106,7 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
 
       const rawBuffer = await fs.promises.readFile(response.timelinePath);
       const timelineString = rawBuffer.toString();
-      const timelineParsed = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e));
+      const timelineParsed = deserializeNDJSON(timelineString);
       if (isMounted) {
         setTimeline(timelineParsed);
       }
