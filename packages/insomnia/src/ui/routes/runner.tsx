@@ -104,8 +104,8 @@ interface RunnerSettings {
   requests: RequestItemInfo[];
 }
 
-// TODO: remove this when the suite management is introduced
-let tempRunnerSettings: RunnerSettings = {
+// TODO: remove tempRunnerSettings related stuff when the test suite management is introduced
+const defaultTempRunnerSettings: RunnerSettings = {
   iterations: 1,
   delay: 0,
   iterationData: [],
@@ -113,89 +113,39 @@ let tempRunnerSettings: RunnerSettings = {
   requests: [],
 };
 
-class RequestListDelegate {
-  constructor(
-    private reqList: ListData<RequestItemInfo>,
-  ) { }
+let tempSettingsIterationData: UploadDataType[] = [];
+let tempSettingsFile: File | null = null;
 
-  public get items() {
-    return this.reqList.items;
+function getTempRunnerSettings(): RunnerSettings {
+  const tempRunnerSettingsStr = window.localStorage.getItem('tempRunnerSettings');
+  if (!tempRunnerSettingsStr) {
+    return defaultTempRunnerSettings;
   }
-
-  public get selectedKeys() {
-    return this.reqList.selectedKeys;
+  try {
+    return {
+      ...JSON.parse(tempRunnerSettingsStr),
+      iterationData: tempSettingsIterationData,
+      file: tempSettingsFile,
+    };
+  } catch (e) {
+    return defaultTempRunnerSettings;
   }
+}
 
-  setSelectedKeys = (selection: Selection) => {
-    this.reqList.setSelectedKeys(selection);
-
-    if (selection === 'all') {
-      tempRunnerSettings = {
-        ...tempRunnerSettings,
-        requests: tempRunnerSettings.requests.map(req => {
-          req.selected = true;
-          return req;
-        }),
-      };
-    } else {
-      const selectionSet = selection as Set<ReactTypeKey>;
-      tempRunnerSettings = {
-        ...tempRunnerSettings,
-        requests: tempRunnerSettings.requests.map(req => {
-          req.selected = selectionSet.has(req.id);
-          return req;
-        }),
-      };
-    }
-  };
-
-  moveBefore = (key: ReactTypeKey, keys: Iterable<ReactTypeKey>) => {
-    // this.reqList.moveBefore doesn't take effect immediately
-    // so this.reqList.items can't be assigned to tempRunnerSettings.requests directly
-    const movedItemKeys = new Set(keys);
-    const movedItems = this.reqList.items.filter(item => movedItemKeys.has(item.id));
-    const itemsWithoutMoved = this.reqList.items.filter(item => !movedItemKeys.has(item.id));
-
-    const targetKeyIndex = itemsWithoutMoved.findIndex(item => item.id === key);
-    if (targetKeyIndex < 0 || targetKeyIndex >= itemsWithoutMoved.length) {
-      return;
-    }
-
-    tempRunnerSettings = {
-      ...tempRunnerSettings,
-      requests: [
-        ...itemsWithoutMoved.slice(0, targetKeyIndex),
-        ...movedItems,
-        ...itemsWithoutMoved.slice(targetKeyIndex),
-      ],
+function setTempRunnerSettings(newSettings: RunnerSettings) {
+  try {
+    tempSettingsIterationData = newSettings.iterationData;
+    tempSettingsFile = newSettings.file;
+    const prunedSettings = {
+      ...newSettings,
+      iterationData: [],
+      file: null,
     };
-
-    this.reqList.moveBefore(key, keys);
-  };
-
-  moveAfter = (key: ReactTypeKey, keys: Iterable<ReactTypeKey>) => {
-    // this.reqList.moveAfter doesn't take effect immediately
-    // so this.reqList.items can't be assigned to tempRunnerSettings.requests directly
-    const movedItemKeys = new Set(keys);
-    const movedItems = this.reqList.items.filter(item => movedItemKeys.has(item.id));
-    const itemsWithoutMoved = this.reqList.items.filter(item => !movedItemKeys.has(item.id));
-
-    const targetKeyIndex = itemsWithoutMoved.findIndex(item => item.id === key);
-    if (targetKeyIndex < 0 || targetKeyIndex >= itemsWithoutMoved.length) {
-      return;
-    }
-
-    tempRunnerSettings = {
-      ...tempRunnerSettings,
-      requests: [
-        ...itemsWithoutMoved.slice(0, targetKeyIndex + 1),
-        ...movedItems,
-        ...itemsWithoutMoved.slice(targetKeyIndex + 1),
-      ],
-    };
-
-    this.reqList.moveAfter(key, keys);
-  };
+    const tempRunnerSettingsStr = JSON.stringify(prunedSettings);
+    window.localStorage.setItem('tempRunnerSettings', tempRunnerSettingsStr);
+  } catch (e) {
+    console.error('failed to save temp runner settings', e);
+  }
 }
 
 export const Runner: FC<{}> = () => {
@@ -230,10 +180,10 @@ export const Runner: FC<{}> = () => {
     setSearchParams({});
   }
 
-  const [iterations, setIterations] = useState(tempRunnerSettings?.iterations || 1);
-  const [delay, setDelay] = useState(tempRunnerSettings?.delay || 0);
-  const [uploadData, setUploadData] = useState<UploadDataType[]>(tempRunnerSettings?.iterationData || []);
-  const [file, setFile] = useState<File | null>(tempRunnerSettings?.file || null);
+  const [iterations, setIterations] = useState(getTempRunnerSettings().iterations || 1);
+  const [delay, setDelay] = useState(getTempRunnerSettings().delay || 0);
+  const [uploadData, setUploadData] = useState<UploadDataType[]>(getTempRunnerSettings().iterationData || []);
+  const [file, setFile] = useState<File | null>(getTempRunnerSettings().file || null);
 
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
@@ -268,9 +218,9 @@ export const Runner: FC<{}> = () => {
     }
   }, [settings.forceVerticalLayout, direction]);
 
-  const { mergedRequestList: latestRequestItems, getEntityById } = getMergedRequestList(collection, tempRunnerSettings.requests);
+  const { mergedRequestList: latestRequestItems, getEntityById } = getMergedRequestList(collection, getTempRunnerSettings().requests);
 
-  const initialSelectedKeys = tempRunnerSettings.requests
+  const initialSelectedKeys = getTempRunnerSettings().requests
     .filter(req => req.selected)
     .map(req => req.id);
   const reqListRaw = useListData({
@@ -388,10 +338,10 @@ export const Runner: FC<{}> = () => {
     if (uploadData.length >= 1) {
       // update iteration number from upload data length
       setIterations(uploadData.length); // also update the temp settings
-      tempRunnerSettings = {
-        ...tempRunnerSettings,
+      setTempRunnerSettings({
+        ...getTempRunnerSettings(),
         iterations: uploadData.length,
-      };
+      });
     }
   }, [uploadData]);
 
@@ -513,10 +463,10 @@ export const Runner: FC<{}> = () => {
                                 const iterCount = parseInt(e.target.value, 10);
                                 if (iterCount > 0) {
                                   setIterations(iterCount); // also update the temp settings
-                                  tempRunnerSettings = {
-                                    ...tempRunnerSettings,
+                                  setTempRunnerSettings({
+                                    ...getTempRunnerSettings(),
                                     iterations: iterCount,
-                                  };
+                                  });
                                 }
                               } catch (ex) {
                                 // no op
@@ -537,10 +487,10 @@ export const Runner: FC<{}> = () => {
                                 const delay = parseInt(e.target.value, 10);
                                 if (delay >= 0) {
                                   setDelay(delay); // also update the temp settings
-                                  tempRunnerSettings = {
-                                    ...tempRunnerSettings,
+                                  setTempRunnerSettings({
+                                    ...getTempRunnerSettings(),
                                     delay,
-                                  };
+                                  });
                                 }
                               } catch (ex) {
                                 // no op
@@ -731,11 +681,15 @@ export const Runner: FC<{}> = () => {
                     onUploadFile={(file, uploadData) => {
                       setFile(file);
                       setUploadData(uploadData); // also update the temp settings
-                      tempRunnerSettings = {
-                        ...tempRunnerSettings,
+                      setTempRunnerSettings({
+                        ...getTempRunnerSettings(),
+                        delay,
+                      });
+                      setTempRunnerSettings({
+                        ...getTempRunnerSettings(),
                         iterationData: uploadData,
                         file,
-                      };
+                      });
                     }}
                     userUploadData={uploadData}
                     onClose={() => setShowUploadModal(false)}
@@ -1045,6 +999,8 @@ export const collectionRunnerStatusLoader: ActionFunction = async ({ params }) =
   return null;
 };
 
+// getMergedRequestList merges latest requests from the db with the persisted requests settings
+// because request settings are persisted while original requests could be changed
 function getMergedRequestList(collection: Collection, savedRequestItems: RequestItemInfo[]): {
   mergedRequestList: RequestItemInfo[];
   getEntityById: Map<string, Child>;
@@ -1113,5 +1069,93 @@ function getMergedRequestList(collection: Collection, savedRequestItems: Request
   return {
     mergedRequestList: updatedRequestItems,
     getEntityById,
+  };
+}
+
+// RequestListDelegate is for handling the state of request list
+// It takes cares both the ListData from react-aria and the state of persisted settings
+// have to define it with class as it requires typescript getter
+class RequestListDelegate {
+  constructor(
+    private reqList: ListData<RequestItemInfo>,
+  ) { }
+
+  public get items() {
+    return this.reqList.items;
+  }
+
+  public get selectedKeys() {
+    return this.reqList.selectedKeys;
+  }
+
+  setSelectedKeys = (selection: Selection) => {
+    this.reqList.setSelectedKeys(selection);
+
+    if (selection === 'all') {
+      setTempRunnerSettings({
+        ...getTempRunnerSettings(),
+        requests: getTempRunnerSettings().requests.map(req => {
+          req.selected = true;
+          return req;
+        }),
+      });
+    } else {
+      const selectionSet = selection as Set<ReactTypeKey>;
+      setTempRunnerSettings({
+        ...getTempRunnerSettings(),
+        requests: getTempRunnerSettings().requests.map(req => {
+          req.selected = selectionSet.has(req.id);
+          return req;
+        }),
+      });
+    }
+  };
+
+  moveBefore = (key: ReactTypeKey, keys: Iterable<ReactTypeKey>) => {
+    // this.reqList.moveBefore doesn't take effect immediately
+    // so this.reqList.items can't be assigned to tempRunnerSettings.requests directly
+    const movedItemKeys = new Set(keys);
+    const movedItems = this.reqList.items.filter(item => movedItemKeys.has(item.id));
+    const itemsWithoutMoved = this.reqList.items.filter(item => !movedItemKeys.has(item.id));
+
+    const targetKeyIndex = itemsWithoutMoved.findIndex(item => item.id === key);
+    if (targetKeyIndex < 0 || targetKeyIndex >= itemsWithoutMoved.length) {
+      return;
+    }
+
+    setTempRunnerSettings({
+      ...getTempRunnerSettings(),
+      requests: [
+        ...itemsWithoutMoved.slice(0, targetKeyIndex),
+        ...movedItems,
+        ...itemsWithoutMoved.slice(targetKeyIndex),
+      ],
+    });
+
+    this.reqList.moveBefore(key, keys);
+  };
+
+  moveAfter = (key: ReactTypeKey, keys: Iterable<ReactTypeKey>) => {
+    // this.reqList.moveAfter doesn't take effect immediately
+    // so this.reqList.items can't be assigned to tempRunnerSettings.requests directly
+    const movedItemKeys = new Set(keys);
+    const movedItems = this.reqList.items.filter(item => movedItemKeys.has(item.id));
+    const itemsWithoutMoved = this.reqList.items.filter(item => !movedItemKeys.has(item.id));
+
+    const targetKeyIndex = itemsWithoutMoved.findIndex(item => item.id === key);
+    if (targetKeyIndex < 0 || targetKeyIndex >= itemsWithoutMoved.length) {
+      return;
+    }
+
+    setTempRunnerSettings({
+      ...getTempRunnerSettings(),
+      requests: [
+        ...itemsWithoutMoved.slice(0, targetKeyIndex + 1),
+        ...movedItems,
+        ...itemsWithoutMoved.slice(targetKeyIndex + 1),
+      ],
+    });
+
+    this.reqList.moveAfter(key, keys);
   };
 }
