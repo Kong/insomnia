@@ -75,7 +75,7 @@
     "papaparse": "^5.4.1",
     "prettier": "2.4.1",
     "shell-quote": "^1.8.1",
-    "swagger-ui-dist": "5.0.0-alpha.6",
+    "swagger-ui-dist": "^5.17.14",
     "tough-cookie": "^4.1.3",
     "uuid": "^9.0.1",
     "yaml": "^1.6.0",
