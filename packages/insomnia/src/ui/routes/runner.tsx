@@ -32,6 +32,7 @@ import { RunnerTestResultPane } from '../components/panes/runner-test-result-pan
 import { ResponseTimer } from '../components/response-timer';
 import { getTimeAndUnit } from '../components/tags/time-tag';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
+import useLocalStorage from '../hooks/use-local-storage';
 import type { OrganizationLoaderData } from './organization';
 import { type CollectionRunnerContext, type RunnerContextForRequest, type RunnerSource, sendActionImp } from './request';
 import { useRootLoaderData } from './root';
@@ -86,21 +87,6 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
   return timelines;
 }
 
-interface RunnerSettings {
-  iterationCount: number;
-  delay: number;
-  iterationData: UploadDataType[];
-  file: File | null;
-}
-
-// TODO: remove this when the suite management is introduced
-let tempRunnerSettings: RunnerSettings = {
-  iterationCount: 1,
-  delay: 0,
-  iterationData: [],
-  file: null,
-};
-
 export const Runner: FC<{}> = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [shouldRefresh, setShouldRefresh] = useState(false);
@@ -133,17 +119,18 @@ export const Runner: FC<{}> = () => {
     setSearchParams({});
   }
 
-  const [iterationCount, setIterationCount] = useState(tempRunnerSettings?.iterationCount || 1);
-  const [delay, setDelay] = useState(tempRunnerSettings?.delay || 0);
-  const [uploadData, setUploadData] = useState<UploadDataType[]>(tempRunnerSettings?.iterationData || []);
-  const [file, setFile] = useState<File | null>(tempRunnerSettings?.file || null);
-
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
     direction: 'vertical' | 'horizontal';
   };
+  const localStorageKey = workspaceId + 'runnerSettings';
+  const [iterationCount, setIterationCount] = useLocalStorage<number>(localStorageKey + 'iterationCount', { defaultValue: 1 });
+  const [delay, setDelay] = useLocalStorage<number>(localStorageKey + 'delay', { defaultValue: 0 });
+  const [uploadData, setUploadData] = useLocalStorage<UploadDataType[]>(localStorageKey + 'iterationData', { defaultValue: [] });
+  const [file, setFile] = useLocalStorage<File | null>(localStorageKey + 'file', { defaultValue: null });
+  invariant(iterationCount, 'iterationCount should not be null');
   const { settings } = useRootLoaderData();
   const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -310,12 +297,8 @@ export const Runner: FC<{}> = () => {
   useEffect(() => {
     if (uploadData.length >= 1) {
       setIterationCount(uploadData.length);
-      tempRunnerSettings = {
-        ...tempRunnerSettings,
-        iterationCount: uploadData.length,
-      };
     }
-  }, [uploadData]);
+  }, [setIterationCount, uploadData]);
 
   const [isRunning, setIsRunning] = useState(false);
   const [timingSteps, setTimingSteps] = useState<TimingStep[]>([]);
@@ -434,10 +417,6 @@ export const Runner: FC<{}> = () => {
                               try {
                                 if (parseInt(e.target.value, 10) > 0) {
                                   setIterationCount(parseInt(e.target.value, 10));
-                                  tempRunnerSettings = {
-                                    ...tempRunnerSettings,
-                                    iterationCount: parseInt(e.target.value, 10),
-                                  };
                                 }
                               } catch (ex) { }
                             }}
@@ -456,10 +435,6 @@ export const Runner: FC<{}> = () => {
                                 const delay = parseInt(e.target.value, 10);
                                 if (delay >= 0) {
                                   setDelay(delay); // also update the temp settings
-                                  tempRunnerSettings = {
-                                    ...tempRunnerSettings,
-                                    delay,
-                                  };
                                 }
                               } catch (ex) {
                                 // no op
@@ -688,11 +663,6 @@ export const Runner: FC<{}> = () => {
                     onUploadFile={(file, uploadData) => {
                       setFile(file);
                       setUploadData(uploadData); // also update the temp settings
-                      tempRunnerSettings = {
-                        ...tempRunnerSettings,
-                        iterationData: uploadData,
-                        file,
-                      };
                     }}
                     userUploadData={uploadData}
                     onClose={() => setShowUploadModal(false)}
