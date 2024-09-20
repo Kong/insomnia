@@ -116,8 +116,8 @@ const defaultTempRunnerSettings: RunnerSettings = {
 let tempSettingsIterationData: UploadDataType[] = [];
 let tempSettingsFile: File | null = null;
 
-function getTempRunnerSettings(): RunnerSettings {
-  const tempRunnerSettingsStr = window.localStorage.getItem('tempRunnerSettings');
+function getTempRunnerSettings(workspaceId: string): RunnerSettings {
+  const tempRunnerSettingsStr = window.localStorage.getItem(`tempRunnerSettings:${workspaceId}`);
   if (!tempRunnerSettingsStr) {
     return defaultTempRunnerSettings;
   }
@@ -132,7 +132,7 @@ function getTempRunnerSettings(): RunnerSettings {
   }
 }
 
-function setTempRunnerSettings(newSettings: RunnerSettings) {
+function setTempRunnerSettings(workspaceId: string, newSettings: RunnerSettings) {
   try {
     tempSettingsIterationData = newSettings.iterationData;
     tempSettingsFile = newSettings.file;
@@ -142,7 +142,7 @@ function setTempRunnerSettings(newSettings: RunnerSettings) {
       file: null,
     };
     const tempRunnerSettingsStr = JSON.stringify(prunedSettings);
-    window.localStorage.setItem('tempRunnerSettings', tempRunnerSettingsStr);
+    window.localStorage.setItem(`tempRunnerSettings:${workspaceId}`, tempRunnerSettingsStr);
   } catch (e) {
     console.error('failed to save temp runner settings', e);
   }
@@ -152,6 +152,12 @@ export const Runner: FC<{}> = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [shouldRefresh, setShouldRefresh] = useState(false);
   const [errorMsg, setErrorMsg] = useState<null | string>(null);
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+    direction: 'vertical' | 'horizontal';
+  };
 
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
 
@@ -180,17 +186,11 @@ export const Runner: FC<{}> = () => {
     setSearchParams({});
   }
 
-  const [iterations, setIterations] = useState(getTempRunnerSettings().iterations || 1);
-  const [delay, setDelay] = useState(getTempRunnerSettings().delay || 0);
-  const [uploadData, setUploadData] = useState<UploadDataType[]>(getTempRunnerSettings().iterationData || []);
-  const [file, setFile] = useState<File | null>(getTempRunnerSettings().file || null);
+  const [iterations, setIterations] = useState(getTempRunnerSettings(workspaceId).iterations || 1);
+  const [delay, setDelay] = useState(getTempRunnerSettings(workspaceId).delay || 0);
+  const [uploadData, setUploadData] = useState<UploadDataType[]>(getTempRunnerSettings(workspaceId).iterationData || []);
+  const [file, setFile] = useState<File | null>(getTempRunnerSettings(workspaceId).file || null);
 
-  const { organizationId, projectId, workspaceId } = useParams() as {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    direction: 'vertical' | 'horizontal';
-  };
   const { settings } = useRootLoaderData();
   const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -218,20 +218,24 @@ export const Runner: FC<{}> = () => {
     }
   }, [settings.forceVerticalLayout, direction]);
 
-  const { mergedRequestList: latestRequestItems, getEntityById } = getMergedRequestList(collection, getTempRunnerSettings().requests);
+  const { mergedRequestList: latestRequestItems, getEntityById } = getMergedRequestList(collection, getTempRunnerSettings(workspaceId).requests);
 
-  const initialSelectedKeys = getTempRunnerSettings().requests
+  const initialSelectedKeys = getTempRunnerSettings(workspaceId).requests
     .filter(req => req.selected)
     .map(req => req.id);
   const reqListRaw = useListData({
     initialItems: latestRequestItems,
     initialSelectedKeys,
   });
-  const reqList = new RequestListDelegate(reqListRaw);
-  setTempRunnerSettings({ // refresh
-    ...getTempRunnerSettings(),
-    requests: latestRequestItems,
-  });
+  const reqList = new RequestListDelegate(reqListRaw, workspaceId);
+  // refresh
+  setTempRunnerSettings(
+    workspaceId,
+    {
+      ...getTempRunnerSettings(workspaceId),
+      requests: latestRequestItems,
+    },
+  );
 
   const allKeys = reqList.items.map(item => item.id);
 
@@ -342,12 +346,15 @@ export const Runner: FC<{}> = () => {
     if (uploadData.length >= 1) {
       // update iteration number from upload data length
       setIterations(uploadData.length); // also update the temp settings
-      setTempRunnerSettings({
-        ...getTempRunnerSettings(),
-        iterations: uploadData.length,
-      });
+      setTempRunnerSettings(
+        workspaceId,
+        {
+          ...getTempRunnerSettings(workspaceId),
+          iterations: uploadData.length,
+        },
+      );
     }
-  }, [uploadData]);
+  }, [uploadData, workspaceId]);
 
   const [isRunning, setIsRunning] = useState(false);
   const [timingSteps, setTimingSteps] = useState<TimingStep[]>([]);
@@ -467,10 +474,13 @@ export const Runner: FC<{}> = () => {
                                 const iterCount = parseInt(e.target.value, 10);
                                 if (iterCount > 0) {
                                   setIterations(iterCount); // also update the temp settings
-                                  setTempRunnerSettings({
-                                    ...getTempRunnerSettings(),
-                                    iterations: iterCount,
-                                  });
+                                  setTempRunnerSettings(
+                                    workspaceId,
+                                    {
+                                      ...getTempRunnerSettings(workspaceId),
+                                      iterations: iterCount,
+                                    },
+                                  );
                                 }
                               } catch (ex) {
                                 // no op
@@ -491,10 +501,13 @@ export const Runner: FC<{}> = () => {
                                 const delay = parseInt(e.target.value, 10);
                                 if (delay >= 0) {
                                   setDelay(delay); // also update the temp settings
-                                  setTempRunnerSettings({
-                                    ...getTempRunnerSettings(),
-                                    delay,
-                                  });
+                                  setTempRunnerSettings(
+                                    workspaceId,
+                                    {
+                                      ...getTempRunnerSettings(workspaceId),
+                                      delay,
+                                    },
+                                  );
                                 }
                               } catch (ex) {
                                 // no op
@@ -685,15 +698,21 @@ export const Runner: FC<{}> = () => {
                     onUploadFile={(file, uploadData) => {
                       setFile(file);
                       setUploadData(uploadData); // also update the temp settings
-                      setTempRunnerSettings({
-                        ...getTempRunnerSettings(),
-                        delay,
-                      });
-                      setTempRunnerSettings({
-                        ...getTempRunnerSettings(),
-                        iterationData: uploadData,
-                        file,
-                      });
+                      setTempRunnerSettings(
+                        workspaceId,
+                        {
+                          ...getTempRunnerSettings(workspaceId),
+                          delay,
+                        }
+                      );
+                      setTempRunnerSettings(
+                        workspaceId,
+                        {
+                          ...getTempRunnerSettings(workspaceId),
+                          iterationData: uploadData,
+                          file,
+                        }
+                      );
                     }}
                     userUploadData={uploadData}
                     onClose={() => setShowUploadModal(false)}
@@ -1083,6 +1102,7 @@ function getMergedRequestList(collection: Collection, savedRequestItems: Request
 class RequestListDelegate {
   constructor(
     private reqList: ListData<RequestItemInfo>,
+    private workspaceId: string,
   ) { }
 
   public get items() {
@@ -1097,22 +1117,28 @@ class RequestListDelegate {
     this.reqList.setSelectedKeys(selection);
 
     if (selection === 'all') {
-      setTempRunnerSettings({
-        ...getTempRunnerSettings(),
-        requests: getTempRunnerSettings().requests.map(req => {
-          req.selected = true;
-          return req;
-        }),
-      });
+      setTempRunnerSettings(
+        this.workspaceId,
+        {
+          ...getTempRunnerSettings(this.workspaceId),
+          requests: getTempRunnerSettings(this.workspaceId).requests.map(req => {
+            req.selected = true;
+            return req;
+          }),
+        }
+      );
     } else {
       const selectionSet = selection as Set<ReactTypeKey>;
-      setTempRunnerSettings({
-        ...getTempRunnerSettings(),
-        requests: getTempRunnerSettings().requests.map(req => {
-          req.selected = selectionSet.has(req.id);
-          return req;
-        }),
-      });
+      setTempRunnerSettings(
+        this.workspaceId,
+        {
+          ...getTempRunnerSettings(this.workspaceId),
+          requests: getTempRunnerSettings(this.workspaceId).requests.map(req => {
+            req.selected = selectionSet.has(req.id);
+            return req;
+          }),
+        }
+      );
     }
   };
 
@@ -1128,14 +1154,17 @@ class RequestListDelegate {
       return;
     }
 
-    setTempRunnerSettings({
-      ...getTempRunnerSettings(),
-      requests: [
-        ...itemsWithoutMoved.slice(0, targetKeyIndex),
-        ...movedItems,
-        ...itemsWithoutMoved.slice(targetKeyIndex),
-      ],
-    });
+    setTempRunnerSettings(
+      this.workspaceId,
+      {
+        ...getTempRunnerSettings(this.workspaceId),
+        requests: [
+          ...itemsWithoutMoved.slice(0, targetKeyIndex),
+          ...movedItems,
+          ...itemsWithoutMoved.slice(targetKeyIndex),
+        ],
+      }
+    );
 
     this.reqList.moveBefore(key, keys);
   };
@@ -1152,14 +1181,17 @@ class RequestListDelegate {
       return;
     }
 
-    setTempRunnerSettings({
-      ...getTempRunnerSettings(),
-      requests: [
-        ...itemsWithoutMoved.slice(0, targetKeyIndex + 1),
-        ...movedItems,
-        ...itemsWithoutMoved.slice(targetKeyIndex + 1),
-      ],
-    });
+    setTempRunnerSettings(
+      this.workspaceId,
+      {
+        ...getTempRunnerSettings(this.workspaceId),
+        requests: [
+          ...itemsWithoutMoved.slice(0, targetKeyIndex + 1),
+          ...movedItems,
+          ...itemsWithoutMoved.slice(targetKeyIndex + 1),
+        ],
+      },
+    );
 
     this.reqList.moveAfter(key, keys);
   };
