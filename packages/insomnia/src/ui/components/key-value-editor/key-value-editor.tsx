@@ -1,6 +1,5 @@
 import React, { type FC, Fragment, useCallback } from 'react';
 import { Button, DropIndicator, ListBox, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, ToggleButton, Toolbar, useDragAndDrop } from 'react-aria-components';
-import { useListData } from 'react-stately';
 
 import { describeByteSize, generateId } from '../../../common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
@@ -66,83 +65,64 @@ export const KeyValueEditor: FC<Props> = ({
   const { enabled: nunjucksEnabled } = useNunjucksEnabled();
   const initialItems = pairs.length > 0 ? pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) : [createEmptyPair()];
   const initialReadOnlyItems = readOnlyPairs?.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) || [];
-  const pairsList = useListData({
-    initialItems,
-    getKey: item => item.id,
-  });
 
+  const pairsList = {
+    items: initialItems,
+    getItem: (key: string) => pairsList.items.find(item => item.id === key),
+  };
   const upsertPair = useCallback(function upsertPair(pair: typeof pairsList.items[0]) {
     if (pairsList.getItem(pair.id)) {
-      pairsList.update(pair.id, pair);
-      const items = pairsList.items.map(item => (item.id === pair.id ? pair : item));
-      onChange(items);
+      pairsList.items = pairsList.items.map(item => (item.id === pair.id ? pair : item));
+      onChange(pairsList.items);
     } else {
       const id = pair.id === 'pair-empty' ? generateId('pair') : pair.id;
-      pairsList.append({ ...pair, id });
-      const items = pairsList.items.concat(pair);
-      onChange(items);
+      pairsList.items.concat({ ...pair, id });
+      onChange(pairsList.items);
     }
   }, [onChange, pairsList]);
 
   const removePair = useCallback(function removePair(id: string) {
     if (pairsList.getItem(id)) {
-      pairsList.remove(id);
-      const items = pairsList.items.filter(pair => pair.id !== id);
-
-      if (items.length === 0) {
-        pairsList.append(createEmptyPair());
+      pairsList.items = pairsList.items.filter(pair => pair.id !== id);
+      if (pairsList.items.length === 0) {
+        pairsList.items.push(createEmptyPair());
       }
-
-      onChange(items);
+      onChange(pairsList.items);
     }
   }, [onChange, pairsList]);
 
   const removeAllPairs = useCallback(function removeAllPairs() {
-    pairsList.setSelectedKeys(new Set(pairsList.items.map(item => item.id)));
-    pairsList.removeSelectedItems();
-    pairsList.append(createEmptyPair());
+    pairsList.items = [createEmptyPair()];
     onChange([]);
   }, [onChange, pairsList]);
-
+  const repositionInArray = (allItems: Pair[], itemsToMove: string[], targetIndex: number) => {
+    let items = allItems;
+    for (const key of itemsToMove) {
+      const removed = items.filter(item => item.id !== key);
+      const itemToMove = items.find(item => item.id === key);
+      if (itemToMove) {
+        items = [...removed.slice(0, targetIndex), itemToMove, ...removed.slice(targetIndex)];
+      }
+    }
+    return items;
+  };
   const { dragAndDropHooks } = useDragAndDrop({
     getItems: keys =>
-      [...keys].map(key => {
-        const pair = pairsList.getItem(key);
-        return { 'text/plain': `${pair.id}` };
-      }),
+      [...keys].map(key => ({ 'text/plain': `${pairsList.getItem(key.toString())?.id}` })),
     onReorder(e) {
       if (e.target.dropPosition === 'before') {
-        pairsList.moveBefore(e.target.key, e.keys);
-
-        const items = [...pairsList.items];
-        for (const key of e.keys) {
-          const targetItemIndex = items.findIndex(item => item.id === key);
-          const updatedItems = items.splice(targetItemIndex, 1);
-          items.splice(targetItemIndex - 1, 0, updatedItems[0]);
-        }
-
-        onChange(items);
+        onChange(repositionInArray(pairsList.items, [...e.keys].map(key => key.toString()), pairsList.items.findIndex(item => item.id === e.target.key.toString())));
       } else if (e.target.dropPosition === 'after') {
-        pairsList.moveAfter(e.target.key, e.keys);
-
-        const items = [...pairsList.items];
-
-        for (const key of e.keys) {
-          const targetItemIndex = items.findIndex(item => item.id === key);
-          const updatedItems = items.splice(targetItemIndex, 1);
-          items.splice(targetItemIndex + 1, 0, updatedItems[0]);
-        }
-
-        onChange(items);
+        onChange(repositionInArray(pairsList.items, [...e.keys].map(key => key.toString()), pairsList.items.findIndex(item => item.id === e.target.key.toString())));
       }
     },
     renderDragPreview(items) {
-      const pair = pairsList.getItem(items[0]['text/plain']);
+      const pair = pairsList.getItem(items[0]['text/plain']) || createEmptyPair();
 
       const element = document.querySelector(`[data-key="${pair.id}"]`);
 
-      const isFile = pair.type === 'file';
-      const isMultiline = pair.type === 'text' && pair.multiline;
+      const isFile = 'type' in pair && pair.type === 'file';
+      const isMultiline = 'type' in pair && pair.type === 'text' && pair.multiline;
       const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
 
       let valueEditor = (
