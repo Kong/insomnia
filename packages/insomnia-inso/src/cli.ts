@@ -236,16 +236,23 @@ function convertToTAP(testCases: RequestTestResult[]): string {
   return tapOutput;
 }
 const readFileFromPathOrUrl = async (pathOrUrl: string) => {
+  if (!pathOrUrl) {
+    return '';
+  }
   if (pathOrUrl.startsWith('http')) {
     const response = await fetch(pathOrUrl);
     return response.text();
   }
   return readFile(pathOrUrl, 'utf8');
 };
-const pathToIterationData = async (pathOrUrl: string): Promise<UserUploadEnvironment[]> => {
+const pathToIterationData = async (pathOrUrl: string, env: string): Promise<UserUploadEnvironment[]> => {
+  const envAsObject = Object.fromEntries(new URLSearchParams(env).entries());
   const fileType = pathOrUrl.split('.').pop()?.toLowerCase();
   const content = await readFileFromPathOrUrl(pathOrUrl);
-  const list = getListFromFileOrUrl(content, fileType);
+  if (!content) {
+    return transformIterationDataToEnvironmentList([envAsObject]);
+  }
+  const list = getListFromFileOrUrl(content, fileType).map(data => ({ ...data, ...envAsObject }));
   return transformIterationDataToEnvironmentList(list);
 };
 const getListFromFileOrUrl = (content: string, fileType?: string): Record<string, string>[] => {
@@ -425,12 +432,13 @@ export const go = (args?: string[]) => {
     .option('-i, --item <requestid>', 'request or folder id to run', collect, [])
     .option('-e, --env <identifier>', 'environment to use', '')
     .option('--delay-request <duration>', 'milliseconds to delay between requests', '0')
+    .option('--env-var <key=value>', 'override environment variables', '')
     .option('-n, --iteration-count <count>', 'number of times to repeat', '1')
     .option('-d, --iteration-data <path/url>', 'file path or url (JSON or CSV)', '')
     .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}]`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first non-200 response', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
-    .action(async (identifier, cmd: { env: string; disableCertValidation: boolean; requestNamePattern: string; bail: boolean; item: string[]; delayRequest: string; iterationCount: string; iterationData: string }) => {
+    .action(async (identifier, cmd: { env: string; disableCertValidation: boolean; requestNamePattern: string; bail: boolean; item: string[]; delayRequest: string; iterationCount: string; iterationData: string; envVar: string }) => {
       const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
 
       const commandOptions = { ...globals, ...cmd };
@@ -494,7 +502,8 @@ export const go = (args?: string[]) => {
 
       try {
         const iterationCount = parseInt(options.iterationCount, 10);
-        const iterationData = options.iterationData ? await pathToIterationData(options.iterationData) : undefined;
+
+        const iterationData = await pathToIterationData(options.iterationData, options.envVar);
         const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !options.disableCertValidation }, iterationData, iterationCount);
         let success = true;
         for (let i = 0; i < iterationCount; i++) {
