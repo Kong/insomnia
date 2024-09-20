@@ -23,6 +23,8 @@ async function updateProxy() {
     if (httpsProxy) {
       proxyRules.push(`https=${parseProxyFromUrl(httpsProxy)}`);
     }
+
+    session.defaultSession.resolveProxy;
     // Set proxy rules in the main session https://www.electronjs.org/docs/latest/api/structures/proxy-config
     session.defaultSession.setProxy({
       proxyRules: proxyRules.join(';'),
@@ -32,10 +34,11 @@ async function updateProxy() {
         // @TODO Add all our API urls here to bypass the proxy to work as before with axios.
         // We can add an option in settings to use the proxy for insomnia API requests and not include them here.
       ].join(','),
+      mode: 'system',
     });
     return;
   }
-  session.defaultSession.setProxy({ proxyRules: '', proxyBypassRules: '' });
+  session.defaultSession.setProxy({ proxyRules: '', proxyBypassRules: '', mode: 'system' });
 }
 
 export async function watchProxySettings() {
