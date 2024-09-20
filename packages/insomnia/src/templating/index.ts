@@ -22,7 +22,12 @@ export class RenderError extends Error {
 
   type!: string;
   reason!: string;
-  extraInfo?: Record<string, string>;
+  extraInfo?: Record<string, any>;
+
+  constructor(message: string) {
+    super(message);
+    this.message = message;
+  }
 }
 
 // Some constants
@@ -102,7 +107,7 @@ export function render(
         if (hasNunjucksInterpolationSymbols && reason === 'undefined') {
           newError.extraInfo = {
             subType: RenderErrorSubType.EnvironmentVariable,
-            missingKey: extractVariableKey(text, line, column),
+            undefinedEnvironmentVariable: extractVariableKey(text, line, column),
           };
         }
         reject(newError);

@@ -45,11 +45,12 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
 }, ref) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showEnvVariableMissingModal, setShowEnvVariableMissingModal] = useState(false);
-  const [missingKey, setMissingKey] = useState('');
+  const [undefinedEnvironmentVariables, setUndefinedEnvironmentVariables] = useState('');
+  const undefinedEnvironmentVariableList = undefinedEnvironmentVariables?.split(',');
   if (searchParams.has('error')) {
-    if (searchParams.has('envVariableMissing') && searchParams.get('missingKey')) {
+    if (searchParams.has('envVariableMissing') && searchParams.get('undefinedEnvironmentVariables')) {
       setShowEnvVariableMissingModal(true);
-      setMissingKey(searchParams.get('missingKey')!);
+      setUndefinedEnvironmentVariables(searchParams.get('undefinedEnvironmentVariables')!);
     } else {
       showAlert({
         title: 'Unexpected Request Failure',
@@ -374,7 +375,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       </div>
       <VariableMissingErrorModal
         isOpen={showEnvVariableMissingModal}
-        title="An environment variable is missing"
+        title={undefinedEnvironmentVariableList?.length === 1 ? '1 environment variable is missing' : `${undefinedEnvironmentVariableList?.length} environment variables are missing`}
         okText='Execute anyways'
         onOk={() => {
           setShowEnvVariableMissingModal(false);
@@ -382,11 +383,14 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         }}
         onCancel={() => setShowEnvVariableMissingModal(false)}
       >
-        <p>
-          The environment variable
-          <Button className="bg-[--color-surprise] text-[--color-font-surprise] px-3 mx-3 rounded-sm">{missingKey}</Button>
-          has been defined but has no value defined on a currently Active Environment
-        </p>
+        <div>
+          These environment variables have been defined, but have not been valued with in the currently active environment:
+          <div className='flex gap-2'>
+            {undefinedEnvironmentVariableList?.map(item => {
+              return <Button key={item} className="bg-[--color-surprise] text-[--color-font-surprise] mt-3 px-3 py-1 mr-3 rounded-sm">{item}</Button>;
+            })}
+          </div>
+        </div>
       </VariableMissingErrorModal>
     </div>
   );

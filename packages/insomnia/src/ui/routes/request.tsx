@@ -435,7 +435,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     url.searchParams.set('error', e);
     if (e?.extraInfo && e?.extraInfo?.subType === RenderErrorSubType.EnvironmentVariable) {
       url.searchParams.set('envVariableMissing', '1');
-      url.searchParams.set('missingKey', e?.extraInfo?.missingKey);
+      url.searchParams.set('undefinedEnvironmentVariables', e?.extraInfo?.undefinedEnvironmentVariables);
     }
     return redirect(`${url.pathname}?${url.searchParams}`);
   }
