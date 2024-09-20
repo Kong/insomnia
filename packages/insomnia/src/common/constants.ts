@@ -337,6 +337,36 @@ export const sortOrderName: Record<SortOrder, string> = {
   [SORT_TYPE_ASC]: 'Requests First',
 };
 
+export type CollectionSortOrder =
+  | 'name-asc'
+  | 'name-desc'
+  | 'created-asc'
+  | 'created-desc'
+  | 'http-method'
+  | 'type-desc'
+  | 'type-asc'
+  | 'type-manual';
+export const COLLECTION_SORT_ORDERS = [
+  SORT_TYPE_MANUAL,
+  SORT_NAME_ASC,
+  SORT_NAME_DESC,
+  SORT_CREATED_ASC,
+  SORT_CREATED_DESC,
+  SORT_HTTP_METHOD,
+  SORT_TYPE_DESC,
+  SORT_TYPE_ASC,
+] as const;
+export const collectionSortOrderName: Record<CollectionSortOrder, string> = {
+  [SORT_TYPE_MANUAL]: 'Manual',
+  [SORT_NAME_ASC]: 'Name Ascending (A-Z)',
+  [SORT_NAME_DESC]: 'Name Descending (Z-A)',
+  [SORT_CREATED_ASC]: 'Oldest First',
+  [SORT_CREATED_DESC]: 'Newest First',
+  [SORT_HTTP_METHOD]: 'HTTP Method',
+  [SORT_TYPE_DESC]: 'Folders First',
+  [SORT_TYPE_ASC]: 'Requests First',
+};
+
 export type DashboardSortOrder =
   | 'name-asc'
   | 'name-desc'
