@@ -21,21 +21,57 @@ import {
 import { NunjucksEnabledProvider } from '../../../context/nunjucks/nunjucks-enabled-context';
 import { useRequestPatcher } from '../../../hooks/use-request';
 import { ContentTypeDropdown } from '../../dropdowns/content-type-dropdown';
+import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
 import { AskModal } from '../../modals/ask-modal';
 import { showModal } from '../../modals/index';
 import { EmptyStatePane } from '../../panes/empty-state-pane';
 import { SvgIcon } from '../../svg-icon';
 import { FileEditor } from './file-editor';
-import { FormEditor } from './form-editor';
 import { GraphQLEditor } from './graph-ql-editor';
 import { RawEditor } from './raw-editor';
-import { UrlEncodedEditor } from './url-encoded-editor';
 
 interface Props {
   request: Request;
   environmentId: string;
 }
-
+interface EditorProps {
+  onChange: (c: {
+    name: string;
+    value: string;
+    description?: string;
+    disabled?: boolean;
+  }[]) => void;
+  parameters: any[];
+}
+const FormEditor: FC<EditorProps> = ({ parameters, onChange }) => (
+  <div className="scrollable-container tall wide">
+    <div className="scrollable">
+      <KeyValueEditor
+        allowFile
+        allowMultiline
+        namePlaceholder="name"
+        valuePlaceholder="value"
+        descriptionPlaceholder="description"
+        onChange={onChange}
+        pairs={parameters}
+      />
+    </div>
+  </div>
+);
+const UrlEncodedEditor: FC<EditorProps> = ({ parameters, onChange }) => (
+  <div className="scrollable-container tall wide">
+    <div className="scrollable">
+      <KeyValueEditor
+        allowMultiline
+        namePlaceholder="name"
+        valuePlaceholder="value"
+        descriptionPlaceholder="description"
+        onChange={onChange}
+        pairs={parameters}
+      />
+    </div>
+  </div>
+);
 export const BodyEditor: FC<Props> = ({
   request,
   environmentId,
