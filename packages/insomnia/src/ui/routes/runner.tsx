@@ -92,22 +92,9 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
   return timelines;
 }
 
-interface RunnerSettings {
-  iterations: number;
-  delay: number;
-  iterationData: UploadDataType[];
-  file: File | null;
+interface RunnerAdvancedSettings {
   bail: boolean;
 }
-
-// TODO: remove this when the suite management is introduced
-let tempRunnerSettings: RunnerSettings = {
-  iterations: 1,
-  delay: 0,
-  iterationData: [],
-  file: null,
-  bail: true,
-};
 
 export const Runner: FC<{}> = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -143,15 +130,6 @@ export const Runner: FC<{}> = () => {
     setSearchParams({});
   }
 
-  // const [iterations, setIterations] = useState(tempRunnerSettings?.iterations || 1);
-  // const [delay, setDelay] = useState(tempRunnerSettings?.delay || 0);
-  // const [uploadData, setUploadData] = useState<UploadDataType[]>(tempRunnerSettings?.iterationData || []);
-  // const [file, setFile] = useState<File | null>(tempRunnerSettings?.file || null);
-  const [runnerAdvancedSettings, setAdvancedRunnerSettings] = useState({
-    bail: tempRunnerSettings?.bail || true as boolean,
-  });
-  const toggleBail = () => setAdvancedRunnerSettings({ ...runnerAdvancedSettings, bail: !runnerAdvancedSettings.bail });
-
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -163,7 +141,11 @@ export const Runner: FC<{}> = () => {
   const [delay, setDelay] = useLocalStorage<number>(localStorageKey + 'delay', { defaultValue: 0 });
   const [uploadData, setUploadData] = useLocalStorage<UploadDataType[]>(localStorageKey + 'iterationData', { defaultValue: [] });
   const [file, setFile] = useLocalStorage<File | null>(localStorageKey + 'file', { defaultValue: null });
+  const [runnerAdvancedSettings, setAdvancedRunnerSettings] = useLocalStorage<RunnerAdvancedSettings>(localStorageKey + 'bail', { defaultValue: { bail: true } });
+  const toggleBail = () => setAdvancedRunnerSettings({ ...runnerAdvancedSettings, bail: !runnerAdvancedSettings.bail });
+
   invariant(iterationCount, 'iterationCount should not be null');
+
   const { settings } = useRootLoaderData();
   const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -296,7 +278,7 @@ export const Runner: FC<{}> = () => {
         iterationCount,
         userUploadEnvs,
         delay,
-        runnerAdvancedSettings,
+        runnerAdvancedSettings: { ...runnerAdvancedSettings },
       },
       {
         method: 'post',
