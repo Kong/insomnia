@@ -64,21 +64,10 @@ export const KeyValueEditor: FC<Props> = ({
 }) => {
   const [showDescription, setShowDescription] = React.useState(false);
   const { enabled: nunjucksEnabled } = useNunjucksEnabled();
+  const initialItems = pairs.length > 0 ? pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) : [createEmptyPair()];
+  const initialReadOnlyItems = readOnlyPairs?.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) || [];
   const pairsList = useListData({
-    initialItems: pairs.length > 0 ? pairs.map(pair => {
-      const pairId = pair.id || generateId('pair');
-      return { ...pair, id: pairId };
-    }) : [createEmptyPair()],
-    getKey: item => item.id,
-  });
-
-  const items = pairsList.items.length > 0 ? pairsList.items : [];
-
-  const readOnlyPairsList = useListData({
-    initialItems: readOnlyPairs?.map(pair => {
-      const pairId = pair.id || generateId('pair');
-      return { ...pair, id: pairId };
-    }) || [],
+    initialItems,
     getKey: item => item.id,
   });
 
@@ -272,13 +261,13 @@ export const KeyValueEditor: FC<Props> = ({
           )}
         </ToggleButton>
       </Toolbar>
-      {readOnlyPairsList.items.length > 0 && (
+      {initialReadOnlyItems.length > 0 && (
         <ListBox
           aria-label='Key-value pairs readonly'
           selectionMode='none'
           dependencies={[showDescription, nunjucksEnabled]}
           className="flex pt-1 flex-col w-full overflow-y-auto flex-1 relative"
-          items={readOnlyPairsList.items}
+          items={initialReadOnlyItems}
         >
           {pair => {
             const isFile = pair.type === 'file';
@@ -362,7 +351,7 @@ export const KeyValueEditor: FC<Props> = ({
         className="flex pt-1 flex-col w-full overflow-y-auto flex-1 relative"
         dragAndDropHooks={dragAndDropHooks}
         dependencies={[upsertPair, removePair, showDescription, nunjucksEnabled]}
-        items={items}
+        items={pairsList.items.length > 0 ? pairsList.items : []}
       >
         {pair => {
           const isFile = pair.type === 'file';
