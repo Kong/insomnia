@@ -420,7 +420,7 @@ export interface RunnerContextForRequest {
   requestId: string;
   requestName: string;
   requestUrl: string;
-  responseReason: string;
+  statusCode: number;
   duration: number; // millisecond
   size: number;
   results: RequestTestResult[];
