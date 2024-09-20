@@ -1,7 +1,7 @@
 import type { RequestContext } from 'insomnia-sdk';
 import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
+import { Button, Checkbox, DropIndicator, type DroppableCollectionReorderEvent, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { type ActionFunction, redirect, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
 import { useListData } from 'react-stately';
@@ -199,11 +199,35 @@ export const Runner: FC<{}> = () => {
         url: item.doc.url,
       };
     });
+  const [allKeys, setAllKeys] = useLocalStorage<string[]>(localStorageKey + 'allKeys', { defaultValue: requestRows.map(item => item.id) });
+  const orderedRows = allKeys
+    .filter(key => requestRows.find(item => item.id === key))
+    .map(key => {
+      const thing = requestRows.find(item => item.id === key);
+      invariant(thing, 'key should exist');
+      return thing;
+    });
   const reqList = useListData({
-    initialItems: requestRows,
+    initialItems: orderedRows,
   });
-  const allKeys = reqList.items.map(item => item.id);
-
+  const moveBefore = (event: DroppableCollectionReorderEvent) => {
+    const items = [...allKeys];
+    for (const key of event.keys) {
+      const targetItemIndex = items.findIndex(item => item === key);
+      const updatedItems = items.splice(targetItemIndex, 1);
+      items.splice(targetItemIndex - 1, 0, updatedItems[0]);
+    }
+    return items;
+  };
+  const moveAfter = (event: DroppableCollectionReorderEvent) => {
+    const items = [...allKeys];
+    for (const key of event.keys) {
+      const targetItemIndex = items.findIndex(item => item === key);
+      const updatedItems = items.splice(targetItemIndex, 1);
+      items.splice(targetItemIndex + 1, 0, updatedItems[0]);
+    }
+    return items;
+  };
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
     getItems: keys => {
       return [...keys].map(key => {
@@ -217,8 +241,10 @@ export const Runner: FC<{}> = () => {
     onReorder: event => {
       if (event.target.dropPosition === 'before') {
         reqList.moveBefore(event.target.key, event.keys);
+        setAllKeys(moveBefore(event));
       } else if (event.target.dropPosition === 'after') {
         reqList.moveAfter(event.target.key, event.keys);
+        setAllKeys(moveAfter(event));
       }
     },
     renderDragPreview(items) {
@@ -256,8 +282,8 @@ export const Runner: FC<{}> = () => {
     window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount } });
 
     const selected = new Set(reqList.selectedKeys);
-    const requests = Array.from(reqList.items)
-      .filter(item => selected.has(item.id));
+    const requests = allKeys
+      .filter(id => selected.has(id));
     // convert uploadData to environment data
     const userUploadEnvs = uploadData.map(data => {
       const orderedJson = porderedJSON.parse<UploadDataType>(
@@ -293,12 +319,12 @@ export const Runner: FC<{}> = () => {
     navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}`);
   };
   const onToggleSelection = () => {
-    if (Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length) {
+    if (Array.from(reqList.selectedKeys).length === allKeys.length) {
       // unselect all
       reqList.setSelectedKeys(new Set([]));
     } else {
       // select all
-      reqList.setSelectedKeys(new Set(reqList.items.map(item => item.id)));
+      reqList.setSelectedKeys(new Set(allKeys));
     }
   };
 

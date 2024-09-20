@@ -1,5 +1,5 @@
 import React, { type FC, Fragment, useCallback } from 'react';
-import { Button, DropIndicator, ListBox, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, ToggleButton, Toolbar, useDragAndDrop } from 'react-aria-components';
+import { Button, DropIndicator, type DroppableCollectionReorderEvent, ListBox, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, ToggleButton, Toolbar, useDragAndDrop } from 'react-aria-components';
 import { useListData } from 'react-stately';
 
 import { describeByteSize, generateId } from '../../../common/misc';
@@ -115,6 +115,24 @@ export const KeyValueEditor: FC<Props> = ({
     onChange([]);
   }, [onChange, pairsList]);
 
+  const moveBefore = (event: DroppableCollectionReorderEvent) => {
+    const items = [...pairsList.items];
+    for (const key of event.keys) {
+      const targetItemIndex = items.findIndex(item => item.id === key);
+      const updatedItems = items.splice(targetItemIndex, 1);
+      items.splice(targetItemIndex - 1, 0, updatedItems[0]);
+    }
+    return items;
+  };
+  const moveAfter = (event: DroppableCollectionReorderEvent) => {
+    const items = [...pairsList.items];
+    for (const key of event.keys) {
+      const targetItemIndex = items.findIndex(item => item.id === key);
+      const updatedItems = items.splice(targetItemIndex, 1);
+      items.splice(targetItemIndex + 1, 0, updatedItems[0]);
+    }
+    return items;
+  };
   const { dragAndDropHooks } = useDragAndDrop({
     getItems: keys =>
       [...keys].map(key => {
@@ -124,27 +142,26 @@ export const KeyValueEditor: FC<Props> = ({
     onReorder(e) {
       if (e.target.dropPosition === 'before') {
         pairsList.moveBefore(e.target.key, e.keys);
+        // const items = [...pairsList.items];
+        // for (const key of e.keys) {
+        //   const targetItemIndex = items.findIndex(item => item.id === key);
+        //   const updatedItems = items.splice(targetItemIndex, 1);
+        //   items.splice(targetItemIndex - 1, 0, updatedItems[0]);
+        // }
 
-        const items = [...pairsList.items];
-        for (const key of e.keys) {
-          const targetItemIndex = items.findIndex(item => item.id === key);
-          const updatedItems = items.splice(targetItemIndex, 1);
-          items.splice(targetItemIndex - 1, 0, updatedItems[0]);
-        }
-
-        onChange(items);
+        onChange(moveBefore(e));
       } else if (e.target.dropPosition === 'after') {
         pairsList.moveAfter(e.target.key, e.keys);
 
-        const items = [...pairsList.items];
+        // const items = [...pairsList.items];
 
-        for (const key of e.keys) {
-          const targetItemIndex = items.findIndex(item => item.id === key);
-          const updatedItems = items.splice(targetItemIndex, 1);
-          items.splice(targetItemIndex + 1, 0, updatedItems[0]);
-        }
+        // for (const key of e.keys) {
+        //   const targetItemIndex = items.findIndex(item => item.id === key);
+        //   const updatedItems = items.splice(targetItemIndex, 1);
+        //   items.splice(targetItemIndex + 1, 0, updatedItems[0]);
+        // }
 
-        onChange(items);
+        onChange(moveAfter(e));
       }
     },
     renderDragPreview(items) {
