@@ -78,15 +78,12 @@ export const KeyValueEditor: FC<Props> = ({
   }, [onChange]);
 
   const repositionInArray = (allItems: Pair[], itemsToMove: string[], targetIndex: number) => {
-    let items = allItems;
-    for (const key of itemsToMove) {
-      const removed = items.filter(item => item.id !== key);
-      const itemToMove = items.find(item => item.id === key);
-      if (itemToMove) {
-        items = [...removed.slice(0, targetIndex), itemToMove, ...removed.slice(targetIndex)];
-      }
+    const removed = allItems.filter(item => item.id !== itemsToMove[0]);
+    const itemToMove = allItems.find(item => item.id === itemsToMove[0]);
+    if (itemToMove) {
+      return [...removed.slice(0, targetIndex), itemToMove, ...removed.slice(targetIndex)];
     }
-    return items;
+    return allItems;
   };
   const { dragAndDropHooks } = useDragAndDrop({
     getItems: keys =>
