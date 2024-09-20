@@ -65,7 +65,6 @@ const InviteModal: FC<{
 
   return (
     <ModalOverlay
-      isDismissable
       isOpen={true}
       onOpenChange={setIsOpen}
       className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-[--color-bg] theme--transparent-overlay"
@@ -141,6 +140,7 @@ const InviteModal: FC<{
                     const isAcceptedMember = member.itemType === ITEM_TYPE.ACCEPTED_MEMBER;
                     const isPendingMember = member.itemType === ITEM_TYPE.PENDING_MEMBER;
                     const textValue = isAcceptedMember ? member.name : member.invitee.email;
+                    const isCurrentUser = isAcceptedMember && currentUserAccountId === member.user_id;
                     return ((
                       <ListBoxItem
                         id={isAcceptedMember ? member.user_id : member.id}
@@ -150,7 +150,7 @@ const InviteModal: FC<{
                         <div className="grow truncate pl-[32px] relative">
                           <img src={(isAcceptedMember && member.picture) ? member.picture : defaultAvatarImg} alt="member image" className="w-[24px] h-[24px] rounded-full absolute left-0 bottom-0 top-0 m-auto" />
                           {textValue}
-                          {isAcceptedMember && currentUserAccountId === member.user_id && ' (You)'}
+                          {isCurrentUser && ' (You)'}
                           {isPendingMember && ' (Invite sent)'}
                         </div>
                         <div className='w-[88px] shrink-0'>
@@ -176,7 +176,11 @@ const InviteModal: FC<{
                           <Button
                             aria-label="Delete member button"
                             className='w-[64px] shrink-0 text-right'
-                            isDisabled={permissionRef.current['delete:membership'] && member.role_name === 'owner'}
+                            isDisabled={
+                              !permissionRef.current['delete:membership']
+                              || member.role_name === 'owner'
+                              || isCurrentUser
+                            }
                             onPress={() => {
                               deleteMember(organizationId, member.user_id).then(() => {
                                 queryPageFunctionsRef.current.reloadCurrentPage(organizationId);
@@ -250,24 +254,41 @@ export const InviteModalContainer: FC<{
   const [currentOrgInfo, setCurrentOrgInfo] = useState<OrganizationAuth0 | null>(null);
 
   const isCurrentUserOrganizationOwner = currentUserAccountId === currentOrgInfo?.metadata.ownerAccountId;
+
+  function getBaseInfo(organizationId: string) {
+    return Promise.all([
+      getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
+      getOrganizationFeatures(organizationId).then(setOrgFeatures),
+      getOrganizationUserPermissions(organizationId).then(permissions => {
+        permissionRef.current = permissions;
+      }),
+      getAccountId().then(setCurrentUserAccountId),
+      getOrganization(organizationId).then(setCurrentOrgInfo),
+    ]);
+  }
+
+  // get info every time organizationId changes
   useEffect(() => {
     (async () => {
       if (organizationId) {
         setLoadingOrgInfo(true);
         await Promise.all([
           getAllRoles().then(setAllRoles),
-          getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
-          getOrganizationFeatures(organizationId).then(setOrgFeatures),
-          getOrganizationUserPermissions(organizationId).then(permissions => {
-            permissionRef.current = permissions;
-          }),
-          getAccountId().then(setCurrentUserAccountId),
-          getOrganization(organizationId).then(setCurrentOrgInfo),
+          getBaseInfo(organizationId),
         ]);
         setLoadingOrgInfo(false);
       }
     })();
   }, [organizationId]);
+
+  // get info every time modal is opened
+  useEffect(() => {
+    if (organizationId && isOpen) {
+      getBaseInfo(organizationId);
+    }
+  }, [organizationId, isOpen]);
+
+  // track event when modal is opened
   useEffect(() => {
     if (isOpen) {
       window.main.trackSegmentEvent({ event: SegmentEvent.inviteTrigger });
@@ -275,6 +296,7 @@ export const InviteModalContainer: FC<{
   }, [
     isOpen,
   ]);
+
   if (loadingOrgInfo || !organizationId || !isOpen) {
     return null;
   } else {
