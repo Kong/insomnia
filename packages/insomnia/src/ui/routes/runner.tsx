@@ -93,7 +93,7 @@ export interface RequestItemInfo {
   ancestorNames: string[];
   method: string;
   url: string;
-  selected?: boolean;
+  selected: boolean;
 }
 
 interface RunnerSettings {
@@ -228,6 +228,10 @@ export const Runner: FC<{}> = () => {
     initialSelectedKeys,
   });
   const reqList = new RequestListDelegate(reqListRaw);
+  setTempRunnerSettings({ // refresh
+    ...getTempRunnerSettings(),
+    requests: latestRequestItems,
+  });
 
   const allKeys = reqList.items.map(item => item.id);
 
@@ -1035,6 +1039,7 @@ function getMergedRequestList(collection: Collection, savedRequestItems: Request
           ancestorNames,
           method: requestDoc.method,
           url: item.doc.url,
+          selected: false,
         },
       );
     });
@@ -1063,7 +1068,7 @@ function getMergedRequestList(collection: Collection, savedRequestItems: Request
   // handle updated items
   const updatedRequestItems = savedRequestItemsWithAdded.map(item => {
     const latestItem = latestRequestItems.get(item.id);
-    return latestItem ? latestItem : item;
+    return latestItem ? { ...latestItem, selected: item.selected } : item; // the select status is kept
   });
 
   return {
