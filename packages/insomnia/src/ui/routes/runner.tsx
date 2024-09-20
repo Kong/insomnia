@@ -92,6 +92,17 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
   return timelines;
 }
 
+export const repositionInArray = (allItems: string[], itemsToMove: string[], target: string, after: boolean) => {
+  let items = allItems;
+  for (const key of itemsToMove) {
+    const removed = items.filter(item => item !== key);
+    const targetItemIndex = items.findIndex(item => item === target);
+    const afterIndex = after ? targetItemIndex + 1 : targetItemIndex - 1;
+    items = [...removed.slice(0, afterIndex), key.toString(), ...removed.slice(afterIndex)];
+  }
+  return items;
+};
+
 interface RunnerAdvancedSettings {
   bail: boolean;
 }
@@ -210,24 +221,7 @@ export const Runner: FC<{}> = () => {
   const reqList = useListData({
     initialItems: orderedRows,
   });
-  const moveBefore = (event: DroppableCollectionReorderEvent) => {
-    const items = [...allKeys];
-    for (const key of event.keys) {
-      const targetItemIndex = items.findIndex(item => item === key);
-      const updatedItems = items.splice(targetItemIndex, 1);
-      items.splice(targetItemIndex - 1, 0, updatedItems[0]);
-    }
-    return items;
-  };
-  const moveAfter = (event: DroppableCollectionReorderEvent) => {
-    const items = [...allKeys];
-    for (const key of event.keys) {
-      const targetItemIndex = items.findIndex(item => item === key);
-      const updatedItems = items.splice(targetItemIndex, 1);
-      items.splice(targetItemIndex + 1, 0, updatedItems[0]);
-    }
-    return items;
-  };
+
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
     getItems: keys => {
       return [...keys].map(key => {
@@ -241,10 +235,10 @@ export const Runner: FC<{}> = () => {
     onReorder: event => {
       if (event.target.dropPosition === 'before') {
         reqList.moveBefore(event.target.key, event.keys);
-        setAllKeys(moveBefore(event));
+        setAllKeys(repositionInArray(allKeys, [...event.keys].map(key => key.toString()), event.target.key.toString(), false));
       } else if (event.target.dropPosition === 'after') {
         reqList.moveAfter(event.target.key, event.keys);
-        setAllKeys(moveAfter(event));
+        setAllKeys(repositionInArray(allKeys, [...event.keys].map(key => key.toString()), event.target.key.toString(), true));
       }
     },
     renderDragPreview(items) {

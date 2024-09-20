@@ -1,5 +1,5 @@
 import React, { type FC, Fragment, useCallback } from 'react';
-import { Button, DropIndicator, type DroppableCollectionReorderEvent, ListBox, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, ToggleButton, Toolbar, useDragAndDrop } from 'react-aria-components';
+import { Button, DropIndicator, ListBox, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, ToggleButton, Toolbar, useDragAndDrop } from 'react-aria-components';
 import { useListData } from 'react-stately';
 
 import { describeByteSize, generateId } from '../../../common/misc';
@@ -31,6 +31,20 @@ function createEmptyPair() {
     disabled: false,
   };
 }
+export const repositionInArray = (allItems: Pair[], itemsToMove: string[], target: string, after: boolean) => {
+  let items = allItems;
+  for (const key of itemsToMove) {
+    const removed = items.filter(item => item.id !== key);
+    const targetItemIndex = items.findIndex(item => item.id === target);
+    const afterIndex = after ? targetItemIndex + 1 : targetItemIndex - 1;
+    const itemToMove = items.find(item => item.id === key);
+    if (!itemToMove) {
+      continue;
+    }
+    items = [...removed.slice(0, afterIndex), itemToMove, ...removed.slice(afterIndex)];
+  }
+  return items;
+};
 
 type AutocompleteHandler = (pair: Pair) => string[] | PromiseLike<string[]>;
 
@@ -115,53 +129,21 @@ export const KeyValueEditor: FC<Props> = ({
     onChange([]);
   }, [onChange, pairsList]);
 
-  const moveBefore = (event: DroppableCollectionReorderEvent) => {
-    const items = [...pairsList.items];
-    for (const key of event.keys) {
-      const targetItemIndex = items.findIndex(item => item.id === key);
-      const updatedItems = items.splice(targetItemIndex, 1);
-      items.splice(targetItemIndex - 1, 0, updatedItems[0]);
-    }
-    return items;
-  };
-  const moveAfter = (event: DroppableCollectionReorderEvent) => {
-    const items = [...pairsList.items];
-    for (const key of event.keys) {
-      const targetItemIndex = items.findIndex(item => item.id === key);
-      const updatedItems = items.splice(targetItemIndex, 1);
-      items.splice(targetItemIndex + 1, 0, updatedItems[0]);
-    }
-    return items;
-  };
   const { dragAndDropHooks } = useDragAndDrop({
     getItems: keys =>
       [...keys].map(key => {
         const pair = pairsList.getItem(key);
         return { 'text/plain': `${pair.id}` };
       }),
-    onReorder(e) {
-      if (e.target.dropPosition === 'before') {
-        pairsList.moveBefore(e.target.key, e.keys);
-        // const items = [...pairsList.items];
-        // for (const key of e.keys) {
-        //   const targetItemIndex = items.findIndex(item => item.id === key);
-        //   const updatedItems = items.splice(targetItemIndex, 1);
-        //   items.splice(targetItemIndex - 1, 0, updatedItems[0]);
-        // }
+    onReorder(event) {
+      if (event.target.dropPosition === 'before') {
+        pairsList.moveBefore(event.target.key, event.keys);
 
-        onChange(moveBefore(e));
-      } else if (e.target.dropPosition === 'after') {
-        pairsList.moveAfter(e.target.key, e.keys);
+        onChange(repositionInArray(pairsList.items, [...event.keys].map(key => key.toString()), event.target.key.toString(), false));
+      } else if (event.target.dropPosition === 'after') {
+        pairsList.moveAfter(event.target.key, event.keys);
 
-        // const items = [...pairsList.items];
-
-        // for (const key of e.keys) {
-        //   const targetItemIndex = items.findIndex(item => item.id === key);
-        //   const updatedItems = items.splice(targetItemIndex, 1);
-        //   items.splice(targetItemIndex + 1, 0, updatedItems[0]);
-        // }
-
-        onChange(moveAfter(e));
+        onChange(repositionInArray(pairsList.items, [...event.keys].map(key => key.toString()), event.target.key.toString(), true));
       }
     },
     renderDragPreview(items) {
