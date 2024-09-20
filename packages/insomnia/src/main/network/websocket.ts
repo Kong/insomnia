@@ -82,10 +82,10 @@ const timelineFileStreams = new Map<string, fs.WriteStream>();
 
 // Extra handler for graphql websocket. Refer: https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md
 const handleGraphQLWsMessage = (data: MessageEvent['data'], request: Request) => {
-  // send subscribe operation to graphql websocket server
   const graphqlServerData = parseMessage(data);
   const graphqlServerDataType = graphqlServerData.type;
   const requestId = request._id;
+  // send subscribe operation to graphql websocket server when ack is received
   if (graphqlServerDataType === MessageType.ConnectionAck) {
     parseGraphQLReqeustBody(request as RenderedRequest);
     let subscriptionPayload = {};
@@ -102,6 +102,7 @@ const handleGraphQLWsMessage = (data: MessageEvent['data'], request: Request) =>
     });
     sendWebSocketEvent({ payload, requestId });
   } else if (graphqlServerDataType === MessageType.Error || graphqlServerDataType === MessageType.Complete) {
+    // close connection if server responsed with error or complete
     closeWebSocketConnection({ requestId });
   }
 };

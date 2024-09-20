@@ -4,7 +4,7 @@ import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import type { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import type { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
-import { type DefinitionNode, type DocumentNode, getOperationAST, GraphQLNonNull, GraphQLSchema, Kind, type NonNullTypeNode, type OperationDefinitionNode, type OperationTypeNode, parse, typeFromAST } from 'graphql';
+import { type DefinitionNode, type DocumentNode, getOperationAST, GraphQLNonNull, GraphQLSchema, Kind, type NonNullTypeNode, type OperationDefinitionNode, OperationTypeNode, parse, typeFromAST } from 'graphql';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import type { Maybe } from 'graphql-language-service';
 import React, { type FC, useEffect, useRef, useState } from 'react';
@@ -241,10 +241,6 @@ export const GraphQLEditor: FC<Props> = ({
 
   const [automaticFetch, setAutoFetch] = useLocalStorage<boolean>(
     'graphql.automaticFetch',
-    true
-  );
-  const [useWebsocketForSubscription, setAutoWebsocket] = useLocalStorage<boolean>(
-    'graphql.useWebsocketForSubscription',
     true
   );
   const [includeInputValueDeprecation, setIncludeInputValueDeprecation] = useState(false);
@@ -574,21 +570,6 @@ export const GraphQLEditor: FC<Props> = ({
                 }
                 onClick={() => {
                   setAutoFetch(!automaticFetch);
-                }}
-              />
-            </DropdownItem>
-            <DropdownItem aria-label='Use Websocket for subscription'>
-              <ItemContent
-                stayOpenAfterClick
-                icon={`toggle-${useWebsocketForSubscription ? 'on' : 'off'}`}
-                label={
-                  <>
-                    <span style={{ marginRight: '10px' }}>Use Websocket For Subscription</span>
-                    <HelpTooltip>Automatically use websocket for subscription operation</HelpTooltip>
-                  </>
-                }
-                onClick={() => {
-                  setAutoWebsocket(!useWebsocketForSubscription);
                 }}
               />
             </DropdownItem>

@@ -1311,6 +1311,7 @@ const CollectionGridListItem = ({
           }}
         />
         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+        {isGraphqlSubscriptionRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
         {isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
         {item.pinned && (
