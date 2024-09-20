@@ -34,7 +34,7 @@ import { getTimeAndUnit } from '../components/tags/time-tag';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
 import useLocalStorage from '../hooks/use-local-storage';
 import type { OrganizationLoaderData } from './organization';
-import { type CollectionRunnerContext, type RunnerContextForRequest, type RunnerSource, sendActionImp } from './request';
+import { type CollectionRunnerContext, type RunnerSource, sendActionImp } from './request';
 import { useRootLoaderData } from './root';
 import type { Child, WorkspaceLoaderData } from './workspace';
 
