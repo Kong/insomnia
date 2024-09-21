@@ -1,10 +1,9 @@
 import type { RequestContext } from 'insomnia-sdk';
 import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Checkbox, DropIndicator, type DroppableCollectionReorderEvent, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
+import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { type ActionFunction, redirect, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
-import { useListData } from 'react-stately';
 import { useInterval } from 'react-use';
 
 import { Tooltip } from '../../../src/ui/components/tooltip';
@@ -92,13 +91,11 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
   return timelines;
 }
 
-export const repositionInArray = (allItems: string[], itemsToMove: string[], target: string, after: boolean) => {
+export const repositionInArray = (allItems: string[], itemsToMove: string[], targetIndex: number) => {
   let items = allItems;
   for (const key of itemsToMove) {
     const removed = items.filter(item => item !== key);
-    const targetItemIndex = items.findIndex(item => item === target);
-    const afterIndex = after ? targetItemIndex + 1 : targetItemIndex - 1;
-    items = [...removed.slice(0, afterIndex), key.toString(), ...removed.slice(afterIndex)];
+    items = [...removed.slice(0, targetIndex), key.toString(), ...removed.slice(targetIndex)];
   }
   return items;
 };
@@ -211,16 +208,15 @@ export const Runner: FC<{}> = () => {
       };
     });
   const [allKeys, setAllKeys] = useLocalStorage<string[]>(localStorageKey + 'allKeys', { defaultValue: requestRows.map(item => item.id) });
-  const orderedRows = allKeys
+  const reqListItems = allKeys
     .filter(key => requestRows.find(item => item.id === key))
     .map(key => {
       const thing = requestRows.find(item => item.id === key);
       invariant(thing, 'key should exist');
       return thing;
     });
-  const reqList = useListData({
-    initialItems: orderedRows,
-  });
+
+  const [selectedKeys, setSelectedKeys] = useState<Set<Key>>(new Set([]));
 
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
     getItems: keys => {
@@ -233,13 +229,7 @@ export const Runner: FC<{}> = () => {
       });
     },
     onReorder: event => {
-      if (event.target.dropPosition === 'before') {
-        reqList.moveBefore(event.target.key, event.keys);
-        setAllKeys(repositionInArray(allKeys, [...event.keys].map(key => key.toString()), event.target.key.toString(), false));
-      } else if (event.target.dropPosition === 'after') {
-        reqList.moveAfter(event.target.key, event.keys);
-        setAllKeys(repositionInArray(allKeys, [...event.keys].map(key => key.toString()), event.target.key.toString(), true));
-      }
+      setAllKeys(repositionInArray(allKeys, [...event.keys].map(key => key.toString()), allKeys.findIndex(item => item === event.target.key.toString())));
     },
     renderDragPreview(items) {
       return (
@@ -250,7 +240,7 @@ export const Runner: FC<{}> = () => {
     },
     renderDropIndicator(target) {
       if (target.type === 'item') {
-        const item = reqList.items.find(item => item.id === target.key);
+        const item = reqListItems.find(item => item.id === target.key);
         if (item) {
           return (
             <DropIndicator
@@ -275,9 +265,8 @@ export const Runner: FC<{}> = () => {
 
     window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount } });
 
-    const selected = new Set(reqList.selectedKeys);
     const requests = allKeys
-      .filter(id => selected.has(id));
+      .filter(id => selectedKeys.has(id));
     // convert uploadData to environment data
     const userUploadEnvs = uploadData.map(data => {
       const orderedJson = porderedJSON.parse<UploadDataType>(
@@ -313,12 +302,12 @@ export const Runner: FC<{}> = () => {
     navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}`);
   };
   const onToggleSelection = () => {
-    if (Array.from(reqList.selectedKeys).length === allKeys.length) {
+    if (selectedKeys.size === allKeys.length) {
       // unselect all
-      reqList.setSelectedKeys(new Set([]));
+      setSelectedKeys(new Set([]));
     } else {
       // select all
-      reqList.setSelectedKeys(new Set(allKeys));
+      setSelectedKeys(new Set(allKeys));
     }
   };
 
@@ -431,7 +420,7 @@ export const Runner: FC<{}> = () => {
   const disabledKeys = useMemo(() => {
     return isRunning ? allKeys : [];
   }, [isRunning, allKeys]);
-  const isDisabled = isRunning || Array.from(reqList.selectedKeys).length === 0;
+  const isDisabled = isRunning || selectedKeys.size === 0;
   return (
     <PanelGroup autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel>
@@ -554,9 +543,9 @@ export const Runner: FC<{}> = () => {
                     <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
                       <span className="mr-2">
                         {
-                          Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length ?
+                          selectedKeys.size === Array.from(reqListItems).length ?
                             <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-check fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Unselect All</span></span> :
-                            Array.from(reqList.selectedKeys).length === 0 ?
+                            selectedKeys.size === 0 ?
                               <span onClick={onToggleSelection}><i className="fa fa-square fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span> :
                               <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-minus fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span>
                         }
@@ -565,10 +554,15 @@ export const Runner: FC<{}> = () => {
                     <PaneBody placeholder className='p-0'>
                       <GridList
                         id="runner-request-list"
-                        items={reqList.items}
+                        items={reqListItems}
                         selectionMode="multiple"
-                        selectedKeys={reqList.selectedKeys}
-                        onSelectionChange={reqList.setSelectedKeys}
+                        selectedKeys={selectedKeys}
+                        onSelectionChange={keys => {
+                          if (keys === 'all') {
+                            setSelectedKeys(new Set(allKeys));
+                          }
+                          setSelectedKeys(new Set(keys));
+                        }}
                         defaultSelectedKeys={allKeys}
                         aria-label="Request Collection"
                         dragAndDropHooks={requestsDnD}
@@ -687,8 +681,8 @@ export const Runner: FC<{}> = () => {
                 {showCLIModal && (
                   <CLIPreviewModal
                     onClose={() => setShowCLIModal(false)}
-                    requestIds={Array.from(reqList.selectedKeys) as string[]}
-                    allSelected={Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length}
+                    requestIds={Array.from(selectedKeys) as string[]}
+                    allSelected={selectedKeys.size === Array.from(reqListItems).length}
                     iterationCount={iterationCount}
                     delay={delay}
                     filePath={file?.path || ''}
