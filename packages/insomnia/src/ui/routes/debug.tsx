@@ -936,7 +936,7 @@ export const Debug: FC = () => {
 
             <GridList
               id="sidebar-pinned-request-gridlist"
-              className="overflow-y-auto border-b border-t data-[empty]:py-0 py-[--padding-sm] data-[empty]:border-none border-solid border-[--hl-sm]"
+              className="overflow-y-auto border-b border-t data-[empty]:py-0 py-[--padding-sm] data-[empty]:border-none border-solid border-[--hl-sm] max-h-[50%]"
               items={collection.filter(item => item.pinned)}
               aria-label="Pinned Requests"
               disallowEmptySelection
