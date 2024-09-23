@@ -1,6 +1,5 @@
 import React, { type FC, Fragment, useCallback } from 'react';
 import { Button, DropIndicator, ListBox, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, ToggleButton, Toolbar, useDragAndDrop } from 'react-aria-components';
-import { useListData } from 'react-stately';
 
 import { describeByteSize, generateId } from '../../../common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
@@ -64,96 +63,41 @@ export const KeyValueEditor: FC<Props> = ({
 }) => {
   const [showDescription, setShowDescription] = React.useState(false);
   const { enabled: nunjucksEnabled } = useNunjucksEnabled();
-  const pairsList = useListData({
-    initialItems: pairs.length > 0 ? pairs.map(pair => {
-      const pairId = pair.id || generateId('pair');
-      return { ...pair, id: pairId };
-    }) : [createEmptyPair()],
-    getKey: item => item.id,
-  });
+  let pairsListItems = pairs.length > 0 ? pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) : [createEmptyPair()];
+  const initialReadOnlyItems = readOnlyPairs?.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) || [];
 
-  const items = pairsList.items.length > 0 ? pairsList.items : [];
-
-  const readOnlyPairsList = useListData({
-    initialItems: readOnlyPairs?.map(pair => {
-      const pairId = pair.id || generateId('pair');
-      return { ...pair, id: pairId };
-    }) || [],
-    getKey: item => item.id,
-  });
-
-  const upsertPair = useCallback(function upsertPair(pair: typeof pairsList.items[0]) {
-    if (pairsList.getItem(pair.id)) {
-      pairsList.update(pair.id, pair);
-      const items = pairsList.items.map(item => (item.id === pair.id ? pair : item));
-      onChange(items);
+  const upsertPair = useCallback(function upsertPair(pairsListItems: Pair[], pair: Pair) {
+    if (pairsListItems.find(item => item.id === pair.id)) {
+      pairsListItems = pairsListItems.map(item => (item.id === pair.id ? pair : item));
+      onChange(pairsListItems);
     } else {
       const id = pair.id === 'pair-empty' ? generateId('pair') : pair.id;
-      pairsList.append({ ...pair, id });
-      const items = pairsList.items.concat(pair);
-      onChange(items);
+      pairsListItems = pairsListItems.concat({ ...pair, id });
+      onChange(pairsListItems);
     }
-  }, [onChange, pairsList]);
+  }, [onChange]);
 
-  const removePair = useCallback(function removePair(id: string) {
-    if (pairsList.getItem(id)) {
-      pairsList.remove(id);
-      const items = pairsList.items.filter(pair => pair.id !== id);
-
-      if (items.length === 0) {
-        pairsList.append(createEmptyPair());
-      }
-
-      onChange(items);
+  const repositionInArray = (allItems: Pair[], itemsToMove: string[], targetIndex: number) => {
+    const removed = allItems.filter(item => item.id !== itemsToMove[0]);
+    const itemToMove = allItems.find(item => item.id === itemsToMove[0]);
+    if (itemToMove) {
+      return [...removed.slice(0, targetIndex), itemToMove, ...removed.slice(targetIndex)];
     }
-  }, [onChange, pairsList]);
-
-  const removeAllPairs = useCallback(function removeAllPairs() {
-    pairsList.setSelectedKeys(new Set(pairsList.items.map(item => item.id)));
-    pairsList.removeSelectedItems();
-    pairsList.append(createEmptyPair());
-    onChange([]);
-  }, [onChange, pairsList]);
-
+    return allItems;
+  };
   const { dragAndDropHooks } = useDragAndDrop({
     getItems: keys =>
-      [...keys].map(key => {
-        const pair = pairsList.getItem(key);
-        return { 'text/plain': `${pair.id}` };
-      }),
+      [...keys].map(key => ({ 'text/plain': `${pairsListItems.find(item => item.id === key.toString())?.id}` })),
     onReorder(e) {
-      if (e.target.dropPosition === 'before') {
-        pairsList.moveBefore(e.target.key, e.keys);
-
-        const items = [...pairsList.items];
-        for (const key of e.keys) {
-          const targetItemIndex = items.findIndex(item => item.id === key);
-          const updatedItems = items.splice(targetItemIndex, 1);
-          items.splice(targetItemIndex - 1, 0, updatedItems[0]);
-        }
-
-        onChange(items);
-      } else if (e.target.dropPosition === 'after') {
-        pairsList.moveAfter(e.target.key, e.keys);
-
-        const items = [...pairsList.items];
-
-        for (const key of e.keys) {
-          const targetItemIndex = items.findIndex(item => item.id === key);
-          const updatedItems = items.splice(targetItemIndex, 1);
-          items.splice(targetItemIndex + 1, 0, updatedItems[0]);
-        }
-
-        onChange(items);
-      }
+      onChange(repositionInArray(pairsListItems, [...e.keys].map(key => key.toString()), pairsListItems.findIndex(item => item.id === e.target.key.toString())));
     },
     renderDragPreview(items) {
-      const pair = pairsList.getItem(items[0]['text/plain']);
+      const pair = pairsListItems.find(item => item.id === items[0]['text/plain']) || createEmptyPair();
 
       const element = document.querySelector(`[data-key="${pair.id}"]`);
 
-      const isFile = pair.type === 'file';
-      const isMultiline = pair.type === 'text' && pair.multiline;
+      const isFile = 'type' in pair && pair.type === 'file';
+      const isMultiline = 'type' in pair && pair.type === 'text' && pair.multiline;
       const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
 
       let valueEditor = (
@@ -246,14 +190,17 @@ export const KeyValueEditor: FC<Props> = ({
           className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
           onPress={() => {
             const id = generateId('pair');
-            upsertPair({ id, name: '', value: '', description: '', disabled: false });
+            upsertPair(pairsListItems, { id, name: '', value: '', description: '', disabled: false });
           }}
         >
           <Icon icon="plus" /> Add
         </Button>
         <PromptButton
-          disabled={pairsList.items.length === 0}
-          onClick={() => removeAllPairs()}
+          disabled={pairsListItems.length === 0}
+          onClick={() => {
+            pairsListItems = [createEmptyPair()];
+            onChange([]);
+          }}
           className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
         >
           <Icon icon="trash-can" />
@@ -272,13 +219,13 @@ export const KeyValueEditor: FC<Props> = ({
           )}
         </ToggleButton>
       </Toolbar>
-      {readOnlyPairsList.items.length > 0 && (
+      {initialReadOnlyItems.length > 0 && (
         <ListBox
           aria-label='Key-value pairs readonly'
           selectionMode='none'
           dependencies={[showDescription, nunjucksEnabled]}
           className="flex pt-1 flex-col w-full overflow-y-auto flex-1 relative"
-          items={readOnlyPairsList.items}
+          items={initialReadOnlyItems}
         >
           {pair => {
             const isFile = pair.type === 'file';
@@ -361,8 +308,8 @@ export const KeyValueEditor: FC<Props> = ({
         // dependencies={[showDescription, nunjucksEnabled]}
         className="flex pt-1 flex-col w-full overflow-y-auto flex-1 relative"
         dragAndDropHooks={dragAndDropHooks}
-        dependencies={[upsertPair, removePair, showDescription, nunjucksEnabled]}
-        items={items}
+        dependencies={[upsertPair, showDescription, nunjucksEnabled]}
+        items={pairsListItems}
       >
         {pair => {
           const isFile = pair.type === 'file';
@@ -377,7 +324,7 @@ export const KeyValueEditor: FC<Props> = ({
               defaultValue={pair.value}
               readOnly={pair.disabled || isDisabled}
               getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
-              onChange={value => upsertPair({ ...pair, value })}
+              onChange={value => upsertPair(pairsListItems, { ...pair, value })}
             />
           );
 
@@ -389,7 +336,7 @@ export const KeyValueEditor: FC<Props> = ({
                 disabled={pair.disabled || isDisabled}
                 className="px-2 py-1 w-full fle flex-shrink-0 flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden"
                 path={pair.fileName || ''}
-                onChange={fileName => upsertPair({ ...pair, fileName })}
+                onChange={fileName => upsertPair(pairsListItems, { ...pair, fileName })}
               />
             );
           }
@@ -405,8 +352,8 @@ export const KeyValueEditor: FC<Props> = ({
                   defaultValue: pair.value,
                   enableRender: nunjucksEnabled,
                   mode: pair.multiline && typeof pair.multiline === 'string' ? pair.multiline : 'text/plain',
-                  onChange: (value: string) => upsertPair({ ...pair, value }),
-                  onModeChange: (mode: string) => upsertPair({ ...pair, multiline: mode }),
+                  onChange: (value: string) => upsertPair(pairsListItems, { ...pair, value }),
+                  onModeChange: (mode: string) => upsertPair(pairsListItems, { ...pair, multiline: mode }),
                 })}
               >
                 <i className="fa fa-pencil-square-o space-right" />
@@ -442,7 +389,7 @@ export const KeyValueEditor: FC<Props> = ({
                 readOnly={pair.disabled || isDisabled}
                 getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
                 onChange={name => {
-                  upsertPair({ ...pair, name });
+                  upsertPair(pairsListItems, { ...pair, name });
                 }}
               />
               {valueEditor}
@@ -453,7 +400,7 @@ export const KeyValueEditor: FC<Props> = ({
                   placeholder={descriptionPlaceholder || 'Description'}
                   defaultValue={pair.description || ''}
                   readOnly={pair.disabled || isDisabled}
-                  onChange={description => upsertPair({ ...pair, description })}
+                  onChange={description => upsertPair(pairsListItems, { ...pair, description })}
                 />
               )}
               <Toolbar className="flex items-center gap-1">
@@ -475,14 +422,14 @@ export const KeyValueEditor: FC<Props> = ({
                           id: 'text',
                           name: 'Text',
                           textValue: 'Text',
-                          onAction: () => upsertPair({ ...pair, type: 'text', multiline: false }),
+                          onAction: () => upsertPair(pairsListItems, { ...pair, type: 'text', multiline: false }),
                         },
                         ...allowMultiline ? [
                           {
                             id: 'multiline-text',
                             name: 'Multiline text',
                             textValue: 'Multiline text',
-                            onAction: () => upsertPair({ ...pair, type: 'text', multiline: true }),
+                            onAction: () => upsertPair(pairsListItems, { ...pair, type: 'text', multiline: true }),
                           },
                         ] : [],
                         ...allowFile ? [
@@ -490,7 +437,7 @@ export const KeyValueEditor: FC<Props> = ({
                             id: 'file',
                             name: 'File',
                             textValue: 'File',
-                            onAction: () => upsertPair({ ...pair, type: 'file' }),
+                            onAction: () => upsertPair(pairsListItems, { ...pair, type: 'file' }),
                           },
                         ] : [],
                       ]}
@@ -511,7 +458,7 @@ export const KeyValueEditor: FC<Props> = ({
                 </MenuTrigger>
                 <ToggleButton
                   className="flex items-center justify-center h-7 aspect-square rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                  onChange={isSelected => upsertPair({ ...pair, disabled: !isSelected })}
+                  onChange={isSelected => upsertPair(pairsListItems, { ...pair, disabled: !isSelected })}
                   isSelected={!pair.disabled}
                 >
                   <Icon icon={pair.disabled ? 'square' : 'check-square'} />
@@ -521,7 +468,15 @@ export const KeyValueEditor: FC<Props> = ({
                   className="flex items-center disabled:opacity-50 justify-center h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   confirmMessage=''
                   doneMessage=''
-                  onClick={() => removePair(pair.id)}
+                  onClick={() => {
+                    if (pairsListItems.find(item => item.id === pair.id)) {
+                      pairsListItems = pairsListItems.filter(pair => pair.id !== pair.id);
+                      if (pairsListItems.length === 0) {
+                        pairsListItems.push(createEmptyPair());
+                      }
+                      onChange(pairsListItems);
+                    }
+                  }}
                 >
                   <Icon icon="trash-can" />
                 </PromptButton>
