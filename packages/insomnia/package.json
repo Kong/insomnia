@@ -80,7 +80,9 @@
     "uuid": "^9.0.1",
     "yaml": "^1.6.0",
     "yaml-source-map": "^2.1.1",
-    "graphql-ws": "^5.16.0"
+    "graphql-ws": "^5.16.0",
+    "graphql": "^16.8.1"
+
   },
   "devDependencies": {
     "@develohpanda/fluent-builder": "^2.1.2",
@@ -151,7 +153,6 @@
     "esbuild-plugin-alias": "0.2.1",
     "esbuild-runner": "^2.2.2",
     "fuzzysort": "^1.2.1",
-    "graphql": "^16.8.1",
     "gsap": "^3.12.5",
     "highlight.js": "^11.9.0",
     "httplease-asap": "^0.6.0",
