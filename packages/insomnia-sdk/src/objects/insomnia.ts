@@ -166,7 +166,7 @@ export async function initInsomniaObject(
     const existClientCert = rawObj.clientCertificates != null && rawObj.clientCertificates.length > 0;
     const certificate = existClientCert && rawObj.clientCertificates[0] ?
         {
-            disabled: false,
+            disabled: rawObj.clientCertificates[0].disabled,
             name: 'The first certificate from Settings',
             matches: [rawObj.clientCertificates[0].host],
             key: { src: rawObj.clientCertificates[0].key || '' },
