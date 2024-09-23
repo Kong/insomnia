@@ -256,10 +256,10 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
   return (
     <Fragment>
       <MenuTrigger>
-        <div className="flex items-center h-[--line-height-sm] gap-4 px-[--padding-md] w-full aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+        <div className="flex items-center h-[--line-height-sm] w-full aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
           <Button
             aria-label="Insomnia Sync"
-            className="flex-1 flex items-center gap-2 truncate"
+            className="flex-1 flex h-full items-center gap-2 truncate px-[--padding-md]"
           >
             <Icon
               icon={syncError ? 'warning' : isSyncing ? 'refresh' : 'cloud'}
@@ -267,9 +267,9 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
             />
             <span className={`truncate ${syncError ? 'text-[--color-warning]' : ''}`}>{syncError ? 'Error syncing with Insomnia Cloud' : currentBranch}</span>
           </Button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center h-full">
             <TooltipTrigger>
-              <Button>
+              <Button className="h-full pl-2">
                 <Icon icon="cube" className={`transition-colors ${canCreateSnapshot ? 'text-[--color-warning]' : 'opacity-50'}`} />
               </Button>
               <Tooltip
@@ -281,7 +281,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
               </Tooltip>
             </TooltipTrigger>
             <TooltipTrigger>
-              <Button>
+              <Button className="h-full px-2">
                 <Icon icon="cloud-download" className={`transition-colors ${canPull ? '' : 'opacity-50'} ${pullFetcher.state !== 'idle' ? 'animate-pulse' : ''}`} />
               </Button>
               <Tooltip
@@ -294,7 +294,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
             </TooltipTrigger>
 
             <TooltipTrigger>
-              <Button>
+              <Button className="h-full pr-[--padding-md]">
                 <Icon icon="cloud-upload" className={`transition-colors ${canPush ? '' : 'opacity-50'} ${pushFetcher.state !== 'idle' ? 'animate-pulse' : ''}`} />
               </Button>
               <Tooltip
