@@ -695,6 +695,9 @@ export const updateGitRepoAction: ActionFunction = async ({
     gitRepositoryId,
   });
 
+  checkGitCanPush(workspaceId);
+  checkGitChanges(workspaceId);
+
   return null;
 };
 
@@ -723,6 +726,8 @@ export const resetGitRepoAction: ActionFunction = async ({ params }) => {
       cachedGitLastCommitTime: null,
       cachedGitRepositoryBranch: null,
       cachedGitLastAuthor: null,
+      hasUncommittedChanges: false,
+      hasUnpushedChanges: false,
     });
   }
 
@@ -790,6 +795,8 @@ export const commitToGitRepoAction: ActionFunction = async ({
         providerName,
       },
     });
+
+    checkGitCanPush(workspaceId);
   } catch (e) {
     const message =
       e instanceof Error ? e.message : 'Error while committing changes';
@@ -835,6 +842,8 @@ export const createNewGitBranchAction: ActionFunction = async ({
         providerName,
       },
     });
+    checkGitCanPush(workspaceId);
+    checkGitChanges(workspaceId);
   } catch (err) {
     if (err instanceof Errors.HttpError) {
       return {
@@ -911,6 +920,9 @@ export const checkoutGitBranchAction: ActionFunction = async ({
 
   await database.flushChanges(bufferId);
 
+  checkGitCanPush(workspaceId);
+  checkGitChanges(workspaceId);
+
   return {};
 };
 
@@ -962,6 +974,7 @@ export const mergeGitBranchAction: ActionFunction = async ({
         providerName,
       },
     });
+    checkGitCanPush(workspaceId);
   } catch (err) {
     if (err instanceof Errors.HttpError) {
       return {
@@ -1225,45 +1238,54 @@ async function getGitChanges(vcs: typeof GitVCS, workspace: Workspace) {
   // Create status items
   const items: Record<string, GitChange> = {};
   const log = (await vcs.log({ depth: 1 })) || [];
-
-  for (const gitPath of allPaths) {
-    const status = await vcs.status(gitPath);
-    if (status === 'unmodified') {
-      continue;
-    }
-    if (!statusNames[gitPath] && log.length > 0) {
-      const docYML = await vcs.readObjFromTree(log[0].commit.tree, gitPath);
-      if (docYML) {
-        try {
-          statusNames[gitPath] = YAML.parse(docYML.toString()).name || '';
-        } catch (err) {}
+  const batchSize = 10;
+  const processGitPaths = async (allPaths: string[]) => {
+    const promises = allPaths.map(async gitPath => {
+      const status = await vcs.status(gitPath);
+      if (status === 'unmodified') {
+        return;
       }
-    }
-    // We know that type is in the path; extract it. If the model is not found, set to Unknown.
-    let { type } = parseGitPath(gitPath);
+      if (!statusNames[gitPath] && log.length > 0) {
+        const docYML = await vcs.readObjFromTree(log[0].commit.tree, gitPath);
+        if (docYML) {
+          try {
+            statusNames[gitPath] = YAML.parse(docYML.toString()).name || '';
+          } catch (err) { }
+        }
+      }
+      // We know that type is in the path; extract it. If the model is not found, set to Unknown.
+      let { type } = parseGitPath(gitPath);
 
-    if (type && !models.types().includes(type as any)) {
-      type = 'Unknown';
-    }
-    const added = status.includes('added');
-    let staged = !added;
-    let editable = true;
-    // We want to enforce that workspace changes are always committed because otherwise
-    // others won't be able to clone from it. We also make fundamental migrations to the
-    // scope property which need to be committed.
-    // So here we're preventing people from un-staging the workspace.
-    if (type === models.workspace.type) {
-      editable = false;
-      staged = true;
-    }
-    items[gitPath] = {
-      type: type as any,
-      staged,
-      editable,
-      status,
-      added,
-      path: gitPath,
-    };
+      if (type && !models.types().includes(type as any)) {
+        type = 'Unknown';
+      }
+      const added = status.includes('added');
+      let staged = !added;
+      let editable = true;
+      // We want to enforce that workspace changes are always committed because otherwise
+      // others won't be able to clone from it. We also make fundamental migrations to the
+      // scope property which need to be committed.
+      // So here we're preventing people from un-staging the workspace.
+      if (type === models.workspace.type) {
+        editable = false;
+        staged = true;
+      }
+      items[gitPath] = {
+        type: type as any,
+        staged,
+        editable,
+        status,
+        added,
+        path: gitPath,
+      };
+    });
+
+    await Promise.all(promises);
+  };
+
+  for (let i = 0; i < allPaths.length; i += batchSize) {
+    const batch = allPaths.slice(i, i + batchSize);
+    await processGitPaths(batch);
   }
 
   return {
@@ -1347,6 +1369,10 @@ export const gitStatusAction: ActionFunction = async ({
   try {
     const { changes } = await getGitChanges(GitVCS, workspace);
     const localChanges = changes.filter(i => i.editable).length;
+    // update workspace meta with git sync data, use for show uncommit changes on collection card
+    models.workspaceMeta.updateByParentId(workspaceId, {
+      hasUncommittedChanges: changes.length > 0,
+    });
 
     return {
       status: {
@@ -1361,4 +1387,38 @@ export const gitStatusAction: ActionFunction = async ({
       },
     };
   }
+};
+
+export const checkGitChanges = async (workspaceId: string) => {
+  try {
+    const workspace = await models.workspace.getById(workspaceId);
+    invariant(workspace, 'Workspace not found');
+    const { changes } = await getGitChanges(GitVCS, workspace);
+    // update workspace meta with git sync data, use for show uncommit changes on collection card
+    models.workspaceMeta.updateByParentId(workspaceId, {
+      hasUncommittedChanges: changes.length > 0,
+    });
+  } catch (e) {
+  }
+};
+
+export const checkGitCanPush = async (workspaceId: string) => {
+  try {
+    let canPush = false;
+    const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+
+    const repoId = workspaceMeta?.gitRepositoryId;
+
+    if (repoId) {
+      const gitRepository = await models.gitRepository.getById(repoId);
+
+      invariant(gitRepository, 'Git Repository not found');
+      canPush = await GitVCS.canPush(gitRepository.credentials);
+    }
+
+    // update workspace meta with git sync data, use for show unpushed changes on collection card
+    models.workspaceMeta.updateByParentId(workspaceId, {
+      hasUnpushedChanges: canPush,
+    });
+  } catch (e) { }
 };
