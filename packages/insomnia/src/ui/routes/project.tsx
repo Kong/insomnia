@@ -846,38 +846,6 @@ const ProjectRoute: FC = () => {
       });
   };
 
-  const createNewProjectFetcher = useFetcher({
-    key: `${organizationId}-${projectId}-create-new-project`,
-  });
-
-  useEffect(() => {
-    if (createNewProjectFetcher.data && createNewProjectFetcher.data.error && createNewProjectFetcher.state === 'idle') {
-      if (createNewProjectFetcher.data.error === 'NEEDS_TO_UPGRADE') {
-        showModal(AskModal, {
-          title: 'Upgrade your plan',
-          message: 'You are currently on the Free plan where you can invite as many collaborators as you want as long as you don\'t have more than one project. Since you have more than one project, you need to upgrade to "Individual" or above to continue.',
-          yesText: 'Upgrade',
-          noText: 'Cancel',
-          onDone: async (isYes: boolean) => {
-            if (isYes) {
-              window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=individual`);
-            }
-          },
-        });
-      } else if (createNewProjectFetcher.data.error === 'FORBIDDEN') {
-        showAlert({
-          title: 'Could not create project.',
-          message: 'You do not have permission to create a project in this organization.',
-        });
-      } else {
-        showAlert({
-          title: 'Could not create project.',
-          message: createNewProjectFetcher.data.error,
-        });
-      }
-    }
-  }, [createNewProjectFetcher.state, createNewProjectFetcher.data]);
-
   const isGitSyncEnabled = features.gitSync.enabled;
 
   const showUpgradePlanModal = () => {
@@ -1553,10 +1521,43 @@ const ProjectRoute: FC = () => {
                         return;
                       }
 
-                      createNewProjectFetcher.submit(e.currentTarget, {
-                        action: `/organization/${organizationId}/project/new`,
-                        method: 'post',
-                      });
+                      const name = formData.get('name');
+
+                      createNewProject({
+                        organizationId,
+                        name: (typeof name === 'string') ? name : 'My project',
+                        projectType: type as ProjectType,
+                      }).then(
+                        newProjectId => {
+                          navigate(`/organization/${organizationId}/project/${newProjectId}`);
+                        },
+                        err => {
+                          const errMsg = err.message;
+                          if (errMsg === 'NEEDS_TO_UPGRADE') {
+                            showModal(AskModal, {
+                              title: 'Upgrade your plan',
+                              message: 'You are currently on the Free plan where you can invite as many collaborators as you want as long as you don\'t have more than one project. Since you have more than one project, you need to upgrade to "Individual" or above to continue.',
+                              yesText: 'Upgrade',
+                              noText: 'Cancel',
+                              onDone: async (isYes: boolean) => {
+                                if (isYes) {
+                                  window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=individual`);
+                                }
+                              },
+                            });
+                          } else if (errMsg === 'FORBIDDEN') {
+                            showAlert({
+                              title: 'Could not create project.',
+                              message: 'You do not have permission to create a project in this organization.',
+                            });
+                          } else {
+                            showAlert({
+                              title: 'Could not create project.',
+                              message: errMsg,
+                            });
+                          }
+                        },
+                      );
 
                       close();
                     }}
@@ -1840,3 +1841,76 @@ const ProjectRoute: FC = () => {
 ProjectRoute.displayName = 'ProjectRoute';
 
 export default ProjectRoute;
+
+type ProjectType = 'local' | 'remote';
+
+async function createNewProject({
+  organizationId,
+  name,
+  projectType,
+}: {
+  organizationId: string;
+  name: string;
+  projectType: ProjectType;
+}) {
+  invariant(organizationId, 'Organization ID is required');
+  invariant(typeof name === 'string', 'Name is required');
+  invariant(projectType === 'local' || projectType === 'remote', 'Project type is required');
+
+  const user = await models.userSession.getOrCreate();
+  const sessionId = user.id;
+  invariant(sessionId, 'User must be logged in to create a project');
+
+  if (projectType === 'local') {
+    const project = await models.project.create({
+      name,
+      parentId: organizationId,
+    });
+    return project._id;
+  }
+
+  try {
+    const newCloudProject = await insomniaFetch<{
+      id: string;
+      name: string;
+    } | {
+      error: string;
+      message?: string;
+    }>({
+      path: `/v1/organizations/${organizationId}/team-projects`,
+      method: 'POST',
+      data: {
+        name,
+      },
+      sessionId,
+    });
+
+    if (!newCloudProject || 'error' in newCloudProject) {
+      let error = 'An unexpected error occurred while creating the project. Please try again.';
+      if (newCloudProject.error === 'FORBIDDEN') {
+        error = newCloudProject.error;
+      }
+
+      if (newCloudProject.error === 'NEEDS_TO_UPGRADE') {
+        error = 'Upgrade your account in order to create new Cloud Projects.';
+      }
+
+      if (newCloudProject.error === 'PROJECT_STORAGE_RESTRICTION') {
+        error = newCloudProject.message ?? 'The owner of the organization allows only Local Vault project creation.';
+      }
+
+      throw new Error(error);
+    }
+
+    const project = await models.project.create({
+      _id: newCloudProject.id,
+      name: newCloudProject.name,
+      remoteId: newCloudProject.id,
+      parentId: organizationId,
+    });
+
+    return project._id;
+  } catch (err) {
+    throw new Error(err instanceof Error ? err.message : `An unexpected error occurred while creating the project. Please try again. ${err}`);
+  }
+}
