@@ -122,7 +122,7 @@ export const getMockServiceBinURL = (serverId: string, path: string, customUrl?:
   if (serverId && !customUrl) {
     const baseUrl = getMockServiceURL();
     const url = new URL(baseUrl);
-    url.host = serverId + '.' + url.host;
+    url.host = serverId.replace('_', '-') + '.' + url.host;
     return url.origin + path;
   }
   return customUrl + '/bin/' + serverId + path;
