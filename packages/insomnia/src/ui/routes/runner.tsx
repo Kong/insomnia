@@ -919,9 +919,12 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
 
         try {
           if (nextRequestIdOrName !== '') {
-            if (targetRequest.id === nextRequestIdOrName ||
+            const matchId = targetRequest.id === nextRequestIdOrName;
+            const matchName = targetRequest.name.trim() === nextRequestIdOrName.trim();
               // find the last request with matched name in case multiple requests with same name in collection runner
-              (targetRequest.name.trim() === nextRequestIdOrName.trim() && j === requests.findLastIndex(req => req.name.trim() === nextRequestIdOrName.trim()))
+            const matchLastIndex = j === requests.slice().reverse().findIndex(req => req.name.trim() === nextRequestIdOrName.trim());
+
+            if (matchId || (matchName && matchLastIndex)
             ) {
               // reset nextRequestIdOrName when request name or id meets;
               nextRequestIdOrName = '';
