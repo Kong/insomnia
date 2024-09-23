@@ -2,7 +2,7 @@ import { createWriteStream } from 'node:fs';
 import path from 'node:path';
 
 import * as contentDisposition from 'content-disposition';
-import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws'
+import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
 import type { RequestTestResult } from 'insomnia-sdk';
 import { extension as mimeExtension } from 'mime-types';
 import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
