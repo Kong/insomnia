@@ -3,8 +3,7 @@ import React from 'react';
 import type { Key } from 'react-aria-components';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Text } from 'react-aria-components';
 
-import { showModal } from '..';
-import { ErrorModal } from '../error-modal';
+import { showAlert } from '..';
 
 export interface Role {
   id: string;
@@ -105,7 +104,7 @@ export const OrganizationMemberRolesSelector = (props: PropsForUpdateRole | Prop
         isUserOrganizationOwner,
         isRBACEnabled,
       } = props;
-      const { allow, message } = checkIfAllow(
+      const { allow, title, message } = checkIfAllow(
         isUserOrganizationOwner,
         userRole,
         isRBACEnabled,
@@ -113,7 +112,10 @@ export const OrganizationMemberRolesSelector = (props: PropsForUpdateRole | Prop
       );
 
       if (!allow) {
-        showModal(ErrorModal, { error: new Error(message) });
+        showAlert({
+          title,
+          message,
+        });
       } else {
         setSelectedRoles([selectedRole.name]);
         onRoleChange(selectedRole);

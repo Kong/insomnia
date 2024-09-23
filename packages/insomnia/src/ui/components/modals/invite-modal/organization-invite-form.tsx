@@ -453,18 +453,11 @@ async function inviteUserToOrganization(
   }).then(
     () => inviteeEmail,
     async error => {
-      if (error instanceof ResponseFailError && error.response.headers.get('content-type')?.includes('application/json')) {
-        let json;
-        try {
-          json = await error.response.json();
-        } catch (e) {
-          throw new Error(`Failed to invite ${inviteeEmail}`);
-        }
-        if (json?.message) {
-          throw new Error(json.message);
-        }
+      let errMsg = `Failed to invite ${inviteeEmail}`;
+      if (error instanceof ResponseFailError && error.message) {
+        errMsg = error.message;
       }
-      throw new Error(`Failed to invite ${inviteeEmail}`);
+      throw new Error(errMsg);
     }
   );
 }

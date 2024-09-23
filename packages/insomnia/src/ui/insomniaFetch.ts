@@ -59,13 +59,22 @@ export async function insomniaFetch<T = void>({
     if (uri) {
       window.main.openDeepLink(uri);
     }
+    const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
     if (onlyResolveOnSuccess && !response.ok) {
+      let errMsg = '';
+      if (isJson) {
+        try {
+          const json = await response.json();
+          if (typeof json?.message === 'string') {
+            errMsg = json.message;
+          }
+        } catch (err) { }
+      }
       throw new ResponseFailError(
-        `${response.status} ${response.statusText}`,
+        errMsg,
         response,
       );
     }
-    const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
     return isJson ? response.json() : response.text();
   } catch (err) {
     if (err.name === 'AbortError') {

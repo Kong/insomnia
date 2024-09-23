@@ -7,6 +7,7 @@ import defaultAvatarImg from '../../../../ui/images/default-avatar.svg';
 import { invariant } from '../../../../utils/invariant';
 import { SegmentEvent } from '../../../analytics';
 import { insomniaFetch } from '../../../insomniaFetch';
+import { Icon } from '../../icon';
 import { InviteForm } from './organization-invite-form';
 import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
 
@@ -123,14 +124,16 @@ const InviteModal: FC<{
                 />
               </Group>
             </div>
-            {membersInCurrentPage.length === 0 ? (
-              <p className='text-center'>
-                {queryStringRef.current
-                  ? `No member found for the search "${queryStringRef.current}"`
-                  : 'No member'
-                }
-              </p>
-            ) : (
+            {loading ?
+              (<Icon icon="spinner" className="text-[--color-font] block animate-spin m-auto" />) :
+              (membersInCurrentPage.length === 0 ? (
+                <p className='text-center'>
+                  {queryStringRef.current
+                    ? `No member found for the search "${queryStringRef.current}"`
+                    : 'No member'
+                  }
+                </p>
+              ) : (
                 <ListBox
                   aria-label="Invitation list"
                   items={membersInCurrentPage}
@@ -204,7 +207,8 @@ const InviteModal: FC<{
                     ));
                   }}
                 </ListBox>
-            )}
+              ))
+            }
             {(hasPrevPage || hasNextPage) && (
               <div className='flex justify-between mt-[24px] leading-[19px]'>
                 <Button
