@@ -151,12 +151,11 @@ export const Runner: FC<{}> = () => {
     workspaceId: string;
     direction: 'vertical' | 'horizontal';
   };
-  const localStorageKey = workspaceId + 'runnerSettings';
-  const [iterationCount, setIterationCount] = useLocalStorage<number>(localStorageKey + 'iterationCount', { defaultValue: 1 });
-  const [delay, setDelay] = useLocalStorage<number>(localStorageKey + 'delay', { defaultValue: 0 });
-  const [uploadData, setUploadData] = useLocalStorage<UploadDataType[]>(localStorageKey + 'iterationData', { defaultValue: [] });
-  const [file, setFile] = useLocalStorage<File | null>(localStorageKey + 'file', { defaultValue: null });
-  const [runnerAdvancedSettings, setAdvancedRunnerSettings] = useLocalStorage<RunnerAdvancedSettings>(localStorageKey + 'bail', { defaultValue: { bail: true } });
+  const [iterationCount, setIterationCount] = useLocalStorage<number>(`runner:iterationCount:${workspaceId}`, { defaultValue: 1 });
+  const [delay, setDelay] = useLocalStorage<number>(`runner:delay:${workspaceId}`, { defaultValue: 0 });
+  const [uploadData, setUploadData] = useLocalStorage<UploadDataType[]>(`runner:iterationData:${workspaceId}`, { defaultValue: [] });
+  const [file, setFile] = useLocalStorage<File | null>(`runner:file:${workspaceId}`, { defaultValue: null });
+  const [runnerAdvancedSettings, setAdvancedRunnerSettings] = useLocalStorage<RunnerAdvancedSettings>(workspaceId + 'bail', { defaultValue: { bail: true } });
 
   invariant(iterationCount, 'iterationCount should not be null');
 
@@ -214,17 +213,17 @@ export const Runner: FC<{}> = () => {
         url: item.doc.url,
       };
     });
-  const [allKeys, setAllKeys] = useLocalStorage<string[]>(localStorageKey + 'allKeys', { defaultValue: requestRows.map(item => item.id) });
+  const [requestIds, setRequestIds] = useLocalStorage<string[]>(`runner:requestIds:${workspaceId}`, { defaultValue: requestRows.map(item => item.id) });
   // request was added or removed
-  if (allKeys.length !== requestRows.length) {
-    const newRequest = requestRows.find(item => !allKeys.includes(item.id));
+  if (requestIds.length !== requestRows.length) {
+    const newRequest = requestRows.find(item => !requestIds.includes(item.id));
     if (newRequest) {
-      setAllKeys([...allKeys, newRequest.id]);
+      setRequestIds([...requestIds, newRequest.id]);
     } else {
-      setAllKeys(allKeys.filter(key => requestRows.map(r => r.id).includes(key)));
+      setRequestIds(requestIds.filter(key => requestRows.map(r => r.id).includes(key)));
     }
   }
-  const reqListItems = allKeys
+  const sortedRequestRows = requestIds
     .filter(key => requestRows.find(item => item.id === key))
     .map(key => {
       const thing = requestRows.find(item => item.id === key);
@@ -232,7 +231,7 @@ export const Runner: FC<{}> = () => {
       return thing;
     });
 
-  const [selectedKeys, setSelectedKeys] = useState<Set<Key>>(new Set([]));
+  const [selectedRequestIds, setSelectedRequestIds] = useState<Set<Key>>(new Set([]));
 
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
     getItems: keys => {
@@ -245,7 +244,10 @@ export const Runner: FC<{}> = () => {
       });
     },
     onReorder: event => {
-      setAllKeys(repositionInArray(allKeys, [...event.keys].map(key => key.toString()), allKeys.findIndex(item => item === event.target.key.toString())));
+      setRequestIds(repositionInArray(
+        requestIds,
+        [...event.keys].map(key => key.toString()),
+        requestIds.findIndex(item => item === event.target.key.toString())));
     },
     renderDragPreview(items) {
       return (
@@ -256,7 +258,7 @@ export const Runner: FC<{}> = () => {
     },
     renderDropIndicator(target) {
       if (target.type === 'item') {
-        const item = reqListItems.find(item => item.id === target.key);
+        const item = sortedRequestRows.find(item => item.id === target.key);
         if (item) {
           return (
             <DropIndicator
@@ -281,8 +283,7 @@ export const Runner: FC<{}> = () => {
 
     window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount } });
 
-    const requests = requestRows
-      .filter(row => selectedKeys.has(row.id));
+    const requests = requestRows.filter(row => selectedRequestIds.has(row.id));
     // convert uploadData to environment data
     const userUploadEnvs = uploadData.map(data => {
       const orderedJson = porderedJSON.parse<UploadDataType>(
@@ -318,13 +319,11 @@ export const Runner: FC<{}> = () => {
     navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}`);
   };
   const onToggleSelection = () => {
-    if (selectedKeys.size === allKeys.length) {
-      // unselect all
-      setSelectedKeys(new Set([]));
-    } else {
-      // select all
-      setSelectedKeys(new Set(allKeys));
+    if (selectedRequestIds.size === requestIds.length) {
+      setSelectedRequestIds(new Set([]));
+      return;
     }
+    setSelectedRequestIds(new Set(requestIds));
   };
 
   const [testHistory, setTestHistory] = useState<RunnerTestResult[]>([]);
@@ -433,10 +432,8 @@ export const Runner: FC<{}> = () => {
     setSelectedTab('test-results');
   }, [setSelectedTab]);
 
-  const disabledKeys = useMemo(() => {
-    return isRunning ? allKeys : [];
-  }, [isRunning, allKeys]);
-  const isDisabled = isRunning || selectedKeys.size === 0;
+  const disabledKeys = useMemo(() => isRunning ? requestIds : [], [isRunning, requestIds]);
+  const isDisabled = isRunning || selectedRequestIds.size === 0;
   return (
     <PanelGroup autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel>
@@ -478,9 +475,7 @@ export const Runner: FC<{}> = () => {
                                 if (delay >= 0) {
                                   setDelay(delay); // also update the temp settings
                                 }
-                              } catch (ex) {
-                                // no op
-                              }
+                              } catch (ex) { }
                             }}
                             type='number'
                             className={inputStyle}
@@ -559,9 +554,9 @@ export const Runner: FC<{}> = () => {
                     <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
                       <span className="mr-2">
                         {
-                          selectedKeys.size === Array.from(reqListItems).length ?
+                          selectedRequestIds.size === Array.from(sortedRequestRows).length ?
                             <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-check fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Unselect All</span></span> :
-                            selectedKeys.size === 0 ?
+                            selectedRequestIds.size === 0 ?
                               <span onClick={onToggleSelection}><i className="fa fa-square fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span> :
                               <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-minus fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span>
                         }
@@ -570,16 +565,16 @@ export const Runner: FC<{}> = () => {
                     <PaneBody placeholder className='p-0'>
                       <GridList
                         id="runner-request-list"
-                        items={reqListItems}
+                        items={sortedRequestRows}
                         selectionMode="multiple"
-                        selectedKeys={selectedKeys}
+                        selectedKeys={selectedRequestIds}
                         onSelectionChange={keys => {
                           if (keys === 'all') {
-                            setSelectedKeys(new Set(allKeys));
+                            setSelectedRequestIds(new Set(requestIds));
                           }
-                          setSelectedKeys(new Set(keys));
+                          setSelectedRequestIds(new Set(keys));
                         }}
-                        defaultSelectedKeys={allKeys}
+                        defaultSelectedKeys={requestIds}
                         aria-label="Request Collection"
                         dragAndDropHooks={requestsDnD}
                         className="w-full h-full leading-8 text-base overflow-auto"
@@ -697,8 +692,8 @@ export const Runner: FC<{}> = () => {
                 {showCLIModal && (
                   <CLIPreviewModal
                     onClose={() => setShowCLIModal(false)}
-                    requestIds={Array.from(selectedKeys) as string[]}
-                    allSelected={selectedKeys.size === Array.from(reqListItems).length}
+                    requestIds={Array.from(selectedRequestIds) as string[]}
+                    allSelected={selectedRequestIds.size === Array.from(sortedRequestRows).length}
                     iterationCount={iterationCount}
                     delay={delay}
                     filePath={file?.path || ''}
@@ -930,7 +925,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
           if (nextRequestIdOrName !== '') {
             const matchId = targetRequest.id === nextRequestIdOrName;
             const matchName = targetRequest.name.trim() === nextRequestIdOrName.trim();
-              // find the last request with matched name in case multiple requests with same name in collection runner
+            // find the last request with matched name in case multiple requests with same name in collection runner
             const matchLastIndex = j === requests.slice().reverse().findIndex(req => req.name.trim() === nextRequestIdOrName.trim());
 
             if (matchId || (matchName && matchLastIndex)
