@@ -103,6 +103,13 @@ export const repositionInArray = (allItems: string[], itemsToMove: string[], tar
 interface RunnerAdvancedSettings {
   bail: boolean;
 }
+interface RequestRow {
+  id: string;
+  name: string;
+  ancestorNames: string[];
+  method: string;
+  url: string;
+}[];
 
 export const Runner: FC<{}> = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -150,7 +157,6 @@ export const Runner: FC<{}> = () => {
   const [uploadData, setUploadData] = useLocalStorage<UploadDataType[]>(localStorageKey + 'iterationData', { defaultValue: [] });
   const [file, setFile] = useLocalStorage<File | null>(localStorageKey + 'file', { defaultValue: null });
   const [runnerAdvancedSettings, setAdvancedRunnerSettings] = useLocalStorage<RunnerAdvancedSettings>(localStorageKey + 'bail', { defaultValue: { bail: true } });
-  const toggleBail = () => setAdvancedRunnerSettings({ ...runnerAdvancedSettings, bail: !runnerAdvancedSettings.bail });
 
   invariant(iterationCount, 'iterationCount should not be null');
 
@@ -181,7 +187,8 @@ export const Runner: FC<{}> = () => {
   }, [settings.forceVerticalLayout, direction]);
 
   const getEntityById = new Map<string, Child>();
-  const requestRows = collection
+
+  const requestRows: RequestRow[] = collection
     .filter(item => {
       getEntityById.set(item.doc._id, item);
       return isRequest(item.doc);
@@ -265,8 +272,8 @@ export const Runner: FC<{}> = () => {
 
     window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount } });
 
-    const requests = allKeys
-      .filter(id => selectedKeys.has(id));
+    const requests = requestRows
+      .filter(row => selectedKeys.has(row.id));
     // convert uploadData to environment data
     const userUploadEnvs = uploadData.map(data => {
       const orderedJson = porderedJSON.parse<UploadDataType>(
@@ -280,15 +287,15 @@ export const Runner: FC<{}> = () => {
         dataPropertyOrder: orderedJson.map || null,
       };
     });
-
+    const actionInput: runCollectionActionParams = {
+      requests,
+      iterationCount,
+      userUploadEnvs,
+      delay,
+      runnerAdvancedSettings: { ...runnerAdvancedSettings },
+    };
     submit(
-      {
-        requests,
-        iterationCount,
-        userUploadEnvs,
-        delay,
-        runnerAdvancedSettings: { ...runnerAdvancedSettings },
-      },
+      JSON.stringify(actionInput),
       {
         method: 'post',
         encType: 'application/json',
@@ -636,7 +643,7 @@ export const Runner: FC<{}> = () => {
                         <label className="flex items-center gap-2">
                           <input
                             name='bail'
-                            onChange={toggleBail}
+                            onChange={() => setAdvancedRunnerSettings({ ...runnerAdvancedSettings, bail: !runnerAdvancedSettings.bail })}
                             type="checkbox"
                             disabled={isRunning}
                             checked={runnerAdvancedSettings.bail}
@@ -848,7 +855,11 @@ const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], cu
   return list[(currentIteration + 1) % list.length];
 };
 export interface runCollectionActionParams {
-  requests: { id: string; name: string }[];
+  requests: RequestRow[];
+  iterationCount: number;
+  delay: number;
+  userUploadEnvs: UserUploadEnvironment[];
+  runnerAdvancedSettings: RunnerAdvancedSettings;
 }
 
 export const runCollectionAction: ActionFunction = async ({ request, params }) => {
@@ -857,7 +868,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   invariant(projectId, 'Project id is required');
   invariant(workspaceId, 'Workspace id is required');
 
-  const { requests, iterationCount, delay, userUploadEnvs, runnerAdvancedSettings } = await request.json();
+  const { requests, iterationCount, delay, userUploadEnvs, runnerAdvancedSettings } = await request.json() as runCollectionActionParams;
   const source: RunnerSource = 'runner';
 
   let testCtx: CollectionRunnerContext = {
@@ -880,12 +891,6 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   });
   startExecution(workspaceId);
 
-  interface RequestType {
-    name: string;
-    id: string;
-    url: string;
-  };
-
   try {
     for (let i = 0; i < iterationCount; i++) {
       // nextRequestIdOrName is used to manual set next request in iteration from pre-request script
@@ -894,7 +899,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       let testResultsForOneIteration: RunnerResultPerRequest[] = [];
 
       for (let j = 0; j < requests.length; j++) {
-        const targetRequest = requests[j] as RequestType;
+        const targetRequest = requests[j];
 
         const resultCollector = {
           requestId: targetRequest.id,
@@ -915,8 +920,8 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
         try {
           if (nextRequestIdOrName !== '') {
             if (targetRequest.id === nextRequestIdOrName ||
-              // find the last request with matched name in case mulitple requests with same name in collection runner
-              (targetRequest.name.trim() === nextRequestIdOrName.trim() && j === requests.findLastIndex((req: RequestType) => req.name.trim() === nextRequestIdOrName.trim()))
+              // find the last request with matched name in case multiple requests with same name in collection runner
+              (targetRequest.name.trim() === nextRequestIdOrName.trim() && j === requests.findLastIndex(req => req.name.trim() === nextRequestIdOrName.trim()))
             ) {
               // reset nextRequestIdOrName when request name or id meets;
               nextRequestIdOrName = '';
