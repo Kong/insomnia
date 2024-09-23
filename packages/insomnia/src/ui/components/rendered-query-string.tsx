@@ -88,7 +88,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         const encoded = smartEncodeUrl(fullUrl, request.settingEncodeUrl, { strictNullHandling: true });
         setPreviewString(encoded === '' ? defaultPreview : encoded);
       } catch (error: unknown) {
-        console.error(error);
+        console.warn(error);
         setPreviewString(defaultPreview);
       }
     };
