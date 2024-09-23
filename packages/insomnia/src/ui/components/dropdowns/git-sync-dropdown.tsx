@@ -7,14 +7,14 @@ import { useInterval } from 'react-use';
 import type { GitRepository } from '../../../models/git-repository';
 import { deleteGitRepository } from '../../../models/helpers/git-repository-operations';
 import { getOauth2FormatName } from '../../../sync/git/utils';
-import type {
-  GitCanPushLoaderData,
-  GitChangesLoaderData,
-  GitFetchLoaderData,
-  GitRepoLoaderData,
-  GitStatusResult,
-  PullFromGitRemoteResult,
-  PushToGitRemoteResult,
+import {
+  checkGitCanPush,
+  checkGitChanges,
+  type GitFetchLoaderData,
+  type GitRepoLoaderData,
+  type GitStatusResult,
+  type PullFromGitRemoteResult,
+  type PushToGitRemoteResult,
 } from '../../routes/git-actions';
 import { Icon } from '../icon';
 import { showAlert } from '../modals';
@@ -47,8 +47,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   const gitRepoDataFetcher = useFetcher<GitRepoLoaderData>();
   const gitFetchFetcher = useFetcher<GitFetchLoaderData>();
   const gitStatusFetcher = useFetcher<GitStatusResult>();
-  const gitChangesFetcher = useFetcher<GitChangesLoaderData>();
-  const gitCanPushFetcher = useFetcher<GitCanPushLoaderData>();
 
   const loadingPush = gitPushFetcher.state === 'loading';
   const loadingPull = gitPullFetcher.state === 'loading';
@@ -74,16 +72,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
     workspaceId,
   ]);
 
-  useInterval(() => {
-    // these 2 loaders have been disabled for revalidation, we manually revalidate them here to improve performance
-    if (gitRepository?.uri && gitRepository?._id && gitChangesFetcher.state === 'idle' && gitRepoDataFetcher.data) {
-      gitChangesFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/changes`);
-    }
-    if (gitRepository?.uri && gitRepository?._id && gitCanPushFetcher.state === 'idle' && gitRepoDataFetcher.data) {
-      gitCanPushFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/can-push`);
-    }
-  }, 30 * 1000);
-
   // Only fetch the repo status if we have a repo uri and we don't have the status already
   const shouldFetchGitRepoStatus = Boolean(gitRepository?.uri && gitRepository?._id && gitStatusFetcher.state === 'idle' && !gitStatusFetcher.data && gitRepoDataFetcher.data);
 
@@ -96,6 +84,18 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       });
     }
   }, [gitStatusFetcher, organizationId, projectId, shouldFetchGitRepoStatus, workspaceId]);
+
+  useInterval(() => {
+    requestIdleCallback(() => {
+      checkGitChanges(workspaceId);
+    });
+  }, 30 * 1000);
+
+  useEffect(() => {
+    if (shouldFetchGitRepoStatus) {
+      checkGitCanPush(workspaceId);
+    }
+  }, [gitRepoDataFetcher.data, gitRepository?._id, gitRepository?.uri, workspaceId, shouldFetchGitRepoStatus]);
 
   useEffect(() => {
     const errors = [...(gitPushFetcher.data?.errors ?? [])];

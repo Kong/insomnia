@@ -886,18 +886,6 @@ async function renderApp() {
                                     },
                                   },
                                   {
-                                    path: 'can-push',
-                                    loader: async (...args) =>
-                                      (await import('./routes/git-actions')).canPushLoader(...args),
-                                    shouldRevalidate: ({ formAction }) => {
-                                      if (formAction?.includes('git')) {
-                                        return true;
-                                      }
-                                      // disable revalidation for this loader, we will fetch this loader periodically through fetcher.load in component
-                                      return false;
-                                    },
-                                  },
-                                  {
                                     path: 'log',
                                     loader: async (...args) =>
                                       (await import('./routes/git-actions')).gitLogLoader(...args),
