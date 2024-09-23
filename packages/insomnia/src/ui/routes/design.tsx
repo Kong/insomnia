@@ -65,6 +65,7 @@ import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
+import { CodeEditor as MonacoEditor } from '../components/monaco-editor/code-editor';
 import { formatMethodName } from '../components/tags/method-tag';
 import { useAIContext } from '../context/app/ai-context';
 import {
@@ -987,7 +988,7 @@ const Design: FC = () => {
           <Panel id="pane-one" minSize={10} className='pane-one theme--pane'>
             <div className="flex flex-col h-full w-full overflow-hidden divide-y divide-solid divide-[--hl-md]">
               <div className="relative overflow-hidden flex-shrink-0 flex flex-1 basis-1/2">
-                <CodeEditor
+                <MonacoEditor
                   id="spec-editor"
                   key={uniquenessKey}
                   showPrettifyButton

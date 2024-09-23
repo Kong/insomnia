@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react';
 import { builtinModules } from 'module';
 import path from 'path';
 import { defineConfig } from 'vite';
+import MonacoEditorPlugin from 'vite-plugin-monaco-editor';
 
 import pkg from './package.json';
 import { electronNodeRequire } from './vite-plugin-electron-node-require';
@@ -40,19 +41,21 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       exclude: ['@getinsomnia/node-libcurl'],
-      // these packages are only used in web worker, Vite won't be able to discover the import on the initial scan，so we need to include them here to let vite pre-bundle them
-      // https://vitejs.dev/guide/dep-pre-bundling.html#customizing-the-behavior
-      include: ['@stoplight/spectral-core', '@stoplight/spectral-ruleset-bundler/with-loader', '@stoplight/spectral-rulesets', 'codemirror-graphql/utils/SchemaReference', 'openapi-types'],
+      include: [
+        // these packages are only used in web worker, Vite won't be able to discover the import on the initial scan，so we need to include them here to let vite pre-bundle them
+        // https://vitejs.dev/guide/dep-pre-bundling.html#customizing-the-behavior
+        '@stoplight/spectral-core', '@stoplight/spectral-ruleset-bundler/with-loader', '@stoplight/spectral-rulesets', 'codemirror-graphql/utils/SchemaReference', 'openapi-types'],
       force: true,
     },
     plugins: [
+      MonacoEditorPlugin({}),
       // Allows us to import modules that will be resolved by Node's require() function.
       // e.g. import fs from 'fs'; will get transformed to const fs = require('fs'); so that it works in the renderer process.
       // This is necessary because we use nodeIntegration: true in the renderer process and allow importing modules from node.
       electronNodeRequire({
         modules: [
           'electron',
-          ...Object.keys(pkg.dependencies),
+          ...Object.keys(pkg.dependencies).filter(k => !k.includes('monaco') && !k.includes('vscode')),
           ...builtinModules.filter(m => m !== 'buffer'),
           ...builtinModules.map(m => `node:${m}`),
         ],
@@ -65,6 +68,12 @@ export default defineConfig(({ mode }) => {
           modules: ['fs'],
         }),
       ],
+    },
+    resolve: {
+      alias: {
+        'vscode-languageclient/lib/common/codeConverter.js': path.resolve(__dirname, '../../node_modules/vscode-languageclient/lib/common/codeConverter.js'),
+        'vscode-languageclient/lib/common/protocolConverter.js': path.resolve(__dirname, '../../node_modules/vscode-languageclient/lib/common/protocolConverter.js'),
+      },
     },
   };
 });
