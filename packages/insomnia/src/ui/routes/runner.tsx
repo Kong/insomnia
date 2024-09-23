@@ -215,6 +215,15 @@ export const Runner: FC<{}> = () => {
       };
     });
   const [allKeys, setAllKeys] = useLocalStorage<string[]>(localStorageKey + 'allKeys', { defaultValue: requestRows.map(item => item.id) });
+  // request was added or removed
+  if (allKeys.length !== requestRows.length) {
+    const newRequest = requestRows.find(item => !allKeys.includes(item.id));
+    if (newRequest) {
+      setAllKeys([...allKeys, newRequest.id]);
+    } else {
+      setAllKeys(allKeys.filter(key => requestRows.map(r => r.id).includes(key)));
+    }
+  }
   const reqListItems = allKeys
     .filter(key => requestRows.find(item => item.id === key))
     .map(key => {
