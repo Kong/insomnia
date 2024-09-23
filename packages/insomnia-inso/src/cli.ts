@@ -245,8 +245,8 @@ const readFileFromPathOrUrl = async (pathOrUrl: string) => {
   }
   return readFile(pathOrUrl, 'utf8');
 };
-const pathToIterationData = async (pathOrUrl: string, env: string): Promise<UserUploadEnvironment[]> => {
-  const envAsObject = Object.fromEntries(new URLSearchParams(env).entries());
+const pathToIterationData = async (pathOrUrl: string, env: string[]): Promise<UserUploadEnvironment[]> => {
+  const envAsObject = env.map(envString => Object.fromEntries(new URLSearchParams(envString).entries())).reduce((acc, obj) => ({ ...acc, ...obj }), {});
   const fileType = pathOrUrl.split('.').pop()?.toLowerCase();
   const content = await readFileFromPathOrUrl(pathOrUrl);
   if (!content) {
@@ -432,13 +432,13 @@ export const go = (args?: string[]) => {
     .option('-i, --item <requestid>', 'request or folder id to run', collect, [])
     .option('-e, --env <identifier>', 'environment to use', '')
     .option('--delay-request <duration>', 'milliseconds to delay between requests', '0')
-    .option('--env-var <key=value>', 'override environment variables', '')
+    .option('--env-var <key=value>', 'override environment variables', collect, [])
     .option('-n, --iteration-count <count>', 'number of times to repeat', '1')
     .option('-d, --iteration-data <path/url>', 'file path or url (JSON or CSV)', '')
     .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}]`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first non-200 response', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
-    .action(async (identifier, cmd: { env: string; disableCertValidation: boolean; requestNamePattern: string; bail: boolean; item: string[]; delayRequest: string; iterationCount: string; iterationData: string; envVar: string }) => {
+    .action(async (identifier, cmd: { env: string; disableCertValidation: boolean; requestNamePattern: string; bail: boolean; item: string[]; delayRequest: string; iterationCount: string; iterationData: string; envVar: string[] }) => {
       const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
 
       const commandOptions = { ...globals, ...cmd };
