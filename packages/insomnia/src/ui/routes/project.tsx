@@ -1116,12 +1116,20 @@ const ProjectRoute: FC = () => {
                           />
                           <span className={'truncate'}>{item.name}</span>
                           <span className="flex-1" />
-                          {item.presence.length > 0 && <AvatarGroup
-                            size="small"
-                            maxAvatars={3}
-                            items={item.presence}
-                          />}
-                          {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown hasUncommittedOrUnpushedChanges={item.hasUncommittedOrUnpushedChanges} organizationId={organizationId} project={item} storage={storage} />}
+                          {item.presence.length > 0 && (
+                            <AvatarGroup
+                              size="small"
+                              maxAvatars={3}
+                              items={item.presence}
+                            />
+                          )}
+                          {item._id !== SCRATCHPAD_PROJECT_ID && (
+                            <ProjectDropdown
+                              organizationId={organizationId}
+                              project={item}
+                              storage={storage}
+                            />
+                          )}
                         </div>
                       </GridListItem>
                     );
