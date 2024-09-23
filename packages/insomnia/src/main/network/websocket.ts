@@ -80,33 +80,6 @@ const WebSocketConnections = new Map<string, WebSocket>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
 
-// Extra handler for graphql websocket. Refer: https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md
-const handleGraphQLWsMessage = (data: MessageEvent['data'], request: Request) => {
-  const graphqlServerData = parseMessage(data);
-  const graphqlServerDataType = graphqlServerData.type;
-  const requestId = request._id;
-  // send subscribe operation to graphql websocket server when ack is received
-  if (graphqlServerDataType === MessageType.ConnectionAck) {
-    parseGraphQLReqeustBody(request as RenderedRequest);
-    let subscriptionPayload = {};
-    try {
-      // @ts-expect-error graphql request has body attribute
-      subscriptionPayload = JSON.parse(request.body.text);
-    } catch (error) {
-      console.warn('failed to parse graphql subscription request body', error);
-    }
-    const payload = JSON.stringify({
-      id: uuidV4(),
-      type: MessageType.Subscribe,
-      payload: subscriptionPayload,
-    });
-    sendWebSocketEvent({ payload, requestId });
-  } else if (graphqlServerDataType === MessageType.Error || graphqlServerDataType === MessageType.Complete) {
-    // close connection if server responsed with error or complete
-    closeWebSocketConnection({ requestId });
-  }
-};
-
 const parseResponseAndBuildTimeline = (url: string, incomingMessage: IncomingMessage, clientRequestHeaders: string) => {
   const statusMessage = incomingMessage.statusMessage || '';
   const statusCode = incomingMessage.statusCode || 0;
@@ -416,6 +389,33 @@ const openWebSocketConnection = async (
 
     deleteRequestMaps(request._id, e.message || 'Something went wrong');
     createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, e.message || 'Something went wrong');
+  }
+};
+
+// graphql ws protocl message handler. Refer: https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md
+const handleGraphQLWsMessage = (data: MessageEvent['data'], request: Request) => {
+  const graphqlServerData = parseMessage(data);
+  const graphqlServerDataType = graphqlServerData.type;
+  const requestId = request._id;
+  // send subscribe operation to graphql websocket server when ack is received
+  if (graphqlServerDataType === MessageType.ConnectionAck) {
+    parseGraphQLReqeustBody(request as RenderedRequest);
+    let subscriptionPayload = {};
+    try {
+      // @ts-expect-error graphql request has body attribute
+      subscriptionPayload = JSON.parse(request.body.text);
+    } catch (error) {
+      console.warn('failed to parse graphql subscription request body', error);
+    }
+    const payload = JSON.stringify({
+      id: uuidV4(),
+      type: MessageType.Subscribe,
+      payload: subscriptionPayload,
+    });
+    sendWebSocketEvent({ payload, requestId });
+  } else if (graphqlServerDataType === MessageType.Error || graphqlServerDataType === MessageType.Complete) {
+    // close connection if server responsed with error or complete
+    closeWebSocketConnection({ requestId });
   }
 };
 

@@ -107,6 +107,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
     ...mockServer,
     routes: mockRoutes.filter(route => route.parentId === mockServer._id),
   }));
+  // set empty activeResponse if graphql websocket request and activeResponse is not websocket response
   if (isGraphqlWsRequest && activeResponse && !isWebSocketResponse(activeResponse)) {
     return {
       activeRequest,
