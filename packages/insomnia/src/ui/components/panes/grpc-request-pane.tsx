@@ -57,12 +57,24 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
   const { requestMessages, running, methods } = grpcState;
   useMount(async () => {
-    if (!activeRequest.protoFileId) {
-      return;
+    if (activeRequest.protoFileId) {
+      console.log(`[gRPC] loading proto file methods pf=${activeRequest.protoFileId}`);
+      const methods = await window.main.grpc.loadMethods(activeRequest.protoFileId);
+      setGrpcState({ ...grpcState, methods });
+    } else {
+      const rendered =
+        await tryToInterpolateRequestOrShowRenderErrorModal({
+          request: activeRequest,
+          environmentId,
+          payload: {
+            url: activeRequest.url,
+            metadata: activeRequest.metadata,
+            reflectionApi: activeRequest.reflectionApi,
+          },
+        });
+      const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
+      setGrpcState({ ...grpcState, methods });
     }
-    console.log(`[gRPC] loading proto file methods pf=${activeRequest.protoFileId}`);
-    const methods = await window.main.grpc.loadMethods(activeRequest.protoFileId);
-    setGrpcState({ ...grpcState, methods });
   });
   const editorRef = useRef<CodeEditorHandle>(null);
   const gitVersion = useGitVCSVersion();
