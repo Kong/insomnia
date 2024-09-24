@@ -31,8 +31,9 @@ import {
   type LoaderFunction,
   type NavigateFunction,
   NavLink,
-  Outlet,
   redirect,
+  Route,
+  Routes,
   useFetcher,
   useFetchers,
   useNavigate,
@@ -112,6 +113,7 @@ import type {
   WebSocketRequestLoaderData,
 } from './request';
 import { useRootLoaderData } from './root';
+import Runner from './runner';
 import type { Child, WorkspaceLoaderData } from './workspace';
 
 export interface GrpcMessage {
@@ -1114,62 +1116,76 @@ export const Debug: FC = () => {
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
       <Panel>
-        <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
-          <Panel id="pane-one" minSize={10} className='pane-one theme--pane'>
-            {workspaceId ? (
-              <ErrorBoundary showAlert>
-                {isRequestGroupId(requestGroupId) && (
-                  <RequestGroupPane settings={settings} />
-                )}
-                {isGrpcRequestId(requestId) && grpcState && (
-                  <GrpcRequestPane
-                    grpcState={grpcState}
-                    setGrpcState={setGrpcState}
-                    reloadRequests={reloadRequests}
-                  />
-                )}
-                {isWebSocketRequestId(requestId) && (
-                  <WebSocketRequestPane environment={activeEnvironment} />
-                )}
-                {isRequestId(requestId) && (
-                  <RequestPane
-                    environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                    settings={settings}
-                    onPaste={text => {
-                      setPastedCurl(text);
-                      setPasteCurlModalOpen(true);
-                    }}
-                  />
-                )}
-                {Boolean(!requestId && !requestGroupId) && <PlaceholderRequestPane />}
-                {isRequestSettingsModalOpen && activeRequest && (
-                  <RequestSettingsModal
-                    request={activeRequest}
-                    onHide={() => setIsRequestSettingsModalOpen(false)}
-                  />
-                )}
-              </ErrorBoundary>
-            ) : null}
-          </Panel>
-          {
-            activeRequest ? (<>
-              <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
-              <Panel id="pane-two" minSize={10} className='pane-two theme--pane'>
-                <ErrorBoundary showAlert>
-                  {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
-                    <GrpcResponsePane grpcState={grpcState} />
-                  )}
-                  {isRealtimeRequest && (
-                    <RealtimeResponsePane requestId={activeRequest._id} />
-                  )}
-                  {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
-                    <ResponsePane activeRequestId={activeRequest._id} />
-                  )}
-                </ErrorBoundary>
-              </Panel>
-            </>) : null
-          }
-          <Outlet />
+        <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
+          <Routes>
+            <Route
+              path="*"
+              element={
+                <>
+                  <Panel id="pane-one" order={1} minSize={10} className='pane-one theme--pane'>
+                    {workspaceId ? (
+                      <ErrorBoundary showAlert>
+                        {isRequestGroupId(requestGroupId) && (
+                          <RequestGroupPane settings={settings} />
+                        )}
+                        {isGrpcRequestId(requestId) && grpcState && (
+                          <GrpcRequestPane
+                            grpcState={grpcState}
+                            setGrpcState={setGrpcState}
+                            reloadRequests={reloadRequests}
+                          />
+                        )}
+                        {isWebSocketRequestId(requestId) && (
+                          <WebSocketRequestPane environment={activeEnvironment} />
+                        )}
+                        {isRequestId(requestId) && (
+                          <RequestPane
+                            environmentId={activeEnvironment ? activeEnvironment._id : ''}
+                            settings={settings}
+                            onPaste={text => {
+                              setPastedCurl(text);
+                              setPasteCurlModalOpen(true);
+                            }}
+                          />
+                        )}
+                        {Boolean(!requestId && !requestGroupId) && <PlaceholderRequestPane />}
+                        {isRequestSettingsModalOpen && activeRequest && (
+                          <RequestSettingsModal
+                            request={activeRequest}
+                            onHide={() => setIsRequestSettingsModalOpen(false)}
+                          />
+                        )}
+                      </ErrorBoundary>
+                    ) : null}
+                  </Panel>
+                  {
+                    activeRequest ? (<>
+                      <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
+                      <Panel id="pane-two" order={2} minSize={10} className='pane-two theme--pane'>
+                        <ErrorBoundary showAlert>
+                          {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
+                            <GrpcResponsePane grpcState={grpcState} />
+                          )}
+                          {isRealtimeRequest && (
+                            <RealtimeResponsePane requestId={activeRequest._id} />
+                          )}
+                          {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
+                            <ResponsePane activeRequestId={activeRequest._id} />
+                          )}
+                        </ErrorBoundary>
+                      </Panel>
+                    </>) : null
+                  }
+                </>
+              }
+            />
+            <Route
+              path="runner"
+              element={
+                <Runner />
+              }
+            />
+          </Routes>
         </PanelGroup>
       </Panel>
     </PanelGroup >
