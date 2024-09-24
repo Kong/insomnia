@@ -32,6 +32,7 @@ export enum SegmentEvent {
   vcsSyncComplete = 'VCS Sync Completed',
   vcsAction = 'VCS Action Executed',
   buttonClick = 'Button Clicked',
+  inviteMember = 'Invite Member',
 }
 
 type PushPull = 'push' | 'pull';

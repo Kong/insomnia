@@ -41,7 +41,6 @@ import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization 
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { AsyncTask, getInitialRouteForOrganization } from '../../utils/router';
-import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
 import { CommandPalette } from '../components/command-palette';
@@ -51,6 +50,7 @@ import { Icon } from '../components/icon';
 import { InsomniaAI } from '../components/insomnia-ai-icon';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { showAlert, showModal } from '../components/modals';
+import { InviteModalContainer } from '../components/modals/invite-modal/invite-modal';
 import { SettingsModal, showSettingsModal } from '../components/modals/settings-modal';
 import { OrganizationAvatar } from '../components/organization-avatar';
 import { PresentUsers } from '../components/present-users';
@@ -601,6 +601,8 @@ const OrganizationRoute = () => {
     }
   }, [organizationId]);
 
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+
   return (
     <InsomniaEventStreamProvider>
       <div className="w-full h-full">
@@ -645,16 +647,19 @@ const OrganizationRoute = () => {
                   <Button
                     aria-label="Invite collaborators"
                     className="px-4 text-[--color-font-surprise] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-2 h-full font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-md hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                    onPress={() => {
-                      window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/organizations/${organizationId}/collaborators`);
-                      window.main.trackSegmentEvent({ event: SegmentEvent.inviteTrigger });
-                    }}
+                    onPress={() => setIsInviteModalOpen(true)}
                   >
                     <Icon icon="user-plus" />
                     <span className="truncate">
                       Invite
                     </span>
                   </Button>
+                  <InviteModalContainer
+                    {...{
+                      isOpen: isInviteModalOpen,
+                      setIsOpen: setIsInviteModalOpen,
+                    }}
+                  />
                   <MenuTrigger>
                     <Button data-testid='user-dropdown' className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                       <Avatar

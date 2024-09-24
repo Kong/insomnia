@@ -11,10 +11,29 @@ interface FetchConfig {
   retries?: number;
   origin?: string;
   headers?: Record<string, string>;
+  onlyResolveOnSuccess?: boolean;
+}
+
+export class ResponseFailError extends Error {
+  constructor(msg: string, response: Response) {
+    super(msg);
+    this.response = response;
+  };
+  response;
+  name = 'ResponseFailError';
 }
 
 // Adds headers, retries and opens deep links returned from the api
-export async function insomniaFetch<T = void>({ method, path, data, sessionId, organizationId, origin, headers }: FetchConfig): Promise<T> {
+export async function insomniaFetch<T = void>({
+  method,
+  path,
+  data,
+  sessionId,
+  organizationId,
+  origin,
+  headers,
+  onlyResolveOnSuccess = false,
+}: FetchConfig): Promise<T> {
   const config: RequestInit = {
     method,
     headers: {
@@ -41,6 +60,21 @@ export async function insomniaFetch<T = void>({ method, path, data, sessionId, o
       window.main.openDeepLink(uri);
     }
     const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
+    if (onlyResolveOnSuccess && !response.ok) {
+      let errMsg = '';
+      if (isJson) {
+        try {
+          const json = await response.json();
+          if (typeof json?.message === 'string') {
+            errMsg = json.message;
+          }
+        } catch (err) { }
+      }
+      throw new ResponseFailError(
+        errMsg,
+        response,
+      );
+    }
     return isJson ? response.json() : response.text();
   } catch (err) {
     if (err.name === 'AbortError') {

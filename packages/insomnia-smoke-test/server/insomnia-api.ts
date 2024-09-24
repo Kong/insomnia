@@ -89,6 +89,148 @@ const whoami = {
   'lastName': 'Morty',
 };
 
+const allRoles = [
+  {
+    'id': 'role_d32b9d6c-1fb2-4ac1-b780-b4c15074d6cb',
+    'name': 'owner',
+    'description': 'Owner can manage the organization and also delete it.',
+  },
+  {
+    'id': 'role_013aeb67-15c9-42c5-bcd0-5c70a33f8719',
+    'name': 'admin',
+    'description': 'Admin can only manage the organization.',
+  },
+  {
+    'id': 'role_3fbb17e4-249c-47d5-a5ee-b7f1f43a9c63',
+    'name': 'member',
+    'description': 'Member cannot manage the organization.',
+  },
+];
+
+const userPermissions = {
+  'create:enterprise_connection': false,
+  'create:invitation': true,
+  'create:team_project': true,
+  'delete:enterprise_connection': false,
+  'delete:file': true,
+  'delete:invitation': true,
+  'delete:membership': true,
+  'delete:organization': true,
+  'delete:team_project': true,
+  'get:organization:transfers': true,
+  'own:organization': true,
+  'read:enterprise_connection': false,
+  'read:invitation': true,
+  'read:membership': true,
+  'read:organization': true,
+  'read:team_project': true,
+  'revoke:organization:transfer': true,
+  'start:organization:transfer': true,
+  'update:enterprise_connection': false,
+  'update:membership': true,
+  'update:organization': true,
+  'update:team_project': true,
+};
+
+const orgInfo = {
+  'id': 'org_3d314c35-b9ca-4aec-b57d-04cea38da05c',
+  'name': 'Sync',
+  'display_name': 'Sync',
+  'branding': {
+    'logo_url': 'https://d2evto68nv31gd.cloudfront.net/org_98e187f8-a753-4abf-b0b2-58cdb852eba6',
+  },
+  'metadata': {
+    'organizationType': 'team',
+    'ownerAccountId': 'acct_e9cf786dc67b4dbc8c002359b3cc3d70',
+  },
+};
+
+const currentRole = {
+  'roleId': 'role_d32b9d6c-1fb2-4ac1-b780-b4c15074d6cb',
+  'name': 'owner',
+  'description': 'Owner can manage the organization and also delete it.',
+};
+
+const storageRule = { 'storage': 'cloud_plus_local', 'isOverridden': false };
+
+const members = {
+  'start': 0,
+  'limit': 0,
+  'length': 0,
+  'total': 2,
+  'next': '',
+  'members': [
+    {
+      'user_id': 'acct_e9cf786dc67b4dbc8c002359b3cc3d70',
+      'picture': 'https://s.gravatar.com/avatar/5301bf735ebace330bb801abb593dc78?s=480\u0026r=pg\u0026d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fwe.png',
+      'name': 'wei.yao+2@konghq.com ',
+      'email': 'wei.yao+2@konghq.com',
+      'role_name': 'owner',
+      'created': '2024-08-28T07:02:04.341983Z',
+    },
+    {
+      'user_id': 'acct_f883f98dbb9945fba7bb23925361e02a',
+      'picture': 'https://s.gravatar.com/avatar/fe822a9c78b8154da82635055895e6e6?s=480\u0026r=pg\u0026d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fwe.png',
+      'name': 'wei.yao+3@konghq.com ',
+      'email': 'wei.yao+3@konghq.com',
+      'role_name': 'member',
+      'created': '2024-09-12T11:40:43.168144Z',
+    },
+  ],
+};
+
+const invites = {
+  'start': 0,
+  'limit': 3,
+  'length': 0,
+  'total': 3,
+  'next': '',
+  'invitations': [
+    {
+      'id': 'uinv_1dmvK1rTehbiBV85',
+      'inviter': {
+        'name': 'wei.yao+2@konghq.com ',
+      },
+      'invitee': {
+        'email': 'wei.yao@konghq.com',
+      },
+      'created_at': '2024-09-14T10:16:10.513Z',
+      'expires_at': '2024-09-21T10:16:10.513Z',
+      'roles': [
+        'member',
+      ],
+    },
+    {
+      'id': 'uinv_T9uaMMeoRQQVKF2E',
+      'inviter': {
+        'name': 'wei.yao+2@konghq.com ',
+      },
+      'invitee': {
+        'email': 'wei.yao+6@konghq.com',
+      },
+      'created_at': '2024-09-12T10:33:45.320Z',
+      'expires_at': '2024-09-19T10:33:45.320Z',
+      'roles': [
+        'member',
+      ],
+    },
+    {
+      'id': 'uinv_TIYVQQC2aH7Ev5hW',
+      'inviter': {
+        'name': 'wei.yao+2@konghq.com ',
+      },
+      'invitee': {
+        'email': 'wei.yao+4@konghq.com',
+      },
+      'created_at': '2024-09-12T10:03:51.638Z',
+      'expires_at': '2024-09-19T10:03:51.638Z',
+      'roles': [
+        'member',
+      ],
+    },
+  ],
+};
+
 export default (app: Application) => {
   // User
   app.get('/v1/user/profile', (_req, res) => {
@@ -193,5 +335,37 @@ export default (app: Application) => {
 
     projectsByOrgId.set(organization.id, projects);
     res.status(200).send({ ...newProject, organizationId: organization.id });
+  });
+
+  app.post('/v1/organizations/:organizationId/collaborators', (_req, res) => {
+    res.json({ 'data': [] });
+  });
+
+  app.get('/v1/organizations/roles', (_req, res) => {
+    res.json(allRoles);
+  });
+
+  app.get('/v1/organizations/:organizationId/user-permissions', (_req, res) => {
+    res.json(userPermissions);
+  });
+
+  app.get('/v1/organizations/:organizationId', (_req, res) => {
+    res.json(orgInfo);
+  });
+
+  app.get('/v1/organizations/:organizationId/members/:accountId/roles', (_req, res) => {
+    res.json(currentRole);
+  });
+
+  app.get('/v1/organizations/:organizationId/storage-rule', (_req, res) => {
+    res.json(storageRule);
+  });
+
+  app.get('/v1/organizations/:organizationId/members', (_req, res) => {
+    res.json(members);
+  });
+
+  app.get('/v1/organizations/:organizationId/invites', (_req, res) => {
+    res.json(invites);
   });
 };
