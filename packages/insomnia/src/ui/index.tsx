@@ -474,7 +474,7 @@ async function renderApp() {
                                       ).runCollectionAction(...args),
                                     children: [
                                       {
-                                        path: 'run/',
+                                        path: 'run',
                                         action: async (...args) =>
                                           (
                                             await import('./routes/runner')
