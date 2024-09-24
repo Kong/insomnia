@@ -75,14 +75,14 @@ interface PropsForUpdateRole {
   isUserOrganizationOwner: boolean;
   isRBACEnabled: boolean;
   isDisabled?: boolean;
-  onRoleChange: (role: Role) => void;
+  onRoleChange: (role: Role) => Promise<void>;
 }
 
 interface PropsForInvite {
   type: SELECTOR_TYPE.INVITE;
   availableRoles: Role[];
   memberRoles: string[];
-  onRoleChange: (role: Role) => void;
+  onRoleChange: (role: Role) => Promise<void>;
   isDisabled?: boolean;
 }
 
@@ -104,6 +104,7 @@ export const OrganizationMemberRolesSelector = (props: PropsForUpdateRole | Prop
         isUserOrganizationOwner,
         isRBACEnabled,
       } = props;
+
       const { allow, title, message } = checkIfAllow(
         isUserOrganizationOwner,
         userRole,
@@ -118,11 +119,15 @@ export const OrganizationMemberRolesSelector = (props: PropsForUpdateRole | Prop
         });
       } else {
         setSelectedRoles([selectedRole.name]);
-        onRoleChange(selectedRole);
+        onRoleChange(selectedRole).catch(() => {
+          setSelectedRoles([...selectedRoles] as string[]);
+        });
       }
     } else {
       setSelectedRoles([selectedRole.name]);
-      onRoleChange(selectedRole);
+      onRoleChange(selectedRole).catch(() => {
+        setSelectedRoles([...selectedRoles] as string[]);
+      });
     }
   };
 

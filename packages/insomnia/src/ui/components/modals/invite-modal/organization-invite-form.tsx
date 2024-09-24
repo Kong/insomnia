@@ -87,7 +87,7 @@ export const InviteForm = ({ onInviteCompleted, allRoles }: {
               availableRoles: allRoles,
               memberRoles: [defaultRoleName],
               isDisabled: loading,
-              onRoleChange: role => {
+              onRoleChange: async role => {
                 selectedRoleRef.current = role;
               },
             }}

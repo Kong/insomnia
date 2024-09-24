@@ -20,6 +20,7 @@ const InviteModal: FC<{
   permissionRef: MutableRefObject<Record<Permission, boolean>>;
   isCurrentUserOrganizationOwner: boolean;
   currentUserAccountId: string;
+  revalidateCurrentUserRoleAndPermissionsInOrg: (organizationId: string) => Promise<[void, void]>;
 }> = ({
   setIsOpen,
   organizationId,
@@ -29,6 +30,7 @@ const InviteModal: FC<{
   permissionRef,
   isCurrentUserOrganizationOwner,
   currentUserAccountId,
+  revalidateCurrentUserRoleAndPermissionsInOrg,
 }) => {
   const [queryInputString, setQueryInputString] = useState('');
   const {
@@ -158,20 +160,26 @@ const InviteModal: FC<{
                         </div>
                         <div className='w-[88px] shrink-0'>
                           <OrganizationMemberRolesSelector
-                            type={SELECTOR_TYPE.UPDATE}
-                            availableRoles={allRoles}
-                            memberRoles={isAcceptedMember ? [member.role_name] : member.roles}
-                            userRole={currentUserRoleInOrg as Role}
-                            isDisabled={isAcceptedMember && member.role_name === 'owner'}
-                            isRBACEnabled={Boolean(orgFeatures?.features.orgBasicRbac?.enabled)}
-                            isUserOrganizationOwner={isCurrentUserOrganizationOwner}
-                            hasPermissionToChangeRoles={permissionRef.current['update:membership']}
-                            onRoleChange={(role: Role) => {
-                              if (isAcceptedMember) {
-                                return updateMemberRole(role.id, member.user_id, organizationId as string);
-                              } else {
-                                return updateInvitationRole(role.id, member.id, organizationId as string);
-                              }
+                            {...{
+                              type: SELECTOR_TYPE.UPDATE,
+                              availableRoles: allRoles,
+                              memberRoles: isAcceptedMember ? [member.role_name] : member.roles,
+                              userRole: currentUserRoleInOrg as Role,
+                              isDisabled: isAcceptedMember && member.role_name === 'owner',
+                              isRBACEnabled: Boolean(orgFeatures?.features.orgBasicRbac?.enabled),
+                              isUserOrganizationOwner: isCurrentUserOrganizationOwner,
+                              hasPermissionToChangeRoles: permissionRef.current['update:membership'],
+                              async onRoleChange(role: Role) {
+                                if (isAcceptedMember) {
+                                  await updateMemberRole(role.id, member.user_id, organizationId);
+                                  if (isCurrentUser) {
+                                    await revalidateCurrentUserRoleAndPermissionsInOrg(organizationId);
+                                    await queryPageFunctionsRef.current.reloadCurrentPage(organizationId);
+                                  }
+                                } else {
+                                  await updateInvitationRole(role.id, member.id, organizationId);
+                                }
+                              },
                             }}
                           />
                         </div>
@@ -263,11 +271,20 @@ export const InviteModalContainer: FC<{
     return Promise.all([
       getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
       getOrganizationFeatures(organizationId).then(setOrgFeatures),
-      getOrganizationUserPermissions(organizationId).then(permissions => {
+      getCurrentUserPermissionsInOrg(organizationId).then(permissions => {
         permissionRef.current = permissions;
       }),
       getAccountId().then(setCurrentUserAccountId),
       getOrganization(organizationId).then(setCurrentOrgInfo),
+    ]);
+  }
+
+  function revalidateCurrentUserRoleAndPermissionsInOrg(organizationId: string) {
+    return Promise.all([
+      getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
+      getCurrentUserPermissionsInOrg(organizationId).then(permissions => {
+        permissionRef.current = permissions;
+      }),
     ]);
   }
 
@@ -317,6 +334,7 @@ export const InviteModalContainer: FC<{
           permissionRef,
           isCurrentUserOrganizationOwner,
           currentUserAccountId,
+          revalidateCurrentUserRoleAndPermissionsInOrg,
         }}
       />;
     } else {
@@ -552,7 +570,7 @@ export type Permission =
   | 'update:enterprise_connection'
   | 'leave:organization';
 
-export async function getOrganizationUserPermissions(
+export async function getCurrentUserPermissionsInOrg(
   organizationId: string,
 ): Promise<Record<Permission, boolean>> {
   return insomniaFetch({
