@@ -385,9 +385,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       >
         <div>
           These environment variables have been defined, but have not been valued with in the currently active environment:
-          <div className='flex gap-2'>
+          <div className='flex gap-2 flex-wrap max-h-80 overflow-y-auto'>
             {undefinedEnvironmentVariableList?.map(item => {
-              return <Button key={item} className="bg-[--color-surprise] text-[--color-font-surprise] mt-3 px-3 py-1 mr-3 rounded-sm">{item}</Button>;
+              return <div key={item} className="bg-[--color-surprise] text-[--color-font-surprise] mt-3 px-3 py-1 mr-3 rounded-sm">{item}</div>;
             })}
           </div>
         </div>
