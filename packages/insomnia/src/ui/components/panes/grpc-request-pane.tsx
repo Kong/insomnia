@@ -1,3 +1,4 @@
+import { readFile } from 'fs/promises';
 import React, { type FunctionComponent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
@@ -11,7 +12,9 @@ import type { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
 import type { GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
+import { urlMatchesCertHost } from '../../../network/url-matches-cert-host';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
+import { setDefaultProtocol } from '../../../utils/url/protocol';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import type { GrpcRequestState } from '../../routes/debug';
@@ -98,7 +101,15 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
           purpose: 'send',
           skipBody: canClientStream(methodType),
         });
-        window.main.grpc.start({ request });
+        const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+        const clientCertificate = workspaceClientCertificates.find(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), request.url, false));
+        const caCertificatePath = (await models.caCertificate.findByParentId(workspaceId))?.path;
+        window.main.grpc.start({
+          request,
+          clientCert: clientCertificate?.cert || undefined,
+          clientKey: clientCertificate?.key || undefined,
+          caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+        });
         setGrpcState({
           ...grpcState,
           requestMessages: [],
@@ -189,7 +200,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 disabled={!activeRequest.url}
                 onClick={async () => {
                   try {
-                    const rendered =
+                    let rendered =
                       await tryToInterpolateRequestOrShowRenderErrorModal({
                         request: activeRequest,
                         environmentId,
@@ -199,6 +210,15 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                           reflectionApi: activeRequest.reflectionApi,
                         },
                       });
+                    const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+                    const clientCertificate = workspaceClientCertificates.find(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), request.url, false));
+                    const caCertificatePath = (await models.caCertificate.findByParentId(workspaceId))?.path;
+                    rendered = {
+                      ...rendered,
+                      clientCert: clientCertificate?.cert || undefined,
+                      clientKey: clientCertificate?.key || undefined,
+                      caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+                    };
                     const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
                     setGrpcState({ ...grpcState, methods });
                     patchRequest(requestId, { protoFileId: '', protoMethodName: '' });
