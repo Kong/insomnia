@@ -8,6 +8,7 @@ import { Code, ConnectError, createPromiseClient } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-node';
 import {
   type Call,
+  ChannelCredentials,
   type ClientDuplexStream,
   type ClientReadableStream,
   credentials,
@@ -26,6 +27,7 @@ import type {
 } from '@grpc/proto-loader';
 import * as protoLoader from '@grpc/proto-loader';
 import electron, { type IpcMainEvent } from 'electron';
+import fs from 'fs';
 import * as grpcReflection from 'grpc-reflection-js';
 
 import { version } from '../../../package.json';
@@ -343,6 +345,24 @@ const isEnumDefinition = (definition: AnyDefinition): definition is EnumTypeDefi
   return (definition as EnumTypeDefinition).format === 'Protocol Buffer 3 EnumDescriptorProto';
 };
 
+const getChannelCredentialsByWorkspaceId = async (workspaceId: string): ChannelCredentials => {
+  const clientCerts = await models.clientCertificate.findByParentId(workspaceId);
+  const caCert = await models.caCertificate.findByParentId(workspaceId);
+  const caCertficatePath = caCert?.path || null;
+  const rootCert = (caCertficatePath && fs.readFileSync(caCertficatePath));
+  // TODO: filter out disabled client certs and select approriate
+  const clientCert = clientCerts?.[0]?.cert;
+  const clientKey = clientCerts?.[0]?.key;
+
+  if (!rootCert) {
+    return ChannelCredentials.createInsecure();
+  }
+  if (rootCert && clientKey && clientCert) {
+    return ChannelCredentials.createSsl(rootCert, Buffer.from(clientKey, 'utf8'), Buffer.from(clientCert, 'utf8'));
+  }
+  return ChannelCredentials.createSsl(rootCert);
+};
+
 export const start = (
   event: IpcMainEvent,
   { request }: GrpcIpcRequestParams,
@@ -355,6 +375,8 @@ export const start = (
     const methodType = getMethodType(method);
     // Create client
     const { url, enableTls } = parseGrpcUrl(request.url);
+    const workspaceId = request.parentId;
+
     if (!url) {
       event.reply('grpc.error', request._id, new Error('URL not specified'));
       return undefined;
@@ -362,7 +384,8 @@ export const start = (
     console.log(`[gRPC] connecting to url=${url} ${enableTls ? 'with' : 'without'} TLS`);
     // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
     const Client = makeGenericClientConstructor({});
-    const client = new Client(url, enableTls ? credentials.createSsl() : credentials.createInsecure());
+    const creds = enableTls ? getChannelCredentialsByWorkspaceId(workspaceId) : credentials.createInsecure();
+    const client = new Client(url, creds);
     if (!client) {
       return;
     }
