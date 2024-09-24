@@ -211,12 +211,14 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                         },
                       });
                     const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
-                    const clientCertificate = workspaceClientCertificates.find(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), request.url, false));
+                    const clientCertificate = workspaceClientCertificates.find(c => !c.disabled);
                     const caCertificatePath = (await models.caCertificate.findByParentId(workspaceId))?.path;
+                    const clientCert = await readFile(clientCertificate?.cert || '', 'utf8');
+                    const clientKey = await readFile(clientCertificate?.key || '', 'utf8');
                     rendered = {
                       ...rendered,
-                      clientCert: clientCertificate?.cert || undefined,
-                      clientKey: clientCertificate?.key || undefined,
+                      clientCert,
+                      clientKey,
                       caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
                     };
                     const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
