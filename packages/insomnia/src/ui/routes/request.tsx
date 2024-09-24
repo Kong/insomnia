@@ -244,7 +244,9 @@ export const deleteRequestAction: ActionFunction = async ({ request, params }) =
   invariant(workspaceMeta, 'Workspace meta not found');
   if (workspaceMeta.activeRequestId === id) {
     await models.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: null });
-    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
+    if (request.url.includes(id)) {
+      return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
+    }
   }
   return null;
 };

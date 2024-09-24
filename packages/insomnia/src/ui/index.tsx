@@ -44,7 +44,6 @@ const Debug = lazy(() => import('./routes/debug'));
 const Design = lazy(() => import('./routes/design'));
 const MockServer = lazy(() => import('./routes/mock-server'));
 const Environments = lazy(() => import('./routes/environments'));
-const Runner = lazy(() => import('./routes/runner'));
 
 initializeSentry();
 initializeLogging();
@@ -321,7 +320,7 @@ async function renderApp() {
                             ),
                             children: [
                               {
-                                path: `${ACTIVITY_DEBUG}`,
+                                path: `${ACTIVITY_DEBUG}/*`,
                                 loader: async (...args) =>
                                   (await import('./routes/debug')).loader(
                                     ...args,
@@ -464,10 +463,7 @@ async function renderApp() {
                                       (
                                         await import('./routes/runner')
                                       ).collectionRunnerStatusLoader(...args),
-                                    element:
-                                      <Suspense fallback={<AppLoadingIndicator />}>
-                                        <Runner />
-                                      </Suspense>,
+                                    element: <Outlet />,
                                     action: async (...args) =>
                                       (
                                         await import('./routes/runner')
@@ -705,6 +701,7 @@ async function renderApp() {
                                 children: [
                                   {
                                     index: true,
+                                    element: <Outlet />,
                                     loader: async (...args) =>
                                       (
                                         await import('./routes/test-suite')

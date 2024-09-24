@@ -2,7 +2,7 @@ import type { RequestContext } from 'insomnia-sdk';
 import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { Panel, PanelResizeHandle } from 'react-resizable-panels';
 import { type ActionFunction, redirect, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
@@ -216,11 +216,15 @@ export const Runner: FC<{}> = () => {
   const [requestIds, setRequestIds] = useLocalStorage<string[]>(`runner:requestIds:${workspaceId}`, { defaultValue: requestRows.map(item => item.id) });
 
   useEffect(() => {
+    const areRequestsSameLength = requestIds.length === requestRows.length;
+    const areRequestIdsMatching = requestRows.map(requestRow => requestRow.id).every(id => requestIds.includes(id));
+    const areRequestsSynced = areRequestsSameLength && areRequestIdsMatching;
+
     // request was added or removed
-    if (requestIds.length !== requestRows.length) {
-      const newRequest = requestRows.find(item => !requestIds.includes(item.id));
-      if (newRequest) {
-        setRequestIds([...requestIds, newRequest.id]);
+    if (!areRequestsSynced) {
+      const newRequests = requestRows.filter(item => !requestIds.includes(item.id));
+      if (newRequests.length > 0) {
+        setRequestIds([...requestIds, ...newRequests.map(item => item.id)]);
       } else {
         setRequestIds(requestIds.filter(key => requestRows.map(r => r.id).includes(key)));
       }
@@ -439,10 +443,7 @@ export const Runner: FC<{}> = () => {
   const disabledKeys = useMemo(() => isRunning ? requestIds : [], [isRunning, requestIds]);
   const isDisabled = isRunning || selectedRequestIds.size === 0;
   return (
-    <PanelGroup autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
-      <Panel id="wrapper">
-        <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
-
+    <>
           <Panel id="pane-one" className='pane-one theme--pane' minSize={35} maxSize={90}>
             <ErrorBoundary showAlert>
 
@@ -787,9 +788,7 @@ export const Runner: FC<{}> = () => {
             </Tabs>
 
           </Panel>
-        </PanelGroup>
-      </Panel>
-    </PanelGroup>
+    </>
   );
 };
 
