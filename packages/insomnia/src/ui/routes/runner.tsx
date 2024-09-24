@@ -34,7 +34,7 @@ import { ResponseTimer } from '../components/response-timer';
 import { getTimeAndUnit } from '../components/tags/time-tag';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
 import type { OrganizationLoaderData } from './organization';
-import { type CollectionRunnerContext, type RunnerSource, sendActionImplementation } from './request';
+import { type CollectionRunnerContext, defaultSendActionRuntime, type RunnerSource, sendActionImplementation } from './request';
 import { useRootLoaderData } from './root';
 import type { Child, WorkspaceLoaderData } from './workspace';
 
@@ -165,6 +165,7 @@ export const Runner: FC<{}> = () => {
   const [uploadData, setUploadData] = useState<UploadDataType[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [bail, setBail] = useState<boolean>(true);
+  const [keepLog, setKeepLog] = useState<boolean>(true);
   const [isRunning, setIsRunning] = useState(false);
 
   invariant(iterationCount, 'iterationCount should not be null');
@@ -328,6 +329,7 @@ export const Runner: FC<{}> = () => {
       userUploadEnvs,
       delay,
       bail,
+      keepLog,
       targetFolderId: targetFolderId || '',
     };
     submit(
@@ -659,12 +661,13 @@ export const Runner: FC<{}> = () => {
                   <div>
                     <label className="flex items-center gap-2">
                       <input
-                        name='log-off'
-                        onChange={() => { }}
+                        name='enable-log'
+                        onChange={() => setKeepLog(!keepLog)}
                         type="checkbox"
-                        disabled={true}
+                        disabled={isRunning}
+                        checked={keepLog}
                       />
-                      Turn off logs during run
+                      Keep logs after run
                       <HelpTooltip className="space-left">Disabling this will improve the performance while logs are not saved.</HelpTooltip>
                     </label>
                   </div>
@@ -894,6 +897,7 @@ export interface runCollectionActionParams {
   delay: number;
   userUploadEnvs: UserUploadEnvironment[];
   bail: boolean;
+  keepLog: boolean;
   targetFolderId: string;
 }
 
@@ -904,7 +908,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   invariant(projectId, 'Project id is required');
   invariant(workspaceId, 'Workspace id is required');
 
-  const { requests, iterationCount, delay, userUploadEnvs, bail, targetFolderId } = await request.json() as runCollectionActionParams;
+  const { requests, iterationCount, delay, userUploadEnvs, bail, targetFolderId, keepLog } = await request.json() as runCollectionActionParams;
   const source: RunnerSource = 'runner';
 
   let testCtx: CollectionRunnerContext = {
@@ -938,6 +942,13 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   startExecution(workspaceId);
 
   try {
+    const runtime = keepLog ?
+      defaultSendActionRuntime :
+      {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        appendTimeline: async (_timelinePath: string, _logs: string[]) => { }, // no op
+      };
+
     for (let i = 0; i < iterationCount; i++) {
       // nextRequestIdOrName is used to manual set next request in iteration from pre-request script
       let nextRequestIdOrName = '';
@@ -1004,6 +1015,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
             shouldPromptForPathAfterResponse: false,
             ignoreUndefinedEnvVariable: true,
             testResultCollector: resultCollector,
+            runtime,
             transientVariables: testCtx.transientVariables,
           }) as RequestContext | null;
           if (mutatedContext?.execution?.nextRequestIdOrName) {

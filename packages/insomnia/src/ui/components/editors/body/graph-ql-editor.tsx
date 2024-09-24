@@ -21,6 +21,7 @@ import type { Request } from '../../../../models/request';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../../../network/network';
 import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
+import { defaultSendActionRuntime } from '../../../routes/request';
 import { useRootLoaderData } from '../../../routes/root';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
 import { CodeEditor, type CodeEditorHandle } from '../../codemirror/code-editor';
@@ -140,6 +141,7 @@ const fetchGraphQLSchemaForRequest = async ({
       settings,
       timelinePath,
       responseId,
+      defaultSendActionRuntime,
     );
     const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
     const statusCode = response.statusCode || 0;

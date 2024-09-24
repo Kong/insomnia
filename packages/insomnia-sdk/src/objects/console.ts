@@ -60,4 +60,9 @@ export class Console {
             .map(row => JSON.stringify(row) + '\n')
             .join('\n');
     };
+
+    dumpLogsAsArray = () => {
+        return this.rows
+            .map(row => JSON.stringify(row) + '\n');
+    };
 }

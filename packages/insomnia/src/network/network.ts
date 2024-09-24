@@ -33,6 +33,7 @@ import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
+import type { SendActionRuntime } from '../ui/routes/request';
 import { invariant } from '../utils/invariant';
 import { serializeNDJSON } from '../utils/ndjson';
 import {
@@ -184,6 +185,7 @@ export const tryToExecutePreRequestScript = async (
   userUploadEnvironment?: UserUploadEnvironment,
   iteration?: number,
   iterationCount?: number,
+  runtime?: SendActionRuntime,
 ) => {
 
   const requestGroups = ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
@@ -206,6 +208,7 @@ export const tryToExecutePreRequestScript = async (
       userUploadEnvironment,
       requestTestResults: new Array<RequestTestResult>(),
       transientVariables,
+      logs: '',
     };
   }
   const joinedScript = [...folderScripts].join('\n');
@@ -227,6 +230,7 @@ export const tryToExecutePreRequestScript = async (
     eventName: 'prerequest',
     settings,
     transientVariables,
+  runtime,
   });
   if (!mutatedContext || 'error' in mutatedContext) {
     return {
@@ -242,6 +246,7 @@ export const tryToExecutePreRequestScript = async (
     };
   }
   await savePatchesMadeByScript(mutatedContext, environment, baseEnvironment, activeGlobalEnvironment);
+
   return {
     request: mutatedContext.request,
     environment: mutatedContext.environment,
@@ -332,6 +337,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     eventName,
     execution,
     transientVariables,
+    runtime,
   } = context;
   invariant(script, 'script must be provided');
 
@@ -381,6 +387,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
           location: requestLocation,
         },
         transientVariables,
+        logs: [],
       },
     });
     if ('error' in originalOutput) {
@@ -422,6 +429,9 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       );
       userUploadEnvironment.data = output?.iterationData?.data || [];
       userUploadEnvironment.dataPropertyOrder = userUploadEnvPropertyOrder.map;
+    }
+    if (runtime) {
+      await runtime.appendTimeline(timelinePath, output.logs);
     }
 
     if (output?.transientVariables !== undefined) {
@@ -489,6 +499,7 @@ type RequestAndContextAndResponse = RequestContextForScript & {
   response: sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse;
   iteration?: number;
   iterationCount?: number;
+  runtime: SendActionRuntime;
 };
 
 type RequestAndContextAndOptionalResponse = RequestContextForScript & {
@@ -498,6 +509,7 @@ type RequestAndContextAndOptionalResponse = RequestContextForScript & {
   iteration?: number;
   iterationCount?: number;
   eventName?: RequestContext['requestInfo']['eventName'];
+  runtime?: SendActionRuntime;
 };
 
 export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
@@ -602,6 +614,7 @@ export interface sendCurlAndWriteTimelineResponse extends ResponsePatch {
   timelinePath: string;
   statusMessage: string;
   cookies: Cookie[];
+  timeline: string[];
 }
 
 export async function sendCurlAndWriteTimeline(
@@ -611,6 +624,7 @@ export async function sendCurlAndWriteTimeline(
   settings: Settings,
   timelinePath: string,
   responseId: string,
+  runtime: SendActionRuntime,
 ): Promise<sendCurlAndWriteTimelineError | sendCurlAndWriteTimelineResponse> {
   const requestId = renderedRequest._id;
   const timeline: ResponseTimelineEntry[] = [];
@@ -643,7 +657,9 @@ export async function sendCurlAndWriteTimeline(
   const output = await nodejsCurlRequest(requestOptions);
 
   if ('error' in output) {
-    await fs.promises.appendFile(timelinePath, serializeNDJSON(timeline));
+    if (runtime) {
+      await runtime.appendTimeline(timelinePath, serializeNDJSON(timeline).split('\n'));
+    }
 
     return {
       _id: responseId,
@@ -654,6 +670,7 @@ export async function sendCurlAndWriteTimeline(
       bytesRead: 0,
       statusMessage: output.statusMessage,
       timelinePath,
+      timeline: serializeNDJSON(timeline).split('\n'),
     };
   }
   const { patch, debugTimeline, headerResults, responseBodyPath } = output;
@@ -668,7 +685,9 @@ export async function sendCurlAndWriteTimeline(
   }
   const lastRedirect = headerResults[headerResults.length - 1];
 
-  await fs.promises.appendFile(timelinePath, serializeNDJSON(timeline));
+  if (runtime) {
+    await runtime.appendTimeline(timelinePath, serializeNDJSON(timeline).split('\n'));
+  }
 
   return {
     _id: responseId,
@@ -681,6 +700,7 @@ export async function sendCurlAndWriteTimeline(
     statusCode: lastRedirect.code,
     statusMessage: lastRedirect.reason,
     cookies,
+    timeline: serializeNDJSON(timeline).split('\n'),
     ...patch,
   };
 }

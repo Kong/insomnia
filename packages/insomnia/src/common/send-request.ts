@@ -18,6 +18,7 @@ import {
   tryToExecutePreRequestScript,
   tryToInterpolateRequest,
 } from '../network/network';
+import { defaultSendActionRuntime } from '../ui/routes/request';
 import { invariant } from '../utils/invariant';
 import { database } from './database';
 import { generateId } from './misc';
@@ -150,7 +151,8 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       requestData.caCert,
       mutatedContext.settings,
       requestData.timelinePath,
-      requestData.responseId
+      requestData.responseId,
+      defaultSendActionRuntime,
     );
     const res = await responseTransform(response, environmentId, renderedRequest, renderedResult.context);
     const postMutatedContext = await tryToExecuteAfterResponseScript({
