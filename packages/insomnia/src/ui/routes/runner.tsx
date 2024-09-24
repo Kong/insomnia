@@ -214,15 +214,19 @@ export const Runner: FC<{}> = () => {
       };
     });
   const [requestIds, setRequestIds] = useLocalStorage<string[]>(`runner:requestIds:${workspaceId}`, { defaultValue: requestRows.map(item => item.id) });
-  // request was added or removed
-  if (requestIds.length !== requestRows.length) {
-    const newRequest = requestRows.find(item => !requestIds.includes(item.id));
-    if (newRequest) {
-      setRequestIds([...requestIds, newRequest.id]);
-    } else {
-      setRequestIds(requestIds.filter(key => requestRows.map(r => r.id).includes(key)));
+
+  useEffect(() => {
+    // request was added or removed
+    if (requestIds.length !== requestRows.length) {
+      const newRequest = requestRows.find(item => !requestIds.includes(item.id));
+      if (newRequest) {
+        setRequestIds([...requestIds, newRequest.id]);
+      } else {
+        setRequestIds(requestIds.filter(key => requestRows.map(r => r.id).includes(key)));
+      }
     }
-  }
+  }, [requestIds, requestRows, setRequestIds]);
+
   const sortedRequestRows = requestIds
     .filter(key => requestRows.find(item => item.id === key))
     .map(key => {
@@ -309,7 +313,7 @@ export const Runner: FC<{}> = () => {
       {
         method: 'post',
         encType: 'application/json',
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner/run/`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner/run`,
       }
     );
   };
@@ -436,7 +440,7 @@ export const Runner: FC<{}> = () => {
   const isDisabled = isRunning || selectedRequestIds.size === 0;
   return (
     <PanelGroup autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
-      <Panel>
+      <Panel id="wrapper">
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
 
           <Panel id="pane-one" className='pane-one theme--pane' minSize={35} maxSize={90}>
@@ -593,7 +597,7 @@ export const Runner: FC<{}> = () => {
                           const parentFolderContainer = parentFolders.length > 0 ? <span className="ml-2">{parentFolders}</span> : null;
 
                           return (
-                            <RequestItem className='text-[--color-font] border border-solid border-transparent' style={{ 'outline': 'none' }}>
+                            <RequestItem textValue={item.name} className='text-[--color-font] border border-solid border-transparent' style={{ 'outline': 'none' }}>
                               {parentFolderContainer}
                               <span className={`ml-2 uppercase text-xs http-method-${item.method}`}>{item.method}</span>
                               <span className="ml-2 hover:underline cursor-pointer text-[--hl]" onClick={() => goToRequest(item.id)}>{item.name}</span>
