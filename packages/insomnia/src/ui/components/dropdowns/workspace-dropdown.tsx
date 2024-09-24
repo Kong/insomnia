@@ -174,7 +174,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
             name: 'Run Collection',
             icon: <Icon icon='circle-play' />,
             action: () => {
-              navigate(`/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/${activeWorkspace._id}/debug/runner`,);
+              navigate(`/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/${activeWorkspace._id}/debug/runner?folder=`,);
             },
           },
         ],

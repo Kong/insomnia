@@ -1,7 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useRef, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Section } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
@@ -45,6 +45,7 @@ export const RequestGroupActionsDropdown = ({
   const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<DropdownHandle>(null);
+  const navigate = useNavigate();
 
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
@@ -261,6 +262,14 @@ export const RequestGroupActionsDropdown = ({
             icon: 'trash',
             action: () =>
               handleDeleteFolder(),
+          },
+          {
+            id: 'RunFolder',
+            name: 'Run Folder',
+            icon: 'circle-play',
+            action: () => {
+              navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?folder=${requestGroup._id}`,);
+            },
           },
         ],
       },

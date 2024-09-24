@@ -3,7 +3,7 @@ import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelResizeHandle } from 'react-resizable-panels';
-import { type ActionFunction, redirect, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, redirect, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
 import { useListData } from 'react-stately';
 import { useInterval } from 'react-use';
 
@@ -106,20 +106,23 @@ interface RequestRow {
   ancestorNames: string[];
   method: string;
   url: string;
+  parentId: string;
 };
 
 export const Runner: FC<{}> = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [shouldRefresh, setShouldRefresh] = useState(false);
   const [errorMsg, setErrorMsg] = useState<null | string>(null);
+  const [targetFolderId, setTargetFolderId] = useState<string | null>(null);
 
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
 
-  if (searchParams.has('refresh-pane') || searchParams.has('error')) {
+  if (searchParams.has('refresh-pane') || searchParams.has('error') || searchParams.has('folder')) {
     if (searchParams.has('refresh-pane')) {
       setShouldRefresh(true);
       searchParams.delete('refresh-pane');
     }
+
     if (searchParams.has('error')) {
       setErrorMsg(searchParams.get('error'));
       // TODO: this should be removed when we are able categorized errors better and display them in different ways.
@@ -137,6 +140,13 @@ export const Runner: FC<{}> = () => {
       searchParams.delete('error');
     } else {
       setErrorMsg(null);
+    }
+
+    if (searchParams.has('folder')) {
+      setTargetFolderId(searchParams.get('folder'));
+      searchParams.delete('folder');
+    } else {
+      setTargetFolderId(null);
     }
 
     setSearchParams({});
@@ -187,6 +197,12 @@ export const Runner: FC<{}> = () => {
 
   const requestRows: RequestRow[] = collection
     .filter(item => {
+      if (targetFolderId) {
+        return item.doc.parentId === targetFolderId;
+      }
+      return true;
+    })
+    .filter(item => {
       getEntityById.set(item.doc._id, item);
       return isRequest(item.doc);
     })
@@ -209,11 +225,18 @@ export const Runner: FC<{}> = () => {
         ancestorNames,
         method: requestDoc.method,
         url: item.doc.url,
+        parentId: item.doc.parentId,
       };
     });
 
   const reqList = useListData({
     initialItems: requestRows,
+    filter: item => {
+      if (targetFolderId) {
+        return item.parentId === targetFolderId;
+      }
+      return true;
+    },
   });
 
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
@@ -289,6 +312,7 @@ export const Runner: FC<{}> = () => {
       userUploadEnvs,
       delay,
       bail,
+      targetFolderId: targetFolderId || '',
     };
     submit(
       JSON.stringify(actionInput),
@@ -857,6 +881,7 @@ export interface runCollectionActionParams {
   delay: number;
   userUploadEnvs: UserUploadEnvironment[];
   bail: boolean;
+  targetFolderId: string;
 }
 
 // don't forget also apply modification on this function to the cli.ts at the moment
@@ -866,7 +891,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   invariant(projectId, 'Project id is required');
   invariant(workspaceId, 'Workspace id is required');
 
-  const { requests, iterationCount, delay, userUploadEnvs, bail } = await request.json() as runCollectionActionParams;
+  const { requests, iterationCount, delay, userUploadEnvs, bail, targetFolderId } = await request.json() as runCollectionActionParams;
   const source: RunnerSource = 'runner';
 
   let testCtx: CollectionRunnerContext = {
@@ -1022,7 +1047,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   } catch (e) {
     // the error could be from third party
     const errMsg = encodeURIComponent(e.error || e);
-    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane&error=${errMsg}`);
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane&error=${errMsg}&folder=${targetFolderId}`);
   } finally {
     cancelExecution(workspaceId);
 
@@ -1037,10 +1062,10 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     });
   }
 
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane`);
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane&folder=${targetFolderId}`);
 };
 
-export const collectionRunnerStatusLoader: ActionFunction = async ({ params }) => {
+export const collectionRunnerStatusLoader: LoaderFunction = async ({ params }) => {
   const { workspaceId } = params;
   invariant(workspaceId, 'Workspace id is required');
   return null;
