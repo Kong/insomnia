@@ -1,0 +1,70 @@
+_type: export
+__export_format: 4
+__export_date: 2024-09-18T13:31:59.297Z
+__export_source: insomnia.desktop.app:v10.0.0
+resources:
+  - _id: req_3fd28aabbb18447abab1f45e6ee4bdc1
+    parentId: wrk_c992d40ce76f4a3cb44c5fdb8435cbeb
+    modified: 1726666263873
+    created: 1726658232232
+    url: localhost:4010/echo
+    name: "1"
+    description: ""
+    method: GET
+    body:
+      mimeType: text/plain
+      text: expecting to see:{{firstkey}}:{{secondkey}}
+    parameters: []
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/10.0.0
+    authentication: {}
+    metaSortKey: -1726658232232
+    isPrivate: false
+    pathParameters: []
+    afterResponseScript: |+
+      insomnia.test('Check if status is 200', () => {
+          insomnia.expect(insomnia.response.code).to.eql(200);
+          insomnia.expect(JSON.parse(insomnia.response.body).headers.host)
+      			.to.eql('localhost:4010');
+      });
+      insomnia.test('Check if response body contains value', () => {
+          insomnia.expect(JSON.parse(insomnia.response.body).data).to.eql('expecting to see:first:second');
+      });
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_c992d40ce76f4a3cb44c5fdb8435cbeb
+    parentId: null
+    modified: 1726658198059
+    created: 1726658198059
+    name: Collection with 3 requests
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: env_86e1354fb9909cdb109ccadf83c3353f3bb9bd09
+    parentId: wrk_c992d40ce76f4a3cb44c5fdb8435cbeb
+    modified: 1726666211581
+    created: 1726658198060
+    name: Base Environment
+    data: {}
+    dataPropertyOrder:
+      "&":
+        - value
+    color: null
+    isPrivate: false
+    metaSortKey: 1726658198060
+    _type: environment
+  - _id: jar_86e1354fb9909cdb109ccadf83c3353f3bb9bd09
+    parentId: wrk_c992d40ce76f4a3cb44c5fdb8435cbeb
+    modified: 1726658198060
+    created: 1726658198060
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar

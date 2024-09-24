@@ -43,6 +43,8 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/after-response.yml wrk_616795 --verbose',
   // select request by id
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/three-requests.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -i req_6063adcdab5b409e9b4f00f47322df4a',
+  // multiple --env-var overrides
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/with-missing-env-vars.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 --env-var firstkey=first --env-var secondkey=second',
 ];
 
 const shouldReturnErrorCode = [
