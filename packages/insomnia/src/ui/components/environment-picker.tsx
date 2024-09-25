@@ -101,7 +101,7 @@ export const EnvironmentPicker = ({
         <Dialog className="border h-full w-full grid grid-flow-col [grid-auto-columns:min(260px,calc(40vw))_min(260px,calc(40vw))] overflow-hidden divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] bg-[--color-bg] shadow-lg rounded-md focus:outline-none">
           <div className='relative w-full h-full flex flex-col overflow-hidden flex-1'>
             <Heading className='text-sm flex-shrink-0 h-[--line-height-sm] font-bold text-[--hl] px-3 py-1 flex items-center gap-2 justify-between'>
-              <span>Global Environments ({globalBaseEnvironments.length})</span>
+              <span>Global Environments</span>
               {selectedGlobalBaseEnvironment && (
                 <Button onPress={() => navigate(`/organization/${organizationId}/project/${projectId}/workspace/${selectedGlobalBaseEnvironment.parentId}/environment`)} aria-label='Manage global environment' className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] outline-none hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                   <Icon icon="gear" />
