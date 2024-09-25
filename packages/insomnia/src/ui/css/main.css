@@ -1814,6 +1814,7 @@ html {
   position: absolute;
   width: 0;
   height: 0;
+  display: none;
   overflow: hidden;  /* Ensure the content is fully hidden */
   white-space: nowrap;  /* Prevent any unwanted line breaks */
   pointer-events: none; 
@@ -1864,10 +1865,10 @@ html {
 .editor .nunjucks-tag:hover {
   background: rgba(255, 255, 255, 0.1);
 }
-.editor .nunjucks-tag[data-error='on'] {
+.editor .nunjucks-tag[data-error='on'], .editor .nunjucks-tag-error{
   color: var(--color-font-danger);
 }
-.editor .nunjucks-tag[data-error='on']::after {
+.editor .nunjucks-tag[data-error='on']::after, .editor .nunjucks-tag-error{
   background: var(--color-danger);
 }
 .editor .nunjucks-tag[data-ignore='on']::after {

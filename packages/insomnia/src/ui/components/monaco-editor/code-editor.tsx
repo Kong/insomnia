@@ -3,15 +3,19 @@ import * as monaco from 'monaco-editor';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 
-import type { HandleGetRenderContext, HandleRender } from '../../../common/render';
-import { getTagDefinitions } from '../../../templating';
-import { tokenizeTag } from '../../../templating/utils';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
 import { useRootLoaderData } from '../../routes/root';
 import { showModal } from '../modals/index';
 import { NunjucksModal } from '../modals/nunjucks-modal';
-import { getMatchTokens } from './languages/nunjucks/modes';
+import { getMatchTokens, updateTokenText } from './languages/nunjucks/modes';
 import { languageId } from './languages/openapi/apidom';
+
+const getVariableHoverMessage = (name: string, value: string, source: string) => {
+  const gapContent = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp';
+  const valueContent = `<p>Value${gapContent}${value}</p>`;
+  const scopeContent = `<p>Source${gapContent}${source}</p>`;
+  return `<div><p><strong>${name}</strong></p>${valueContent}${scopeContent}</div>`;
+};
 
 export const CodeEditor = ({ id, readOnly, className, dynamicHeight, style, defaultValue, enableNunjucks }: any) => {
   const textAreaRef = useRef<HTMLDivElement>(null);
@@ -21,7 +25,7 @@ export const CodeEditor = ({ id, readOnly, className, dynamicHeight, style, defa
   const {
     settings,
   } = useRootLoaderData();
-  const { handleRender, handleGetRenderContext } = useGatedNunjucks({ disabled: !enableNunjucks });
+  const { handleRender, handleGetRenderContext } = useGatedNunjucks();
 
   const initEditor = () => {
     if (!textAreaRef.current) {
@@ -29,8 +33,8 @@ export const CodeEditor = ({ id, readOnly, className, dynamicHeight, style, defa
     }
     monacoEditor.current = monaco.editor.create(textAreaRef.current, {
       value: '{\n\
-    "username": "{{ username }}",\n\
-    "password": "{{ password }}",\n\
+    "username": "{{ _.username }}",\n\
+    "password": "{{ _.password }}",\n\
     "result": "{% base64 \'encode\', \'normal\', \'test\' %}"  hello\n\
   }',
       language: languageId,
@@ -51,7 +55,7 @@ export const CodeEditor = ({ id, readOnly, className, dynamicHeight, style, defa
     applyTokenDecorations();
   };
 
-  const applyTokenDecorations = () => {
+  const applyTokenDecorations = useCallback(async () => {
     const editor = monacoEditor.current;
     if (editor) {
       const model = editor.getModel()!;
@@ -62,54 +66,68 @@ export const CodeEditor = ({ id, readOnly, className, dynamicHeight, style, defa
       const getRenderContext = () => handleGetRenderContext!(renderCacheKey);
 
       const matches = getMatchTokens(model);
-      // Find all matches for {{ token }}
-      // const regexVariable = /^{{\s*([^ }]+)\s*[^}]*\s*}}/;
-      // const regexTag = /^{%\s*([^ }]+)\s*[^%]*\s*%}/;
 
       // Create decorations
-      const decorations: monaco.editor.IModelDeltaDecoration[] = matches.map(({ range, token, type }) => {
+      const decorations: monaco.editor.IModelDeltaDecoration[] = await Promise.all(matches.map(async ({ range, token, type }) => {
+        const {
+          key, value, dataError, dataIgnore, content, cleanedStr,
+        } = await updateTokenText(token, renderString, getRenderContext);
+      // if (!enableNunjucks) {
+      //   return {
+      //     range: range,
+      //     options: {
+      //       inlineClassName: `nunjucks-tag ${type === 'variable' ? 'nunjucks-variable' : ''}`,
+      //     },
+      //   };
+      // }
         return {
           range: range,
           options: {
             inlineClassName: 'invisible-token', // Hide the braces
             afterContentClassName: 'visible-token', // Show the token
+            ...(type === 'variable' && !dataError && {
+              hoverMessage: {
+                supportHtml: true,
+                value: getVariableHoverMessage(content, value, key),
+              },
+            }),
             after: {
               attachedData: model.getValueInRange(range),
-              content: token,
-              inlineClassName: `nunjucks-tag ${type === 'variable' ? 'nunjucks-variable' : ''}`, // Style for the visible token
+              content: !dataError ? content : cleanedStr,
+              inlineClassName: classnames(
+                'nunjucks-tag',
+                {
+                  'nunjucks-variable': type === 'variable',
+                  'nunjucks-tag-error': dataError,
+                }
+              ),
               cursorStops: monaco.editor.InjectedTextCursorStops.Both,
             },
           },
         };
-      });
+      }));
       // Apply the decorations
       decorationsCount.current = editor.createDecorationsCollection(decorations).length;
+      // const widgets: monaco.editor.IContentWidget[] = matches.map(({ range, token, type }, idx) => {
+      //   return {
+      //     getDomNode: () => {
+      //       const el = document.createElement('span');
+      //       el.className = `nunjucks-tag ${type === 'variable' ? 'nunjucks-variable' : ''}`;
+      //       el.innerHTML = token;
+      //       return el;
+      //     },
+      //     getId: () => `${token}-{idx}`,
+      //     getPosition: () => ({
+      //       position: { column: range.startColumn, lineNumber: range.startLineNumber },
+      //       preference: [0, 0],
+      //     }),
+      //   };
+      //   });
+      // widgets.forEach(w => editor.addContentWidget(w));
     }
-  };
+  }, [handleRender, handleGetRenderContext]);
 
   // Function to handle content change
-  const handleContentChange = useCallback(() => {
-    const editor = monacoEditor.current;
-    if (editor) {
-      const model = editor.getModel()!;
-      const value = model.getValue();
-      const tokenPattern = /\{\{\s*([^\s\}]+)\s*\}\}/g;
-      let hasRemovedToken = false;
-      // Detect if the user has deleted a token by checking the remaining value
-      const updatedMatches = value.match(tokenPattern) || [];
-
-      // If the number of tokens in the value has decreased, trigger a re-decoration
-      const decoLength = decorationsCount.current || 0;
-      if (updatedMatches.length < decoLength) {
-        hasRemovedToken = true;
-      }
-
-      // Apply new decorations if a token was deleted or added
-      if (hasRemovedToken) {
-        applyTokenDecorations();
-      }
-    }
-  }, []);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const editor = monacoEditor.current;
@@ -227,7 +245,7 @@ export const CodeEditor = ({ id, readOnly, className, dynamicHeight, style, defa
       // }, 100);
     }
 
-  }, [handleKeyDown, handleMouseUp, isEditorReady]);
+  }, [applyTokenDecorations, handleKeyDown, handleMouseUp, isEditorReady]);
 
   return (
     <div
