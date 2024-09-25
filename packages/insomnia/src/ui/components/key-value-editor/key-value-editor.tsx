@@ -470,7 +470,7 @@ export const KeyValueEditor: FC<Props> = ({
                   doneMessage=''
                   onClick={() => {
                     if (pairsListItems.find(item => item.id === pair.id)) {
-                      pairsListItems = pairsListItems.filter(pair => pair.id !== pair.id);
+                      pairsListItems = pairsListItems.filter(item => item.id !== pair.id);
                       if (pairsListItems.length === 0) {
                         pairsListItems.push(createEmptyPair());
                       }
