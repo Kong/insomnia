@@ -730,10 +730,6 @@ export const Debug: FC = () => {
     }
   }, [settings.forceVerticalLayout, direction]);
 
-  const onRunCollection = () => {
-    navigate(`/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/${activeWorkspace._id}/debug/runner`);
-  };
-
   useEffect(() => {
     if (isScratchpad(activeWorkspace)) {
       window.main.landingPageRendered(LandingPage.Scratchpad);
@@ -762,7 +758,14 @@ export const Debug: FC = () => {
                   <WorkspaceDropdown />
                 </Breadcrumb>
                 <Breadcrumb className="flex text-sm truncate select-none items-center justify-self-end ml-auto mr-2.5 gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
-                  <Icon icon='circle-play' onClick={onRunCollection} className="cursor-pointer" data-testid="run-collection-btn-quick" />
+                  <NavLink
+                    data-testid="run-collection-btn-quick"
+                    className="px-2 aria-[current]:hidden py-1 h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    to={`/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/${activeWorkspace._id}/debug/runner`}
+                  >
+                    <Icon icon="play" />
+                    <span className='truncate'>Run</span>
+                  </NavLink>
                 </Breadcrumb>
               </Breadcrumbs>
             </div>

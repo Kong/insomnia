@@ -29,10 +29,9 @@ import { showAlert, showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
 
 interface Props {
-  project: Project;
+  project: Project & { hasUncommittedOrUnpushedChanges?: boolean };
   organizationId: string;
   storage: 'cloud_only' | 'local_only' | 'cloud_plus_local';
-  hasUncommittedOrUnpushedChanges?: boolean;
 }
 
 interface ProjectActionItem {
@@ -42,7 +41,7 @@ interface ProjectActionItem {
   action: (projectId: string, projectName: string) => void;
 }
 
-export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage, hasUncommittedOrUnpushedChanges }) => {
+export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage }) => {
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] =
     useState(false);
   const deleteProjectFetcher = useFetcher();
@@ -128,9 +127,9 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage, h
           </Tooltip>
         </TooltipTrigger>
       }
-      {hasUncommittedOrUnpushedChanges && (
-        <div className='aspect-square h-6 flex items-center justify-center'>
-          <Icon icon="circle" className='group-focus:hidden group-hover:hidden w-2 h-2' color="var(--color-warning)" />
+      {project.hasUncommittedOrUnpushedChanges && (
+        <div className='group-focus:hidden group-hover:hidden aspect-square h-6 flex items-center justify-center'>
+          <Icon icon="circle" className='w-2 h-2' color="var(--color-warning)" />
         </div>
       )}
       <MenuTrigger>
