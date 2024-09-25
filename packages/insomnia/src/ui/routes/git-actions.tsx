@@ -1225,7 +1225,10 @@ async function getGitVCSPaths(vcs: typeof GitVCS) {
 
 async function getGitChanges(vcs: typeof GitVCS, workspace: Workspace) {
   // Cache status names
+  const start = Date.now();
   const docs = await database.withDescendants(workspace);
+  console.log('[test git] Time to get descendants', Date.now() - start);
+  console.log(docs);
   const allPaths = await getGitVCSPaths(vcs);
   const statusNames: Record<string, string> = {};
   for (const doc of docs) {
