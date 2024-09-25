@@ -295,7 +295,7 @@ export async function render<T>(
         console.log(`Failed to render element ${path}`, x);
         if (errorMode !== KEEP_ON_ERROR) {
           if (err?.extraInfo?.subType === templating.RenderErrorSubType.EnvironmentVariable) {
-            undefinedEnvironmentVariables.push(err.extraInfo.undefinedEnvironmentVariable);
+            undefinedEnvironmentVariables.push(...err.extraInfo.undefinedEnvironmentVariables);
           } else {
             throw err;
           }

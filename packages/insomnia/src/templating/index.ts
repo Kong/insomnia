@@ -4,7 +4,7 @@ import nunjucks from 'nunjucks/browser/nunjucks';
 import * as plugins from '../plugins/index';
 import { localTemplateTags } from '../ui/components/templating/local-template-tags';
 import BaseExtension from './base-extension';
-import { extractVariableKey, type NunjucksParsedTag } from './utils';
+import { extractUndefinedVariableKey, type NunjucksParsedTag } from './utils';
 
 export enum RenderErrorSubType {
   EnvironmentVariable = 'environmentVariable'
@@ -107,7 +107,7 @@ export function render(
         if (hasNunjucksInterpolationSymbols && reason === 'undefined') {
           newError.extraInfo = {
             subType: RenderErrorSubType.EnvironmentVariable,
-            undefinedEnvironmentVariable: extractVariableKey(text, line, column),
+            undefinedEnvironmentVariables: extractUndefinedVariableKey(text, templatingContext),
           };
         }
         reject(newError);
