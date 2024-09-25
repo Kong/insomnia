@@ -21,6 +21,10 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
   resultFilter,
   targetTests,
 }: RequestTestResultRowsProps) => {
+  if (requestTestResults.length === 0) {
+    return <div className="pl-3 text-sm text-neutral-400 w-full my-3">No test was detected, add test cases in scripts to see results.</div>;
+  }
+
   const testResultRows = requestTestResults
     .filter(result => {
       switch (targetTests) {
