@@ -68,6 +68,7 @@ const InviteModal: FC<{
 
   return (
     <ModalOverlay
+      isDismissable={true}
       isOpen={true}
       onOpenChange={setIsOpen}
       className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-[--color-bg] theme--transparent-overlay"

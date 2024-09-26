@@ -7,6 +7,7 @@ import { getCurrentSessionId, getPrivateKey } from '../../../../account/session'
 import { SegmentEvent } from '../../../analytics';
 import useStateRef from '../../../hooks/use-state-ref';
 import { insomniaFetch, ResponseFailError } from '../../../insomniaFetch';
+import { Icon } from '../../icon';
 import { type PendingMember, updateInvitationRole } from './invite-modal';
 import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
 
@@ -127,6 +128,7 @@ export const InviteForm = ({ onInviteCompleted, allRoles }: {
         }}
       >
         Invite
+        {loading && (<Icon icon="spinner" className="animate-spin ml-[4px]" />)}
       </Button>
     </div>
     {errMsg && (
