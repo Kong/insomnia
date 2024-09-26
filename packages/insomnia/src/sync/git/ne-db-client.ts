@@ -15,7 +15,6 @@ import { SystemError } from './system-error';
 export class NeDBClient {
   _workspaceId: string;
   _projectId: string;
-  children: any;
 
   constructor(workspaceId: string, projectId: string) {
     if (!workspaceId) {
@@ -24,10 +23,7 @@ export class NeDBClient {
 
     this._workspaceId = workspaceId;
     this._projectId = projectId;
-    console.log('CREATE INSTANCE');
-    db.withDescendants({ type: 'Workspace', _id: workspaceId }).then(children => {
-      this.children = children;
-    });
+
   }
 
   static createClient(workspaceId: string, projectId: string): PromiseFsClient {
