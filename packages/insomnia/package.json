@@ -42,6 +42,7 @@
     "@getinsomnia/node-libcurl": "^2.4.31-0",
     "@grpc/grpc-js": "^1.10.10",
     "@grpc/proto-loader": "^0.7.13",
+    "@kong/spec-renderer-dev": "^1.76.1",
     "@seald-io/nedb": "^4.0.4",
     "@segment/analytics-node": "2.1.0",
     "apiconnect-wsdl": "2.0.36",
