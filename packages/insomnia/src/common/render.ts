@@ -258,6 +258,8 @@ export async function render<T>(
   // Make a deep copy so no one gets mad :)
   const newObj = clone(obj);
 
+  const undefinedEnvironmentVariables: string[] = [];
+
   async function next<T>(x: T, path: string, first = false) {
     if (blacklistPathRegex && path.match(blacklistPathRegex)) {
       return x;
@@ -292,7 +294,11 @@ export async function render<T>(
       } catch (err) {
         console.log(`Failed to render element ${path}`, x);
         if (errorMode !== KEEP_ON_ERROR) {
-          throw err;
+          if (err?.extraInfo?.subType === templating.RenderErrorSubType.EnvironmentVariable) {
+            undefinedEnvironmentVariables.push(...err.extraInfo.undefinedEnvironmentVariables);
+          } else {
+            throw err;
+          }
         }
       }
     } else if (Array.isArray(x)) {
@@ -324,7 +330,18 @@ export async function render<T>(
     return x;
   }
 
-  return next<T>(newObj, name, true);
+  const renderResult = await next<T>(newObj, name, true);
+  if (undefinedEnvironmentVariables.length > 0) {
+    const error = new templating.RenderError(`Failed to render environment variables: ${undefinedEnvironmentVariables.join(', ')}`);
+    error.type = 'render';
+    error.extraInfo = {
+      subType: templating.RenderErrorSubType.EnvironmentVariable,
+      undefinedEnvironmentVariables,
+    };
+    throw error;
+  }
+
+  return renderResult;
 }
 
 interface RenderRequest<T extends Request | GrpcRequest | WebSocketRequest> {

@@ -1,4 +1,5 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
+import _ from 'lodash';
 
 import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
 import objectPath from './third_party/objectPath';
@@ -280,13 +281,24 @@ export function decodeEncoding<T>(value: T) {
   return value;
 }
 
-export function extractVariableKey(text: string = '', line: number, column: number): string {
-  const list = text?.split('\n');
-  const lineText = list?.[line - 1];
-  const errorText = lineText?.slice(column - 1);
-  const regexVariable = /{{\s*([^ }]+)\s*[^}]*\s*}}/;
-  const res = errorText?.match(regexVariable);
-  return res?.[1] || '';
+// because nunjucks only report the first error, we need to extract all missing variables that are not present in the context
+// for example, if the text is `{{ a }} {{ b }}`, nunjucks only report `a` is missing, but we need to report both `a` and `b`
+export function extractUndefinedVariableKey(text: string = '', templatingContext: Record<string, any>): string[] {
+  const regexVariable = /{{\s*([^ }]+)\s*}}/g;
+  const missingVariables: string[] = [];
+  let match;
+
+  while ((match = regexVariable.exec(text)) !== null) {
+    let variable = match[1];
+    if (variable.includes('_.')) {
+      variable = variable.split('_.')[1];
+    }
+    // Check if the variable is not present in the context
+    if (_.get(templatingContext, variable) === undefined) {
+      missingVariables.push(variable);
+    }
+  }
+  return missingVariables;
 }
 
 export function extractNunjucksTagFromCoords(

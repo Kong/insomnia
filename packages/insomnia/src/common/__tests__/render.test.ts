@@ -559,7 +559,7 @@ describe('render tests', () => {
         );
         fail('Render should have failed');
       } catch (err) {
-        expect(err.message).toContain('attempted to output null or undefined value');
+        expect(err.message).toContain('Failed to render environment variables');
       }
     });
 
