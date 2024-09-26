@@ -156,7 +156,9 @@ export class NeDBClient {
       ];
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
-      const children = await db.withDescendants(workspace, null, [type]);
+      const modelTypesWithinFolders = [models.request.type, models.grpcRequest.type, models.webSocketRequest.type];
+      const typeFilter = modelTypesWithinFolders.includes(type) ? [models.requestGroup.type, type] : [type];
+      const children = await db.withDescendants(workspace, null, typeFilter);
       docs = children.filter(d => d.type === type && !d.isPrivate);
     } else {
       throw this._errMissing(filePath);
