@@ -102,18 +102,20 @@ export const EnvironmentPicker = ({
           <div className='relative w-full h-full flex flex-col overflow-hidden flex-1'>
             <Heading className='text-sm flex-shrink-0 h-[--line-height-sm] font-bold text-[--hl] px-3 py-1 flex items-center gap-2 justify-between'>
               <span>Global Environments</span>
-              {selectedGlobalBaseEnvironment && (
-                <Button onPress={() => navigate(`/organization/${organizationId}/project/${projectId}/workspace/${selectedGlobalBaseEnvironment.parentId}/environment`)} aria-label='Manage global environment' className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] outline-none hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                  <Icon icon="gear" />
-                </Button>
-              )}
+              <Button
+                aria-label='Manage global environment'
+                onPress={() => selectedGlobalBaseEnvironment && navigate(`/organization/${organizationId}/project/${projectId}/workspace/${selectedGlobalBaseEnvironment.parentId}/environment`)}
+                className={`flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] outline-none hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm ${!selectedGlobalBaseEnvironment ? 'opacity-50' : ''}`}
+              >
+                <Icon icon="gear" />
+              </Button>
             </Heading>
             <div>
               <ComboBox
                 aria-label='Global Environment'
                 shouldFocusWrap
-                key={activeGlobalBaseEnvironment?._id}
                 allowsCustomValue={false}
+                onFocus={() => { }}
                 menuTrigger='focus'
                 defaultFilter={(textValue, filter) => {
                   const match = Boolean(fuzzyMatch(
@@ -125,6 +127,7 @@ export const EnvironmentPicker = ({
                   return match;
                 }}
                 onSelectionChange={environmentId => {
+                  console.log({ environmentId });
                   if (environmentId === 'all' || environmentId === null) {
                     return;
                   }
@@ -140,7 +143,7 @@ export const EnvironmentPicker = ({
                   );
                 }}
                 defaultInputValue={selectedGlobalBaseEnvironment?.workspaceName || selectedGlobalBaseEnvironment?.name || 'No Global Environment'}
-                selectedKey={selectedGlobalBaseEnvironmentId}
+                selectedKey={selectedGlobalBaseEnvironmentId || ''}
                 defaultItems={[{ id: '', icon: 'cancel', name: 'No Global Environment', textValue: 'No Global Environment' }, ...globalBaseEnvironments.map(baseEnv => {
                   return {
                     id: baseEnv._id,
@@ -205,7 +208,7 @@ export const EnvironmentPicker = ({
               {item => (
                 <ListBoxItem
                   textValue={item.name}
-                  className={`aria-disabled:font-bold rounded flex gap-2 pr-1 aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item.isBase ? 'pl-[--padding-md]' : 'pl-8'}`}
+                  className={`rounded flex gap-2 pr-1 items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item.isBase ? 'pl-[--padding-md]' : 'pl-8'}`}
                 >
                   {({ isSelected }) => (
                     <Fragment>
