@@ -91,6 +91,10 @@ export function all() {
   return db.all<RunnerTestResult>(type);
 }
 
+export function remove(item: RunnerTestResult) {
+  return db.remove<RunnerTestResult>(item);
+}
+
 export function findByParentId(parentId: string) {
   return db.find<RunnerTestResult>(type, { parentId: parentId });
 }

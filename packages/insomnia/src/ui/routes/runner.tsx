@@ -442,6 +442,13 @@ export const Runner: FC<{}> = () => {
 
   const disabledKeys = useMemo(() => isRunning ? requestIds : [], [isRunning, requestIds]);
   const isDisabled = isRunning || selectedRequestIds.size === 0;
+
+  const [deletedItems, setDeletedItems] = useState<string[]>([]);
+  const deleteHistoryItem = (item: RunnerTestResult) => {
+    models.runnerTestResult.remove(item);
+    setDeletedItems([...deletedItems, item._id]);
+  };
+
   return (
     <>
           <Panel id="pane-one" className='pane-one theme--pane' minSize={35} maxSize={90}>
@@ -768,7 +775,12 @@ export const Runner: FC<{}> = () => {
                 />
               </TabPanel>
               <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='history'>
-                <RunnerResultHistoryPane history={testHistory} gotoExecutionResult={gotoExecutionResult} gotoTestResultsTab={gotoTestResultsTab} />
+              <RunnerResultHistoryPane
+                history={testHistory.filter(item => !deletedItems.includes(item._id))}
+                gotoExecutionResult={gotoExecutionResult}
+                gotoTestResultsTab={gotoTestResultsTab}
+                deleteHistoryItem={deleteHistoryItem}
+              />
               </TabPanel>
               <TabPanel
                 className='w-full flex-1 flex flex-col overflow-y-auto'

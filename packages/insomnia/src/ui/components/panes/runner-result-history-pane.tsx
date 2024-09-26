@@ -3,6 +3,8 @@ import React, { type FC } from 'react';
 import { Cell, Column, ColumnResizer, ResizableTableContainer, Row, Table, TableBody, TableHeader, TooltipTrigger } from 'react-aria-components';
 
 import type { RunnerTestResult } from '../../..//models/runner-test-result';
+import { PromptButton } from '../base/prompt-button';
+import { Icon } from '../icon';
 import { getTimeAndUnit } from '../tags/time-tag';
 import { Tooltip } from '../tooltip';
 
@@ -10,12 +12,14 @@ interface Props {
   history: RunnerTestResult[];
   gotoExecutionResult: (exectionId: string) => Promise<void>;
   gotoTestResultsTab: () => void;
+  deleteHistoryItem: (item: RunnerTestResult) => void;
 }
 
 export const RunnerResultHistoryPane: FC<Props> = ({
   history,
   gotoExecutionResult,
   gotoTestResultsTab,
+  deleteHistoryItem,
 }) => {
   const rows = history.map((runnerResult: RunnerTestResult) => {
     let passedCount = 0;
@@ -40,29 +44,32 @@ export const RunnerResultHistoryPane: FC<Props> = ({
       }
     }
 
-    // const startedAt = new Date(runnerResult.created).toString(); // TODO: should be endedat
     const { number: durationNumber, unit: durationUnit } = getTimeAndUnit(runnerResult.duration);
     const createdAt = format(runnerResult.created, 'yyyy-MM-dd HH:mm:ss');
 
     return (
       <Row
         key={runnerResult._id}
-        className="cursor-pointer leading-9 hover:bg-[--hl-sm]"
+        className="leading-9 hover:bg-[--hl-sm]"
         style={{ 'outline': 'none' }}
-        onAction={() => {
-          gotoExecutionResult(runnerResult._id);
-          gotoTestResultsTab();
-        }}
       >
         <Cell className="capitalize hover:underline">
-          {failedCount === 0 ?
-            <i className="fa fa-circle-check fa-1x mr-2 text-green-500" /> :
-            <i className="fa fa-circle-xmark fa-1x mr-2 text-red-500" />}
-          <TooltipTrigger key={`parent-folder-${runnerResult.created}`} >
-            <Tooltip message={createdAt}>
-              {runnerResult.source}
-            </Tooltip>
-          </TooltipTrigger>
+          <div
+            onClick={() => {
+              gotoExecutionResult(runnerResult._id);
+              gotoTestResultsTab();
+            }}
+            className='cursor-pointer'
+          >
+            {failedCount === 0 ?
+              <i className="fa fa-circle-check fa-1x mr-2 text-green-500" /> :
+              <i className="fa fa-circle-xmark fa-1x mr-2 text-red-500" />}
+            <TooltipTrigger key={`parent-folder-${runnerResult.created}`} >
+              <Tooltip message={createdAt}>
+                {runnerResult.source}
+              </Tooltip>
+            </TooltipTrigger>
+          </div>
         </Cell>
         <Cell>{runnerResult.iterations}</Cell>
         <Cell>{`${durationNumber} ${durationUnit}`}</Cell>
@@ -71,6 +78,16 @@ export const RunnerResultHistoryPane: FC<Props> = ({
         <Cell>{passedCount}</Cell>
         <Cell>{failedCount}</Cell>
         <Cell>{skippedCount}</Cell>
+        <Cell>
+          <PromptButton
+            disabled={false}
+            confirmMessage=''
+            doneMessage=''
+            onClick={() => deleteHistoryItem(runnerResult)}
+          >
+            <Icon icon="trash-can" />
+          </PromptButton>
+        </Cell>
       </Row>
     );
   });
@@ -89,6 +106,7 @@ export const RunnerResultHistoryPane: FC<Props> = ({
             <Column className="leading-9">Passed</Column>
             <Column className="leading-9">Failed</Column>
             <Column className="leading-9">Skipped</Column>
+            <Column className="leading-9">Delete</Column>
           </TableHeader>
           <TableBody >
             {rows}
