@@ -15,6 +15,7 @@ import { SystemError } from './system-error';
 export class NeDBClient {
   _workspaceId: string;
   _projectId: string;
+  children: any;
 
   constructor(workspaceId: string, projectId: string) {
     if (!workspaceId) {
@@ -23,6 +24,10 @@ export class NeDBClient {
 
     this._workspaceId = workspaceId;
     this._projectId = projectId;
+    console.log('CREATE INSTANCE');
+    db.withDescendants({ type: 'Workspace', _id: workspaceId }).then(children => {
+      this.children = children;
+    });
   }
 
   static createClient(workspaceId: string, projectId: string): PromiseFsClient {
@@ -125,6 +130,9 @@ export class NeDBClient {
     await db.unsafeRemove(doc, true);
   }
 
+  // recurses over each .insomnia subfolder, ApiSpec, Workspace, Request etc..
+  // and returns a list of all the files/folders which should be in the directory
+  // according to the what entities are children of the workspace
   async readdir(filePath: string) {
     filePath = path.normalize(filePath);
     const { root, type, id } = parseGitPath(filePath);
@@ -150,12 +158,10 @@ export class NeDBClient {
         models.mockRoute.type,
         models.mockServer.type,
       ];
-    } else if (type === models.workspace.type && id === null) {
-      const workspace = await db.get(models.workspace.type, this._workspaceId);
-      const children = await db.withDescendants(workspace);
-      docs = children.filter(d => d.type === type && !d.isPrivate);
     } else if (type !== null && id === null) {
-      // Do nothing
+      const workspace = await db.get(models.workspace.type, this._workspaceId);
+      const children = await db.withDescendants(workspace, null, [type]);
+      docs = children.filter(d => d.type === type && !d.isPrivate);
     } else {
       throw this._errMissing(filePath);
     }
