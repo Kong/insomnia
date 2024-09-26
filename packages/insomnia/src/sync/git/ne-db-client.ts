@@ -150,10 +150,12 @@ export class NeDBClient {
         models.mockRoute.type,
         models.mockServer.type,
       ];
-    } else if (type !== null && id === null) {
+    } else if (type === models.workspace.type && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
       const children = await db.withDescendants(workspace);
       docs = children.filter(d => d.type === type && !d.isPrivate);
+    } else if (type !== null && id === null) {
+      // Do nothing
     } else {
       throw this._errMissing(filePath);
     }
