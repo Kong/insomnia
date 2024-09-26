@@ -1,6 +1,6 @@
 import { stat } from 'node:fs/promises';
 
-import NeDB from '@seald-io/nedb';
+import NeDB from 'nedb';
 import path from 'path';
 
 import { Database, DbAdapter, emptyDb } from '../index';

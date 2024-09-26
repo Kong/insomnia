@@ -41,7 +41,7 @@
     "vitest": "^2.0.4"
   },
   "dependencies": {
-    "@seald-io/nedb": "^4.0.4",
+    "nedb": "^1.8.0",
     "@stoplight/spectral-core": "^1.18.3",
     "@stoplight/spectral-formats": "^1.6.0",
     "@stoplight/spectral-ruleset-bundler": "^1.5.2",
