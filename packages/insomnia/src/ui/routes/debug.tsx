@@ -55,6 +55,7 @@ import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc
 import type { Project } from '../../models/project';
 import {
   isEventStreamRequest,
+  isGraphqlSubscriptionRequest,
   isRequest,
   isRequestId,
   type Request,
@@ -446,7 +447,7 @@ export const Debug: FC = () => {
 
   const isRealtimeRequest =
     activeRequest &&
-    (isWebSocketRequest(activeRequest) || isEventStreamRequest(activeRequest));
+    (isWebSocketRequest(activeRequest) || isEventStreamRequest(activeRequest) || isGraphqlSubscriptionRequest(activeRequest));
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -1310,6 +1311,7 @@ const CollectionGridListItem = ({
           }}
         />
         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+        {isGraphqlSubscriptionRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
         {isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
         {item.pinned && (

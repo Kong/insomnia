@@ -1,3 +1,5 @@
+import { OperationTypeNode } from 'graphql';
+
 import {
   AUTH_API_KEY,
   AUTH_ASAP,
@@ -255,6 +257,7 @@ export interface BaseRequest {
   afterResponseScript?: string;
   parameters: RequestParameter[];
   pathParameters?: RequestPathParameter[];
+  operationType?: OperationTypeNode;
   headers: RequestHeader[];
   authentication: RequestAuthentication | {};
   metaSortKey: number;
@@ -281,6 +284,9 @@ export const isRequestId = (id?: string | null) => (
 export const isEventStreamRequest = (model: Pick<BaseModel, 'type'>) => (
   isRequest(model) && model.headers?.find(h => h.name === 'Accept')?.value === 'text/event-stream'
 );
+export const isGraphqlSubscriptionRequest = (model: Pick<BaseModel, 'type'>) => (
+  isRequest(model) && model.operationType === OperationTypeNode.SUBSCRIPTION
+);
 
 export function init(): BaseRequest {
   return {
@@ -297,6 +303,7 @@ export function init(): BaseRequest {
     isPrivate: false,
     pathParameters: undefined,
     afterResponseScript: undefined,
+    operationType: undefined,
     // Settings
     settingStoreCookies: true,
     settingSendCookies: true,

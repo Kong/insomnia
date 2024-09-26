@@ -6,7 +6,7 @@ import { useInterval } from 'react-use';
 import { database as db } from '../../common/database';
 import * as models from '../../models';
 import type { Request } from '../../models/request';
-import { isEventStreamRequest } from '../../models/request';
+import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../models/request-group';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/network';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
@@ -80,6 +80,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditorHandle>(null);
+  const isRealtimeRequest = activeRequest && (isEventStreamRequest(activeRequest) || isGraphqlSubscriptionRequest(activeRequest));
 
   const focusInput = useCallback(() => {
     if (inputRef.current) {
@@ -125,7 +126,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     // reset timeout
     setCurrentTimeout(undefined);
 
-    if (isEventStreamRequest(activeRequest)) {
+    if (isEventStreamRequest(activeRequest) || isGraphqlSubscriptionRequest(activeRequest)) {
       const startListening = async () => {
         const environmentId = activeEnvironment._id;
         const workspaceId = activeWorkspace._id;
@@ -213,11 +214,12 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     },
   });
 
-  const buttonText = isEventStreamRequest(activeRequest) ? 'Connect' : (downloadPath ? 'Download' : 'Send');
-  const borderRadius = isEventStreamRequest(activeRequest) ? 'rounded-sm' : 'rounded-l-sm';
+  const buttonText = isRealtimeRequest ? 'Connect' : (downloadPath ? 'Download' : 'Send');
+  const borderRadius = isRealtimeRequest ? 'rounded-sm' : 'rounded-l-sm';
   const { url, method } = activeRequest;
   const isEventStreamOpen = useReadyState({ requestId: activeRequest._id, protocol: 'curl' });
-  const isCancellable = currentInterval || currentTimeout || isEventStreamOpen;
+  const isGraphQLSubscriptionOpen = useReadyState({ requestId: activeRequest._id, protocol: 'webSocket' });
+  const isCancellable = currentInterval || currentTimeout || isEventStreamOpen || isGraphQLSubscriptionOpen;
   return (
     <div className="w-full flex justify-between self-stretch items-stretch">
       <div className="flex items-center">
@@ -252,16 +254,19 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                   window.main.curl.close({ requestId: activeRequest._id });
                   return;
                 }
+                if (isGraphqlSubscriptionRequest(activeRequest)) {
+                  window.main.webSocket.close({ requestId: activeRequest._id });
+                }
                 setCurrentInterval(null);
                 setCurrentTimeout(undefined);
               }}
             >
-              {isEventStreamRequest(activeRequest) ? 'Disconnect' : 'Cancel'}
+              {isRealtimeRequest ? 'Disconnect' : 'Cancel'}
             </button>
           ) : (
             <>
               <button onClick={() => sendOrConnect()} className={`px-[--padding-md] bg-[--color-surprise] text-[--color-font-surprise] ${borderRadius}`} type="button">{buttonText}</button>
-              {isEventStreamRequest(activeRequest) ? null : (
+              {isRealtimeRequest ? null : (
                 <Dropdown
                   key="dropdown"
                   className="flex"
