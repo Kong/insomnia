@@ -1133,9 +1133,9 @@ const ProjectRoute: FC = () => {
                   selectionMode="single"
                   onSelectionChange={keys => {
                     if (keys !== 'all') {
-                      const value = Array.from(keys.values?.())?.[0];
+                      const [value] = keys.values();
 
-                      setWorkspaceListScope(value?.toString());
+                      setWorkspaceListScope(value.toString());
                     }
                   }}
                 >
