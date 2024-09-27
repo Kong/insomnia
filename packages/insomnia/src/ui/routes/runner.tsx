@@ -130,7 +130,7 @@ interface RequestRow {
   ancestorNames: string[];
   method: string;
   url: string;
-}[];
+};
 
 export const Runner: FC<{}> = () => {
   const [searchParams, setSearchParams] = useSearchParams();
