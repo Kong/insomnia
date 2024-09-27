@@ -15,8 +15,7 @@ import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo }
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showAlert } from '../components/modals';
-import { useLoaderDeferData } from '../hooks/use-loader-defer-data';
-import type { OrganizationFeatureLoaderData } from './organization';
+import { useOrganizationPermissions } from '../hooks/use-organization-features';
 import type { WorkspaceLoaderData } from './workspace';
 
 const Environments = () => {
@@ -26,19 +25,7 @@ const Environments = () => {
   ) as WorkspaceLoaderData;
 
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
-  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
-
-  useEffect(() => {
-    const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
-    if (isIdleAndUninitialized) {
-      permissionsFetcher.load(`/organization/${organizationId}/permissions`);
-    }
-  }, [organizationId, permissionsFetcher]);
-
-  const { featuresPromise } = permissionsFetcher.data || {};
-  const [features = {
-    gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
-  }] = useLoaderDeferData(featuresPromise);
+  const { features } = useOrganizationPermissions();
 
   const createEnvironmentFetcher = useFetcher();
   const deleteEnvironmentFetcher = useFetcher();

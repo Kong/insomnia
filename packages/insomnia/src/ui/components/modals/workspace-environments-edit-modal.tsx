@@ -1,5 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Button, Dialog, DropIndicator, GridList, GridListItem, Heading, Label, ListBoxItem, Menu, MenuTrigger, Modal, ModalOverlay, Popover, Text, useDragAndDrop } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
@@ -8,8 +8,7 @@ import { debounce } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
 import { isRemoteProject } from '../../../models/project';
 import { responseTagRegex } from '../../../templating/utils';
-import { useLoaderDeferData } from '../../hooks/use-loader-defer-data';
-import type { OrganizationFeatureLoaderData } from '../../routes/organization';
+import { useOrganizationPermissions } from '../../hooks/use-organization-features';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { EditableInput } from '../editable-input';
 import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from '../editors/environment-editor';
@@ -24,19 +23,8 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
     ':workspaceId'
   ) as WorkspaceLoaderData;
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
-  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
 
-  useEffect(() => {
-    const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
-    if (isIdleAndUninitialized) {
-      permissionsFetcher.load(`/organization/${organizationId}/permissions`);
-    }
-  }, [organizationId, permissionsFetcher]);
-
-  const { featuresPromise } = permissionsFetcher.data || {};
-  const [features = {
-    gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
-  }] = useLoaderDeferData(featuresPromise);
+  const { features } = useOrganizationPermissions();
 
   const createEnvironmentFetcher = useFetcher();
   const deleteEnvironmentFetcher = useFetcher();

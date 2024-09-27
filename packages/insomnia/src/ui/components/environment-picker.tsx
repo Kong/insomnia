@@ -1,12 +1,11 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { Fragment, useEffect } from 'react';
+import React, { Fragment } from 'react';
 import { Button, ComboBox, Dialog, DialogTrigger, Heading, Input, ListBox, ListBoxItem, Popover, Text } from 'react-aria-components';
 import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { fuzzyMatch } from '../../common/misc';
 import { isRemoteProject } from '../../models/project';
-import { useLoaderDeferData } from '../hooks/use-loader-defer-data';
-import type { OrganizationFeatureLoaderData } from '../routes/organization';
+import { useOrganizationPermissions } from '../hooks/use-organization-features';
 import type { WorkspaceLoaderData } from '../routes/workspace';
 import { Icon } from './icon';
 
@@ -38,20 +37,7 @@ export const EnvironmentPicker = ({
     requestGroupId?: string;
   };
 
-  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
-
-  useEffect(() => {
-    const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
-    if (isIdleAndUninitialized) {
-      permissionsFetcher.load(`/organization/${organizationId}/permissions`);
-    }
-  }, [organizationId, permissionsFetcher]);
-
-  const { featuresPromise } = permissionsFetcher.data || {};
-  const [features = {
-    gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
-  }] = useLoaderDeferData(featuresPromise);
-
+  const { features } = useOrganizationPermissions();
   const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
