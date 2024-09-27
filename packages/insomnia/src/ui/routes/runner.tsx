@@ -4,6 +4,7 @@ import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelResizeHandle } from 'react-resizable-panels';
 import { type ActionFunction, redirect, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
+import { useListData } from 'react-stately';
 import { useInterval } from 'react-use';
 
 import { Tooltip } from '../../../src/ui/components/tooltip';
@@ -31,7 +32,6 @@ import { RunnerTestResultPane } from '../components/panes/runner-test-result-pan
 import { ResponseTimer } from '../components/response-timer';
 import { getTimeAndUnit } from '../components/tags/time-tag';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
-import useLocalStorage from '../hooks/use-local-storage';
 import type { OrganizationLoaderData } from './organization';
 import { type CollectionRunnerContext, type RunnerSource, sendActionImp } from './request';
 import { useRootLoaderData } from './root';
@@ -102,7 +102,27 @@ export const repositionInArray = (allItems: string[], itemsToMove: string[], tar
 
 interface RunnerAdvancedSettings {
   bail: boolean;
+};
+
+interface RunnerSettings {
+  iterationCount: number;
+  delay: number;
+  iterationFile: File | null;
+  iterationData: UploadDataType[];
+  advanced: RunnerAdvancedSettings;
 }
+
+// it is just for defining the type at the moment
+const tempRunnerSettings: RunnerSettings = {
+  iterationCount: 1,
+  delay: 0,
+  iterationFile: null,
+  iterationData: [],
+  advanced: {
+    bail: true,
+  },
+};
+
 interface RequestRow {
   id: string;
   name: string;
@@ -151,11 +171,12 @@ export const Runner: FC<{}> = () => {
     workspaceId: string;
     direction: 'vertical' | 'horizontal';
   };
-  const [iterationCount, setIterationCount] = useLocalStorage<number>(`runner:iterationCount:${workspaceId}`, { defaultValue: 1 });
-  const [delay, setDelay] = useLocalStorage<number>(`runner:delay:${workspaceId}`, { defaultValue: 0 });
-  const [uploadData, setUploadData] = useLocalStorage<UploadDataType[]>(`runner:iterationData:${workspaceId}`, { defaultValue: [] });
-  const [file, setFile] = useLocalStorage<File | null>(`runner:file:${workspaceId}`, { defaultValue: null });
-  const [runnerAdvancedSettings, setAdvancedRunnerSettings] = useLocalStorage<RunnerAdvancedSettings>(workspaceId + 'bail', { defaultValue: { bail: true } });
+  const [iterationCount, setIterationCount] = useState<number>(tempRunnerSettings.iterationCount);
+  const [delay, setDelay] = useState<number>(tempRunnerSettings.delay);
+  const [uploadData, setUploadData] = useState<UploadDataType[]>(tempRunnerSettings.iterationData);
+  const [file, setFile] = useState<File | null>(tempRunnerSettings.iterationFile);
+  const [runnerAdvancedSettings, setAdvancedRunnerSettings] = useState<RunnerAdvancedSettings>(tempRunnerSettings.advanced);
+  const [isRunning, setIsRunning] = useState(false);
 
   invariant(iterationCount, 'iterationCount should not be null');
 
@@ -213,33 +234,10 @@ export const Runner: FC<{}> = () => {
         url: item.doc.url,
       };
     });
-  const [requestIds, setRequestIds] = useLocalStorage<string[]>(`runner:requestIds:${workspaceId}`, { defaultValue: requestRows.map(item => item.id) });
 
-  useEffect(() => {
-    const areRequestsSameLength = requestIds.length === requestRows.length;
-    const areRequestIdsMatching = requestRows.map(requestRow => requestRow.id).every(id => requestIds.includes(id));
-    const areRequestsSynced = areRequestsSameLength && areRequestIdsMatching;
-
-    // request was added or removed
-    if (!areRequestsSynced) {
-      const newRequests = requestRows.filter(item => !requestIds.includes(item.id));
-      if (newRequests.length > 0) {
-        setRequestIds([...requestIds, ...newRequests.map(item => item.id)]);
-      } else {
-        setRequestIds(requestIds.filter(key => requestRows.map(r => r.id).includes(key)));
-      }
-    }
-  }, [requestIds, requestRows, setRequestIds]);
-
-  const sortedRequestRows = requestIds
-    .filter(key => requestRows.find(item => item.id === key))
-    .map(key => {
-      const thing = requestRows.find(item => item.id === key);
-      invariant(thing, 'key should exist');
-      return thing;
-    });
-
-  const [selectedRequestIds, setSelectedRequestIds] = useState<Set<Key>>(new Set([]));
+  const reqList = useListData({
+    initialItems: requestRows,
+  });
 
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
     getItems: keys => {
@@ -252,10 +250,11 @@ export const Runner: FC<{}> = () => {
       });
     },
     onReorder: event => {
-      setRequestIds(repositionInArray(
-        requestIds,
-        [...event.keys].map(key => key.toString()),
-        requestIds.findIndex(item => item === event.target.key.toString())));
+      if (event.target.dropPosition === 'before') {
+        reqList.moveBefore(event.target.key, event.keys);
+      } else if (event.target.dropPosition === 'after') {
+        reqList.moveAfter(event.target.key, event.keys);
+      }
     },
     renderDragPreview(items) {
       return (
@@ -266,7 +265,7 @@ export const Runner: FC<{}> = () => {
     },
     renderDropIndicator(target) {
       if (target.type === 'item') {
-        const item = sortedRequestRows.find(item => item.id === target.key);
+        const item = reqList.items.find(item => item.id === target.key);
         if (item) {
           return (
             <DropIndicator
@@ -291,7 +290,9 @@ export const Runner: FC<{}> = () => {
 
     window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount } });
 
-    const requests = requestRows.filter(row => selectedRequestIds.has(row.id));
+    const selected = new Set(reqList.selectedKeys);
+    const requests = Array.from(reqList.items)
+      .filter(item => selected.has(item.id));
     // convert uploadData to environment data
     const userUploadEnvs = uploadData.map(data => {
       const orderedJson = porderedJSON.parse<UploadDataType>(
@@ -327,11 +328,13 @@ export const Runner: FC<{}> = () => {
     navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}`);
   };
   const onToggleSelection = () => {
-    if (selectedRequestIds.size === requestIds.length) {
-      setSelectedRequestIds(new Set([]));
-      return;
+    if (Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length) {
+      // unselect all
+      reqList.setSelectedKeys(new Set([]));
+    } else {
+      // select all
+      reqList.setSelectedKeys(new Set(reqList.items.map(item => item.id)));
     }
-    setSelectedRequestIds(new Set(requestIds));
   };
 
   const [testHistory, setTestHistory] = useState<RunnerTestResult[]>([]);
@@ -349,7 +352,6 @@ export const Runner: FC<{}> = () => {
     }
   }, [setIterationCount, uploadData]);
 
-  const [isRunning, setIsRunning] = useState(false);
   const [timingSteps, setTimingSteps] = useState<TimingStep[]>([]);
   const [totalTime, setTotalTime] = useState({
     duration: 0,
@@ -440,8 +442,11 @@ export const Runner: FC<{}> = () => {
     setSelectedTab('test-results');
   }, [setSelectedTab]);
 
-  const disabledKeys = useMemo(() => isRunning ? requestIds : [], [isRunning, requestIds]);
-  const isDisabled = isRunning || selectedRequestIds.size === 0;
+  const allKeys = reqList.items.map(item => item.id);
+  const disabledKeys = useMemo(() => {
+    return isRunning ? allKeys : [];
+  }, [isRunning, allKeys]);
+  const isDisabled = isRunning || Array.from(reqList.selectedKeys).length === 0;
 
   const [deletedItems, setDeletedItems] = useState<string[]>([]);
   const deleteHistoryItem = (item: RunnerTestResult) => {
@@ -566,9 +571,9 @@ export const Runner: FC<{}> = () => {
                     <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
                       <span className="mr-2">
                         {
-                          selectedRequestIds.size === Array.from(sortedRequestRows).length ?
+                          Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length ?
                             <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-check fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Unselect All</span></span> :
-                            selectedRequestIds.size === 0 ?
+                            Array.from(reqList.selectedKeys).length === 0 ?
                               <span onClick={onToggleSelection}><i className="fa fa-square fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span> :
                               <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-minus fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span>
                         }
@@ -577,16 +582,11 @@ export const Runner: FC<{}> = () => {
                     <PaneBody placeholder className='p-0'>
                       <GridList
                         id="runner-request-list"
-                        items={sortedRequestRows}
+                        items={reqList.items}
                         selectionMode="multiple"
-                        selectedKeys={selectedRequestIds}
-                        onSelectionChange={keys => {
-                          if (keys === 'all') {
-                            setSelectedRequestIds(new Set(requestIds));
-                          }
-                          setSelectedRequestIds(new Set(keys));
-                        }}
-                        defaultSelectedKeys={requestIds}
+                        selectedKeys={reqList.selectedKeys}
+                        onSelectionChange={reqList.setSelectedKeys}
+                        defaultSelectedKeys={allKeys}
                         aria-label="Request Collection"
                         dragAndDropHooks={requestsDnD}
                         className="w-full h-full leading-8 text-base overflow-auto"
@@ -704,8 +704,8 @@ export const Runner: FC<{}> = () => {
                 {showCLIModal && (
                   <CLIPreviewModal
                     onClose={() => setShowCLIModal(false)}
-                    requestIds={Array.from(selectedRequestIds) as string[]}
-                    allSelected={selectedRequestIds.size === Array.from(sortedRequestRows).length}
+                    requestIds={Array.from(reqList.selectedKeys) as string[]}
+                    allSelected={Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length}
                     iterationCount={iterationCount}
                     delay={delay}
                     filePath={file?.path || ''}
@@ -775,12 +775,12 @@ export const Runner: FC<{}> = () => {
                 />
               </TabPanel>
               <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='history'>
-              <RunnerResultHistoryPane
-                history={testHistory.filter(item => !deletedItems.includes(item._id))}
-                gotoExecutionResult={gotoExecutionResult}
-                gotoTestResultsTab={gotoTestResultsTab}
-                deleteHistoryItem={deleteHistoryItem}
-              />
+                <RunnerResultHistoryPane
+                  history={testHistory.filter(item => !deletedItems.includes(item._id))}
+                  gotoExecutionResult={gotoExecutionResult}
+                  gotoTestResultsTab={gotoTestResultsTab}
+                  deleteHistoryItem={deleteHistoryItem}
+                />
               </TabPanel>
               <TabPanel
                 className='w-full flex-1 flex flex-col overflow-y-auto'

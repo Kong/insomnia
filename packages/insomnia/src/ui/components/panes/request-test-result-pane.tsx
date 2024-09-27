@@ -71,7 +71,7 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
       const executionTime = <span className={result.executionTime < 300 ? 'text-white-500' : 'text-red-500'} >
         {result.executionTime === 0 ? '< 0.1' : `${result.executionTime.toFixed(1)}`}
       </span>;
-      const statusTag = <div className={`text-xs rounded p-[2px] inline-block w-16 text-center font-semibold ${statusTagColor}`}>
+      const statusTag = <div className={`text-xs rounded p-[2px] inline-block w-16 text-center text-white font-semibold ${statusTagColor}`}>
         {statusText}
       </div >;
       const message = <>
