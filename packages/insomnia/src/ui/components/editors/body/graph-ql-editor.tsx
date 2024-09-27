@@ -4,7 +4,7 @@ import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import type { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import type { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
-import { buildClientSchema, type DefinitionNode, type DocumentNode, getIntrospectionQuery, getOperationAST, GraphQLNonNull, GraphQLSchema, Kind, type NonNullTypeNode, type OperationDefinitionNode, OperationTypeNode, parse, typeFromAST } from 'graphql';
+import { buildClientSchema, type DefinitionNode, type DocumentNode, getIntrospectionQuery, GraphQLNonNull, GraphQLSchema, Kind, type NonNullTypeNode, type OperationDefinitionNode, OperationTypeNode, parse, typeFromAST } from 'graphql';
 import type { Maybe } from 'graphql-language-service';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { Button, Group, Heading, Toolbar, Tooltip, TooltipTrigger } from 'react-aria-components';
@@ -67,15 +67,6 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
 
 const isString = (value?: string): value is string => typeof value === 'string' || (value as unknown) instanceof String;
 const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode => def.kind === Kind.OPERATION_DEFINITION;
-const getOperationType = (operationName: string, documentAST: DocumentNode | null) => {
-  if (documentAST) {
-    const operationAST = getOperationAST(documentAST, operationName);
-    if (operationAST) {
-      return operationAST.operation;
-    }
-  };
-  return undefined;
-};
 
 const fetchGraphQLSchemaForRequest = async ({
   requestId,
@@ -180,7 +171,7 @@ interface GraphQLBody {
 }
 
 interface Props {
-  onChange: (value: string, type?: OperationTypeNode) => void;
+  onChange: (value: string) => void;
   request: Request;
   environmentId: string;
   className?: string;
@@ -298,13 +289,13 @@ export const GraphQLEditor: FC<Props> = ({
   });
   const changeOperationName = (operationName: string) => {
     const content = getGraphQLContent(state.body, undefined, operationName);
-    onChange(content, getOperationType(operationName, documentAST));
+    onChange(content);
     setState(prevState => ({ ...prevState, body: { ...prevState.body, operationName } }));
   };
   const changeVariables = (variablesInput: string) => {
     try {
       const content = getGraphQLContent(state.body, undefined, operationName, variablesInput);
-      onChange(content, getOperationType(operationName, documentAST));
+      onChange(content);
 
       setState(state => ({
         ...state,
@@ -338,7 +329,7 @@ export const GraphQLEditor: FC<Props> = ({
       }
 
       const content = getGraphQLContent(state.body, query, operationName);
-      onChange(content, getOperationType(operationName, documentAST));
+      onChange(content);
 
       setState(state => ({
         ...state,
