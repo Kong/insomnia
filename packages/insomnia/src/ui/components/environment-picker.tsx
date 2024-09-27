@@ -112,14 +112,14 @@ export const EnvironmentPicker = ({
 
                   return match;
                 }}
-                onSelectionChange={environmentId => {
-                  if (environmentId === 'all' || environmentId === null) {
+                onSelectionChange={key => {
+                  if (key === 'all' || !key) {
                     return;
                   }
 
                   setActiveGlobalEnvironmentFetcher.submit(
                     {
-                      environmentId,
+                      environmentId: key.toString(),
                     },
                     {
                       method: 'POST',
@@ -168,15 +168,11 @@ export const EnvironmentPicker = ({
               key={activeGlobalEnvironment?._id}
               items={globalEnvironmentList}
               selectedKeys={[activeGlobalEnvironment?._id || activeGlobalBaseEnvironment?._id || '']}
-              onSelectionChange={selection => {
-                if (selection === 'all' || selection === null) {
+              onSelectionChange={keys => {
+                if (keys === 'all' || !keys) {
                   return;
                 }
-                const environmentId = selection.values().next().value;
-
-                if (environmentId === null) {
-                  return;
-                }
+                const [environmentId] = keys.values();
 
                 setActiveGlobalEnvironmentFetcher.submit(
                   {
