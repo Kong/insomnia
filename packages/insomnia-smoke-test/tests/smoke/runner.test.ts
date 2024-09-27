@@ -33,6 +33,8 @@ test.describe('runner features tests', async () => {
         const testResults = page.getByTestId(`runner-test-result-iteration-${iteration}`).getByTestId('test-result-row');
         const testResultCount = await testResults.count();
 
+        expect(expectedTestOrder.length).toEqual(testResultCount);
+
         for (let i = 0; i < testResultCount; i++) {
             const resultMsg = await testResults.nth(i).textContent();
             if (resultMsg?.startsWith('PASS')) {
@@ -135,5 +137,55 @@ test.describe('runner features tests', async () => {
             'expected 200 to deeply equal 201',
         ]);
 
+    });
+
+    test('run req4 3 times with setNextRequest the pre-request script', async ({ page }) => {
+        await page.getByTestId('run-collection-btn-quick').click();
+
+        // select requests to test
+        await page.locator('text=Select All').click();
+        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req1' }).locator('.react-aria-Checkbox').click();
+        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req2' }).locator('.react-aria-Checkbox').click();
+        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req3' }).locator('.react-aria-Checkbox').click();
+        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req5' }).locator('.react-aria-Checkbox').click();
+
+        // send
+        await page.getByRole('button', { name: 'Run', exact: true }).click();
+
+        // check result
+        await page.getByText('ITERATION 1').click();
+
+        const expectedTestOrder = [
+            'req4-post-check',
+            'req4-post-check',
+            'req4-post-check',
+        ];
+
+        await verifyResultRows(page, 3, 0, 3, expectedTestOrder, 1);
+    });
+
+    test('run req5 3 times with setNextRequest in the after-response script', async ({ page }) => {
+        await page.getByTestId('run-collection-btn-quick').click();
+
+        // select requests to test
+        await page.locator('text=Select All').click();
+        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req1' }).locator('.react-aria-Checkbox').click();
+        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req2' }).locator('.react-aria-Checkbox').click();
+        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req3' }).locator('.react-aria-Checkbox').click();
+        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req4' }).locator('.react-aria-Checkbox').click();
+
+        // send
+        await page.getByRole('button', { name: 'Run', exact: true }).click();
+
+        // check result
+        await page.getByText('ITERATION 1').click();
+
+        const expectedTestOrder = [
+            'req5-post-check',
+            'req5-post-check',
+            'req5-post-check',
+        ];
+
+        await verifyResultRows(page, 3, 0, 3, expectedTestOrder, 1);
     });
 });

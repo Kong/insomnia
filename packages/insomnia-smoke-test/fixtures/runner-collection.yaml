@@ -180,3 +180,64 @@ resources:
     isPrivate: true
     metaSortKey: 1725267312624
     _type: environment
+  - _id: req_76bf52b201cf47269f5845795a7fe688
+    parentId: wrk_418cad89191c418395abfeb2277fd26f
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: req4
+    description: ""
+    method: POST
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    preRequestScript: |-
+      const executed = insomnia.environment.get('executed') || 0;
+      if (executed < 2) {
+        insomnia.environment.set('executed', executed + 1);
+        insomnia.execution.setNextRequest('req4');
+      }
+    metaSortKey: -1636141014555
+    isPrivate: false
+    afterResponseScript: |-
+      insomnia.test('req4-post-check', () => {
+          insomnia.expect(insomnia.response.code).to.eql(200);
+      });
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_76bf52b201cf47269f5845795a7fe689
+    parentId: wrk_418cad89191c418395abfeb2277fd26f
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: req5
+    description: ""
+    method: POST
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    afterResponseScript: |-
+      const executed = insomnia.environment.get('executedReq5') || 0;
+      if (executed < 2) {
+        insomnia.environment.set('executedReq5', executed + 1);
+        insomnia.execution.setNextRequest('req5');
+      }
+      insomnia.test('req5-post-check', () => {
+          insomnia.expect(insomnia.response.code).to.eql(200);
+      });
+    metaSortKey: -1636141014555
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request

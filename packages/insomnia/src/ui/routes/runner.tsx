@@ -293,6 +293,7 @@ export const Runner: FC<{}> = () => {
     const selected = new Set(reqList.selectedKeys);
     const requests = Array.from(reqList.items)
       .filter(item => selected.has(item.id));
+
     // convert uploadData to environment data
     const userUploadEnvs = uploadData.map(data => {
       const orderedJson = porderedJSON.parse<UploadDataType>(
@@ -923,7 +924,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       for (let j = 0; j < requests.length; j++) {
         const targetRequest = requests[j];
 
-        const resultCollector = {
+        let resultCollector = {
           requestId: targetRequest.id,
           requestName: targetRequest.name,
           requestUrl: targetRequest.url,
@@ -940,68 +941,92 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
         }
 
         try {
-          if (nextRequestIdOrName !== '') {
+          const isNextRequest = (targetRequest: RequestRow, nextRequestIdOrName: string) => {
             const matchId = targetRequest.id === nextRequestIdOrName;
             const matchName = targetRequest.name.trim() === nextRequestIdOrName.trim();
             // find the last request with matched name in case multiple requests with same name in collection runner
             const matchLastIndex = j === requests.findLastIndex(req => req.name.trim() === nextRequestIdOrName.trim());
 
-            if (matchId || (matchName && matchLastIndex)
-            ) {
+            return matchId || (matchName && matchLastIndex);
+          };
+
+          if (nextRequestIdOrName !== '') {
+            if (isNextRequest(targetRequest, nextRequestIdOrName)) {
               // reset nextRequestIdOrName when request name or id meets;
               nextRequestIdOrName = '';
             } else {
               continue;
             }
           }
-          updateExecution(workspaceId, targetRequest.id);
 
-          window.main.updateLatestStepName({
-            requestId: workspaceId,
-            stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"`,
-          });
+          while (true) {
+            updateExecution(workspaceId, targetRequest.id);
 
-          const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(
-            targetRequest.id,
-            { lastActive: Date.now() },
-          );
-          invariant(activeRequestMeta, 'Request meta not found');
+            resultCollector = {
+              requestId: targetRequest.id,
+              requestName: targetRequest.name,
+              requestUrl: targetRequest.url,
+              statusCode: 0,
+              duration: 0,
+              size: 0,
+              results: [],
+              responseId: '',
+            };
 
-          await new Promise(resolve => setTimeout(resolve, delay));
+            window.main.updateLatestStepName({
+              requestId: workspaceId,
+              stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"`,
+            });
 
-          const mutatedContext = await sendActionImplementation({
-            requestId: targetRequest.id,
-            iteration: i + 1,
-            iterationCount,
-            userUploadEnvironment: wrapAroundIterationOverIterationData(userUploadEnvs, i),
-            shouldPromptForPathAfterResponse: false,
-            ignoreUndefinedEnvVariable: true,
-            testResultCollector: resultCollector,
-          }) as RequestContext | null;
-          if (mutatedContext?.execution?.nextRequestIdOrName) {
-            nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
-          };
+            const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(
+              targetRequest.id,
+              { lastActive: Date.now() },
+            );
+            invariant(activeRequestMeta, 'Request meta not found');
 
-          const requestResults: RunnerResultPerRequest = {
-            requestName: targetRequest.name,
-            requestUrl: targetRequest.url,
-            responseCode: resultCollector.statusCode,
-            results: resultCollector.results,
-          };
+            await new Promise(resolve => setTimeout(resolve, delay));
 
-          testResultsForOneIteration = [...testResultsForOneIteration, requestResults];
-          testCtx = {
-            ...testCtx,
-            duration: testCtx.duration + resultCollector.duration,
-            responsesInfo: [
-              ...testCtx.responsesInfo,
-              {
-                responseId: resultCollector.responseId,
-                originalRequestId: targetRequest.id,
-                originalRequestName: targetRequest.name,
-              },
-            ],
-          };
+            const mutatedContext = await sendActionImplementation({
+              requestId: targetRequest.id,
+              iteration: i + 1,
+              iterationCount,
+              userUploadEnvironment: wrapAroundIterationOverIterationData(userUploadEnvs, i),
+              shouldPromptForPathAfterResponse: false,
+              ignoreUndefinedEnvVariable: true,
+              testResultCollector: resultCollector,
+            }) as RequestContext | null;
+            if (mutatedContext?.execution?.nextRequestIdOrName) {
+              nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
+            };
+
+            const requestResults: RunnerResultPerRequest = {
+              requestName: targetRequest.name,
+              requestUrl: targetRequest.url,
+              responseCode: resultCollector.statusCode,
+              results: resultCollector.results,
+            };
+
+            testResultsForOneIteration = [...testResultsForOneIteration, requestResults];
+            testCtx = {
+              ...testCtx,
+              duration: testCtx.duration + resultCollector.duration,
+              responsesInfo: [
+                ...testCtx.responsesInfo,
+                {
+                  responseId: resultCollector.responseId,
+                  originalRequestId: targetRequest.id,
+                  originalRequestName: targetRequest.name,
+                },
+              ],
+            };
+
+            if (isNextRequest(targetRequest, nextRequestIdOrName)) {
+              nextRequestIdOrName = '';
+              continue;
+            } else {
+              break;
+            }
+          }
         } catch (e) {
           const requestResults: RunnerResultPerRequest = {
             requestName: targetRequest.name,
