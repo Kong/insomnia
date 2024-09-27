@@ -1,6 +1,5 @@
 import type { RequestContext } from 'insomnia-sdk';
 import porderedJSON from 'json-order';
-import _ from 'lodash';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelResizeHandle } from 'react-resizable-panels';
