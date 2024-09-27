@@ -3,7 +3,7 @@
     /* Basic */
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "target": "es2022",
+    "target": "es2020",
     "allowJs": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
@@ -13,7 +13,7 @@
     "sourceMap": true,
     /* Runs in the DOM */
     "lib": [
-      "ES2020",
+      "ES2023",
       "DOM.Iterable",
       "DOM"
     ],
