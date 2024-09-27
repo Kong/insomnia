@@ -127,7 +127,6 @@ export const EnvironmentPicker = ({
                   return match;
                 }}
                 onSelectionChange={environmentId => {
-                  console.log({ environmentId });
                   if (environmentId === 'all' || environmentId === null) {
                     return;
                   }
