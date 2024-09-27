@@ -4,6 +4,7 @@ import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelResizeHandle } from 'react-resizable-panels';
 import { type ActionFunction, redirect, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
+import { useListData } from 'react-stately';
 import { useInterval } from 'react-use';
 
 import { Tooltip } from '../../../src/ui/components/tooltip';
@@ -31,7 +32,6 @@ import { RunnerTestResultPane } from '../components/panes/runner-test-result-pan
 import { ResponseTimer } from '../components/response-timer';
 import { getTimeAndUnit } from '../components/tags/time-tag';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
-import useLocalStorage from '../hooks/use-local-storage';
 import type { OrganizationLoaderData } from './organization';
 import { type CollectionRunnerContext, type RunnerSource, sendActionImp } from './request';
 import { useRootLoaderData } from './root';
@@ -100,16 +100,13 @@ export const repositionInArray = (allItems: string[], itemsToMove: string[], tar
   return items;
 };
 
-interface RunnerAdvancedSettings {
-  bail: boolean;
-}
 interface RequestRow {
   id: string;
   name: string;
   ancestorNames: string[];
   method: string;
   url: string;
-}[];
+};
 
 export const Runner: FC<{}> = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -151,11 +148,12 @@ export const Runner: FC<{}> = () => {
     workspaceId: string;
     direction: 'vertical' | 'horizontal';
   };
-  const [iterationCount, setIterationCount] = useLocalStorage<number>(`runner:iterationCount:${workspaceId}`, { defaultValue: 1 });
-  const [delay, setDelay] = useLocalStorage<number>(`runner:delay:${workspaceId}`, { defaultValue: 0 });
-  const [uploadData, setUploadData] = useLocalStorage<UploadDataType[]>(`runner:iterationData:${workspaceId}`, { defaultValue: [] });
-  const [file, setFile] = useLocalStorage<File | null>(`runner:file:${workspaceId}`, { defaultValue: null });
-  const [runnerAdvancedSettings, setAdvancedRunnerSettings] = useLocalStorage<RunnerAdvancedSettings>(workspaceId + 'bail', { defaultValue: { bail: true } });
+  const [iterationCount, setIterationCount] = useState<number>(1);
+  const [delay, setDelay] = useState<number>(0);
+  const [uploadData, setUploadData] = useState<UploadDataType[]>([]);
+  const [file, setFile] = useState<File | null>(null);
+  const [bail, setBail] = useState<boolean>(true);
+  const [isRunning, setIsRunning] = useState(false);
 
   invariant(iterationCount, 'iterationCount should not be null');
 
@@ -213,33 +211,10 @@ export const Runner: FC<{}> = () => {
         url: item.doc.url,
       };
     });
-  const [requestIds, setRequestIds] = useLocalStorage<string[]>(`runner:requestIds:${workspaceId}`, { defaultValue: requestRows.map(item => item.id) });
 
-  useEffect(() => {
-    const areRequestsSameLength = requestIds.length === requestRows.length;
-    const areRequestIdsMatching = requestRows.map(requestRow => requestRow.id).every(id => requestIds.includes(id));
-    const areRequestsSynced = areRequestsSameLength && areRequestIdsMatching;
-
-    // request was added or removed
-    if (!areRequestsSynced) {
-      const newRequests = requestRows.filter(item => !requestIds.includes(item.id));
-      if (newRequests.length > 0) {
-        setRequestIds([...requestIds, ...newRequests.map(item => item.id)]);
-      } else {
-        setRequestIds(requestIds.filter(key => requestRows.map(r => r.id).includes(key)));
-      }
-    }
-  }, [requestIds, requestRows, setRequestIds]);
-
-  const sortedRequestRows = requestIds
-    .filter(key => requestRows.find(item => item.id === key))
-    .map(key => {
-      const thing = requestRows.find(item => item.id === key);
-      invariant(thing, 'key should exist');
-      return thing;
-    });
-
-  const [selectedRequestIds, setSelectedRequestIds] = useState<Set<Key>>(new Set([]));
+  const reqList = useListData({
+    initialItems: requestRows,
+  });
 
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
     getItems: keys => {
@@ -252,10 +227,11 @@ export const Runner: FC<{}> = () => {
       });
     },
     onReorder: event => {
-      setRequestIds(repositionInArray(
-        requestIds,
-        [...event.keys].map(key => key.toString()),
-        requestIds.findIndex(item => item === event.target.key.toString())));
+      if (event.target.dropPosition === 'before') {
+        reqList.moveBefore(event.target.key, event.keys);
+      } else if (event.target.dropPosition === 'after') {
+        reqList.moveAfter(event.target.key, event.keys);
+      }
     },
     renderDragPreview(items) {
       return (
@@ -266,7 +242,7 @@ export const Runner: FC<{}> = () => {
     },
     renderDropIndicator(target) {
       if (target.type === 'item') {
-        const item = sortedRequestRows.find(item => item.id === target.key);
+        const item = reqList.items.find(item => item.id === target.key);
         if (item) {
           return (
             <DropIndicator
@@ -291,7 +267,9 @@ export const Runner: FC<{}> = () => {
 
     window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount } });
 
-    const requests = requestRows.filter(row => selectedRequestIds.has(row.id));
+    const selected = new Set(reqList.selectedKeys);
+    const requests = Array.from(reqList.items)
+      .filter(item => selected.has(item.id));
     // convert uploadData to environment data
     const userUploadEnvs = uploadData.map(data => {
       const orderedJson = porderedJSON.parse<UploadDataType>(
@@ -310,7 +288,7 @@ export const Runner: FC<{}> = () => {
       iterationCount,
       userUploadEnvs,
       delay,
-      runnerAdvancedSettings: { ...runnerAdvancedSettings },
+      bail,
     };
     submit(
       JSON.stringify(actionInput),
@@ -327,11 +305,13 @@ export const Runner: FC<{}> = () => {
     navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}`);
   };
   const onToggleSelection = () => {
-    if (selectedRequestIds.size === requestIds.length) {
-      setSelectedRequestIds(new Set([]));
-      return;
+    if (Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length) {
+      // unselect all
+      reqList.setSelectedKeys(new Set([]));
+    } else {
+      // select all
+      reqList.setSelectedKeys(new Set(reqList.items.map(item => item.id)));
     }
-    setSelectedRequestIds(new Set(requestIds));
   };
 
   const [testHistory, setTestHistory] = useState<RunnerTestResult[]>([]);
@@ -349,7 +329,6 @@ export const Runner: FC<{}> = () => {
     }
   }, [setIterationCount, uploadData]);
 
-  const [isRunning, setIsRunning] = useState(false);
   const [timingSteps, setTimingSteps] = useState<TimingStep[]>([]);
   const [totalTime, setTotalTime] = useState({
     duration: 0,
@@ -440,8 +419,11 @@ export const Runner: FC<{}> = () => {
     setSelectedTab('test-results');
   }, [setSelectedTab]);
 
-  const disabledKeys = useMemo(() => isRunning ? requestIds : [], [isRunning, requestIds]);
-  const isDisabled = isRunning || selectedRequestIds.size === 0;
+  const allKeys = reqList.items.map(item => item.id);
+  const disabledKeys = useMemo(() => {
+    return isRunning ? allKeys : [];
+  }, [isRunning, allKeys]);
+  const isDisabled = isRunning || Array.from(reqList.selectedKeys).length === 0;
 
   const [deletedItems, setDeletedItems] = useState<string[]>([]);
   const deleteHistoryItem = (item: RunnerTestResult) => {
@@ -451,355 +433,350 @@ export const Runner: FC<{}> = () => {
 
   return (
     <>
-          <Panel id="pane-one" className='pane-one theme--pane' minSize={35} maxSize={90}>
-            <ErrorBoundary showAlert>
+      <Panel id="pane-one" className='pane-one theme--pane' minSize={35} maxSize={90}>
+        <ErrorBoundary showAlert>
 
-              <Pane type="request">
-                <PaneHeader>
-                  <Heading className="flex items-center w-full h-[--line-height-sm] pl-[--padding-md]">
-                    <div className="w-full h-full text-left overflow-hidden">
-                      <div className="h-full min-w-[500px]">
-                        <span className="mr-6 text-sm">
-                          <input
-                            value={iterationCount}
-                            name='Iterations'
-                            disabled={isRunning}
-                            onChange={e => {
-                              try {
-                                if (parseInt(e.target.value, 10) > 0) {
-                                  setIterationCount(parseInt(e.target.value, 10));
-                                }
-                              } catch (ex) { }
-                            }}
-                            type='number'
-                            className={iterationInputStyle}
-                          />
-                          <span className="border">Iterations</span>
-                        </span>
-                        <span className="mr-6 text-sm">
-                          <input
-                            value={delay}
-                            disabled={isRunning}
-                            name='Delay'
-                            onChange={e => {
-                              try {
-                                const delay = parseInt(e.target.value, 10);
-                                if (delay >= 0) {
-                                  setDelay(delay); // also update the temp settings
-                                }
-                              } catch (ex) { }
-                            }}
-                            type='number'
-                            className={inputStyle}
-                          />
-                          <span className="mr-1 border">Delay (ms)</span>
-                        </span>
-                        <Button
-                          onPress={() => setShowUploadModal(true)}
-                          className="py-0.5 px-1 border-[--hl-sm] h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ring-1 ring-transparent transition-all text-sm mr-6"
-                          isDisabled={isRunning}
-                        >
-                          <Icon icon={file ? 'eye' : 'upload'} /> {file ? 'View Data' : 'Upload Data'}
-                        </Button>
-                      </div>
-                    </div>
-                    <div className='flex p-1 self-stretch'>
+          <Pane type="request">
+            <PaneHeader>
+              <Heading className="flex items-center w-full h-[--line-height-sm] pl-[--padding-md]">
+                <div className="w-full h-full text-left overflow-hidden">
+                  <div className="h-full min-w-[500px]">
+                    <span className="mr-6 text-sm">
+                      <input
+                        value={iterationCount}
+                        name='Iterations'
+                        disabled={isRunning}
+                        onChange={e => {
+                          try {
+                            if (parseInt(e.target.value, 10) > 0) {
+                              setIterationCount(parseInt(e.target.value, 10));
+                            }
+                          } catch (ex) { }
+                        }}
+                        type='number'
+                        className={iterationInputStyle}
+                      />
+                      <span className="border">Iterations</span>
+                    </span>
+                    <span className="mr-6 text-sm">
+                      <input
+                        value={delay}
+                        disabled={isRunning}
+                        name='Delay'
+                        onChange={e => {
+                          try {
+                            const delay = parseInt(e.target.value, 10);
+                            if (delay >= 0) {
+                              setDelay(delay); // also update the temp settings
+                            }
+                          } catch (ex) { }
+                        }}
+                        type='number'
+                        className={inputStyle}
+                      />
+                      <span className="mr-1 border">Delay (ms)</span>
+                    </span>
+                    <Button
+                      onPress={() => setShowUploadModal(true)}
+                      className="py-0.5 px-1 border-[--hl-sm] h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ring-1 ring-transparent transition-all text-sm mr-6"
+                      isDisabled={isRunning}
+                    >
+                      <Icon icon={file ? 'eye' : 'upload'} /> {file ? 'View Data' : 'Upload Data'}
+                    </Button>
+                  </div>
+                </div>
+                <div className='flex p-1 self-stretch'>
+                  <Button
+                    isDisabled={isDisabled}
+                    className="px-5 ml-1 text-[--color-font-surprise] bg-[--color-surprise] hover:bg-opacity-90 focus:bg-opacity-90 rounded-l-sm"
+                    onPress={onRun}
+                  >
+                    Run
+                  </Button>
+                  <Dropdown
+                    key="dropdown"
+                    className="flex"
+                    isDisabled={isDisabled}
+                    aria-label="Run Options"
+                    closeOnSelect={false}
+                    triggerButton={
                       <Button
                         isDisabled={isDisabled}
-                        className="px-5 ml-1 text-[--color-font-surprise] bg-[--color-surprise] hover:bg-opacity-90 focus:bg-opacity-90 rounded-l-sm"
-                        onPress={onRun}
+                        className="px-1 bg-[--color-surprise] text-[--color-font-surprise] rounded-r-sm"
+                        style={{
+                          borderTopRightRadius: '0.125rem',
+                          borderBottomRightRadius: '0.125rem',
+                        }}
                       >
-                        Run
+                        <i className="fa fa-caret-down" />
                       </Button>
-                      <Dropdown
-                        key="dropdown"
-                        className="flex"
-                        isDisabled={isDisabled}
-                        aria-label="Run Options"
-                        closeOnSelect={false}
-                        triggerButton={
-                          <Button
-                            isDisabled={isDisabled}
-                            className="px-1 bg-[--color-surprise] text-[--color-font-surprise] rounded-r-sm"
-                            style={{
-                              borderTopRightRadius: '0.125rem',
-                              borderBottomRightRadius: '0.125rem',
-                            }}
-                          >
-                            <i className="fa fa-caret-down" />
-                          </Button>
-                        }
-                      >
+                    }
+                  >
 
-                        <DropdownItem aria-label="send-now">
-                          <ItemContent icon="arrow-circle-o-right" label="Run" onClick={onRun} />
-                        </DropdownItem>
-                        <DropdownItem aria-label='Run via CLI'>
-                          <ItemContent
-                            icon="code"
-                            label="Run via CLI"
-                            onClick={() => setShowCLIModal(true)}
-                          />
-                        </DropdownItem>
-                      </Dropdown>
-                    </div>
-                  </Heading>
-                </PaneHeader>
-                <Tabs aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
-                  <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
-                    <Tab
-                      className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-                      id='request-order'
-                    >
-                      <i className="fa fa-sort fa-1x h-4 mr-2" />
-                      Request Order
-                    </Tab>
-                    <Tab
-                      className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-                      id='advanced'
-                    >
-                      <i className="fa fa-gear fa-1x h-4 mr-2" />
-                      Advanced
-                    </Tab>
-                  </TabList>
-                  <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='request-order'>
-                    <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
-                      <span className="mr-2">
-                        {
-                          selectedRequestIds.size === Array.from(sortedRequestRows).length ?
-                            <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-check fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Unselect All</span></span> :
-                            selectedRequestIds.size === 0 ?
-                              <span onClick={onToggleSelection}><i className="fa fa-square fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span> :
-                              <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-minus fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span>
-                        }
-                      </span>
-                    </Toolbar>
-                    <PaneBody placeholder className='p-0'>
-                      <GridList
-                        id="runner-request-list"
-                        items={sortedRequestRows}
-                        selectionMode="multiple"
-                        selectedKeys={selectedRequestIds}
-                        onSelectionChange={keys => {
-                          if (keys === 'all') {
-                            setSelectedRequestIds(new Set(requestIds));
-                          }
-                          setSelectedRequestIds(new Set(keys));
-                        }}
-                        defaultSelectedKeys={requestIds}
-                        aria-label="Request Collection"
-                        dragAndDropHooks={requestsDnD}
-                        className="w-full h-full leading-8 text-base overflow-auto"
-                        disabledKeys={disabledKeys}
-                      >
-                        {item => {
-                          const parentFolders = item.ancestorNames.map((parentFolderName: string, i: number) => {
-                            // eslint-disable-next-line react/no-array-index-key
-                            return <TooltipTrigger key={`parent-folder-${i}=${parentFolderName}`} >
-                              <Tooltip message={parentFolderName}>
-                                <i className="fa fa-folder fa-1x h-4 mr-0.3 text-[--color-font]" />
-                                <i className="fa fa-caret-right fa-1x h-4 mr-0.3 text-[--color-font]-50  opacity-50" />
-                              </Tooltip>
-                            </TooltipTrigger>;
-                          });
-                          const parentFolderContainer = parentFolders.length > 0 ? <span className="ml-2">{parentFolders}</span> : null;
-
-                          return (
-                            <RequestItem textValue={item.name} className='text-[--color-font] border border-solid border-transparent' style={{ 'outline': 'none' }}>
-                              {parentFolderContainer}
-                              <span className={`ml-2 uppercase text-xs http-method-${item.method}`}>{item.method}</span>
-                              <span className="ml-2 hover:underline cursor-pointer text-[--hl]" onClick={() => goToRequest(item.id)}>{item.name}</span>
-                            </RequestItem>
-                          );
-                        }}
-                      </GridList>
-                    </PaneBody>
-                  </TabPanel>
-                  <TabPanel className='w-full flex-1 flex align-center overflow-y-auto' id='advanced'>
-                    <div className="p-4 w-full">
-                      <Heading className="w-full text-lg text-[--hl] h-[--line-height-sm] border-solid scro border-b border-b-[--hl-md]">Advanced Settings</Heading>
-                      <div>
-                        <label className="flex items-center gap-2">
-                          <input
-                            name='ignore-undefined-env'
-                            onChange={() => { }}
-                            type="checkbox"
-                            disabled={true}
-                            checked
-                          />
-                          Ignore undefined environments
-                          <HelpTooltip className="space-left">Undefined environments will not be rendered for all requests.</HelpTooltip>
-                        </label>
-                      </div>
-                      <div>
-                        <label className="flex items-center gap-2">
-                          <input
-                            name='persist-response'
-                            onChange={() => { }}
-                            type="checkbox"
-                            disabled={true}
-                          />
-                          Persist responses for a session
-                          <HelpTooltip className="space-left">Enabling this will impact performance while responses are saved for other purposes.</HelpTooltip>
-                        </label>
-                      </div>
-                      <div>
-                        <label className="flex items-center gap-2">
-                          <input
-                            name='log-off'
-                            onChange={() => { }}
-                            type="checkbox"
-                            disabled={true}
-                          />
-                          Turn off logs during run
-                          <HelpTooltip className="space-left">Disabling this will improve the performance while logs are not saved.</HelpTooltip>
-                        </label>
-                      </div>
-                      <div>
-                        <label className="flex items-center gap-2">
-                          <input
-                            name='bail'
-                            onChange={() => setAdvancedRunnerSettings({ ...runnerAdvancedSettings, bail: !runnerAdvancedSettings.bail })}
-                            type="checkbox"
-                            disabled={isRunning}
-                            checked={runnerAdvancedSettings.bail}
-                          />
-                          Stop run if an error occurs
-                        </label>
-                      </div>
-                      <div>
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            disabled={true}
-                            checked
-                          />
-                          Keep variable values
-                          <HelpTooltip className="space-left">Enabling this will persist generated values.</HelpTooltip>
-                        </label>
-                      </div>
-                      <div>
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            disabled={true}
-                          />
-                          Run collection without using stored cookies
-                        </label>
-                      </div>
-                      <div>
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            disabled={true}
-                            checked
-                          />
-                          Save cookies after collection run
-                          <HelpTooltip className="space-left">Cookies in the running will be saved to the cookie manager.</HelpTooltip>
-                        </label>
-                      </div>
-                    </div>
-                  </TabPanel>
-                </Tabs>
-                {showCLIModal && (
-                  <CLIPreviewModal
-                    onClose={() => setShowCLIModal(false)}
-                    requestIds={Array.from(selectedRequestIds) as string[]}
-                    allSelected={selectedRequestIds.size === Array.from(sortedRequestRows).length}
-                    iterationCount={iterationCount}
-                    delay={delay}
-                    filePath={file?.path || ''}
-                  />
-                )}
-                {showUploadModal && (
-                  <UploadDataModal
-                    onUploadFile={(file, uploadData) => {
-                      setFile(file);
-                      setUploadData(uploadData); // also update the temp settings
-                    }}
-                    userUploadData={uploadData}
-                    onClose={() => setShowUploadModal(false)}
-                  />
-                )}
-              </Pane>
-            </ErrorBoundary>
-          </Panel>
-          <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
-          <Panel id="pane-two" className='pane-two theme--pane'>
-            <PaneHeader className="row-spaced">
-              <Heading className="flex items-center w-full h-[--line-height-sm] pl-3 border-solid scro border-b border-b-[--hl-md]">
-                {
-                  executionResult?.duration ?
-                    <div className="bg-info tag" >
-                      <strong>{`${totalTime.duration} ${totalTime.unit}`}</strong>
-                    </div> :
-                    <span className="font-bold">Collection Runner</span>
-                }
+                    <DropdownItem aria-label="send-now">
+                      <ItemContent icon="arrow-circle-o-right" label="Run" onClick={onRun} />
+                    </DropdownItem>
+                    <DropdownItem aria-label='Run via CLI'>
+                      <ItemContent
+                        icon="code"
+                        label="Run via CLI"
+                        onClick={() => setShowCLIModal(true)}
+                      />
+                    </DropdownItem>
+                  </Dropdown>
+                </div>
               </Heading>
             </PaneHeader>
-            <Tabs selectedKey={selectedTab} onSelectionChange={setSelectedTab} aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
+            <Tabs aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
               <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
                 <Tab
                   className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-                  id='test-results'
+                  id='request-order'
                 >
-                  <div>
-                    <span>
-                      Tests
-                    </span>
-                    <span
-                      className={`test-result-count rounded-sm ml-1 px-1 ${testResultCountTagColor}`}
-                      style={{ color: 'white' }}
-                    >
-                      {`${passedTestCount} / ${totalTestCount}`}
-                    </span>
-                  </div>
+                  <i className="fa fa-sort fa-1x h-4 mr-2" />
+                  Request Order
                 </Tab>
                 <Tab
                   className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-                  id='history'
+                  id='advanced'
                 >
-                  History
-                </Tab>
-                <Tab
-                  className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-                  id='console'
-                >
-                  Console
+                  <i className="fa fa-gear fa-1x h-4 mr-2" />
+                  Advanced
                 </Tab>
               </TabList>
-              <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='console'>
-                <ResponseTimelineViewer
-                  key={workspaceId}
-                  timeline={timelines}
-                />
+              <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='request-order'>
+                <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
+                  <span className="mr-2">
+                    {
+                      Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length ?
+                        <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-check fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Unselect All</span></span> :
+                        Array.from(reqList.selectedKeys).length === 0 ?
+                          <span onClick={onToggleSelection}><i className="fa fa-square fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span> :
+                          <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-minus fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span>
+                    }
+                  </span>
+                </Toolbar>
+                <PaneBody placeholder className='p-0'>
+                  <GridList
+                    id="runner-request-list"
+                    items={reqList.items}
+                    selectionMode="multiple"
+                    selectedKeys={reqList.selectedKeys}
+                    onSelectionChange={reqList.setSelectedKeys}
+                    defaultSelectedKeys={allKeys}
+                    aria-label="Request Collection"
+                    dragAndDropHooks={requestsDnD}
+                    className="w-full h-full leading-8 text-base overflow-auto"
+                    disabledKeys={disabledKeys}
+                  >
+                    {item => {
+                      const parentFolders = item.ancestorNames.map((parentFolderName: string, i: number) => {
+                        // eslint-disable-next-line react/no-array-index-key
+                        return <TooltipTrigger key={`parent-folder-${i}=${parentFolderName}`} >
+                          <Tooltip message={parentFolderName}>
+                            <i className="fa fa-folder fa-1x h-4 mr-0.3 text-[--color-font]" />
+                            <i className="fa fa-caret-right fa-1x h-4 mr-0.3 text-[--color-font]-50  opacity-50" />
+                          </Tooltip>
+                        </TooltipTrigger>;
+                      });
+                      const parentFolderContainer = parentFolders.length > 0 ? <span className="ml-2">{parentFolders}</span> : null;
+
+                      return (
+                        <RequestItem textValue={item.name} className='text-[--color-font] border border-solid border-transparent' style={{ 'outline': 'none' }}>
+                          {parentFolderContainer}
+                          <span className={`ml-2 uppercase text-xs http-method-${item.method}`}>{item.method}</span>
+                          <span className="ml-2 hover:underline cursor-pointer text-[--hl]" onClick={() => goToRequest(item.id)}>{item.name}</span>
+                        </RequestItem>
+                      );
+                    }}
+                  </GridList>
+                </PaneBody>
               </TabPanel>
-              <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='history'>
-              <RunnerResultHistoryPane
-                history={testHistory.filter(item => !deletedItems.includes(item._id))}
-                gotoExecutionResult={gotoExecutionResult}
-                gotoTestResultsTab={gotoTestResultsTab}
-                deleteHistoryItem={deleteHistoryItem}
-              />
-              </TabPanel>
-              <TabPanel
-                className='w-full flex-1 flex flex-col overflow-y-auto'
-                id='test-results'
-              >
-                {isRunning &&
-                  <div className="h-full w-full text-md flex items-center">
-                    <ResponseTimer
-                      handleCancel={() => cancelExecution(workspaceId)}
-                      activeRequestId={workspaceId}
-                      steps={timingSteps}
-                    />
+              <TabPanel className='w-full flex-1 flex align-center overflow-y-auto' id='advanced'>
+                <div className="p-4 w-full">
+                  <Heading className="w-full text-lg text-[--hl] h-[--line-height-sm] border-solid scro border-b border-b-[--hl-md]">Advanced Settings</Heading>
+                  <div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        name='ignore-undefined-env'
+                        onChange={() => { }}
+                        type="checkbox"
+                        disabled={true}
+                        checked
+                      />
+                      Ignore undefined environments
+                      <HelpTooltip className="space-left">Undefined environments will not be rendered for all requests.</HelpTooltip>
+                    </label>
                   </div>
-                }
-                {!isRunning && <ErrorBoundary showAlert><RunnerTestResultPane result={executionResult} /></ErrorBoundary>}
+                  <div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        name='persist-response'
+                        onChange={() => { }}
+                        type="checkbox"
+                        disabled={true}
+                      />
+                      Persist responses for a session
+                      <HelpTooltip className="space-left">Enabling this will impact performance while responses are saved for other purposes.</HelpTooltip>
+                    </label>
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        name='log-off'
+                        onChange={() => { }}
+                        type="checkbox"
+                        disabled={true}
+                      />
+                      Turn off logs during run
+                      <HelpTooltip className="space-left">Disabling this will improve the performance while logs are not saved.</HelpTooltip>
+                    </label>
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        name='bail'
+                        onChange={() => setBail(!bail)}
+                        type="checkbox"
+                        disabled={isRunning}
+                        checked={bail}
+                      />
+                      Stop run if an error occurs
+                    </label>
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        disabled={true}
+                        checked
+                      />
+                      Keep variable values
+                      <HelpTooltip className="space-left">Enabling this will persist generated values.</HelpTooltip>
+                    </label>
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        disabled={true}
+                      />
+                      Run collection without using stored cookies
+                    </label>
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        disabled={true}
+                        checked
+                      />
+                      Save cookies after collection run
+                      <HelpTooltip className="space-left">Cookies in the running will be saved to the cookie manager.</HelpTooltip>
+                    </label>
+                  </div>
+                </div>
               </TabPanel>
             </Tabs>
+            {showCLIModal && (
+              <CLIPreviewModal
+                onClose={() => setShowCLIModal(false)}
+                requestIds={Array.from(reqList.selectedKeys) as string[]}
+                allSelected={Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length}
+                iterationCount={iterationCount}
+                delay={delay}
+                filePath={file?.path || ''}
+              />
+            )}
+            {showUploadModal && (
+              <UploadDataModal
+                onUploadFile={(file, uploadData) => {
+                  setFile(file);
+                  setUploadData(uploadData); // also update the temp settings
+                }}
+                userUploadData={uploadData}
+                onClose={() => setShowUploadModal(false)}
+              />
+            )}
+          </Pane>
+        </ErrorBoundary>
+      </Panel>
+      <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
+      <Panel id="pane-two" className='pane-two theme--pane'>
+        <PaneHeader className="row-spaced">
+          <Heading className="flex items-center w-full h-[--line-height-sm] pl-3 border-solid scro border-b border-b-[--hl-md]">
+            {
+              executionResult?.duration ?
+                <div className="bg-info tag" >
+                  <strong>{`${totalTime.duration} ${totalTime.unit}`}</strong>
+                </div> :
+                <span className="font-bold">Collection Runner</span>
+            }
+          </Heading>
+        </PaneHeader>
+        <Tabs selectedKey={selectedTab} onSelectionChange={setSelectedTab} aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
+          <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+            <Tab
+              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+              id='test-results'
+            >
+              <div>
+                <span>
+                  Tests
+                </span>
+                <span
+                  className={`test-result-count rounded-sm ml-1 px-1 ${testResultCountTagColor}`}
+                  style={{ color: 'white' }}
+                >
+                  {`${passedTestCount} / ${totalTestCount}`}
+                </span>
+              </div>
+            </Tab>
+            <Tab
+              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+              id='history'
+            >
+              History
+            </Tab>
+            <Tab
+              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+              id='console'
+            >
+              Console
+            </Tab>
+          </TabList>
+          <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='console'>
+            <ResponseTimelineViewer
+              key={workspaceId}
+              timeline={timelines}
+            />
+          </TabPanel>
+          <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='history'>
+            <RunnerResultHistoryPane
+              history={testHistory.filter(item => !deletedItems.includes(item._id))}
+              gotoExecutionResult={gotoExecutionResult}
+              gotoTestResultsTab={gotoTestResultsTab}
+              deleteHistoryItem={deleteHistoryItem}
+            />
+          </TabPanel>
+          <TabPanel
+            className='w-full flex-1 flex flex-col overflow-y-auto'
+            id='test-results'
+          >
+            {isRunning &&
+              <div className="h-full w-full text-md flex items-center">
+                <ResponseTimer
+                  handleCancel={() => cancelExecution(workspaceId)}
+                  activeRequestId={workspaceId}
+                  steps={timingSteps}
+                />
+              </div>
+            }
+            {!isRunning && <ErrorBoundary showAlert><RunnerTestResultPane result={executionResult} /></ErrorBoundary>}
+          </TabPanel>
+        </Tabs>
 
-          </Panel>
+      </Panel>
     </>
   );
 };
@@ -878,7 +855,7 @@ export interface runCollectionActionParams {
   iterationCount: number;
   delay: number;
   userUploadEnvs: UserUploadEnvironment[];
-  runnerAdvancedSettings: RunnerAdvancedSettings;
+  bail: boolean;
 }
 
 export const runCollectionAction: ActionFunction = async ({ request, params }) => {
@@ -887,7 +864,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   invariant(projectId, 'Project id is required');
   invariant(workspaceId, 'Workspace id is required');
 
-  const { requests, iterationCount, delay, userUploadEnvs, runnerAdvancedSettings } = await request.json() as runCollectionActionParams;
+  const { requests, iterationCount, delay, userUploadEnvs, bail } = await request.json() as runCollectionActionParams;
   const source: RunnerSource = 'runner';
 
   let testCtx: CollectionRunnerContext = {
@@ -1021,7 +998,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
               },
             ],
           };
-          if (runnerAdvancedSettings.bail) {
+          if (bail) {
             // save previous results in this iteration
             testCtx = {
               ...testCtx,
