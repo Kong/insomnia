@@ -141,8 +141,8 @@ const config = {
     ],
   },
   snap: {
-    base: 'core24',
-    plugs: ['gnome-46-2404'],
+    base: 'core22',
+    // plugs: ['gnome-46-2404'],
   },
 };
 
