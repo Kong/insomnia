@@ -234,15 +234,11 @@ export const EnvironmentPicker = ({
                 items={collectionEnvironmentList}
                 selectedKeys={[activeEnvironment._id || baseEnvironment._id || '']}
                 disallowEmptySelection
-                onSelectionChange={selection => {
-                  if (selection === 'all' || selection === null) {
+                onSelectionChange={keys => {
+                  if (keys === 'all' || !keys) {
                     return;
                   }
-                  const environmentId = selection.values().next().value;
-
-                  if (environmentId === null) {
-                    return;
-                  }
+                  const [environmentId] = keys.values();
 
                   setActiveEnvironmentFetcher.submit(
                     {
