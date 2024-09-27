@@ -265,7 +265,8 @@ const Environments = () => {
           dragAndDropHooks={environmentsDragAndDrop.dragAndDropHooks}
           onSelectionChange={keys => {
             if (keys !== 'all') {
-              setSelectedEnvironmentId(keys.values().next().value);
+              const [environmentId] = keys.values();
+              setSelectedEnvironmentId(environmentId.toString());
             }
           }}
         >

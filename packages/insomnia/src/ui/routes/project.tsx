@@ -1076,9 +1076,10 @@ const ProjectRoute: FC = () => {
                   selectionMode="single"
                   onSelectionChange={keys => {
                     if (keys !== 'all') {
-                      const value = keys.values().next().value;
-                      nextProjectId.current = value;
+                      const [value] = keys.values();
+                      nextProjectId.current = value.toString();
                       startSwitchProjectTime.current = performance.now();
+
                       navigate({
                         pathname: `/organization/${organizationId}/project/${value}`,
                       });
@@ -1132,9 +1133,9 @@ const ProjectRoute: FC = () => {
                   selectionMode="single"
                   onSelectionChange={keys => {
                     if (keys !== 'all') {
-                      const value = keys.values().next().value;
+                      const [value] = keys.values();
 
-                      setWorkspaceListScope(value);
+                      setWorkspaceListScope(value.toString());
                     }
                   }}
                 >
