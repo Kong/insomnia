@@ -89,7 +89,8 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '../hooks/use-loader-defer-data';
-import { DefaultStorage, type OrganizationFeatureLoaderData, type OrganizationLoaderData, type OrganizationStorageLoaderData, useOrganizationLoaderData } from './organization';
+import { useOrganizationPermissions } from '../hooks/use-organization-features';
+import { DefaultStorage, type OrganizationLoaderData, type OrganizationStorageLoaderData, useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
 interface TeamProject {
@@ -634,15 +635,9 @@ const ProjectRoute: FC = () => {
 
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
-  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
   const storageRuleFetcher = useFetcher<OrganizationStorageLoaderData>({ key: `storage-rule:${organizationId}` });
 
-  useEffect(() => {
-    if (!isScratchpadOrganizationId(organizationId)) {
-      const load = permissionsFetcher.load;
-      load(`/organization/${organizationId}/permissions`);
-    }
-  }, [organizationId, permissionsFetcher.load]);
+  const { billing, features } = useOrganizationPermissions();
 
   useEffect(() => {
     if (!isScratchpadOrganizationId(organizationId)) {
@@ -652,15 +647,6 @@ const ProjectRoute: FC = () => {
   }, [organizationId, storageRuleFetcher.load]);
 
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
-
-  const { featuresPromise, billingPromise } = permissionsFetcher.data || {};
-  const [features = {
-    gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
-    orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
-  }] = useLoaderDeferData(featuresPromise);
-  const [billing = {
-    isActive: true,
-  }] = useLoaderDeferData(billingPromise);
 
   const { storagePromise } = storageRuleFetcher.data || {};
 

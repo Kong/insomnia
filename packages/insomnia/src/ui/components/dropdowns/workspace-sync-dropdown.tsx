@@ -1,10 +1,9 @@
-import { type FC, useEffect } from 'react';
+import { type FC } from 'react';
 import React from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { isRemoteProject } from '../../../models/project';
-import { useLoaderDeferData } from '../../hooks/use-loader-defer-data';
-import type { OrganizationFeatureLoaderData } from '../../routes/organization';
+import { useOrganizationPermissions } from '../../hooks/use-organization-features';
 import { useRootLoaderData } from '../../routes/root';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { GitSyncDropdown } from './git-sync-dropdown';
@@ -21,20 +20,8 @@ export const WorkspaceSyncDropdown: FC = () => {
   ) as WorkspaceLoaderData;
 
   const { userSession } = useRootLoaderData();
-  const { organizationId } = useParams() as { organizationId: string };
-  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
 
-  useEffect(() => {
-    const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
-    if (isIdleAndUninitialized) {
-      permissionsFetcher.load(`/organization/${organizationId}/permissions`);
-    }
-  }, [organizationId, permissionsFetcher]);
-
-  const { featuresPromise } = permissionsFetcher.data || {};
-  const [features = {
-    gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
-  }] = useLoaderDeferData(featuresPromise);
+  const { features } = useOrganizationPermissions();
 
   if (!userSession.id) {
     return null;
