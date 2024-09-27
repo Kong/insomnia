@@ -1,5 +1,6 @@
 import type { RequestContext } from 'insomnia-sdk';
 import porderedJSON from 'json-order';
+import _ from 'lodash';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelResizeHandle } from 'react-resizable-panels';
@@ -941,7 +942,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
             const matchId = targetRequest.id === nextRequestIdOrName;
             const matchName = targetRequest.name.trim() === nextRequestIdOrName.trim();
             // find the last request with matched name in case multiple requests with same name in collection runner
-            const matchLastIndex = j === requests.slice().reverse().findIndex(req => req.name.trim() === nextRequestIdOrName.trim());
+            const matchLastIndex = j === _.findLastIndex(requests, req => req.name.trim() === nextRequestIdOrName.trim());
 
             if (matchId || (matchName && matchLastIndex)
             ) {
