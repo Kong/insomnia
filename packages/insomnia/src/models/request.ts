@@ -20,6 +20,7 @@ import {
 } from '../common/constants';
 import { database as db } from '../common/database';
 import type { OAuth1SignatureMethod } from '../network/o-auth-1/constants';
+import { getOperationType } from '../utils/graph-ql';
 import { deconstructQueryStringToParams } from '../utils/url/querystring';
 import type { BaseModel } from './index';
 
@@ -257,7 +258,6 @@ export interface BaseRequest {
   afterResponseScript?: string;
   parameters: RequestParameter[];
   pathParameters?: RequestPathParameter[];
-  operationType?: OperationTypeNode;
   headers: RequestHeader[];
   authentication: RequestAuthentication | {};
   metaSortKey: number;
@@ -285,7 +285,7 @@ export const isEventStreamRequest = (model: Pick<BaseModel, 'type'>) => (
   isRequest(model) && model.headers?.find(h => h.name === 'Accept')?.value === 'text/event-stream'
 );
 export const isGraphqlSubscriptionRequest = (model: Pick<BaseModel, 'type'>) => (
-  isRequest(model) && model.operationType === OperationTypeNode.SUBSCRIPTION
+  isRequest(model) && getOperationType(model) === OperationTypeNode.SUBSCRIPTION
 );
 
 export function init(): BaseRequest {
@@ -303,7 +303,6 @@ export function init(): BaseRequest {
     isPrivate: false,
     pathParameters: undefined,
     afterResponseScript: undefined,
-    operationType: undefined,
     // Settings
     settingStoreCookies: true,
     settingSendCookies: true,
