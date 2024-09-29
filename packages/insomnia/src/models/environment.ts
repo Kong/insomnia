@@ -8,17 +8,39 @@ export const type = 'Environment';
 export const prefix = 'env';
 export const canDuplicate = true;
 export const canSync = true;
+// for those keys do not need to add in model init method
+export const optionalKeys = [
+  'kvPairData',
+  'environmentType',
+];
 
 export interface BaseEnvironment {
   name: string;
   data: Record<string, any>;
   dataPropertyOrder: Record<string, any> | null;
+  kvPairData?: EnvironmentKvPairData[];
   color: string | null;
   metaSortKey: number;
   // For sync control
   isPrivate: boolean;
+  environmentType?: EnvironmentType;
 }
 
+export enum EnvironmentType {
+  JSON = 'json',
+  KVPAIR = 'kv'
+};
+export enum EnvironmentKvPairDataType {
+  JSON = 'json',
+  STRING = 'str'
+}
+export interface EnvironmentKvPairData {
+  id: string;
+  name: string;
+  value: string;
+  type: EnvironmentKvPairDataType;
+  enabled?: boolean;
+}
 export type Environment = BaseModel & BaseEnvironment;
 // This is a representation of the data taken from a csv or json file AKA iterationData
 export type UserUploadEnvironment = Pick<Environment, 'data' | 'dataPropertyOrder' | 'name'>;
@@ -46,7 +68,6 @@ export function create(patch: Partial<Environment> = {}) {
   if (!patch.parentId) {
     throw new Error(`New Environment missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
-
   return db.docCreate<Environment>(type, patch);
 }
 

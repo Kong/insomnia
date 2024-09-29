@@ -28,6 +28,7 @@ import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { SpectralRunner } from '../worker/spectral-run';
+import { EnvironmentType } from '../../models/environment';
 
 export const updateProjectAction: ActionFunction = async ({
   request,
@@ -1140,7 +1141,7 @@ export const createEnvironmentAction: ActionFunction = async ({
   const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
-  const { isPrivate } = await request.json();
+  const { isPrivate, environmentType = EnvironmentType.KVPAIR } = await request.json();
 
   const baseEnvironment = await models.environment.getByParentId(workspaceId);
 
@@ -1148,6 +1149,7 @@ export const createEnvironmentAction: ActionFunction = async ({
 
   const environment = await models.environment.create({
     parentId: baseEnvironment._id,
+    environmentType,
     isPrivate,
   });
 
