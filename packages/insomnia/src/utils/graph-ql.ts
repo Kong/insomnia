@@ -1,4 +1,3 @@
-
 import { getOperationAST, parse } from 'graphql';
 
 import { CONTENT_TYPE_GRAPHQL } from '../common/constants';
