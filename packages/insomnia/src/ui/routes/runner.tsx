@@ -686,6 +686,7 @@ export const Runner: FC<{}> = () => {
                 iterationCount={iterationCount}
                 delay={delay}
                 filePath={file?.path || ''}
+                bail={bail}
               />
             )}
             {showUploadModal && (
