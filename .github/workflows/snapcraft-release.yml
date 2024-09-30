@@ -50,7 +50,7 @@ jobs:
 
       - name: Package
         shell: bash
-        run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-package -- --linux snap
+        run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='snap' npm run app-package
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
