@@ -150,7 +150,7 @@ export const MockServerSettingsModal = ({ onClose }: { onClose: () => void }) =>
                 <div className="flex items-center gap-2 text-sm">
                   <Icon icon="info-circle" />
                   <span>
-                    To learn more about self hosting. <Link href="https://docs.insomnia.rest/insomnia/api-mocking" className='underline'>Click here</Link>
+                    To learn more about self hosting <Link href="https://docs.insomnia.rest/insomnia/api-mocking" className='underline'>click here</Link>
                   </span>
                 </div>
                 {!isSelfHostedDisabled && (
