@@ -1,9 +1,8 @@
 import childProcess from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 import fs from 'fs';
-import { rm } from 'fs/promises';
+import { cp, mkdir, rm } from 'fs/promises';
 import licenseChecker from 'license-checker';
-import { ncp } from 'ncp';
 import path from 'path';
 import * as vite from 'vite';
 
@@ -20,20 +19,6 @@ if (require.main === module) {
     }
   });
 }
-
-const copyFiles = (relSource: string, relDest: string) =>
-  new Promise<void>((resolve, reject) => {
-    const source = path.resolve(__dirname, relSource);
-    const dest = path.resolve(__dirname, relDest);
-    console.log(`[build] copy "${relSource}" to "${relDest}"`);
-    ncp(source, dest, err => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
 
 const buildLicenseList = (relSource: string, relDest: string) =>
   new Promise<void>((resolve, reject) => {
@@ -135,6 +120,12 @@ export const start = async () => {
 
   // Copy necessary files
   console.log('[build] Copying files');
+  const copyFiles = async (relSource: string, relDest: string) => {
+    const src = path.resolve(__dirname, relSource);
+    const dest = path.resolve(__dirname, relDest);
+    await mkdir(path.dirname(dest), { recursive: true });
+    await cp(src, dest, { recursive: true, verbatimSymlinks: true });
+  };
   await copyFiles('../bin', buildFolder);
   await copyFiles('../src/static', path.join(buildFolder, 'static'));
   await copyFiles('../src/icons', buildFolder);

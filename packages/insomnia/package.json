@@ -160,7 +160,6 @@
     "json-order": "^1.1.3",
     "less": "^4.2.0",
     "license-checker": "^25.0.1",
-    "ncp": "^2.0.0",
     "nunjucks": "^3.2.4",
     "objectpath": "^2.0.0",
     "openapi-types": "^12.1.3",
