@@ -1,6 +1,9 @@
 import * as crypto from 'crypto';
+import orderedJSON from 'json-order';
 
+import { JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
+import { generateId } from '../common/misc';
 import { type BaseModel } from './index';
 
 export const name = 'Environment';
@@ -44,6 +47,37 @@ export interface EnvironmentKvPairData {
 export type Environment = BaseModel & BaseEnvironment;
 // This is a representation of the data taken from a csv or json file AKA iterationData
 export type UserUploadEnvironment = Pick<Environment, 'data' | 'dataPropertyOrder' | 'name'>;
+
+export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: Record<string, any> | null) {
+  const ordered = orderedJSON.order(data, dataPropertyOrder, JSON_ORDER_SEPARATOR);
+  const kvPair: EnvironmentKvPairData[] = [];
+  Object.keys(ordered).forEach(key => {
+    const val = ordered[key];
+    const isValObject = val && typeof val === 'object' && data !== null;
+    kvPair.push({
+      id: generateId('envPair'),
+      name: key,
+      value: isValObject ? JSON.stringify(val) : String(val),
+      type: isValObject ? EnvironmentKvPairDataType.JSON : EnvironmentKvPairDataType.STRING,
+      enabled: true,
+    });
+  });
+  return kvPair;
+}
+
+export function getDataFromKVPair(kvPair: EnvironmentKvPairData[]) {
+  const data: Record<string, any> = {};
+  kvPair.forEach(pair => {
+    const { name, value, type, enabled } = pair;
+    if (enabled) {
+      data[name] = type === EnvironmentKvPairDataType.JSON ? JSON.parse(value) : value;
+    }
+  });
+  return {
+    data,
+    dataPropertyOrder: null,
+  };
+}
 
 export const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => (
   model.type === type

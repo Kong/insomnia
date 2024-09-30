@@ -11,71 +11,105 @@ import type { EnvironmentEditorHandle } from '../environment-editor';
 
 interface EditorProps {
   data: EnvironmentKvPairData[];
-  onChange?: (value: EnvironmentKvPairData) => void;
+  onChange: (newPari: EnvironmentKvPairData[]) => void;
 }
+const rowHeaderStyle = 'sticky normal-case top-[-8px] p-2 z-10 border-b border-r border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none';
+const cellCommonStyle = 'px-2 border-b border-r border-solid border-[--hl-sm] h-8 align-middle';
+
+const createNewPair = (): EnvironmentKvPairData => ({
+  id: generateId('envPair'),
+  name: '',
+  value: '',
+  type: EnvironmentKvPairDataType.STRING,
+  enabled: false,
+});
 
 export const EnvironmentKVEditor = forwardRef<EnvironmentEditorHandle, EditorProps>(({
   data,
   onChange,
 }, ref) => {
-  const kvPairs: EnvironmentKvPairData[] = data.length > 0 ? data :
-    [{ id: generateId('envPair'), name: '', value: '', type: EnvironmentKvPairDataType.STRING, enabled: false }];
+  const kvPairs: EnvironmentKvPairData[] = data.length > 0 ? [...data] : [createNewPair()];
 
-  const handleItemChange = (id: string, changedPropertyName: keyof EnvironmentKvPairData, newValue: string) => {
+  const handleItemChange = <K extends keyof EnvironmentKvPairData>(id: string, changedPropertyName: K, newValue: EnvironmentKvPairData[K]) => {
     const changedItemIdx = kvPairs.findIndex(p => p.id === id);
     if (changedItemIdx !== -1) {
-
+      kvPairs[changedItemIdx][changedPropertyName] = newValue;
+      // also enable item since user modifies the item
+      kvPairs[changedItemIdx]['enabled'] = true;
     }
+    onChange(kvPairs);
+  };
+
+  const handleAddItem = (insertIdx: number) => {
+    const newPair = createNewPair();
+    kvPairs.splice(insertIdx, 0, newPair);
+    onChange(kvPairs);
+  };
+
+  const handleDeleteItem = (id: string) => {
+    const filteredPairs = kvPairs.filter(d => d.id !== id);
+    onChange(filteredPairs);
   };
 
   return (
-    <div className="environment-editor p-[--padding-sm]">
+    <div className="p-[--padding-sm]">
       <Table
         aria-label='Environment Variable Table'
         className="min-w-full table-auto"
       >
         <TableHeader>
-          <Column />
-          <Column isRowHeader>Name</Column>
-          <Column>Type</Column>
-          <Column>Value</Column>
-          <Column>Action</Column>
+          <Column className={rowHeaderStyle} />
+          <Column className={rowHeaderStyle} isRowHeader>Name</Column>
+          <Column className={rowHeaderStyle}>Type</Column>
+          <Column className={rowHeaderStyle}>Value</Column>
+          <Column className={rowHeaderStyle}>Action</Column>
         </TableHeader>
         <TableBody>
-          {kvPairs.map(kvPair => {
+          {kvPairs.map((kvPair, idx) => {
             const { id, name, value, type, enabled = false } = kvPair;
             return (
-              <Row key={id}>
-                <Cell>
-                  <div slot="drag" className="cursor-grab invisible p-2 w-5 flex focus-visible:bg-[--hl-sm] justify-center items-center flex-shrink-0">
+              <Row key={id} className="h-[--line-height-sm] group">
+                <Cell className={`${cellCommonStyle} p-0 w-[50px]`}>
+                  <div className="flex flex-row flex-1 items-center justify-end">
+                    {/* <Icon icon="grip-vertical" className="cursor-grab hidden mr-1 group-hover:inline" /> */}
                     <Button
                       className="flex items-center disabled:opacity-50 justify-center h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                      onPress={v => v}
+                      onPress={() => handleAddItem(idx + 1)}
                     >
                       <Icon icon="plus" />
                     </Button>
-                    <Icon icon="grip-vertical" className='w-2 text-[--hl]' />
+                    <ToggleButton
+                      className="flex items-center justify-center h-7 aspect-square rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                      onChange={isSelect => handleItemChange(id, 'enabled', isSelect)}
+                      isSelected={enabled}
+                    >
+                      <Icon icon={enabled ? 'check-square' : 'square'} />
+                    </ToggleButton>
                   </div>
                 </Cell>
-                <Cell>
-                  <div className="relative h-full w-full flex flex-1 px-2">
+                <Cell className={`${cellCommonStyle} w-[25%]`}>
+                  <div className="h-full w-full flex">
                     <OneLineEditor
                       id={`environment-kv-editor-name-${id}`}
                       placeholder={'Input Name'}
                       defaultValue={name}
-                      onChange={() => { }}
+                      onChange={newName => handleItemChange(id, 'name', newName)}
                     />
                   </div>
                 </Cell>
-                <Cell>
+                <Cell className={`${cellCommonStyle} min-w-8`}>
                   <Select
                     selectedKey={type}
+                    aria-label='environment-kv-editor-type-selector'
+                    onSelectionChange={newType => {
+                      handleItemChange(id, 'type', newType as EnvironmentKvPairDataType);
+                    }}
                   >
-                    <Button className="px-4 min-w-[17ch] py-1 font-bold flex flex-1 items-center justify-between gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                    <Button className="py-1 px-[--padding-md] w-full font-bold flex flex-1 items-center justify-between aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs]  text-sm">
                       <SelectValue className="flex truncate items-center justify-center gap-2" />
                       <Icon icon="caret-down" />
                     </Button>
-                    <Popover>
+                    <Popover className='border-solid border-[--hl-sm] shadow-lg bg-[--color-bg]'>
                       <ListBox
                         items={
                           [
@@ -92,7 +126,7 @@ export const EnvironmentKVEditor = forwardRef<EnvironmentEditorHandle, EditorPro
                       >
                         {item => (
                           <ListBoxItem
-                            className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                            className="flex gap-2 pl-[--padding-md] pr-[--padding-xl] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors text-sm"
                             aria-label={item.name}
                             textValue={item.name}
                           >
@@ -113,39 +147,32 @@ export const EnvironmentKVEditor = forwardRef<EnvironmentEditorHandle, EditorPro
                     </Popover>
                   </Select>
                 </Cell>
-                <Cell>
+                <Cell className={`${cellCommonStyle} w-[50%]`}>
                   <div className="relative h-full w-full flex flex-1 px-2">
                     {type === EnvironmentKvPairDataType.STRING ?
                       <OneLineEditor
                         id={`environment-kv-editor-value-${id}`}
-                        placeholder={'Input Name'}
-                        defaultValue={value}
-                        onChange={() => { }}
+                        placeholder={'Input Value'}
+                        defaultValue={value.toString()}
+                        onChange={newValue => handleItemChange(id, 'value', newValue)}
                       /> :
                       <CodeEditor
                         id={`environment-kv-editor-value-${id}`}
-                        placeholder={'Input Name'}
+                        placeholder={'Input Value'}
                         defaultValue={value}
                         onChange={() => { }}
                       />
                     }
                   </div>
                 </Cell>
-                <Cell>
-                  <div>
-                    <ToggleButton
-                      className="inline-block	items-center justify-center h-7 aspect-square rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                      onChange={v => v}
-                      isSelected={enabled}
-                    >
-                      <Icon icon={enabled ? 'square' : 'check-square'} />
-                    </ToggleButton>
+                <Cell className={`${cellCommonStyle} w-5`}>
+                  <div className="flex flex-row gap-2">
                     <PromptButton
-                      disabled={false}
-                      className="inline-block	items-center disabled:opacity-50 justify-center h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                      disabled={kvPairs.length <= 1 && idx === 0}
+                      className="flex	items-center disabled:opacity-50 justify-center h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                       confirmMessage=''
                       doneMessage=''
-                      onClick={v => v}
+                      onClick={() => handleDeleteItem(id)}
                     >
                       <Icon icon="trash-can" />
                     </PromptButton>
