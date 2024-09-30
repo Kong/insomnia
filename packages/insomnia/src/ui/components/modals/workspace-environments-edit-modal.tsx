@@ -1,6 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { useMemo, useRef, useState } from 'react';
-import { Button, Dialog, DropIndicator, GridList, GridListItem, Heading, Label, ListBoxItem, Menu, MenuTrigger, Modal, ModalOverlay, Popover, Text, useDragAndDrop } from 'react-aria-components';
+import { Button, Dialog, DropIndicator, GridList, GridListItem, Heading, Label, ListBoxItem, Menu, MenuItem, MenuTrigger, Modal, ModalOverlay, Popover, Text, useDragAndDrop } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
@@ -350,7 +350,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                                   className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                                 >
                                   {item => (
-                                    <ListBoxItem
+                                    <MenuItem
                                       key={item.id}
                                       id={item.id}
                                       className="flex flex-col gap-1 px-[--padding-md] py-2 aria-selected:font-bold text-[--color-font] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -363,7 +363,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                                       <Text slot="description" className='text-xs text-[--hl]'>
                                         {item.description}
                                       </Text>
-                                    </ListBoxItem>
+                                    </MenuItem>
                                   )}
                                 </Menu>
                               </Popover>
