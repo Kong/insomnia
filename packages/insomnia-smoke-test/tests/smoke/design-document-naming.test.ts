@@ -15,7 +15,7 @@ test.describe('design document operations', async () => {
         await page.getByPlaceholder('my-spec.yaml').press('Enter');
         await page.getByTestId('workspace-test').click();
         await page.getByText('New test suite').click();
-        await page.getByLabel('Test Suites').getByLabel('Project Actions').click();
+        await page.getByLabel('Test Suites').getByLabel('Unit Test Actions').click();
         await page.getByRole('menuitemradio', { name: 'Delete suite' }).click();
         await page.locator('.modal__content').getByRole('button', { name: 'Delete' }).click();
     });
