@@ -1,8 +1,5 @@
 import childProcess from 'child_process';
-import { readFileSync, writeFileSync } from 'fs';
-import fs from 'fs';
 import { cp, mkdir, rm } from 'fs/promises';
-import licenseChecker from 'license-checker';
 import path from 'path';
 import * as vite from 'vite';
 
@@ -19,65 +16,6 @@ if (require.main === module) {
     }
   });
 }
-
-const buildLicenseList = (relSource: string, relDest: string) =>
-  new Promise<void>((resolve, reject) => {
-    const source = path.resolve(__dirname, relSource);
-    const dest = path.resolve(__dirname, relDest);
-    fs.mkdirSync(path.dirname(dest), { recursive: true });
-
-    licenseChecker.init(
-      {
-        start: source,
-        production: true,
-      },
-      (err, packages) => {
-        if (err) {
-          return reject(err);
-        }
-
-        const header = [
-          'This application bundles the following third-party packages in ',
-          'accordance with the following licenses:',
-          '-------------------------------------------------------------------------',
-          '',
-          '',
-        ].join('\n');
-
-        const out = Object.keys(packages)
-          .sort()
-          .map(packageName => {
-            const {
-              licenses,
-              repository,
-              publisher,
-              email,
-              licenseFile: lf,
-            } = packages[packageName];
-            const licenseFile = (lf || '').includes('README') ? null : lf;
-            return [
-              '-------------------------------------------------------------------------',
-              '',
-              `PACKAGE: ${packageName}`,
-              licenses ? `LICENSES: ${licenses}` : null,
-              repository ? `REPOSITORY: ${repository}` : null,
-              publisher ? `PUBLISHER: ${publisher}` : null,
-              email ? `EMAIL: ${email}` : null,
-              '',
-              licenseFile ? readFileSync(licenseFile) : '[no license file]',
-              '',
-              '',
-            ]
-              .filter(v => v !== null)
-              .join('\n');
-          })
-          .join('\n');
-
-        writeFileSync(dest, `${header}${out}`);
-        resolve();
-      }
-    );
-  });
 
 export const start = async () => {
   console.log('[build] Starting build');
@@ -99,13 +37,6 @@ export const start = async () => {
   // Remove folders first
   console.log('[build] Removing existing directories');
   await rm(path.resolve(__dirname, buildFolder), { recursive: true, force: true });
-
-  // Build the things
-  console.log('[build] Building license list');
-  await buildLicenseList(
-    '../',
-    path.join(buildFolder, 'opensource-licenses.txt')
-  );
 
   console.log('[build] Building main.min.js and preload');
   await buildMainAndPreload({
