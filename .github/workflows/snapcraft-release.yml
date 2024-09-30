@@ -1,0 +1,61 @@
+name: Snapcraft Experiment release
+# This workflow bakes executables of the major platforms for Testing purposes
+on:
+  merge_group:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+  pull_request:
+    types:
+      - opened
+      - synchronize
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  PR_NUMBER: ${{ github.event.number }}
+jobs:
+  build-and-upload-artifacts:
+    timeout-minutes: 15
+    # Skip jobs for release PRs
+    # windows on recurring should be portable
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: "ubuntu-20.04"
+          - os: "ubuntu-22.04"
+          - os: "ubuntu-24.04"
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Bump version
+        shell: bash
+        run: npm --workspaces version prerelease --preid="$(git rev-parse --short HEAD)${{ github.event_name == 'pull_request' && '.pr-$PR_NUMBER' || '' }}" --no-git-tag-version
+
+      - name: Package
+        shell: bash
+        run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-package -- --linux snap
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-artifacts-${{ github.run_number }}
+          path: |
+            packages/insomnia/dist/*.snap
