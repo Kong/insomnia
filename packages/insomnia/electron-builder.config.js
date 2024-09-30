@@ -68,6 +68,9 @@ const config = {
     asarUnpack: [
       'node_modules/@getinsomnia/node-libcurl',
     ],
+    x64ArchFiles: [
+      'Contents/Resources/fsevents-*',
+    ],
   },
   dmg: {
     window: {
