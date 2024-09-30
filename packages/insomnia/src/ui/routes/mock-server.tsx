@@ -1,6 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Breadcrumb, Breadcrumbs, Button, GridList, GridListItem, Menu, MenuTrigger, Popover } from 'react-aria-components';
+import { Breadcrumb, Breadcrumbs, Button, GridList, GridListItem, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { type LoaderFunction, NavLink, Route, Routes, useFetcher, useLoaderData, useNavigate, useParams } from 'react-router-dom';
 
@@ -313,14 +313,14 @@ const MockServerRoute = () => {
                   <span className="flex-1" />
                   <MenuTrigger>
                     <Button
-                      aria-label="Project Actions"
+                      aria-label="Mock Route Actions"
                       className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                     >
                       <Icon icon="caret-down" />
                     </Button>
                     <Popover className="min-w-max">
                       <Menu
-                        aria-label="Project Actions Menu"
+                        aria-label="Mock Route Action Menu"
                         selectionMode="single"
                         onAction={key => {
                           mockRouteActionList
@@ -331,7 +331,7 @@ const MockServerRoute = () => {
                         className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                       >
                         {item => (
-                          <Breadcrumb
+                          <MenuItem
                             key={item.id}
                             id={item.id}
                             className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -339,7 +339,7 @@ const MockServerRoute = () => {
                           >
                             <Icon icon={item.icon} />
                             <span>{item.name}</span>
-                          </Breadcrumb>
+                          </MenuItem>
                         )}
                       </Menu>
                     </Popover>

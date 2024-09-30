@@ -712,6 +712,7 @@ async function renderApp() {
                                     children: [
                                       {
                                         index: true,
+                                        element: <Outlet />,
                                         loader: async (...args) =>
                                           (
                                             await import('./routes/test-suite')
@@ -727,6 +728,7 @@ async function renderApp() {
                                       {
                                         path: ':testSuiteId',
                                         id: ':testSuiteId',
+                                        element: <Outlet />,
                                         loader: async (...args) =>
                                           (
                                             await import('./routes/test-suite')
@@ -734,6 +736,7 @@ async function renderApp() {
                                         children: [
                                           {
                                             index: true,
+                                            element: <Outlet />,
                                             loader: async (...args) =>
                                               (
                                                 await import(

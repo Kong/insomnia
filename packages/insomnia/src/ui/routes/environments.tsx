@@ -1,6 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { useEffect, useRef, useState } from 'react';
-import { Breadcrumb, Breadcrumbs, Button, DropIndicator, GridList, GridListItem, Heading, Label, ListBoxItem, Menu, MenuTrigger, Popover, Text, useDragAndDrop } from 'react-aria-components';
+import { Breadcrumb, Breadcrumbs, Button, DropIndicator, GridList, GridListItem, Heading, Label, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, Text, useDragAndDrop } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { NavLink, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
@@ -362,7 +362,7 @@ const Environments = () => {
                           className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                         >
                           {item => (
-                            <ListBoxItem
+                            <MenuItem
                               key={item.id}
                               id={item.id}
                               className="flex flex-col gap-1 px-[--padding-md] py-2 aria-selected:font-bold text-[--color-font] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -375,7 +375,7 @@ const Environments = () => {
                               <Text slot="description" className='text-xs text-[--hl]'>
                                 {item.description}
                               </Text>
-                            </ListBoxItem>
+                            </MenuItem>
                           )}
                         </Menu>
                       </Popover>

@@ -2,6 +2,8 @@ import React, { Fragment, useRef, useState } from 'react';
 import {
   Button,
   DropIndicator,
+  GridList,
+  GridListItem,
   Heading,
   ListBox,
   ListBoxItem,
@@ -565,7 +567,7 @@ const TestSuiteRoute = () => {
         </div>
       )}
       {unitTests.length > 0 && (
-        <ListBox
+        <GridList
           aria-label='Unit tests'
           dragAndDropHooks={unitTestsDragAndDrop.dragAndDropHooks}
           items={unitTests.map(unitTest => ({
@@ -576,15 +578,15 @@ const TestSuiteRoute = () => {
           className="flex-1 flex flex-col divide-y divide-solid divide-[--hl-md] overflow-y-auto"
         >
           {unitTest => (
-            <ListBoxItem className="outline-none">
+            <GridListItem textValue={unitTest.name} className="outline-none">
               <Button slot="drag" className="hidden" />
               <UnitTestItemView
                 unitTest={unitTest}
                 testsRunning={testsRunning}
               />
-            </ListBoxItem>
+            </GridListItem>
           )}
-        </ListBox>
+        </GridList>
       )}
     </div>
   );
