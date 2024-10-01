@@ -32,10 +32,6 @@ const config = {
       to: './bin',
       filter: 'yarn-standalone.js',
     },
-    {
-      from: './build',
-      to: '.',
-    },
   ],
   extraMetadata: {
     main: 'main.min.js', // Override the main path in package.json
@@ -67,9 +63,6 @@ const config = {
     },
     asarUnpack: [
       'node_modules/@getinsomnia/node-libcurl',
-    ],
-    x64ArchFiles: [
-      'Contents/Resources/fsevents-*',
     ],
   },
   dmg: {
