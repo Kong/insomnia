@@ -21,7 +21,7 @@ const config = {
     {
       from: './build',
       to: '.',
-      filter: ['**/*', '!opensource-licenses.txt'],
+      filter: ['**/*'],
     },
     './package.json',
   ],
@@ -31,11 +31,6 @@ const config = {
       from: './bin',
       to: './bin',
       filter: 'yarn-standalone.js',
-    },
-    {
-      from: './build',
-      to: '.',
-      filter: 'opensource-licenses.txt',
     },
   ],
   extraMetadata: {

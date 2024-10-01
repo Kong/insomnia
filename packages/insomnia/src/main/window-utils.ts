@@ -503,10 +503,10 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
         type: 'separator',
       },
       {
-        label: 'Show Open Source Licenses',
+        label: 'Show Software Bill of Materials',
         click: () => {
-          const licensePath = path.resolve(app.getAppPath(), '../opensource-licenses.txt');
-          shell.openPath(licensePath);
+          // eslint-disable-next-line no-restricted-properties
+          shell.openExternal('https://github.com/Kong/insomnia/releases');
         },
       },
       {
