@@ -1,5 +1,6 @@
 import * as path from 'path';
 import React, { type FC, useEffect, useState } from 'react';
+import { Button } from 'react-aria-components';
 
 import {
   NPM_PACKAGE_BASE,
@@ -17,7 +18,6 @@ import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { showAlert, showPrompt } from '../modals';
-import { Button } from '../themed-button';
 interface State {
   plugins: Plugin[];
   npmPluginValue: string;
@@ -127,9 +127,7 @@ export const Plugins: FC = () => {
                       Copy Path
                     </CopyButton>{' '}
                     <Button
-                      size="small"
-                      variant="contained"
-                      onClick={() => window.shell.showItemInFolder(plugin.directory)}
+                      onPress={() => window.shell.showItemInFolder(plugin.directory)}
                     >
                       Reveal Folder
                     </Button>
@@ -208,25 +206,26 @@ export const Plugins: FC = () => {
             />
           </div>
           <div className="form-control width-auto">
-            <Button variant="contained" bg="surprise" disabled={isInstallingFromNpm}>
+            <Button
+              className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
+              isDisabled={isInstallingFromNpm}
+            >
               {isInstallingFromNpm && <i className="fa fa-refresh fa-spin space-right" />}
               Install Plugin
             </Button>
           </div>
         </div>
       </form >
-      <hr />
-      <div className="text-right mt-2">
+      <div className="w-full flex flex-row justify-center mt-2">
         <Button
-          onClick={() => window.main.openInBrowser(PLUGIN_HUB_BASE)}
+          className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
+          onPress={() => window.main.openInBrowser(PLUGIN_HUB_BASE)}
         >
           Browse Plugin Hub
         </Button>
         <Button
-          style={{
-            marginLeft: '0.3em',
-          }}
-          onClick={() => showPrompt({
+          className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
+          onPress={() => showPrompt({
             title: 'New Plugin',
             defaultValue: 'demo-example',
             placeholder: 'example-name',
@@ -261,19 +260,15 @@ export const Plugins: FC = () => {
           })}
         >Generate New Plugin</Button>
         <Button
-          style={{
-            marginLeft: '0.3em',
-          }}
-          onClick={() => window.shell.showItemInFolder(path.join(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'))}
+          className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
+          onPress={() => window.shell.showItemInFolder(path.join(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'))}
         >
           Reveal Plugins Folder
         </Button>
         <Button
-          disabled={isRefreshingPlugins}
-          style={{
-            marginLeft: '0.3em',
-          }}
-          onClick={() => refreshPlugins()}
+          isDisabled={isRefreshingPlugins}
+          className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
+          onPress={() => refreshPlugins()}
         >
           Reload Plugins
           {isRefreshingPlugins && <i className="fa fa-refresh fa-spin space-left" />}
