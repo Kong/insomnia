@@ -127,7 +127,14 @@ const SwaggerUIDiv = ({ text }: { text: string }) => {
       setSpec(parseApiSpec(text).contents || {});
     } catch (err) { }
   }, [text]);
-  return (<kong-spec-renderer spec={JSON.stringify(spec)} control-address-bar="true" hide-try-it="false" navigation-type="hash" />);
+  return (<div className="h-full w-full overflow-scroll bg-white">
+    <kong-spec-renderer
+      spec={JSON.stringify(spec)}
+      control-address-bar="true"
+      hide-try-it="false"
+      navigation-type="hash"
+    />
+  </div>);
 };
 
 interface LintMessage {
