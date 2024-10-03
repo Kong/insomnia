@@ -431,6 +431,7 @@ export const go = (args?: string[]) => {
     .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
     .option('-i, --item <requestid>', 'request or folder id to run', collect, [])
     .option('-e, --env <identifier>', 'environment to use', '')
+    .option('-g, --globals <identifier>', 'global environment to use', '')
     .option('--delay-request <duration>', 'milliseconds to delay between requests', '0')
     .option('--env-var <key=value>', 'override environment variables', collect, [])
     .option('-n, --iteration-count <count>', 'number of times to repeat', '1')
@@ -438,7 +439,7 @@ export const go = (args?: string[]) => {
     .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}]`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first non-200 response', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
-    .action(async (identifier, cmd: { env: string; disableCertValidation: boolean; requestNamePattern: string; bail: boolean; item: string[]; delayRequest: string; iterationCount: string; iterationData: string; envVar: string[] }) => {
+    .action(async (identifier, cmd: { env: string; globals: string; disableCertValidation: boolean; requestNamePattern: string; bail: boolean; item: string[]; delayRequest: string; iterationCount: string; iterationData: string; envVar: string[] }) => {
       const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
 
       const commandOptions = { ...globals, ...cmd };
@@ -485,8 +486,11 @@ export const go = (args?: string[]) => {
 
       // Find environment
       const workspaceId = workspace._id;
-      const environment = options.env ? loadEnvironment(db, workspaceId, options.env) : await promptEnvironment(db, !!options.ci, workspaceId);
-
+      const globalEnvironment = options.globals ? loadEnvironment(db, workspaceId, options.globals) : null;
+      let environment = options.env ? loadEnvironment(db, workspaceId, options.env) : await promptEnvironment(db, !!options.ci, workspaceId);
+      if (globalEnvironment) {
+        environment = { ...globalEnvironment, ...environment };
+      }
       if (!environment) {
         logger.fatal('No environment identified; cannot run requests without a valid environment.');
         return process.exit(1);
