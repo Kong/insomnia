@@ -1,4 +1,3 @@
-import { registerKongSpecRenderer } from '@kong/spec-renderer-dev/web-component';
 import { type IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
 import { stat } from 'fs/promises';
@@ -119,7 +118,7 @@ export const loader: LoaderFunction = async ({
     parsedSpec,
   };
 };
-registerKongSpecRenderer();
+
 const SwaggerUIDiv = ({ text }: { text: string }) => {
   const [spec, setSpec] = useState({});
   useEffect(() => {

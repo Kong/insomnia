@@ -1,5 +1,6 @@
 import './rendererListeners';
 
+import { registerKongSpecRenderer } from '@kong/spec-renderer-dev/web-component';
 import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import {
@@ -47,6 +48,8 @@ const Environments = lazy(() => import('./routes/environments'));
 
 initializeSentry();
 initializeLogging();
+registerKongSpecRenderer();
+
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
