@@ -321,6 +321,7 @@ export const go = (args?: string[]) => {
   You can also point it at a git repository folder, or an Insomnia export file.
 
   Examples:
+  $ inso run collection
   $ inso run test
   $ inso lint spec
   $ inso export spec
@@ -329,13 +330,10 @@ export const go = (args?: string[]) => {
   Inso also supports configuration files, by default it will look for .insorc in the current/provided working directory.
   $ inso export spec --config /some/path/.insorc
 `)
-    // TODO: make fallback dir clearer
-    .option('-w, --workingDir <dir>', 'set working directory, to look for files: .insorc, .insomnia folder, *.db.json', '')
-    // TODO: figure out how to remove this option
-    .option('--exportFile <file>', 'set the Insomna export file read from', '')
+    .option('-w, --workingDir <dir>', 'set working directory/file: .insomnia folder, *.db.json, export.yaml', '')
     .option('--verbose', 'show additional logs while running the command', false)
     .option('--ci', 'run in CI, disables all prompts, defaults to false', false)
-    .option('--config <path>', 'path to configuration file containing above options', '')
+    .option('--config <path>', 'path to configuration file containing above options (.insorc)', '')
     .option('--printOptions', 'print the loaded options', false);
 
   const run = program.command('run')
