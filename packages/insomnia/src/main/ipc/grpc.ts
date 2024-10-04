@@ -45,6 +45,7 @@ export interface GrpcIpcRequestParams {
   clientCert?: string;
   clientKey?: string;
   caCertificate?: string;
+  rejectUnauthorized: boolean;
 }
 
 export interface GrpcIpcMessageParams {
@@ -203,6 +204,7 @@ const getMethodsFromReflectionServer = async (
 const getMethodsFromReflection = async (
   host: string,
   metadata: GrpcRequestHeader[],
+  rejectUnauthorized: boolean,
   reflectionApi: GrpcRequest['reflectionApi'],
   clientCert?: string,
   clientKey?: string,
@@ -215,7 +217,7 @@ const getMethodsFromReflection = async (
     const { url } = parseGrpcUrl(host);
     const client = new grpcReflection.Client(
       url,
-      getChannelCredentials({ url: host, caCertificate, clientCert, clientKey }),
+      getChannelCredentials({ url: host, caCertificate, clientCert, clientKey, rejectUnauthorized }),
       grpcOptions,
       filterDisabledMetaData(metadata)
     );
@@ -268,6 +270,7 @@ const getMethodsFromReflection = async (
 export const loadMethodsFromReflection = async (options: {
   url: string;
   metadata: GrpcRequestHeader[];
+  rejectUnauthorized: boolean;
   reflectionApi: GrpcRequest['reflectionApi'];
   clientCert?: string;
   clientKey?: string;
@@ -277,10 +280,11 @@ export const loadMethodsFromReflection = async (options: {
   const methods = await getMethodsFromReflection(
     options.url,
     options.metadata,
+    options.rejectUnauthorized,
     options.reflectionApi,
     options.clientCert,
     options.clientKey,
-    options.caCertificate
+    options.caCertificate,
   );
   return methods.map(method => ({
     type: getMethodType(method),
@@ -325,10 +329,12 @@ export const getSelectedMethod = async (
     invariant(methods, 'No methods found');
     return methods.find(c => c.path === request.protoMethodName);
   }
+  const settings = await models.settings.getOrCreate();
   const methods = await getMethodsFromReflection(
     request.url,
     request.metadata,
-    request.reflectionApi
+    settings.validateSSL,
+    request.reflectionApi,
   );
   invariant(methods, 'No reflection methods found');
   return methods.find(c => c.path === request.protoMethodName);
@@ -355,22 +361,22 @@ const isEnumDefinition = (definition: AnyDefinition): definition is EnumTypeDefi
   return (definition as EnumTypeDefinition).format === 'Protocol Buffer 3 EnumDescriptorProto';
 };
 
-const getChannelCredentials = ({ url, clientCert, clientKey, caCertificate }: { url: string; clientCert?: string; clientKey?: string; caCertificate?: string }): ChannelCredentials => {
+const getChannelCredentials = ({ url, rejectUnauthorized, clientCert, clientKey, caCertificate }: { url: string; rejectUnauthorized: boolean; clientCert?: string; clientKey?: string; caCertificate?: string }): ChannelCredentials => {
   if (url.toLowerCase().startsWith('grpc:')) {
     return ChannelCredentials.createInsecure();
   }
   if (caCertificate && clientKey && clientCert) {
-    return ChannelCredentials.createSsl(Buffer.from(caCertificate, 'utf8'), Buffer.from(clientKey, 'utf8'), Buffer.from(clientCert, 'utf8'));
+    return ChannelCredentials.createSsl(Buffer.from(caCertificate, 'utf8'), Buffer.from(clientKey, 'utf8'), Buffer.from(clientCert, 'utf8'), { rejectUnauthorized });
   }
   if (caCertificate) {
-    return ChannelCredentials.createSsl(Buffer.from(caCertificate, 'utf8'),);
+    return ChannelCredentials.createSsl(Buffer.from(caCertificate, 'utf8'), null, null, { rejectUnauthorized });
   }
-  return ChannelCredentials.createInsecure();
+  return ChannelCredentials.createSsl(null, null, null, { rejectUnauthorized });
 };
 
 export const start = (
   event: IpcMainEvent,
-  { request, clientCert, clientKey, caCertificate }: GrpcIpcRequestParams,
+  { request, rejectUnauthorized, clientCert, clientKey, caCertificate }: GrpcIpcRequestParams,
 ) => {
   getSelectedMethod(request)?.then(method => {
     if (!method) {
@@ -387,7 +393,7 @@ export const start = (
     }
     // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
     const Client = makeGenericClientConstructor({});
-    const creds = getChannelCredentials({ url: request.url, clientCert, clientKey, caCertificate });
+    const creds = getChannelCredentials({ url: request.url, rejectUnauthorized, clientCert, clientKey, caCertificate });
     const client = new Client(url, creds);
     if (!client) {
       return;
