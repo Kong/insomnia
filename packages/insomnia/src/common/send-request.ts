@@ -2,7 +2,7 @@ import path from 'path';
 
 import { type BaseModel, types as modelTypes } from '../models';
 import * as models from '../models';
-import type { UserUploadEnvironment } from '../models/environment';
+import type { Environment, UserUploadEnvironment } from '../models/environment';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import { getBodyBuffer } from '../models/response';
@@ -87,25 +87,47 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     invariant(environment, 'failed to find environment ' + overrideEnvironmentId);
     const activeEnvironmentId = overrideEnvironmentId;
 
+    const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+
+    const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+    let activeGlobalEnvironment: Environment | undefined = undefined;
+    if (workspaceMeta?.activeGlobalEnvironmentId) {
+      activeGlobalEnvironment = await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId) || undefined;
+    }
+
     const responseId = generateId('res');
     const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
     const timelinePath = path.join(responsesDir, responseId + '.timeline');
 
-    return { request, settings, clientCertificates, caCert, environment, activeEnvironmentId, workspace, timelinePath, responseId, ancestors };
+    return {
+      request,
+      settings,
+      clientCertificates,
+      caCert,
+      environment,
+      baseEnvironment,
+      cookieJar,
+      activeGlobalEnvironment,
+      activeEnvironmentId,
+      workspace,
+      timelinePath,
+      responseId,
+      ancestors,
+    };
   };
 
   // Return callback helper to send requests
   return async function sendRequest(requestId: string, iteration?: number) {
     const requestData = await fetchInsoRequestData(requestId, environmentId);
     const getCurrentRowOfIterationData = wrapAroundIterationOverIterationData(iterationData, iteration);
-    const mutatedContext = await tryToExecutePreRequestScript(requestData, requestData.workspace._id, getCurrentRowOfIterationData, iteration, iterationCount);
+    const mutatedContext = await tryToExecutePreRequestScript(requestData, getCurrentRowOfIterationData, iteration, iterationCount);
     if (mutatedContext === null) {
       console.error('Time out while executing pre-request script');
       return null;
     }
     const ignoreUndefinedEnvVariable = true;
     // NOTE: inso ignores active environment, using the one passed in
-
     const renderedResult = await tryToInterpolateRequest({
       request: mutatedContext.request,
       environment: mutatedContext.environment,

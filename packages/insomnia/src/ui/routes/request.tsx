@@ -488,7 +488,7 @@ export const sendActionImp = async ({
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
   window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
-  const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId, userUploadEnvironment, iteration, iterationCount);
+  const mutatedContext = await tryToExecutePreRequestScript(requestData, userUploadEnvironment, iteration, iterationCount);
   if ('error' in mutatedContext) {
     throw {
       error: mutatedContext.error,
