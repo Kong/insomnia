@@ -43,7 +43,7 @@ interface Options {
   filterTypes?: (keyof Database)[];
 }
 
-const isFile = async (path: string) => {
+export const isFile = async (path: string) => {
   try {
     return (await stat(path)).isFile();
   } catch (error) {
