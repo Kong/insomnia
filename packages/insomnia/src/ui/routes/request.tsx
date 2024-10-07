@@ -413,9 +413,8 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
 
   try {
-    return await sendActionImp({
+    return await sendActionImplementation({
       requestId,
-      workspaceId,
       shouldPromptForPathAfterResponse,
       ignoreUndefinedEnvVariable,
     });
@@ -466,9 +465,8 @@ export interface RunnerContextForRequest {
   responseId: string;
 }
 
-export const sendActionImp = async ({
+export const sendActionImplementation = async ({
   requestId,
-  workspaceId,
   userUploadEnvironment,
   shouldPromptForPathAfterResponse,
   ignoreUndefinedEnvVariable,
@@ -476,8 +474,7 @@ export const sendActionImp = async ({
   iteration,
   iterationCount,
 }: {
-  requestId: string;
-  workspaceId: string;
+    requestId: string;
   shouldPromptForPathAfterResponse: boolean | undefined;
   ignoreUndefinedEnvVariable: boolean | undefined;
   testResultCollector?: RunnerContextForRequest;
@@ -488,7 +485,7 @@ export const sendActionImp = async ({
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
   window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
-  const mutatedContext = await tryToExecutePreRequestScript(requestData, workspaceId, userUploadEnvironment, iteration, iterationCount);
+  const mutatedContext = await tryToExecutePreRequestScript(requestData, userUploadEnvironment, iteration, iterationCount);
   if ('error' in mutatedContext) {
     throw {
       error: mutatedContext.error,

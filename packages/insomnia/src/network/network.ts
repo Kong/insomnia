@@ -135,6 +135,14 @@ export const fetchRequestData = async (requestId: string) => {
   const environment = activeEnvironment || await models.environment.getOrCreateForParentId(workspace._id);
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
+  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+
+  let activeGlobalEnvironment: Environment | undefined = undefined;
+  if (workspaceMeta?.activeGlobalEnvironmentId) {
+    activeGlobalEnvironment = await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId) || undefined;
+  }
+
   const settings = await models.settings.get();
   invariant(settings, 'failed to create settings');
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
@@ -142,32 +150,40 @@ export const fetchRequestData = async (requestId: string) => {
   const responseId = generateId('res');
   const responsesDir = pathJoin((process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
-  return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId: activeEnvironmentId || environment._id, timelinePath, responseId, ancestors };
+
+  return {
+    request,
+    environment,
+    baseEnvironment,
+    cookieJar,
+    activeGlobalEnvironment,
+    settings,
+    clientCertificates,
+    caCert,
+    activeEnvironmentId: activeEnvironmentId || environment._id,
+    timelinePath,
+    responseId,
+    ancestors,
+  };
 };
 
 export const tryToExecutePreRequestScript = async (
   {
     request,
     environment,
+    baseEnvironment,
+    activeGlobalEnvironment,
+    cookieJar,
     settings,
     clientCertificates,
     timelinePath,
     responseId,
     ancestors,
   }: Awaited<ReturnType<typeof fetchRequestData>>,
-  workspaceId: string,
   userUploadEnvironment?: UserUploadEnvironment,
   iteration?: number,
   iterationCount?: number,
 ) => {
-  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
-  const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-  let activeGlobalEnvironment: Environment | undefined = undefined;
-  if (workspaceMeta?.activeGlobalEnvironmentId) {
-    activeGlobalEnvironment = await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId) || undefined;
-  }
 
   const requestGroups = ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
   const folderScripts = requestGroups.reverse()

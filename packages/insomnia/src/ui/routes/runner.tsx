@@ -33,7 +33,7 @@ import { ResponseTimer } from '../components/response-timer';
 import { getTimeAndUnit } from '../components/tags/time-tag';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
 import type { OrganizationLoaderData } from './organization';
-import { type CollectionRunnerContext, type RunnerSource, sendActionImp } from './request';
+import { type CollectionRunnerContext, type RunnerSource, sendActionImplementation } from './request';
 import { useRootLoaderData } from './root';
 import type { Child, WorkspaceLoaderData } from './workspace';
 
@@ -944,9 +944,8 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
 
           await new Promise(resolve => setTimeout(resolve, delay));
 
-          const mutatedContext = await sendActionImp({
+          const mutatedContext = await sendActionImplementation({
             requestId: targetRequest.id,
-            workspaceId,
             iteration: i + 1,
             iterationCount,
             userUploadEnvironment: wrapAroundIterationOverIterationData(userUploadEnvs, i),

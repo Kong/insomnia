@@ -1,0 +1,37 @@
+_type: export
+__export_format: 4
+__export_date: 2024-10-07T10:58:13.163Z
+__export_source: insomnia.desktop.app:v10.1.0-beta.2
+resources:
+  - _id: wrk_542d3604f4814c68a67b10e8e210d448
+    type: Workspace
+    parentId: proj_1023628c50a84a1ea37ddb82b735db3c
+    modified: 1728298565335
+    created: 1728298565335
+    name: GlobalEnv
+    description: ""
+    scope: environment
+    _type: workspace
+  - _id: env_dcf0363e684fae59a4ac57c09c208674caa8a64a
+    type: Environment
+    parentId: wrk_542d3604f4814c68a67b10e8e210d448
+    modified: 1728298634375
+    created: 1728298565336
+    name: Base Environment
+    data:
+      apiKey: global
+      base_path: /v3
+      newkey: /v3
+      firstkey: first
+      secondkey: second
+    dataPropertyOrder:
+      "&":
+        - apiKey
+        - newkey
+        - base_path
+        - firstkey
+        - secondkey
+    color: null
+    isPrivate: false
+    metaSortKey: 1728298565336
+    _type: environment

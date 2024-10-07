@@ -117,3 +117,4 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
 };
 
 export default insomniaAdapter;
+export const insomniaExportAdapter = insomniaAdapter;
