@@ -30,6 +30,9 @@ export function useOrganizationPermissions() {
 
   const [billing = {
     isActive: true,
+    expirationErrorMessage: '',
+    expirationWarningMessage: '',
+    accessDenied: false,
   }] = useLoaderDeferData(billingPromise);
 
   return { features, billing };
