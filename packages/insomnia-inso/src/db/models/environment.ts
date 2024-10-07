@@ -2,7 +2,7 @@
 import { AutoComplete } from 'enquirer';
 
 import { logger } from '../../cli';
-import type { Database } from '../index';
+import { type Database } from '../index';
 import type { Environment } from './types';
 import { ensureSingle, generateIdIsh, getDbChoice, matchIdIsh } from './util';
 
@@ -25,13 +25,10 @@ export const loadEnvironment = (
     return null;
   }
 
-  // Get the sub environments
-  const baseWorkspaceEnv = loadBaseEnvironmentForWorkspace(db, workspaceId);
-
   // If no identifier, return base environment
   if (!identifier) {
     logger.trace('No sub environments found, using base environment');
-    return baseWorkspaceEnv;
+    return loadBaseEnvironmentForWorkspace(db, workspaceId);
   }
 
   logger.trace(

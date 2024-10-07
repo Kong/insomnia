@@ -11,6 +11,7 @@ import type {
   UnitTest,
   UnitTestSuite,
   Workspace,
+  WorkspaceMeta,
 } from './models/types';
 
 export interface Database {
@@ -19,6 +20,7 @@ export interface Database {
   Request: BaseModel[];
   RequestGroup: BaseModel[];
   Workspace: Workspace[];
+  WorkspaceMeta: WorkspaceMeta[];
   UnitTestSuite: UnitTestSuite[];
   UnitTest: UnitTest[];
 }
@@ -29,6 +31,7 @@ export const emptyDb = (): Database => ({
   Request: [],
   RequestGroup: [],
   Workspace: [],
+  WorkspaceMeta: [],
   UnitTest: [],
   UnitTestSuite: [],
 });

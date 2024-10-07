@@ -44,6 +44,8 @@ interface BaseWorkspace {
     description: string;
 }
 
+export type WorkspaceMeta = BaseModel & { activeGlobalEnvironmentId: string };
+
 export type Workspace = BaseModel & BaseWorkspace;
 
 export type InsomniaRequest = BaseModel & {
