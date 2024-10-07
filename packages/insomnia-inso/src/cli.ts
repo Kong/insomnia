@@ -14,14 +14,17 @@ import { type RequestTestResult } from 'insomnia-sdk';
 import { generate, runTestsCli } from 'insomnia-testing';
 import orderedJSON from 'json-order';
 import { parseArgsStringToArgv } from 'string-argv';
+import { v4 as uuidv4 } from 'uuid';
 
 import packageJson from '../package.json';
 import { exportSpecification, writeFileWithCliOptions } from './commands/export-specification';
 import { getRuleSetFileFromFolderByFilename, lintSpecification } from './commands/lint-specification';
-import { Database, loadDb } from './db';
+import { Database, isFile, loadDb } from './db';
+import { insomniaExportAdapter } from './db/adapters/insomnia-adapter';
 import { loadApiSpec, promptApiSpec } from './db/models/api-spec';
 import { loadEnvironment, promptEnvironment } from './db/models/environment';
 import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
+import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
 
 export interface GlobalOptions {
@@ -429,7 +432,7 @@ export const go = (args?: string[]) => {
     .option('-t, --requestNamePattern <regex>', 'run requests that match the regex', '')
     .option('-i, --item <requestid>', 'request or folder id to run', collect, [])
     .option('-e, --env <identifier>', 'environment to use', '')
-    .option('-g, --globals <identifier>', 'global environment to use', '')
+    .option('-g, --globals <identifier>', 'global environment to use (filepath or id)', '')
     .option('--delay-request <duration>', 'milliseconds to delay between requests', '0')
     .option('--env-var <key=value>', 'override environment variables', collect, [])
     .option('-n, --iteration-count <count>', 'number of times to repeat', '1')
@@ -484,11 +487,36 @@ export const go = (args?: string[]) => {
 
       // Find environment
       const workspaceId = workspace._id;
-      const globalEnvironment = options.globals ? loadEnvironment(db, workspaceId, options.globals) : null;
-      let environment = options.env ? loadEnvironment(db, workspaceId, options.env) : await promptEnvironment(db, !!options.ci, workspaceId);
-      if (globalEnvironment) {
-        environment = { ...globalEnvironment, ...environment };
+      // get global env by id from nedb or gitstore, or first element from file
+      // smell: mutates db
+      if (options.globals) {
+        const isGlobalFile = await isFile(options.globals);
+        if (!isGlobalFile) {
+          const globalEnv = db.Environment.find(env => matchIdIsh(env, options.globals) || env.name === options.globals);
+          if (!globalEnv) {
+            logger.warn('No global environment found with id or name', options.globals);
+            return process.exit(1);
+          }
+          if (globalEnv) {
+            // attach this global env to the workspace
+            db.WorkspaceMeta = [{ activeGlobalEnvironmentId: globalEnv._id, _id: `wrkm_${uuidv4().replace(/-/g, '')}`, type: 'WorkspaceMeta', parentId: workspaceId, name: '' }];
+          }
+        }
+        if (isGlobalFile) {
+          const globalEnvDb = await insomniaExportAdapter(options.globals, ['Environment']);
+          logger.trace('--globals is a file path, loading from file, global env selection is not currently supported, taking first element');
+          const firstGlobalEnv = globalEnvDb?.Environment?.[0];
+          if (!firstGlobalEnv) {
+            logger.warn('No environments found in the file', options.globals);
+            return process.exit(1);
+          }
+          // mutate db to include the global envs
+          db.Environment = [...db.Environment, ...globalEnvDb.Environment];
+          // attach this global env to the workspace
+          db.WorkspaceMeta = [{ activeGlobalEnvironmentId: firstGlobalEnv._id, _id: `wrkm_${uuidv4().replace(/-/g, '')}`, type: 'WorkspaceMeta', parentId: workspaceId, name: '' }];
+        }
       }
+      const environment = options.env ? loadEnvironment(db, workspaceId, options.env) : await promptEnvironment(db, !!options.ci, workspaceId);
       if (!environment) {
         logger.fatal('No environment identified; cannot run requests without a valid environment.');
         return process.exit(1);
