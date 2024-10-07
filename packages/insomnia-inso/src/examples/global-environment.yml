@@ -22,13 +22,15 @@ resources:
       apiKey: global
       base_path: /v3
       newkey: /v3
-      first: first
-      second: second
+      firstkey: first
+      secondkey: second
     dataPropertyOrder:
       "&":
         - apiKey
         - newkey
         - base_path
+        - firstkey
+        - secondkey
     color: null
     isPrivate: false
     metaSortKey: 1728298565336
