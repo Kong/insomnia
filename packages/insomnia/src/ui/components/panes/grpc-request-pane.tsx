@@ -105,12 +105,13 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
         const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
         const clientCertificate = workspaceClientCertificates.find(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), request.url, false));
         const caCertificatePath = (await models.caCertificate.findByParentId(workspaceId))?.path;
-
+        const clientCert = await readFile(clientCertificate?.cert || '', 'utf8');
+        const clientKey = await readFile(clientCertificate?.key || '', 'utf8');
         window.main.grpc.start({
           request,
           rejectUnauthorized: settings.validateSSL,
-          clientCert: clientCertificate?.cert || undefined,
-          clientKey: clientCertificate?.key || undefined,
+          clientCert,
+          clientKey,
           caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
         });
         setGrpcState({
