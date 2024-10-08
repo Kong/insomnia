@@ -830,7 +830,7 @@ const OrganizationRoute = () => {
                         }) ? (
                             <div className='flex items-center justify-center'>
                               <Icon icon="home" />
-                              {(billing.expirationErrorMessage || billing.expirationWarningMessage) && isActive && <Icon className={`z-20 absolute -top-1 -right-1 w-4 h-4 ${currentPlan?.expirationErrorMessage ? 'text-red-600' : 'text-orange-600'} `} icon="exclamation-circle" />}
+                              {isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) && <Icon className={`z-20 absolute -top-1 -right-1 w-4 h-4 ${currentPlan?.expirationErrorMessage ? 'text-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))]' : 'text-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))]'} `} icon="exclamation-circle" />}
                             </div>
                         ) : (
                             <div className='flex items-center justify-center'>
@@ -838,7 +838,7 @@ const OrganizationRoute = () => {
                                 alt={organization.display_name}
                                 src={organization.branding?.logo_url || ''}
                               />
-                              {(billing.expirationErrorMessage || billing.expirationWarningMessage) && isActive && <Icon className={`z-20 absolute -top-1 -right-1 w-4 h-4 ${currentPlan?.expirationErrorMessage ? 'text-red-600' : 'text-orange-600'} `} icon="exclamation-circle" />}
+                              {isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) && <Icon className={`z-20 absolute -top-1 -right-1 w-4 h-4 ${currentPlan?.expirationErrorMessage ? 'text-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))]' : 'text-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))]'} `} icon="exclamation-circle" />}
                             </div>
                         )}
                       </div>
