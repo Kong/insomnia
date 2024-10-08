@@ -3,7 +3,6 @@ import { useRouteLoaderData } from 'react-router-dom';
 
 import { ErrorBoundary } from '../components/error-boundary';
 import { registerModal } from '../components/modals';
-import { AccessDeniedModal } from '../components/modals/access-denied-modal';
 import { AddKeyCombinationModal } from '../components/modals/add-key-combination-modal';
 import { AlertModal } from '../components/modals/alert-modal';
 import { AskModal } from '../components/modals/ask-modal';
@@ -67,10 +66,6 @@ const Modals: FC = () => {
 
         <SettingsModal
           ref={instance => registerModal(instance, 'SettingsModal')}
-        />
-
-        <AccessDeniedModal
-          ref={instance => registerModal(instance, 'AccessDeniedModal')}
         />
 
         <ResponseDebugModal
