@@ -393,11 +393,11 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
 
     if (userUploadEnvironment) {
       const userUploadEnvPropertyOrder = orderedJSON.parse(
-        JSON.stringify(output?.iterationData?.data || {}),
+        JSON.stringify(output?.iterationData?.data || []),
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
-      userUploadEnvironment.data = output?.iterationData?.data || {};
+      userUploadEnvironment.data = output?.iterationData?.data || [];
       userUploadEnvironment.dataPropertyOrder = userUploadEnvPropertyOrder.map;
     }
 
@@ -420,6 +420,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     );
 
     const requestId = request._id;
+    const errMessage = err.stack ? `message: ${err.messsage}; stack: ${err.stack}` : err.message;
     const responsePatch = {
       _id: responseId,
       parentId: requestId,
@@ -427,11 +428,11 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       globalEnvironmentId: globals?._id,
       timelinePath,
       statusMessage: 'Error',
-      error: err.message,
+      error: errMessage,
     };
     const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
     models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
-    return { error: err };
+    return { error: errMessage };
   }
 };
 

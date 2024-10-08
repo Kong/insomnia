@@ -273,7 +273,7 @@ export const Runner: FC<{}> = () => {
     // convert uploadData to environment data
     const userUploadEnvs = uploadData.map(data => {
       const orderedJson = porderedJSON.parse<UploadDataType>(
-        JSON.stringify(data),
+        JSON.stringify(data || []),
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
