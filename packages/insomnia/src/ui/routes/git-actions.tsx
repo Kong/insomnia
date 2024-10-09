@@ -177,14 +177,22 @@ export const gitBranchesLoader: LoaderFunction = async ({
   );
   invariant(gitRepository, 'Git Repository not found');
 
-  const branches = await GitVCS.listBranches();
+  try {
+    const branches = await GitVCS.listBranches();
 
-  const remoteBranches = await GitVCS.fetchRemoteBranches();
+    const remoteBranches = await GitVCS.fetchRemoteBranches();
 
-  return {
-    branches,
-    remoteBranches,
-  };
+    return {
+      branches,
+      remoteBranches,
+    };
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Could not fetch remote branches.';
+    return {
+      errors: [errorMessage],
+    };
+  }
+
 };
 
 export interface GitFetchLoaderData {

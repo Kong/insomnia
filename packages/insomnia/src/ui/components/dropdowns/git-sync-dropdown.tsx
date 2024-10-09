@@ -432,16 +432,14 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       )}
       {isGitBranchesModalOpen && gitRepository && (
         <GitBranchesModal
-          gitRepository={gitRepository}
-          onHide={() => setIsGitBranchesModalOpen(false)}
-          activeBranch={currentBranch}
+          onClose={() => setIsGitBranchesModalOpen(false)}
+          currentBranch={currentBranch}
           branches={branches}
         />
       )}
       {isGitLogModalOpen && gitRepository && (
         <GitLogModal
-          branch={currentBranch}
-          onHide={() => setIsGitLogModalOpen(false)}
+          onClose={() => setIsGitLogModalOpen(false)}
         />
       )}
       {isGitStagingModalOpen && gitRepository && (
