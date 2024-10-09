@@ -95,6 +95,7 @@ export interface CodeEditorProps {
   noStyleActiveLine?: boolean;
   // used only for saving env editor state, focusEvent doesn't work well
   onBlur?: (e: FocusEvent) => void;
+  onFocus?: (e: FocusEvent, editor?: CodeMirror.Editor) => void;
   onChange?: (value: string) => void;
   onCursorActivity?: (doc: CodeMirror.Editor) => void;
   onFocus?: (event: Event) => void;
@@ -168,6 +169,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
   noLint,
   noMatchBrackets,
   noStyleActiveLine,
+  onFocus,
   onBlur,
   onChange,
   onCursorActivity,
@@ -531,6 +533,12 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     codeMirror.current?.on('blur', handleOnBlur);
     return () => codeMirror.current?.off('blur', handleOnBlur);
   }, [onBlur]);
+
+  useEffect(() => {
+    const handleOnFocus = (_: CodeMirror.Editor, e: FocusEvent) => onFocus?.(e, _);
+    codeMirror.current?.on('focus', handleOnFocus);
+    return () => codeMirror.current?.off('focus', handleOnFocus);
+  }, [onFocus]);
 
   const tryToSetOption = (key: keyof EditorConfiguration, value: any) => {
     try {

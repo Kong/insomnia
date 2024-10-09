@@ -76,9 +76,14 @@ export const EnvironmentKVEditor = forwardRef<EnvironmentEditorHandle, EditorPro
   const handleItemChange = <K extends keyof EnvironmentKvPairData>(id: string, changedPropertyName: K, newValue: EnvironmentKvPairData[K]) => {
     const changedItemIdx = kvPairs.findIndex(p => p.id === id);
     if (changedItemIdx !== -1) {
+      const changedItem = kvPairs[changedItemIdx];
       // enable item since user modifies the item unless manual disbale it
-      kvPairs[changedItemIdx]['enabled'] = true;
-      kvPairs[changedItemIdx][changedPropertyName] = newValue;
+      changedItem['enabled'] = true;
+      changedItem[changedPropertyName] = newValue;
+      // update value to empty object json string when switch to json type and current value is empty string
+      if (newValue === EnvironmentKvPairDataType.JSON && changedItem.value.trim() === '') {
+        changedItem.value = JSON.stringify({});
+      }
     }
     onChange(kvPairs);
   };
@@ -141,7 +146,8 @@ export const EnvironmentKVEditor = forwardRef<EnvironmentEditorHandle, EditorPro
             onSelectionChange={newType => {
               handleItemChange(id, 'type', newType as EnvironmentKvPairDataType);
             }}
-            disabledKeys={isValidJSONString ? [] : [EnvironmentKvPairDataType.JSON]}
+            // Only valid json string or empty string allowed to convert to JSON type
+            disabledKeys={isValidJSONString || value.trim() === '' ? [] : [EnvironmentKvPairDataType.JSON]}
           >
             <Button className="py-1 px-[--padding-sm] w-full font-bold flex flex-1 items-center justify-between aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] text-sm">
               <SelectValue className="flex truncate items-center justify-center gap-2" />
@@ -185,7 +191,7 @@ export const EnvironmentKVEditor = forwardRef<EnvironmentEditorHandle, EditorPro
             </Popover>
           </Select>
         </div>
-        <div className={`${cellCommonStyle} w-[50%]`}>
+        <div className={`${cellCommonStyle} w-[50%] relative`}>
           {type === EnvironmentKvPairDataType.STRING ?
             <div className="h-full w-full flex flex-1 px-2">
               <OneLineEditor
@@ -198,8 +204,30 @@ export const EnvironmentKVEditor = forwardRef<EnvironmentEditorHandle, EditorPro
             <CodeEditor
               id={`environment-kv-editor-value-${id}`}
               className="w-full h-full py-1 editor--environment-inline"
+              autoPrettify
               defaultValue={value}
               enableNunjucks
+              onBlur={() => {
+                // collapse the editor when lose focus
+                const textarea = document.getElementById(`environment-kv-editor-value-${id}`);
+                if (textarea && textarea.parentElement) {
+                  textarea.parentElement.classList.remove('editor--environment-inline-focus');
+                  textarea.parentElement.style.height = '100%';
+                }
+              }}
+              onFocus={(_e, editor) => {
+                const textarea = document.getElementById(`environment-kv-editor-value-${id}`);
+                const lineCount = editor?.lineCount();
+                // expand the editor when user focus the editor with more than one line of json string
+                if (textarea && textarea.parentElement && lineCount && lineCount > 1) {
+                  const editorContainer = textarea.parentElement;
+                  editorContainer.classList.add('editor--environment-inline-focus');
+                  if (lineCount && lineCount > 1) {
+                    // at least expand with 12em height
+                    editorContainer.style.height = `${Math.max(1.4 * lineCount, 12)}em`;
+                  }
+                }
+              }}
               mode="application/json"
               dynamicHeight={false}
               onChange={value => {
@@ -244,18 +272,18 @@ export const EnvironmentKVEditor = forwardRef<EnvironmentEditorHandle, EditorPro
         aria-label='Environment Key Value Pair'
         selectionMode='none'
         dragAndDropHooks={dragAndDropHooks}
-        className="w-full overflow-y-auto py-1 scroll-pr-3"
+        className="w-full overflow-y-auto py-1 h-full"
         items={kvPairs}
         ref={parentRef}
       >
         {kvPair => {
-          const { id, type, name } = kvPair;
+          const { id, name, type } = kvPair;
           return (
             <ListBoxItem
               key={id}
               id={id}
               textValue={name}
-              className={`w-full flex group focus:outline-none ${type === 'json' ? 'h-[--line-height-lg]' : 'h-[--line-height-sm]'}`}
+              className={`w-full flex group focus:outline-none ${type === 'json' ? 'h-[--line-height-md]' : 'h-[--line-height-sm]'}`}
             >
               {renderPairItem(kvPair)}
             </ListBoxItem>
