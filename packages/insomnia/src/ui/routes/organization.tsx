@@ -178,7 +178,7 @@ interface SyncOrgsAndProjectsActionRequest {
 // this action is used to run task that we dont want to block the UI
 export const syncOrgsAndProjectsAction: ActionFunction = async ({ request }) => {
   try {
-    const { organizationId, projectId, asyncTaskList } = await request.json() as SyncOrgsAndProjectsActionRequest;
+    const { organizationId, projectId, asyncTaskList = [] } = await request.json() as SyncOrgsAndProjectsActionRequest;
     const { id: sessionId, accountId } = await userSession.getOrCreate();
 
     const taskPromiseList = [];

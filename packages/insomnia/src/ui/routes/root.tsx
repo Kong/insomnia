@@ -91,6 +91,9 @@ const Root = () => {
             break;
 
           case 'insomnia://app/auth/login':
+            if (params.message) {
+              window.localStorage.setItem('logoutMessage', params.message);
+            }
             actionFetcher.submit(
               {},
               {
