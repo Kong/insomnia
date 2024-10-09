@@ -96,6 +96,8 @@ export interface CodeEditorProps {
   // used only for saving env editor state, focusEvent doesn't work well
   onBlur?: (e: FocusEvent) => void;
   onChange?: (value: string) => void;
+  onCursorActivity?: (doc: CodeMirror.Editor) => void;
+  onFocus?: (event: Event) => void;
   onPaste?: (value: string) => string;
   onClickLink?: CodeMirrorLinkClickCallback;
   pinToBottom?: boolean;
@@ -140,6 +142,9 @@ export interface CodeEditorHandle {
   getCursor: () => CodeMirror.Position | undefined;
   setCursorLine: (lineNumber: number) => void;
   tryToSetOption: (key: keyof EditorConfiguration, value: any) => void;
+  hasFocus: () => boolean;
+  indexFromPos: (pos?: CodeMirror.Position) => number;
+  getDoc: () => CodeMirror.Doc | undefined;
 }
 export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
   autoPrettify,
@@ -165,6 +170,8 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
   noStyleActiveLine,
   onBlur,
   onChange,
+  onCursorActivity,
+  onFocus,
   onPaste,
   onClickLink,
   pinToBottom,
@@ -596,7 +603,28 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
       codeMirror.current?.setCursor(lineNumber);
     },
     tryToSetOption,
+    hasFocus: () => codeMirror.current?.hasFocus() as boolean,
+    indexFromPos: (pos?: CodeMirror.Position) => pos ? codeMirror.current?.indexFromPos(pos) || 0 : 0,
+    getDoc: () => codeMirror.current?.getDoc(),
   }), []);
+
+  useEffect(() => {
+    const handleCursorActivity = (doc: CodeMirror.Editor) => {
+      onCursorActivity?.(doc);
+    };
+
+    const handleFocus = (_: CodeMirror.Editor, event: Event) => {
+      onFocus?.(event);
+    };
+    codeMirror.current?.on('cursorActivity', handleCursorActivity);
+
+    codeMirror.current?.on('focus', handleFocus);
+
+    return () => {
+      codeMirror.current?.off('cursorActivity', handleCursorActivity);
+      codeMirror.current?.off('focus', handleFocus);
+    };
+  }, [onCursorActivity, onFocus]);
 
   const showFilter = readOnly && (mode?.includes('json') || mode?.includes('xml'));
   const showPrettify = showPrettifyButton && mode?.includes('json') || mode?.includes('xml');
