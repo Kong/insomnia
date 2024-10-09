@@ -32,8 +32,8 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: brew install-bundler-gems
 
-      # - name: Add "Versions" Tap
-      #   run: brew tap homebrew/homebrew-cask-versions
+      - name: Add "Versions" Tap
+        run: brew tap homebrew/homebrew-cask --force
 
       - name: Configure Git user
         uses: Homebrew/actions/git-user-config@master
