@@ -859,6 +859,7 @@ export interface runCollectionActionParams {
   bail: boolean;
 }
 
+// don't forget also apply modification on this function to the cli.ts at the moment
 export const runCollectionAction: ActionFunction = async ({ request, params }) => {
   const { organizationId, projectId, workspaceId } = params;
   invariant(organizationId, 'Organization id is required');

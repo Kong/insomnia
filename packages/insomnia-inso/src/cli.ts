@@ -289,7 +289,7 @@ const getListFromFileOrUrl = (content: string, fileType?: string): Record<string
 const transformIterationDataToEnvironmentList = (list: Record<string, string>[]): UserUploadEnvironment[] => {
   return list?.map(data => {
     const orderedJson = orderedJSON.parse<Record<string, any>>(
-      JSON.stringify(data),
+      JSON.stringify(data || []),
       JSON_ORDER_PREFIX,
       JSON_ORDER_SEPARATOR,
     );
