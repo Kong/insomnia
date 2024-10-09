@@ -29,11 +29,11 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
     // switch branches
     await page.getByTestId('git-dropdown').click();
     await page.getByText('Branches').click();
-    await page.getByRole('cell', { name: 'main(current)' }).click();
-    await page.getByRole('cell', { name: 'abc' }).click();
-    await page.getByRole('row', { name: 'abc Checkout' }).getByRole('button').click();
-    await page.getByRole('cell', { name: 'abc(current)' }).click();
-    await page.getByRole('button', { name: 'Done' }).click();
+    await page.getByLabel('main').getByText('main').click();
+    await page.getByText('abc').click();
+    await page.getByLabel('abc').getByRole('button', { name: 'Fetch' }).click();
+    await page.getByText('abc *').click();
+    await page.getByRole('heading', { name: 'Branches', exact: true }).press('Escape');
 
     // perform some changes and commit them
     await page.locator('pre').filter({ hasText: 'title: Endpoint Security' }).click();
@@ -56,8 +56,8 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
     await page.getByText('main').click();
     await page.getByTestId('git-dropdown').click();
     await page.getByText('Branches').click();
-    await page.getByRole('cell', { name: 'main(current)' }).click();
-    await page.getByRole('button', { name: 'Done' }).click();
+    await page.getByText('main *').click();
+    await page.getByText('main *').press('Escape');
     await page.getByTestId('CodeEditor').getByText('Endpoint Security').click();
 
     // switch to the branch with the changes and check if they are there
@@ -65,8 +65,8 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
     await page.getByText('abc').click();
     await page.getByTestId('git-dropdown').click();
     await page.getByText('Branches').click();
-    await page.getByRole('cell', { name: 'abc(current)' }).click();
-    await page.getByRole('button', { name: 'Done' }).click();
+    await page.getByText('abc *').click();
+    await page.getByRole('heading', { name: 'Branches', exact: true }).press('Escape');
     await page.getByText('Endpoint Security test').click();
 
     // check git history
@@ -75,18 +75,17 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
 
     await page.getByTestId('git-dropdown').click();
     await page.getByText('History').click();
-    await page.getByRole('cell', { name: 'example commit message' }).click();
-    await page.getByRole('cell', { name: 'just now' }).click();
-    await page.getByRole('button', { name: 'Done' }).click();
+    await page.getByRole('rowheader', { name: 'example commit message' }).click();
+    await page.getByRole('gridcell', { name: 'just now' }).click();
+    await page.getByRole('heading', { name: 'History', exact: true }).click();
+    await page.getByRole('heading', { name: 'History', exact: true }).press('Escape');
 
     // push changes test
     await page.getByTestId('git-dropdown').click();
     await page.getByText('Branches').click();
-    await page.getByRole('cell', { name: 'abc(current)' }).click();
-    await page.getByRole('cell', { name: 'push-pull-test' }).click();
-    await page.getByRole('row', { name: 'push-pull-test Checkout' }).getByRole('button').click();
-    await page.getByRole('cell', { name: 'push-pull-test(current)' }).click();
-    await page.getByRole('button', { name: 'Done' }).click();
+    await page.getByLabel('push-pull-test').getByRole('button', { name: 'Fetch' }).click();
+    await page.getByText('push-pull-test *').click();
+    await page.getByText('push-pull-test *').press('Escape');
     await page.getByTestId('workspace-debug').click();
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('New Folder').click();
@@ -108,6 +107,7 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
     await page.getByText('Fetch').click();
     await page.getByTestId('git-dropdown').click();
     await page.getByText('History').click();
-    await page.getByRole('cell', { name: `commit test ${testUUID}` }).click();
-    await page.getByRole('button', { name: 'Done' }).click();
+    await page.getByRole('rowheader', { name: `commit test ${testUUID}` }).click();
+    await page.getByRole('heading', { name: 'History', exact: true }).click();
+    await page.getByRole('heading', { name: 'History', exact: true }).press('Escape');
 });

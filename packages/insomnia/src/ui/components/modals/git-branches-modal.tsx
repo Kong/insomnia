@@ -56,7 +56,7 @@ const LocalBranchItem = ({
 
   return (
     <div className="flex items-center w-full">
-      <span className='flex-1 truncate'>{branch}</span>
+      <span className='flex-1 truncate'>{branch} {isCurrent ? '*' : ''}</span>
       <div className='flex items-center gap-2'>
         {branch !== 'master' && (
           <PromptButton
