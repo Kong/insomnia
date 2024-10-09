@@ -249,11 +249,12 @@ export const EnvironmentKVEditor = forwardRef<EnvironmentEditorHandle, EditorPro
         ref={parentRef}
       >
         {kvPair => {
-          const { id, type } = kvPair;
+          const { id, type, name } = kvPair;
           return (
             <ListBoxItem
               key={id}
               id={id}
+              textValue={name}
               className={`w-full flex group focus:outline-none ${type === 'json' ? 'h-[--line-height-lg]' : 'h-[--line-height-sm]'}`}
             >
               {renderPairItem(kvPair)}

@@ -15,7 +15,9 @@ import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo }
 import { EnvironmentKVEditor } from '../components/editors/environment-key-value-editor/key-value-editor';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
+import { showModal } from '../components/modals';
 import { showAlert } from '../components/modals';
+import { AskModal } from '../components/modals/ask-modal';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
 import type { WorkspaceLoaderData } from './workspace';
 
@@ -460,17 +462,35 @@ const Environments = () => {
                   const newEnvironmentType = isSelected ? EnvironmentType.JSON : EnvironmentType.KVPAIR;
                   // clear kvPairData when switch to json view, otherwise convert json data to kvPairData
                   const kvPairData = isSelected ? [] : getKVPairFromData(selectedEnvironment.data, selectedEnvironment.dataPropertyOrder);
-                  updateEnvironmentFetcher.submit(JSON.stringify({
-                    patch: {
-                      environmentType: newEnvironmentType,
-                      kvPairData: kvPairData,
-                    },
-                    environmentId: selectedEnvironment._id,
-                  }), {
-                    method: 'post',
-                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-                    encType: 'application/json',
-                  });
+                  const shouldShowConfirmModal = isSelected && selectedEnvironment.kvPairData?.some(pair => !pair.enabled);
+                  const toggleSwitchEnvironmentType = () => {
+                    updateEnvironmentFetcher.submit(JSON.stringify({
+                      patch: {
+                        environmentType: newEnvironmentType,
+                        kvPairData: kvPairData,
+                      },
+                      environmentId: selectedEnvironment._id,
+                    }), {
+                      method: 'post',
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
+                      encType: 'application/json',
+                    });
+                  };
+                  if (shouldShowConfirmModal) {
+                    showModal(AskModal, {
+                      title: 'Change Environment Type',
+                      message: (
+                        <p>Convert current environment to JSON will lose all disabled key value pairs, are you sure to continue?</p>
+                      ),
+                      onDone: async (saidYes: boolean) => {
+                        if (saidYes) {
+                          toggleSwitchEnvironmentType();
+                        }
+                      },
+                    });
+                  } else {
+                    toggleSwitchEnvironmentType();
+                  }
                 }}
                 isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
                 className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 h-full rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"

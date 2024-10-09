@@ -11,6 +11,7 @@ import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
+import { EnvironmentType } from '../../models/environment';
 import { getById, update } from '../../models/helpers/request-operations';
 import type { MockServer } from '../../models/mock-server';
 import { isRemoteProject, type Project } from '../../models/project';
@@ -28,7 +29,6 @@ import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { SpectralRunner } from '../worker/spectral-run';
-import { EnvironmentType } from '../../models/environment';
 
 export const updateProjectAction: ActionFunction = async ({
   request,
