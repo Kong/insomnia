@@ -186,6 +186,7 @@ const RemoteBranchItem = ({
     </div>
   );
 };
+
 interface Props {
   branches: string[];
   remoteBranches: string[];
@@ -233,7 +234,7 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
           {({ close }) => (
             <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
               <div className='flex-shrink-0 flex gap-2 items-center justify-between'>
-                <Heading className='text-2xl'>Branches</Heading>
+                <Heading slot="title" className='text-2xl'>Branches</Heading>
                 <Button
                   className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   onPress={close}
@@ -299,7 +300,7 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
               </div>
 
               {remoteBranches.length > 0 && (
-                <div className='select-none border border-solid rounded border-[--hl-sm] divide-y divide-solid divide-[--hl-sm]'>
+                <div className='flex-1 max-h-96 overflow-hidden flex flex-col select-none border border-solid rounded border-[--hl-sm] divide-y divide-solid divide-[--hl-sm]'>
                   <Heading className='font-semibold uppercase text-[--hl] text-sm p-2'>Remote Branches</Heading>
                   <GridList
                     aria-label='Remote Branches list'
