@@ -64,6 +64,12 @@ jobs:
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
+      - name: Ensure Inso binary can use spectral lint config out of project folder
+        run: |
+          cp -r packages/insomnia-inso/src/commands/fixtures/with-ruleset ../tempfolder
+          echo "Expected: warnings, not ES Module errors"
+          packages/insomnia-inso/binaries/inso lint spec ../tempfolder/path-plugin.yaml
+          
       - name: Run Inso binary e2e tests
         run: npm run test:binary -w insomnia-inso
 
