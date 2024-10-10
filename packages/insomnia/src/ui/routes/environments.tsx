@@ -1,6 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { useEffect, useRef, useState } from 'react';
-import { Breadcrumb, Breadcrumbs, Button, DropIndicator, GridList, GridListItem, Heading, Label, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, Text, useDragAndDrop } from 'react-aria-components';
+import { Breadcrumb, Breadcrumbs, Button, DropIndicator, GridList, GridListItem, Heading, Label, Menu, MenuItem, MenuTrigger, Popover, Text, useDragAndDrop } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { NavLink, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
@@ -327,7 +327,7 @@ const Environments = () => {
                         className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                       >
                         {item => (
-                          <ListBoxItem
+                          <MenuItem
                             key={item.id}
                             id={item.id}
                             className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -335,7 +335,7 @@ const Environments = () => {
                           >
                             <Icon className='w-5' icon={item.icon} />
                             <span>{item.name}</span>
-                          </ListBoxItem>
+                          </MenuItem>
                         )}
                       </Menu>
                     </Popover>
