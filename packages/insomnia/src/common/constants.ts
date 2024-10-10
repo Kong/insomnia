@@ -58,6 +58,8 @@ export const getClientString = () => `${getAppEnvironment()}::${getAppPlatform()
 // Global Stuff
 export const DEBOUNCE_MILLIS = 100;
 
+export const CLOUDFLARE_CACHE_INVALIDATION_TTL = 10_000; // 10 seconds
+
 export const STATUS_CODE_PLUGIN_ERROR = -222;
 export const LARGE_RESPONSE_MB = 5;
 export const HUGE_RESPONSE_MB = 100;
