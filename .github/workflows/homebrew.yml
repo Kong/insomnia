@@ -33,7 +33,7 @@ jobs:
         run: brew install-bundler-gems
 
       - name: Add "Versions" Tap
-        run: brew tap homebrew/homebrew-cask-versions
+        run: brew tap homebrew/homebrew-cask --force
 
       - name: Configure Git user
         uses: Homebrew/actions/git-user-config@master
@@ -46,18 +46,18 @@ jobs:
       # Update Homebrew's Inso(mnia) formulae
       # https://github.com/Homebrew/actions/tree/master/bump-formulae
       - name: Bump Inso (Beta) Formula
-        uses: Homebrew/actions/bump-formulae@master
+        uses: Homebrew/actions/bump-packages@master
         with:
           token: ${{ secrets.HOMEBREW_PR_GH_TOKEN }}
-          formulae: inso-beta
+          casks: inso@beta
       - name: Bump Inso Formula
-        uses: Homebrew/actions/bump-formulae@master
+        uses: Homebrew/actions/bump-packages@master
         with:
           token: ${{ secrets.HOMEBREW_PR_GH_TOKEN }}
-          formulae: inso
+          casks: inso
       - name: Bump Insomnia Formula
-        uses: Homebrew/actions/bump-formulae@master
+        uses: Homebrew/actions/bump-packages@master
         with:
           token: ${{ secrets.HOMEBREW_PR_GH_TOKEN }}
           # Bump only these formulae if outdated
-          formulae: insomnia
+          casks: insomnia
