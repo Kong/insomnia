@@ -1,0 +1,120 @@
+_type: export
+__export_format: 4
+__export_date: 2024-10-10T08:43:54.626Z
+__export_source: insomnia.desktop.app:v10.1.0-beta.2
+resources:
+  - _id: req_05d360edc7724a3ea4ff91fac2165521
+    parentId: wrk_c0fb97811e7644ed979a60dff28e16e0
+    modified: 1728549768587
+    created: 1670587797191
+    url: localhost:4010/
+    name: New Request
+    description: ""
+    method: GET
+    body:
+      mimeType: text/plain
+      text: |-
+        {{ _.exampleObject.anotherString }}
+        {{ _.exampleString }}
+        {{ _.exampleNumber }}
+        {{ _.exampleObject.anotherNumber }}
+        {{ _['global-base'] }}
+        {{ _['global-sub'] }}
+    parameters: []
+    headers:
+      - name: Content-Type
+        value: text/plain
+    authentication: {}
+    metaSortKey: -1670587797191
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_c0fb97811e7644ed979a60dff28e16e0
+    parentId: null
+    modified: 1728549792915
+    created: 1728549673757
+    name: collection-for-global-environments
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: env_cd7a3555ee4a4840b9d16ff5522cefbe
+    parentId: wrk_c0fb97811e7644ed979a60dff28e16e0
+    modified: 1670587811762
+    created: 1670587793246
+    name: Base Environment
+    data:
+      exampleString: baseenv0
+      exampleNumber: 1001
+      exampleObject:
+        anotherString: baseenv1
+        anotherNumber: 1001
+    dataPropertyOrder:
+      "&":
+        - exampleString
+        - exampleNumber
+        - exampleObject
+      "&~|exampleObject":
+        - anotherString
+        - anotherNumber
+    color: null
+    isPrivate: false
+    metaSortKey: 1670587793246
+    _type: environment
+  - _id: jar_559d8cd02c5d4ec2a6220a9ad0cfbec7
+    parentId: wrk_c0fb97811e7644ed979a60dff28e16e0
+    modified: 1670587793248
+    created: 1670587793248
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: env_21d872b03ba2458fb86e0cdf242428c4
+    parentId: env_cd7a3555ee4a4840b9d16ff5522cefbe
+    modified: 1670587818649
+    created: 1670587812382
+    name: ExampleA
+    data:
+      exampleString: subenvA0
+      exampleNumber: 1111
+      exampleObject:
+        anotherString: subenvA1
+        anotherNumber: 1111
+    dataPropertyOrder:
+      "&":
+        - exampleString
+        - exampleNumber
+        - exampleObject
+      "&~|exampleObject":
+        - anotherString
+        - anotherNumber
+    color: null
+    isPrivate: false
+    metaSortKey: 1670587812382
+    _type: environment
+  - _id: env_03237e870e584a71b5414a0769dcc524
+    parentId: env_cd7a3555ee4a4840b9d16ff5522cefbe
+    modified: 1670587831933
+    created: 1670587826837
+    name: ExampleB
+    data:
+      exampleString: subenvB0
+      exampleNumber: 2222
+      exampleObject:
+        anotherString: subenvB1
+        anotherNumber: 2222
+    dataPropertyOrder:
+      "&":
+        - exampleString
+        - exampleNumber
+        - exampleObject
+      "&~|exampleObject":
+        - anotherString
+        - anotherNumber
+    color: null
+    isPrivate: false
+    metaSortKey: 1670587826837
+    _type: environment
