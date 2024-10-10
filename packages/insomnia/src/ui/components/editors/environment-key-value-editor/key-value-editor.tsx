@@ -7,6 +7,7 @@ import { PromptButton } from '../../base/prompt-button';
 import { CodeEditor } from '../../codemirror/code-editor';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { Icon } from '../../icon';
+import { Tooltip } from '../../tooltip';
 import type { EnvironmentEditorHandle } from '../environment-editor';
 import { checkNestedKeys } from '../environment-utils';
 
@@ -111,6 +112,8 @@ export const EnvironmentKVEditor = forwardRef<EnvironmentEditorHandle, EditorPro
 
   const renderPairItem = (kvPair: EnvironmentKvPairData) => {
     const { id, name, value, type, enabled = false } = kvPair;
+    const itemIndex = kvPairs.findIndex(pair => pair.id === id);
+    const hasItemWithSameNameAfter = name !== '' && kvPairs.slice(itemIndex + 1).some(pair => pair.name.trim() === name.trim());
     const isValidJSONString = checkValidJSONString(value);
     return (
       <>
@@ -137,6 +140,11 @@ export const EnvironmentKVEditor = forwardRef<EnvironmentEditorHandle, EditorPro
             defaultValue={name}
             onChange={newName => handleItemChange(id, 'name', newName)}
           />
+          {hasItemWithSameNameAfter &&
+            <Tooltip message={`Duplicate name: ${name}. Only the last item with same name will be used.`} delay={200}>
+              <i className="fa fa-exclamation-circle text-[--color-warning]" />
+            </Tooltip>
+          }
         </div>
         <div className={`${cellCommonStyle} w-32`}>
           <Select
@@ -261,7 +269,7 @@ export const EnvironmentKVEditor = forwardRef<EnvironmentEditorHandle, EditorPro
 
   return (
     <div className="p-[--padding-sm] min-w-max h-full overflow-hidden flex flex-col">
-      <div className="min-w-full flex h-[--line-height-xxs]">
+      <div className="w-full flex h-[--line-height-xxs]">
         <span className={`${headerStyle} w-20 flex-shrink-0`} />
         <span className={`${headerStyle} w-[25%] flex flex-grow`}>Name</span>
         <span className={`${headerStyle} w-32`}>Type</span>
