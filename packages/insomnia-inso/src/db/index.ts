@@ -84,7 +84,8 @@ export const loadDb = async ({
 
   logger.warn(
     `No git, app data store or Insomnia V4 export file found at path "${pathToSearch}",
-      re-run --verbose to see tracing information`,
+     --workingDir/-w should point to a git repository root, an Insomnia export file or a directory containing Insomnia data.
+      re-run with --verbose to see tracing information`,
   );
 
   return emptyDb();

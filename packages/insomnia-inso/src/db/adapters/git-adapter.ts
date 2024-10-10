@@ -10,11 +10,15 @@ const gitAdapter: DbAdapter = async (dir, filterTypes) => {
   if (!dir) {
     return null;
   }
-  const workspaceFolder = path.join(dir, '.insomnia', 'Workspace');
+  const insomniaFolder = path.join(dir, '.insomnia');
+  let files = null;
   try {
-    await fs.promises.readdir(workspaceFolder);
+    files = await fs.promises.readdir(insomniaFolder);
   } catch (error) {
-  // console.error(`Failed to read "${workspaceFolder}"`, error);
+    if (files?.length === 0) {
+      console.error(`.insomnia folder found at "${insomniaFolder}"
+        but no files found inside. Ensure your workingDir is correct.`);
+    }
     return null;
   }
 
