@@ -28,8 +28,7 @@
     "build": "esr esbuild.ts",
     "build:production": "cross-env NODE_ENV=production esr esbuild.ts",
     "start": "ESBUILD_WATCH=true esr esbuild.ts",
-    "prepackage": "npm run build:production && rm -rf binaries/inso",
-    "package": "npx -y @yao-pkg/pkg@5.11.5 . --output binaries/inso --targets host",
+    "package": "rm -rf binaries/inso && npx -y @yao-pkg/pkg@5.11.5 . --output binaries/inso --targets host",
     "postpackage": "node src/scripts/verify-pkg.js",
     "artifacts": "esr src/scripts/artifacts.ts"
   },
