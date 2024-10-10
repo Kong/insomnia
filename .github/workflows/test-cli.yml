@@ -66,7 +66,7 @@ jobs:
 
   # local dx: 
   # cp -r packages/insomnia-inso/src/commands/fixtures/with-ruleset ../tempfolder
-  # npm run build -w insomnia-inso && npm run  && $PWD/packages/insomnia-inso/binaries/inso lint spec ../tempfolder/path-plugin.yaml
+  # npm run build -w insomnia-inso && npm run package -w insomnia-inso && $PWD/packages/insomnia-inso/binaries/inso lint spec ../tempfolder/path-plugin.yaml
       - name: Ensure Inso binary can use spectral lint config out of project folder
         run: |
           cp -r packages/insomnia-inso/src/commands/fixtures/with-ruleset ../tempfolder
