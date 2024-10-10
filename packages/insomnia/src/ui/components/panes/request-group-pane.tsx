@@ -203,18 +203,25 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
                     const newEnvironmentType = isSelected ? EnvironmentType.JSON : EnvironmentType.KVPAIR;
                     // clear kvPairData when switch to json view, otherwise convert json data to kvPairData
                     const kvPairData = isSelected ? [] : getKVPairFromData(activeRequestGroup.environment, activeRequestGroup.environmentPropertyOrder);
-                    const shouldShowConfirmModal = isSelected && activeRequestGroup.kvPairData?.some(pair => !pair.enabled);
+                    const foundDisabledItem = isSelected && activeRequestGroup.kvPairData?.some(pair => !pair.enabled);
+                    const foundDuplicateNameItem = isSelected && activeRequestGroup.kvPairData?.some(
+                      (pair, idx) => activeRequestGroup.kvPairData?.slice(idx + 1).some(newPair => pair.name.trim() === newPair.name.trim())
+                    );
                     const toggleSwitchEnvironmentType = () => {
                       patchGroup(activeRequestGroup._id, {
                         environmentType: newEnvironmentType,
                         kvPairData: kvPairData,
                       });
                     };
-                    if (shouldShowConfirmModal) {
+                    if (foundDisabledItem || foundDuplicateNameItem) {
                       showModal(AskModal, {
                         title: 'Change Environment Type',
                         message: (
-                          <p>Convert current environment to JSON will lose all disabled key value pairs, are you sure to continue?</p>
+                          <>
+                            {foundDisabledItem && <p>All disabled items will be lost.</p>}
+                            {foundDuplicateNameItem && <p>Items with same name will be lost except the last one.</p>}
+                            <p>Are you sure to continue?</p>
+                          </>
                         ),
                         onDone: async (saidYes: boolean) => {
                           if (saidYes) {
@@ -248,7 +255,6 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
             <div className='h-[calc(100%-var(--line-height-md))] flex flex-col'>
               {activeRequestGroup && activeRequestGroup.environmentType === EnvironmentType.KVPAIR ?
                 <EnvironmentKVEditor
-                  ref={environmentEditorRef}
                   key={activeRequestGroup ? activeRequestGroup._id : 'n/a'}
                   data={activeRequestGroup?.kvPairData || []}
                   onChange={handleKVPairChange}

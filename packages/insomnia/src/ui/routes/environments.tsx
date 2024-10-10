@@ -462,7 +462,10 @@ const Environments = () => {
                   const newEnvironmentType = isSelected ? EnvironmentType.JSON : EnvironmentType.KVPAIR;
                   // clear kvPairData when switch to json view, otherwise convert json data to kvPairData
                   const kvPairData = isSelected ? [] : getKVPairFromData(selectedEnvironment.data, selectedEnvironment.dataPropertyOrder);
-                  const shouldShowConfirmModal = isSelected && selectedEnvironment.kvPairData?.some(pair => !pair.enabled);
+                  const foundDisabledItem = isSelected && selectedEnvironment.kvPairData?.some(pair => !pair.enabled);
+                  const foundDuplicateNameItem = isSelected && selectedEnvironment.kvPairData?.some(
+                    (pair, idx) => selectedEnvironment.kvPairData?.slice(idx + 1).some(newPair => pair.name.trim() === newPair.name.trim())
+                  );
                   const toggleSwitchEnvironmentType = () => {
                     updateEnvironmentFetcher.submit(JSON.stringify({
                       patch: {
@@ -476,11 +479,15 @@ const Environments = () => {
                       encType: 'application/json',
                     });
                   };
-                  if (shouldShowConfirmModal) {
+                  if (foundDisabledItem || foundDuplicateNameItem) {
                     showModal(AskModal, {
                       title: 'Change Environment Type',
                       message: (
-                        <p>Convert current environment to JSON will lose all disabled key value pairs, are you sure to continue?</p>
+                        <>
+                          {foundDisabledItem && <p>All disabled items will be lost.</p>}
+                          {foundDuplicateNameItem && <p>Items with same name will be lost except the last one.</p>}
+                          <p>Are you sure to continue?</p>
+                        </>
                       ),
                       onDone: async (saidYes: boolean) => {
                         if (saidYes) {
@@ -493,7 +500,7 @@ const Environments = () => {
                   }
                 }}
                 isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
-                className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 h-full rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
+                className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
               >
                 {({ isSelected }) => (
                   <Fragment>
@@ -520,7 +527,6 @@ const Environments = () => {
           }
           {selectedEnvironment && selectedEnvironment.environmentType === EnvironmentType.KVPAIR &&
             <EnvironmentKVEditor
-              ref={environmentEditorRef}
               key={selectedEnvironment._id}
               data={selectedEnvironment.kvPairData || []}
               onChange={handleKVPairChange}

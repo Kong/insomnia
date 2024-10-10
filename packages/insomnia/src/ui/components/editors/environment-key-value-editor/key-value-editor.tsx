@@ -1,4 +1,4 @@
-import React, { forwardRef, useRef } from 'react';
+import React, { useRef } from 'react';
 import { Button, DropIndicator, ListBox, ListBoxItem, Popover, Select, SelectValue, ToggleButton, useDragAndDrop } from 'react-aria-components';
 
 import { generateId } from '../../../../common/misc';
@@ -8,7 +8,6 @@ import { CodeEditor } from '../../codemirror/code-editor';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { Icon } from '../../icon';
 import { Tooltip } from '../../tooltip';
-import type { EnvironmentEditorHandle } from '../environment-editor';
 import { checkNestedKeys } from '../environment-utils';
 
 interface EditorProps {
@@ -26,10 +25,7 @@ const createNewPair = (): EnvironmentKvPairData => ({
   enabled: false,
 });
 
-export const EnvironmentKVEditor = forwardRef<EnvironmentEditorHandle, EditorProps>(({
-  data,
-  onChange,
-}, ref) => {
+export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
   const kvPairs: EnvironmentKvPairData[] = data.length > 0 ? [...data] : [createNewPair()];
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -300,5 +296,5 @@ export const EnvironmentKVEditor = forwardRef<EnvironmentEditorHandle, EditorPro
       </ListBox>
     </div>
   );
-});
+};
 EnvironmentKVEditor.displayName = 'EnvironmentKeyValueEditor';
