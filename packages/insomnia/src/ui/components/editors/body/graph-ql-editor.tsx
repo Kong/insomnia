@@ -6,7 +6,7 @@ import type { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
 import { buildClientSchema, type DefinitionNode, type DocumentNode, getIntrospectionQuery, GraphQLNonNull, GraphQLSchema, Kind, type NonNullTypeNode, type OperationDefinitionNode, OperationTypeNode, parse, typeFromAST } from 'graphql';
 import type { Maybe } from 'graphql-language-service';
-import React, { type FC, useEffect, useRef, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Group, Heading, Toolbar, Tooltip, TooltipTrigger } from 'react-aria-components';
 import ReactDOM from 'react-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -30,6 +30,19 @@ import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
 import { TimeFromNow } from '../../time-from-now';
+
+// Type guard to ensure loc is non-nullable
+const hasLocation = (def: OperationDefinitionNode): def is OperationDefinitionNode & { loc: NonNullable<OperationDefinitionNode['loc']> } => {
+  return def.loc !== null && def.loc !== undefined;
+};
+/** note that `null` is a valid operation name.  For example, `null` is the operation name of an anonymous `query` operation. */
+const matchesOperation = (operationName: string | null | undefined) => ({ name }: OperationDefinitionNode) => {
+  // For matching an anonymous function, `operationName` will be `null` and `operation.name` will be `undefined`
+  if (!operationName && !name) {
+    return true;
+  }
+  return name?.value === operationName;
+};
 
 function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: string, variables?: string): string {
   // the body object is one dimensional, so we don't need to worry about shallow copying.
@@ -167,7 +180,7 @@ const fetchGraphQLSchemaForRequest = async ({
 interface GraphQLBody {
   query: string;
   variables?: string;
-  operationName?: string;
+  operationName?: string | null;
 }
 
 interface Props {
@@ -187,7 +200,6 @@ interface State {
   activeReference: null | ActiveReference;
   documentAST: null | DocumentNode;
   operationType?: OperationTypeNode;
-  disabledOperationMarkers: (TextMarker | undefined)[];
 }
 
 export const GraphQLEditor: FC<Props> = ({
@@ -215,6 +227,7 @@ export const GraphQLEditor: FC<Props> = ({
   }
   const operations = documentAST?.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '').filter(Boolean) || [];
   const operationName = requestBody.operationName || operations[0] || '';
+  const disabledOperationMarkers = useRef<TextMarker[]>([]);
   const [state, setState] = useState<State>({
     body: {
       query: requestBody.query || '',
@@ -226,7 +239,6 @@ export const GraphQLEditor: FC<Props> = ({
     activeReference: null,
     explorerVisible: false,
     documentAST,
-    disabledOperationMarkers: [],
   });
 
   const [automaticFetch, setAutoFetch] = useLocalStorage<boolean>(
@@ -287,11 +299,12 @@ export const GraphQLEditor: FC<Props> = ({
   useDocBodyKeyboardShortcuts({
     beautifyRequestBody,
   });
-  const changeOperationName = (operationName: string) => {
+  const changeOperationName = useCallback((operationName: string) => {
     const content = getGraphQLContent(state.body, undefined, operationName);
     onChange(content);
     setState(prevState => ({ ...prevState, body: { ...prevState.body, operationName } }));
-  };
+  }, [onChange, state.body]);
+
   const changeVariables = (variablesInput: string) => {
     try {
       const content = getGraphQLContent(state.body, undefined, operationName, variablesInput);
@@ -480,6 +493,95 @@ export const GraphQLEditor: FC<Props> = ({
     };
   }
   const canShowSchema = schema && !schemaIsFetching && !schemaFetchError && schemaLastFetchTime > 0;
+
+  const highlightOperation = useCallback((operationName?: string | null) => {
+
+    if (!state.documentAST || !editorRef.current) {
+      return;
+    }
+
+    // Remove current query highlighting
+    for (const textMarker of disabledOperationMarkers?.current) {
+      textMarker.clear();
+    }
+
+    disabledOperationMarkers.current = state.documentAST?.definitions
+      .filter(isOperationDefinition)
+      .filter(name => {
+        const fn = matchesOperation(operationName);
+        return !fn(name);
+      })
+      .filter(hasLocation)
+      .map(({ loc: { startToken, endToken } }) => {
+        const from = {
+          line: startToken.line - 1,
+          ch: startToken.column - 1,
+        };
+        const to = {
+          line: endToken.line,
+          ch: endToken.column - 1,
+        };
+
+        return editorRef.current?.getDoc()?.markText(from, to, {
+          className: 'opacity-70',
+        }) as TextMarker;
+      });
+  }, [state.documentAST]);
+
+  const getCurrentOperation = useCallback(() => {
+
+    if (!editorRef.current || !editorRef.current.hasFocus()) {
+      return state.body.operationName || null;
+    }
+
+    const operationDefinitions = state.documentAST?.definitions.filter(isOperationDefinition) || [];
+
+    const cursor = editorRef.current.getCursor();
+
+    const cursorIndex = editorRef.current.indexFromPos(cursor);
+
+    let operationName: string | null = null;
+    const allOperationNames: (string | null)[] = [];
+
+    // Loop through all operationDefinitions to see if one contains the cursor.
+    for (let i = 0; i < operationDefinitions.length; i++) {
+      const operation = operationDefinitions[i];
+
+      if (!operation.name) {
+        continue;
+      }
+
+      allOperationNames.push(operation.name.value);
+      const { start = 0, end = 0 } = operation.loc || {};
+
+      if (start <= cursorIndex && end >= cursorIndex) {
+        operationName = operation.name.value;
+      }
+    }
+
+    if (!operationName && operations.length > 0) {
+      operationName = state.body.operationName || null;
+    }
+
+    if (!allOperationNames.includes(operationName)) {
+      return null;
+    }
+
+    return operationName;
+  }, [operations.length, state.body.operationName, state.documentAST?.definitions]);
+
+  const handleQueryUserActivity = useCallback(() => {
+    const newOperationName = getCurrentOperation();
+
+    if (newOperationName !== state.body.operationName) {
+      changeOperationName(newOperationName || '');
+    }
+  }, [changeOperationName, getCurrentOperation, state.body.operationName]);
+
+  useEffect(() => {
+    highlightOperation(state.body.operationName);
+  }, [highlightOperation, state.body.operationName]);
+
   return (
     <>
       <Toolbar aria-label='GraphQL toolbar' className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
@@ -615,6 +717,8 @@ export const GraphQLEditor: FC<Props> = ({
             defaultValue={requestBody.query || ''}
             className={className}
             onChange={changeQuery}
+            onCursorActivity={handleQueryUserActivity}
+            onFocus={handleQueryUserActivity}
             mode="graphql"
             placeholder=""
             hintOptions={graphqlOptions?.hintOptions}
