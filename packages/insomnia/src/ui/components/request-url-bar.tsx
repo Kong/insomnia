@@ -51,18 +51,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     if (searchParams.has('envVariableMissing') && searchParams.get('undefinedEnvironmentVariables')) {
       setShowEnvVariableMissingModal(true);
       setUndefinedEnvironmentVariables(searchParams.get('undefinedEnvironmentVariables')!);
-    } else {
-      showAlert({
-        title: 'Unexpected Request Failure',
-        message: (
-          <div>
-            <p>The request failed due to an unhandled error:</p>
-            <code className="wide selectable">
-              <pre>{searchParams.get('error')}</pre>
-            </code>
-          </div>
-        ),
-      });
     }
 
     // clean up params
