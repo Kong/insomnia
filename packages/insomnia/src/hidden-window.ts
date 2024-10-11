@@ -22,7 +22,8 @@ window.bridge.onmessage(async (data, callback) => {
     callback(result);
   } catch (err) {
     console.error('error', err);
-    callback({ error: err || err.message });
+    const errMessage = err.message ? `message: ${err.message}; stack: ${err.stack}` : err;
+    callback({ error: errMessage });
   } finally {
     window.bridge.setBusy(false);
   }

@@ -273,7 +273,7 @@ export const Runner: FC<{}> = () => {
     // convert uploadData to environment data
     const userUploadEnvs = uploadData.map(data => {
       const orderedJson = porderedJSON.parse<UploadDataType>(
-        JSON.stringify(data),
+        JSON.stringify(data || []),
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
@@ -859,6 +859,7 @@ export interface runCollectionActionParams {
   bail: boolean;
 }
 
+// don't forget also apply modification on this function to the cli.ts at the moment
 export const runCollectionAction: ActionFunction = async ({ request, params }) => {
   const { organizationId, projectId, workspaceId } = params;
   invariant(organizationId, 'Organization id is required');
