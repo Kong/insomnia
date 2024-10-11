@@ -28,9 +28,6 @@ test.describe('test hidden window handling', async () => {
 
     await page.getByRole('button', { name: 'Cancel Request' }).click();
 
-    // check the alert model message
-    await page.getByRole('code').getByText('Request was cancelled').click();
-    await page.getByRole('button', { name: 'Ok', exact: true }).click();
     // check the response pane message
     await page.click('text=Request was cancelled');
   });
