@@ -89,6 +89,7 @@ const config = {
         target: 'squirrel',
       },
     ],
+    signAndEditExecutable: false, // false to prevent unused winCodeSign download
   },
   squirrelWindows: {
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
