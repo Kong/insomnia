@@ -422,7 +422,13 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     console.log('[request] Failed to send request', err);
     const e = err.error || err;
 
+    // when after-script error, there is no error in response, we need to set error info into response, so that we can show it in response viewer
     if (err.response && err.requestMeta && err.response._id) {
+      if (!err.response.error) {
+        err.response.error = e;
+        err.response.statusMessage = 'Error';
+        err.response.statusCode = 0;
+      }
       // this part is for persisting useful info (e.g. timeline) for debugging, even there is an error
       const existingResponse = await models.response.getById(err.response._id);
       const response = existingResponse || await models.response.create(err.response, err.maxHistoryResponses);
@@ -484,10 +490,21 @@ export const sendActionImplementation = async ({
 }) => {
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
+  const requestMeta = await models.requestMeta.getByParentId(requestId);
   window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
   const mutatedContext = await tryToExecutePreRequestScript(requestData, userUploadEnvironment, iteration, iterationCount);
   if ('error' in mutatedContext) {
     throw {
+      // create response with error info, so that we can store response in db and show it in response viewer
+      response: {
+        _id: requestData.responseId,
+        parentId: requestId,
+        environemntId: requestData.environment,
+        statusMessage: 'Error',
+        error: mutatedContext.error,
+      },
+      maxHistoryResponses: requestData.settings.maxHistoryResponses,
+      requestMeta,
       error: mutatedContext.error,
     };
   }
@@ -531,7 +548,6 @@ export const sendActionImplementation = async ({
   // TODO: remove this temporary hack to support GraphQL variables in the request body properly
   parseGraphQLReqeustBody(renderedRequest);
 
-  const requestMeta = await models.requestMeta.getByParentId(requestId);
   invariant(requestMeta, 'RequestMeta not found');
 
   window.main.addExecutionStep({ requestId, stepName: 'Sending request' });
