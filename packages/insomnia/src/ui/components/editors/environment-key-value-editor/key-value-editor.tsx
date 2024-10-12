@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Button, DropIndicator, ListBox, ListBoxItem, Popover, Select, SelectValue, ToggleButton, useDragAndDrop } from 'react-aria-components';
+import React, { useEffect, useRef } from 'react';
+import { Button, type ButtonProps, DropIndicator, ListBox, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, useDragAndDrop } from 'react-aria-components';
 
 import { generateId } from '../../../../common/misc';
 import { type EnvironmentKvPairData, EnvironmentKvPairDataType } from '../../../../models/environment';
@@ -25,9 +25,22 @@ const createNewPair = (): EnvironmentKvPairData => ({
   enabled: false,
 });
 
+// Add tab index -1 to button so that user can use tab navigation to editors
+const ItemButton = (props: ButtonProps & { tabIndex?: number }) => {
+  const { tabIndex, ...restProps } = props;
+  const btnRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (btnRef.current && typeof tabIndex === 'number') {
+      // add tab index
+      btnRef.current.tabIndex = tabIndex;
+    }
+  });
+
+  return <Button {...restProps} ref={btnRef} />;
+};
+
 export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
   const kvPairs: EnvironmentKvPairData[] = data.length > 0 ? [...data] : [createNewPair()];
-  const parentRef = useRef<HTMLDivElement>(null);
 
   const repositionInArray = (moveItems: string[], targetIndex: number) => {
     const removed = kvPairs.filter(pair => pair.id !== moveItems[0]);
@@ -77,7 +90,7 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
       // enable item since user modifies the item unless manual disbale it
       changedItem['enabled'] = true;
       changedItem[changedPropertyName] = newValue;
-      // update value to empty object json string when switch to json type and current value is empty string
+      // update value to emptfy object json string when switch to json type and current value is empty string
       if (newValue === EnvironmentKvPairDataType.JSON && changedItem.value.trim() === '') {
         changedItem.value = JSON.stringify({});
       }
@@ -106,6 +119,17 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
     }
   };
 
+  const kvPairItemTypes = [
+    {
+      id: EnvironmentKvPairDataType.STRING,
+      name: 'String',
+    },
+    {
+      id: EnvironmentKvPairDataType.JSON,
+      name: 'JSON',
+    },
+  ];
+
   const renderPairItem = (kvPair: EnvironmentKvPairData) => {
     const { id, name, value, type, enabled = false } = kvPair;
     const itemIndex = kvPairs.findIndex(pair => pair.id === id);
@@ -115,21 +139,22 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
       <>
         <div className={`${cellCommonStyle} p-0 w-20 flex flex-shrink-0 items-center justify-end`}>
           <Icon icon="grip-vertical" className="cursor-grab hidden mr-1 group-hover:inline" />
-          <Button
+          <ItemButton
             className="flex items-center disabled:opacity-50 justify-center h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             onPress={() => handleAddItem(id)}
+            tabIndex={-1}
           >
             <Icon icon="plus" />
-          </Button>
-          <ToggleButton
+          </ItemButton>
+          <ItemButton
             className="flex items-center justify-center h-7 aspect-square rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-            onChange={isSelect => handleItemChange(id, 'enabled', isSelect)}
-            isSelected={enabled}
+            tabIndex={-1}
+            onPress={() => handleItemChange(id, 'enabled', !enabled)}
           >
             <Icon icon={enabled ? 'check-square' : 'square'} />
-          </ToggleButton>
+          </ItemButton>
         </div>
-        <div className={`${cellCommonStyle} w-[25%] flex flex-grow`}>
+        <div className={`${cellCommonStyle} relative h-full w-[25%] flex flex-grow`}>
           <OneLineEditor
             id={`environment-kv-editor-name-${id}`}
             placeholder={'Input Name'}
@@ -142,41 +167,29 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
             </Tooltip>
           }
         </div>
-        <div className={`${cellCommonStyle} w-32`}>
-          <Select
-            selectedKey={type}
-            aria-label='environment-kv-editor-type-selector'
-            className='w-full'
-            onSelectionChange={newType => {
-              handleItemChange(id, 'type', newType as EnvironmentKvPairDataType);
-            }}
-            // Only valid json string or empty string allowed to convert to JSON type
-            disabledKeys={isValidJSONString || value.trim() === '' ? [] : [EnvironmentKvPairDataType.JSON]}
-          >
-            <Button className="py-1 px-[--padding-sm] w-full font-bold flex flex-1 items-center justify-between aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] text-sm">
-              <SelectValue className="flex truncate items-center justify-center gap-2" />
+        <div className={`${cellCommonStyle} w-32`} >
+          <MenuTrigger>
+            <ItemButton className="py-1 px-[--padding-sm] w-full font-bold flex flex-1 items-center justify-between aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] text-sm" tabIndex={-1}>
+              <span className="flex truncate items-center justify-center gap-2" >{kvPairItemTypes.find(t => t.id === type)?.name}</span>
               <Icon icon="caret-down" />
-            </Button>
+            </ItemButton>
             <Popover className='border-solid border-[--hl-sm] shadow-lg bg-[--color-bg]'>
-              <ListBox
-                items={
-                  [
-                    {
-                      id: EnvironmentKvPairDataType.STRING,
-                      name: 'String',
-                    },
-                    {
-                      id: EnvironmentKvPairDataType.JSON,
-                      name: 'JSON',
-                    },
-                  ]
-                }
+              <Menu
+                aria-label='environment-kv-editor-type-selector'
+                selectionMode="single"
+                selectedKeys={[type]}
+                // Only valid json string or empty string allowed to convert to JSON type
+                disabledKeys={isValidJSONString || value.trim() === '' ? [] : [EnvironmentKvPairDataType.JSON]}
+                items={kvPairItemTypes}
               >
                 {item => (
-                  <ListBoxItem
-                    className="aria-disabled:text-[--hl-lg] aria-disabled:cursor-not-allowed aria-disabled:bg-transparent flex gap-2 pl-[--padding-sm] pr-[--padding-xl] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none transition-colors text-sm react-aria-ListBoxItem"
+                  <MenuItem
+                    key={item.id}
+                    id={item.id}
+                    className="aria-disabled:text-[--hl-lg] aria-disabled:cursor-not-allowed aria-disabled:bg-transparent flex gap-2 pl-[--padding-sm] pr-[--padding-xl] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full
+                      text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none transition-colors text-sm react-aria-ListBoxItem"
                     aria-label={item.name}
-                    textValue={item.name}
+                    onAction={() => handleItemChange(id, 'type', item.id)}
                   >
                     {({ isSelected }) => (
                       <>
@@ -189,22 +202,20 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
                         )}
                       </>
                     )}
-                  </ListBoxItem>
+                  </MenuItem>
                 )}
-              </ListBox>
+              </Menu>
             </Popover>
-          </Select>
+          </MenuTrigger>
         </div>
         <div className={`${cellCommonStyle} w-[50%] relative`}>
           {type === EnvironmentKvPairDataType.STRING ?
-            <div className="h-full w-full flex flex-1 px-2">
-              <OneLineEditor
-                id={`environment-kv-editor-value-${id}`}
-                placeholder={'Input Value'}
-                defaultValue={value.toString()}
-                onChange={newValue => handleItemChange(id, 'value', newValue)}
-              />
-            </div> :
+            <OneLineEditor
+              id={`environment-kv-editor-value-${id}`}
+              placeholder={'Input Value'}
+              defaultValue={value.toString()}
+              onChange={newValue => handleItemChange(id, 'value', newValue)}
+            /> :
             <CodeEditor
               id={`environment-kv-editor-value-${id}`}
               className="w-full h-full py-1 editor--environment-inline"
@@ -247,13 +258,14 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
             />
           }
         </div>
-        <div className={`${cellCommonStyle} w-14`}>
+        <div className={`${cellCommonStyle} w-14`} >
           <PromptButton
             disabled={kvPairs.length <= 1}
             className="flex	items-center disabled:opacity-50 justify-center h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             fullWidth
             confirmMessage=''
             doneMessage=''
+            tabIndex={-1}
             onClick={() => handleDeleteItem(id)}
           >
             <Icon icon="trash-can" />
@@ -263,9 +275,13 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
     );
   };
 
+  useEffect(() => {
+
+  }, []);
+
   return (
     <div className="p-[--padding-sm] min-w-max h-full overflow-hidden flex flex-col">
-      <div className="w-full flex h-[--line-height-xxs]">
+      <div className="w-full flex h-[--line-height-xxs]" >
         <span className={`${headerStyle} w-20 flex-shrink-0`} />
         <span className={`${headerStyle} w-[25%] flex flex-grow`}>Name</span>
         <span className={`${headerStyle} w-32`}>Type</span>
@@ -278,7 +294,6 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
         dragAndDropHooks={dragAndDropHooks}
         className="w-full overflow-y-auto py-1 h-full"
         items={kvPairs}
-        ref={parentRef}
       >
         {kvPair => {
           const { id, name, type } = kvPair;
