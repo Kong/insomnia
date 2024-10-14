@@ -936,6 +936,21 @@ async function renderApp() {
                                       (await import('./routes/git-actions')).pushToGitRemoteAction(...args),
                                   },
                                   {
+                                    path: 'stage',
+                                    action: async (...args) =>
+                                      (await import('./routes/git-actions')).stageChangesAction(...args),
+                                  },
+                                  {
+                                    path: 'unstage',
+                                    action: async (...args) =>
+                                      (await import('./routes/git-actions')).unstageChangesAction(...args),
+                                  },
+                                  {
+                                    path: 'diff',
+                                    loader: async (...args) =>
+                                      (await import('./routes/git-actions')).diffFileLoader(...args),
+                                  },
+                                  {
                                     path: 'branch',
                                     children: [
                                       {

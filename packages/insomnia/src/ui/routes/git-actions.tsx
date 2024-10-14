@@ -7,7 +7,6 @@ import YAML from 'yaml';
 import { ACTIVITY_SPEC } from '../../common/constants';
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { isApiSpec } from '../../models/api-spec';
 import type { GitRepository } from '../../models/git-repository';
 import { createGitRepository } from '../../models/helpers/git-repository-operations';
 import {
@@ -26,7 +25,6 @@ import GitVCS, {
 } from '../../sync/git/git-vcs';
 import { MemClient } from '../../sync/git/mem-client';
 import { NeDBClient } from '../../sync/git/ne-db-client';
-import parseGitPath from '../../sync/git/parse-git-path';
 import { routableFSClient } from '../../sync/git/routable-fs-client';
 import { shallowClone } from '../../sync/git/shallow-clone';
 import {
@@ -283,9 +281,17 @@ export const gitLogLoader: LoaderFunction = async ({
 };
 
 export interface GitChangesLoaderData {
-  changes: GitChange[];
+  changes: {
+    staged: {
+      name: string;
+      path: string;
+    }[];
+    unstaged: {
+      name: string;
+      path: string;
+    }[];
+  };
   branch: string;
-  statusNames: Record<string, string>;
 }
 
 export const gitChangesLoader: LoaderFunction = async ({
@@ -304,8 +310,10 @@ export const gitChangesLoader: LoaderFunction = async ({
   if (!repoId) {
     return {
       branch: '',
-      changes: [],
-      statusNames: {},
+      changes: {
+        staged: [],
+        unstaged: [],
+      },
     };
   }
 
@@ -315,22 +323,26 @@ export const gitChangesLoader: LoaderFunction = async ({
 
   const branch = await GitVCS.getCurrentBranch();
   try {
-    const { changes, statusNames } = await getGitChanges(GitVCS, workspace);
+    const { changes, hasUncommittedChanges } = await getGitChanges(GitVCS);
+
+    console.log('changes', changes);
+
     // update workspace meta with git sync data, use for show uncommit changes on collection card
     models.workspaceMeta.updateByParentId(workspaceId, {
-      hasUncommittedChanges: changes.length > 0,
+      hasUncommittedChanges,
     });
     return {
       branch,
       changes,
-      statusNames,
     };
   } catch (e) {
     console.log(e);
     return {
       branch,
-      changes: [],
-      statusNames: {},
+      changes: {
+        staged: [],
+        unstaged: [],
+      },
     };
   }
 };
@@ -772,28 +784,7 @@ export const commitToGitRepoAction: ActionFunction = async ({
   const message = formData.get('message');
   invariant(typeof message === 'string', 'Commit message is required');
 
-  const stagedChangesPaths = [...formData.getAll('paths')] as string[];
-  const allModified = Boolean(formData.get('allModified'));
-  const allUnversioned = Boolean(formData.get('allUnversioned'));
-
   try {
-    const { changes } = await getGitChanges(GitVCS, workspace);
-
-    const changesToCommit = changes.filter(change => {
-      if (allModified && !change.added) {
-        return true;
-      } else if (allUnversioned && change.added) {
-        return true;
-      }
-      return stagedChangesPaths.includes(change.path);
-    });
-
-    for (const item of changesToCommit) {
-      item.status.includes('deleted')
-        ? await GitVCS.remove(item.path)
-        : await GitVCS.add(item.path);
-    }
-
     await GitVCS.commit(message);
 
     const providerName = getOauth2FormatName(repo?.credentials);
@@ -1208,97 +1199,12 @@ export interface GitChange {
   editable: boolean;
 }
 
-async function getGitVCSPaths(vcs: typeof GitVCS) {
-  const gitFS = vcs.getFs();
-
-  const fs = 'promises' in gitFS ? gitFS.promises : gitFS;
-
-  const fsPaths: string[] = [];
-  for (const type of await fs.readdir(GIT_INSOMNIA_DIR)) {
-    const typeDir = path.join(GIT_INSOMNIA_DIR, type);
-    for (const name of await fs.readdir(typeDir)) {
-      // NOTE: git paths don't start with '/' so we're omitting
-      //  it here too.
-      const gitPath = path.join(GIT_INSOMNIA_DIR_NAME, type, name);
-      fsPaths.push(path.join(gitPath));
-    }
-  }
-  // To get all possible paths, we need to combine the paths already in Git
-  // with the paths on the FS. This is required to cover the case where a
-  // file can be deleted from FS or from Git.
-  const gitPaths = await vcs.listFiles();
-  const uniquePaths = new Set([...fsPaths, ...gitPaths]);
-  return Array.from(uniquePaths).sort();
-}
-
-async function getGitChanges(vcs: typeof GitVCS, workspace: Workspace) {
-  // Cache status names
-  const docs = await database.withDescendants(workspace);
-  const allPaths = await getGitVCSPaths(vcs);
-  const statusNames: Record<string, string> = {};
-  for (const doc of docs) {
-    const name = (isApiSpec(doc) && doc.fileName) || doc.name || '';
-    statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.json`)] =
-      name;
-    statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.yml`)] =
-      name;
-  }
-  // Create status items
-  const items: Record<string, GitChange> = {};
-  const log = (await vcs.log({ depth: 1 })) || [];
-  const batchSize = 10;
-  const processGitPaths = async (allPaths: string[]) => {
-    const promises = allPaths.map(async gitPath => {
-      const status = await vcs.status(gitPath);
-      if (status === 'unmodified') {
-        return;
-      }
-      if (!statusNames[gitPath] && log.length > 0) {
-        const docYML = await vcs.readObjFromTree(log[0].commit.tree, gitPath);
-        if (docYML) {
-          try {
-            statusNames[gitPath] = YAML.parse(docYML.toString()).name || '';
-          } catch (err) { }
-        }
-      }
-      // We know that type is in the path; extract it. If the model is not found, set to Unknown.
-      let { type } = parseGitPath(gitPath);
-
-      if (type && !models.types().includes(type as any)) {
-        type = 'Unknown';
-      }
-      const added = status.includes('added');
-      let staged = !added;
-      let editable = true;
-      // We want to enforce that workspace changes are always committed because otherwise
-      // others won't be able to clone from it. We also make fundamental migrations to the
-      // scope property which need to be committed.
-      // So here we're preventing people from un-staging the workspace.
-      if (type === models.workspace.type) {
-        editable = false;
-        staged = true;
-      }
-      items[gitPath] = {
-        type: type as any,
-        staged,
-        editable,
-        status,
-        added,
-        path: gitPath,
-      };
-    });
-
-    await Promise.all(promises);
-  };
-
-  for (let i = 0; i < allPaths.length; i += batchSize) {
-    const batch = allPaths.slice(i, i + batchSize);
-    await processGitPaths(batch);
-  }
+async function getGitChanges(vcs: typeof GitVCS) {
+  const changes = await vcs.status();
 
   return {
-    changes: Object.values(items),
-    statusNames,
+    changes,
+    hasUncommittedChanges: changes.staged.length > 0 || changes.unstaged.length > 0,
   };
 }
 
@@ -1329,25 +1235,13 @@ export const gitRollbackChangesAction: ActionFunction = async ({
   const formData = await request.formData();
 
   const paths = [...formData.getAll('paths')] as string[];
-  const changeType = formData.get('changeType') as string;
+  // const changeType = formData.get('changeType') as string;
   try {
-    const { changes } = await getGitChanges(GitVCS, workspace);
+    const { changes } = await getGitChanges(GitVCS);
 
-    const files = changes
-      .filter(i =>
-        changeType === 'modified'
-          ? !i.status.includes('added')
-          : i.status.includes('added')
-      )
-      // only rollback if editable
-      .filter(i => i.editable)
-      // only rollback if in selected path or for all paths
-      .filter(i => paths.length === 0 || paths.includes(i.path))
-      .map(i => ({
-        filePath: i.path,
-        status: i.status,
-      }));
-
+    const files = changes.unstaged
+      .map(change => change.path)
+      .filter(path => paths.includes(path));
     await gitRollback(GitVCS, files);
   } catch (e) {
     const errorMessage =
@@ -1375,11 +1269,11 @@ export const gitStatusAction: ActionFunction = async ({
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
   try {
-    const { changes } = await getGitChanges(GitVCS, workspace);
-    const localChanges = changes.filter(i => i.editable).length;
+    const { hasUncommittedChanges, changes } = await getGitChanges(GitVCS);
+    const localChanges = changes.staged.length + changes.unstaged.length;
     // update workspace meta with git sync data, use for show uncommit changes on collection card
     models.workspaceMeta.updateByParentId(workspaceId, {
-      hasUncommittedChanges: changes.length > 0,
+      hasUncommittedChanges,
     });
 
     return {
@@ -1399,12 +1293,10 @@ export const gitStatusAction: ActionFunction = async ({
 
 export const checkGitChanges = async (workspaceId: string) => {
   try {
-    const workspace = await models.workspace.getById(workspaceId);
-    invariant(workspace, 'Workspace not found');
-    const { changes } = await getGitChanges(GitVCS, workspace);
+    const { hasUncommittedChanges } = await getGitChanges(GitVCS);
     // update workspace meta with git sync data, use for show uncommit changes on collection card
     models.workspaceMeta.updateByParentId(workspaceId, {
-      hasUncommittedChanges: changes.length > 0,
+      hasUncommittedChanges,
     });
   } catch (e) {
   }
@@ -1429,4 +1321,146 @@ export const checkGitCanPush = async (workspaceId: string) => {
       hasUnpushedChanges: canPush,
     });
   } catch (e) { }
+};
+
+export const stageChangesAction: ActionFunction = async ({
+  request,
+  params,
+}): Promise<GitRollbackChangesResult> => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
+
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+
+  const repoId = workspaceMeta?.gitRepositoryId;
+
+  invariant(repoId, 'Workspace is not linked to a git repository');
+
+  const gitRepository = await models.gitRepository.getById(repoId);
+
+  invariant(gitRepository, 'Git Repository not found');
+
+  const { paths } = await request.json() as { paths: string[] };
+
+  try {
+    const { changes } = await getGitChanges(GitVCS);
+
+    const files = changes.unstaged
+      .map(change => change.path)
+      .filter(path => paths.includes(path));
+
+    await GitVCS.stageChanges(files);
+  } catch (e) {
+    const errorMessage =
+      e instanceof Error ? e.message : 'Error while staging changes';
+    return {
+      errors: [errorMessage],
+    };
+  }
+
+  return {};
+};
+
+export const unstageChangesAction: ActionFunction = async ({
+  request,
+  params,
+}): Promise<GitRollbackChangesResult> => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
+
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+
+  const repoId = workspaceMeta?.gitRepositoryId;
+
+  invariant(repoId, 'Workspace is not linked to a git repository');
+
+  const gitRepository = await models.gitRepository.getById(repoId);
+
+  invariant(gitRepository, 'Git Repository not found');
+
+  const { paths } = await request.json() as { paths: string[] };
+
+  try {
+    const { changes } = await getGitChanges(GitVCS);
+
+    const files = changes.staged
+      .map(change => change.path)
+      .filter(path => paths.includes(path));
+
+    await GitVCS.unstageChanges(files);
+  } catch (e) {
+    const errorMessage =
+      e instanceof Error ? e.message : 'Error while unstaging changes';
+    return {
+      errors: [errorMessage],
+    };
+  }
+
+  return {};
+};
+
+export type GitDiffResult = {
+  diff?: {
+    before: string;
+    after: string;
+  };
+} | {
+  errors: string[];
+};
+
+export const diffFileLoader: LoaderFunction = async ({
+  request,
+  params,
+}): Promise<GitDiffResult> => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
+
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+
+  const repoId = workspaceMeta?.gitRepositoryId;
+
+  invariant(repoId, 'Workspace is not linked to a git repository');
+
+  const gitRepository = await models.gitRepository.getById(repoId);
+
+  invariant(gitRepository, 'Git Repository not found');
+
+  const urlParams = new URLSearchParams(request.url.split('?')[1]);
+
+  const filepath = urlParams.get('filepath');
+  invariant(filepath, 'Filepath is required');
+
+  const staged = urlParams.get('staged') === 'true';
+
+  try {
+    const fileStatus = await GitVCS.fileStatus(filepath);
+
+    console.log({ fileStatus });
+
+    return {
+      diff: staged ? {
+        before: fileStatus.head,
+        after: fileStatus.stage,
+      } : {
+        before: fileStatus.stage || fileStatus.head,
+        after: fileStatus.workdir,
+      },
+    };
+  } catch (e) {
+    const errorMessage =
+      e instanceof Error ? e.message : 'Error while unstaging changes';
+    return {
+      errors: [errorMessage],
+    };
+  }
+
 };

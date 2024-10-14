@@ -1,5 +1,6 @@
 import * as git from 'isomorphic-git';
 import path from 'path';
+import { parse } from 'yaml';
 
 import { httpClient } from './http-client';
 import { convertToOsSep, convertToPosixSep } from './path-sep';
@@ -257,16 +258,251 @@ export class GitVCS {
     }
   }
 
-  async status(filepath: string) {
-    return git.status({
-      ...this._baseOpts,
-      filepath: convertToPosixSep(filepath),
+  async fileStatus(file: string) {
+    const baseOpts = this._baseOpts;
+    // Adopted from statusMatrix of isomorphic-git https://github.com/isomorphic-git/isomorphic-git/blob/main/src/api/statusMatrix.js#L157
+    const [result]: [[string, string, string, string]] = await git.walk({
+      ...baseOpts,
+      dir: GIT_INSOMNIA_DIR,
+      trees: [git.TREE({ ref: 'HEAD' }), git.WORKDIR(), git.STAGE()],
+      map: async function map(filepath, [head, workdir, stage]) {
+        // Late filter against file names
+        if (filepath !== file) {
+          return;
+        }
+
+        const [headType, workdirType, stageType] = await Promise.all([
+          head && head.type(),
+          workdir && workdir.type(),
+          stage && stage.type(),
+        ]);
+
+        const isBlob = [headType, workdirType, stageType].includes('blob');
+
+        // For now, bail on directories unless the file is also a blob in another tree
+        if ((headType === 'tree' || headType === 'special') && !isBlob) {
+          return;
+        }
+        if (headType === 'commit') {
+          return null;
+        }
+
+        if ((workdirType === 'tree' || workdirType === 'special') && !isBlob) {
+          return;
+        }
+
+        if (stageType === 'commit') {
+          return null;
+        }
+        if ((stageType === 'tree' || stageType === 'special') && !isBlob) {
+          return;
+        }
+
+        // Figure out the oids for files, using the staged oid for the working dir oid if the stats match.
+        const headOid = headType === 'blob' ? await head?.oid() : undefined;
+        const stageOid = stageType === 'blob' ? await stage?.oid() : undefined;
+        let workdirOid;
+        if (
+          headType !== 'blob' &&
+          workdirType === 'blob' &&
+          stageType !== 'blob'
+        ) {
+          // We don't actually NEED the sha. Any sha will do
+          // TODO: update this logic to handle N trees instead of just 3.
+          workdirOid = '42';
+        } else if (workdirType === 'blob') {
+          workdirOid = await workdir?.oid();
+        }
+
+        let headBlob = await head?.content();
+        let workdirBlob = await workdir?.content();
+        let stageBlob = await stage?.content();
+
+        if (!stageBlob && stageOid) {
+          try {
+            const { blob } = await git.readBlob({
+              ...baseOpts,
+
+              oid: stageOid,
+            });
+
+            stageBlob = blob;
+          } catch (e) {
+            console.log('[git] Failed to read blob', e);
+          }
+        }
+
+        if (!headBlob && headOid) {
+          try {
+            const { blob } = await git.readBlob({
+              ...baseOpts,
+
+              oid: headOid,
+            });
+
+            headBlob = blob;
+          } catch (e) {
+            console.log('[git] Failed to read blob', e);
+          }
+        }
+
+        if (!workdirBlob && workdirOid) {
+          try {
+            const { blob } = await git.readBlob({
+              ...baseOpts,
+
+              oid: workdirOid,
+            });
+
+            workdirBlob = blob;
+          } catch (e) {
+            console.log('[git] Failed to read blob', e);
+          }
+        }
+
+        const blobs = [headBlob, workdirBlob, stageBlob].map(r => r ? JSON.stringify(parse(Buffer.from(r).toString('utf-8'))) : null);
+
+        return [filepath, ...blobs];
+      },
     });
+
+    const diff = {
+      head: result[1],
+      workdir: result[2],
+      stage: result[3],
+    };
+
+    return diff;
+  }
+
+  // PRs
+  // - [] git status perf using new way
+  // - [] use new status magic with stage/unstage with diff view
+  // - [] Existing workspace in git repo - clone succeeds but it's not working as expected
+  // - [] Conflict handling
+
+  // Known Errors/Issues
+  // - [] No merge conflict resolution
+  // - [] No handling of existing workspace in git repo - clone succeeds but it's not working as expected
+
+  // @TODO:
+  // [] add commands like: git status ...
+  // [] stage/unstage for removed files
+  // [] tests?
+  // [] Perf measurements
+  // - [] Maybe two different git.changes to check if there are changes
+  async statusWithContent() {
+    const baseOpts = this._baseOpts;
+
+    // Adopted from statusMatrix of isomorphic-git https://github.com/isomorphic-git/isomorphic-git/blob/main/src/api/statusMatrix.js#L157
+    const result: [string, string, string, string, string, string, string][] = await git.walk({
+      ...baseOpts,
+      dir: GIT_INSOMNIA_DIR,
+      trees: [
+        // What the latest commit on the current branch looks like
+        git.TREE({ ref: 'HEAD' }),
+        // What the working directory looks like
+        git.WORKDIR(),
+        // What the index (staging area) looks like
+        git.STAGE(),
+      ],
+      map: async function map(filepath, [head, workdir, stage]) {
+        const [headType, workdirType, stageType] = await Promise.all([
+          head && head.type(),
+          workdir && workdir.type(),
+          stage && stage.type(),
+        ]);
+
+        const isBlob = [headType, workdirType, stageType].includes('blob');
+
+        // For now, bail on directories unless the file is also a blob in another tree
+        if ((headType === 'tree' || headType === 'special') && !isBlob) {
+          return;
+        }
+        if (headType === 'commit') {
+          return null;
+        }
+
+        if ((workdirType === 'tree' || workdirType === 'special') && !isBlob) {
+          return;
+        }
+
+        if (stageType === 'commit') {
+          return null;
+        }
+        if ((stageType === 'tree' || stageType === 'special') && !isBlob) {
+          return;
+        }
+
+        // Figure out the oids for files, using the staged oid for the working dir oid if the stats match.
+        const headOid = headType === 'blob' ? await head?.oid() : undefined;
+        const stageOid = stageType === 'blob' ? await stage?.oid() : undefined;
+        let workdirOid;
+        if (
+          headType !== 'blob' &&
+          workdirType === 'blob' &&
+          stageType !== 'blob'
+        ) {
+          // We don't actually NEED the sha. Any sha will do
+          // TODO: update this logic to handle N trees instead of just 3.
+          workdirOid = '42';
+        } else if (workdirType === 'blob') {
+          workdirOid = await workdir?.oid();
+        }
+
+        const headBlob = await head?.content();
+        const workdirBlob = await workdir?.content();
+        let stageBlob = await stage?.content();
+
+        if (!stageBlob && stageOid) {
+          try {
+            const { blob } = await git.readBlob({
+              ...baseOpts,
+
+              oid: stageOid,
+            });
+
+            stageBlob = blob;
+          } catch (e) {
+            console.log('[git] Failed to read blob', e);
+          }
+        }
+
+        const entry = [undefined, headOid, workdirOid, stageOid];
+        const result = entry.map(value => entry.indexOf(value));
+        result.shift(); // remove leading undefined entry
+        console.log('[git] ChangesWithNames', {
+          filepath,
+          headOid,
+          workdirOid,
+          stageOid,
+          result,
+        });
+        return [
+          filepath,
+          ...result,
+          ...[headBlob, workdirBlob, stageBlob].map(r => r ? parse(Buffer.from(r).toString('utf-8'))?.name : null),
+        ];
+      },
+    });
+
+    return result;
+  }
+
+  async status() {
+    const status = await this.statusWithContent();
+
+    const unstagedChanges = status.filter(([, , workdir, stage]) => stage !== workdir);
+    const stagedChanges = status.filter(([, head, workdir, stage]) => head !== workdir && stage !== head);
+
+    return {
+      staged: stagedChanges.map(([filepath, , , , headName, workdirName, stageName]) => ({ name: stageName || headName || workdirName || filepath, path: filepath })),
+      unstaged: unstagedChanges.map(([filepath, , , , headName, workdirName, stageName]) => ({ name: workdirName || stageName || headName || filepath, path: filepath })),
+    };
   }
 
   async add(relPath: string) {
     relPath = convertToPosixSep(relPath);
-    console.log(`[git] Add ${relPath}`);
     return git.add({ ...this._baseOpts, filepath: relPath });
   }
 
@@ -549,6 +785,18 @@ export class GitVCS {
 
   getFs() {
     return this._baseOpts.fs;
+  }
+
+  async stageChanges(filepaths: string[]) {
+    for (const filepath of filepaths) {
+      await git.add({ ...this._baseOpts, dir: GIT_INSOMNIA_DIR, filepath });
+    }
+  }
+
+  async unstageChanges(filepaths: string[]) {
+    for (const filepath of filepaths) {
+      await git.remove({ ...this._baseOpts, dir: GIT_INSOMNIA_DIR, filepath });
+    }
   }
 
   static sortBranches(branches: string[]) {
