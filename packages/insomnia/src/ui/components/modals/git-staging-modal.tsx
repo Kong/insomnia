@@ -49,6 +49,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
   const rollbackFetcher = useFetcher<GitRollbackChangesResult>();
   const stageChangesFetcher = useFetcher<GitRollbackChangesResult>();
   const unstageChangesFetcher = useFetcher<GitRollbackChangesResult>();
+  const undoUnstagedChangesFetcher = useFetcher<GitRollbackChangesResult>();
   const diffChangesFetcher = useFetcher<GitDiffResult>();
 
   function diffChanges({ path, staged }: { path: string; staged: boolean }) {
@@ -81,6 +82,19 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
       {
         method: 'POST',
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/unstage`,
+        encType: 'application/json',
+      }
+    );
+  }
+
+  function undoUnstagedChanges(paths: string[]) {
+    undoUnstagedChangesFetcher.submit(
+      {
+        paths,
+      },
+      {
+        method: 'POST',
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/undo`,
         encType: 'application/json',
       }
     );
@@ -268,6 +282,15 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                             className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
                             slot={null}
                             onPress={() => {
+                              undoUnstagedChanges(changes.unstaged.map(entry => entry.path));
+                            }}
+                          >
+                            <Icon icon="undo-alt" />
+                          </Button>
+                          <Button
+                            className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                            slot={null}
+                            onPress={() => {
                               stageChanges(changes.unstaged.map(entry => entry.path));
                             }}
                           >
@@ -298,6 +321,15 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                               <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
                                 <span className='truncate'>{item.entry.name}</span>
                                 <div className='flex items-center gap-1'>
+                                  <Button
+                                    className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                                    slot={null}
+                                    onPress={() => {
+                                      undoUnstagedChanges([item.entry.path]);
+                                    }}
+                                  >
+                                    <Icon icon="undo" />
+                                  </Button>
                                   <Button
                                     className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
                                     slot={null}

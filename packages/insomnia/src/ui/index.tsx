@@ -911,11 +911,6 @@ async function renderApp() {
                                       (await import('./routes/git-actions')).gitFetchAction(...args),
                                   },
                                   {
-                                    path: 'rollback',
-                                    action: async (...args) =>
-                                      (await import('./routes/git-actions')).gitRollbackChangesAction(...args),
-                                  },
-                                  {
                                     path: 'update',
                                     action: async (...args) =>
                                       (await import('./routes/git-actions')).updateGitRepoAction(...args),
@@ -944,6 +939,11 @@ async function renderApp() {
                                     path: 'unstage',
                                     action: async (...args) =>
                                       (await import('./routes/git-actions')).unstageChangesAction(...args),
+                                  },
+                                  {
+                                    path: 'undo',
+                                    action: async (...args) =>
+                                      (await import('./routes/git-actions')).undoChangesAction(...args),
                                   },
                                   {
                                     path: 'diff',

@@ -375,27 +375,11 @@ export class GitVCS {
     return diff;
   }
 
-  // PRs
-  // - [] git status perf using new way
-  // - [] use new status magic with stage/unstage with diff view
-  // - [] Existing workspace in git repo - clone succeeds but it's not working as expected
-  // - [] Conflict handling
-
-  // Known Errors/Issues
-  // - [] No merge conflict resolution
-  // - [] No handling of existing workspace in git repo - clone succeeds but it's not working as expected
-
-  // @TODO:
-  // [] add commands like: git status ...
-  // [] stage/unstage for removed files
-  // [] tests?
-  // [] Perf measurements
-  // - [] Maybe two different git.changes to check if there are changes
   async statusWithContent() {
     const baseOpts = this._baseOpts;
 
     // Adopted from statusMatrix of isomorphic-git https://github.com/isomorphic-git/isomorphic-git/blob/main/src/api/statusMatrix.js#L157
-    const result: [string, string, string, string, string, string, string][] = await git.walk({
+    const result: [string, git.HeadStatus, git.WorkdirStatus, git.StageStatus, string, string, string][] = await git.walk({
       ...baseOpts,
       dir: GIT_INSOMNIA_DIR,
       trees: [
@@ -470,14 +454,8 @@ export class GitVCS {
 
         const entry = [undefined, headOid, workdirOid, stageOid];
         const result = entry.map(value => entry.indexOf(value));
-        result.shift(); // remove leading undefined entry
-        console.log('[git] ChangesWithNames', {
-          filepath,
-          headOid,
-          workdirOid,
-          stageOid,
-          result,
-        });
+        result.shift();
+
         return [
           filepath,
           ...result,
@@ -489,15 +467,26 @@ export class GitVCS {
     return result;
   }
 
-  async status() {
+  async status(): Promise<{
+    staged: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus]; name: string }[];
+    unstaged: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus]; name: string }[];
+  }> {
     const status = await this.statusWithContent();
 
     const unstagedChanges = status.filter(([, , workdir, stage]) => stage !== workdir);
     const stagedChanges = status.filter(([, head, workdir, stage]) => head !== workdir && stage !== head);
 
     return {
-      staged: stagedChanges.map(([filepath, , , , headName, workdirName, stageName]) => ({ name: stageName || headName || workdirName || filepath, path: filepath })),
-      unstaged: unstagedChanges.map(([filepath, , , , headName, workdirName, stageName]) => ({ name: workdirName || stageName || headName || filepath, path: filepath })),
+      staged: stagedChanges.map(([filepath, headStatus, workdirStatus, stageStatus, headName, workdirName, stageName]) => ({
+        path: filepath,
+        status: [headStatus, workdirStatus, stageStatus],
+        name: stageName || headName || workdirName || filepath,
+      })),
+      unstaged: unstagedChanges.map(([filepath, headStatus, workdirStatus, stageStatus, headName, workdirName, stageName]) => ({
+        path: filepath,
+        status: [headStatus, workdirStatus, stageStatus],
+        name: workdirName || stageName || headName || filepath,
+      })),
     };
   }
 
@@ -748,17 +737,6 @@ export class GitVCS {
     }
   }
 
-  async undoPendingChanges(fileFilter?: string[]) {
-    console.log('[git] Undo pending changes');
-    await git.checkout({
-      ...this._baseOpts,
-      ref: await this.getCurrentBranch(),
-      remote: 'origin',
-      force: true,
-      filepaths: fileFilter?.map(convertToPosixSep),
-    });
-  }
-
   async readObjFromTree(treeOid: string, objPath: string) {
     try {
       const obj = await git.readObject({
@@ -787,15 +765,49 @@ export class GitVCS {
     return this._baseOpts.fs;
   }
 
-  async stageChanges(filepaths: string[]) {
-    for (const filepath of filepaths) {
-      await git.add({ ...this._baseOpts, dir: GIT_INSOMNIA_DIR, filepath });
+  async stageChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
+    for (const change of changes) {
+      console.log(`[git] Stage ${change.path} | ${change.status}`);
+      if (change.status[1] === 0) {
+        await git.remove({ ...this._baseOpts, dir: GIT_INSOMNIA_DIR, filepath: change.path });
+      } else {
+        await git.add({ ...this._baseOpts, dir: GIT_INSOMNIA_DIR, filepath: change.path });
+      }
     }
   }
 
-  async unstageChanges(filepaths: string[]) {
-    for (const filepath of filepaths) {
-      await git.remove({ ...this._baseOpts, dir: GIT_INSOMNIA_DIR, filepath });
+  async unstageChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
+    for (const change of changes) {
+      await git.remove({ ...this._baseOpts, dir: GIT_INSOMNIA_DIR, filepath: change.path });
+
+      // If the file was deleted in stage, we need to restore it
+      if (change.status[2] === 0) {
+        await git.checkout({
+          ...this._baseOpts,
+          dir: GIT_INSOMNIA_DIR,
+          ref: await this.getCurrentBranch(),
+          filepaths: [change.path],
+        });
+      }
+    }
+  }
+
+  async undoUnstagedChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
+    for (const change of changes) {
+      // If the file didn't exist in HEAD, we need to remove it
+      if (change.status[0] === 0) {
+        await git.remove({ ...this._baseOpts, dir: GIT_INSOMNIA_DIR, filepath: change.path });
+        // @ts-expect-error -- TSCONVERSION
+        await this.getFs().promises.unlink(path.join(GIT_INSOMNIA_DIR, change.path));
+      } else {
+        await git.checkout({
+          ...this._baseOpts,
+          dir: GIT_INSOMNIA_DIR,
+          ref: await this.getCurrentBranch(),
+          filepaths: [change.path],
+        });
+      }
+
     }
   }
 

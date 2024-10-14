@@ -11,11 +11,9 @@ import type { GitRepository } from '../../models/git-repository';
 import { createGitRepository } from '../../models/helpers/git-repository-operations';
 import {
   isWorkspace,
-  type Workspace,
   WorkspaceScopeKeys,
 } from '../../models/workspace';
 import { fsClient } from '../../sync/git/fs-client';
-import { gitRollback } from '../../sync/git/git-rollback';
 import GitVCS, {
   GIT_CLONE_DIR,
   GIT_INSOMNIA_DIR,
@@ -1212,7 +1210,7 @@ export interface GitRollbackChangesResult {
   errors?: string[];
 }
 
-export const gitRollbackChangesAction: ActionFunction = async ({
+export const undoChangesAction: ActionFunction = async ({
   params,
   request,
 }): Promise<GitRollbackChangesResult> => {
@@ -1232,17 +1230,16 @@ export const gitRollbackChangesAction: ActionFunction = async ({
 
   invariant(gitRepository, 'Git Repository not found');
 
-  const formData = await request.formData();
+  const { paths } = await request.json() as { paths: string[] };
 
-  const paths = [...formData.getAll('paths')] as string[];
-  // const changeType = formData.get('changeType') as string;
   try {
     const { changes } = await getGitChanges(GitVCS);
 
     const files = changes.unstaged
-      .map(change => change.path)
-      .filter(path => paths.includes(path));
-    await gitRollback(GitVCS, files);
+      .filter(change => paths.includes(change.path));
+
+    await GitVCS.undoUnstagedChanges(files);
+
   } catch (e) {
     const errorMessage =
       e instanceof Error ? e.message : 'Error while rolling back changes';
@@ -1349,8 +1346,7 @@ export const stageChangesAction: ActionFunction = async ({
     const { changes } = await getGitChanges(GitVCS);
 
     const files = changes.unstaged
-      .map(change => change.path)
-      .filter(path => paths.includes(path));
+      .filter(change => paths.includes(change.path));
 
     await GitVCS.stageChanges(files);
   } catch (e) {
@@ -1390,8 +1386,7 @@ export const unstageChangesAction: ActionFunction = async ({
     const { changes } = await getGitChanges(GitVCS);
 
     const files = changes.staged
-      .map(change => change.path)
-      .filter(path => paths.includes(path));
+      .filter(change => paths.includes(change.path));
 
     await GitVCS.unstageChanges(files);
   } catch (e) {
