@@ -281,13 +281,16 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
   invariant(baseEnvironment, 'Could not create base environment');
 
+  const baseEnvironmentFromResources = resources.filter(isEnvironment).find(env => env.parentId && env.parentId.startsWith('__WORKSPACE_ID__'));
+  if (baseEnvironmentFromResources) {
+    await models.environment.update(baseEnvironment, { data: baseEnvironmentFromResources.data });
+  }
   const subEnvironments = resources.filter(isEnvironment).filter(isSubEnvironmentResource) || [];
 
   for (const environment of subEnvironments) {
     const model = getModel(environment.type);
     model && ResourceIdMap.set(environment._id, generateId(model.prefix));
-
-    await db.docCreate(environment.type, {
+    await models.environment.create({
       ...environment,
       _id: ResourceIdMap.get(environment._id),
       parentId: baseEnvironment._id,
@@ -307,7 +310,7 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
     if (model) {
       // Make sure we point to the new proto file
       if (isGrpcRequest(resource)) {
-        await db.docCreate(model.type, {
+        await models.grpcRequest.create({
           ...resource,
           _id: ResourceIdMap.get(resource._id),
           protoFileId: ResourceIdMap.get(resource.protoFileId),
@@ -316,14 +319,14 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
 
         // Make sure we point unit test to the new request
       } else if (isUnitTest(resource)) {
-        await db.docCreate(model.type, {
+        await models.unitTest.create({
           ...resource,
           _id: ResourceIdMap.get(resource._id),
           requestId: ResourceIdMap.get(resource.requestId),
           parentId: ResourceIdMap.get(resource.parentId),
         });
       } else if (isRequest(resource)) {
-        await db.docCreate(model.type, importRequestWithNewIds(resource, ResourceIdMap, canTransform));
+        await models.request.create(importRequestWithNewIds(resource, ResourceIdMap, canTransform));
       } else {
         await db.docCreate(model.type, {
           ...resource,
@@ -413,21 +416,21 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
 
     if (model) {
       if (isGrpcRequest(resource)) {
-        await db.docCreate(model.type, {
+        await models.grpcRequest.create({
           ...resource,
           _id: ResourceIdMap.get(resource._id),
           protoFileId: ResourceIdMap.get(resource.protoFileId),
           parentId: ResourceIdMap.get(resource.parentId),
         });
       } else if (isUnitTest(resource)) {
-        await db.docCreate(model.type, {
+        await models.unitTest.create({
           ...resource,
           _id: ResourceIdMap.get(resource._id),
           requestId: ResourceIdMap.get(resource.requestId),
           parentId: ResourceIdMap.get(resource.parentId),
         });
       } else if (isRequest(resource)) {
-        await db.docCreate(model.type, importRequestWithNewIds(resource, ResourceIdMap, canTransform));
+        await models.request.create(importRequestWithNewIds(resource, ResourceIdMap, canTransform));
       } else {
         await db.docCreate(model.type, {
           ...resource,
@@ -438,9 +441,8 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
     }
   }
 
-  // Use the first environment as the active one
-  const subEnvironments =
-    resources.filter(isEnvironment).filter(isSubEnvironmentResource) || [];
+  // Use the first sub environment as the active one
+  const subEnvironments = resources.filter(isEnvironment).filter(isSubEnvironmentResource) || [];
 
   if (subEnvironments.length > 0) {
     const firstSubEnvironment = subEnvironments[0];
