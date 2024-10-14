@@ -941,9 +941,9 @@ async function renderApp() {
                                       (await import('./routes/git-actions')).unstageChangesAction(...args),
                                   },
                                   {
-                                    path: 'undo',
+                                    path: 'discard',
                                     action: async (...args) =>
-                                      (await import('./routes/git-actions')).undoChangesAction(...args),
+                                      (await import('./routes/git-actions')).discardChangesAction(...args),
                                   },
                                   {
                                     path: 'diff',

@@ -3,7 +3,7 @@ import React, { type FC, useEffect } from 'react';
 import { Button, Dialog, GridList, GridListItem, Heading, Label, Modal, ModalOverlay, TextArea, TextField, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
-import type { CommitToGitRepoResult, GitChangesLoaderData, GitDiffResult, GitRollbackChangesResult } from '../../routes/git-actions';
+import type { CommitToGitRepoResult, GitChangesLoaderData, GitDiffResult } from '../../routes/git-actions';
 import { Icon } from '../icon';
 import { showAlert } from '.';
 
@@ -46,10 +46,18 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
   };
   const gitChangesFetcher = useFetcher<GitChangesLoaderData>();
   const gitCommitFetcher = useFetcher<CommitToGitRepoResult>();
-  const rollbackFetcher = useFetcher<GitRollbackChangesResult>();
-  const stageChangesFetcher = useFetcher<GitRollbackChangesResult>();
-  const unstageChangesFetcher = useFetcher<GitRollbackChangesResult>();
-  const undoUnstagedChangesFetcher = useFetcher<GitRollbackChangesResult>();
+  const rollbackFetcher = useFetcher<{
+    errors?: string[];
+  }>();
+  const stageChangesFetcher = useFetcher<{
+    errors?: string[];
+  }>();
+  const unstageChangesFetcher = useFetcher<{
+    errors?: string[];
+  }>();
+  const undoUnstagedChangesFetcher = useFetcher<{
+    errors?: string[];
+  }>();
   const diffChangesFetcher = useFetcher<GitDiffResult>();
 
   function diffChanges({ path, staged }: { path: string; staged: boolean }) {
@@ -98,7 +106,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
           },
           {
             method: 'POST',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/undo`,
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/discard`,
             encType: 'application/json',
           }
         );

@@ -792,7 +792,7 @@ export class GitVCS {
     }
   }
 
-  async undoUnstagedChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
+  async discardChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
     for (const change of changes) {
       // If the file didn't exist in HEAD, we need to remove it
       if (change.status[0] === 0) {

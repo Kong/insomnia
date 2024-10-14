@@ -1206,14 +1206,12 @@ async function getGitChanges(vcs: typeof GitVCS) {
   };
 }
 
-export interface GitRollbackChangesResult {
-  errors?: string[];
-}
-
-export const undoChangesAction: ActionFunction = async ({
+export const discardChangesAction: ActionFunction = async ({
   params,
   request,
-}): Promise<GitRollbackChangesResult> => {
+}): Promise<{
+  errors?: string[];
+}> => {
   const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
 
@@ -1238,7 +1236,7 @@ export const undoChangesAction: ActionFunction = async ({
     const files = changes.unstaged
       .filter(change => paths.includes(change.path));
 
-    await GitVCS.undoUnstagedChanges(files);
+    await GitVCS.discardChanges(files);
 
   } catch (e) {
     const errorMessage =
@@ -1323,7 +1321,9 @@ export const checkGitCanPush = async (workspaceId: string) => {
 export const stageChangesAction: ActionFunction = async ({
   request,
   params,
-}): Promise<GitRollbackChangesResult> => {
+}): Promise<{
+  errors?: string[];
+}> => {
   const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
 
@@ -1363,7 +1363,9 @@ export const stageChangesAction: ActionFunction = async ({
 export const unstageChangesAction: ActionFunction = async ({
   request,
   params,
-}): Promise<GitRollbackChangesResult> => {
+}): Promise<{
+  errors?: string[];
+}> => {
   const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
 
