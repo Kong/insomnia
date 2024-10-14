@@ -135,7 +135,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
       <MenuTrigger>
         <Button
           aria-label="Project Actions"
-          className="opacity-0 hidden items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 group-focus:flex group-hover:flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="opacity-0 flex items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 group-focus:flex group-hover:flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
         >
           <Icon icon="caret-down" />
         </Button>
