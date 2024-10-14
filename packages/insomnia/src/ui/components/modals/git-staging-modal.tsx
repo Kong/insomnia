@@ -146,6 +146,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
 
   useEffect(() => {
     if (gitChangesFetcher.state === 'idle' && !gitChangesFetcher.data) {
+      // file://./../../routes/git-actions.tsx#gitChangesLoader
       gitChangesFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/changes`);
     }
   }, [organizationId, projectId, workspaceId, gitChangesFetcher]);

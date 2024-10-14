@@ -6,22 +6,26 @@ import { useInterval } from 'react-use';
 
 import type { GitRepository } from '../../../models/git-repository';
 import { deleteGitRepository } from '../../../models/helpers/git-repository-operations';
+import { MergeConflictError } from '../../../sync/git/git-vcs';
 import { getOauth2FormatName } from '../../../sync/git/utils';
+import type { MergeConflict } from '../../../sync/types';
 import {
   checkGitCanPush,
   checkGitChanges,
+  continueMerge,
   type GitFetchLoaderData,
   type GitRepoLoaderData,
   type GitStatusResult,
-  type PullFromGitRemoteResult,
+  pullFromGitRemote,
   type PushToGitRemoteResult,
 } from '../../routes/git-actions';
 import { Icon } from '../icon';
-import { showAlert } from '../modals';
+import { showAlert, showModal } from '../modals';
 import { GitBranchesModal } from '../modals/git-branches-modal';
 import { GitLogModal } from '../modals/git-log-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { GitStagingModal } from '../modals/git-staging-modal';
+import { SyncMergeModal } from '../modals/sync-merge-modal';
 
 interface Props {
   gitRepository: GitRepository | null;
@@ -42,16 +46,16 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   const [isGitStagingModalOpen, setIsGitStagingModalOpen] = useState(false);
 
   const gitPushFetcher = useFetcher<PushToGitRemoteResult>();
-  const gitPullFetcher = useFetcher<PullFromGitRemoteResult>();
   const gitCheckoutFetcher = useFetcher();
   const gitRepoDataFetcher = useFetcher<GitRepoLoaderData>();
   const gitFetchFetcher = useFetcher<GitFetchLoaderData>();
   const gitStatusFetcher = useFetcher<GitStatusResult>();
 
   const loadingPush = gitPushFetcher.state === 'loading';
-  const loadingPull = gitPullFetcher.state === 'loading';
   const loadingFetch = gitFetchFetcher.state === 'loading';
   const loadingStatus = gitStatusFetcher.state === 'loading';
+
+  const [isPulling, setIsPulling] = useState(false);
 
   useEffect(() => {
     if (
@@ -60,6 +64,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       gitRepoDataFetcher.state === 'idle' &&
       !gitRepoDataFetcher.data
     ) {
+      // file://./../../routes/git-actions.tsx#gitRepoLoader
       gitRepoDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/repo`);
     }
   }, [
@@ -76,6 +81,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
 
   useEffect(() => {
     if (shouldFetchGitRepoStatus) {
+      // file://./../../routes/git-actions.tsx#gitStatusAction
       gitStatusFetcher.submit({}, {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/status`,
         method: 'post',
@@ -123,16 +129,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   }, [gitRepoDataFetcher.data]);
 
   useEffect(() => {
-    const errors = [...(gitPullFetcher.data?.errors ?? [])];
-    if (errors.length > 0) {
-      showAlert({
-        title: 'Pull Failed',
-        message: errors.join('\n'),
-      });
-    }
-  }, [gitPullFetcher.data?.errors]);
-
-  useEffect(() => {
     const errors = [...(gitCheckoutFetcher.data?.errors ?? [])];
     if (errors.length > 0) {
       showAlert({
@@ -168,7 +164,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
     gitFetchFetcher.state === 'loading' ||
     gitCheckoutFetcher.state === 'loading' ||
     gitPushFetcher.state === 'loading' ||
-    gitPullFetcher.state === 'loading';
+    isPulling;
 
   const isSynced = Boolean(gitRepository?.uri && gitRepoDataFetcher.data && !('errors' in gitRepoDataFetcher.data));
 
@@ -195,17 +191,39 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
     },
     {
       id: 'pull',
-      icon: loadingPull ? 'refresh' : 'cloud-download',
+      icon: isPulling ? 'refresh' : 'cloud-download',
       label: 'Pull',
       isDisabled: false,
       action: async () => {
-        gitPullFetcher.submit(
-          {},
-          {
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/pull`,
-            method: 'post',
+        try {
+          setIsPulling(true);
+          await pullFromGitRemote(workspaceId).finally(() => setIsPulling(false));
+        } catch (err) {
+          if (err instanceof MergeConflictError) {
+            const data = err.data;
+            showModal(SyncMergeModal, {
+              conflicts: data.conflicts,
+              labels: data.labels,
+              handleDone: (conflicts?: MergeConflict[]) => {
+                if (Array.isArray(conflicts) && conflicts.length > 0) {
+                  setIsPulling(true);
+                  continueMerge({
+                    handledMergeConflicts: conflicts,
+                    commitMessage: data.commitMessage,
+                    commitParent: data.commitParent,
+                  }).finally(() => setIsPulling(false));
+                } else {
+                  // user aborted merge, do nothing
+                }
+              },
+            });
+          } else {
+            showAlert({
+              title: 'Pull Failed',
+              message: err.message,
+            });
           }
-        );
+        }
       },
     },
     {

@@ -22,7 +22,7 @@ export const VCSInstance = () => {
           if (conflicts && conflicts.length) {
             resolve(conflicts);
           }
-
+          // TODO: this error is not captured
           reject(new Error('User aborted merge'));
         },
       });

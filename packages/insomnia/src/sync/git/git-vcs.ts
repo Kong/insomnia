@@ -1,7 +1,8 @@
 import * as git from 'isomorphic-git';
 import path from 'path';
-import { parse } from 'yaml';
+import { parse, stringify } from 'yaml';
 
+import type { MergeConflict } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
 import { gitCallbacks } from './utils';
@@ -630,6 +631,160 @@ export class GitVCS {
       ...gitCallbacks(gitCredentials),
       remote: 'origin',
       singleBranch: true,
+    }).catch(
+      async err => {
+        if (err instanceof git.Errors.MergeConflictError) {
+          const {
+            filepaths, bothModified, deleteByUs, deleteByTheirs,
+          } = err.data;
+          if (filepaths.length) {
+            const mergeConflicts: MergeConflict[] = [];
+            const conflictPathsObj = {
+              bothModified,
+              deleteByUs,
+              deleteByTheirs,
+            };
+            const conflictTypeList: (keyof typeof conflictPathsObj)[] = [
+              'bothModified',
+              'deleteByUs',
+              'deleteByTheirs',
+            ];
+
+            const currentLocalBranch = await this.getCurrentBranch();
+            const localHeadCommitOid = await git.resolveRef({
+              ...this._baseOpts,
+              ...gitCallbacks(gitCredentials),
+              ref: currentLocalBranch,
+            });
+
+            const remoteBranch = `origin/${currentLocalBranch}`;
+            const remoteHeadCommitOid = await git.resolveRef({
+              ...this._baseOpts,
+              ...gitCallbacks(gitCredentials),
+              ref: remoteBranch,
+            });
+
+            const _baseOpts = this._baseOpts;
+
+            function readBlob(filepath: string, oid: string) {
+              return git.readBlob({
+                ..._baseOpts,
+                ...gitCallbacks(gitCredentials),
+                oid,
+                filepath,
+              }).then(
+                ({ blob, oid: blobId }) => ({
+                  blobContent: parse(Buffer.from(blob).toString('utf8')),
+                  blobId,
+                })
+              );
+            }
+
+            function readMineBlob(filepath: string) {
+              return readBlob(filepath, localHeadCommitOid);
+            }
+
+            function readTheirsBlob(filepath: string) {
+              return readBlob(filepath, remoteHeadCommitOid);
+            }
+
+            for (const conflictType of conflictTypeList) {
+              const conflictPaths = conflictPathsObj[conflictType];
+              const message = {
+                'bothModified': 'both modified',
+                'deleteByUs': 'you deleted and they modified',
+                'deleteByTheirs': 'they deleted and you modified',
+              }[conflictType];
+              for (const conflictPath of conflictPaths) {
+                let mineBlobContent = null;
+                let mineBlobId = null;
+
+                let theirsBlobContent = null;
+                let theirsBlobId = null;
+
+                if (conflictType !== 'deleteByUs') {
+                  const {
+                    blobContent,
+                    blobId,
+                  } = await readMineBlob(conflictPath);
+                  mineBlobContent = blobContent;
+                  mineBlobId = blobId;
+                }
+
+                if (conflictType !== 'deleteByTheirs') {
+                  const {
+                    blobContent,
+                    blobId,
+                  } = await readTheirsBlob(conflictPath);
+                  theirsBlobContent = blobContent;
+                  theirsBlobId = blobId;
+                }
+                const name = mineBlobContent?.name || theirsBlobContent?.name || '';
+
+                mergeConflicts.push({
+                  key: conflictPath,
+                  name,
+                  message,
+                  mineBlob: mineBlobId,
+                  theirsBlob: theirsBlobId,
+                  choose: mineBlobId || theirsBlobId,
+                  mineBlobContent,
+                  theirsBlobContent,
+                });
+              }
+            }
+
+            throw new MergeConflictError('Need to solve merge conflicts first', {
+              conflicts: mergeConflicts,
+              labels: {
+                ours: currentLocalBranch,
+                theirs: remoteBranch,
+              },
+              commitMessage: `Merge branch '${remoteBranch}' into ${currentLocalBranch}`,
+              commitParent: [localHeadCommitOid, remoteHeadCommitOid],
+            });
+
+          } else {
+            throw new Error('Merge conflict filepaths is of length 0');
+          }
+        } else {
+          throw err;
+        }
+      },
+    );
+  }
+
+  // create a commit after resolving merge conflicts
+  async continueMerge({
+    handledMergeConflicts,
+    commitMessage,
+    commitParent,
+  }: {
+    gitCredentials?: GitCredentials | null;
+    handledMergeConflicts: MergeConflict[];
+      commitMessage: string;
+      commitParent: string[];
+    }) {
+    console.log('[git] continue to merge after resolving merge conflicts', await this.getCurrentBranch());
+    for (const conflict of handledMergeConflicts) {
+      assertIsPromiseFsClient(this._baseOpts.fs);
+      if (conflict.theirsBlobContent) {
+        await this._baseOpts.fs.promises.writeFile(
+          conflict.key,
+          stringify(conflict.theirsBlobContent),
+        );
+        await git.add({ ...this._baseOpts, filepath: conflict.key });
+      } else {
+        await this._baseOpts.fs.promises.unlink(
+          conflict.key,
+        );
+        await git.remove({ ...this._baseOpts, filepath: conflict.key });
+      }
+    }
+    await git.commit({
+      ...this._baseOpts,
+      message: commitMessage,
+      parent: commitParent,
     });
   }
 
@@ -809,6 +964,28 @@ export class GitVCS {
       }
     });
     return newBranches;
+  }
+}
+export class MergeConflictError extends Error {
+  constructor(msg: string, data: {
+    conflicts: MergeConflict[];
+    labels: {
+      ours: string;
+      theirs: string;
+    };
+    commitMessage: string;
+    commitParent: string[];
+  }) {
+    super(msg);
+    this.data = data;
+  }
+  data;
+  name = 'MergeConflictError';
+}
+
+function assertIsPromiseFsClient(fs: git.FsClient): asserts fs is git.PromiseFsClient {
+  if (!('promises' in fs)) {
+    throw new Error('Expected fs to be of PromiseFsClient');
   }
 }
 
