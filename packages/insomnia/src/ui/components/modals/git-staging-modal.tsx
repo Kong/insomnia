@@ -88,19 +88,24 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
   }
 
   function undoUnstagedChanges(paths: string[]) {
-    undoUnstagedChangesFetcher.submit(
-      {
-        paths,
+    showAlert({
+      message: 'Are you sure you want to undo your changes? This action cannot be undone and will revert all changes made since the last commit that are unstaged.',
+      title: 'Undo changes',
+      onConfirm: () => {
+        undoUnstagedChangesFetcher.submit(
+          {
+            paths,
+          },
+          {
+            method: 'POST',
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/undo`,
+            encType: 'application/json',
+          }
+        );
       },
-      {
-        method: 'POST',
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/undo`,
-        encType: 'application/json',
-      }
-    );
+      addCancel: true,
+    });
   }
-
-  // const isLoadingGitChanges = gitChangesFetcher.state !== 'idle';
 
   useEffect(() => {
     if (gitChangesFetcher.state === 'idle' && !gitChangesFetcher.data) {
