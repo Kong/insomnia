@@ -38,6 +38,10 @@ const isSubEnvironmentResource = (environment: Environment) => {
   return !environment.parentId || environment.parentId.startsWith(models.environment.prefix) || environment.parentId.startsWith('__BASE_ENVIRONMENT_ID__');
 };
 
+const isBaseEnvironmentResource = (environment: Environment) => {
+  return environment.parentId && environment.parentId.startsWith('__WORKSPACE_ID__');
+};
+
 export const isInsomniaV4Import = ({ id }: Pick<InsomniaImporter, 'id'>) =>
   id === 'insomnia-4';
 
@@ -281,6 +285,12 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
   invariant(baseEnvironment, 'Could not create base environment');
 
+  const baseEnvironmentFromResources = resources.filter(isEnvironment).find(isBaseEnvironmentResource);
+  if (baseEnvironmentFromResources) {
+    db.docUpdate(baseEnvironment, {
+      data: { ...baseEnvironmentFromResources.data },
+    });
+  }
   const subEnvironments = resources.filter(isEnvironment).filter(isSubEnvironmentResource) || [];
 
   for (const environment of subEnvironments) {
@@ -293,6 +303,9 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
       parentId: baseEnvironment._id,
     });
   }
+
+  // Use the first environment as the active one
+  await setFirstSubEnvAsActive(resources, existingWorkspace, ResourceIdMap);
 
   // Create new ids for each resource below optionalResources
   for (const resource of optionalResources) {
@@ -438,9 +451,20 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
     }
   }
 
-  // Use the first environment as the active one
-  const subEnvironments =
-    resources.filter(isEnvironment).filter(isSubEnvironmentResource) || [];
+  // Use the first sub environment as the active one
+  await setFirstSubEnvAsActive(resources, newWorkspace, ResourceIdMap);
+  return {
+    resources: resources.map(r => ({
+      ...r,
+      _id: ResourceIdMap.get(r._id),
+      parentId: ResourceIdMap.get(r.parentId),
+    })),
+    workspace: newWorkspace,
+  };
+};
+
+async function setFirstSubEnvAsActive(resources: ExtendedBaseModel[], newWorkspace: Workspace, ResourceIdMap: Map<any, any>) {
+  const subEnvironments = resources.filter(isEnvironment).filter(isSubEnvironmentResource) || [];
 
   if (subEnvironments.length > 0) {
     const firstSubEnvironment = subEnvironments[0];
@@ -455,15 +479,7 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
       });
     }
   }
-  return {
-    resources: resources.map(r => ({
-      ...r,
-      _id: ResourceIdMap.get(r._id),
-      parentId: ResourceIdMap.get(r.parentId),
-    })),
-    workspace: newWorkspace,
-  };
-};
+}
 
 function importEnvResourcesToRespectiveWorkspaces(resources: BaseModel[], projectId: string) {
   // create a new workspace for each environment, so we need to pass third argument here
