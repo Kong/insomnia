@@ -288,7 +288,7 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
   const baseEnvironmentFromResources = resources.filter(isEnvironment).find(isBaseEnvironmentResource);
   if (baseEnvironmentFromResources) {
     db.docUpdate(baseEnvironment, {
-      data: { ...baseEnvironmentFromResources.data },
+      data: baseEnvironmentFromResources.data,
     });
   }
   const subEnvironments = resources.filter(isEnvironment).filter(isSubEnvironmentResource) || [];
@@ -303,9 +303,6 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
       parentId: baseEnvironment._id,
     });
   }
-
-  // Use the first environment as the active one
-  await setFirstSubEnvAsActive(resources, existingWorkspace, ResourceIdMap);
 
   // Create new ids for each resource below optionalResources
   for (const resource of optionalResources) {
@@ -452,18 +449,6 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
   }
 
   // Use the first sub environment as the active one
-  await setFirstSubEnvAsActive(resources, newWorkspace, ResourceIdMap);
-  return {
-    resources: resources.map(r => ({
-      ...r,
-      _id: ResourceIdMap.get(r._id),
-      parentId: ResourceIdMap.get(r.parentId),
-    })),
-    workspace: newWorkspace,
-  };
-};
-
-async function setFirstSubEnvAsActive(resources: ExtendedBaseModel[], newWorkspace: Workspace, ResourceIdMap: Map<any, any>) {
   const subEnvironments = resources.filter(isEnvironment).filter(isSubEnvironmentResource) || [];
 
   if (subEnvironments.length > 0) {
@@ -479,7 +464,15 @@ async function setFirstSubEnvAsActive(resources: ExtendedBaseModel[], newWorkspa
       });
     }
   }
-}
+  return {
+    resources: resources.map(r => ({
+      ...r,
+      _id: ResourceIdMap.get(r._id),
+      parentId: ResourceIdMap.get(r.parentId),
+    })),
+    workspace: newWorkspace,
+  };
+};
 
 function importEnvResourcesToRespectiveWorkspaces(resources: BaseModel[], projectId: string) {
   // create a new workspace for each environment, so we need to pass third argument here
