@@ -34,7 +34,7 @@ test.describe('Environment Editor', async () => {
     await page.getByText('baseenv1').click();
   });
 
-  test.only('duplicate an environment', async ({ page }) => {
+  test('duplicate an environment', async ({ page }) => {
     await page.getByRole('button', { name: 'Manage Environments' }).click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     await page.getByRole('row', { name: 'ExampleA' }).getByLabel('Environment Actions').click();
