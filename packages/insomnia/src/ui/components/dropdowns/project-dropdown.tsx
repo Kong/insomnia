@@ -127,11 +127,6 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage })
           </Tooltip>
         </TooltipTrigger>
       }
-      {project.hasUncommittedOrUnpushedChanges && (
-        <div className='group-focus:hidden group-hover:hidden aspect-square h-6 flex items-center justify-center'>
-          <Icon icon="circle" className='w-2 h-2' color="var(--color-warning)" />
-        </div>
-      )}
       <MenuTrigger>
         <Button
           aria-label="Project Actions"

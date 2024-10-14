@@ -1102,6 +1102,11 @@ const ProjectRoute: FC = () => {
                             }
                           />
                           <span className={'truncate'}>{item.name}</span>
+                          {item.hasUncommittedOrUnpushedChanges && (
+                            <div className='aspect-square h-6 flex items-center justify-center'>
+                              <Icon icon="circle" className='w-2 h-2' color="var(--color-warning)" />
+                            </div>
+                          )}
                           <span className="flex-1" />
                           {item.presence.length > 0 && (
                             <AvatarGroup
