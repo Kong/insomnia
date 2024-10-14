@@ -34,6 +34,14 @@ test.describe('Environment Editor', async () => {
     await page.getByText('baseenv1').click();
   });
 
+  test.only('duplicate an environment', async ({ page }) => {
+    await page.getByRole('button', { name: 'Manage Environments' }).click();
+    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByRole('row', { name: 'ExampleA' }).getByLabel('Environment Actions').click();
+    await page.getByText('Duplicate').click();
+    await page.getByLabel('Environments', { exact: true }).getByText('ExampleA (Copy)').click();
+  });
+
   // rename an existing environment
   test('Rename an existing environment', async ({ page }) => {
     // Rename the environment
