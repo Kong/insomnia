@@ -1,11 +1,12 @@
 const { exec } = require('child_process');
 const util = require('util');
+const path = require('path');
 const execAsync = util.promisify(exec);
 
 exports.default = async function(configuration) {
     // remove /n and other crap from path
-    const path = configuration.path.replace(/(\r\n|\n|\r)/gm, '');
-    console.log('[customSign] File to sign before final packaging:', path);
+    const rawPath = configuration.path.replace(/(\r\n|\n|\r)/gm, '');
+    console.log('[customSign] File to sign before final packaging:', rawPath);
 
     const { USERNAME, PASSWORD, CREDENTIAL_ID, TOTP_SECRET } = process.env;
 
@@ -13,15 +14,19 @@ exports.default = async function(configuration) {
         throw new Error('[customSign] Missing required environment variables.');
     }
     // meant to be run on Windows host with docker
-    const inputFilePath = path.replace(/\\/g, '/');
+    const absolutePath = path.resolve(rawPath);
+    const inputFileName = path.basename(absolutePath);
+    // Convert Windows path to Unix-style path for Docker
+    const dockerInputFilePath = path.posix.join('/data', inputFileName);
     const dockerCommand = `docker run --rm \
+        -v "${absolutePath.replace(/\\/g, '/')}:${path.posix.join('/data', inputFileName)}" \
         -e USERNAME="${USERNAME}" \
         -e PASSWORD="${PASSWORD}" \
         -e CREDENTIAL_ID="${CREDENTIAL_ID}" \
         -e TOTP_SECRET="${TOTP_SECRET}" \
-        -v "$(dirname "${inputFilePath}")":"$(dirname "${inputFilePath}")" \
         ghcr.io/sslcom/codesigner:latest sign \
-        -input_file_path="${inputFilePath}" -override`;
+        -input_file_path="${dockerInputFilePath}" -override`;
+
     try {
         console.log('[customSign] Docker command:', dockerCommand);
         console.log('[customSign] Starting to run sign cmd via docker...');
