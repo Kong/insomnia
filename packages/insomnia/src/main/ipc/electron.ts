@@ -28,6 +28,7 @@ export type HandleChannels =
   | 'webSocket.open'
   | 'webSocket.readyState'
   | 'writeFile'
+  | 'isWindowFocused'
   | 'extractJsonFileFromPostmanDataDumpArchive';
 
 export const ipcMainHandle = (
@@ -86,7 +87,9 @@ export type RendererOnChannels =
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
   | 'toggle-sidebar'
-  | 'updaterStatus';
+  | 'updaterStatus'
+  | 'main-window-focus'
+  | 'main-window-blur';
 export const ipcMainOn = (
   channel: MainOnChannels,
   listener: (

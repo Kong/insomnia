@@ -14,6 +14,7 @@ import type { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { addExecutionStep, completeExecutionStep, getExecution, startExecution, type TimingStep, updateLatestStepName } from '../network/request-timing';
 import type { WebSocketBridgeAPI } from '../network/websocket';
+import { isWindowFocused } from '../window-utils';
 import { ipcMainHandle, ipcMainOn, ipcMainOnce, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
@@ -31,6 +32,7 @@ export interface RendererToMainBridgeAPI {
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
+  isWindowFocused: () => Promise<boolean>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
@@ -96,6 +98,10 @@ export function registerMainHandlers() {
     } catch (err) {
       throw new Error(err);
     }
+  });
+
+  ipcMainHandle('isWindowFocused', async () => {
+    return isWindowFocused();
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {

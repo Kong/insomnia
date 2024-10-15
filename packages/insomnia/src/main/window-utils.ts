@@ -38,7 +38,7 @@ const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 
-const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
+export const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
 let localStorage: LocalStorage | null = null;
 let hiddenWindowIsBusy = false;
 
@@ -269,6 +269,16 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
     if (browserWindows.get('Insomnia')) {
       browserWindows.delete('Insomnia');
     }
+  });
+
+  mainBrowserWindow.on('focus', () => {
+    console.log('[main] window focus');
+    mainBrowserWindow.webContents.send('main-window-focus');
+  });
+
+  mainBrowserWindow.on('blur', () => {
+    console.log('[main] window blur');
+    mainBrowserWindow.webContents.send('main-window-blur');
   });
 
   const applicationMenu: MenuItemConstructorOptions = {
@@ -792,3 +802,8 @@ export function createWindowsAndReturnMain({ firstLaunch }: { firstLaunch?: bool
   }
   return mainWindow;
 }
+
+export const isWindowFocused = () => {
+  const mainWindow = browserWindows.get('Insomnia');
+  return mainWindow?.isFocused();
+};
