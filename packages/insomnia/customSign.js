@@ -5,6 +5,7 @@ const execAsync = util.promisify(exec);
 
 exports.default = async function(configuration) {
     // skip signing if not windows squirrel
+    console.log('[customSign] Configuration:', configuration);
     if (!configuration.options.target || configuration.options.target !== 'squirrel' || configuration.options.target[0].target !== 'squirrel') {
         console.log('[customSign] Skipping signing because target is not windows squirrel.');
         return;
