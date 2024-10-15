@@ -18,8 +18,8 @@ function getDiff(previewDiffItem: {
   before: string;
   after: string;
 }) {
-  let prev = previewDiffItem.before;
-  let next = previewDiffItem.after;
+  let prev = null;
+  let next = null;
 
   try {
     prev = JSON.parse(previewDiffItem.before);
@@ -34,6 +34,35 @@ function getDiff(previewDiffItem: {
   }
 
   return differ.diff(prev, next);
+}
+
+function getPreviewItemName(previewDiffItem: {
+  before: string;
+  after: string;
+}) {
+  let prevName = '';
+  let nextName = '';
+
+  try {
+    const prev = JSON.parse(previewDiffItem.before);
+
+    if (prev && 'fileName' in prev || 'name' in prev) {
+      prevName = prev.fileName || prev.name;
+    }
+  } catch (e) {
+    // Nothing to do
+  }
+
+  try {
+    const next = JSON.parse(previewDiffItem.after);
+    if (next && 'fileName' in next || 'name' in next) {
+      nextName = next.fileName || next.name;
+    }
+  } catch (e) {
+    // Nothing to do
+  }
+
+  return nextName || prevName;
 }
 
 export const GitStagingModal: FC<{ onClose: () => void }> = ({
@@ -234,7 +263,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                       <Heading className='group font-semibold flex-shrink-0 w-full flex items-center gap-2 py-1 justify-between'>
                         <span className='flex-1'>Staged changes</span>
                         <Button
-                          className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                          className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base'
                           slot={null}
                           name='Unstage all changes'
                           onPress={() => {
@@ -243,7 +272,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                         >
                           <Icon icon="minus" />
                         </Button>
-                        <span className='text-xs rounded-full px-1 text-[--hl] bg-[--hl-sm]'>{changes.staged.length}</span>
+                        <span className='text-base rounded-full size-6 flex items-center justify-center px-1 text-[--hl] bg-[--hl-sm]'>{changes.staged.length}</span>
                       </Heading>
                       <div className='flex-1 flex overflow-y-auto w-full select-none'>
                         <GridList
@@ -304,7 +333,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                         <span>Changes</span>
                         <div className='flex items-center gap-2'>
                           <Button
-                            className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                            className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base'
                             slot={null}
                             name='Discard all changes'
                             onPress={() => {
@@ -314,7 +343,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                             <Icon icon="undo-alt" />
                           </Button>
                           <Button
-                            className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                            className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] px-2 gap-2 rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base'
                             slot={null}
                             name="Stage all changes"
                             onPress={() => {
@@ -323,7 +352,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                           >
                             <Icon icon="plus" />
                           </Button>
-                          <span className='text-xs rounded-full px-1 text-[--hl] bg-[--hl-sm]'>{changes.unstaged.length}</span>
+                          <span className='text-base rounded-full size-6 flex items-center justify-center px-1 text-[--hl] bg-[--hl-sm]'>{changes.unstaged.length}</span>
                         </div>
                       </Heading>
                       <div className='flex-1 flex overflow-y-auto w-full select-none'>
@@ -391,7 +420,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                 {previewDiffItem ? <div className='p-2 pb-0 flex flex-col gap-2 h-full overflow-y-auto'>
                   <Heading className='font-bold flex items-center gap-2'>
                     <Icon icon="code-compare" />
-                    {/* {previewDiffItem.name || ('document' in previewDiffItem && previewDiffItem.document && 'type' in previewDiffItem.document ? previewDiffItem.document?.type : '')} */}
+                    {getPreviewItemName(previewDiffItem)}
                   </Heading>
                   {previewDiffItem && (
                     <div
