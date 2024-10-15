@@ -19,6 +19,8 @@ exports.default = async function(configuration) {
         ghcr.io/sslcom/codesigner-win:latest sign \
         -input_file_path="${inputFilePath}" -override`;
     try {
+        console.log('[customSign] Docker command:', dockerCommand);
+        console.log('[customSign] Starting to run sign cmd via docker...');
         const { stdout, stderr } = await execAsync(dockerCommand);
 
         console.log('[customSign] Docker command output:', stdout);
