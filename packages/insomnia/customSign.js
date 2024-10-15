@@ -19,6 +19,7 @@ exports.default = async function(configuration) {
         -e PASSWORD="${PASSWORD}" \
         -e CREDENTIAL_ID="${CREDENTIAL_ID}" \
         -e TOTP_SECRET="${TOTP_SECRET}" \
+        -v "$(dirname "${inputFilePath}")":"$(dirname "${inputFilePath}")" \
         ghcr.io/sslcom/codesigner:latest sign \
         -input_file_path="${inputFilePath}" -override`;
     try {
