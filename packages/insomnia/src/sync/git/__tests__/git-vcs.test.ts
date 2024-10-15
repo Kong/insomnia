@@ -289,6 +289,7 @@ First commit!
 
   describe('push()', () => {
     it('should throw an exception when push response contains errors', async () => {
+      // @ts-expect-error -- mockReturnValue is not typed
       git.push.mockReturnValue({
         ok: ['unpack'],
         errors: ['refs/heads/master pre-receive hook declined'],
@@ -319,19 +320,49 @@ First commit!
       });
       // Commit
       await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
-      await GitVCS.add(fooTxt);
-      await GitVCS.add(folderBarTxt);
+
+      const status = await GitVCS.status();
+
+      const fooStatus = status.unstaged.find(s => s.path.includes(fooTxt));
+      const folderStatus = status.unstaged.find(s => s.path.includes(folder));
+
+      if (!fooStatus || !folderStatus) {
+        throw new Error('c');
+      }
+
+      await GitVCS.stageChanges([fooStatus, folderStatus]);
       await GitVCS.commit('First commit!');
       // Change the file
-      await fsClient.promises.writeFile(fooTxt, 'changedContent');
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, fooTxt), 'changedContent');
       await fsClient.promises.writeFile(folderBarTxt, 'changedContent');
-      expect(await GitVCS.status(fooTxt)).toBe('*modified');
-      expect(await GitVCS.status(folderBarTxt)).toBe('*modified');
-      // Undo
-      await GitVCS.undoPendingChanges();
+
+      const status2 = await GitVCS.status();
+
+      expect(status2).toEqual({
+        'staged': [],
+        'unstaged': [
+          {
+            'name': '',
+            'path': '.insomnia/folder/bar.txt',
+            'status': [1, 2, 1],
+          },
+          {
+            'name': '',
+            'path': '.insomnia/foo.txt',
+            'status': [0, 2, 0],
+          },
+        ],
+      });
+      // Discard changes
+      await GitVCS.discardChanges(status2.unstaged);
+
+      const status3 = await GitVCS.status();
+
       // Ensure git doesn't recognize a change anymore
-      expect(await GitVCS.status(fooTxt)).toBe('unmodified');
-      expect(await GitVCS.status(folderBarTxt)).toBe('unmodified');
+      expect(status3).toEqual({
+        staged: [],
+        unstaged: [],
+      });
       // Expect original doc to have reverted
       expect((await fsClient.promises.readFile(fooTxt)).toString()).toBe(originalContent);
       expect((await fsClient.promises.readFile(folderBarTxt)).toString()).toBe(originalContent);
@@ -357,20 +388,30 @@ First commit!
       await Promise.all(files.map(f => fsClient.promises.writeFile(f, originalContent)));
       // Commit all files
       await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
-      await Promise.all(files.map(f => GitVCS.add(f, originalContent)));
+      const status = await GitVCS.status();
+      await GitVCS.stageChanges(status.unstaged);
       await GitVCS.commit('First commit!');
       // Change all files
       await Promise.all(files.map(f => fsClient.promises.writeFile(f, changedContent)));
-      await Promise.all(files.map(() => expect(GitVCS.status(foo1Txt)).resolves.toBe('*modified')));
+
+      const status2 = await GitVCS.status();
       // Undo foo1 and foo2, but not foo3
-      await GitVCS.undoUnstagedChanges([foo1Txt, foo2Txt]);
-      expect(await GitVCS.status(foo1Txt)).toBe('unmodified');
-      expect(await GitVCS.status(foo2Txt)).toBe('unmodified');
+      const changesToUndo = status2.unstaged.filter(change => !change.path.includes(foo3Txt));
+      await GitVCS.discardChanges(changesToUndo);
+      const status3 = await GitVCS.status();
+      expect(status3).toEqual({
+        'staged': [],
+        'unstaged': [
+          {
+            'name': '',
+            'path': '.insomnia/foo3.txt',
+            'status': [1, 2, 1],
+          },
+        ],
+      });
       // Expect original doc to have reverted for foo1 and foo2
       expect((await fsClient.promises.readFile(foo1Txt)).toString()).toBe(originalContent);
       expect((await fsClient.promises.readFile(foo2Txt)).toString()).toBe(originalContent);
-      // Expect changed content for foo3
-      expect(await GitVCS.status(foo3Txt)).toBe('*modified');
       expect((await fsClient.promises.readFile(foo3Txt)).toString()).toBe(changedContent);
     });
   });

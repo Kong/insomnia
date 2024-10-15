@@ -844,8 +844,9 @@ export class GitVCS {
       } else {
         await git.checkout({
           ...this._baseOpts,
+          force: true,
           ref: await this.getCurrentBranch(),
-          filepaths: [change.path],
+          filepaths: [convertToPosixSep(change.path)],
         });
       }
 
