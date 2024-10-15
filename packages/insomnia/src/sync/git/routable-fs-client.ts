@@ -26,7 +26,7 @@ export function routableFSClient(
     }
 
     // Uncomment this to debug operations
-    console.log('[routablefs] Executing', method, filePath, { args });
+    // console.log('[routablefs] Executing', method, filePath, { args });
     // Fallback to default if no prefix matched
     // TODO: remove non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -35,7 +35,7 @@ export function routableFSClient(
     // we need to return the actual result plus inject the .insomnia directory
     // so that git will try to find changes inside that directory
     if (method === 'readdir' && filePath === '.') {
-      console.log('[routablefs] Executing', method, filePath, { args });
+      // console.log('[routablefs] Executing', method, filePath, { args });
       return ['.insomnia', ...result];
     }
     // Uncomment this to debug operations
