@@ -108,7 +108,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
     isCheckingGitChanges.current = true;
     await checkGitChanges(workspaceId);
     isCheckingGitChanges.current = false;
-  }, isWindowFocused ? 1000 : null);
+  }, isWindowFocused ? 30 * 1000 : null);
 
   useEffect(() => {
     if (shouldFetchGitRepoStatus) {
