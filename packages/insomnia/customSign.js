@@ -11,7 +11,7 @@ exports.default = async function(configuration) {
     }
     // meant to be run on Windows host with docker
     const inputFilePath = configuration.path.replace(/\\/g, '/');
-    const dockerCommand = `docker run -it --rm \
+    const dockerCommand = `docker run --rm \
         -e USERNAME="${USERNAME}" \
         -e PASSWORD="${PASSWORD}" \
         -e CREDENTIAL_ID="${CREDENTIAL_ID}" \
