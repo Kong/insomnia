@@ -42,14 +42,12 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
     await page.waitForTimeout(1000);
     await page.getByTestId('git-dropdown').click();
     await page.getByText('Commit').click();
-    await page.getByText('Modified Objects').click();
-    await page.getByText('ApiSpec').click();
-    await page.getByPlaceholder('A descriptive message to').click();
-    await page.getByPlaceholder('A descriptive message to').fill('example commit message');
-    await page.getByRole('dialog').getByText('abc').click();
-    await page.getByRole('button', { name: ' Commit' }).click();
-    await page.getByText('No changes to commit.').click();
-    await page.getByRole('button', { name: 'Close' }).click();
+    await page.locator('button[name="Stage all changes"]').click();
+    await page.getByPlaceholder('This is a helpful message').click();
+    await page.getByPlaceholder('This is a helpful message').fill('example commit message');
+    await page.getByRole('button', { name: 'Commit', exact: true }).click();
+    await page.getByRole('heading', { name: 'Commit changes' }).click();
+    await page.getByLabel('Commit changes').press('Escape');
 
     // switch back to main branch, which should not have said changes
     await page.getByTestId('git-dropdown').click();
@@ -93,17 +91,22 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
     await page.getByLabel('Name', { exact: true }).fill(`My Folder ${testUUID}`);
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.getByTestId('git-dropdown').click();
+
+    // Commit changes
     await page.getByText('Commit').click();
-    await page.getByRole('cell', { name: `My Folder ${testUUID}` }).locator('label').click();
-    await page.getByPlaceholder('A descriptive message to').click();
-    await page.getByPlaceholder('A descriptive message to').fill(`commit test ${testUUID}`);
-    await page.getByText('Commit Changes').click();
-    await page.getByRole('button', { name: ' Commit' }).click();
-    await page.getByText('No changes to commit.').click();
-    await page.getByRole('button', { name: 'Close' }).click();
+    await page.locator('button[name="Stage all changes"]').click();
+    await page.getByPlaceholder('This is a helpful message').click();
+    await page.getByPlaceholder('This is a helpful message').fill(`commit test ${testUUID}`);
+    await page.getByRole('button', { name: 'Commit', exact: true }).click();
+    await page.getByRole('heading', { name: 'Commit changes' }).click();
+    await page.getByLabel('Commit changes').press('Escape');
+
+    // Push changes
     await page.getByTestId('git-dropdown').click();
     await page.getByText('Push', { exact: true }).click();
     await page.getByTestId('git-dropdown').click();
+
+    // Check if the changes are pushed
     await page.getByText('Fetch').click();
     await page.getByTestId('git-dropdown').click();
     await page.getByText('History').click();

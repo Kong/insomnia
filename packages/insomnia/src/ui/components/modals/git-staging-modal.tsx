@@ -1,6 +1,6 @@
 import { Differ, Viewer } from 'json-diff-kit';
 import React, { type FC, useEffect } from 'react';
-import { Button, Dialog, GridList, GridListItem, Heading, Label, Modal, ModalOverlay, TextArea, TextField, Tooltip, TooltipTrigger } from 'react-aria-components';
+import { Button, Dialog, GridList, GridListItem, Heading, Label, Modal, ModalOverlay, TextArea, TextField } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import type { CommitToGitRepoResult, GitChangesLoaderData, GitDiffResult } from '../../routes/git-actions';
@@ -226,6 +226,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                         <Button
                           className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
                           slot={null}
+                          name='Unstage all changes'
                           onPress={() => {
                             unstageChanges(changes.staged.map(entry => entry.path));
                           }}
@@ -263,23 +264,24 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                                   <Button
                                     className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
                                     slot={null}
+                                    name="Unstage change"
                                     onPress={() => {
                                       unstageChanges([item.entry.path]);
                                     }}
                                   >
                                     <Icon icon="minus" />
                                   </Button>
-                                  <TooltipTrigger>
+                                  {/* <TooltipTrigger>
                                     <Button className="cursor-default">
-                                      {/* {'added' in item.entry ? 'U' : 'deleted' in item.entry ? 'D' : 'M'} */}
+                                      {'added' in item.entry ? 'U' : 'deleted' in item.entry ? 'D' : 'M'}
                                     </Button>
                                     <Tooltip
                                       offset={8}
                                       className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                                     >
-                                      {/* {'added' in item.entry ? 'Untracked' : 'deleted' in item.entry ? 'Deleted' : 'Modified'} */}
+                                      {'added' in item.entry ? 'Untracked' : 'deleted' in item.entry ? 'Deleted' : 'Modified'}
                                     </Tooltip>
-                                  </TooltipTrigger>
+                                  </TooltipTrigger> */}
                                 </div>
                               </GridListItem>
                             );
@@ -294,6 +296,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                           <Button
                             className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
                             slot={null}
+                            name='Discard all changes'
                             onPress={() => {
                               undoUnstagedChanges(changes.unstaged.map(entry => entry.path));
                             }}
@@ -303,6 +306,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                           <Button
                             className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
                             slot={null}
+                            name="Stage all changes"
                             onPress={() => {
                               stageChanges(changes.unstaged.map(entry => entry.path));
                             }}
@@ -337,6 +341,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                                   <Button
                                     className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
                                     slot={null}
+                                    name="Discard change"
                                     onPress={() => {
                                       undoUnstagedChanges([item.entry.path]);
                                     }}
@@ -346,23 +351,24 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                                   <Button
                                     className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
                                     slot={null}
+                                    name="Stage change"
                                     onPress={() => {
                                       stageChanges([item.entry.path]);
                                     }}
                                   >
                                     <Icon icon="plus" />
                                   </Button>
-                                  <TooltipTrigger>
+                                  {/* <TooltipTrigger>
                                     <Button className="cursor-default">
-                                      {/* {'added' in item.entry ? 'U' : 'deleted' in item.entry ? 'D' : 'M'} */}
+                                      {'added' in item.entry ? 'U' : 'deleted' in item.entry ? 'D' : 'M'}
                                     </Button>
                                     <Tooltip
                                       offset={8}
                                       className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                                     >
-                                      {/* {'added' in item.entry ? 'Untracked' : 'deleted' in item.entry ? 'Deleted' : 'Modified'} */}
+                                      {'added' in item.entry ? 'Untracked' : 'deleted' in item.entry ? 'Deleted' : 'Modified'}
                                     </Tooltip>
-                                  </TooltipTrigger>
+                                  </TooltipTrigger> */}
                                 </div>
                               </GridListItem>
                             );
