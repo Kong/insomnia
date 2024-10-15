@@ -92,6 +92,20 @@ export const GIT_INSOMNIA_DIR_NAME = '.insomnia';
 export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, gitInternalDirName); // .git
 export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME); // .insomnia
 
+function getInsomniaFileName(blob: void | Uint8Array | undefined): string {
+  if (!blob) {
+    return '';
+  }
+
+  try {
+    const parsed = parse(Buffer.from(blob).toString('utf-8'));
+    return parsed?.fileName || parsed?.name || '';
+  } catch (e) {
+    // If the document couldn't be parsed as yaml return an empty string
+    return '';
+  }
+}
+
 interface BaseOpts {
   dir: string;
   gitdir?: string;
@@ -359,9 +373,19 @@ export class GitVCS {
           }
         }
 
-        const blobs = [headBlob, workdirBlob, stageBlob].map(r => r ? JSON.stringify(parse(Buffer.from(r).toString('utf-8'))) : null);
+        const blobsAsJSONStrings = [headBlob, workdirBlob, stageBlob].map(blob => {
+          if (!blob) {
+            return null;
+          }
 
-        return [filepath, ...blobs];
+          try {
+            return JSON.stringify(parse(Buffer.from(blob).toString('utf-8')));
+          } catch (e) {
+            return null;
+          }
+        });
+
+        return [filepath, ...blobsAsJSONStrings];
       },
     });
 
@@ -394,6 +418,12 @@ export class GitVCS {
         git.STAGE(),
       ],
       map: async function map(filepath, [head, workdir, stage]) {
+        if (await git.isIgnored({
+          ...baseOpts,
+          filepath,
+        })) {
+          return null;
+        }
         const [headType, workdirType, stageType] = await Promise.all([
           head && head.type(),
           workdir && workdir.type(),
@@ -459,15 +489,6 @@ export class GitVCS {
         const result = entry.map(value => entry.indexOf(value));
         result.shift();
 
-        function getInsomniaFileName(blob: void | Uint8Array | undefined) {
-          if (!blob) {
-            return '';
-          }
-
-          const parsed = parse(Buffer.from(blob).toString('utf-8'));
-          return parsed?.fileName || parsed?.name || '';
-        }
-
         return {
           filepath,
           head: {
@@ -493,8 +514,6 @@ export class GitVCS {
     staged: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus]; name: string }[];
     unstaged: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus]; name: string }[];
   }> {
-    const statusMatrix = await git.statusMatrix({ ...this._baseOpts });
-    console.log({ statusMatrix });
     const status = await this.statusWithContent();
 
     const unstagedChanges = status.filter(({ workdir, stage }) => stage.status !== workdir.status);
