@@ -3,7 +3,7 @@ import path from 'path';
 import { parse } from 'yaml';
 
 import { httpClient } from './http-client';
-import { convertToOsSep, convertToPosixSep } from './path-sep';
+import { convertToPosixSep } from './path-sep';
 import { gitCallbacks } from './utils';
 
 export interface GitAuthor {
@@ -205,15 +205,6 @@ export class GitVCS {
 
   isInitializedForRepo(id: string) {
     return this._baseOpts.repoId === id;
-  }
-
-  async listFiles() {
-    console.log('[git] List files');
-    const repositoryFiles = await git.listFiles({ ...this._baseOpts });
-    const insomniaFiles = repositoryFiles
-      .filter(file => file.startsWith(GIT_INSOMNIA_DIR_NAME))
-      .map(convertToOsSep);
-    return insomniaFiles;
   }
 
   async getCurrentBranch() {
@@ -534,17 +525,6 @@ export class GitVCS {
     };
   }
 
-  async add(relPath: string) {
-    relPath = convertToPosixSep(relPath);
-    return git.add({ ...this._baseOpts, filepath: relPath });
-  }
-
-  async remove(relPath: string) {
-    relPath = convertToPosixSep(relPath);
-    console.log(`[git] Remove relPath=${relPath}`);
-    return git.remove({ ...this._baseOpts, filepath: relPath });
-  }
-
   async addRemote(url: string) {
     console.log(`[git] Add Remote url=${url}`);
     await git.addRemote({
@@ -564,18 +544,6 @@ export class GitVCS {
 
   async listRemotes(): Promise<GitRemoteConfig[]> {
     return git.listRemotes({ ...this._baseOpts });
-  }
-
-  async getAuthor() {
-    const name = await git.getConfig({ ...this._baseOpts, path: 'user.name' });
-    const email = await git.getConfig({
-      ...this._baseOpts,
-      path: 'user.email',
-    });
-    return {
-      name: name || '',
-      email: email || '',
-    } as GitAuthor;
   }
 
   async setAuthor(name: string, email: string) {
@@ -781,20 +749,6 @@ export class GitVCS {
     }
   }
 
-  async readObjFromTree(treeOid: string, objPath: string) {
-    try {
-      const obj = await git.readObject({
-        ...this._baseOpts,
-        oid: treeOid,
-        filepath: convertToPosixSep(objPath),
-        encoding: 'utf8',
-      });
-      return obj.object;
-    } catch (err) {
-      return null;
-    }
-  }
-
   async repoExists() {
     try {
       await git.getConfig({ ...this._baseOpts, path: '' });
@@ -803,10 +757,6 @@ export class GitVCS {
     }
 
     return true;
-  }
-
-  getFs() {
-    return this._baseOpts.fs;
   }
 
   async stageChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
@@ -842,7 +792,7 @@ export class GitVCS {
       if (change.status[0] === 0) {
         await git.remove({ ...this._baseOpts, filepath: change.path });
         // @ts-expect-error -- TSCONVERSION
-        await this.getFs().promises.unlink(change.path);
+        await this._baseOpts.fs.promises.unlink(change.path);
       } else {
         await git.checkout({
           ...this._baseOpts,

@@ -17,25 +17,6 @@ describe('Git-VCS', () => {
   beforeEach(setupDateMocks);
 
   describe('common operations', () => {
-    it('listFiles()', async () => {
-      const fsClient = MemClient.createClient();
-
-      await GitVCS.init({
-        uri: '',
-        repoId: '',
-        directory: GIT_CLONE_DIR,
-        fs: fsClient,
-      });
-      await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
-      // No files exist yet
-      const files1 = await GitVCS.listFiles();
-      expect(files1).toEqual([]);
-      // File does not exist in git index
-      await fsClient.promises.writeFile('foo.txt', 'bar');
-      const files2 = await GitVCS.listFiles();
-      expect(files2).toEqual([]);
-    });
-
     it('stage and unstage file', async () => {
       // Write the files to the repository directory
       const fsClient = MemClient.createClient();
@@ -266,12 +247,16 @@ First commit!
         fs: fsClient,
       });
       await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
-      await GitVCS.add(fooTxt);
+      const status = await GitVCS.status();
+      const fooStatus = status.unstaged.find(f => f.path.includes(fooTxt));
+      fooStatus && await GitVCS.stageChanges([fooStatus]);
       await GitVCS.commit('First commit!');
       expect((await GitVCS.log()).length).toBe(1);
       await GitVCS.checkout('new-branch');
       expect((await GitVCS.log()).length).toBe(1);
-      await GitVCS.add(barTxt);
+      const status2 = await GitVCS.status();
+      const barStatus = status2.unstaged.find(f => f.path.includes(barTxt));
+      barStatus && await GitVCS.stageChanges([barStatus]);
       await GitVCS.commit('Second commit!');
       expect((await GitVCS.log()).length).toBe(2);
       await GitVCS.checkout('main');
@@ -405,36 +390,6 @@ First commit!
       expect((await fsClient.promises.readFile(foo1Txt)).toString()).toBe(originalContent);
       expect((await fsClient.promises.readFile(foo2Txt)).toString()).toBe(originalContent);
       expect((await fsClient.promises.readFile(foo3Txt)).toString()).toBe(changedContent);
-    });
-  });
-
-  describe('readObjectFromTree()', () => {
-    it('reads an object from tree', async () => {
-      const fsClient = MemClient.createClient();
-      const dir = path.join(GIT_INSOMNIA_DIR, 'dir');
-      const dirFooTxt = path.join(dir, 'foo.txt');
-      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
-      await fsClient.promises.mkdir(dir);
-      await fsClient.promises.writeFile(dirFooTxt, 'foo');
-
-      await GitVCS.init({
-        uri: '',
-        repoId: '',
-        directory: GIT_CLONE_DIR,
-        fs: fsClient,
-      });
-      await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
-      await GitVCS.add(dirFooTxt);
-      await GitVCS.commit('First');
-      await fsClient.promises.writeFile(dirFooTxt, 'foo bar');
-      await GitVCS.add(dirFooTxt);
-      await GitVCS.commit('Second');
-      const log = await GitVCS.log();
-      expect(await GitVCS.readObjFromTree(log[0].commit.tree, dirFooTxt)).toBe('foo bar');
-      expect(await GitVCS.readObjFromTree(log[1].commit.tree, dirFooTxt)).toBe('foo');
-      // Some extra checks
-      expect(await GitVCS.readObjFromTree(log[1].commit.tree, 'missing')).toBe(null);
-      expect(await GitVCS.readObjFromTree('missing', 'missing')).toBe(null);
     });
   });
 });
