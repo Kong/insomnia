@@ -19,18 +19,22 @@ exports.default = async function(configuration) {
     if (!USERNAME || !PASSWORD || !CREDENTIAL_ID || !TOTP_SECRET) {
         throw new Error('[customSign] Missing required environment variables.');
     }
-    // meant to be run on Windows host with docker
-    const absolutePath = path.resolve(rawPath);
+    const absolutePath = fs.realpathSync(path.resolve(rawPath));
     const inputFileName = path.basename(absolutePath);
+
     // Convert Windows path to Unix-style path for Docker
     const dockerInputFilePath = path.posix.join('/data', inputFileName);
-    const dockerCommand = `docker run --rm  --platform linux \
-        -v "${absolutePath.replace(/\\/g, '/')}:${path.posix.join('/data', inputFileName)}" \
+    const hostPathForDocker = absolutePath
+        .replace(/\\/g, '/')
+        .replace(/^([A-Za-z]):/, (match, driveLetter) => `/${driveLetter.toLowerCase()}`);
+
+    const dockerCommand = `docker run --rm \
+        -v "${hostPathForDocker}:${dockerInputFilePath}" \
         -e USERNAME="${USERNAME}" \
         -e PASSWORD="${PASSWORD}" \
         -e CREDENTIAL_ID="${CREDENTIAL_ID}" \
         -e TOTP_SECRET="${TOTP_SECRET}" \
-        ghcr.io/sslcom/codesigner:latest sign \
+        ghcr.io/sslcom/codesigner-win:latest sign \
         -input_file_path="${dockerInputFilePath}" -override`;
 
     try {

@@ -133,7 +133,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
-          docker pull --platform linux ghcr.io/sslcom/codesigner:latest
+          docker pull ghcr.io/sslcom/codesigner-win:latest
           NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
         env:
           USERNAME: ${{secrets.ES_USERNAME}}
