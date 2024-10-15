@@ -60,7 +60,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       gitRepoDataFetcher.state === 'idle' &&
       !gitRepoDataFetcher.data
     ) {
-      console.log('[git:fetcher] Fetching git repo data');
       gitRepoDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/repo`);
     }
   }, [
@@ -77,7 +76,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
 
   useEffect(() => {
     if (shouldFetchGitRepoStatus) {
-      console.log('[git:fetcher] Fetching git repo status');
       gitStatusFetcher.submit({}, {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/status`,
         method: 'post',
@@ -361,7 +359,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
             disabledKeys={allSyncMenuActionList.filter(item => item?.isDisabled).map(item => item.id)}
             onAction={key => {
               const item = allSyncMenuActionList.find(item => item.id === key);
-              console.log('onAction', key, item);
               item?.action();
             }}
             className="border max-w-lg select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
@@ -444,7 +441,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       )}
       {isGitStagingModalOpen && gitRepository && (
         <GitStagingModal
-          onHide={() => setIsGitStagingModalOpen(false)}
+          onClose={() => setIsGitStagingModalOpen(false)}
         />
       )}
     </>

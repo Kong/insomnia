@@ -1,8 +1,9 @@
 import * as git from 'isomorphic-git';
 import path from 'path';
+import { parse } from 'yaml';
 
 import { httpClient } from './http-client';
-import { convertToOsSep, convertToPosixSep } from './path-sep';
+import { convertToPosixSep } from './path-sep';
 import { gitCallbacks } from './utils';
 
 export interface GitAuthor {
@@ -88,8 +89,22 @@ interface InitFromCloneOptions {
 export const GIT_CLONE_DIR = '.';
 const gitInternalDirName = 'git';
 export const GIT_INSOMNIA_DIR_NAME = '.insomnia';
-export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, gitInternalDirName);
-export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME);
+export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, gitInternalDirName); // .git
+export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME); // .insomnia
+
+function getInsomniaFileName(blob: void | Uint8Array | undefined): string {
+  if (!blob) {
+    return '';
+  }
+
+  try {
+    const parsed = parse(Buffer.from(blob).toString('utf-8'));
+    return parsed?.fileName || parsed?.name || '';
+  } catch (e) {
+    // If the document couldn't be parsed as yaml return an empty string
+    return '';
+  }
+}
 
 interface BaseOpts {
   dir: string;
@@ -192,15 +207,6 @@ export class GitVCS {
     return this._baseOpts.repoId === id;
   }
 
-  async listFiles() {
-    console.log('[git] List files');
-    const repositoryFiles = await git.listFiles({ ...this._baseOpts });
-    const insomniaFiles = repositoryFiles
-      .filter(file => file.startsWith(GIT_INSOMNIA_DIR_NAME))
-      .map(convertToOsSep);
-    return insomniaFiles;
-  }
-
   async getCurrentBranch() {
     const branch = await git.currentBranch({ ...this._baseOpts });
 
@@ -257,23 +263,266 @@ export class GitVCS {
     }
   }
 
-  async status(filepath: string) {
-    return git.status({
-      ...this._baseOpts,
-      filepath: convertToPosixSep(filepath),
+  async fileStatus(file: string) {
+    const baseOpts = this._baseOpts;
+    // Adopted from statusMatrix of isomorphic-git https://github.com/isomorphic-git/isomorphic-git/blob/main/src/api/statusMatrix.js#L157
+    const [blobs]: [[string, string, string, string]] = await git.walk({
+      ...baseOpts,
+      trees: [git.TREE({ ref: 'HEAD' }), git.WORKDIR(), git.STAGE()],
+      map: async function map(filepath, [head, workdir, stage]) {
+        // Late filter against file names
+        if (filepath !== file) {
+          return;
+        }
+
+        const [headType, workdirType, stageType] = await Promise.all([
+          head && head.type(),
+          workdir && workdir.type(),
+          stage && stage.type(),
+        ]);
+
+        const isBlob = [headType, workdirType, stageType].includes('blob');
+
+        // For now, bail on directories unless the file is also a blob in another tree
+        if ((headType === 'tree' || headType === 'special') && !isBlob) {
+          return;
+        }
+        if (headType === 'commit') {
+          return null;
+        }
+
+        if ((workdirType === 'tree' || workdirType === 'special') && !isBlob) {
+          return;
+        }
+
+        if (stageType === 'commit') {
+          return null;
+        }
+        if ((stageType === 'tree' || stageType === 'special') && !isBlob) {
+          return;
+        }
+
+        // Figure out the oids for files, using the staged oid for the working dir oid if the stats match.
+        const headOid = headType === 'blob' ? await head?.oid() : undefined;
+        const stageOid = stageType === 'blob' ? await stage?.oid() : undefined;
+        let workdirOid;
+        if (
+          headType !== 'blob' &&
+          workdirType === 'blob' &&
+          stageType !== 'blob'
+        ) {
+          workdirOid = '42';
+        } else if (workdirType === 'blob') {
+          workdirOid = await workdir?.oid();
+        }
+
+        let headBlob = await head?.content();
+        let workdirBlob = await workdir?.content();
+        let stageBlob = await stage?.content();
+
+        if (!stageBlob && stageOid) {
+          try {
+            const { blob } = await git.readBlob({
+              ...baseOpts,
+
+              oid: stageOid,
+            });
+
+            stageBlob = blob;
+          } catch (e) {
+            console.log('[git] Failed to read blob', e);
+          }
+        }
+
+        if (!headBlob && headOid) {
+          try {
+            const { blob } = await git.readBlob({
+              ...baseOpts,
+
+              oid: headOid,
+            });
+
+            headBlob = blob;
+          } catch (e) {
+            console.log('[git] Failed to read blob', e);
+          }
+        }
+
+        if (!workdirBlob && workdirOid) {
+          try {
+            const { blob } = await git.readBlob({
+              ...baseOpts,
+
+              oid: workdirOid,
+            });
+
+            workdirBlob = blob;
+          } catch (e) {
+            console.log('[git] Failed to read blob', e);
+          }
+        }
+
+        const blobsAsJSONStrings = [headBlob, workdirBlob, stageBlob].map(blob => {
+          if (!blob) {
+            return null;
+          }
+
+          try {
+            return JSON.stringify(parse(Buffer.from(blob).toString('utf-8')));
+          } catch (e) {
+            return null;
+          }
+        });
+
+        return [filepath, ...blobsAsJSONStrings];
+      },
     });
+
+    const diff = {
+      head: blobs[1],
+      workdir: blobs[2],
+      stage: blobs[3],
+    };
+
+    return diff;
   }
 
-  async add(relPath: string) {
-    relPath = convertToPosixSep(relPath);
-    console.log(`[git] Add ${relPath}`);
-    return git.add({ ...this._baseOpts, filepath: relPath });
+  async statusWithContent() {
+    const baseOpts = this._baseOpts;
+
+    // Adopted from statusMatrix of isomorphic-git https://github.com/isomorphic-git/isomorphic-git/blob/main/src/api/statusMatrix.js#L157
+    const status: {
+      filepath: string;
+      head: { name: string; status: git.HeadStatus };
+      workdir: { name: string; status: git.WorkdirStatus };
+      stage: { name: string; status: git.StageStatus };
+    }[] = await git.walk({
+      ...baseOpts,
+      trees: [
+        // What the latest commit on the current branch looks like
+        git.TREE({ ref: 'HEAD' }),
+        // What the working directory looks like
+        git.WORKDIR(),
+        // What the index (staging area) looks like
+        git.STAGE(),
+      ],
+      map: async function map(filepath, [head, workdir, stage]) {
+        if (await git.isIgnored({
+          ...baseOpts,
+          filepath,
+        })) {
+          return null;
+        }
+        const [headType, workdirType, stageType] = await Promise.all([
+          head && head.type(),
+          workdir && workdir.type(),
+          stage && stage.type(),
+        ]);
+
+        const isBlob = [headType, workdirType, stageType].includes('blob');
+
+        // For now, bail on directories unless the file is also a blob in another tree
+        if ((headType === 'tree' || headType === 'special') && !isBlob) {
+          return;
+        }
+        if (headType === 'commit') {
+          return null;
+        }
+
+        if ((workdirType === 'tree' || workdirType === 'special') && !isBlob) {
+          return;
+        }
+
+        if (stageType === 'commit') {
+          return null;
+        }
+        if ((stageType === 'tree' || stageType === 'special') && !isBlob) {
+          return;
+        }
+
+        // Figure out the oids for files, using the staged oid for the working dir oid if the stats match.
+        const headOid = headType === 'blob' ? await head?.oid() : undefined;
+        const stageOid = stageType === 'blob' ? await stage?.oid() : undefined;
+        let workdirOid;
+        if (
+          headType !== 'blob' &&
+          workdirType === 'blob' &&
+          stageType !== 'blob'
+        ) {
+          // We don't actually NEED the sha. Any sha will do
+          // TODO: update this logic to handle N trees instead of just 3.
+          workdirOid = '42';
+        } else if (workdirType === 'blob') {
+          workdirOid = await workdir?.oid();
+        }
+
+        const headBlob = await head?.content();
+        const workdirBlob = await workdir?.content();
+        let stageBlob = await stage?.content();
+
+        if (!stageBlob && stageOid) {
+          try {
+            const { blob } = await git.readBlob({
+              ...baseOpts,
+
+              oid: stageOid,
+            });
+
+            stageBlob = blob;
+          } catch (e) {
+            console.log('[git] Failed to read blob', e);
+          }
+        }
+
+        // Adopted from isomorphic-git statusMatrix.
+        // This is needed to return the same status code numbers as isomorphic-git
+        // In isomorphic-git it can be found in these types: git.HeadStatus, git.WorkdirStatus, and git.StageStatus
+        const entry = [undefined, headOid, workdirOid, stageOid];
+        const result = entry.map(value => entry.indexOf(value));
+        result.shift(); // remove leading undefined entry
+
+        return {
+          filepath,
+          head: {
+            name: getInsomniaFileName(headBlob),
+            status: result[0],
+          },
+          workdir: {
+            name: getInsomniaFileName(workdirBlob),
+            status: result[1],
+          },
+          stage: {
+            name: getInsomniaFileName(stageBlob),
+            status: result[2],
+          },
+        };
+      },
+    });
+
+    return status;
   }
 
-  async remove(relPath: string) {
-    relPath = convertToPosixSep(relPath);
-    console.log(`[git] Remove relPath=${relPath}`);
-    return git.remove({ ...this._baseOpts, filepath: relPath });
+  async status(): Promise<{
+    staged: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus]; name: string }[];
+    unstaged: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus]; name: string }[];
+  }> {
+    const status = await this.statusWithContent();
+
+    const unstagedChanges = status.filter(({ workdir, stage }) => stage.status !== workdir.status);
+    const stagedChanges = status.filter(({ head, workdir, stage }) => head.status !== workdir.status && stage.status !== head.status);
+
+    return {
+      staged: stagedChanges.map(({ filepath, head, workdir, stage }) => ({
+        path: filepath,
+        status: [head.status, workdir.status, stage.status],
+        name: stage.name || head.name || workdir.name || '',
+      })),
+      unstaged: unstagedChanges.map(({ filepath, head, workdir, stage }) => ({
+        path: filepath,
+        status: [head.status, workdir.status, stage.status],
+        name: workdir.name || stage.name || head.name || '',
+      })),
+    };
   }
 
   async addRemote(url: string) {
@@ -295,18 +544,6 @@ export class GitVCS {
 
   async listRemotes(): Promise<GitRemoteConfig[]> {
     return git.listRemotes({ ...this._baseOpts });
-  }
-
-  async getAuthor() {
-    const name = await git.getConfig({ ...this._baseOpts, path: 'user.name' });
-    const email = await git.getConfig({
-      ...this._baseOpts,
-      path: 'user.email',
-    });
-    return {
-      name: name || '',
-      email: email || '',
-    } as GitAuthor;
   }
 
   async setAuthor(name: string, email: string) {
@@ -512,31 +749,6 @@ export class GitVCS {
     }
   }
 
-  async undoPendingChanges(fileFilter?: string[]) {
-    console.log('[git] Undo pending changes');
-    await git.checkout({
-      ...this._baseOpts,
-      ref: await this.getCurrentBranch(),
-      remote: 'origin',
-      force: true,
-      filepaths: fileFilter?.map(convertToPosixSep),
-    });
-  }
-
-  async readObjFromTree(treeOid: string, objPath: string) {
-    try {
-      const obj = await git.readObject({
-        ...this._baseOpts,
-        oid: treeOid,
-        filepath: convertToPosixSep(objPath),
-        encoding: 'utf8',
-      });
-      return obj.object;
-    } catch (err) {
-      return null;
-    }
-  }
-
   async repoExists() {
     try {
       await git.getConfig({ ...this._baseOpts, path: '' });
@@ -547,8 +759,50 @@ export class GitVCS {
     return true;
   }
 
-  getFs() {
-    return this._baseOpts.fs;
+  async stageChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
+    for (const change of changes) {
+      console.log(`[git] Stage ${change.path} | ${change.status}`);
+      if (change.status[1] === 0) {
+        await git.remove({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) });
+      } else {
+        await git.add({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) });
+      }
+    }
+  }
+
+  async unstageChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
+    for (const change of changes) {
+      await git.remove({ ...this._baseOpts, filepath: change.path });
+
+      // If the file was deleted in stage, we need to restore it
+      if (change.status[2] === 0) {
+        await git.checkout({
+          ...this._baseOpts,
+          ref: await this.getCurrentBranch(),
+          force: true,
+          filepaths: [change.path],
+        });
+      }
+    }
+  }
+
+  async discardChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
+    for (const change of changes) {
+      // If the file didn't exist in HEAD, we need to remove it
+      if (change.status[0] === 0) {
+        await git.remove({ ...this._baseOpts, filepath: change.path });
+        // @ts-expect-error -- TSCONVERSION
+        await this._baseOpts.fs.promises.unlink(change.path);
+      } else {
+        await git.checkout({
+          ...this._baseOpts,
+          force: true,
+          ref: await this.getCurrentBranch(),
+          filepaths: [convertToPosixSep(change.path)],
+        });
+      }
+
+    }
   }
 
   static sortBranches(branches: string[]) {

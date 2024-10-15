@@ -31,6 +31,13 @@ export function routableFSClient(
     // TODO: remove non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const result = await defaultFS.promises[method]!(filePath, ...args);
+    // If the method is returning a list of files for the root directory
+    // we need to return the actual result plus inject the .insomnia directory
+    // so that git will try to find changes inside that directory
+    if (method === 'readdir' && filePath === '.') {
+      // console.log('[routablefs] Executing', method, filePath, { args });
+      return ['.insomnia', ...result];
+    }
     // Uncomment this to debug operations
     // console.log('[routablefs] Executing', method, filePath, { args }, { result });
     return result;
