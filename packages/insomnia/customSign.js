@@ -24,13 +24,13 @@ exports.default = async function(configuration) {
     const inputFileName = path.basename(absolutePath);
     // Convert Windows path to Unix-style path for Docker
     const dockerInputFilePath = path.posix.join('/data', inputFileName);
-    const dockerCommand = `docker run --rm \
+    const dockerCommand = `docker run --rm  --platform linux \
         -v "${absolutePath.replace(/\\/g, '/')}:${path.posix.join('/data', inputFileName)}" \
         -e USERNAME="${USERNAME}" \
         -e PASSWORD="${PASSWORD}" \
         -e CREDENTIAL_ID="${CREDENTIAL_ID}" \
         -e TOTP_SECRET="${TOTP_SECRET}" \
-        ghcr.io/sslcom/codesigner-win:latest sign \
+        ghcr.io/sslcom/codesigner:latest sign \
         -input_file_path="${dockerInputFilePath}" -override`;
 
     try {

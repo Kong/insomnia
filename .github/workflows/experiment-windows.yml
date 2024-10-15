@@ -83,7 +83,9 @@ jobs:
       - name: Package dist app (Windows only)
         if: matrix.os == 'windows-latest'
         shell: bash
-        run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
+        run: |
+          docker pull --platform linux ghcr.io/sslcom/codesigner:latest
+          NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
         env:
           USERNAME: ${{secrets.ES_USERNAME}}
           PASSWORD: ${{secrets.ES_PASSWORD}}
