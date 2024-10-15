@@ -275,7 +275,7 @@ export class GitVCS {
   async fileStatus(file: string) {
     const baseOpts = this._baseOpts;
     // Adopted from statusMatrix of isomorphic-git https://github.com/isomorphic-git/isomorphic-git/blob/main/src/api/statusMatrix.js#L157
-    const [result]: [[string, string, string, string]] = await git.walk({
+    const [blobs]: [[string, string, string, string]] = await git.walk({
       ...baseOpts,
       trees: [git.TREE({ ref: 'HEAD' }), git.WORKDIR(), git.STAGE()],
       map: async function map(filepath, [head, workdir, stage]) {
@@ -320,8 +320,6 @@ export class GitVCS {
           workdirType === 'blob' &&
           stageType !== 'blob'
         ) {
-          // We don't actually NEED the sha. Any sha will do
-          // TODO: update this logic to handle N trees instead of just 3.
           workdirOid = '42';
         } else if (workdirType === 'blob') {
           workdirOid = await workdir?.oid();
@@ -390,9 +388,9 @@ export class GitVCS {
     });
 
     const diff = {
-      head: result[1],
-      workdir: result[2],
-      stage: result[3],
+      head: blobs[1],
+      workdir: blobs[2],
+      stage: blobs[3],
     };
 
     return diff;
@@ -402,7 +400,7 @@ export class GitVCS {
     const baseOpts = this._baseOpts;
 
     // Adopted from statusMatrix of isomorphic-git https://github.com/isomorphic-git/isomorphic-git/blob/main/src/api/statusMatrix.js#L157
-    const result: {
+    const status: {
       filepath: string;
       head: { name: string; status: git.HeadStatus };
       workdir: { name: string; status: git.WorkdirStatus };
@@ -485,9 +483,12 @@ export class GitVCS {
           }
         }
 
+        // Adopted from isomorphic-git statusMatrix.
+        // This is needed to return the same status code numbers as isomorphic-git
+        // In isomorphic-git it can be found in these types: git.HeadStatus, git.WorkdirStatus, and git.StageStatus
         const entry = [undefined, headOid, workdirOid, stageOid];
         const result = entry.map(value => entry.indexOf(value));
-        result.shift();
+        result.shift(); // remove leading undefined entry
 
         return {
           filepath,
@@ -507,7 +508,7 @@ export class GitVCS {
       },
     });
 
-    return result;
+    return status;
   }
 
   async status(): Promise<{

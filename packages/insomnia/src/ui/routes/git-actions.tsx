@@ -271,7 +271,7 @@ export const gitLogLoader: LoaderFunction = async ({
       log,
     };
   } catch (e) {
-    console.log(e);
+    console.error(e);
     return {
       log: [],
     };
@@ -323,8 +323,6 @@ export const gitChangesLoader: LoaderFunction = async ({
   try {
     const { changes, hasUncommittedChanges } = await getGitChanges(GitVCS);
 
-    console.log('changes', changes);
-
     // update workspace meta with git sync data, use for show uncommit changes on collection card
     models.workspaceMeta.updateByParentId(workspaceId, {
       hasUncommittedChanges,
@@ -334,7 +332,7 @@ export const gitChangesLoader: LoaderFunction = async ({
       changes,
     };
   } catch (e) {
-    console.log(e);
+    console.error(e);
     return {
       branch,
       changes: {
@@ -477,18 +475,18 @@ export const cloneGitRepoAction: ActionFunction = async ({
       fsClient,
       gitRepository: repoSettingsPatch as GitRepository,
     });
-  } catch (err) {
-    console.error(err);
+  } catch (e) {
+    console.error(e);
 
-    if (err instanceof Errors.HttpError) {
+    if (e instanceof Errors.HttpError) {
       return {
-        errors: [`${err.message}, ${err.data.response}`],
+        errors: [`${e.message}, ${e.data.response}`],
       };
     }
 
-      return {
-        errors: [err.message],
-      };
+    return {
+      errors: [e.message],
+    };
   }
 
   const containsInsomniaDir = async (
@@ -1549,8 +1547,6 @@ export const diffFileLoader: LoaderFunction = async ({
 
   try {
     const fileStatus = await GitVCS.fileStatus(filepath);
-
-    console.log({ fileStatus });
 
     return {
       diff: staged ? {
