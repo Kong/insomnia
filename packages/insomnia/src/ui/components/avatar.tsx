@@ -1,7 +1,7 @@
 import React, { type ReactNode, Suspense } from 'react';
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 
-import { useGloballyCachedImage } from '../context/app/global-image-cache-context';
+import { useAvatarImageCache } from '../hooks/image-cache';
 
 const getNameInitials = (name?: string) => {
   // Split on whitespace and take first letter of each word
@@ -24,11 +24,11 @@ const getNameInitials = (name?: string) => {
 };
 
 const AvatarImage = ({ src, alt, size, bounce = false }: { src: string; alt: string; size: 'small' | 'medium'; bounce: boolean }) => {
-  const cachedImage = useGloballyCachedImage(src);
+  const imageUrl = useAvatarImageCache(src);
   return (
     <img
       alt={alt}
-      src={cachedImage.url}
+      src={imageUrl}
       width={size === 'small' ? 20 : 24}
       height={size === 'small' ? 20 : 24}
       className={(bounce ? 'bounce-in' : '') + 'border-2 bounce-in border-solid border-[--color-bg] box-border outline-none rounded-full object-cover object-center bg-[--hl]'}
@@ -48,12 +48,14 @@ const AvatarPlaceholder = ({ size, children }: { size: 'small' | 'medium'; child
 
 export const Avatar = ({ src, alt, size = 'medium', bounce = false }: { src: string; alt: string; size?: 'small' | 'medium'; bounce?: boolean }) => {
   return src ? (
+    <Suspense fallback={<AvatarPlaceholder size={size}>{getNameInitials(alt)}</AvatarPlaceholder>}>
       <AvatarImage
         bounce={bounce}
         src={src}
         alt={alt}
         size={size}
       />
+    </Suspense>
   ) : (
     <AvatarPlaceholder size={size}>
       {getNameInitials(alt)}

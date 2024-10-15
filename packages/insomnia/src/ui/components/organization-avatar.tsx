@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 
-import { useGloballyCachedImage } from '../context/app/global-image-cache-context';
+import { useAvatarImageCache } from '../hooks/image-cache';
 
 const getNameInitials = (name: string) => {
   // Split on whitespace and take first letter of each word
@@ -23,11 +23,11 @@ const getNameInitials = (name: string) => {
 };
 
 const Avatar = ({ src, alt }: { src: string; alt: string }) => {
-  const cachedImage = useGloballyCachedImage(src);
+  const imageUrl = useAvatarImageCache(src);
   return (
     <img
       alt={alt}
-      src={cachedImage.url}
+      src={imageUrl}
       className="h-full w-full aspect-square object-cover"
       aria-label={alt}
     />
@@ -49,5 +49,9 @@ export const OrganizationAvatar = ({
     );
   }
 
-  return <Avatar src={src} alt={alt} />;
+  return (
+    <Suspense fallback={<div className='flex items-center justify-center w-full h-full p-[--padding-md]'>{getNameInitials(alt)}</div>}>
+      <Avatar src={src} alt={alt} />
+    </Suspense>
+  );
 };
