@@ -251,14 +251,6 @@ First commit!
         },
       ]);
       await fsClient.promises.unlink(path.join(GIT_INSOMNIA_DIR, fooTxt));
-      // expect(await GitVCS.status(barTxt)).toBe('*added');
-      // expect(await GitVCS.status(fooTxt)).toBe('*deleted');
-      // await GitVCS.remove(fooTxt);
-      // expect(await GitVCS.status(barTxt)).toBe('*added');
-      // expect(await GitVCS.status(fooTxt)).toBe('deleted');
-      // await GitVCS.remove(fooTxt);
-      // expect(await GitVCS.status(barTxt)).toBe('*added');
-      // expect(await GitVCS.status(fooTxt)).toBe('deleted');
     });
 
     it('create branch', async () => {
