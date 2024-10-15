@@ -1,5 +1,6 @@
 import type { IRuleResult } from '@stoplight/spectral-core';
 import { generate, runTests, type Test } from 'insomnia-testing';
+import type { TestResults } from 'insomnia-testing/src/run/entities';
 import path from 'path';
 import { type ActionFunction, redirect } from 'react-router-dom';
 
@@ -610,16 +611,57 @@ export const runAllTestsAction: ActionFunction = async ({
 
   const sendRequest = getSendRequestCallback();
 
-  const results = await runTests(src, { sendRequest });
+  let results: TestResults = {
+    failures: [],
+    passes: [],
+    pending: [],
+    stats: {
+      suites: 0,
+      tests: 0,
+      passes: 0,
+      pending: 0,
+      failures: 0,
+      start: undefined,
+      end: undefined,
+      duration: undefined,
+    },
+    tests: [],
+  };
 
-  const testResult = await models.unitTestResult.create({
-    results,
-    parentId: workspaceId,
-  });
+  try {
+    results = await runTests(src, { sendRequest });
+  } catch (err) {
+    // create a result manually so that it can be displayed in the UI
+    results.stats.failures = 1;
+    results.stats.tests = 1;
+    results.tests.push(
+      {
+        currentRetry: 0,
+        duration: 0,
+        err: {
+          actual: undefined,
+          expected: undefined,
+          message: err.toString(),
+          multiple: [],
+          operator: undefined,
+          showDiff: false,
+          stack: '',
+        },
+        file: '',
+        fullTitle: 'Test Error',
+        id: '',
+        title: 'Test Error',
+      },
+    );
+  } finally {
+    const testResult = await models.unitTestResult.create({
+      results,
+      parentId: workspaceId,
+    });
+    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun });
 
-  window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun });
-
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
+  }
 };
 
 export const updateTestSuiteAction: ActionFunction = async ({ request, params }) => {
@@ -712,16 +754,57 @@ export const runTestAction: ActionFunction = async ({ params }) => {
 
   const sendRequest = getSendRequestCallback();
 
-  const results = await runTests(src, { sendRequest });
+  let results: TestResults = {
+    failures: [],
+    passes: [],
+    pending: [],
+    stats: {
+      suites: 0,
+      tests: 0,
+      passes: 0,
+      pending: 0,
+      failures: 0,
+      start: undefined,
+      end: undefined,
+      duration: undefined,
+    },
+    tests: [],
+  };
 
-  const testResult = await models.unitTestResult.create({
-    results,
-    parentId: unitTest.parentId,
-  });
+  try {
+    results = await runTests(src, { sendRequest });
+  } catch (error) {
+    // create a result manually so that it can be displayed in the UI
+    results.stats.failures = 1;
+    results.stats.tests = 1;
+    results.tests.push(
+      {
+        currentRetry: 0,
+        duration: 0,
+        err: {
+          actual: undefined,
+          expected: undefined,
+          message: error.toString(),
+          multiple: [],
+          operator: undefined,
+          showDiff: false,
+          stack: '',
+        },
+        file: '',
+        fullTitle: unitTest.name,
+        id: '',
+        title: unitTest.name,
+      },
+    );
+  } finally {
+    const testResult = await models.unitTestResult.create({
+      results,
+      parentId: unitTest.parentId,
+    });
+    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun });
 
-  window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun });
-
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
+  }
 };
 
 // Api Spec
