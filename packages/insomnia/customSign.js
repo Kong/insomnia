@@ -30,7 +30,7 @@ exports.default = async function(configuration) {
         -e PASSWORD="${PASSWORD}" \
         -e CREDENTIAL_ID="${CREDENTIAL_ID}" \
         -e TOTP_SECRET="${TOTP_SECRET}" \
-        ghcr.io/sslcom/codesigner:latest sign \
+        ghcr.io/sslcom/codesigner-win:latest sign \
         -input_file_path="${dockerInputFilePath}" -override`;
 
     try {
