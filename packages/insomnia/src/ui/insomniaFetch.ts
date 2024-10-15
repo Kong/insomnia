@@ -34,7 +34,7 @@ export async function insomniaFetch<T = void>({
   origin,
   headers,
   onlyResolveOnSuccess = false,
-  timeout = INSOMNIA_FETCH_TIME_OUT,
+  timeout,
 }: FetchConfig): Promise<T> {
   const config: RequestInit = {
     method,
@@ -49,7 +49,7 @@ export async function insomniaFetch<T = void>({
       ...(PLAYWRIGHT ? { 'X-Mockbin-Test': 'true' } : {}),
     },
     ...(data ? { body: JSON.stringify(data) } : {}),
-    signal: AbortSignal.timeout(timeout),
+    signal: AbortSignal.timeout(timeout || INSOMNIA_FETCH_TIME_OUT),
   };
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
