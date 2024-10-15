@@ -1,6 +1,7 @@
 const { exec } = require('child_process');
 const util = require('util');
 const path = require('path');
+const fs = require('fs');
 const execAsync = util.promisify(exec);
 
 exports.default = async function(configuration) {
