@@ -800,7 +800,116 @@ export const commitToGitRepoAction: ActionFunction = async ({
     return { errors: [message] };
   }
 
-  return {};
+  return {
+    errors: [],
+  };
+};
+
+export const commitAndPushToGitRepoAction: ActionFunction = async ({
+  request,
+  params,
+}): Promise<CommitToGitRepoResult> => {
+  const { workspaceId } = params;
+  invariant(workspaceId, 'Workspace ID is required');
+
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
+
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+
+  const repoId = workspaceMeta?.gitRepositoryId;
+  invariant(repoId, 'Workspace is not linked to a git repository');
+
+  const repo = await models.gitRepository.getById(repoId);
+  invariant(repo, 'Git Repository not found');
+
+  const formData = await request.formData();
+
+  const message = formData.get('message');
+  invariant(typeof message === 'string', 'Commit message is required');
+
+  try {
+    await GitVCS.commit(message);
+
+    const providerName = getOauth2FormatName(repo?.credentials);
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsAction, properties: {
+        ...vcsSegmentEventProperties('git', 'commit'),
+        providerName,
+      },
+    });
+
+    checkGitCanPush(workspaceId);
+  } catch (e) {
+    const message =
+      e instanceof Error ? e.message : 'Error while committing changes';
+    return { errors: [message] };
+  }
+
+  let canPush = false;
+  try {
+    canPush = await GitVCS.canPush(repo.credentials);
+  } catch (err) {
+    if (err instanceof Errors.HttpError) {
+      return {
+        errors: [`${err.message}, ${err.data.response}`],
+      };
+    }
+    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+
+    return { errors: [errorMessage] };
+  }
+  // If nothing to push, display that to the user
+  if (!canPush) {
+    return {
+      errors: ['Nothing to push'],
+    };
+  }
+
+  const bufferId = await database.bufferChanges();
+  const providerName = getOauth2FormatName(repo.credentials);
+  try {
+    await GitVCS.push(repo.credentials);
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsAction, properties: {
+        ...vcsSegmentEventProperties('git', 'push'),
+        providerName,
+      },
+    });
+    models.workspaceMeta.updateByParentId(workspaceId, {
+      hasUnpushedChanges: false,
+    });
+  } catch (err: unknown) {
+    if (err instanceof Errors.HttpError) {
+      return {
+        errors: [`${err.message}, ${err.data.response}`],
+      };
+    }
+    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsAction, properties: {
+        ...vcsSegmentEventProperties('git', 'push', errorMessage),
+        providerName,
+      },
+    });
+
+    if (err instanceof Errors.PushRejectedError) {
+      return {
+        errors: [`Push Rejected, ${errorMessage}`],
+      };
+    }
+
+    return {
+      errors: [`Error Pushing Repository, ${errorMessage}`],
+    };
+  }
+
+  await database.flushChanges(bufferId);
+
+  return {
+    errors: [],
+  };
 };
 
 export interface CreateNewGitBranchResult {

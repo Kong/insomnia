@@ -42,12 +42,11 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
     await page.waitForTimeout(1000);
     await page.getByTestId('git-dropdown').click();
     await page.getByText('Commit').click();
+    await page.getByRole('row', { name: 'spec.yaml' }).click();
     await page.locator('button[name="Stage all changes"]').click();
     await page.getByPlaceholder('This is a helpful message').click();
     await page.getByPlaceholder('This is a helpful message').fill('example commit message');
     await page.getByRole('button', { name: 'Commit', exact: true }).click();
-    await page.getByRole('heading', { name: 'Commit changes' }).click();
-    await page.getByLabel('Commit changes').press('Escape');
 
     // switch back to main branch, which should not have said changes
     await page.getByTestId('git-dropdown').click();
@@ -94,12 +93,11 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
 
     // Commit changes
     await page.getByText('Commit').click();
+    await page.getByRole('row', { name: `My Folder ${testUUID}`, exact: true }).click();
     await page.locator('button[name="Stage all changes"]').click();
     await page.getByPlaceholder('This is a helpful message').click();
     await page.getByPlaceholder('This is a helpful message').fill(`commit test ${testUUID}`);
     await page.getByRole('button', { name: 'Commit', exact: true }).click();
-    await page.getByRole('heading', { name: 'Commit changes' }).click();
-    await page.getByLabel('Commit changes').press('Escape');
 
     // Push changes
     await page.getByTestId('git-dropdown').click();

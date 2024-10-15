@@ -132,11 +132,11 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
     statusNames: {},
   };
 
-  const { Form, formAction, state, data } = useFetcher();
+  const { Form, formAction, state, data } = useFetcher<{ errors?: string[] }>();
   const errors = gitCommitFetcher.data?.errors || rollbackFetcher.data?.errors;
 
-  const isCreatingSnapshot = state === 'loading' && formAction === '/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/branch/create-snapshot';
-  const isPushing = state === 'loading' && formAction === '/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/branch/create-snapshot-and-push';
+  const isCreatingSnapshot = state === 'loading' && formAction === '/organization/:organizationId/project/:projectId/workspace/:workspaceId/git/commit';
+  const isPushing = state === 'loading' && formAction === '/organization/:organizationId/project/:projectId/workspace/:workspaceId/git/commit-and-push';
   const previewDiffItem = diffChangesFetcher.data && 'diff' in diffChangesFetcher.data ? diffChangesFetcher.data.diff : null;
 
   useEffect(() => {
@@ -147,6 +147,16 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
       });
     }
   }, [errors]);
+
+  const allChanges = [...changes.staged, ...changes.unstaged];
+  const allChangesLength = allChanges.length;
+  const noCommitErrors = data && 'errors' in data && data.errors?.length === 0;
+
+  useEffect(() => {
+    if (allChangesLength === 0 && noCommitErrors) {
+      onClose();
+    }
+  }, [allChangesLength, onClose, noCommitErrors]);
 
   return (
     <ModalOverlay
@@ -197,7 +207,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                     <div className="flex flex-shrink-0 justify-stretch gap-2 items-center">
                       <Button
                         type='submit'
-                        isDisabled={state !== 'idle'}
+                        isDisabled={state !== 'idle' || changes.staged.length === 0}
                         formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/commit`}
                         className="flex-1 flex h-8 items-center justify-center px-4 gap-2 bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                       >
@@ -205,16 +215,16 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                       </Button>
                       <Button
                         type="submit"
-                        isDisabled={state !== 'idle'}
+                        isDisabled={state !== 'idle' || changes.staged.length === 0}
                         formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/commit-and-push`}
                         className="flex-1 flex h-8 items-center justify-center px-4 gap-2 bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                       >
                         <Icon icon={isPushing ? 'spinner' : 'cloud-arrow-up'} className={`w-5 ${isPushing ? 'animate-spin' : ''}`} /> Commit and push
                       </Button>
                     </div>
-                    {data?.error && (
+                    {data && data.errors && data.errors.length > 0 && (
                       <p className="bg-opacity-20 text-sm text-[--color-font-danger] p-2 rounded-sm bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))]">
-                        <Icon icon="exclamation-triangle" /> {data.error}
+                        <Icon icon="exclamation-triangle" /> {data.errors.join('\n')}
                       </p>
                     )}
                   </Form>

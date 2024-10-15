@@ -828,6 +828,7 @@ export class GitVCS {
         await git.checkout({
           ...this._baseOpts,
           ref: await this.getCurrentBranch(),
+          force: true,
           filepaths: [change.path],
         });
       }

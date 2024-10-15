@@ -906,6 +906,11 @@ async function renderApp() {
                                       (await import('./routes/git-actions')).commitToGitRepoAction(...args),
                                   },
                                   {
+                                    path: 'commit-and-push',
+                                    action: async (...args) =>
+                                      (await import('./routes/git-actions')).commitAndPushToGitRepoAction(...args),
+                                  },
+                                  {
                                     path: 'fetch',
                                     action: async (...args) =>
                                       (await import('./routes/git-actions')).gitFetchAction(...args),
