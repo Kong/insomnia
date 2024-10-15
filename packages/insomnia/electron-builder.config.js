@@ -101,6 +101,7 @@ const config = {
   },
   portable: {
     artifactName: `${BINARY_PREFIX}-\${version}-portable.\${ext}`,
+    sign: false,
   },
   linux: {
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
