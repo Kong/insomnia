@@ -4,9 +4,9 @@ const execAsync = util.promisify(exec);
 
 exports.default = async function(configuration) {
     console.log('[customSign] Debug - file to sign before packaging:', configuration.path);
-    const { ES_USERNAME, ES_PASSWORD, ES_CREDENTIAL_ID, ES_TOTP_SECRET } = process.env;
+    const { USERNAME, PASSWORD, CREDENTIAL_ID, TOTP_SECRET } = process.env;
 
-    if (!ES_USERNAME || !ES_PASSWORD || !ES_CREDENTIAL_ID || !ES_TOTP_SECRET) {
+    if (!USERNAME || !PASSWORD || !CREDENTIAL_ID || !TOTP_SECRET) {
         throw new Error('[customSign] Missing required environment variables.');
     }
     // meant to be run on Windows host with docker
