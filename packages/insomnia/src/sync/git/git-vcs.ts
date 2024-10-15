@@ -89,8 +89,8 @@ interface InitFromCloneOptions {
 export const GIT_CLONE_DIR = '.';
 const gitInternalDirName = 'git';
 export const GIT_INSOMNIA_DIR_NAME = '.insomnia';
-export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, gitInternalDirName);
-export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME);
+export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, gitInternalDirName); // .git
+export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME); // .insomnia
 
 interface BaseOpts {
   dir: string;
@@ -263,7 +263,6 @@ export class GitVCS {
     // Adopted from statusMatrix of isomorphic-git https://github.com/isomorphic-git/isomorphic-git/blob/main/src/api/statusMatrix.js#L157
     const [result]: [[string, string, string, string]] = await git.walk({
       ...baseOpts,
-      dir: GIT_INSOMNIA_DIR,
       trees: [git.TREE({ ref: 'HEAD' }), git.WORKDIR(), git.STAGE()],
       map: async function map(filepath, [head, workdir, stage]) {
         // Late filter against file names
@@ -379,9 +378,13 @@ export class GitVCS {
     const baseOpts = this._baseOpts;
 
     // Adopted from statusMatrix of isomorphic-git https://github.com/isomorphic-git/isomorphic-git/blob/main/src/api/statusMatrix.js#L157
-    const result: [string, git.HeadStatus, git.WorkdirStatus, git.StageStatus, string, string, string][] = await git.walk({
+    const result: {
+      filepath: string;
+      head: { name: string; status: git.HeadStatus };
+      workdir: { name: string; status: git.WorkdirStatus };
+      stage: { name: string; status: git.StageStatus };
+    }[] = await git.walk({
       ...baseOpts,
-      dir: GIT_INSOMNIA_DIR,
       trees: [
         // What the latest commit on the current branch looks like
         git.TREE({ ref: 'HEAD' }),
@@ -456,11 +459,30 @@ export class GitVCS {
         const result = entry.map(value => entry.indexOf(value));
         result.shift();
 
-        return [
+        function getInsomniaFileName(blob: void | Uint8Array | undefined) {
+          if (!blob) {
+            return '';
+          }
+
+          const parsed = parse(Buffer.from(blob).toString('utf-8'));
+          return parsed?.fileName || parsed?.name || '';
+        }
+
+        return {
           filepath,
-          ...result,
-          ...[headBlob, workdirBlob, stageBlob].map(r => r ? parse(Buffer.from(r).toString('utf-8'))?.name : null),
-        ];
+          head: {
+            name: getInsomniaFileName(headBlob),
+            status: result[0],
+          },
+          workdir: {
+            name: getInsomniaFileName(workdirBlob),
+            status: result[1],
+          },
+          stage: {
+            name: getInsomniaFileName(stageBlob),
+            status: result[2],
+          },
+        };
       },
     });
 
@@ -471,21 +493,23 @@ export class GitVCS {
     staged: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus]; name: string }[];
     unstaged: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus]; name: string }[];
   }> {
+    const statusMatrix = await git.statusMatrix({ ...this._baseOpts });
+    console.log({ statusMatrix });
     const status = await this.statusWithContent();
 
-    const unstagedChanges = status.filter(([, , workdir, stage]) => stage !== workdir);
-    const stagedChanges = status.filter(([, head, workdir, stage]) => head !== workdir && stage !== head);
+    const unstagedChanges = status.filter(({ workdir, stage }) => stage.status !== workdir.status);
+    const stagedChanges = status.filter(({ head, workdir, stage }) => head.status !== workdir.status && stage.status !== head.status);
 
     return {
-      staged: stagedChanges.map(([filepath, headStatus, workdirStatus, stageStatus, headName, workdirName, stageName]) => ({
+      staged: stagedChanges.map(({ filepath, head, workdir, stage }) => ({
         path: filepath,
-        status: [headStatus, workdirStatus, stageStatus],
-        name: stageName || headName || workdirName || filepath,
+        status: [head.status, workdir.status, stage.status],
+        name: stage.name || head.name || workdir.name || '',
       })),
-      unstaged: unstagedChanges.map(([filepath, headStatus, workdirStatus, stageStatus, headName, workdirName, stageName]) => ({
+      unstaged: unstagedChanges.map(({ filepath, head, workdir, stage }) => ({
         path: filepath,
-        status: [headStatus, workdirStatus, stageStatus],
-        name: workdirName || stageName || headName || filepath,
+        status: [head.status, workdir.status, stage.status],
+        name: workdir.name || stage.name || head.name || '',
       })),
     };
   }
@@ -769,22 +793,21 @@ export class GitVCS {
     for (const change of changes) {
       console.log(`[git] Stage ${change.path} | ${change.status}`);
       if (change.status[1] === 0) {
-        await git.remove({ ...this._baseOpts, dir: GIT_INSOMNIA_DIR, filepath: change.path });
+        await git.remove({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) });
       } else {
-        await git.add({ ...this._baseOpts, dir: GIT_INSOMNIA_DIR, filepath: change.path });
+        await git.add({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) });
       }
     }
   }
 
   async unstageChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
     for (const change of changes) {
-      await git.remove({ ...this._baseOpts, dir: GIT_INSOMNIA_DIR, filepath: change.path });
+      await git.remove({ ...this._baseOpts, filepath: change.path });
 
       // If the file was deleted in stage, we need to restore it
       if (change.status[2] === 0) {
         await git.checkout({
           ...this._baseOpts,
-          dir: GIT_INSOMNIA_DIR,
           ref: await this.getCurrentBranch(),
           filepaths: [change.path],
         });
@@ -796,13 +819,12 @@ export class GitVCS {
     for (const change of changes) {
       // If the file didn't exist in HEAD, we need to remove it
       if (change.status[0] === 0) {
-        await git.remove({ ...this._baseOpts, dir: GIT_INSOMNIA_DIR, filepath: change.path });
+        await git.remove({ ...this._baseOpts, filepath: change.path });
         // @ts-expect-error -- TSCONVERSION
-        await this.getFs().promises.unlink(path.join(GIT_INSOMNIA_DIR, change.path));
+        await this.getFs().promises.unlink(change.path);
       } else {
         await git.checkout({
           ...this._baseOpts,
-          dir: GIT_INSOMNIA_DIR,
           ref: await this.getCurrentBranch(),
           filepaths: [change.path],
         });

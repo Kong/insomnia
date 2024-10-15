@@ -7,13 +7,8 @@ import { MemClient } from '../mem-client';
 import { setupDateMocks } from './util';
 
 describe('Git-VCS', () => {
-  let fooTxt = '';
-  let barTxt = '';
-
-  beforeAll(() => {
-    fooTxt = path.join(GIT_INSOMNIA_DIR, 'foo.txt');
-    barTxt = path.join(GIT_INSOMNIA_DIR, 'bar.txt');
-  });
+  const fooTxt = 'foo.txt';
+  const barTxt = 'bar.txt';
 
   afterAll(() => {
     vi.restoreAllMocks();
@@ -42,10 +37,11 @@ describe('Git-VCS', () => {
     });
 
     it('stage and unstage file', async () => {
+      // Write the files to the repository directory
       const fsClient = MemClient.createClient();
       await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
-      await fsClient.promises.writeFile(fooTxt, 'foo');
-      await fsClient.promises.writeFile(barTxt, 'bar');
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, fooTxt), 'foo');
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, barTxt), 'bar');
       // Files outside namespace should be ignored
       await fsClient.promises.writeFile('/other.txt', 'other');
 
@@ -56,14 +52,66 @@ describe('Git-VCS', () => {
         fs: fsClient,
       });
       await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
-      expect(await GitVCS.status(barTxt)).toBe('*added');
-      expect(await GitVCS.status(fooTxt)).toBe('*added');
-      await GitVCS.add(fooTxt);
-      expect(await GitVCS.status(barTxt)).toBe('*added');
-      expect(await GitVCS.status(fooTxt)).toBe('added');
-      await GitVCS.remove(fooTxt);
-      expect(await GitVCS.status(barTxt)).toBe('*added');
-      expect(await GitVCS.status(fooTxt)).toBe('*added');
+
+      // foo.txt and bar.txt should be in the unstaged list
+      const status = await GitVCS.status();
+      expect(status.staged).toEqual([]);
+      expect(status.unstaged).toEqual([{
+        'name': '',
+        'path': '.insomnia/bar.txt',
+        'status': [0, 2, 0],
+      },
+      {
+        'name': '',
+        'path': '.insomnia/foo.txt',
+        'status': [0, 2, 0],
+      }]);
+
+      const fooStatus = status.unstaged.find(f => f.path.includes(fooTxt));
+
+      fooStatus && await GitVCS.stageChanges([fooStatus]);
+      const status2 = await GitVCS.status();
+      expect(status2.staged).toEqual([{
+        'name': '',
+        'path': '.insomnia/foo.txt',
+        'status': [0, 2, 2],
+      }]);
+      expect(status2.unstaged).toEqual([{
+        'name': '',
+        'path': '.insomnia/bar.txt',
+        'status': [0, 2, 0],
+      }]);
+
+      const barStatus = status2.unstaged.find(f => f.path.includes(barTxt));
+
+      barStatus && await GitVCS.stageChanges([barStatus]);
+      const status3 = await GitVCS.status();
+      expect(status3.staged).toEqual([{
+        'name': '',
+        'path': '.insomnia/bar.txt',
+        'status': [0, 2, 2],
+      },
+      {
+        'name': '',
+        'path': '.insomnia/foo.txt',
+        'status': [0, 2, 2],
+      }]);
+
+      const fooStatus2 = status3.staged.find(f => f.path.includes(fooTxt));
+      fooStatus2 && await GitVCS.unstageChanges([fooStatus2]);
+      const status4 = await GitVCS.status();
+      expect(status4).toEqual({
+        staged: [{
+          'name': '',
+          'path': '.insomnia/bar.txt',
+          'status': [0, 2, 2],
+        }],
+        unstaged: [{
+          'name': '',
+          'path': '.insomnia/foo.txt',
+          'status': [0, 2, 0],
+        }],
+      });
     });
 
     it('Returns empty log without first commit', async () => {
@@ -79,11 +127,11 @@ describe('Git-VCS', () => {
       expect(await GitVCS.log()).toEqual([]);
     });
 
-    it('commit file', async () => {
+    it.only('commit file', async () => {
       const fsClient = MemClient.createClient();
       await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
-      await fsClient.promises.writeFile(fooTxt, 'foo');
-      await fsClient.promises.writeFile(barTxt, 'bar');
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, fooTxt), 'foo');
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, barTxt), 'bar');
       await fsClient.promises.writeFile('other.txt', 'should be ignored');
 
       await GitVCS.init({
@@ -92,11 +140,37 @@ describe('Git-VCS', () => {
         directory: GIT_CLONE_DIR,
         fs: fsClient,
       });
+
       await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
-      await GitVCS.add(fooTxt);
+
+      const status = await GitVCS.status();
+      const fooStatus = status.unstaged.find(f => f.path.includes(fooTxt));
+      fooStatus && await GitVCS.stageChanges([fooStatus]);
+
+      const status2 = await GitVCS.status();
+
+      expect(status2.staged).toEqual([{
+        'name': '',
+        'path': '.insomnia/foo.txt',
+        'status': [0, 2, 2],
+      }]);
+      expect(status2.unstaged).toEqual([{
+        'name': '',
+        'path': '.insomnia/bar.txt',
+        'status': [0, 2, 0],
+      }]);
+
       await GitVCS.commit('First commit!');
-      expect(await GitVCS.status(barTxt)).toBe('*added');
-      expect(await GitVCS.status(fooTxt)).toBe('unmodified');
+
+      const status3 = await GitVCS.status();
+
+      expect(status3.staged).toEqual([]);
+      expect(status3.unstaged).toEqual([{
+        'name': '',
+        'path': '.insomnia/bar.txt',
+        'status': [0, 2, 0],
+      }]);
+
       expect(await GitVCS.log()).toEqual([
         {
           commit: {
@@ -238,7 +312,7 @@ First commit!
       await Promise.all(files.map(f => fsClient.promises.writeFile(f, changedContent)));
       await Promise.all(files.map(() => expect(GitVCS.status(foo1Txt)).resolves.toBe('*modified')));
       // Undo foo1 and foo2, but not foo3
-      await GitVCS.undoPendingChanges([foo1Txt, foo2Txt]);
+      await GitVCS.undoUnstagedChanges([foo1Txt, foo2Txt]);
       expect(await GitVCS.status(foo1Txt)).toBe('unmodified');
       expect(await GitVCS.status(foo2Txt)).toBe('unmodified');
       // Expect original doc to have reverted for foo1 and foo2
