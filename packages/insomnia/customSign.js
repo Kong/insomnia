@@ -4,6 +4,11 @@ const path = require('path');
 const execAsync = util.promisify(exec);
 
 exports.default = async function(configuration) {
+    // skip signing if not windows squirrel
+    if (configuration.options.target[0].target !== 'squirrel') {
+        console.log('[customSign] Skipping signing because target is not windows squirrel.');
+        return;
+    }
     // remove /n and other crap from path
     const rawPath = configuration.path.replace(/(\r\n|\n|\r)/gm, '');
     console.log('[customSign] File to sign before final packaging:', rawPath);
