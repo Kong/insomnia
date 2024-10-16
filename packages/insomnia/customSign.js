@@ -34,7 +34,7 @@ exports.default = async function(configuration) {
         -e CREDENTIAL_ID="${CREDENTIAL_ID}" \
         -e TOTP_SECRET="${TOTP_SECRET}" \
         ghcr.io/sslcom/codesigner-win:latest sign \
-        -input_file_path="${dockerInputFilePath}" -override`;
+        \`\`-input_file_path="${dockerInputFilePath}" \`\`-override`;
 
     try {
         console.log('[customSign] Docker command:', dockerCommand);
