@@ -607,7 +607,7 @@ export const Runner: FC<{}> = () => {
                       const parentFolderContainer = parentFolders.length > 0 ? <span className="ml-2">{parentFolders}</span> : null;
 
                       return (
-                        <RequestItem textValue={item.name} className='text-[--color-font] border border-solid border-transparent' style={{ 'outline': 'none' }}>
+                        <RequestItem textValue={item.name} className={`item-${item.name} text-[--color-font] border border-solid border-transparent`} style={{ 'outline': 'none' }}>
                           {parentFolderContainer}
                           <span className={`ml-2 uppercase text-xs http-method-${item.method}`}>{item.method}</span>
                           <span className="ml-2 hover:underline cursor-pointer text-[--hl]" onClick={() => goToRequest(item.id)}>{item.name}</span>

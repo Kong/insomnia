@@ -59,8 +59,8 @@ test.describe('runner features tests', async () => {
         await page.getByTestId('run-collection-btn-quick').click();
 
         // select requests to test
-        await page.locator('text=Select All').click();
-        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req3' }).locator('.react-aria-Checkbox').click();
+        await page.locator('.item-req1').click();
+        await page.locator('.item-req2').click();
 
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
@@ -83,6 +83,7 @@ test.describe('runner features tests', async () => {
             expect(summarizedPassedCount).toEqual(expectedPassed);
             expect(summarizedTotalCount).toEqual(expectedTotal);
         };
+        await page.getByText('6 / 8').click();
         await verifyTestCounts(6, 8);
 
         const expectedTestOrder = [
@@ -142,18 +143,13 @@ test.describe('runner features tests', async () => {
     test('run req4 3 times with setNextRequest the pre-request script', async ({ page }) => {
         await page.getByTestId('run-collection-btn-quick').click();
 
-        // select requests to test
-        await page.locator('text=Select All').click();
-        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req1' }).locator('.react-aria-Checkbox').click();
-        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req2' }).locator('.react-aria-Checkbox').click();
-        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req3' }).locator('.react-aria-Checkbox').click();
-        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req5' }).locator('.react-aria-Checkbox').click();
+        await page.locator('.item-req4').click();
 
         // send
         await page.getByRole('button', { name: 'Run', exact: true }).click();
 
         // check result
-        await page.getByText('ITERATION 1').click();
+        await page.getByText('3 / 3').first().click();
 
         const expectedTestOrder = [
             'req4-post-check',
@@ -167,18 +163,13 @@ test.describe('runner features tests', async () => {
     test('run req5 3 times with setNextRequest in the after-response script', async ({ page }) => {
         await page.getByTestId('run-collection-btn-quick').click();
 
-        // select requests to test
-        await page.locator('text=Select All').click();
-        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req1' }).locator('.react-aria-Checkbox').click();
-        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req2' }).locator('.react-aria-Checkbox').click();
-        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req3' }).locator('.react-aria-Checkbox').click();
-        await page.locator('#runner-request-list').getByRole('gridcell', { name: 'req4' }).locator('.react-aria-Checkbox').click();
+        await page.locator('.item-req5').click();
 
         // send
         await page.getByRole('button', { name: 'Run', exact: true }).click();
 
         // check result
-        await page.getByText('ITERATION 1').click();
+        await page.getByText('3 / 3').first().click();
 
         const expectedTestOrder = [
             'req5-post-check',
