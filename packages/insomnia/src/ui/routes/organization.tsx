@@ -50,7 +50,6 @@ import { Icon } from '../components/icon';
 import { InsomniaAI } from '../components/insomnia-ai-icon';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { showAlert, showModal } from '../components/modals';
-import { showAccessDeniedModal } from '../components/modals/access-denied-modal';
 import { InviteModalContainer } from '../components/modals/invite-modal/invite-modal';
 import { SettingsModal, showSettingsModal } from '../components/modals/settings-modal';
 import { OrganizationAvatar } from '../components/organization-avatar';
@@ -113,9 +112,6 @@ export interface CurrentPlan {
   price: number;
   quantity: number;
   type: PersonalPlanType;
-  expirationWarningMessage: string;
-  expirationErrorMessage: string;
-  accessDenied: boolean;
 };
 
 function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
@@ -570,12 +566,6 @@ const OrganizationRoute = () => {
   }, [organizationId, asyncTaskList, syncOrgsAndProjects]);
 
   useEffect(() => {
-    if (billing.accessDenied) {
-      showAccessDeniedModal();
-    }
-  }, [billing, organizationId]);
-
-  useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
     if (isIdleAndUninitialized) {
       untrackedProjectsFetcher.load('/untracked-projects');
@@ -802,6 +792,7 @@ const OrganizationRoute = () => {
             <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
               {organizations.map(organization => {
                 const isActive = organization.id === organizationId;
+
                 return (
                   <TooltipTrigger key={organization.id}>
                     <Link className="outline-none relative">
@@ -830,7 +821,7 @@ const OrganizationRoute = () => {
                         }) ? (
                             <div className='flex items-center justify-center'>
                               <Icon icon="home" />
-                              {isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) && <Icon className={`z-20 absolute -top-1 -right-1 w-4 h-4 ${currentPlan?.expirationErrorMessage ? 'text-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))]' : 'text-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))]'} `} icon="exclamation-circle" />}
+                              {<Icon className={`z-20 absolute -top-1 -right-1 w-4 h-4 transition-opacity ease-in-out ${billing?.expirationErrorMessage ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]'} ${isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) ? 'opacity-100' : 'opacity-0'} `} icon="exclamation-circle" />}
                             </div>
                         ) : (
                             <div className='flex items-center justify-center'>
@@ -838,7 +829,7 @@ const OrganizationRoute = () => {
                                 alt={organization.display_name}
                                 src={organization.branding?.logo_url || ''}
                               />
-                              {isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) && <Icon className={`z-20 absolute -top-1 -right-1 w-4 h-4 ${currentPlan?.expirationErrorMessage ? 'text-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))]' : 'text-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))]'} `} icon="exclamation-circle" />}
+                              {<Icon className={`z-20 absolute -top-1 -right-1 w-4 h-4 transition-opacity ease-in-out ${billing?.expirationErrorMessage ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]'} ${isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) ? 'opacity-100' : 'opacity-0'} `} icon="exclamation-circle" />}
                             </div>
                         )}
                       </div>
