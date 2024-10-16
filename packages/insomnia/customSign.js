@@ -18,13 +18,17 @@ exports.default = async function(configuration) {
     if (!USERNAME || !PASSWORD || !CREDENTIAL_ID || !TOTP_SECRET) {
         throw new Error('[customSign] Missing required environment variables.');
     }
-    // meant to be run on Windows host with docker
-    const absolutePath = path.resolve(rawPath);
-    const inputFileName = path.basename(absolutePath);
-    // Convert Windows path to Unix-style path for Docker
-    const dockerInputFilePath = path.posix.join('C:/CodeSignTool', inputFileName);
+
+    const absolutePath = path.resolve(rawPath); // C:\Users\...\Update.exe
+    const fixedAbsolutePath = absolutePath.replace(/\\/g, '/'); // C:/Users/.../Update.exe
+    const lastSlashIndex = fixedAbsolutePath.lastIndexOf('/'); // index of last / slash
+    const directoryPath = fixedAbsolutePath.substring(0, lastSlashIndex); // C:/Users/...
+    const inputFileName = path.basename(absolutePath); // Update.exe
+    const codeSignPath = 'C:/CodeSignTool';
+    const dockerInputFilePath = path.posix.join(codeSignPath, inputFileName);
+
     const dockerCommand = `docker run --rm \
-        -v "${absolutePath.replace(/\\/g, '/')}:${dockerInputFilePath}" \
+        -v "${directoryPath}:${codeSignPath}" \
         -e USERNAME="${USERNAME}" \
         -e PASSWORD="${PASSWORD}" \
         -e CREDENTIAL_ID="${CREDENTIAL_ID}" \
