@@ -38,6 +38,7 @@ async function fetchAndCacheImage(
   if (originalCachedImage?.fetching) {
     return;
   }
+  // set fetching state to true
   globalImageCache.set(imageUrlSansParams, {
     ...(originalCachedImage ?? {
       value: imageUrl,
@@ -49,6 +50,12 @@ async function fetchAndCacheImage(
   const initialFetch = await fetch(imageUrl, { cache, redirect: 'follow' });
   fetching = false;
   if (!initialFetch.ok) {
+    // updates fetching state to false
+    globalImageCache.set(imageUrlSansParams, {
+      value: imageUrl,
+      version,
+      fetching,
+    });
     // if the image fails to load, return the original url
     callback({ value: imageUrl, version, fetching });
     return;
