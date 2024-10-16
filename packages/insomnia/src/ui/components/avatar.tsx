@@ -23,7 +23,7 @@ const getNameInitials = (name?: string) => {
   return `${firstWord.charAt(0)}${lastWord ? lastWord.charAt(0) : ''}`;
 };
 
-const AvatarImage = ({ src, alt, size, bounce = false }: { src: string; alt: string; size: 'small' | 'medium'; bounce: boolean }) => {
+const AvatarImage = ({ src, alt, size }: { src: string; alt: string; size: 'small' | 'medium' }) => {
   const imageUrl = useAvatarImageCache(src);
   return (
     <img
@@ -31,7 +31,7 @@ const AvatarImage = ({ src, alt, size, bounce = false }: { src: string; alt: str
       src={imageUrl}
       width={size === 'small' ? 20 : 24}
       height={size === 'small' ? 20 : 24}
-      className={(bounce ? 'bounce-in' : '') + 'border-2 bounce-in border-solid border-[--color-bg] box-border outline-none rounded-full object-cover object-center bg-[--hl]'}
+      className={'border-2 bounce-in border-solid border-[--color-bg] box-border outline-none rounded-full object-cover object-center bg-[--hl]'}
     />
   );
 };
@@ -46,11 +46,10 @@ const AvatarPlaceholder = ({ size, children }: { size: 'small' | 'medium'; child
   );
 };
 
-export const Avatar = ({ src, alt, size = 'medium', bounce = false }: { src: string; alt: string; size?: 'small' | 'medium'; bounce?: boolean }) => {
+export const Avatar = ({ src, alt, size = 'medium' }: { src: string; alt: string; size?: 'small' | 'medium' }) => {
   return src ? (
     <Suspense fallback={<AvatarPlaceholder size={size}>{getNameInitials(alt)}</AvatarPlaceholder>}>
       <AvatarImage
-        bounce={bounce}
         src={src}
         alt={alt}
         size={size}
@@ -63,7 +62,7 @@ export const Avatar = ({ src, alt, size = 'medium', bounce = false }: { src: str
   );
 };
 
-export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium', bounce = false }: { items: { key: string; src: string; alt: string }[]; maxAvatars?: number; size: 'small' | 'medium'; bounce?: boolean }) => {
+export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium' }: { items: { key: string; src: string; alt: string }[]; maxAvatars?: number; size: 'small' | 'medium' }) => {
   const avatars = items.slice(0, maxAvatars);
   const overflow = items.length - maxAvatars;
 
@@ -79,7 +78,6 @@ export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium', bounce = f
           <TooltipTrigger key={avatar.key}>
             <Button className="cursor-default">
               <Avatar
-                bounce={bounce}
                 size={size}
                 src={avatar.src}
                 alt={avatar.alt}

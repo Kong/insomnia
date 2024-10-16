@@ -26,7 +26,6 @@ import {
 } from '../components/modals/settings-modal';
 import { AppHooks } from '../containers/app-hooks';
 import { AIProvider } from '../context/app/ai-context';
-import { GlobalImageCacheProvider } from '../context/app/global-image-cache-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import Modals from './modals';
 
@@ -238,23 +237,21 @@ const Root = () => {
     <AIProvider>
       <NunjucksEnabledProvider>
         <ErrorBoundary>
-          <GlobalImageCacheProvider>
-            <div className="app">
-              <Outlet />
-            </div>
-            <Modals />
-            <AppHooks />
-            {/* triggered by insomnia://app/import */}
-            {importUri && (
-              <ImportModal
-                onHide={() => setImportUri('')}
-                projectName="Insomnia"
-                defaultProjectId={projectId}
-                organizationId={organizationId}
-                from={{ type: 'uri', defaultValue: importUri }}
-              />
-            )}
-          </GlobalImageCacheProvider>
+          <div className="app">
+            <Outlet />
+          </div>
+          <Modals />
+          <AppHooks />
+          {/* triggered by insomnia://app/import */}
+          {importUri && (
+            <ImportModal
+              onHide={() => setImportUri('')}
+              projectName="Insomnia"
+              defaultProjectId={projectId}
+              organizationId={organizationId}
+              from={{ type: 'uri', defaultValue: importUri }}
+            />
+          )}
         </ErrorBoundary>
       </NunjucksEnabledProvider>
     </AIProvider>

@@ -1,8 +1,9 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 
 interface CacheEntry {
   value: Promise<string> | string;
   timestamp: number;
+  version?: string;
   subscribers: (() => void)[];
 }
 
@@ -15,51 +16,71 @@ class ImageCache {
     this.ttl = ttl;
   }
 
-  read(src: string) {
+  read(base: string, version: string) {
+    const value = `${base}${version ? `?${version}` : ''}`;
     const now = Date.now();
-    if (this.__cache[src] && this.__cache[src].value instanceof Promise) {
+    if (this.__cache[base] && this.__cache[base].value instanceof Promise) {
       // If the value is a Promise, throw it to indicate that the cache is still loading
-      throw this.__cache[src].value;
-    } else if (this.__cache[src] && now - this.__cache[src].timestamp < this.ttl) {
-      // If the value is an HTMLImageElement and hasn't expired, return it
-      return this.__cache[src].value;
+      throw this.__cache[base].value;
+    } else if (
+      this.__cache[base] &&
+      (this.__cache[base].version === version ||
+        now - this.__cache[base].timestamp < this.ttl)
+    ) {
+      // If the value is an HTMLImageElement, the version matches, and hasn't expired, return it
+      return this.__cache[base].value;
     } else {
       // Otherwise, load the image and add it to the cache
       const promise = new Promise<string>((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
-          this.__cache[src] = { value: src, timestamp: now, subscribers: [] };
-          resolve(src);
+          this.__cache[base].value = value;
+          this.__cache[base].timestamp = now;
+          this.__cache[base].version = version;
+          resolve(value);
           // Notify all subscribers
-          this.__cache[src].subscribers.forEach(callback => callback());
+          this.__cache[base].subscribers.forEach(callback => callback());
         };
         img.onerror = () => {
-          reject(new Error(`Failed to load image: ${src}`));
+          reject(new Error(`Failed to load image: ${value}`));
           // Remove the cache entry if the image fails to load
-          delete this.__cache[src];
+          delete this.__cache[base];
         };
-        img.src = src;
+        img.src = value;
       });
-      this.__cache[src] = { value: promise, timestamp: now, subscribers: [] };
+      this.__cache[base].value = promise;
+      this.__cache[base].timestamp = now;
+      this.__cache[base].version = version;
       throw promise;
     }
   }
 
-  subscribe(src: string, callback: () => void) {
-    if (!this.__cache[src]) {
-      this.__cache[src] = { value: new Promise(() => { }), timestamp: 0, subscribers: [] };
+  subscribe(base: string, callback: () => void) {
+    if (!this.__cache[base]) {
+      this.__cache[base] = {
+        value: new Promise(() => {}),
+        timestamp: 0,
+        subscribers: [],
+      };
     }
-    this.__cache[src].subscribers.push(callback);
-
+    if (!this.__cache[base].subscribers) {
+      this.__cache[base].subscribers = [];
+    }
+    if (!this.__cache[base].subscribers.includes(callback)) {
+      this.__cache[base].subscribers.push(callback);
+    }
     return () => {
-      this.__cache[src].subscribers = this.__cache[src].subscribers.filter(cb => cb !== callback);
+      this.__cache[base].subscribers = this.__cache[base].subscribers.filter(
+        cb => cb !== callback
+      );
     };
   }
 
   invalidate(src: string) {
-    if (this.__cache[src]) {
-      delete this.__cache[src];
-      this.read(src);
+    const [base, version] = src.split('?');
+    if (this.__cache[base] && this.__cache[base].version !== version) {
+      this.__cache[base].timestamp = 0;
+      this.read(base, version);
     }
   }
 
@@ -69,15 +90,19 @@ class ImageCache {
 }
 
 export function useImageCache(src: string, cache: ImageCache): string {
+  const [base, version] = src.split('?');
   const [imageSrc, setImageSrc] = useState<string | null>(null);
 
-  const subscribe = (callback: () => void) => {
-    return cache.subscribe(src, callback);
-  };
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      return cache.subscribe(base, callback);
+    },
+    [base, cache]
+  );
 
   const getSnapshot = () => {
     try {
-      return cache.read(src);
+      return cache.read(base, version);
     } catch (promise) {
       if (promise instanceof Promise) {
         throw promise;
@@ -91,29 +116,33 @@ export function useImageCache(src: string, cache: ImageCache): string {
   useEffect(() => {
     setImageSrc(() => {
       try {
-        const result = cache.read(src);
+        const result = cache.read(base, version);
         if (result instanceof Promise) {
           throw result;
         }
 
         return result;
-      } catch (promise) {
-        if (promise instanceof Promise) {
-          throw promise;
+      } catch (maybeResultPromise) {
+        if (maybeResultPromise instanceof Promise) {
+          throw maybeResultPromise;
         }
         return null;
       }
     });
-  }, [cache, src]);
+  }, [cache, base, version]);
 
-  const cacheSrc = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const cacheSrc = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot
+  );
 
   if (typeof cacheSrc === 'string') {
     return cacheSrc;
   }
 
   return imageSrc!;
-};
+}
 
 export const avatarImageCache = new ImageCache({
   ttl: 10 * 60 * 1000, // 10 minutes

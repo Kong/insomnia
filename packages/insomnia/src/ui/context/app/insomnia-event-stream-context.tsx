@@ -1,13 +1,12 @@
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { CLOUDFLARE_CACHE_INVALIDATION_TTL } from '../../../common/constants';
+import { CDN_INVALIDATION_TTL } from '../../../common/constants';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { avatarImageCache } from '../../hooks/image-cache';
 import type { ProjectIdLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
-import { useGlobalImageContext } from './global-image-cache-context';
 
 const InsomniaEventStreamContext = createContext<{
   presence: UserPresence[];
@@ -84,8 +83,6 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
   const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
-  const { invalidateImage: invalidateGlobalImage } = useGlobalImageContext();
-
   const [presence, setPresence] = useState<UserPresence[]>([]);
   const syncOrganizationsFetcher = useFetcher();
   const syncStorageRuleFetcher = useFetcher();
@@ -147,21 +144,15 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               }));
             } else if (event.type === 'PresentStateChanged') {
               setPresence(prev => {
-                if (!prev.find(p => p.avatar.split('?')[0] === event.avatar.split('?')[0])) {
+                if (!prev.find(p => p.avatar === event.avatar)) {
                   // if this avatar is new, invalidate the cache
-                  window.setTimeout(() => {
-                    console.log('[sse] Invalidating cache for', event.avatar);
-                    avatarImageCache.invalidate(event.avatar);
-                  }, CLOUDFLARE_CACHE_INVALIDATION_TTL);
+                  window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
                 }
                 return [...prev.filter(p => p.acct !== event.acct), event];
               });
             } else if (event.type === 'OrganizationChanged') {
               if (event.avatar) {
-                window.setTimeout(() => {
-                  console.log('[sse] Invalidating cache for', event.avatar);
-                  avatarImageCache.invalidate(event.avatar);
-                }, CLOUDFLARE_CACHE_INVALIDATION_TTL);
+                window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
               }
               syncOrganizationsFetcher.submit({}, {
                 action: '/organization/sync',
@@ -203,7 +194,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
       }
     }
     return;
-  }, [invalidateGlobalImage, organizationId, projectId, remoteId, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, syncStorageRuleFetcher, userSession.id, workspaceId]);
+  }, [organizationId, projectId, remoteId, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, syncStorageRuleFetcher, userSession.id, workspaceId]);
 
   return (
     <InsomniaEventStreamContext.Provider
