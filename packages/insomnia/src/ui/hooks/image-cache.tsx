@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 
 interface CacheEntry {
   value: Promise<string> | string;
@@ -68,31 +68,51 @@ class ImageCache {
   }
 }
 
-function useImageCache(src: string, cache: ImageCache): string {
+export function useImageCache(src: string, cache: ImageCache): string {
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
 
   const subscribe = (callback: () => void) => {
     return cache.subscribe(src, callback);
   };
 
   const getSnapshot = () => {
-    return cache.read(src);
+    try {
+      return cache.read(src);
+    } catch (promise) {
+      if (promise instanceof Promise) {
+        throw promise;
+      }
+      return null;
+    }
   };
 
-  const getServerSnapshot = () => src;
+  const getServerSnapshot = () => null;
 
-  cache.read(src);
+  useEffect(() => {
+    setImageSrc(() => {
+      try {
+        const result = cache.read(src);
+        if (result instanceof Promise) {
+          throw result;
+        }
 
-  const image = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+        return result;
+      } catch (promise) {
+        if (promise instanceof Promise) {
+          throw promise;
+        }
+        return null;
+      }
+    });
+  }, [cache, src]);
 
-  if (image instanceof Promise) {
-    throw image;
+  const cacheSrc = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  if (typeof cacheSrc === 'string') {
+    return cacheSrc;
   }
 
-  if (typeof image === 'string') {
-    return image;
-  }
-
-  return src;
+  return imageSrc!;
 };
 
 export const avatarImageCache = new ImageCache({
