@@ -147,15 +147,21 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               }));
             } else if (event.type === 'PresentStateChanged') {
               setPresence(prev => {
-                if (!prev.find(p => p.avatar === event.avatar)) {
+                if (!prev.find(p => p.avatar.split('?')[0] === event.avatar.split('?')[0])) {
                   // if this avatar is new, invalidate the cache
-                  window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CLOUDFLARE_CACHE_INVALIDATION_TTL);
+                  window.setTimeout(() => {
+                    console.log('[sse] Invalidating cache for', event.avatar);
+                    avatarImageCache.invalidate(event.avatar);
+                  }, CLOUDFLARE_CACHE_INVALIDATION_TTL);
                 }
                 return [...prev.filter(p => p.acct !== event.acct), event];
               });
             } else if (event.type === 'OrganizationChanged') {
               if (event.avatar) {
-                window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CLOUDFLARE_CACHE_INVALIDATION_TTL);
+                window.setTimeout(() => {
+                  console.log('[sse] Invalidating cache for', event.avatar);
+                  avatarImageCache.invalidate(event.avatar);
+                }, CLOUDFLARE_CACHE_INVALIDATION_TTL);
               }
               syncOrganizationsFetcher.submit({}, {
                 action: '/organization/sync',
