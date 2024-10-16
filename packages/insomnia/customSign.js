@@ -9,24 +9,24 @@ exports.default = async function(configuration) {
         console.log('[customSign] Skipping signing because target is not windows squirrel.');
         return;
     }
-    // remove /n and other crap from path
-    const rawPath = configuration.path.replace(/(\r\n|\n|\r)/gm, '');
-    console.log('[customSign] File to sign before final packaging:', rawPath);
 
     const { USERNAME, PASSWORD, CREDENTIAL_ID, TOTP_SECRET } = process.env;
-
     if (!USERNAME || !PASSWORD || !CREDENTIAL_ID || !TOTP_SECRET) {
         throw new Error('[customSign] Missing required environment variables.');
     }
 
+    // Note: Avoid changing the lines bellow. Risk of breaking the windows code-signing process.
+    // Feedback loop > 15 mins. Requires a branch on origin, a PR, and a separate dummy release pipeline to test changes.
+    // sslcom/codesigner-win has large image size (>1GB) and requires docker within windows-latest host.
+    const rawPath = configuration.path.replace(/(\r\n|\n|\r)/gm, ''); // remove /n and other crap from path
+    console.log('[customSign] File to sign before final packaging:', rawPath);
     const absolutePath = path.resolve(rawPath); // C:\Users\...\Update.exe
     const fixedAbsolutePath = absolutePath.replace(/\\/g, '/'); // C:/Users/.../Update.exe
     const lastSlashIndex = fixedAbsolutePath.lastIndexOf('/'); // index of last / slash
     const directoryPath = fixedAbsolutePath.substring(0, lastSlashIndex); // C:/Users/...
     const inputFileName = path.basename(absolutePath); // Update.exe
     const codeSignPath = 'C:/CodeSignTool/Insomnia'; // path inside docker container
-    const dockerInputFilePath = path.join(codeSignPath, inputFileName);
-
+    const dockerInputFilePath = path.join(codeSignPath, inputFileName); // C:/CodeSignTool/Insomnia/Update.exe
     const dockerCommand = `docker run --rm \
         -v "${directoryPath}:${codeSignPath}" \
         -e USERNAME="${USERNAME}" \
