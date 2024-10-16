@@ -24,7 +24,7 @@ exports.default = async function(configuration) {
     const lastSlashIndex = fixedAbsolutePath.lastIndexOf('/'); // index of last / slash
     const directoryPath = fixedAbsolutePath.substring(0, lastSlashIndex); // C:/Users/...
     const inputFileName = path.basename(absolutePath); // Update.exe
-    const codeSignPath = 'C:/CodeSignTool';
+    const codeSignPath = 'C:/CodeSignTool/Insomnia'; // path inside docker container
     const dockerInputFilePath = path.posix.join(codeSignPath, inputFileName);
 
     const dockerCommand = `docker run --rm \
