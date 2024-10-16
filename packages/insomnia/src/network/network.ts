@@ -1,6 +1,6 @@
 import clone from 'clone';
 import fs from 'fs';
-import type { RequestContext, RequestTestResult } from 'insomnia-sdk';
+import type { ExecutionOption, RequestContext, RequestTestResult } from 'insomnia-sdk';
 import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
 
@@ -448,6 +448,7 @@ interface RequestContextForScript {
   ancestors: (Request | RequestGroup | Workspace | Project | MockRoute | MockServer)[];
   globals?: Environment; // there could be no global environment
   settings: Settings;
+  execution?: ExecutionOption;
 }
 
 type RequestAndContextAndResponse = RequestContextForScript & {
