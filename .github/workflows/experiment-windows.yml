@@ -84,9 +84,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
-          echo: "Pulling docker image"
           docker pull ghcr.io/sslcom/codesigner-win:latest
-          echo: "Pulling docker image... Done"
           NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
         env:
           USERNAME: ${{secrets.ES_USERNAME}}
