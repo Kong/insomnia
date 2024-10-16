@@ -1,13 +1,11 @@
 const { exec } = require('child_process');
 const util = require('util');
 const path = require('path');
-const fs = require('fs');
 const execAsync = util.promisify(exec);
 
 exports.default = async function(configuration) {
     // skip signing if not windows squirrel
     if (configuration.options.target.length === 0 || configuration.options.target[0].target !== 'squirrel') {
-        console.log('[customSign] Configuration target:', configuration.options.target);
         console.log('[customSign] Skipping signing because target is not windows squirrel.');
         return;
     }
@@ -20,17 +18,13 @@ exports.default = async function(configuration) {
     if (!USERNAME || !PASSWORD || !CREDENTIAL_ID || !TOTP_SECRET) {
         throw new Error('[customSign] Missing required environment variables.');
     }
-    const absolutePath = fs.realpathSync(path.resolve(rawPath));
+    // meant to be run on Windows host with docker
+    const absolutePath = path.resolve(rawPath);
     const inputFileName = path.basename(absolutePath);
-
     // Convert Windows path to Unix-style path for Docker
-    const dockerInputFilePath = path.posix.join('/data', inputFileName);
-    const hostPathForDocker = absolutePath
-        .replace(/\\/g, '/')
-        .replace(/^([A-Za-z]):/, (match, driveLetter) => `/${driveLetter.toLowerCase()}`);
-
+    const dockerInputFilePath = path.posix.join('C:/CodeSignTool', inputFileName);
     const dockerCommand = `docker run --rm \
-        -v "${hostPathForDocker}:${dockerInputFilePath}" \
+        -v "${absolutePath.replace(/\\/g, '/')}:${dockerInputFilePath}" \
         -e USERNAME="${USERNAME}" \
         -e PASSWORD="${PASSWORD}" \
         -e CREDENTIAL_ID="${CREDENTIAL_ID}" \
