@@ -171,6 +171,14 @@ export class NeDBClient {
         typeFilter = [models.protoDirectory.type, type];
       }
 
+      if (type === models.mockRoute.type) {
+        typeFilter = [models.mockServer.type, type];
+      }
+
+      if (type === models.webSocketPayload.type) {
+        typeFilter = [models.webSocketRequest.type, type];
+      }
+
       const children = await db.withDescendants(workspace, null, typeFilter);
       docs = children.filter(d => d.type === type && !d.isPrivate);
     } else {
