@@ -1,0 +1,4 @@
+{
+  "main": "packages/insomnia-inso/dist/index.js",
+  "output": "packages/insomnia-inso/binaries/sea-prep.blob"
+}
