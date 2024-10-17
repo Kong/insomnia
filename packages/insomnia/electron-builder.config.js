@@ -11,7 +11,6 @@ const config = {
   productName: 'Insomnia',
   copyright: 'Kong Inc. <https://konghq.com>',
   description: 'The Collaborative API Client and Design Tool',
-  homepage: 'https://insomnia.rest',
   npmRebuild: false,
   appId: 'com.insomnia.app',
   protocols: [
