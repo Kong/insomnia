@@ -1495,6 +1495,18 @@ html {
   padding-top: 0.3em;
   padding-bottom: 0.3em;
 }
+.editor.editor--environment-inline .CodeMirror-lines {
+  padding: 0;
+}
+
+.editor.editor--environment-inline .editor--environment-inline-focus {
+  position: absolute!important;
+  top: 0.25rem;
+  background: var(--color-bg);
+  z-index: 50;
+  max-height: 200px;
+}
+
 .editor .CodeMirror-dialog {
   background: var(--color-bg);
   opacity: 0.95;
