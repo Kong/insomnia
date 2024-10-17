@@ -89,7 +89,7 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
       <ModalHeader>{title}</ModalHeader>
       <ModalBody
         noScroll
-        className="wide tall relative"
+        className="wide tall"
         style={
           showCopyButton
             ? {
