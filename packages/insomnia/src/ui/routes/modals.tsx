@@ -67,6 +67,7 @@ const Modals: FC = () => {
         <SettingsModal
           ref={instance => registerModal(instance, 'SettingsModal')}
         />
+
         <ResponseDebugModal
           ref={instance => registerModal(instance, 'ResponseDebugModal')}
         />

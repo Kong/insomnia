@@ -57,6 +57,7 @@ import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
 import { useAIContext } from '../context/app/ai-context';
 import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-stream-context';
+import { useOrganizationPermissions } from '../hooks/use-organization-features';
 import { syncProjects } from './project';
 import { useRootLoaderData } from './root';
 import type { UntrackedProjectsLoaderData } from './untracked-projects';
@@ -360,6 +361,9 @@ export interface FeatureList {
 export interface Billing {
   // If true, the user has paid for the current period
   isActive: boolean;
+  expirationWarningMessage: string;
+  expirationErrorMessage: string;
+  accessDenied: boolean;
 }
 
 export const DefaultStorage = 'cloud_plus_local';
@@ -426,6 +430,9 @@ export const organizationPermissionsLoader: LoaderFunction = async ({ params }):
   // If network unreachable assume user has paid for the current period
   const fallbackBilling = {
     isActive: true,
+    expirationWarningMessage: '',
+    expirationErrorMessage: '',
+    accessDenied: false,
   };
 
   if (isScratchpadOrganizationId(organizationId)) {
@@ -506,6 +513,7 @@ const UpgradeButton = ({
 
 const OrganizationRoute = () => {
   const { userSession, settings } = useRootLoaderData();
+  const { billing } = useOrganizationPermissions();
 
   const { organizations, user, currentPlan } =
     useLoaderData() as OrganizationLoaderData;
@@ -784,9 +792,10 @@ const OrganizationRoute = () => {
             <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
               {organizations.map(organization => {
                 const isActive = organization.id === organizationId;
+
                 return (
                   <TooltipTrigger key={organization.id}>
-                    <Link className="outline-none">
+                    <Link className="outline-none relative">
                       <div
                         className={`select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${isActive
                           ? 'outline-[--color-font]'
@@ -810,12 +819,18 @@ const OrganizationRoute = () => {
                           organization,
                           accountId: userSession.accountId || '',
                         }) ? (
-                          <Icon icon="home" />
+                            <div className='flex items-center justify-center'>
+                              <Icon icon="home" />
+                              {<Icon className={`z-20 absolute -top-1 -right-1 w-4 h-4 transition-opacity ease-in-out ${billing?.expirationErrorMessage ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]'} ${isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) ? 'opacity-100' : 'opacity-0'} `} icon="exclamation-circle" />}
+                            </div>
                         ) : (
-                          <OrganizationAvatar
-                            alt={organization.display_name}
-                            src={organization.branding?.logo_url || ''}
-                          />
+                            <div className='flex items-center justify-center'>
+                              <OrganizationAvatar
+                                alt={organization.display_name}
+                                src={organization.branding?.logo_url || ''}
+                              />
+                              {<Icon className={`z-20 absolute -top-1 -right-1 w-4 h-4 transition-opacity ease-in-out ${billing?.expirationErrorMessage ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]'} ${isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) ? 'opacity-100' : 'opacity-0'} `} icon="exclamation-circle" />}
+                            </div>
                         )}
                       </div>
                     </Link>
