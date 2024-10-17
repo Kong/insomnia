@@ -14,7 +14,6 @@ const config = {
   homepage: 'https://insomnia.rest',
   npmRebuild: false,
   appId: 'com.insomnia.app',
-  name: 'Insomnia',
   protocols: [
     {
       name: 'Insomnia',
