@@ -16,7 +16,8 @@ exports.default = async function(configuration) {
 
     const { USERNAME, PASSWORD, CREDENTIAL_ID, TOTP_SECRET } = process.env;
     if (!USERNAME || !PASSWORD || !CREDENTIAL_ID || !TOTP_SECRET) {
-        throw new Error('[customSign] Missing required environment variables.');
+        console.log('[customSign] Skipping signing,  Missing required environment variables.');
+        return;
     }
 
     // Note: Avoid changing the lines bellow. Risk of breaking the windows code-signing process.
