@@ -2,10 +2,11 @@
 /* eslint-disable camelcase */
 // inspiration: https://github.com/grpc/grpc/blob/master/examples/node/dynamic_codegen/route_guide/route_guide_server.js
 import * as grpc from '@grpc/grpc-js';
+import { ServerCredentials } from '@grpc/grpc-js';
 import { HandleCall } from '@grpc/grpc-js/build/src/server-call';
 import * as protoLoader from '@grpc/proto-loader';
 import { addReflection } from '@ravanallc/grpc-server-reflection';
-import fs from 'fs';
+import fs, { readFileSync } from 'fs';
 import path from 'path';
 
 const PROTO_PATH = path.resolve('../../packages/insomnia/src/network/grpc/__fixtures__/library/route_guide.proto');
@@ -192,8 +193,7 @@ export const startGRPCServer = (port: number) => {
     const server = new grpc.Server();
 
     // Enable reflection
-    const descriptorSet = '../../packages/insomnia-smoke-test/fixtures/route_guide.bin';
-    addReflection(server, descriptorSet);
+    addReflection(server, '../../packages/insomnia-smoke-test/fixtures/route_guide.bin');
 
     // @ts-expect-error generated from proto file
     server.addService(routeguide.RouteGuide.service, {
@@ -215,6 +215,47 @@ export const startGRPCServer = (port: number) => {
         featureList = JSON.parse(data.toString());
         console.log(`Listening at grpc://localhost:${port} for route_guide.proto`);
         server.start();
+        resolve();
+      });
+    });
+    const serverWithTLS = new grpc.Server();
+
+    // Enable reflection
+    addReflection(serverWithTLS, '../../packages/insomnia-smoke-test/fixtures/route_guide.bin');
+
+    // @ts-expect-error generated from proto file
+    serverWithTLS.addService(routeguide.RouteGuide.service, {
+      getFeature: getFeature,
+      listFeatures: listFeatures,
+      recordRoute: recordRoute,
+      routeChat: routeChat,
+    });
+    const rootCert = readFileSync(path.join(__dirname, '../fixtures/certificates/rootCA.pem'));
+    const serverCert = readFileSync(path.join(__dirname, '../fixtures/certificates/localhost.pem'));
+    const serverKey = readFileSync(path.join(__dirname, '../fixtures/certificates/localhost-key.pem'));
+    const serverCredentials = ServerCredentials.createSsl(
+      rootCert,
+      [
+        {
+          cert_chain: serverCert,
+          private_key: serverKey,
+        },
+      ],
+      true
+    );
+    serverWithTLS.bindAsync('localhost:50052', serverCredentials, error => {
+      if (error) {
+        return reject(error);
+      }
+
+      const dbPath = '../../packages/insomnia/src/network/grpc/__fixtures__/library/route_guide_db.json';
+      fs.readFile(path.resolve(dbPath), (err, data) => {
+        if (err) {
+          throw err;
+        }
+        featureList = JSON.parse(data.toString());
+        console.log('Listening at grpcs://localhost:50052 for route_guide.proto');
+        serverWithTLS.start();
         resolve();
       });
     });
