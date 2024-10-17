@@ -8,8 +8,13 @@ const BINARY_PREFIX = 'Insomnia.Core';
  * @see https://www.electron.build/configuration/configuration
  */
 const config = {
+  productName: 'Insomnia',
+  copyright: 'Kong Inc. <https://konghq.com>',
+  description: 'The Collaborative API Client and Design Tool',
+  homepage: 'https://insomnia.rest',
   npmRebuild: false,
   appId: 'com.insomnia.app',
+  name: 'Insomnia',
   protocols: [
     {
       name: 'Insomnia',
@@ -84,6 +89,8 @@ const config = {
     ],
   },
   win: {
+    icon: './src/icons/icon.ico',
+    legalTrademarks: 'Insomnia by Kong Inc.',
     target: [
       {
         target: 'squirrel',
@@ -92,12 +99,10 @@ const config = {
     signAndEditExecutable: false, // false to prevent unused winCodeSign download
     sign: './customSign.js',
     signingHashAlgorithms: ['sha256'], // avoid duplicate signing hook calls https://github.com/electron-userland/electron-builder/issues/3995#issuecomment-505725704
-    compression: 'store', // speed up builds?
   },
   squirrelWindows: {
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
-    iconUrl:
-      'https://github.com/kong/insomnia/blob/develop/packages/insomnia/src/icons/icon.ico?raw=true',
+    iconUrl: 'https://github.com/kong/insomnia/blob/develop/packages/insomnia/src/icons/icon.ico?raw=true',
   },
   portable: {
     artifactName: `${BINARY_PREFIX}-\${version}-portable.\${ext}`,
