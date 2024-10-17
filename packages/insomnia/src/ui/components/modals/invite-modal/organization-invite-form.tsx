@@ -6,7 +6,7 @@ import { decryptRSAWithJWK, encryptRSAWithJWK } from '../../../../account/crypt'
 import { getCurrentSessionId, getPrivateKey } from '../../../../account/session';
 import { SegmentEvent } from '../../../analytics';
 import useStateRef from '../../../hooks/use-state-ref';
-import { insomniaFetch, ResponseFailError } from '../../../insomniaFetch';
+import { insomniaFetch } from '../../../insomniaFetch';
 import { Icon } from '../../icon';
 import { type PendingMember, updateInvitationRole } from './invite-modal';
 import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
@@ -240,25 +240,19 @@ async function getInviteInstruction(
     sessionId: await getCurrentSessionId(),
     onlyResolveOnSuccess: true,
   }).catch(async error => {
-    if (error instanceof ResponseFailError && error.response.headers.get('content-type')?.includes('application/json')) {
-      let json;
-      try {
-        json = await error.response.json();
-      } catch (e) {
-        throw new Error(`Failed to get invite instruction for ${inviteeEmail}`);
-      }
-      if (json?.error === NEEDS_TO_UPGRADE_ERROR) {
+    if (error.message && error.error) {
+      if (error?.error === NEEDS_TO_UPGRADE_ERROR) {
         throw new Error(
           `You are currently on the Free plan where you can invite as many collaborators as you want only as long as
 you don’t have more than one project. Since you have more than one project, you need to upgrade to
 Individual or above to continue.`
         );
       }
-      if (json?.error === NEEDS_TO_INCREASE_SEATS_ERROR) {
+      if (error?.error === NEEDS_TO_INCREASE_SEATS_ERROR) {
         throw new Error(needToIncreaseSeatErrMsg);
       }
-      if (json?.message) {
-        throw new Error(json.message);
+      if (error?.message) {
+        throw new Error(error.message);
       }
     }
     throw new Error(`Failed to get invite instruction for ${inviteeEmail}`);
@@ -455,11 +449,7 @@ async function inviteUserToOrganization(
   }).then(
     () => inviteeEmail,
     async error => {
-      let errMsg = `Failed to invite ${inviteeEmail}`;
-      if (error instanceof ResponseFailError && error.message) {
-        errMsg = error.message;
-      }
-      throw new Error(errMsg);
+      throw new Error(error.message || `Failed to invite ${inviteeEmail}`);
     }
   );
 }
