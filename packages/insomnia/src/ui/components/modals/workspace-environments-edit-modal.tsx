@@ -446,7 +446,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                           const kvPairData = isSelected ? [] : getKVPairFromData(selectedEnvironment.data, selectedEnvironment.dataPropertyOrder);
                           const foundDisabledItem = isSelected && selectedEnvironment.kvPairData?.some(pair => !pair.enabled);
                           const foundDuplicateNameItem = isSelected && selectedEnvironment.kvPairData?.some(
-                            (pair, idx) => selectedEnvironment.kvPairData?.slice(idx + 1).some(newPair => pair.name.trim() === newPair.name.trim())
+                            (pair, idx) => selectedEnvironment.kvPairData?.slice(idx + 1).some(newPair => pair.name.trim() === newPair.name.trim() && newPair.enabled)
                           ); const toggleSwitchEnvironmentType = () => {
                             updateEnvironmentFetcher.submit(JSON.stringify({
                               patch: {

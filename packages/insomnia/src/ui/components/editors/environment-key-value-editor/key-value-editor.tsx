@@ -1,28 +1,27 @@
-import React, { useEffect, useRef } from 'react';
-import { Button, type ButtonProps, DropIndicator, ListBox, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, useDragAndDrop } from 'react-aria-components';
+import React, { useEffect, useRef, useState } from 'react';
+import { Button, type ButtonProps, DropIndicator, ListBox, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, Toolbar, useDragAndDrop } from 'react-aria-components';
 
 import { generateId } from '../../../../common/misc';
 import { type EnvironmentKvPairData, EnvironmentKvPairDataType } from '../../../../models/environment';
 import { PromptButton } from '../../base/prompt-button';
-import { CodeEditor } from '../../codemirror/code-editor';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { Icon } from '../../icon';
+import { CodePromptModal, type CodePromptModalHandle } from '../../modals/code-prompt-modal';
 import { Tooltip } from '../../tooltip';
-import { checkNestedKeys } from '../environment-utils';
+import { checkNestedKeys, ensureKeyIsValid } from '../environment-utils';
 
 interface EditorProps {
   data: EnvironmentKvPairData[];
   onChange: (newPari: EnvironmentKvPairData[]) => void;
 }
-const headerStyle = 'normal-case p-2 z-10 border-b border-r border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none';
-const cellCommonStyle = 'h-full px-2 border-b border-r border-solid border-[--hl-sm] flex items-center';
+const cellCommonStyle = 'h-full px-2  flex items-center';
 
-const createNewPair = (): EnvironmentKvPairData => ({
+const createNewPair = (enabled: boolean = true): EnvironmentKvPairData => ({
   id: generateId('envPair'),
   name: '',
   value: '',
   type: EnvironmentKvPairDataType.STRING,
-  enabled: false,
+  enabled,
 });
 
 // Add tab index -1 to button so that user can use tab navigation to editors
@@ -41,6 +40,8 @@ const ItemButton = (props: ButtonProps & { tabIndex?: number }) => {
 
 export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
   const kvPairs: EnvironmentKvPairData[] = data.length > 0 ? [...data] : [createNewPair()];
+  const codeModalRef = useRef<CodePromptModalHandle>(null);
+  const [kvPairError, setKvPariError] = useState<{ id: string; error: string }[]>([]);
 
   const repositionInArray = (moveItems: string[], targetIndex: number) => {
     const removed = kvPairs.filter(pair => pair.id !== moveItems[0]);
@@ -98,9 +99,9 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
     onChange(kvPairs);
   };
 
-  const handleAddItem = (id: string) => {
+  const handleAddItem = (id?: string) => {
     const newPair = createNewPair();
-    const insertIdx = kvPairs.findIndex(d => d.id === id);
+    const insertIdx = id ? kvPairs.findIndex(d => d.id === id) : kvPairs.length - 1;
     kvPairs.splice(insertIdx === -1 ? 0 : insertIdx + 1, 0, newPair);
     onChange(kvPairs);
   };
@@ -122,7 +123,7 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
   const kvPairItemTypes = [
     {
       id: EnvironmentKvPairDataType.STRING,
-      name: 'String',
+      name: 'Text',
     },
     {
       id: EnvironmentKvPairDataType.JSON,
@@ -133,38 +134,91 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
   const renderPairItem = (kvPair: EnvironmentKvPairData) => {
     const { id, name, value, type, enabled = false } = kvPair;
     const itemIndex = kvPairs.findIndex(pair => pair.id === id);
-    const hasItemWithSameNameAfter = name !== '' && kvPairs.slice(itemIndex + 1).some(pair => pair.name.trim() === name.trim());
+    const itemError = kvPairError.find(p => p.id === id);
+    const hasItemWithSameNameAfter = name !== '' && kvPairs.slice(itemIndex + 1).some(pair => pair.name.trim() === name.trim() && pair.enabled);
     const isValidJSONString = checkValidJSONString(value);
     return (
       <>
-        <div className={`${cellCommonStyle} p-0 w-20 flex flex-shrink-0 items-center justify-end`}>
-          <Icon icon="grip-vertical" className="cursor-grab hidden mr-1 group-hover:inline" />
-          <ItemButton
-            className="flex items-center disabled:opacity-50 justify-center h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-            onPress={() => handleAddItem(id)}
-            tabIndex={-1}
-          >
-            <Icon icon="plus" />
-          </ItemButton>
-          <ItemButton
-            className="flex items-center justify-center h-7 aspect-square rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-            tabIndex={-1}
-            onPress={() => handleItemChange(id, 'enabled', !enabled)}
-          >
-            <Icon icon={enabled ? 'check-square' : 'square'} />
-          </ItemButton>
+        <div className={`${cellCommonStyle} w-6 flex flex-shrink-0 items-center justify-end border-l border-r-0`} style={{ padding: 0 }}>
+          <Icon icon="grip-vertical" className="cursor-grab mr-1" />
         </div>
-        <div className={`${cellCommonStyle} relative h-full w-[25%] flex flex-grow`}>
+        <div className={`${cellCommonStyle} relative h-full w-[30%] flex flex-grow pl-1`}>
           <OneLineEditor
             id={`environment-kv-editor-name-${id}`}
             placeholder={'Input Name'}
             defaultValue={name}
-            onChange={newName => handleItemChange(id, 'name', newName)}
+            readOnly={!enabled}
+            onChange={newName => {
+              // check filed names for invalid '$' for '.' sign
+              const error = ensureKeyIsValid(newName, true);
+              if (error) {
+                if (itemError) {
+                  setKvPariError(kvPairError.map(p => p.id === id ? { id, error } : p));
+                } else {
+                  setKvPariError([...kvPairError, { id, error }]);
+                }
+              } else {
+                if (itemError) {
+                  setKvPariError(kvPairError.filter(p => p.id !== id));
+                }
+                handleItemChange(id, 'name', newName);
+              }
+            }}
           />
+          {itemError &&
+            <Tooltip message={itemError.error} delay={200}>
+              <i className="fa fa-exclamation-circle text-[--color-danger]" />
+            </Tooltip>
+          }
           {hasItemWithSameNameAfter &&
             <Tooltip message={`Duplicate name: ${name}. Only the last item with same name will be used.`} delay={200}>
               <i className="fa fa-exclamation-circle text-[--color-warning]" />
             </Tooltip>
+          }
+        </div>
+        <div className={`${cellCommonStyle} w-[50%] relative`}>
+          {type === EnvironmentKvPairDataType.STRING ?
+            <OneLineEditor
+              id={`environment-kv-editor-value-${id}`}
+              placeholder={'Input Value'}
+              defaultValue={value.toString()}
+              readOnly={!enabled}
+              onChange={newValue => handleItemChange(id, 'value', newValue)}
+            /> :
+            <ItemButton
+              className="px-2 py-1 w-full flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden"
+              tabIndex={-1}
+              isDisabled={!enabled}
+              onPress={() => {
+                if (codeModalRef.current) {
+                  const modalRef = codeModalRef.current;
+                  modalRef.setError('');
+                  modalRef.show({
+                    submitName: 'Done',
+                    title: `Edit ${name} value`,
+                    enableRender: true,
+                    defaultValue: value.toString(),
+                    mode: 'application/json',
+                    onChange: (value: string) => {
+                      modalRef.setError('');
+                      try {
+                        const err = checkNestedKeys(JSON.parse(value));
+                        if (err) {
+                          modalRef.setError(err);
+                        } else {
+                          handleItemChange(id, 'value', value);
+                        }
+                      } catch (error) {
+                        modalRef.setError(error.message);
+                      }
+                    },
+                    hideMode: true,
+                  });
+                }
+              }}
+            >
+              <i className="fa fa-pencil-square-o space-right" />Click to Edit
+            </ItemButton>
           }
         </div>
         <div className={`${cellCommonStyle} w-32`} >
@@ -208,57 +262,14 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
             </Popover>
           </MenuTrigger>
         </div>
-        <div className={`${cellCommonStyle} w-[50%] relative`}>
-          {type === EnvironmentKvPairDataType.STRING ?
-            <OneLineEditor
-              id={`environment-kv-editor-value-${id}`}
-              placeholder={'Input Value'}
-              defaultValue={value.toString()}
-              onChange={newValue => handleItemChange(id, 'value', newValue)}
-            /> :
-            <CodeEditor
-              id={`environment-kv-editor-value-${id}`}
-              className="w-full h-full py-1 editor--environment-inline"
-              autoPrettify
-              defaultValue={value}
-              enableNunjucks
-              onBlur={() => {
-                // collapse the editor when lose focus
-                const textarea = document.getElementById(`environment-kv-editor-value-${id}`);
-                if (textarea && textarea.parentElement) {
-                  textarea.parentElement.classList.remove('editor--environment-inline-focus');
-                  textarea.parentElement.style.height = '100%';
-                }
-              }}
-              onFocus={(_e, editor) => {
-                const textarea = document.getElementById(`environment-kv-editor-value-${id}`);
-                const lineCount = editor?.lineCount();
-                // expand the editor when user focus the editor with more than one line of json string
-                if (textarea && textarea.parentElement && lineCount && lineCount > 1) {
-                  const editorContainer = textarea.parentElement;
-                  editorContainer.classList.add('editor--environment-inline-focus');
-                  if (lineCount && lineCount > 1) {
-                    // at least expand with 12em height
-                    editorContainer.style.height = `${Math.max(1.4 * lineCount, 12)}em`;
-                  }
-                }
-              }}
-              mode="application/json"
-              dynamicHeight={false}
-              onChange={value => {
-                if (checkValidJSONString(value)) {
-                  const err = checkNestedKeys(JSON.parse(value));
-                  if (err) {
-                    // handle error
-                  } else {
-                    handleItemChange(id, 'value', value);
-                  }
-                }
-              }}
-            />
-          }
-        </div>
-        <div className={`${cellCommonStyle} w-14`} >
+        <div className={`${cellCommonStyle} w-20`} >
+          <ItemButton
+            className="flex items-center justify-center h-7 aspect-square rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            tabIndex={-1}
+            onPress={() => handleItemChange(id, 'enabled', !enabled)}
+          >
+            <Icon icon={enabled ? 'check-square' : 'square'} />
+          </ItemButton>
           <PromptButton
             disabled={kvPairs.length <= 1}
             className="flex	items-center disabled:opacity-50 justify-center h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
@@ -281,34 +292,52 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
 
   return (
     <div className="p-[--padding-sm] min-w-max h-full overflow-hidden flex flex-col">
-      <div className="w-full flex h-[--line-height-xxs]" >
-        <span className={`${headerStyle} w-20 flex-shrink-0`} />
-        <span className={`${headerStyle} w-[25%] flex flex-grow`}>Name</span>
-        <span className={`${headerStyle} w-32`}>Type</span>
-        <span className={`${headerStyle} w-[50%]`}>Value</span>
-        <span className={`${headerStyle} w-14`}>Action</span>
-      </div>
+      <Toolbar className="content-box z-10 bg-[var(--color-bg)] flex flex-shrink-0 h-[var(--line-height-sm)] text-[var(--font-size-sm)]">
+        <Button
+          className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+          onPress={() => {
+            handleAddItem();
+          }}
+        >
+          <Icon icon="plus" /> Add
+        </Button>
+        <PromptButton
+          disabled={kvPairs.length === 0}
+          onClick={() => {
+            onChange([]);
+          }}
+          className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+        >
+          <Icon icon="trash-can" />
+          <span>Delete all</span>
+        </PromptButton>
+      </Toolbar>
       <ListBox
         aria-label='Environment Key Value Pair'
         selectionMode='none'
         dragAndDropHooks={dragAndDropHooks}
+        dependencies={[kvPairError]}
         className="w-full overflow-y-auto py-1 h-full"
         items={kvPairs}
       >
         {kvPair => {
-          const { id, name, type } = kvPair;
+          const { id, name, enabled } = kvPair;
           return (
             <ListBoxItem
               key={id}
               id={id}
               textValue={name}
-              className={`w-full flex group focus:outline-none ${type === 'json' ? 'h-[--line-height-md]' : 'h-[--line-height-sm]'}`}
+              style={{ opacity: enabled ? '1' : '0.4' }}
+              className={'w-full flex focus:outline-none  h-[--line-height-sm]'}
             >
               {renderPairItem(kvPair)}
             </ListBoxItem>
           );
         }}
       </ListBox>
+      <CodePromptModal
+        ref={codeModalRef}
+      />
     </div>
   );
 };

@@ -203,9 +203,10 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         handleRender,
         handleGetRenderContext,
         settings.showVariableSourceAndValue,
+        id,
       );
     }
-  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, type, eventListeners]);
+  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, type, eventListeners, id]);
 
   const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();

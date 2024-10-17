@@ -37,9 +37,11 @@ interface CodePromptModalOptions {
 export interface CodePromptModalHandle {
   show: (options: CodePromptModalOptions) => void;
   hide: () => void;
+  setError: (error: string) => void;
 }
 export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<ModalHandle>(null);
+  const [error, setError] = useState('');
   const [state, setState] = useState<CodePromptModalOptions>({
     title: 'Not Set',
     defaultValue: '',
@@ -66,6 +68,7 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
       }));
       modalRef.current?.show();
     },
+    setError: (error: string) => setError(error),
   }), []);
 
   const {
@@ -86,7 +89,7 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
       <ModalHeader>{title}</ModalHeader>
       <ModalBody
         noScroll
-        className="wide tall"
+        className="wide tall relative"
         style={
           showCopyButton
             ? {
@@ -165,7 +168,8 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
           </Dropdown>
         ) : null}
         <div className="margin-left faint italic txt-sm">{hint ? `* ${hint}` : ''}</div>
-        <button className="btn" onClick={() => modalRef.current?.hide()}>
+        {error !== '' && <p className="notice error w-full" style={{ marginTop: 0, marginBottom: 0 }}>{error}</p>}
+        <button className="btn" onClick={() => modalRef.current?.hide()} disabled={error !== ''}>
           {submitName || 'Submit'}
         </button>
       </ModalFooter>

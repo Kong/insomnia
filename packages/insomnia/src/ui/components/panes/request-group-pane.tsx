@@ -205,7 +205,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
                     const kvPairData = isSelected ? [] : getKVPairFromData(activeRequestGroup.environment, activeRequestGroup.environmentPropertyOrder);
                     const foundDisabledItem = isSelected && activeRequestGroup.kvPairData?.some(pair => !pair.enabled);
                     const foundDuplicateNameItem = isSelected && activeRequestGroup.kvPairData?.some(
-                      (pair, idx) => activeRequestGroup.kvPairData?.slice(idx + 1).some(newPair => pair.name.trim() === newPair.name.trim())
+                      (pair, idx) => activeRequestGroup.kvPairData?.slice(idx + 1).some(newPair => pair.name.trim() === newPair.name.trim() && newPair.enabled)
                     );
                     const toggleSwitchEnvironmentType = () => {
                       patchGroup(activeRequestGroup._id, {
