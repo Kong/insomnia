@@ -46,6 +46,7 @@ export interface RendererToMainBridgeAPI {
     };
   };
   hiddenBrowserWindow: HiddenBrowserWindowBridgeAPI;
+  runScriptInMain: HiddenBrowserWindowBridgeAPI;
   getExecution: (options: { requestId: string }) => Promise<TimingStep[]>;
   addExecutionStep: (options: { requestId: string; stepName: string }) => void;
   startExecution: (options: { requestId: string }) => void;
