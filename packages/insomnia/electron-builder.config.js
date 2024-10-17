@@ -10,7 +10,6 @@ const BINARY_PREFIX = 'Insomnia.Core';
 const config = {
   productName: 'Insomnia',
   copyright: 'Kong Inc. <https://konghq.com>',
-  description: 'The Collaborative API Client and Design Tool',
   npmRebuild: false,
   appId: 'com.insomnia.app',
   protocols: [
