@@ -29,7 +29,7 @@ resources:
       });
       insomnia.test.skip('req1-pre-check-skipped', () => {
         insomnia.expect(200).to.eql(200);
-      });  
+      });
 
       if (insomnia.iterationData.get('scope') === 'uploda data') {
       	insomnia.execution.setNextRequest('req3');
@@ -233,6 +233,82 @@ resources:
           insomnia.expect(insomnia.response.code).to.eql(200);
       });
     metaSortKey: -1636141014555
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_76bf52b201cf47269f5845795a7f0000
+    parentId: wrk_418cad89191c418395abfeb2277fd26f
+    modified: 1636707449230
+    created: 1636141014550
+    url: http://127.0.0.1:4010/echo
+    name: req0
+    description: ""
+    method: POST
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    afterResponseScript: |-
+      insomnia.test.skip('req0-post-check', () => {
+        insomnia.expect(200).to.eql(200);
+      });
+      insomnia.execution.setNextRequest('req02');
+    metaSortKey: -1636141014552
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_76bf52b201cf47269f5845795a7f0001
+    parentId: wrk_418cad89191c418395abfeb2277fd26f
+    modified: 1636707449231
+    created: 1636141014551
+    url: http://127.0.0.1:4010/echo
+    name: req01
+    description: ""
+    method: POST
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    afterResponseScript: |-
+      insomnia.test('req01-post-check', () => {
+        insomnia.expect(200).to.eql(200);
+      });
+    metaSortKey: -1636141014551
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_76bf52b201cf47269f5845795a7f0002
+    parentId: wrk_418cad89191c418395abfeb2277fd26f
+    modified: 1636707449232
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: req02
+    description: ""
+    method: POST
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    afterResponseScript: |-
+      insomnia.test('req02-post-check', () => {
+        insomnia.expect(200).to.eql(200);
+      });
+    metaSortKey: -1636141014550
     isPrivate: false
     settingStoreCookies: true
     settingSendCookies: true

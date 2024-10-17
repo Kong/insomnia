@@ -179,4 +179,26 @@ test.describe('runner features tests', async () => {
 
         await verifyResultRows(page, 3, 0, 3, expectedTestOrder, 1);
     });
+
+    test('skip req01 with setNextRequest', async ({ page }) => {
+        await page.getByTestId('run-collection-btn-quick').click();
+
+        await page.locator('.item-req0').click();
+        await page.locator('.item-req01').click();
+        await page.locator('.item-req02').click();
+
+        // send
+        await page.getByRole('button', { name: 'Run', exact: true }).click();
+
+        // check result
+        await page.getByText('1 / 2').first().click();
+
+        const expectedTestOrder = [
+            'req0-post-check',
+            // 'req01-post-check' is skipped
+            'req02-post-check',
+        ];
+
+        await verifyResultRows(page, 1, 1, 2, expectedTestOrder, 1);
+    });
 });

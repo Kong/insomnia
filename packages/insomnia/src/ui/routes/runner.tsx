@@ -622,19 +622,6 @@ export const Runner: FC<{}> = () => {
                   <div>
                     <label className="flex items-center gap-2">
                       <input
-                        name='ignore-undefined-env'
-                        onChange={() => { }}
-                        type="checkbox"
-                        disabled={true}
-                        checked
-                      />
-                      Ignore undefined environments
-                      <HelpTooltip className="space-left">Undefined environments will not be rendered for all requests.</HelpTooltip>
-                    </label>
-                  </div>
-                  <div>
-                    <label className="flex items-center gap-2">
-                      <input
                         name='persist-response'
                         onChange={() => { }}
                         type="checkbox"
@@ -921,10 +908,15 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
 
       let testResultsForOneIteration: RunnerResultPerRequest[] = [];
 
-      for (let j = 0; j < requests.length; j++) {
-        const targetRequest = requests[j];
+      let j = 0;
+      while (j < requests.length) {
+        // TODO: we might find a better way to do runner cancellation
+        if (getExecution(workspaceId) === undefined) {
+          throw 'Runner has been stopped';
+        }
 
-        let resultCollector = {
+        const targetRequest = requests[j];
+        const resultCollector = {
           requestId: targetRequest.id,
           requestName: targetRequest.name,
           requestUrl: targetRequest.url,
@@ -935,21 +927,16 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
           responseId: '',
         };
 
-        // TODO: we might find a better way to do runner cancellation
-        if (getExecution(workspaceId) === undefined) {
-          throw 'Runner has been stopped';
-        }
+        const isNextRequest = (targetRequest: RequestRow, nextRequestIdOrName: string) => {
+          const matchId = targetRequest.id === nextRequestIdOrName;
+          const matchName = targetRequest.name.trim() === nextRequestIdOrName.trim();
+          // find the last request with matched name in case multiple requests with same name in collection runner
+          const matchLastIndex = j === requests.findLastIndex(req => req.name.trim() === nextRequestIdOrName.trim());
+
+          return matchId || (matchName && matchLastIndex);
+        };
 
         try {
-          const isNextRequest = (targetRequest: RequestRow, nextRequestIdOrName: string) => {
-            const matchId = targetRequest.id === nextRequestIdOrName;
-            const matchName = targetRequest.name.trim() === nextRequestIdOrName.trim();
-            // find the last request with matched name in case multiple requests with same name in collection runner
-            const matchLastIndex = j === requests.findLastIndex(req => req.name.trim() === nextRequestIdOrName.trim());
-
-            return matchId || (matchName && matchLastIndex);
-          };
-
           if (nextRequestIdOrName !== '') {
             if (isNextRequest(targetRequest, nextRequestIdOrName)) {
               // reset nextRequestIdOrName when request name or id meets;
@@ -959,74 +946,54 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
             }
           }
 
-          while (true) {
-            updateExecution(workspaceId, targetRequest.id);
+          updateExecution(workspaceId, targetRequest.id);
+          window.main.updateLatestStepName({
+            requestId: workspaceId,
+            stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"`,
+          });
 
-            resultCollector = {
-              requestId: targetRequest.id,
-              requestName: targetRequest.name,
-              requestUrl: targetRequest.url,
-              statusCode: 0,
-              duration: 0,
-              size: 0,
-              results: [],
-              responseId: '',
-            };
+          const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(
+            targetRequest.id,
+            { lastActive: Date.now() },
+          );
+          invariant(activeRequestMeta, 'Request meta not found');
 
-            window.main.updateLatestStepName({
-              requestId: workspaceId,
-              stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"`,
-            });
+          await new Promise(resolve => setTimeout(resolve, delay));
 
-            const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(
-              targetRequest.id,
-              { lastActive: Date.now() },
-            );
-            invariant(activeRequestMeta, 'Request meta not found');
+          const mutatedContext = await sendActionImplementation({
+            requestId: targetRequest.id,
+            iteration: i + 1,
+            iterationCount,
+            userUploadEnvironment: wrapAroundIterationOverIterationData(userUploadEnvs, i),
+            shouldPromptForPathAfterResponse: false,
+            ignoreUndefinedEnvVariable: true,
+            testResultCollector: resultCollector,
+          }) as RequestContext | null;
+          if (mutatedContext?.execution?.nextRequestIdOrName) {
+            nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
+          };
 
-            await new Promise(resolve => setTimeout(resolve, delay));
+          const requestResults: RunnerResultPerRequest = {
+            requestName: targetRequest.name,
+            requestUrl: targetRequest.url,
+            responseCode: resultCollector.statusCode,
+            results: resultCollector.results,
+          };
 
-            const mutatedContext = await sendActionImplementation({
-              requestId: targetRequest.id,
-              iteration: i + 1,
-              iterationCount,
-              userUploadEnvironment: wrapAroundIterationOverIterationData(userUploadEnvs, i),
-              shouldPromptForPathAfterResponse: false,
-              ignoreUndefinedEnvVariable: true,
-              testResultCollector: resultCollector,
-            }) as RequestContext | null;
-            if (mutatedContext?.execution?.nextRequestIdOrName) {
-              nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
-            };
+          testResultsForOneIteration = [...testResultsForOneIteration, requestResults];
+          testCtx = {
+            ...testCtx,
+            duration: testCtx.duration + resultCollector.duration,
+            responsesInfo: [
+              ...testCtx.responsesInfo,
+              {
+                responseId: resultCollector.responseId,
+                originalRequestId: targetRequest.id,
+                originalRequestName: targetRequest.name,
+              },
+            ],
+          };
 
-            const requestResults: RunnerResultPerRequest = {
-              requestName: targetRequest.name,
-              requestUrl: targetRequest.url,
-              responseCode: resultCollector.statusCode,
-              results: resultCollector.results,
-            };
-
-            testResultsForOneIteration = [...testResultsForOneIteration, requestResults];
-            testCtx = {
-              ...testCtx,
-              duration: testCtx.duration + resultCollector.duration,
-              responsesInfo: [
-                ...testCtx.responsesInfo,
-                {
-                  responseId: resultCollector.responseId,
-                  originalRequestId: targetRequest.id,
-                  originalRequestName: targetRequest.name,
-                },
-              ],
-            };
-
-            if (isNextRequest(targetRequest, nextRequestIdOrName)) {
-              nextRequestIdOrName = '';
-              continue;
-            } else {
-              break;
-            }
-          }
         } catch (e) {
           const requestResults: RunnerResultPerRequest = {
             requestName: targetRequest.name,
@@ -1057,6 +1024,13 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
             throw e;
           }
           // or continue execution if needed
+          nextRequestIdOrName = ''; // ignore it if there's an exception to avoid infinite loop
+        } finally {
+          if (isNextRequest(targetRequest, nextRequestIdOrName)) {
+            // it points the next request to itself so keep the current j
+          } else {
+            j++;
+          }
         }
       }
 
