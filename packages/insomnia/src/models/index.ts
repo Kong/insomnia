@@ -210,6 +210,8 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   // Migrate the model
   // NOTE: Do migration before pruning because we might need to look at those fields
   const migratedDoc = model.migrate(fullObject);
+  // optional keys do not generated in init method but should allow update.
+  // If we put those keys in init method, all related models will show as modified in git sync.
   const modelOptionalKeys: string[] = 'optionalKeys' in model ? model.optionalKeys || [] : [];
   // Prune extra keys from doc
   for (const key of Object.keys(migratedDoc)) {
