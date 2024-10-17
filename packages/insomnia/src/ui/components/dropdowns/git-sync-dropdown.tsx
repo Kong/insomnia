@@ -1,5 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { type FC, useEffect, useRef, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 import { Button, Collection, Menu, MenuItem, MenuTrigger, Popover, Section, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
 import { useInterval } from 'react-use';
@@ -48,8 +48,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   const gitFetchFetcher = useFetcher<GitFetchLoaderData>();
   const gitStatusFetcher = useFetcher<GitStatusResult>();
 
-  const isCheckingGitChanges = useRef(false);
-
   const loadingPush = gitPushFetcher.state === 'loading';
   const loadingPull = gitPullFetcher.state === 'loading';
   const loadingFetch = gitFetchFetcher.state === 'loading';
@@ -85,14 +83,14 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
     }
   }, [gitStatusFetcher, organizationId, projectId, shouldFetchGitRepoStatus, workspaceId]);
 
-  useInterval(async () => {
-    if (isCheckingGitChanges.current) {
-      return;
-    }
-    isCheckingGitChanges.current = true;
-    await checkGitChanges(workspaceId);
-    isCheckingGitChanges.current = false;
-  }, 30 * 1000);
+  useEffect(() => {
+    // update committed state on unmount
+    // this is a sync action which is responsible for cheaply updating a piece of state representing the existence of a diff
+    // ideally this would not be needed and a diff would be cheaper to find.
+    return () => {
+      checkGitChanges(workspaceId);
+    };
+  }, [workspaceId]);
 
   useEffect(() => {
     if (shouldFetchGitRepoStatus) {
