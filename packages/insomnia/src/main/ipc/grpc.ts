@@ -8,9 +8,9 @@ import { Code, ConnectError, createPromiseClient } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-node';
 import {
   type Call,
+  ChannelCredentials,
   type ClientDuplexStream,
   type ClientReadableStream,
-  credentials,
   makeGenericClientConstructor,
   Metadata,
   type ServiceError,
@@ -42,6 +42,10 @@ const grpcCalls = new Map<string, Call>();
 
 export interface GrpcIpcRequestParams {
   request: RenderedGrpcRequest;
+  clientCert?: string;
+  clientKey?: string;
+  caCertificate?: string;
+  rejectUnauthorized: boolean;
 }
 
 export interface GrpcIpcMessageParams {
@@ -200,16 +204,20 @@ const getMethodsFromReflectionServer = async (
 const getMethodsFromReflection = async (
   host: string,
   metadata: GrpcRequestHeader[],
-  reflectionApi: GrpcRequest['reflectionApi']
+  rejectUnauthorized: boolean,
+  reflectionApi: GrpcRequest['reflectionApi'],
+  clientCert?: string,
+  clientKey?: string,
+  caCertificate?: string,
 ): Promise<MethodDefs[]> => {
   if (reflectionApi.enabled) {
     return getMethodsFromReflectionServer(reflectionApi);
   }
   try {
-    const { url, enableTls } = parseGrpcUrl(host);
+    const { url } = parseGrpcUrl(host);
     const client = new grpcReflection.Client(
       url,
-      enableTls ? credentials.createSsl() : credentials.createInsecure(),
+      getChannelCredentials({ url: host, caCertificate, clientCert, clientKey, rejectUnauthorized }),
       grpcOptions,
       filterDisabledMetaData(metadata)
     );
@@ -262,13 +270,21 @@ const getMethodsFromReflection = async (
 export const loadMethodsFromReflection = async (options: {
   url: string;
   metadata: GrpcRequestHeader[];
+  rejectUnauthorized: boolean;
   reflectionApi: GrpcRequest['reflectionApi'];
+  clientCert?: string;
+  clientKey?: string;
+  caCertificate?: string;
 }): Promise<GrpcMethodInfo[]> => {
   invariant(options.url, 'gRPC request url not provided');
   const methods = await getMethodsFromReflection(
     options.url,
     options.metadata,
-    options.reflectionApi
+    options.rejectUnauthorized,
+    options.reflectionApi,
+    options.clientCert,
+    options.clientKey,
+    options.caCertificate,
   );
   return methods.map(method => ({
     type: getMethodType(method),
@@ -313,10 +329,12 @@ export const getSelectedMethod = async (
     invariant(methods, 'No methods found');
     return methods.find(c => c.path === request.protoMethodName);
   }
+  const settings = await models.settings.getOrCreate();
   const methods = await getMethodsFromReflection(
     request.url,
     request.metadata,
-    request.reflectionApi
+    settings.validateSSL,
+    request.reflectionApi,
   );
   invariant(methods, 'No reflection methods found');
   return methods.find(c => c.path === request.protoMethodName);
@@ -343,9 +361,22 @@ const isEnumDefinition = (definition: AnyDefinition): definition is EnumTypeDefi
   return (definition as EnumTypeDefinition).format === 'Protocol Buffer 3 EnumDescriptorProto';
 };
 
+const getChannelCredentials = ({ url, rejectUnauthorized, clientCert, clientKey, caCertificate }: { url: string; rejectUnauthorized: boolean; clientCert?: string; clientKey?: string; caCertificate?: string }): ChannelCredentials => {
+  if (url.toLowerCase().startsWith('grpc:')) {
+    return ChannelCredentials.createInsecure();
+  }
+  if (caCertificate && clientKey && clientCert) {
+    return ChannelCredentials.createSsl(Buffer.from(caCertificate, 'utf8'), Buffer.from(clientKey, 'utf8'), Buffer.from(clientCert, 'utf8'), { rejectUnauthorized });
+  }
+  if (caCertificate) {
+    return ChannelCredentials.createSsl(Buffer.from(caCertificate, 'utf8'), null, null, { rejectUnauthorized });
+  }
+  return ChannelCredentials.createSsl(null, null, null, { rejectUnauthorized });
+};
+
 export const start = (
   event: IpcMainEvent,
-  { request }: GrpcIpcRequestParams,
+  { request, rejectUnauthorized, clientCert, clientKey, caCertificate }: GrpcIpcRequestParams,
 ) => {
   getSelectedMethod(request)?.then(method => {
     if (!method) {
@@ -354,15 +385,16 @@ export const start = (
     }
     const methodType = getMethodType(method);
     // Create client
-    const { url, enableTls } = parseGrpcUrl(request.url);
+    const { url } = parseGrpcUrl(request.url);
+
     if (!url) {
       event.reply('grpc.error', request._id, new Error('URL not specified'));
       return undefined;
     }
-    console.log(`[gRPC] connecting to url=${url} ${enableTls ? 'with' : 'without'} TLS`);
     // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
     const Client = makeGenericClientConstructor({});
-    const client = new Client(url, enableTls ? credentials.createSsl() : credentials.createInsecure());
+    const creds = getChannelCredentials({ url: request.url, rejectUnauthorized, clientCert, clientKey, caCertificate });
+    const client = new Client(url, creds);
     if (!client) {
       return;
     }

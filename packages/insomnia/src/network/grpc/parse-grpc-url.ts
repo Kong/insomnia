@@ -9,5 +9,5 @@ export const parseGrpcUrl = (grpcUrl: string): { url: string; enableTls: boolean
   if (lower.startsWith('grpcs://')) {
     return { url: lower.slice(8), enableTls: true };
   }
-  return { url: lower, enableTls: false };
+  return { url: lower, enableTls: true };
 };
