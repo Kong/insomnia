@@ -41,7 +41,6 @@ import {
   useRouteLoaderData,
 } from 'react-router-dom';
 import { useUnmount } from 'react-use';
-import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
 
@@ -121,23 +120,20 @@ export const loader: LoaderFunction = async ({
 };
 
 const SwaggerUIDiv = ({ text }: { text: string }) => {
+  const [spec, setSpec] = useState({});
   useEffect(() => {
-    let spec = {};
     try {
-      spec = parseApiSpec(text).contents || {};
+      setSpec(parseApiSpec(text).contents || {});
     } catch (err) { }
-    SwaggerUIBundle({ spec, dom_id: '#swagger-ui' });
   }, [text]);
-  return (
-    <div
-      id="swagger-ui"
-      style={{
-        overflowY: 'auto',
-        height: '100%',
-        background: '#FFF',
-      }}
+  return (<div className="h-full w-full overflow-scroll bg-white">
+    <kong-spec-renderer
+      spec={JSON.stringify(spec)}
+      control-address-bar="true"
+      hide-try-it="false"
+      navigation-type="hash"
     />
-  );
+  </div>);
 };
 
 interface LintMessage {
@@ -471,28 +467,28 @@ const Design: FC = () => {
               </Breadcrumb>
             </Breadcrumbs>
             <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
-            <div className="flex w-full items-center gap-2 justify-between">
+              <div className="flex w-full items-center gap-2 justify-between">
                 <EnvironmentPicker
                   isOpen={isEnvironmentPickerOpen}
                   onOpenChange={setIsEnvironmentPickerOpen}
                   onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
                 />
               </div>
-            <Button
-              onPress={() => setIsCookieModalOpen(true)}
-              className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-            >
+              <Button
+                onPress={() => setIsCookieModalOpen(true)}
+                className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              >
                 <Icon icon="cookie-bite" className='w-5 flex-shrink-0' />
                 <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}</span>
-            </Button>
-            <Button
-              onPress={() => setCertificatesModalOpen(true)}
-              className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-            >
+              </Button>
+              <Button
+                onPress={() => setCertificatesModalOpen(true)}
+                className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              >
                 <Icon icon="file-contract" className='w-5 flex-shrink-0' />
                 <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length > 0 ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})` : ''}</span>
-            </Button>
-          </div>
+              </Button>
+            </div>
           </div>
           <div className="flex flex-shrink-0 items-center gap-2 p-[--padding-sm]">
             <Heading className="text-[--hl] uppercase">Spec</Heading>
