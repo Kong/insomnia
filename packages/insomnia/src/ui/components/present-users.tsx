@@ -35,10 +35,5 @@ export const PresentUsers = () => {
       };
     });
 
-  return (
-    <AvatarGroup
-      size="medium"
-      items={activeUsers}
-    />
-  );
+  return <AvatarGroup size="medium" items={activeUsers} />;
 };

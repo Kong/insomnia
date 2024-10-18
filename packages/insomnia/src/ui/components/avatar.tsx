@@ -1,6 +1,8 @@
 import React, { type ReactNode, Suspense } from 'react';
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 
+import { useAvatarImageCache } from '../hooks/image-cache';
+
 const getNameInitials = (name?: string) => {
   // Split on whitespace and take first letter of each word
   const words = name?.toUpperCase().split(' ') || [];
@@ -21,51 +23,12 @@ const getNameInitials = (name?: string) => {
   return `${firstWord.charAt(0)}${lastWord ? lastWord.charAt(0) : ''}`;
 };
 
-// https://css-tricks.com/pre-caching-image-with-react-suspense/
-// can be improved when api sends image expiry headers
-class ImageCache {
-  __cache: Record<string, { value: Promise<string> | string; timestamp: number }> = {};
-  ttl: number;
-
-  constructor({ ttl }: { ttl: number }) {
-    this.ttl = ttl;
-  }
-
-  read(src: string) {
-    const now = Date.now();
-    if (this.__cache[src] && typeof this.__cache[src].value !== 'string') {
-      // If the value is a Promise, throw it to indicate that the cache is still loading
-      throw this.__cache[src].value;
-    } else if (this.__cache[src] && now - this.__cache[src].timestamp < this.ttl) {
-      // If the value is a string and hasn't expired, return it
-      return this.__cache[src].value;
-    } else {
-      // Otherwise, load the image and add it to the cache
-      const promise = new Promise<string>(resolve => {
-        const img = new Image();
-        img.onload = () => {
-          const value = src;
-          this.__cache[src] = { value, timestamp: now };
-          resolve(value);
-        };
-        img.src = src;
-      });
-      this.__cache[src] = { value: promise, timestamp: now };
-      throw promise;
-    }
-  }
-}
-
-// Cache images for 10 minutes
-const imgCache = new ImageCache({ ttl: 1000 * 60 * 10 });
-
-// The Image component will Suspend while the image is loading if it's not available in the cache
 const AvatarImage = ({ src, alt, size }: { src: string; alt: string; size: 'small' | 'medium' }) => {
-  imgCache.read(src);
+  const imageUrl = useAvatarImageCache(src);
   return (
     <img
       alt={alt}
-      src={src}
+      src={imageUrl}
       width={size === 'small' ? 20 : 24}
       height={size === 'small' ? 20 : 24}
       className={'border-2 bounce-in border-solid border-[--color-bg] box-border outline-none rounded-full object-cover object-center bg-[--hl]'}

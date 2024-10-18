@@ -1,7 +1,9 @@
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
+import { CDN_INVALIDATION_TTL } from '../../../common/constants';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
+import { avatarImageCache } from '../../hooks/image-cache';
 import type { ProjectIdLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
@@ -141,8 +143,17 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                 return true;
               }));
             } else if (event.type === 'PresentStateChanged') {
-              setPresence(prev => [...prev.filter(p => p.acct !== event.acct), event]);
+              setPresence(prev => {
+                if (!prev.find(p => p.avatar === event.avatar)) {
+                  // if this avatar is new, invalidate the cache
+                  window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
+                }
+                return [...prev.filter(p => p.acct !== event.acct), event];
+              });
             } else if (event.type === 'OrganizationChanged') {
+              if (event.avatar) {
+                window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
+              }
               syncOrganizationsFetcher.submit({}, {
                 action: '/organization/sync',
                 method: 'POST',
