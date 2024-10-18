@@ -45,7 +45,7 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
           title: 'Application Error',
           message: (
             <p>
-              Failed to render {componentName}. Please report the error to <a href="https://github.com/Kong/insomnia/issues">our Github Issues</a>
+              Failed to render {componentName}. Please report the error to <a href="https://github.com/Kong/insomnia/issues">our GitHub Issues</a>
             </p>
           ),
         });

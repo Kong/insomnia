@@ -13,17 +13,12 @@ export const GITHUB_GRAPHQL_API_URL = getGitHubGraphQLApiURL();
  */
 const statesCache = new Set<string>();
 
-export function generateAuthorizationUrl() {
+export function generateAppAuthorizationUrl() {
   const state = v4();
-  const scopes = ['repo', 'read:user', 'user:email'];
-  const scope = scopes.join(' ');
-
-  const url = new URL(getAppWebsiteBaseURL() + '/oauth/github');
-
   statesCache.add(state);
+  const url = new URL(getAppWebsiteBaseURL() + '/oauth/github-app');
 
   url.search = new URLSearchParams({
-    scope,
     state,
   }).toString();
 
@@ -33,9 +28,11 @@ export function generateAuthorizationUrl() {
 export async function exchangeCodeForToken({
   code,
   state,
+  path,
 }: {
   code: string;
   state: string;
+  path: string;
 }) {
   if (!statesCache.has(state)) {
     throw new Error(
@@ -44,7 +41,7 @@ export async function exchangeCodeForToken({
   }
 
   return insomniaFetch<{ access_token: string }>({
-    path: '/v1/oauth/github',
+    path,
     method: 'POST',
     data: {
       code,

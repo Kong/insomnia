@@ -264,7 +264,7 @@ jobs:
             When ready to publish, trigger [Publish](https://github.com/${{ github.repository }}/actions/workflows/release-publish.yml) workflow with these variables:
             - Release version (`version`): `${{ steps.release_version.outputs.version }}`
 
-            Alternatively, you can trigger the workflow from [Github CLI](https://cli.github.com/):
+            Alternatively, you can trigger the workflow from [GitHub CLI](https://cli.github.com/):
             ```bash
             gh workflow run release-publish.yml -f version=${{ steps.release_version.outputs.version }} --repo ${{ github.repository }}
             ```

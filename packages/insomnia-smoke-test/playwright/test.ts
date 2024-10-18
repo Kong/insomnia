@@ -32,6 +32,7 @@ interface EnvOptions {
   INSOMNIA_APP_WEBSITE_URL: string;
   INSOMNIA_AI_URL: string;
   INSOMNIA_MOCK_API_URL: string;
+  INSOMNIA_GITHUB_REST_API_URL: string;
   INSOMNIA_GITHUB_API_URL: string;
   INSOMNIA_GITLAB_API_URL: string;
   INSOMNIA_UPDATES_URL: string;
@@ -72,6 +73,7 @@ export const test = baseTest.extend<{
       INSOMNIA_API_URL: webServerUrl,
       INSOMNIA_APP_WEBSITE_URL: webServerUrl + '/website',
       INSOMNIA_AI_URL: webServerUrl + '/ai',
+      INSOMNIA_GITHUB_REST_API_URL: webServerUrl + '/github-api/rest',
       INSOMNIA_GITHUB_API_URL: webServerUrl + '/github-api/graphql',
       INSOMNIA_GITLAB_API_URL: webServerUrl + '/gitlab-api',
       INSOMNIA_UPDATES_URL: webServerUrl || 'https://updates.insomnia.rest',

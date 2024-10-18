@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-aria-components';
 import { useMount, useMountedState } from 'react-use';
 
+import { getGitHubRestApiUrl } from '../../common/constants';
 import { SegmentEvent } from '../analytics';
 import { Icon } from './icon';
 
@@ -24,7 +25,7 @@ export const GitHubStarsButton = () => {
       return;
     }
 
-    fetch('https://api.github.com/repos/Kong/insomnia')
+    fetch(`${getGitHubRestApiUrl()}/repos/Kong/insomnia`)
       .then(data => data.json())
       .then(info => {
         if (!('watchers' in info)) {

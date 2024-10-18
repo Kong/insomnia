@@ -171,11 +171,25 @@ const Root = () => {
 
           case 'insomnia://oauth/github/authenticate': {
             const { code, state } = params;
-            await exchangeCodeForToken({ code, state }).catch(
+            await exchangeCodeForToken({ code, state, path: '/v1/oauth/github' }).catch(
               (error: Error) => {
                 showError({
                   error,
                   title: 'Error authorizing GitHub',
+                  message: error.message,
+                });
+              },
+            );
+            break;
+          }
+
+          case 'insomnia://oauth/github-app/authenticate': {
+            const { code, state } = params;
+            await exchangeCodeForToken({ code, state, path: '/v1/oauth/github-app' }).catch(
+              (error: Error) => {
+                showError({
+                  error,
+                  title: 'Error authorizing GitHub App',
                   message: error.message,
                 });
               },

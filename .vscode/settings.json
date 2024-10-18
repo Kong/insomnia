@@ -8,6 +8,10 @@
   "files.insertFinalNewline": true,
   "editor.formatOnSave": true,
   "editor.formatOnSaveMode": "modifications",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always",
+    "source.fixAll.ts": "always"
+  },
   "editor.defaultFormatter": "vscode.typescript-language-features",
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
@@ -31,4 +35,10 @@
     "upsert",
     "xmark"
   ],
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
 }
