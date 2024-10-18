@@ -1,6 +1,9 @@
 import * as crypto from 'crypto';
+import orderedJSON from 'json-order';
 
+import { JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
+import { generateId } from '../common/misc';
 import { type BaseModel } from './index';
 
 export const name = 'Environment';
@@ -8,20 +11,73 @@ export const type = 'Environment';
 export const prefix = 'env';
 export const canDuplicate = true;
 export const canSync = true;
+// for those keys do not need to add in model init method
+export const optionalKeys = [
+  'kvPairData',
+  'environmentType',
+];
 
 export interface BaseEnvironment {
   name: string;
   data: Record<string, any>;
   dataPropertyOrder: Record<string, any> | null;
+  kvPairData?: EnvironmentKvPairData[];
   color: string | null;
   metaSortKey: number;
   // For sync control
   isPrivate: boolean;
+  environmentType?: EnvironmentType;
 }
 
+export enum EnvironmentType {
+  JSON = 'json',
+  KVPAIR = 'kv'
+};
+export enum EnvironmentKvPairDataType {
+  JSON = 'json',
+  STRING = 'str'
+}
+export interface EnvironmentKvPairData {
+  id: string;
+  name: string;
+  value: string;
+  type: EnvironmentKvPairDataType;
+  enabled?: boolean;
+}
 export type Environment = BaseModel & BaseEnvironment;
 // This is a representation of the data taken from a csv or json file AKA iterationData
 export type UserUploadEnvironment = Pick<Environment, 'data' | 'dataPropertyOrder' | 'name'>;
+
+export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: Record<string, any> | null) {
+  const ordered = orderedJSON.order(data, dataPropertyOrder, JSON_ORDER_SEPARATOR);
+  const kvPair: EnvironmentKvPairData[] = [];
+  Object.keys(ordered).forEach(key => {
+    const val = ordered[key];
+    const isValObject = val && typeof val === 'object' && data !== null;
+    kvPair.push({
+      id: generateId('envPair'),
+      name: key,
+      value: isValObject ? JSON.stringify(val) : String(val),
+      type: isValObject ? EnvironmentKvPairDataType.JSON : EnvironmentKvPairDataType.STRING,
+      enabled: true,
+    });
+  });
+  return kvPair;
+}
+
+export function getDataFromKVPair(kvPair: EnvironmentKvPairData[]) {
+  const data: Record<string, any> = {};
+  kvPair.forEach(pair => {
+    const { name, value, type, enabled } = pair;
+    if (enabled) {
+      data[name] = type === EnvironmentKvPairDataType.JSON ? JSON.parse(value) : value;
+    }
+  });
+  return {
+    data,
+    dataPropertyOrder: null,
+  };
+}
 
 export const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => (
   model.type === type
@@ -46,7 +102,6 @@ export function create(patch: Partial<Environment> = {}) {
   if (!patch.parentId) {
     throw new Error(`New Environment missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
-
   return db.docCreate<Environment>(type, patch);
 }
 
