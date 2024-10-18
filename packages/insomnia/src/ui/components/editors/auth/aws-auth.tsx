@@ -30,6 +30,6 @@ export const AWSAuth: FC = () => (
       label="Session Token"
       property="sessionToken"
       help="Optional token used for multi-factor authentication"
-    /> 
+    />
   </AuthTableBody>
 );
