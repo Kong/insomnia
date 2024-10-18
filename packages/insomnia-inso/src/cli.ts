@@ -563,10 +563,6 @@ Test results:`);
               }
             }
 
-            if (res.status !== 200) {
-              success = false;
-              logger.error(`Request failed with status ${res.status}`);
-            }
             await new Promise(r => setTimeout(r, parseInt(options.delayRequest, 10)));
           }
         }
