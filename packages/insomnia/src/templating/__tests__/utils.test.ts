@@ -2,6 +2,29 @@ import { describe, expect, it } from 'vitest';
 
 import * as utils from '../utils';
 
+describe('forceBracketNotation()', () => {
+  it('forces bracket notation', () => {
+    expect(utils.forceBracketNotation('_', 'foo')).toBe("_['foo']");
+    expect(utils.forceBracketNotation('_', 'foo[bar]')).toBe("_['foo[bar]']");
+    expect(utils.forceBracketNotation('_', 'foo.bar')).toBe("_['foo.bar']");
+    expect(utils.forceBracketNotation('_', 'foo[bar].baz')).toBe("_['foo[bar].baz']");
+    expect(utils.forceBracketNotation('_', 'foo[bar].baz[qux]')).toBe("_['foo[bar].baz[qux]']");
+    expect(utils.forceBracketNotation('_', 'arr-name-with-dash')).toBe("_['arr-name-with-dash']");
+  });
+});
+
+describe('normalizeToDotAndBracketNotation()', () => {
+  it('normalizes to dot and bracket notation', () => {
+    expect(utils.normalizeToDotAndBracketNotation('foo')).toBe('foo');
+    expect(utils.normalizeToDotAndBracketNotation('foo.bar')).toBe('foo.bar');
+    expect(utils.normalizeToDotAndBracketNotation('foo[bar]')).toBe('foo.bar');
+    expect(utils.normalizeToDotAndBracketNotation('foo[bar].baz')).toBe('foo.bar.baz');
+    expect(utils.normalizeToDotAndBracketNotation('_')).toBe('_');
+    expect(utils.normalizeToDotAndBracketNotation("_['notbob']")).toBe('_.notbob');
+    expect(utils.normalizeToDotAndBracketNotation("_['bob-fred']")).toBe("_['bob-fred']");
+    expect(utils.normalizeToDotAndBracketNotation('a.b["c"]')).toBe('a.b.c');
+  });
+});
 describe('getKeys()', () => {
 
   it('flattens complex object', () => {
