@@ -31,26 +31,41 @@ class ImageCache {
       return this.__cache[base].value;
     } else {
       // Otherwise, load the image and add it to the cache
-      const promise = new Promise<string>((resolve, reject) => {
+      const promise = new Promise<string>(resolve => {
         const img = new Image();
         img.onload = () => {
-          this.__cache[base].value = value;
-          this.__cache[base].timestamp = now;
-          this.__cache[base].version = version;
+          if (!this.__cache[base]) {
+            this.__cache[base] = {
+              value,
+              timestamp: now,
+              version,
+              subscribers: [],
+            };
+          } else {
+            this.__cache[base].value = value;
+            this.__cache[base].timestamp = now;
+            this.__cache[base].version = version;
+          }
           resolve(value);
           // Notify all subscribers
+          if (!this.__cache[base].subscribers) {
+            this.__cache[base].subscribers = [];
+          }
           this.__cache[base].subscribers.forEach(callback => callback());
         };
         img.onerror = () => {
-          reject(new Error(`Failed to load image: ${value}`));
-          // Remove the cache entry if the image fails to load
-          delete this.__cache[base];
+          // infinitely suspended if the image fails to load
+          this.__cache[base].value = new Promise(() => {});
+          throw this.__cache[base].value;
         };
         img.src = value;
       });
       this.__cache[base].value = promise;
       this.__cache[base].timestamp = now;
       this.__cache[base].version = version;
+      if (!this.__cache[base].subscribers) {
+        this.__cache[base].subscribers = [];
+      }
       throw promise;
     }
   }
@@ -70,9 +85,11 @@ class ImageCache {
       this.__cache[base].subscribers.push(callback);
     }
     return () => {
-      this.__cache[base].subscribers = this.__cache[base].subscribers.filter(
-        cb => cb !== callback
-      );
+      if (this.__cache[base] && this.__cache[base].subscribers) {
+        this.__cache[base].subscribers = this.__cache[base].subscribers.filter(
+          cb => cb !== callback
+        );
+      }
     };
   }
 
