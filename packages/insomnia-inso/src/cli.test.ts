@@ -12,6 +12,7 @@ const shouldReturnSuccessCode = [
   // lint spec
   // as identifer filepath
   '$PWD/packages/insomnia-inso/bin/inso lint spec packages/insomnia-inso/src/commands/fixtures/openapi-spec.yaml',
+
   // as identifier filepath with spectral.yaml
   '$PWD/packages/insomnia-inso/bin/inso lint spec packages/insomnia-inso/src/commands/fixtures/with-ruleset/path-plugin.yaml',
   // as working directory and identifier filename
