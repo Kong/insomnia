@@ -537,7 +537,7 @@ const ScanResourcesForm = ({
         {errors && errors.length > 0 && (
           <div className="notice error margin-top-sm">
             <p>
-              <strong>Error while scanning for resources to import:</strong>
+              <strong>Error while scanning for resources to import: </strong>
               {errors[0]}
             </p>
           </div>
