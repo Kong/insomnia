@@ -116,6 +116,9 @@ test.describe('runner features tests', async () => {
 
         // select requests to test
         await page.locator('text=Select All').click();
+        await page.locator('.item-req0').click();
+        await page.locator('.item-req01').click();
+        await page.locator('.item-req02').click();
 
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
