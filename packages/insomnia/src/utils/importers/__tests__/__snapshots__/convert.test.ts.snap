@@ -69,7 +69,10 @@ Tests help you confirm that your API is working as expected. You can write test 
 [Using variables](https://learning.postman.com/docs/sending-requests/variables/)  
 [Managing environments](https://learning.postman.com/docs/sending-requests/managing-environments/)  
 [Writing scripts](https://learning.postman.com/docs/writing-scripts/intro-to-scripts/)",
-        "environment": {},
+        "environment": {
+          "base_url": "https://postman-rest-api-learner.glitch.me/",
+          "id": "1",
+        },
         "name": "RESTful API Basics #blueprint",
         "parentId": "__WORKSPACE_ID__",
         "preRequestScript": "",
@@ -198,7 +201,16 @@ A successful DELETE request typically returns a \`200 OK\`, \`202 Accepted\`, or
         "afterResponseScript": "",
         "authentication": {},
         "description": "",
-        "environment": {},
+        "environment": {
+          "access_token": "",
+          "access_token_authO": "",
+          "appid": "",
+          "devid": "",
+          "globalReferenceId": "",
+          "provision_id": "",
+          "refresh_token_authO": "",
+          "usrrefid": "",
+        },
         "name": "Device Collection",
         "parentId": "__WORKSPACE_ID__",
         "preRequestScript": "",
@@ -3113,7 +3125,10 @@ Adding tests to your requests can help you confirm that your API is working as e
 [API testing basics](https://go.postman.co/redirect/workspace?type=personal&collectionTemplateId=e9a37a28-055b-49cd-8c7e-97494a21eb54&sourceTemplateId=ddb19591-3097-41cf-82af-c84273e56719)  
 [API documentation](https://go.postman.co/redirect/workspace?type=personal&collectionTemplateId=e9c28f47-1253-44af-a2f3-20dce4da1f18&sourceTemplateId=ddb19591-3097-41cf-82af-c84273e56719)  
 [Authorization methods](https://go.postman.co/redirect/workspace?type=personal&collectionTemplateId=31a9a6ed-4cdf-4ced-984c-d12c9aec1c27&sourceTemplateId=ddb19591-3097-41cf-82af-c84273e56719)",
-        "environment": {},
+        "environment": {
+          "base_url": "https://postman-rest-api-learner.glitch.me/",
+          "id": "1",
+        },
         "name": "REST API basics: CRUD, test & variable",
         "parentId": "__WORKSPACE_ID__",
         "preRequestScript": "",
@@ -3247,7 +3262,10 @@ A successful DELETE request typically returns a \`200 OK\`, \`202 Accepted\`, or
           "username": "yaowei",
         },
         "description": "",
-        "environment": {},
+        "environment": {
+          "asd": "qwer",
+          "asfd": "qtrsda",
+        },
         "name": "GetSubscriberIdAPI",
         "parentId": "__WORKSPACE_ID__",
         "preRequestScript": "",
@@ -3412,7 +3430,10 @@ Tests help you confirm that your API is working as expected. You can write test 
 [Using variables](https://learning.postman.com/docs/sending-requests/variables/)  
 [Managing environments](https://learning.postman.com/docs/sending-requests/managing-environments/)  
 [Writing scripts](https://learning.postman.com/docs/writing-scripts/intro-to-scripts/)",
-        "environment": {},
+        "environment": {
+          "base_url": "https://postman-rest-api-learner.glitch.me/",
+          "id": "1",
+        },
         "name": "RESTful API Basics #blueprint",
         "parentId": "__WORKSPACE_ID__",
         "preRequestScript": "",
@@ -3621,7 +3642,9 @@ In case you have questions, go through our tutorials ((link to your video or hel
 Or you can check out our community forum, there’s a good chance our community has an answer for you. Visit our developer forum ((link to developer forum)) to review topics, ask questions, and learn from others.
 
 \`You can also document or add links to libraries, code examples, and other resources needed to make a request.\`",
-        "environment": {},
+        "environment": {
+          "baseUrl": "https://farming-simulator.pstmn.io",
+        },
         "name": "API Documentation #reference",
         "parentId": "__WORKSPACE_ID__",
         "preRequestScript": "",
@@ -3929,7 +3952,10 @@ In case you have questions, go through our tutorials ((link to your video or hel
 Or you can check out our community forum, there’s a good chance our community has an answer for you. Visit our developer forum ((link to developer forum)) to review topics, ask questions, and learn from others.
 
 \`You can also document or add links to libraries, code examples, and other resources needed to make a request.\`",
-        "environment": {},
+        "environment": {
+          "baseUrl": "https://farming-simulator.pstmn.io",
+          "haha": "",
+        },
         "name": "API Documentation #reference",
         "parentId": "__WORKSPACE_ID__",
         "preRequestScript": "",

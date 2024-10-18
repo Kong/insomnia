@@ -28,9 +28,6 @@ test.describe('test hidden window handling', async () => {
 
     await page.getByRole('button', { name: 'Cancel Request' }).click();
 
-    // check the alert model message
-    await page.getByRole('code').getByText('Request was cancelled').click();
-    await page.getByRole('button', { name: 'Ok', exact: true }).click();
     // check the response pane message
     await page.click('text=Request was cancelled');
   });
@@ -54,8 +51,7 @@ test.describe('test hidden window handling', async () => {
     await page.getByLabel('Request Collection').getByTestId('Long running task - post').press('Enter');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
 
-    await page.getByRole('code').getByText('Executing script timeout').click();
-    await page.getByRole('button', { name: 'Ok', exact: true }).click();
+    await page.getByText('Executing script timeout').click();
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByRole('tab', { name: 'Preview' }).click();
 
@@ -98,8 +94,7 @@ test.describe('test hidden window handling', async () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
     // await page.getByText('Timeout: Hidden browser window is not responding').click();
 
-    await page.getByRole('code').getByText('Executing script timeout').click();
-    await page.getByRole('button', { name: 'Ok', exact: true }).click();
+    await page.getByText('Executing script timeout').click();
 
     // send the another script with normal script
     await page.getByLabel('Request Collection').getByTestId('simple log').press('Enter');

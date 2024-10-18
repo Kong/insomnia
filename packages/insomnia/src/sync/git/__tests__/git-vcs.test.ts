@@ -1,19 +1,14 @@
 import * as git from 'isomorphic-git';
 import path from 'path';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR } from '../git-vcs';
 import { MemClient } from '../mem-client';
 import { setupDateMocks } from './util';
 
 describe('Git-VCS', () => {
-  let fooTxt = '';
-  let barTxt = '';
-
-  beforeAll(() => {
-    fooTxt = path.join(GIT_INSOMNIA_DIR, 'foo.txt');
-    barTxt = path.join(GIT_INSOMNIA_DIR, 'bar.txt');
-  });
+  const fooTxt = 'foo.txt';
+  const barTxt = 'bar.txt';
 
   afterAll(() => {
     vi.restoreAllMocks();
@@ -22,31 +17,12 @@ describe('Git-VCS', () => {
   beforeEach(setupDateMocks);
 
   describe('common operations', () => {
-    it('listFiles()', async () => {
-      const fsClient = MemClient.createClient();
-
-      await GitVCS.init({
-        uri: '',
-        repoId: '',
-        directory: GIT_CLONE_DIR,
-        fs: fsClient,
-      });
-      await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
-      // No files exist yet
-      const files1 = await GitVCS.listFiles();
-      expect(files1).toEqual([]);
-      // File does not exist in git index
-      await fsClient.promises.writeFile('foo.txt', 'bar');
-      const files2 = await GitVCS.listFiles();
-      expect(files2).toEqual([]);
-    });
-
     it('stage and unstage file', async () => {
+      // Write the files to the repository directory
       const fsClient = MemClient.createClient();
       await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
-      await fsClient.promises.writeFile(fooTxt, 'foo');
-      await fsClient.promises.writeFile(barTxt, 'bar');
-      // Files outside namespace should be ignored
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, fooTxt), 'foo');
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, barTxt), 'bar');
       await fsClient.promises.writeFile('/other.txt', 'other');
 
       await GitVCS.init({
@@ -56,14 +32,88 @@ describe('Git-VCS', () => {
         fs: fsClient,
       });
       await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
-      expect(await GitVCS.status(barTxt)).toBe('*added');
-      expect(await GitVCS.status(fooTxt)).toBe('*added');
-      await GitVCS.add(fooTxt);
-      expect(await GitVCS.status(barTxt)).toBe('*added');
-      expect(await GitVCS.status(fooTxt)).toBe('added');
-      await GitVCS.remove(fooTxt);
-      expect(await GitVCS.status(barTxt)).toBe('*added');
-      expect(await GitVCS.status(fooTxt)).toBe('*added');
+
+      // foo.txt and bar.txt should be in the unstaged list
+      const status = await GitVCS.status();
+      expect(status.staged).toEqual([]);
+      expect(status.unstaged).toEqual([{
+        'name': '',
+        'path': '.insomnia/bar.txt',
+        'status': [0, 2, 0],
+      },
+      {
+        'name': '',
+        'path': '.insomnia/foo.txt',
+        'status': [0, 2, 0],
+        },
+        {
+          'name': '',
+          'path': 'other.txt',
+          'status': [0, 2, 0],
+        },
+      ]);
+
+      const fooStatus = status.unstaged.find(f => f.path.includes(fooTxt));
+
+      fooStatus && await GitVCS.stageChanges([fooStatus]);
+      const status2 = await GitVCS.status();
+      expect(status2.staged).toEqual([{
+        'name': '',
+        'path': '.insomnia/foo.txt',
+        'status': [0, 2, 2],
+      }]);
+      expect(status2.unstaged).toEqual([
+        {
+          'name': '',
+          'path': '.insomnia/bar.txt',
+          'status': [0, 2, 0],
+        },
+        {
+          'name': '',
+          'path': 'other.txt',
+          'status': [0, 2, 0],
+        },
+      ]);
+
+      const barStatus = status2.unstaged.find(f => f.path.includes(barTxt));
+
+      barStatus && await GitVCS.stageChanges([barStatus]);
+      const status3 = await GitVCS.status();
+      expect(status3.staged).toEqual([
+        {
+          'name': '',
+          'path': '.insomnia/bar.txt',
+          'status': [0, 2, 2],
+        },
+        {
+          'name': '',
+          'path': '.insomnia/foo.txt',
+          'status': [0, 2, 2],
+        },
+      ]);
+
+      const fooStatus3 = status3.staged.find(f => f.path.includes(fooTxt));
+      fooStatus3 && await GitVCS.unstageChanges([fooStatus3]);
+      const status4 = await GitVCS.status();
+      expect(status4).toEqual({
+        staged: [{
+          'name': '',
+          'path': '.insomnia/bar.txt',
+          'status': [0, 2, 2],
+        }],
+        unstaged: [
+          {
+          'name': '',
+          'path': '.insomnia/foo.txt',
+          'status': [0, 2, 0],
+          },
+          {
+            'name': '',
+            'path': 'other.txt',
+            'status': [0, 2, 0],
+          },
+        ],
+      });
     });
 
     it('Returns empty log without first commit', async () => {
@@ -82,8 +132,8 @@ describe('Git-VCS', () => {
     it('commit file', async () => {
       const fsClient = MemClient.createClient();
       await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
-      await fsClient.promises.writeFile(fooTxt, 'foo');
-      await fsClient.promises.writeFile(barTxt, 'bar');
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, fooTxt), 'foo');
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, barTxt), 'bar');
       await fsClient.promises.writeFile('other.txt', 'should be ignored');
 
       await GitVCS.init({
@@ -92,11 +142,67 @@ describe('Git-VCS', () => {
         directory: GIT_CLONE_DIR,
         fs: fsClient,
       });
+
       await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
-      await GitVCS.add(fooTxt);
+
+      const status = await GitVCS.status();
+      const fooStatus = status.unstaged.find(f => f.path.includes(fooTxt));
+      fooStatus && await GitVCS.stageChanges([fooStatus]);
+
+      const status2 = await GitVCS.status();
+
+      expect(status2.staged).toEqual([{
+        'name': '',
+        'path': '.insomnia/foo.txt',
+        'status': [0, 2, 2],
+      }]);
+      expect(status2.unstaged).toEqual([
+        {
+        'name': '',
+        'path': '.insomnia/bar.txt',
+          'status': [
+            0,
+            2,
+            0,
+          ],
+        },
+        {
+          'name': '',
+          'path': 'other.txt',
+          'status': [
+            0,
+            2,
+            0,
+          ],
+        },
+      ]);
+
       await GitVCS.commit('First commit!');
-      expect(await GitVCS.status(barTxt)).toBe('*added');
-      expect(await GitVCS.status(fooTxt)).toBe('unmodified');
+
+      const status3 = await GitVCS.status();
+
+      expect(status3.staged).toEqual([]);
+      expect(status3.unstaged).toEqual([
+        {
+        'name': '',
+        'path': '.insomnia/bar.txt',
+          'status': [
+            0,
+            2,
+            0,
+          ],
+        },
+        {
+          'name': '',
+          'path': 'other.txt',
+          'status': [
+            0,
+            2,
+            0,
+          ],
+        },
+      ]);
+
       expect(await GitVCS.log()).toEqual([
         {
           commit: {
@@ -125,15 +231,7 @@ First commit!
 `,
         },
       ]);
-      await fsClient.promises.unlink(fooTxt);
-      expect(await GitVCS.status(barTxt)).toBe('*added');
-      expect(await GitVCS.status(fooTxt)).toBe('*deleted');
-      await GitVCS.remove(fooTxt);
-      expect(await GitVCS.status(barTxt)).toBe('*added');
-      expect(await GitVCS.status(fooTxt)).toBe('deleted');
-      await GitVCS.remove(fooTxt);
-      expect(await GitVCS.status(barTxt)).toBe('*added');
-      expect(await GitVCS.status(fooTxt)).toBe('deleted');
+      await fsClient.promises.unlink(path.join(GIT_INSOMNIA_DIR, fooTxt));
     });
 
     it('create branch', async () => {
@@ -149,12 +247,16 @@ First commit!
         fs: fsClient,
       });
       await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
-      await GitVCS.add(fooTxt);
+      const status = await GitVCS.status();
+      const fooStatus = status.unstaged.find(f => f.path.includes(fooTxt));
+      fooStatus && await GitVCS.stageChanges([fooStatus]);
       await GitVCS.commit('First commit!');
       expect((await GitVCS.log()).length).toBe(1);
       await GitVCS.checkout('new-branch');
       expect((await GitVCS.log()).length).toBe(1);
-      await GitVCS.add(barTxt);
+      const status2 = await GitVCS.status();
+      const barStatus = status2.unstaged.find(f => f.path.includes(barTxt));
+      barStatus && await GitVCS.stageChanges([barStatus]);
       await GitVCS.commit('Second commit!');
       expect((await GitVCS.log()).length).toBe(2);
       await GitVCS.checkout('main');
@@ -164,6 +266,7 @@ First commit!
 
   describe('push()', () => {
     it('should throw an exception when push response contains errors', async () => {
+      // @ts-expect-error -- mockReturnValue is not typed
       git.push.mockReturnValue({
         ok: ['unpack'],
         errors: ['refs/heads/master pre-receive hook declined'],
@@ -194,19 +297,49 @@ First commit!
       });
       // Commit
       await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
-      await GitVCS.add(fooTxt);
-      await GitVCS.add(folderBarTxt);
+
+      const status = await GitVCS.status();
+
+      const fooStatus = status.unstaged.find(s => s.path.includes(fooTxt));
+      const folderStatus = status.unstaged.find(s => s.path.includes(folder));
+
+      if (!fooStatus || !folderStatus) {
+        throw new Error('c');
+      }
+
+      await GitVCS.stageChanges([fooStatus, folderStatus]);
       await GitVCS.commit('First commit!');
       // Change the file
-      await fsClient.promises.writeFile(fooTxt, 'changedContent');
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, fooTxt), 'changedContent');
       await fsClient.promises.writeFile(folderBarTxt, 'changedContent');
-      expect(await GitVCS.status(fooTxt)).toBe('*modified');
-      expect(await GitVCS.status(folderBarTxt)).toBe('*modified');
-      // Undo
-      await GitVCS.undoPendingChanges();
+
+      const status2 = await GitVCS.status();
+
+      expect(status2).toEqual({
+        'staged': [],
+        'unstaged': [
+          {
+            'name': '',
+            'path': '.insomnia/folder/bar.txt',
+            'status': [1, 2, 1],
+          },
+          {
+            'name': '',
+            'path': '.insomnia/foo.txt',
+            'status': [0, 2, 0],
+          },
+        ],
+      });
+      // Discard changes
+      await GitVCS.discardChanges(status2.unstaged);
+
+      const status3 = await GitVCS.status();
+
       // Ensure git doesn't recognize a change anymore
-      expect(await GitVCS.status(fooTxt)).toBe('unmodified');
-      expect(await GitVCS.status(folderBarTxt)).toBe('unmodified');
+      expect(status3).toEqual({
+        staged: [],
+        unstaged: [],
+      });
       // Expect original doc to have reverted
       expect((await fsClient.promises.readFile(fooTxt)).toString()).toBe(originalContent);
       expect((await fsClient.promises.readFile(folderBarTxt)).toString()).toBe(originalContent);
@@ -232,51 +365,31 @@ First commit!
       await Promise.all(files.map(f => fsClient.promises.writeFile(f, originalContent)));
       // Commit all files
       await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
-      await Promise.all(files.map(f => GitVCS.add(f, originalContent)));
+      const status = await GitVCS.status();
+      await GitVCS.stageChanges(status.unstaged);
       await GitVCS.commit('First commit!');
       // Change all files
       await Promise.all(files.map(f => fsClient.promises.writeFile(f, changedContent)));
-      await Promise.all(files.map(() => expect(GitVCS.status(foo1Txt)).resolves.toBe('*modified')));
+
+      const status2 = await GitVCS.status();
       // Undo foo1 and foo2, but not foo3
-      await GitVCS.undoPendingChanges([foo1Txt, foo2Txt]);
-      expect(await GitVCS.status(foo1Txt)).toBe('unmodified');
-      expect(await GitVCS.status(foo2Txt)).toBe('unmodified');
+      const changesToUndo = status2.unstaged.filter(change => !change.path.includes(foo3Txt));
+      await GitVCS.discardChanges(changesToUndo);
+      const status3 = await GitVCS.status();
+      expect(status3).toEqual({
+        'staged': [],
+        'unstaged': [
+          {
+            'name': '',
+            'path': '.insomnia/foo3.txt',
+            'status': [1, 2, 1],
+          },
+        ],
+      });
       // Expect original doc to have reverted for foo1 and foo2
       expect((await fsClient.promises.readFile(foo1Txt)).toString()).toBe(originalContent);
       expect((await fsClient.promises.readFile(foo2Txt)).toString()).toBe(originalContent);
-      // Expect changed content for foo3
-      expect(await GitVCS.status(foo3Txt)).toBe('*modified');
       expect((await fsClient.promises.readFile(foo3Txt)).toString()).toBe(changedContent);
-    });
-  });
-
-  describe('readObjectFromTree()', () => {
-    it('reads an object from tree', async () => {
-      const fsClient = MemClient.createClient();
-      const dir = path.join(GIT_INSOMNIA_DIR, 'dir');
-      const dirFooTxt = path.join(dir, 'foo.txt');
-      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
-      await fsClient.promises.mkdir(dir);
-      await fsClient.promises.writeFile(dirFooTxt, 'foo');
-
-      await GitVCS.init({
-        uri: '',
-        repoId: '',
-        directory: GIT_CLONE_DIR,
-        fs: fsClient,
-      });
-      await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
-      await GitVCS.add(dirFooTxt);
-      await GitVCS.commit('First');
-      await fsClient.promises.writeFile(dirFooTxt, 'foo bar');
-      await GitVCS.add(dirFooTxt);
-      await GitVCS.commit('Second');
-      const log = await GitVCS.log();
-      expect(await GitVCS.readObjFromTree(log[0].commit.tree, dirFooTxt)).toBe('foo bar');
-      expect(await GitVCS.readObjFromTree(log[1].commit.tree, dirFooTxt)).toBe('foo');
-      // Some extra checks
-      expect(await GitVCS.readObjFromTree(log[1].commit.tree, 'missing')).toBe(null);
-      expect(await GitVCS.readObjFromTree('missing', 'missing')).toBe(null);
     });
   });
 });

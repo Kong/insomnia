@@ -1,5 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import { Button, Collection, Menu, MenuItem, MenuTrigger, Popover, Section, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
 import { useInterval } from 'react-use';
@@ -48,6 +48,8 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   const gitFetchFetcher = useFetcher<GitFetchLoaderData>();
   const gitStatusFetcher = useFetcher<GitStatusResult>();
 
+  const isCheckingGitChanges = useRef(false);
+
   const loadingPush = gitPushFetcher.state === 'loading';
   const loadingPull = gitPullFetcher.state === 'loading';
   const loadingFetch = gitFetchFetcher.state === 'loading';
@@ -60,7 +62,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       gitRepoDataFetcher.state === 'idle' &&
       !gitRepoDataFetcher.data
     ) {
-      console.log('[git:fetcher] Fetching git repo data');
       gitRepoDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/repo`);
     }
   }, [
@@ -77,7 +78,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
 
   useEffect(() => {
     if (shouldFetchGitRepoStatus) {
-      console.log('[git:fetcher] Fetching git repo status');
       gitStatusFetcher.submit({}, {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/status`,
         method: 'post',
@@ -85,10 +85,13 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
     }
   }, [gitStatusFetcher, organizationId, projectId, shouldFetchGitRepoStatus, workspaceId]);
 
-  useInterval(() => {
-    requestIdleCallback(() => {
-      checkGitChanges(workspaceId);
-    });
+  useInterval(async () => {
+    if (isCheckingGitChanges.current) {
+      return;
+    }
+    isCheckingGitChanges.current = true;
+    await checkGitChanges(workspaceId);
+    isCheckingGitChanges.current = false;
   }, 30 * 1000);
 
   useEffect(() => {
@@ -361,7 +364,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
             disabledKeys={allSyncMenuActionList.filter(item => item?.isDisabled).map(item => item.id)}
             onAction={key => {
               const item = allSyncMenuActionList.find(item => item.id === key);
-              console.log('onAction', key, item);
               item?.action();
             }}
             className="border max-w-lg select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
@@ -444,7 +446,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       )}
       {isGitStagingModalOpen && gitRepository && (
         <GitStagingModal
-          onHide={() => setIsGitStagingModalOpen(false)}
+          onClose={() => setIsGitStagingModalOpen(false)}
         />
       )}
     </>

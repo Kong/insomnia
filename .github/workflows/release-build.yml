@@ -47,8 +47,8 @@ jobs:
             csc_link_secret: DESIGNER_MAC_CSC_LINK
             csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
           - os: windows-latest
-            csc_link_secret: DESIGNER_WINDOWS_CSC_LINK
-            csc_key_password_secret: DESIGNER_WINDOWS_CSC_KEY_PASSWORD
+            csc_link_secret: ''
+            csc_key_password_secret: ''
           - os: ubuntu-latest
             csc_link_secret: ''
             csc_key_password_secret: ''
@@ -132,32 +132,15 @@ jobs:
       - name: Package dist app (Windows only)
         if: matrix.os == 'windows-latest'
         shell: bash
-        run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
-
-
-      - name: Setup Insomnia version env var (Windows only)
-        if: matrix.os == 'windows-latest'
-        shell: pwsh  # Use PowerShell shell
         run: |
-          $insomniaVersion = jq -r '.version' "./packages/insomnia/package.json"
-          $insoVersion = jq -r '.version' "./packages/insomnia-inso/package.json"
-          echo "INSOMNIA_VERSION=$insomniaVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "INSO_VERSION=$insoVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-      # code-signs the windows installer
-      - name: Code-sign Windows Installer artifact (Windows only)
-        if: matrix.os == 'windows-latest'
-        uses: sslcom/esigner-codesign@develop
-        with:
-          command: sign
-          username: ${{secrets.ES_USERNAME}}
-          password: ${{secrets.ES_PASSWORD}}
-          credential_id: ${{secrets.ES_CREDENTIAL_ID}}
-          totp_secret: ${{secrets.ES_TOTP_SECRET}}
-          file_path: ${{ env.CODESIGN_FILE_PATH}}
-          override: true
+          docker pull ghcr.io/sslcom/codesigner-win:latest
+          NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
         env:
-          CODESIGN_FILE_PATH: packages/insomnia/dist/squirrel-windows/Insomnia.Core-${{ env.INSOMNIA_VERSION }}.exe
+          USERNAME: ${{secrets.ES_USERNAME}}
+          PASSWORD: ${{secrets.ES_PASSWORD}}
+          CREDENTIAL_ID: ${{secrets.ES_CREDENTIAL_ID}}
+          TOTP_SECRET: ${{secrets.ES_TOTP_SECRET}}
+
 
       - name: Package inso
         run: |

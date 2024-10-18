@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { type ActionFunction, redirect, useFetcher, useNavigate } from 'react-router-dom';
 
@@ -49,6 +49,7 @@ export const action: ActionFunction = async ({
 const Login = () => {
   const loginFetcher = useFetcher();
   const navigate = useNavigate();
+  const [message, setMessage] = useState<string | null>(null);
 
   const login = (provider: string) => {
     loginFetcher.submit({
@@ -62,6 +63,14 @@ const Login = () => {
   useEffect(() => {
     window.main.landingPageRendered(LandingPage.Login);
   }, []);
+
+  const logoutMessage = window.localStorage.getItem('logoutMessage');
+  useEffect(() => {
+    if (logoutMessage) {
+      window.localStorage.removeItem('logoutMessage');
+      setMessage(logoutMessage);
+    }
+  }, [logoutMessage]);
 
   return (
     <div
@@ -83,6 +92,7 @@ const Login = () => {
           </span>
           <span className='ml-1 text-[--color-font]'>APIs locally, on Git or in the Cloud.</span>
         </div>
+        {message && <div className="font-bold text-sm text-red-300">{message}</div>}
         <Button
           aria-label='Continue with Google'
           onPress={() => {

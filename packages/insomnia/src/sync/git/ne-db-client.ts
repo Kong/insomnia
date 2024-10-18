@@ -156,8 +156,29 @@ export class NeDBClient {
       ];
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
+      let typeFilter = [type];
+
       const modelTypesWithinFolders = [models.request.type, models.grpcRequest.type, models.webSocketRequest.type];
-      const typeFilter = modelTypesWithinFolders.includes(type) ? [models.requestGroup.type, type] : [type];
+      if (modelTypesWithinFolders.includes(type)) {
+        typeFilter = [models.requestGroup.type, type];
+      };
+
+      if (type === models.unitTest.type) {
+        typeFilter = [models.unitTestSuite.type, type];
+      }
+
+      if (type === models.protoFile.type) {
+        typeFilter = [models.protoDirectory.type, type];
+      }
+
+      if (type === models.mockRoute.type) {
+        typeFilter = [models.mockServer.type, type];
+      }
+
+      if (type === models.webSocketPayload.type) {
+        typeFilter = [models.webSocketRequest.type, type];
+      }
+
       const children = await db.withDescendants(workspace, null, typeFilter);
       docs = children.filter(d => d.type === type && !d.isPrivate);
     } else {

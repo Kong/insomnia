@@ -110,9 +110,9 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           </Button>
         }
       >
-        <DropdownItem aria-label='Duplicate'>
+        <DropdownItem aria-label='Duplicate / Move'>
           <ItemContent
-            label="Duplicate"
+            label="Duplicate / Move"
             icon="copy"
             onClick={() => setIsDuplicateModalOpen(true)}
           />

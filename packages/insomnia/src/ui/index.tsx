@@ -906,14 +906,14 @@ async function renderApp() {
                                       (await import('./routes/git-actions')).commitToGitRepoAction(...args),
                                   },
                                   {
+                                    path: 'commit-and-push',
+                                    action: async (...args) =>
+                                      (await import('./routes/git-actions')).commitAndPushToGitRepoAction(...args),
+                                  },
+                                  {
                                     path: 'fetch',
                                     action: async (...args) =>
                                       (await import('./routes/git-actions')).gitFetchAction(...args),
-                                  },
-                                  {
-                                    path: 'rollback',
-                                    action: async (...args) =>
-                                      (await import('./routes/git-actions')).gitRollbackChangesAction(...args),
                                   },
                                   {
                                     path: 'update',
@@ -934,6 +934,26 @@ async function renderApp() {
                                     path: 'push',
                                     action: async (...args) =>
                                       (await import('./routes/git-actions')).pushToGitRemoteAction(...args),
+                                  },
+                                  {
+                                    path: 'stage',
+                                    action: async (...args) =>
+                                      (await import('./routes/git-actions')).stageChangesAction(...args),
+                                  },
+                                  {
+                                    path: 'unstage',
+                                    action: async (...args) =>
+                                      (await import('./routes/git-actions')).unstageChangesAction(...args),
+                                  },
+                                  {
+                                    path: 'discard',
+                                    action: async (...args) =>
+                                      (await import('./routes/git-actions')).discardChangesAction(...args),
+                                  },
+                                  {
+                                    path: 'diff',
+                                    loader: async (...args) =>
+                                      (await import('./routes/git-actions')).diffFileLoader(...args),
                                   },
                                   {
                                     path: 'branch',

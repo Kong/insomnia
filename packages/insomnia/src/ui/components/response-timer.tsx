@@ -41,7 +41,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
               <div className='w-3/4 ml-1 text-left text-md content-center leading-8'>
                 <span className="leading-8 w-1/5">
                   {
-                    record.duration ?
+                    record.duration !== undefined ?
                       (<i className="fa fa-circle-check fa-1x mr-2 text-green-500" />) :
                       (<i className="fa fa-spinner fa-spin fa-1x mr-2" />)
                   }
@@ -51,7 +51,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
                 </span>
               </div>
               <div className='w-1/4 mr-1 text-right leading-8'>
-                {record.duration ? `${((record.duration) / 1000).toFixed(1)} s` : (<MillisecondTimer startedAt={record.startedAt} />)}
+                {record.duration !== undefined ? `${((record.duration) / 1000).toFixed(1)} s` : (<MillisecondTimer startedAt={record.startedAt} />)}
               </div>
             </div>
           ))}

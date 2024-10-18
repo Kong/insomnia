@@ -107,7 +107,7 @@ export const getInitialEntry = async () => {
       return {
         pathname: await getInitialRouteForOrganization({ organizationId, navigateToWorkspace: true }),
         state: {
-          // async task need to excute when first entry
+          // async task need to execute when first entry
           asyncTaskList: [AsyncTask.SyncOrganization, AsyncTask.MigrateProjects, AsyncTask.SyncProjects],
         },
       };

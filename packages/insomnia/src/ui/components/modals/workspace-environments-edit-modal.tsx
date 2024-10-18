@@ -1,6 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { useMemo, useRef, useState } from 'react';
-import { Button, Dialog, DropIndicator, GridList, GridListItem, Heading, Label, ListBoxItem, Menu, MenuItem, MenuTrigger, Modal, ModalOverlay, Popover, Text, useDragAndDrop } from 'react-aria-components';
+import { Button, Dialog, DropIndicator, GridList, GridListItem, Heading, Label, Menu, MenuItem, MenuTrigger, Modal, ModalOverlay, Popover, Text, useDragAndDrop } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
@@ -315,7 +315,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                                 className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                               >
                                 {item => (
-                                  <ListBoxItem
+                                  <MenuItem
                                     key={item.id}
                                     id={item.id}
                                     className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -323,7 +323,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                                   >
                                     <Icon className='w-5' icon={item.icon} />
                                     <span>{item.name}</span>
-                                  </ListBoxItem>
+                                  </MenuItem>
                                 )}
                               </Menu>
                             </Popover>

@@ -12,13 +12,14 @@ interface FetchConfig {
   origin?: string;
   headers?: Record<string, string>;
   onlyResolveOnSuccess?: boolean;
+  timeout?: number;
 }
 
 export class ResponseFailError extends Error {
   constructor(msg: string, response: Response) {
     super(msg);
     this.response = response;
-  };
+  }
   response;
   name = 'ResponseFailError';
 }
@@ -33,6 +34,7 @@ export async function insomniaFetch<T = void>({
   origin,
   headers,
   onlyResolveOnSuccess = false,
+  timeout = INSOMNIA_FETCH_TIME_OUT,
 }: FetchConfig): Promise<T> {
   const config: RequestInit = {
     method,
@@ -47,7 +49,7 @@ export async function insomniaFetch<T = void>({
       ...(PLAYWRIGHT ? { 'X-Mockbin-Test': 'true' } : {}),
     },
     ...(data ? { body: JSON.stringify(data) } : {}),
-    signal: AbortSignal.timeout(INSOMNIA_FETCH_TIME_OUT),
+    signal: AbortSignal.timeout(timeout),
   };
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
@@ -59,7 +61,9 @@ export async function insomniaFetch<T = void>({
     if (uri) {
       window.main.openDeepLink(uri);
     }
-    const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
+    const isJson =
+      response.headers.get('content-type')?.includes('application/json') ||
+      path.match(/\.json$/);
     if (onlyResolveOnSuccess && !response.ok) {
       let errMsg = '';
       if (isJson) {
@@ -68,12 +72,9 @@ export async function insomniaFetch<T = void>({
           if (typeof json?.message === 'string') {
             errMsg = json.message;
           }
-        } catch (err) { }
+        } catch (err) {}
       }
-      throw new ResponseFailError(
-        errMsg,
-        response,
-      );
+      throw new ResponseFailError(errMsg, response);
     }
     return isJson ? response.json() : response.text();
   } catch (err) {

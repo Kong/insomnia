@@ -1214,6 +1214,22 @@ const ProjectRoute: FC = () => {
                     )}
                   </div>
                 </div>}
+                {billing?.expirationErrorMessage || billing?.expirationWarningMessage ? <div className='p-[--padding-md] pb-0'>
+                  <div className={`flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50  text-[--color-font-warning] rounded ${billing?.expirationWarningMessage ? 'bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))]' : 'bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))]'}`}>
+                    <p className='text-base'>
+                      <Icon icon="exclamation-triangle" className='mr-2' />
+                      {billing?.expirationErrorMessage || billing?.expirationWarningMessage}
+                    </p>
+                    {isUserOwner && (
+                      <a
+                        href="https://insomnia.rest/pricing/contact"
+                        className="px-4 text-[--color-bg] bg-opacity-100 bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                      >
+                        Contact sales
+                      </a>
+                    )}
+                  </div>
+                </div> : null}
                 {isProjectInconsistent && <div className='p-[--padding-md] pb-0'>
                   <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
                     <p className='text-base'>

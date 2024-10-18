@@ -89,6 +89,8 @@ const config = {
         target: 'squirrel',
       },
     ],
+    sign: './customSign.js',
+    signingHashAlgorithms: ['sha256'], // avoid duplicate signing hook calls https://github.com/electron-userland/electron-builder/issues/3995#issuecomment-505725704
   },
   squirrelWindows: {
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
