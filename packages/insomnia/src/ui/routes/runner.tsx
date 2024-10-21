@@ -618,7 +618,6 @@ export const Runner: FC<{}> = () => {
               </TabPanel>
               <TabPanel className='w-full flex-1 flex align-center overflow-y-auto' id='advanced'>
                 <div className="p-4 w-full">
-                  <Heading className="w-full text-lg text-[--hl] h-[--line-height-sm] border-solid scro border-b border-b-[--hl-md]">Advanced Settings</Heading>
                   <div>
                     <label className="flex items-center gap-2">
                       <input
