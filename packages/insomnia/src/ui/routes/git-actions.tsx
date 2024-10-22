@@ -10,7 +10,6 @@ import * as models from '../../models';
 import type { GitRepository } from '../../models/git-repository';
 import { createGitRepository } from '../../models/helpers/git-repository-operations';
 import {
-  isWorkspace,
   WorkspaceScopeKeys,
 } from '../../models/workspace';
 import { fsClient } from '../../sync/git/fs-client';
@@ -467,12 +466,12 @@ export const cloneGitRepoAction: ActionFunction = async ({
   });
   repoSettingsPatch.needsFullClone = true;
 
-  const fsClient = MemClient.createClient();
+  const inMemoryFsClient = MemClient.createClient();
 
   const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
   try {
     await shallowClone({
-      fsClient,
+      fsClient: inMemoryFsClient,
       gitRepository: repoSettingsPatch as GitRepository,
     });
   } catch (e) {
@@ -514,7 +513,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
   let workspaceId = '';
   let scope: 'design' | 'collection' = WorkspaceScopeKeys.design;
   // If no workspace exists we create a new one
-  if (!(await containsInsomniaWorkspaceDir(fsClient))) {
+  if (!(await containsInsomniaWorkspaceDir(inMemoryFsClient))) {
     // Create a new workspace
 
     const workspace = await models.workspace.create({
@@ -538,7 +537,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
   } else {
     // Clone all entities from the repository
     const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
-    const workspaces = await fsClient.promises.readdir(workspaceBase);
+    const workspaces = await inMemoryFsClient.promises.readdir(workspaceBase);
 
     if (workspaces.length === 0) {
       window.main.trackSegmentEvent({
@@ -572,8 +571,9 @@ export const cloneGitRepoAction: ActionFunction = async ({
 
     // Only one workspace
     const workspacePath = path.join(workspaceBase, workspaces[0]);
-    const workspaceJson = await fsClient.promises.readFile(workspacePath);
+    const workspaceJson = await inMemoryFsClient.promises.readFile(workspacePath);
     const workspace = YAML.parse(workspaceJson.toString());
+    workspaceId = workspace._id;
     scope = (workspace.scope === WorkspaceScopeKeys.collection) ? WorkspaceScopeKeys.collection : WorkspaceScopeKeys.design;
     // Check if the workspace already exists
     const existingWorkspace = await models.workspace.getById(workspace._id);
@@ -590,28 +590,58 @@ export const cloneGitRepoAction: ActionFunction = async ({
       return redirect(`/organization/${organizationId}/project/${project._id}/workspace/${existingWorkspace._id}/debug`);
     }
 
-    // Loop over all model folders in root
-    for (const modelType of await fsClient.promises.readdir(GIT_INSOMNIA_DIR)) {
-      const modelDir = path.join(GIT_INSOMNIA_DIR, modelType);
-
-      // Loop over all documents in model folder and save them
-      for (const docFileName of await fsClient.promises.readdir(modelDir)) {
-        const docPath = path.join(modelDir, docFileName);
-        const docYaml = await fsClient.promises.readFile(docPath);
-        const doc: models.BaseModel = YAML.parse(docYaml.toString());
-        if (isWorkspace(doc)) {
-          doc.parentId = project._id;
-          doc.scope = scope;
-          const workspace = await database.upsert(doc);
-          workspaceId = workspace._id;
-        } else {
-          await database.upsert(doc);
-        }
-      }
-    }
-
     // Store GitRepository settings and set it as active
-    await createGitRepository(workspace._id, repoSettingsPatch);
+    const gitRepository = await models.gitRepository.create(repoSettingsPatch);
+    const meta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+    await models.workspaceMeta.update(meta, {
+      gitRepositoryId: gitRepository._id,
+    });
+
+    const baseDir = path.join(
+      process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+      `version-control/git/${gitRepository._id}`
+    );
+
+    // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
+    const neDbClient = NeDBClient.createClient(workspaceId, projectId);
+
+    // All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem
+    const gitDataClient = fsClient(baseDir);
+
+    // All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of.
+    const otherDataClient = fsClient(path.join(baseDir, 'other'));
+
+    // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
+    const routableFS = routableFSClient(otherDataClient, {
+      [GIT_INSOMNIA_DIR]: neDbClient,
+      [GIT_INTERNAL_DIR]: gitDataClient,
+    });
+
+    // Init VCS
+    const { credentials, uri } = gitRepository;
+    if (gitRepository.needsFullClone) {
+      await GitVCS.initFromClone({
+        repoId: gitRepository._id,
+        url: uri,
+        gitCredentials: credentials,
+        directory: GIT_CLONE_DIR,
+        fs: routableFS,
+        gitDirectory: GIT_INTERNAL_DIR,
+      });
+
+      await models.gitRepository.update(gitRepository, {
+        needsFullClone: false,
+      });
+    } else {
+      await GitVCS.init({
+        repoId: gitRepository._id,
+        uri,
+        directory: GIT_CLONE_DIR,
+        fs: routableFS,
+        gitDirectory: GIT_INTERNAL_DIR,
+        gitCredentials: credentials,
+      });
+    }
   }
 
   // Flush DB changes
