@@ -293,6 +293,7 @@ export const Runner: FC<{}> = () => {
     const selected = new Set(reqList.selectedKeys);
     const requests = Array.from(reqList.items)
       .filter(item => selected.has(item.id));
+
     // convert uploadData to environment data
     const userUploadEnvs = uploadData.map(data => {
       const orderedJson = porderedJSON.parse<UploadDataType>(
@@ -606,7 +607,7 @@ export const Runner: FC<{}> = () => {
                       const parentFolderContainer = parentFolders.length > 0 ? <span className="ml-2">{parentFolders}</span> : null;
 
                       return (
-                        <RequestItem textValue={item.name} className='text-[--color-font] border border-solid border-transparent' style={{ 'outline': 'none' }}>
+                        <RequestItem textValue={item.name} className={`runner-request-list-${item.name} text-[--color-font] border border-solid border-transparent`} style={{ 'outline': 'none' }}>
                           {parentFolderContainer}
                           <span className={`ml-2 uppercase text-xs http-method-${item.method}`}>{item.method}</span>
                           <span className="ml-2 hover:underline cursor-pointer text-[--hl]" onClick={() => goToRequest(item.id)}>{item.name}</span>
@@ -618,19 +619,6 @@ export const Runner: FC<{}> = () => {
               </TabPanel>
               <TabPanel className='w-full flex-1 flex align-center overflow-y-auto' id='advanced'>
                 <div className="p-4 w-full">
-                  <div>
-                    <label className="flex items-center gap-2">
-                      <input
-                        name='ignore-undefined-env'
-                        onChange={() => { }}
-                        type="checkbox"
-                        disabled={true}
-                        checked
-                      />
-                      Ignore undefined environments
-                      <HelpTooltip className="space-left">Undefined environments will not be rendered for all requests.</HelpTooltip>
-                    </label>
-                  </div>
                   <div>
                     <label className="flex items-center gap-2">
                       <input
@@ -920,9 +908,14 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
 
       let testResultsForOneIteration: RunnerResultPerRequest[] = [];
 
-      for (let j = 0; j < requests.length; j++) {
-        const targetRequest = requests[j];
+      let j = 0;
+      while (j < requests.length) {
+        // TODO: we might find a better way to do runner cancellation
+        if (getExecution(workspaceId) === undefined) {
+          throw 'Runner has been stopped';
+        }
 
+        const targetRequest = requests[j];
         const resultCollector = {
           requestId: targetRequest.id,
           requestName: targetRequest.name,
@@ -934,28 +927,26 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
           responseId: '',
         };
 
-        // TODO: we might find a better way to do runner cancellation
-        if (getExecution(workspaceId) === undefined) {
-          throw 'Runner has been stopped';
-        }
+        const isNextRequest = (targetRequest: RequestRow, nextRequestIdOrName: string) => {
+          const matchId = targetRequest.id === nextRequestIdOrName;
+          const matchName = targetRequest.name.trim() === nextRequestIdOrName.trim();
+          // find the last request with matched name in case multiple requests with same name in collection runner
+          const matchLastIndex = j === requests.findLastIndex(req => req.name.trim() === nextRequestIdOrName.trim());
+
+          return matchId || (matchName && matchLastIndex);
+        };
 
         try {
           if (nextRequestIdOrName !== '') {
-            const matchId = targetRequest.id === nextRequestIdOrName;
-            const matchName = targetRequest.name.trim() === nextRequestIdOrName.trim();
-            // find the last request with matched name in case multiple requests with same name in collection runner
-            const matchLastIndex = j === requests.findLastIndex(req => req.name.trim() === nextRequestIdOrName.trim());
-
-            if (matchId || (matchName && matchLastIndex)
-            ) {
+            if (isNextRequest(targetRequest, nextRequestIdOrName)) {
               // reset nextRequestIdOrName when request name or id meets;
               nextRequestIdOrName = '';
             } else {
               continue;
             }
           }
-          updateExecution(workspaceId, targetRequest.id);
 
+          updateExecution(workspaceId, targetRequest.id);
           window.main.updateLatestStepName({
             requestId: workspaceId,
             stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"`,
@@ -1002,6 +993,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
               },
             ],
           };
+
         } catch (e) {
           const requestResults: RunnerResultPerRequest = {
             requestName: targetRequest.name,
@@ -1032,6 +1024,13 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
             throw e;
           }
           // or continue execution if needed
+          nextRequestIdOrName = ''; // ignore it if there's an exception to avoid infinite loop
+        } finally {
+          if (isNextRequest(targetRequest, nextRequestIdOrName)) {
+            // it points the next request to itself so keep the current j
+          } else {
+            j++;
+          }
         }
       }
 

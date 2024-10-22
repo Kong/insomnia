@@ -625,7 +625,7 @@ export const sendActionImplementation = async ({
   if (!shouldWriteToFile) {
     const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
     await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-    return mutatedContext;
+    return postMutatedContext;
   }
 
   if (requestMeta.downloadPath) {

@@ -231,7 +231,11 @@ export async function initInsomniaObject(
         pathParameters: rawObj.request.pathParameters,
     };
     const request = new ScriptRequest(reqOpt);
-    const execution = new Execution({ location: rawObj.execution.location });
+    const execution = new Execution({
+        location: rawObj.execution.location,
+        skipRequest: rawObj.execution.skipRequest,
+        nextRequestIdOrName: rawObj.execution.nextRequestIdOrName,
+    });
 
     const responseBody = await readBodyFromPath(rawObj.response);
     const response = rawObj.response ? toScriptResponse(request, rawObj.response, responseBody) : undefined;

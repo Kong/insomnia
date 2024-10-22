@@ -1,6 +1,6 @@
 import clone from 'clone';
 import fs from 'fs';
-import type { RequestContext, RequestTestResult } from 'insomnia-sdk';
+import type { ExecutionOption, RequestContext, RequestTestResult } from 'insomnia-sdk';
 import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
 
@@ -311,7 +311,7 @@ export async function savePatchesMadeByScript(
 }
 
 export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
-  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response, globals, userUploadEnvironment, iteration, iterationCount, ancestors, eventName } = context;
+  const { script, request, environment, timelinePath, responseId, baseEnvironment, clientCertificates, cookieJar, response, globals, userUploadEnvironment, iteration, iterationCount, ancestors, eventName, execution } = context;
   invariant(script, 'script must be provided');
 
   const settings = await models.settings.get();
@@ -356,6 +356,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
           data: userUploadEnvironment.data || {},
         } : undefined,
         execution: {
+          ...execution, // keep some existing properties in the after-response script from the pre-request script
           location: requestLocation,
         },
       },
@@ -447,6 +448,7 @@ interface RequestContextForScript {
   ancestors: (Request | RequestGroup | Workspace | Project | MockRoute | MockServer)[];
   globals?: Environment; // there could be no global environment
   settings: Settings;
+  execution?: ExecutionOption;
 }
 
 type RequestAndContextAndResponse = RequestContextForScript & {
