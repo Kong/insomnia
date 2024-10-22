@@ -206,7 +206,8 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
                       });
                     };
                     const { environment, environmentPropertyOrder, kvPairData } = activeRequestGroup;
-                    handleToggleEnvironmentType(isSelected, { data: environment, dataPropertyOrder: environmentPropertyOrder, kvPairData }, toggleSwitchEnvironmentType);
+                    const isValidJSON = !!environmentEditorRef.current?.isValid();
+                    handleToggleEnvironmentType(isSelected, { data: environment, dataPropertyOrder: environmentPropertyOrder, kvPairData }, isValidJSON, toggleSwitchEnvironmentType);
                   }
                 }}
                 isSelected={activeRequestGroup?.environmentType !== EnvironmentType.KVPAIR}

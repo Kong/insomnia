@@ -3,6 +3,7 @@ import React from 'react';
 import { type Environment, type EnvironmentKvPairData, EnvironmentType, getKVPairFromData } from '../../../models/environment';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
 
 // NeDB field names cannot begin with '$' or contain a period '.'
@@ -53,6 +54,7 @@ export function checkNestedKeys(obj: Record<string, any>, isRoot = true): string
 export function handleToggleEnvironmentType(
   isSelected: boolean,
   environment: Pick<Environment, 'data' | 'dataPropertyOrder' | 'kvPairData'>,
+  isValidJSON: boolean,
   updateEnvironmentTypeRequest: (type: EnvironmentType, kvPairData: EnvironmentKvPairData[]) => void,
 ) {
   const newEnvironmentType = isSelected ? EnvironmentType.JSON : EnvironmentType.KVPAIR;
@@ -62,7 +64,12 @@ export function handleToggleEnvironmentType(
   const foundDuplicateNameItem = isSelected && environment.kvPairData?.some(
     (pair, idx) => environment.kvPairData?.slice(idx + 1).some(newPair => pair.name.trim() === newPair.name.trim() && newPair.enabled)
   );
-  if (foundDisabledItem || foundDuplicateNameItem) {
+  if (!isValidJSON && newEnvironmentType === EnvironmentType.KVPAIR) {
+    showModal(AlertModal, {
+      title: 'Error',
+      message: 'Please modify and fix the JSON string error before switch to Table view',
+    });
+  } else if (foundDisabledItem || foundDuplicateNameItem) {
     showModal(AskModal, {
       title: 'Change Environment Type',
       message: (
