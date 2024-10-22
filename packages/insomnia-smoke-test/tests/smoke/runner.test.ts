@@ -59,8 +59,8 @@ test.describe('runner features tests', async () => {
         await page.getByTestId('run-collection-btn-quick').click();
 
         // select requests to test
-        await page.locator('.item-req1').click();
-        await page.locator('.item-req2').click();
+        await page.locator('.runner-request-list-req1').click();
+        await page.locator('.runner-request-list-req2').click();
 
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
@@ -116,9 +116,9 @@ test.describe('runner features tests', async () => {
 
         // select requests to test
         await page.locator('text=Select All').click();
-        await page.locator('.item-req0').click();
-        await page.locator('.item-req01').click();
-        await page.locator('.item-req02').click();
+        await page.locator('.runner-request-list-req0').click();
+        await page.locator('.runner-request-list-req01').click();
+        await page.locator('.runner-request-list-req02').click();
 
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
@@ -146,7 +146,7 @@ test.describe('runner features tests', async () => {
     test('run req4 3 times with setNextRequest the pre-request script', async ({ page }) => {
         await page.getByTestId('run-collection-btn-quick').click();
 
-        await page.locator('.item-req4').click();
+        await page.locator('.runner-request-list-req4').click();
 
         // send
         await page.getByRole('button', { name: 'Run', exact: true }).click();
@@ -166,7 +166,7 @@ test.describe('runner features tests', async () => {
     test('run req5 3 times with setNextRequest in the after-response script', async ({ page }) => {
         await page.getByTestId('run-collection-btn-quick').click();
 
-        await page.locator('.item-req5').click();
+        await page.locator('.runner-request-list-req5').click();
 
         // send
         await page.getByRole('button', { name: 'Run', exact: true }).click();
@@ -186,9 +186,9 @@ test.describe('runner features tests', async () => {
     test('skip req01 with setNextRequest', async ({ page }) => {
         await page.getByTestId('run-collection-btn-quick').click();
 
-        await page.locator('.item-req0').click();
-        await page.locator('.item-req01').click();
-        await page.locator('.item-req02').click();
+        await page.locator('.runner-request-list-req0').click();
+        await page.locator('.runner-request-list-req01').click();
+        await page.locator('.runner-request-list-req02').click();
 
         // send
         await page.getByRole('button', { name: 'Run', exact: true }).click();
