@@ -139,7 +139,7 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
     const isValidJSONString = checkValidJSONString(value);
     return (
       <>
-        <div className={`${cellCommonStyle} w-6 flex flex-shrink-0 items-center justify-end border-l border-r-0`} style={{ padding: 0 }}>
+        <div slot="drag" className={`${cellCommonStyle} w-6 flex flex-shrink-0 items-center justify-end border-l border-r-0`} style={{ padding: 0 }}>
           <Icon icon="grip-vertical" className="cursor-grab mr-1" />
         </div>
         <div className={`${cellCommonStyle} relative h-full w-[30%] flex flex-grow pl-1`}>

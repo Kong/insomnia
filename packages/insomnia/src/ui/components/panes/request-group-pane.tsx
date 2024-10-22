@@ -2,7 +2,7 @@ import React, { type FC, useRef, useState } from 'react';
 import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair, getKVPairFromData } from '../../../models/environment';
+import { type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair } from '../../../models/environment';
 import type { Settings } from '../../../models/settings';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
@@ -12,13 +12,12 @@ import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { EnvironmentEditor, type EnvironmentEditorHandle } from '../editors/environment-editor';
 import { EnvironmentKVEditor } from '../editors/environment-key-value-editor/key-value-editor';
+import { handleToggleEnvironmentType } from '../editors/environment-utils';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestScriptEditor } from '../editors/request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
-import { showModal } from '../modals';
-import { AskModal } from '../modals/ask-modal';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 
 export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
@@ -200,38 +199,14 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
               <ToggleButton
                 onChange={isSelected => {
                   if (activeRequestGroup) {
-                    const newEnvironmentType = isSelected ? EnvironmentType.JSON : EnvironmentType.KVPAIR;
-                    // clear kvPairData when switch to json view, otherwise convert json data to kvPairData
-                    const kvPairData = isSelected ? [] : getKVPairFromData(activeRequestGroup.environment, activeRequestGroup.environmentPropertyOrder);
-                    const foundDisabledItem = isSelected && activeRequestGroup.kvPairData?.some(pair => !pair.enabled);
-                    const foundDuplicateNameItem = isSelected && activeRequestGroup.kvPairData?.some(
-                      (pair, idx) => activeRequestGroup.kvPairData?.slice(idx + 1).some(newPair => pair.name.trim() === newPair.name.trim() && newPair.enabled)
-                    );
-                    const toggleSwitchEnvironmentType = () => {
+                    const toggleSwitchEnvironmentType = (newEnvironmentType: EnvironmentType, kvPairData: EnvironmentKvPairData[]) => {
                       patchGroup(activeRequestGroup._id, {
                         environmentType: newEnvironmentType,
                         kvPairData: kvPairData,
                       });
                     };
-                    if (foundDisabledItem || foundDuplicateNameItem) {
-                      showModal(AskModal, {
-                        title: 'Change Environment Type',
-                        message: (
-                          <>
-                            {foundDisabledItem && <p>All disabled items will be lost.</p>}
-                            {foundDuplicateNameItem && <p>Items with same name will be lost except the last one.</p>}
-                            <p>Are you sure to continue?</p>
-                          </>
-                        ),
-                        onDone: async (saidYes: boolean) => {
-                          if (saidYes) {
-                            toggleSwitchEnvironmentType();
-                          }
-                        },
-                      });
-                    } else {
-                      toggleSwitchEnvironmentType();
-                    }
+                    const { environment, environmentPropertyOrder, kvPairData } = activeRequestGroup;
+                    handleToggleEnvironmentType(isSelected, { data: environment, dataPropertyOrder: environmentPropertyOrder, kvPairData }, toggleSwitchEnvironmentType);
                   }
                 }}
                 isSelected={activeRequestGroup?.environmentType !== EnvironmentType.KVPAIR}

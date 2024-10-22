@@ -5,7 +5,7 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
 import { debounce } from '../../../common/misc';
-import { type Environment, type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair, getKVPairFromData } from '../../../models/environment';
+import { type Environment, type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair } from '../../../models/environment';
 import { isRemoteProject } from '../../../models/project';
 import { responseTagRegex } from '../../../templating/utils';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
@@ -13,9 +13,9 @@ import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { EditableInput } from '../editable-input';
 import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from '../editors/environment-editor';
 import { EnvironmentKVEditor } from '../editors/environment-key-value-editor/key-value-editor';
+import { handleToggleEnvironmentType } from '../editors/environment-utils';
 import { Icon } from '../icon';
-import { showAlert, showModal } from '.';
-import { AskModal } from './ask-modal';
+import { showAlert } from '.';
 
 export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
   onClose: () => void;
@@ -441,13 +441,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                     {selectedEnvironment && (
                       <ToggleButton
                         onChange={isSelected => {
-                          const newEnvironmentType = isSelected ? EnvironmentType.JSON : EnvironmentType.KVPAIR;
-                          // clear kvPairData when switch to json view, otherwise convert json data to kvPairData
-                          const kvPairData = isSelected ? [] : getKVPairFromData(selectedEnvironment.data, selectedEnvironment.dataPropertyOrder);
-                          const foundDisabledItem = isSelected && selectedEnvironment.kvPairData?.some(pair => !pair.enabled);
-                          const foundDuplicateNameItem = isSelected && selectedEnvironment.kvPairData?.some(
-                            (pair, idx) => selectedEnvironment.kvPairData?.slice(idx + 1).some(newPair => pair.name.trim() === newPair.name.trim() && newPair.enabled)
-                          ); const toggleSwitchEnvironmentType = () => {
+                          const toggleSwitchEnvironmentType = (newEnvironmentType: EnvironmentType, kvPairData: EnvironmentKvPairData[]) => {
                             updateEnvironmentFetcher.submit(JSON.stringify({
                               patch: {
                                 environmentType: newEnvironmentType,
@@ -460,25 +454,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                               encType: 'application/json',
                             });
                           };
-                          if (foundDisabledItem || foundDuplicateNameItem) {
-                            showModal(AskModal, {
-                              title: 'Change Environment Type',
-                              message: (
-                                <>
-                                  {foundDisabledItem && <p>All disabled items will be lost.</p>}
-                                  {foundDuplicateNameItem && <p>Items with same name will be lost except the last one.</p>}
-                                  <p>Are you sure to continue?</p>
-                                </>
-                              ),
-                              onDone: async (saidYes: boolean) => {
-                                if (saidYes) {
-                                  toggleSwitchEnvironmentType();
-                                }
-                              },
-                            });
-                          } else {
-                            toggleSwitchEnvironmentType();
-                          }
+                          handleToggleEnvironmentType(isSelected, selectedEnvironment, toggleSwitchEnvironmentType);
                         }}
                         isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
                         className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
