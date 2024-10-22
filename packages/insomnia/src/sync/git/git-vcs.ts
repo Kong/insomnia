@@ -509,7 +509,7 @@ export class GitVCS {
     const status = await this.statusWithContent();
 
     const unstagedChanges = status.filter(({ workdir, stage }) => stage.status !== workdir.status);
-    const stagedChanges = status.filter(({ head, workdir, stage }) => head.status !== workdir.status && stage.status !== head.status && stage.status !== 0);
+    const stagedChanges = status.filter(({ head, stage }) => stage.status !== head.status);
 
     return {
       staged: stagedChanges.map(({ filepath, head, workdir, stage }) => ({
