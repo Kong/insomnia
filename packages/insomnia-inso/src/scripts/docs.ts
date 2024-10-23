@@ -3,7 +3,7 @@ import path from 'node:path';
 import * as commander from 'commander';
 import fs from 'fs';
 
-import { program, version } from '../cli';
+import { version } from '../../package.json';
 
 const DOCS_DIR = path.join(__dirname, `../../../../reference/insomnia-inso/${version}`);
 
@@ -35,7 +35,7 @@ function generateSubcommandsMarkdown(commandName: string, subcommands: { name: s
     return subcommandsMarkdown;
 }
 
-function generateCommandMarkdownContent(command: commander.Command, parentName?: string): string {
+function generateCommandMarkdownContent(command: commander.Command, programOptions: readonly commander.Option[], parentName?: string): string {
     const commandName = parentName ? `${parentName} ${command.name()}` : command.name();
     const usage = command.usage() || '[options]';
 
@@ -47,7 +47,7 @@ function generateCommandMarkdownContent(command: commander.Command, parentName?:
         commandMarkdown += generateOptionsMarkdown(command.options, 'Local Flags');
     }
 
-    commandMarkdown += generateOptionsMarkdown(program.options, 'Global Flags');
+    commandMarkdown += generateOptionsMarkdown(programOptions, 'Global Flags');
     commandMarkdown += generateSubcommandsMarkdown(commandName, command.commands.map(sub => ({
         name: sub.name(),
         description: sub.description() || 'No description available',
@@ -56,11 +56,11 @@ function generateCommandMarkdownContent(command: commander.Command, parentName?:
     return commandMarkdown;
 }
 
-function generateCommandMarkdown(command: commander.Command, parentName?: string): { name: string; fileName: string; description: string; subcommands: readonly commander.Command[] } {
+export function generateCommandMarkdown(command: commander.Command, programOptions: readonly commander.Option[], parentName?: string): { name: string; fileName: string; description: string; subcommands: readonly commander.Command[] } {
     const commandName = parentName ? `${parentName} ${command.name()}` : command.name();
     const fileName = `${commandName.replace(/\s+/g, '_')}.md`;
 
-    const commandMarkdown = generateCommandMarkdownContent(command, parentName);
+    const commandMarkdown = generateCommandMarkdownContent(command, programOptions, parentName);
     writeMarkdownFile(fileName, commandMarkdown);
 
     return {
@@ -92,7 +92,7 @@ function generateIndexContent(globalOptions: readonly commander.Option[], allCom
     return indexContent;
 }
 
-export function generateDocumentation(): void {
+export function generateDocumentation(program: commander.Command): void {
     if (!fs.existsSync(DOCS_DIR)) {
         fs.mkdirSync(DOCS_DIR, { recursive: true });
     }
@@ -100,7 +100,7 @@ export function generateDocumentation(): void {
     const allCommands: any[] = [];
 
     program.commands.forEach(command => {
-        const commandData = generateCommandMarkdown(command, '');
+        const commandData = generateCommandMarkdown(command, program.options, '');
 
         allCommands.push({
             name: commandData.name,
@@ -114,12 +114,10 @@ export function generateDocumentation(): void {
         });
 
         commandData.subcommands.forEach(sub => {
-            generateCommandMarkdown(sub, commandData.name);
+            generateCommandMarkdown(sub, program.options, commandData.name);
         });
     });
 
     const indexContent = generateIndexContent(program.options, allCommands);
     writeMarkdownFile('index.md', indexContent);
 }
-
-generateDocumentation();
