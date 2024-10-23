@@ -202,7 +202,7 @@ jobs:
       - name: Sign images
         id: sign_images
         if: ${{ steps.image_manifest_metadata.outputs.inso_image_sha != '' }}
-        uses: Kong/public-shared-actions/security-actions/sign-docker-image@2f02738ecb1670f01391162e43fe3f5d4e7942a1 # v2.2.2
+        uses: Kong/public-shared-actions/security-actions/sign-docker-image@28d20a1f492927f35b00b317acd78f669c45f88b # v2.7.3
         with:
           image_digest: ${{ steps.image_manifest_metadata.outputs.inso_image_sha }}
           tags: ${{ steps.inso_docker_meta.outputs.tags }}
