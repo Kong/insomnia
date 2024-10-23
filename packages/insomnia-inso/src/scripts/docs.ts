@@ -13,54 +13,39 @@ function writeMarkdownFile(fileName: string, content: string): void {
 }
 
 function generateOptionsMarkdown(options: readonly commander.Option[], title: string): string {
-    if (options.length === 0) {
-        return '';
-    }
+    return options.length ? `## ${title}
 
-    return `
-## ${title}
-
-${options.map(option => `- \`${option.flags}\`: ${option.description}\n`).join('')}`;
+${options.map(option => `- \`${option.flags}\`: ${option.description}
+`).join('')}
+` : '';
 }
 
 function generateSubcommandsMarkdown(commandName: string, subcommands: { name: string; description: string }[]): string {
-    if (subcommands.length === 0) {
-        return '';
-    }
+    return subcommands.length ? `## Subcommands
 
-    return `
-## Subcommands
-
-${subcommands.map(sub => `- [\`${commandName} ${sub.name}\`](/insomnia-inso/${commandName.replace(/\s+/g, '_')}_${sub.name.replace(/\s+/g, '_')}/): ${sub.description}`).join('\n')}`;
-}
-
-function generateCommandMarkdownContent(command: commander.Command, programOptions: readonly commander.Option[], parentName?: string): string {
-    const commandName = parentName ? `${parentName} ${command.name()}` : command.name();
-    const usage = command.usage() || '[options]';
-
-    let commandMarkdown = `# ${commandName}\n\n`;
-    commandMarkdown += `## Command Description\n\n${command.description()}\n\n`;
-    commandMarkdown += `## Syntax\n\n\`${commandName} ${usage}\`\n`;
-
-    if (command.options.length > 0) {
-        commandMarkdown += generateOptionsMarkdown(command.options, 'Local Flags');
-    }
-
-    commandMarkdown += generateOptionsMarkdown(programOptions, 'Global Flags');
-    commandMarkdown += generateSubcommandsMarkdown(commandName, command.commands.map(sub => ({
-        name: sub.name(),
-        description: sub.description() || 'No description available',
-    })));
-
-    return commandMarkdown;
+${subcommands.map(sub => `- [\`${commandName} ${sub.name}\`](/insomnia-inso/${commandName.replace(/\s+/g, '_')}_${sub.name.replace(/\s+/g, '_')}/): ${sub.description}
+`).join('')}
+` : '';
 }
 
 export function generateCommandMarkdown(command: commander.Command, programOptions: readonly commander.Option[], parentName?: string): { name: string; fileName: string; description: string; subcommands: readonly commander.Command[] } {
     const commandName = parentName ? `${parentName} ${command.name()}` : command.name();
     const fileName = `${commandName.replace(/\s+/g, '_')}.md`;
 
-    const commandMarkdown = generateCommandMarkdownContent(command, programOptions, parentName);
-    writeMarkdownFile(fileName, commandMarkdown);
+    writeMarkdownFile(fileName, `# ${commandName}
+
+## Command Description
+
+${command.description()}
+
+## Syntax
+
+\`${commandName} ${command.usage() || '[options]'}\`
+
+${command.options.length > 0 ? generateOptionsMarkdown(command.options, 'Local Flags') : ''}${generateOptionsMarkdown(programOptions, 'Global Flags')}${generateSubcommandsMarkdown(commandName, command.commands.map(sub => ({
+    name: sub.name(),
+    description: sub.description() || 'No description available',
+})))}`);
 
     return {
         name: commandName,
@@ -100,7 +85,8 @@ export function generateDocumentation(program: commander.Command): void {
 ${generateOptionsMarkdown(program.options, 'Global Flags')}
 ## Commands
 
-${allCommands.map(({ name, description, fileName }) => `- [\`${name}\`](/insomnia-inso/${fileName.replace('.md', '')}/): ${description}`).join('\n')}
-${allCommands.map(({ name, subcommands }) => generateSubcommandsMarkdown(name, subcommands)).join('\n')}
-`);
+${allCommands.map(({ name, description, fileName }) => `- [\`${name}\`](/insomnia-inso/${fileName.replace('.md', '')}/): ${description}
+`).join('')}
+${allCommands.map(({ name, subcommands }) => `${generateSubcommandsMarkdown(name, subcommands)}
+`).join('')}`);
 }
