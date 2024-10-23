@@ -618,7 +618,10 @@ export const cloneGitRepoAction: ActionFunction = async ({
     });
 
     // Init VCS
-    const { credentials, uri } = gitRepository;
+    const { credentials, uri, author } = gitRepository;
+
+    // Configure basic info
+
     if (gitRepository.needsFullClone) {
       await GitVCS.initFromClone({
         repoId: gitRepository._id,
@@ -642,6 +645,9 @@ export const cloneGitRepoAction: ActionFunction = async ({
         gitCredentials: credentials,
       });
     }
+
+    await GitVCS.setAuthor(author.name, author.email);
+    await GitVCS.addRemote(uri);
   }
 
   // Flush DB changes

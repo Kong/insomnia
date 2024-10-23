@@ -46,11 +46,6 @@ describe('Git-VCS', () => {
         'path': '.insomnia/foo.txt',
         'status': [0, 2, 0],
         },
-        {
-          'name': '',
-          'path': 'other.txt',
-          'status': [0, 2, 0],
-        },
       ]);
 
       const fooStatus = status.unstaged.find(f => f.path.includes(fooTxt));
@@ -66,11 +61,6 @@ describe('Git-VCS', () => {
         {
           'name': '',
           'path': '.insomnia/bar.txt',
-          'status': [0, 2, 0],
-        },
-        {
-          'name': '',
-          'path': 'other.txt',
           'status': [0, 2, 0],
         },
       ]);
@@ -106,11 +96,6 @@ describe('Git-VCS', () => {
           'name': '',
           'path': '.insomnia/foo.txt',
           'status': [0, 2, 0],
-          },
-          {
-            'name': '',
-            'path': 'other.txt',
-            'status': [0, 2, 0],
           },
         ],
       });
@@ -166,15 +151,6 @@ describe('Git-VCS', () => {
             0,
           ],
         },
-        {
-          'name': '',
-          'path': 'other.txt',
-          'status': [
-            0,
-            2,
-            0,
-          ],
-        },
       ]);
 
       await GitVCS.commit('First commit!');
@@ -186,15 +162,6 @@ describe('Git-VCS', () => {
         {
         'name': '',
         'path': '.insomnia/bar.txt',
-          'status': [
-            0,
-            2,
-            0,
-          ],
-        },
-        {
-          'name': '',
-          'path': 'other.txt',
           'status': [
             0,
             2,
@@ -285,7 +252,6 @@ First commit!
       const originalContent = 'content';
       const fsClient = MemClient.createClient();
       await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
-      await fsClient.promises.writeFile(fooTxt, originalContent);
       await fsClient.promises.mkdir(folder);
       await fsClient.promises.writeFile(folderBarTxt, originalContent);
 
@@ -300,17 +266,15 @@ First commit!
 
       const status = await GitVCS.status();
 
-      const fooStatus = status.unstaged.find(s => s.path.includes(fooTxt));
       const folderStatus = status.unstaged.find(s => s.path.includes(folder));
 
-      if (!fooStatus || !folderStatus) {
+      if (!folderStatus) {
         throw new Error('c');
       }
 
-      await GitVCS.stageChanges([fooStatus, folderStatus]);
+      await GitVCS.stageChanges([folderStatus]);
       await GitVCS.commit('First commit!');
       // Change the file
-      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, fooTxt), 'changedContent');
       await fsClient.promises.writeFile(folderBarTxt, 'changedContent');
 
       const status2 = await GitVCS.status();
@@ -322,11 +286,6 @@ First commit!
             'name': '',
             'path': '.insomnia/folder/bar.txt',
             'status': [1, 2, 1],
-          },
-          {
-            'name': '',
-            'path': '.insomnia/foo.txt',
-            'status': [0, 2, 0],
           },
         ],
       });
@@ -341,7 +300,6 @@ First commit!
         unstaged: [],
       });
       // Expect original doc to have reverted
-      expect((await fsClient.promises.readFile(fooTxt)).toString()).toBe(originalContent);
       expect((await fsClient.promises.readFile(folderBarTxt)).toString()).toBe(originalContent);
     });
 

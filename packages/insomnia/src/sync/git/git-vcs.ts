@@ -407,10 +407,12 @@ export class GitVCS {
         git.STAGE(),
       ],
       map: async function map(filepath, [head, workdir, stage]) {
+        const isInsomniaFile = filepath.startsWith(GIT_INSOMNIA_DIR_NAME) || filepath === '.';
+
         if (await git.isIgnored({
           ...baseOpts,
           filepath,
-        })) {
+        }) || !isInsomniaFile) {
           return null;
         }
         const [headType, workdirType, stageType] = await Promise.all([
@@ -772,17 +774,7 @@ export class GitVCS {
 
   async unstageChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
     for (const change of changes) {
-      await git.remove({ ...this._baseOpts, filepath: change.path });
-
-      // If the file was deleted in stage, we need to restore it
-      if (change.status[2] === 0) {
-        await git.checkout({
-          ...this._baseOpts,
-          ref: await this.getCurrentBranch(),
-          force: true,
-          filepaths: [change.path],
-        });
-      }
+      await git.resetIndex({ ...this._baseOpts, filepath: change.path });
     }
   }
 
