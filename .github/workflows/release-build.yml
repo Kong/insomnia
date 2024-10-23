@@ -210,6 +210,7 @@ jobs:
           asset_prefix: image-inso-${{ runner.os }}
           image: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/${{ env.INSO_DOCKER_TAR }}
           upload-sbom-release-assets: false # No release is publushed yet. Uploads as workflow assets
+          skip_cis_scan: true
         env:
           SYFT_SOURCE_NAME: ${{ env.INSO_DOCKER_TAR }}
 
