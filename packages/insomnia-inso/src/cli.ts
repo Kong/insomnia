@@ -26,6 +26,7 @@ import { loadEnvironment, promptEnvironment } from './db/models/environment';
 import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
 import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
+import { generateCommandMarkdown, generateDocumentation } from './scripts/docs';
 
 export interface GlobalOptions {
   ci: boolean;
@@ -709,6 +710,12 @@ Test results:`);
       logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`);
 
       program.parseAsync(scriptArgs).catch(logErrorAndExit);
+    });
+
+  program.command('generate-docs')
+    .action(() => {
+      generateDocumentation(program);
+      return process.exit(1);
     });
 
   program.parseAsync(args || process.argv).catch(logErrorAndExit);
