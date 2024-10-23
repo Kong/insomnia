@@ -33,7 +33,7 @@ import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
 import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
 import { logTestResult, logTestResultSummary, reporterTypes, type TestReporter } from './reporter';
-import { generateCommandMarkdown, generateDocumentation } from './scripts/docs';
+import { generateDocumentation } from './scripts/docs';
 
 export interface GlobalOptions {
   ci: boolean;

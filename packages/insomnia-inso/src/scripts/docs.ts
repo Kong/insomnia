@@ -5,7 +5,7 @@ import fs from 'fs';
 
 import { version } from '../../package.json';
 
-const DOCS_DIR = path.join(__dirname, `../../../../reference/insomnia-inso/${version}`);
+const DOCS_DIR = path.join(__dirname, `../reference/insomnia-inso/${version}`);
 
 function writeMarkdownFile(fileName: string, content: string): void {
     const outputPath = path.join(DOCS_DIR, fileName);
@@ -17,8 +17,10 @@ function generateOptionsMarkdown(options: readonly commander.Option[], title: st
         return '';
     }
 
-    const optionList = options.map(option => `- \`${option.flags}\`: ${option.description}\n`).join('');
-    return `\n## ${title}\n\n${optionList}`;
+    return `
+## ${title}
+
+${options.map(option => `- \`${option.flags}\`: ${option.description}\n`).join('')}`;
 }
 
 function generateSubcommandsMarkdown(commandName: string, subcommands: { name: string; description: string }[]): string {
@@ -26,13 +28,10 @@ function generateSubcommandsMarkdown(commandName: string, subcommands: { name: s
         return '';
     }
 
-    let subcommandsMarkdown = '\n## Subcommands\n\n';
-    subcommands.forEach(sub => {
-        const subCommandFileName = `${commandName.replace(/\s+/g, '_')}_${sub.name.replace(/\s+/g, '_')}.md`;
-        subcommandsMarkdown += `- [\`${commandName} ${sub.name}\`](${generateFileURL(subCommandFileName)}): ${sub.description}\n`;
-    });
+    return `
+## Subcommands
 
-    return subcommandsMarkdown;
+${subcommands.map(sub => `- [\`${commandName} ${sub.name}\`](/insomnia-inso/${commandName.replace(/\s+/g, '_')}_${sub.name.replace(/\s+/g, '_')}/): ${sub.description}`).join('\n')}`;
 }
 
 function generateCommandMarkdownContent(command: commander.Command, programOptions: readonly commander.Option[], parentName?: string): string {
@@ -71,27 +70,6 @@ export function generateCommandMarkdown(command: commander.Command, programOptio
     };
 }
 
-function generateFileURL(fileName: string): string {
-    return `/insomnia-inso/${fileName.replace('.md', '')}/`;
-}
-
-function generateIndexContent(globalOptions: readonly commander.Option[], allCommands: { name: string; description: string; fileName: string; subcommands: any[] }[]): string {
-    let indexContent = '# CLI Documentation \n';
-
-    indexContent += generateOptionsMarkdown(globalOptions, 'Global Flags');
-
-    indexContent += '\n## Commands\n\n';
-    allCommands.forEach(({ name, description, fileName }) => {
-        indexContent += `- [\`${name}\`](${generateFileURL(fileName)}): ${description}\n`;
-    });
-
-    allCommands.forEach(({ name, subcommands }) => {
-        indexContent += generateSubcommandsMarkdown(name, subcommands);
-    });
-
-    return indexContent;
-}
-
 export function generateDocumentation(program: commander.Command): void {
     if (!fs.existsSync(DOCS_DIR)) {
         fs.mkdirSync(DOCS_DIR, { recursive: true });
@@ -118,6 +96,11 @@ export function generateDocumentation(program: commander.Command): void {
         });
     });
 
-    const indexContent = generateIndexContent(program.options, allCommands);
-    writeMarkdownFile('index.md', indexContent);
+    writeMarkdownFile('index.md', `# CLI Documentation 
+${generateOptionsMarkdown(program.options, 'Global Flags')}
+## Commands
+
+${allCommands.map(({ name, description, fileName }) => `- [\`${name}\`](/insomnia-inso/${fileName.replace('.md', '')}/): ${description}`).join('\n')}
+${allCommands.map(({ name, subcommands }) => generateSubcommandsMarkdown(name, subcommands)).join('\n')}
+`);
 }
