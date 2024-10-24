@@ -72,4 +72,6 @@ export const environmentModelSchema: Schema<Environment> = {
   ...baseModelSchema,
   ...toSchema(environment.init()),
   type: () => environment.type,
+  environmentType: () => undefined,
+  kvPairData: () => undefined,
 };

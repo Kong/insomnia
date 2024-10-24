@@ -11,6 +11,7 @@ import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
+import { EnvironmentType } from '../../models/environment';
 import { getById, update } from '../../models/helpers/request-operations';
 import type { MockServer } from '../../models/mock-server';
 import { isRemoteProject, type Project } from '../../models/project';
@@ -1140,7 +1141,7 @@ export const createEnvironmentAction: ActionFunction = async ({
   const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
-  const { isPrivate } = await request.json();
+  const { isPrivate, environmentType = EnvironmentType.KVPAIR } = await request.json();
 
   const baseEnvironment = await models.environment.getByParentId(workspaceId);
 
@@ -1148,6 +1149,7 @@ export const createEnvironmentAction: ActionFunction = async ({
 
   const environment = await models.environment.create({
     parentId: baseEnvironment._id,
+    environmentType,
     isPrivate,
   });
 

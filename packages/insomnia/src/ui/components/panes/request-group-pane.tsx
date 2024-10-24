@@ -1,7 +1,8 @@
 import React, { type FC, useRef, useState } from 'react';
-import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
+import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router-dom';
 
+import { type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair } from '../../../models/environment';
 import type { Settings } from '../../../models/settings';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
@@ -10,6 +11,8 @@ import type { RequestGroupLoaderData } from '../../routes/request-group';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { EnvironmentEditor, type EnvironmentEditorHandle } from '../editors/environment-editor';
+import { EnvironmentKVEditor } from '../editors/environment-key-value-editor/key-value-editor';
+import { handleToggleEnvironmentType } from '../editors/environment-utils';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestScriptEditor } from '../editors/request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
@@ -43,6 +46,17 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
       } catch (err) {
         console.warn('Failed to update environment', err);
       }
+    }
+  };
+
+  const handleKVPairChange = (kvPairData: EnvironmentKvPairData[]) => {
+    if (activeRequestGroup) {
+      const environmentData = getDataFromKVPair(kvPairData);
+      patchGroup(activeRequestGroup._id, {
+        environment: environmentData.data,
+        environmentPropertyOrder: environmentData.dataPropertyOrder,
+        kvPairData,
+      });
     }
   };
 
@@ -179,20 +193,59 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
             </TabPanel>
           </Tabs>
         </TabPanel>
-        <TabPanel className='w-full flex-1 overflow-y-auto ' id='environment'>
+        <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='environment'>
+          <div className='flex items-center justify-between gap-2 w-full overflow-hidden'>
+            <Heading className='flex items-center gap-2 text-lg py-2 px-4 overflow-hidden h-[--line-height-sm]'>
+              <ToggleButton
+                onChange={isSelected => {
+                  if (activeRequestGroup) {
+                    const toggleSwitchEnvironmentType = (newEnvironmentType: EnvironmentType, kvPairData: EnvironmentKvPairData[]) => {
+                      patchGroup(activeRequestGroup._id, {
+                        environmentType: newEnvironmentType,
+                        kvPairData: kvPairData,
+                      });
+                    };
+                    const { environment, environmentPropertyOrder, kvPairData } = activeRequestGroup;
+                    const isValidJSON = !!environmentEditorRef.current?.isValid();
+                    handleToggleEnvironmentType(isSelected, { data: environment, dataPropertyOrder: environmentPropertyOrder, kvPairData }, isValidJSON, toggleSwitchEnvironmentType);
+                  }
+                }}
+                isSelected={activeRequestGroup?.environmentType !== EnvironmentType.KVPAIR}
+                className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start ml-2 pl-2 py-1 h-full rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
+              >
+                {({ isSelected }) => (
+                  <>
+                    <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
+                    <span>{
+                      isSelected ? 'Table Edit' : 'Raw Edit'
+                    }</span>
+                  </>
+                )}
+              </ToggleButton>
+            </Heading>
+          </div>
           <ErrorBoundary
             key={uniqueKey}
             errorClassName="font-error pad text-center"
           >
-            <EnvironmentEditor
-              ref={environmentEditorRef}
-              key={activeRequestGroup ? activeRequestGroup._id : 'n/a'}
-              environmentInfo={{
-                object: activeRequestGroup ? activeRequestGroup.environment : {},
-                propertyOrder: activeRequestGroup && activeRequestGroup.environmentPropertyOrder,
-              }}
-              onBlur={saveChanges}
-            />
+            <div className='h-[calc(100%-var(--line-height-md))] flex flex-col'>
+              {activeRequestGroup && activeRequestGroup.environmentType === EnvironmentType.KVPAIR ?
+                <EnvironmentKVEditor
+                  key={activeRequestGroup ? activeRequestGroup._id : 'n/a'}
+                  data={activeRequestGroup?.kvPairData || []}
+                  onChange={handleKVPairChange}
+                /> :
+                <EnvironmentEditor
+                  ref={environmentEditorRef}
+                  key={activeRequestGroup ? activeRequestGroup._id : 'n/a'}
+                  environmentInfo={{
+                    object: activeRequestGroup ? activeRequestGroup.environment : {},
+                    propertyOrder: activeRequestGroup && activeRequestGroup.environmentPropertyOrder,
+                  }}
+                  onBlur={saveChanges}
+                />
+              }
+            </div>
           </ErrorBoundary>
         </TabPanel>
         <TabPanel className='w-full flex-1 overflow-y-auto' id='docs'>

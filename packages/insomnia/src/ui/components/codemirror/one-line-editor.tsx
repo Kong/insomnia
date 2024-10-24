@@ -2,7 +2,7 @@ import './base-imports';
 
 import classnames from 'classnames';
 import clone from 'clone';
-import CodeMirror, { type EditorConfiguration } from 'codemirror';
+import CodeMirror, { type EditorConfiguration, type EditorEventMap } from 'codemirror';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import { useMount, useUnmount } from 'react-use';
 
@@ -28,8 +28,13 @@ export interface OneLineEditorProps {
   type?: string;
   onPaste?: (text: string) => void;
   onBlur?: (e: FocusEvent) => void;
+  eventListeners?: EditorEventListener<keyof EditorEventMap>[];
 }
 
+export interface EditorEventListener<T extends keyof EditorEventMap> {
+  eventName: T;
+  handler: EditorEventMap[T];
+};
 export interface OneLineEditorHandle {
   selectAll: () => void;
   focusEnd: () => void;
@@ -45,6 +50,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   type,
   onPaste,
   onBlur,
+  eventListeners,
 }, ref) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
@@ -172,7 +178,12 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         onKeyDown(event, doc.getValue());
       }
     });
-
+    // extra event listeners for editor
+    if (Array.isArray(eventListeners) && eventListeners.length > 0) {
+      eventListeners.forEach(({ eventName, handler }) => {
+        codeMirror.current?.on(eventName, handler);
+      });
+    }
     codeMirror.current.on('blur', () => codeMirror.current?.getTextArea().parentElement?.removeAttribute('data-focused'));
     codeMirror.current.on('focus', () => codeMirror.current?.getTextArea().parentElement?.setAttribute('data-focused', 'on'));
     codeMirror.current.on('keyHandled', (_: CodeMirror.Editor, _keyName: string, event: Event) => event.stopPropagation());
@@ -181,7 +192,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     codeMirror.current.on('copy', preventDefault);
     codeMirror.current.on('cut', preventDefault);
     codeMirror.current.on('dragstart', preventDefault);
-    codeMirror.current.setCursor({ line: -1, ch: -1 });
 
     // Actually set the value
     codeMirror.current?.setValue(defaultValue || '');
@@ -193,9 +203,10 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         handleRender,
         handleGetRenderContext,
         settings.showVariableSourceAndValue,
+        id,
       );
     }
-  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, type]);
+  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, type, eventListeners, id]);
 
   const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();

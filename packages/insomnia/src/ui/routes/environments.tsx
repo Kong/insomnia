@@ -1,17 +1,19 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { useEffect, useRef, useState } from 'react';
-import { Breadcrumb, Breadcrumbs, Button, DropIndicator, GridList, GridListItem, Heading, Label, Menu, MenuItem, MenuTrigger, Popover, Text, useDragAndDrop } from 'react-aria-components';
+import React, { Fragment, useEffect, useRef, useState } from 'react';
+import { Breadcrumb, Breadcrumbs, Button, DropIndicator, GridList, GridListItem, Heading, Label, Menu, MenuItem, MenuTrigger, Popover, Text, ToggleButton, useDragAndDrop } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { NavLink, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { debounce } from '../../common/misc';
-import type { Environment } from '../../models/environment';
+import { type Environment, type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair } from '../../models/environment';
 import { isRemoteProject } from '../../models/project';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { EditableInput } from '../components/editable-input';
 import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from '../components/editors/environment-editor';
+import { EnvironmentKVEditor } from '../components/editors/environment-key-value-editor/key-value-editor';
+import { handleToggleEnvironmentType } from '../components/editors/environment-utils';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showAlert } from '../components/modals';
@@ -148,6 +150,24 @@ const Environments = () => {
       });
     }
   }, 500);
+
+  const handleKVPairChange = (kvPairData: EnvironmentKvPairData[]) => {
+    if (selectedEnvironment) {
+      const environmentData = getDataFromKVPair(kvPairData);
+      updateEnvironmentFetcher.submit(JSON.stringify({
+        patch: {
+          data: environmentData.data,
+          dataPropertyOrder: environmentData.dataPropertyOrder,
+          kvPairData,
+        },
+        environmentId: selectedEnvironment._id,
+      }), {
+        method: 'post',
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
+        encType: 'application/json',
+      });
+    }
+  };
 
   const environmentsDragAndDrop = useDragAndDrop({
     getItems: keys => [...keys].map(key => ({ 'text/plain': key.toString() })),
@@ -414,7 +434,7 @@ const Environments = () => {
               />
             </Heading>
             {selectedEnvironment && selectedEnvironment.parentId !== workspaceId && (
-              <Label className='mr-2 flex-shrink-0 flex items-center gap-2 py-1 px-2 bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'>
+              <Label className='mr-2 flex-shrink-0 flex ml-auto items-center gap-2 py-1 px-2 bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'>
                 <span>Color:</span>
                 <input
                   onChange={e => {
@@ -435,8 +455,41 @@ const Environments = () => {
                 />
               </Label>
             )}
+            {selectedEnvironment && (
+              <ToggleButton
+                onChange={isSelected => {
+                  const toggleSwitchEnvironmentType = (newEnvironmentType: EnvironmentType, kvPairData: EnvironmentKvPairData[]) => {
+                    updateEnvironmentFetcher.submit(JSON.stringify({
+                      patch: {
+                        environmentType: newEnvironmentType,
+                        kvPairData: kvPairData,
+                      },
+                      environmentId: selectedEnvironment._id,
+                    }), {
+                      method: 'post',
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
+                      encType: 'application/json',
+                    });
+                  };
+                  const isValidJSON = !!environmentEditorRef.current?.isValid();
+                  handleToggleEnvironmentType(isSelected, selectedEnvironment, isValidJSON, toggleSwitchEnvironmentType);
+                }}
+                isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
+                className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
+              >
+                {({ isSelected }) => (
+                  <Fragment>
+                    <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
+                    <span>{
+                      isSelected ? 'Table Edit' : 'Raw Edit'
+                    }</span>
+                  </Fragment>
+                )}
+              </ToggleButton>
+            )}
           </div>
-          {selectedEnvironment && (
+          {/* legacy JSON environment do not have environmentType property*/}
+          {selectedEnvironment && (selectedEnvironment.environmentType === EnvironmentType.JSON || !selectedEnvironment.environmentType) &&
             <EnvironmentEditor
               ref={environmentEditorRef}
               key={selectedEnvironment._id}
@@ -446,8 +499,14 @@ const Environments = () => {
                 propertyOrder: selectedEnvironment.dataPropertyOrder,
               }}
             />
-
-          )}
+          }
+          {selectedEnvironment && selectedEnvironment.environmentType === EnvironmentType.KVPAIR &&
+            <EnvironmentKVEditor
+              key={selectedEnvironment._id}
+              data={selectedEnvironment.kvPairData || []}
+              onChange={handleKVPairChange}
+            />
+          }
         </div>
       </Panel>
     </PanelGroup>

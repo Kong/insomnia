@@ -1,17 +1,19 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { useMemo, useRef, useState } from 'react';
-import { Button, Dialog, DropIndicator, GridList, GridListItem, Heading, Label, Menu, MenuItem, MenuTrigger, Modal, ModalOverlay, Popover, Text, useDragAndDrop } from 'react-aria-components';
+import React, { Fragment, useMemo, useRef, useState } from 'react';
+import { Button, Dialog, DropIndicator, GridList, GridListItem, Heading, Label, Menu, MenuItem, MenuTrigger, Modal, ModalOverlay, Popover, Text, ToggleButton, useDragAndDrop } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
 import { debounce } from '../../../common/misc';
-import type { Environment } from '../../../models/environment';
+import { type Environment, type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair } from '../../../models/environment';
 import { isRemoteProject } from '../../../models/project';
 import { responseTagRegex } from '../../../templating/utils';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { EditableInput } from '../editable-input';
 import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from '../editors/environment-editor';
+import { EnvironmentKVEditor } from '../editors/environment-key-value-editor/key-value-editor';
+import { handleToggleEnvironmentType } from '../editors/environment-utils';
 import { Icon } from '../icon';
 import { showAlert } from '.';
 
@@ -154,6 +156,23 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
     }
   }, 500);
 
+  const handleKVPairChange = (kvPairData: EnvironmentKvPairData[]) => {
+    if (selectedEnvironment) {
+      const environmentData = getDataFromKVPair(kvPairData);
+      updateEnvironmentFetcher.submit(JSON.stringify({
+        patch: {
+          data: environmentData.data,
+          dataPropertyOrder: environmentData.dataPropertyOrder,
+          kvPairData,
+        },
+        environmentId: selectedEnvironment._id,
+      }), {
+        method: 'post',
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
+        encType: 'application/json',
+      });
+    }
+  };
   const environmentsDragAndDrop = useDragAndDrop({
     getItems: keys => [...keys].map(key => ({ 'text/plain': key.toString() })),
     onReorder(e) {
@@ -375,7 +394,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                   }}
                 </GridList>
                 <div className='flex-1 flex flex-col divide-solid divide-y divide-[--hl-md] overflow-hidden'>
-                  <div className='flex items-center justify-between gap-2 w-full overflow-hidden'>
+                  <div className='flex items-center justify-between gap-2 w-full px-[--padding-sm] overflow-hidden'>
                     <Heading className='flex items-center gap-2 text-lg py-2 px-4 overflow-hidden'>
                       <Icon style={{ color: selectedEnvironment?.color || '' }} className='w-4' icon={selectedEnvironment?.isPrivate ? 'lock' : isUsingGitSync ? ['fab', 'git-alt'] : isUsingInsomniaCloudSync ? 'globe-americas' : 'file-arrow-down'} />
                       <EditableInput
@@ -398,7 +417,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                       />
                     </Heading>
                     {selectedEnvironment && selectedEnvironment.parentId !== workspaceId && (
-                      <Label className='mr-2 flex-shrink-0 flex items-center gap-2 py-1 px-2 bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'>
+                      <Label className='mr-2 ml-auto flex-shrink-0 flex items-center gap-2 py-1 px-2 bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'>
                         <span>Color:</span>
                         <input
                           onChange={e => {
@@ -419,8 +438,41 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                         />
                       </Label>
                     )}
+                    {selectedEnvironment && (
+                      <ToggleButton
+                        onChange={isSelected => {
+                          const toggleSwitchEnvironmentType = (newEnvironmentType: EnvironmentType, kvPairData: EnvironmentKvPairData[]) => {
+                            updateEnvironmentFetcher.submit(JSON.stringify({
+                              patch: {
+                                environmentType: newEnvironmentType,
+                                kvPairData: kvPairData,
+                              },
+                              environmentId: selectedEnvironment._id,
+                            }), {
+                              method: 'post',
+                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
+                              encType: 'application/json',
+                            });
+                          };
+                          const isValidJSON = !!environmentEditorRef.current?.isValid();
+                          handleToggleEnvironmentType(isSelected, selectedEnvironment, isValidJSON, toggleSwitchEnvironmentType);
+                        }}
+                        isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
+                        className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
+                      >
+                        {({ isSelected }) => (
+                          <Fragment>
+                            <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
+                            <span>{
+                              isSelected ? 'Table Edit' : 'Raw Edit'
+                            }</span>
+                          </Fragment>
+                        )}
+                      </ToggleButton>
+                    )}
                   </div>
-                  {selectedEnvironment && (
+                  {/* legacy JSON environment do not have environmentType property*/}
+                  {selectedEnvironment && (selectedEnvironment.environmentType === EnvironmentType.JSON || !selectedEnvironment.environmentType) && (
                     <EnvironmentEditor
                       ref={environmentEditorRef}
                       key={selectedEnvironment._id}
@@ -431,6 +483,13 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                       }}
                     />
                   )}
+                  {selectedEnvironment && selectedEnvironment.environmentType === EnvironmentType.KVPAIR &&
+                    <EnvironmentKVEditor
+                      key={selectedEnvironment._id}
+                      data={selectedEnvironment.kvPairData || []}
+                      onChange={handleKVPairChange}
+                    />
+                  }
                 </div>
               </div>
               <div className='flex items-center gap-2 justify-between'>
