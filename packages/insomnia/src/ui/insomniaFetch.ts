@@ -11,17 +11,8 @@ interface FetchConfig {
   retries?: number;
   origin?: string;
   headers?: Record<string, string>;
-  onlyResolveOnSuccess?: boolean;
   timeout?: number;
-}
-
-export class ResponseFailError extends Error {
-  constructor(msg: string, response: Response) {
-    super(msg);
-    this.response = response;
-  }
-  response;
-  name = 'ResponseFailError';
+  onlyResolveOnSuccess?: boolean;
 }
 
 // Adds headers, retries and opens deep links returned from the api
@@ -33,8 +24,8 @@ export async function insomniaFetch<T = void>({
   organizationId,
   origin,
   headers,
-  onlyResolveOnSuccess = false,
-  timeout = INSOMNIA_FETCH_TIME_OUT,
+  timeout,
+  onlyResolveOnSuccess,
 }: FetchConfig): Promise<T> {
   const config: RequestInit = {
     method,
@@ -49,7 +40,7 @@ export async function insomniaFetch<T = void>({
       ...(PLAYWRIGHT ? { 'X-Mockbin-Test': 'true' } : {}),
     },
     ...(data ? { body: JSON.stringify(data) } : {}),
-    signal: AbortSignal.timeout(timeout),
+    signal: AbortSignal.timeout(timeout || INSOMNIA_FETCH_TIME_OUT),
   };
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
@@ -61,27 +52,26 @@ export async function insomniaFetch<T = void>({
     if (uri) {
       window.main.openDeepLink(uri);
     }
-    const isJson =
-      response.headers.get('content-type')?.includes('application/json') ||
-      path.match(/\.json$/);
-    if (onlyResolveOnSuccess && !response.ok) {
-      let errMsg = '';
-      if (isJson) {
-        try {
-          const json = await response.json();
-          if (typeof json?.message === 'string') {
-            errMsg = json.message;
-          }
-        } catch (err) {}
+    const contentType = response.headers.get('content-type');
+    const isJson = contentType?.includes('application/json') || path.match(/\.json$/);
+
+    // assume the backend is sending us a meaningful error message
+    if (isJson && !response.ok && onlyResolveOnSuccess) {
+      try {
+        const json = await response.json();
+        throw ({
+          message: json?.message || '',
+          error: json?.error || '',
+        });
+      } catch (err) {
+        throw err;
       }
-      throw new ResponseFailError(errMsg, response);
     }
     return isJson ? response.json() : response.text();
   } catch (err) {
     if (err.name === 'AbortError') {
       throw new Error('insomniaFetch timed out');
-    } else {
-      throw err;
     }
+    throw err;
   }
 }
