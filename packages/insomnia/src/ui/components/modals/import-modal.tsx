@@ -410,6 +410,7 @@ export const ImportModal: FC<ImportModalProps> = ({
             disabled={importErrors.length > 0}
             onSubmit={e => {
               e.preventDefault();
+              // file://./../../routes/import.tsx#importResourcesAction
               importFetcher.submit(e.currentTarget, {
                 method: 'post',
                 action: '/import/resources',
@@ -428,6 +429,7 @@ export const ImportModal: FC<ImportModalProps> = ({
             errors={scanResourcesFetcher.data?.errors}
             onSubmit={e => {
               e.preventDefault();
+              // file://./../../routes/import.tsx#scanForResourcesAction
               scanResourcesFetcher.submit(e.currentTarget, {
                 method: 'post',
                 action: '/import/scan',
