@@ -1,6 +1,8 @@
 import { stat } from 'fs/promises';
 import { CaCertificate } from 'insomnia/src/models/ca-certificate';
 import { ClientCertificate } from 'insomnia/src/models/client-certificate';
+import { CookieJar } from 'insomnia/src/models/cookie-jar';
+import { Settings } from 'insomnia/src/models/settings';
 
 import { logger } from '../cli';
 import gitAdapter from './adapters/git-adapter';
@@ -26,7 +28,9 @@ export interface Database {
   UnitTestSuite: UnitTestSuite[];
   UnitTest: UnitTest[];
   ClientCertificate: ClientCertificate[];
-  caCertificate: CaCertificate[];
+  CaCertificate: CaCertificate[];
+  CookieJar: CookieJar[];
+  Settings: Settings[];
 }
 
 export const emptyDb = (): Database => ({
@@ -39,7 +43,9 @@ export const emptyDb = (): Database => ({
   UnitTest: [],
   UnitTestSuite: [],
   ClientCertificate: [],
-  caCertificate: [],
+  CaCertificate: [],
+  CookieJar: [],
+  Settings: [],
 });
 
 export type DbAdapter = (
