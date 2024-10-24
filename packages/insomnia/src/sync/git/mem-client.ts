@@ -33,6 +33,9 @@ interface FSDir {
 
 type FSEntry = FSDir | FSFile | FSLink;
 
+/**
+ * In-memory file system client
+ */
 export class MemClient {
   __fs: FSEntry;
   __ino: 0;

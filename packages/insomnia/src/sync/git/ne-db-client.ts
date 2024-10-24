@@ -12,6 +12,11 @@ import parseGitPath from './parse-git-path';
 import Stat from './stat';
 import { SystemError } from './system-error';
 
+/**
+ * A fs client to access workspace data stored in NeDB as files.
+ * Used by isomorphic-git
+ * https://isomorphic-git.org/docs/en/fs#implementing-your-own-fs
+ */
 export class NeDBClient {
   _workspaceId: string;
   _projectId: string;
@@ -138,6 +143,7 @@ export class NeDBClient {
     if (root === null && id === null && type === null) {
       otherFolders = [GIT_INSOMNIA_DIR_NAME];
     } else if (id === null && type === null) {
+      // TODO: It doesn't scale if we add another model which can be sync in the future
       otherFolders = [
         models.workspace.type,
         models.environment.type,
