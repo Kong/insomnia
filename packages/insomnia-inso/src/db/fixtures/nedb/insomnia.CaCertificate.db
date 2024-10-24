@@ -1,0 +1,1 @@
+{"_id":"crt_c8325243678d49e19d7282f4c0f156d8","type":"CaCertificate","parentId":"wrk_0b96eff84c1c4eaa9c6e67ad74bbc85b","modified":1729664881251,"created":1729664881251,"disabled":false,"path":"packages/insomnia-inso/src/db/fixtures/certs/fake_ca.pem","isPrivate":false}

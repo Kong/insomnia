@@ -126,6 +126,16 @@ describe('inso dev bundle', () => {
       expect(result.stdout).toContain('expecting to see:file_value0');
       expect(result.stdout).toContain('expecting to see:file_value1');
     });
+
+    it('send request with client cert and key', async () => {
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withCertAndCA" --verbose "Insomnia Designer"';
+      const result = await runCliFromRoot(input);
+      if (result.code !== 0) {
+        console.log(result);
+      }
+      expect(result.stdout).toContain('Adding SSL PEM certificate');
+      expect(result.stdout).toContain('Adding SSL KEY certificate');
+    });
   });
 });
 
