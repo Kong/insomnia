@@ -24,6 +24,12 @@ export default defineConfig(({ mode }) => {
         strict: true,
       },
     },
+    resolve: {
+      alias: {
+        // For now, manually resolve to the proper import since Insomnia doesn't use "moduleResolution": "Bundler"
+        '@kong/spec-renderer-dev/web-component': path.join(__dirname, '../../node_modules/@kong/spec-renderer-dev/dist/kong-spec-renderer.web-component.es.js'),
+      },
+    },
     build: {
       sourcemap: true,
       outDir: path.join(__dirname, 'build'),
