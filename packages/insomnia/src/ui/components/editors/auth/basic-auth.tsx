@@ -8,7 +8,7 @@ export const BasicAuth: FC<{ disabled?: boolean }> = ({ disabled = false }) => (
   <AuthTableBody>
     <AuthToggleRow label="Enabled" property="disabled" invert disabled={disabled} />
     <AuthInputRow label="Username" property="username" disabled={disabled} />
-    <AuthInputRow label="Password" property="password" disabled={disabled} />
+    <AuthInputRow label="Password" property="password" mask disabled={disabled} />
     <AuthToggleRow
       label="Use ISO 8859-1"
       help="Check this to use ISO-8859-1 encoding instead of default UTF-8"
