@@ -1,3 +1,4 @@
+import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML } from '../../../common/constants';
 import type { AuthTypeOAuth2 } from '../../../models/request';
 import { forceBracketNotation } from '../../../templating/utils';
 import { fakerFunctions } from '../../../ui/components/templating/faker-functions';
@@ -230,6 +231,20 @@ export class ImportPostman {
     const preRequestScript = this.importPreRequestScript(event);
     const afterResponseScript = this.importAfterResponseScript(event);
 
+    // Add Content-Type header for raw body because we don't add it automatically when sending the request
+    const body = this.importBody(request.body);
+    if (
+      request.body?.mode === 'raw' &&
+      !headers.find(({ key }) => key === 'Content-Type') &&
+      typeof body === 'object' &&
+      body?.mimeType
+    ) {
+      headers.push({
+        key: 'Content-Type',
+        value: body.mimeType,
+      });
+    }
+
     return {
       parentId,
       _id: `__REQ_${requestCount++}__`,
@@ -245,7 +260,7 @@ export class ImportPostman {
         ...(typeof disabled !== 'undefined' ? { disabled } : {}),
         ...(typeof description !== 'undefined' ? { description } : {}),
       })),
-      body: this.importBody(request.body, headers.find(({ key }) => key === 'Content-Type')?.value),
+      body,
       authentication,
       preRequestScript,
       afterResponseScript,
@@ -331,14 +346,23 @@ export class ImportPostman {
     return '';
   };
 
-  importBody = (body: Body, contentType? : string): ImportRequest['body'] => {
+  importBody = (body: Body): ImportRequest['body'] => {
     if (!body) {
       return {};
     }
 
     switch (body.mode) {
       case 'raw':
-        return this.importBodyRaw(body.raw, contentType);
+        let language: string | undefined = undefined;
+        if (
+          typeof body.options?.raw === 'object' &&
+          body.options?.raw &&
+          'language' in body.options?.raw &&
+          typeof body.options.raw.language === 'string'
+        ) {
+          language = body.options.raw.language;
+        }
+        return this.importBodyRaw(body.raw, language);
 
       case 'urlencoded':
         return this.importBodyFormUrlEncoded(body.urlencoded);
@@ -415,9 +439,27 @@ export class ImportPostman {
     };
   };
 
-  importBodyRaw = (raw?: string, mimeType = '') => {
+  importBodyRaw = (raw?: string, language?: string) => {
     if (raw === '') {
       return {};
+    }
+
+    let mimeType;
+    switch (language) {
+      case 'xml':
+        mimeType = CONTENT_TYPE_XML;
+        break;
+      case 'text':
+        mimeType = CONTENT_TYPE_PLAINTEXT;
+        break;
+      case 'json':
+        mimeType = CONTENT_TYPE_JSON;
+        break;
+      // TODO: we do not support these types yet
+      case 'javascript':
+      case 'html':
+      default:
+        mimeType = CONTENT_TYPE_PLAINTEXT;
     }
 
     return {
