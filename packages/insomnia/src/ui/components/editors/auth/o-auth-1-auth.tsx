@@ -45,9 +45,9 @@ export const OAuth1Auth: FC = () => {
     <AuthTableBody>
       <AuthToggleRow label="Enabled" property="disabled" invert />
       <AuthInputRow label='Consumer Key' property='consumerKey' />
-      <AuthInputRow label='Consumer Secret' property='consumerSecret' />
+      <AuthInputRow label='Consumer Secret' property='consumerSecret' mask />
       <AuthInputRow label='Token Key' property='tokenKey' />
-      <AuthInputRow label='Token Secret' property='tokenSecret' />
+      <AuthInputRow label='Token Secret' property='tokenSecret' mask />
       <AuthSelectRow label='Signature Method' property='signatureMethod' options={signatureMethodOptions} />
       {signatureMethod === SIGNATURE_METHOD_RSA_SHA1 && <AuthPrivateKeyRow label='Private Key' property='privateKey' />}
       <AuthInputRow label='Callback URL' property='callback' />

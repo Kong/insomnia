@@ -13,7 +13,7 @@ export const HawkAuth: FC = () => (
   <AuthTableBody>
     <AuthToggleRow label="Enabled" property="disabled" invert />
     <AuthInputRow label='Auth Id' property='id' />
-    <AuthInputRow label='Auth Key' property='key' />
+    <AuthInputRow label='Auth Key' property='key' mask />
     <AuthSelectRow
       label='Algorithm'
       property='algorithm'

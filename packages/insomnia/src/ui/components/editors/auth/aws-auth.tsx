@@ -14,6 +14,7 @@ export const AWSAuth: FC = () => (
     <AuthInputRow
       label="Secret Access Key"
       property="secretAccessKey"
+      mask={true}
     />
     <AuthInputRow
       label="Region"
