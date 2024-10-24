@@ -128,7 +128,7 @@ describe('inso dev bundle', () => {
     });
 
     it('send request with client cert and key', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withCertAndCA" "Insomnia Designer"';
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withCertAndCA" --verbose "Insomnia Designer"';
       const result = await runCliFromRoot(input);
       if (result.code !== 0) {
         console.log(result);
