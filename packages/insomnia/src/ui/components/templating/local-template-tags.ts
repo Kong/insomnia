@@ -18,6 +18,38 @@ import { fakerFunctions } from './faker-functions';
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
   {
     templateTag: {
+      name: 'externalVault',
+      displayName: 'External Vault',
+      description: 'Link secret from external vault',
+      // external vault is an enterprise feature
+      isEnterprise: true,
+      args: [
+        {
+          displayName: 'type',
+          type: 'enum',
+          options: [
+            { displayName: 'AWS Secrets Manager', value: 'aws' },
+            { displayName: 'Azure Key Vault', value: 'azure' },
+          ],
+        },
+        {
+          displayName: 'Secret Name',
+          type: 'string',
+          placeholder: 'External vault secret name',
+        },
+        {
+          displayName: 'Path',
+          type: 'string',
+          placeholder: 'External vault secret path',
+        },
+      ],
+      run(_context) {
+
+      },
+    },
+  },
+  {
+    templateTag: {
       name: 'faker',
       displayName: 'Faker',
       description: 'generate random outputs',

@@ -4,6 +4,7 @@ import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { type EditorConfiguration, type EditorEventMap } from 'codemirror';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
+import { useRouteLoaderData } from 'react-router-dom';
 import { useMount, useUnmount } from 'react-use';
 
 import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
@@ -13,9 +14,11 @@ import { getTagDefinitions } from '../../../templating/index';
 import { extractNunjucksTagFromCoords, type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '../../hooks/use-editor-refresh';
+import type { OrganizationLoaderData } from '../../routes/organization';
 import { useRootLoaderData } from '../../routes/root';
 import { showModal } from '../modals';
 import { NunjucksModal } from '../modals/nunjucks-modal';
+import { UpgradeModal } from '../modals/upgrade-modal';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 export interface OneLineEditorProps {
   defaultValue: string;
@@ -57,6 +60,8 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   const {
     settings,
   } = useRootLoaderData();
+  const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  const isEnterprisePlan = currentPlan?.type.includes('enterprise');
   const { handleRender, handleGetRenderContext } = useNunjucks();
 
   const initEditor = useCallback(() => {
@@ -257,7 +262,15 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   }, [onChange]);
 
   useEffect(() => {
-    const unsubscribe = window.main.on('nunjucks-context-menu-command', (_, { key, tag, nunjucksTag }) => {
+    const unsubscribe = window.main.on('nunjucks-context-menu-command', (_, { key, tag, nunjucksTag, isEnterprise, displayName }) => {
+      if (isEnterprise && !isEnterprisePlan) {
+        // show modal if current user is not an enteprise user and the command is an enterprise feature
+        showModal(UpgradeModal, {
+          newPlan: 'enterprise',
+          featureName: displayName,
+        });
+        return;
+      }
       if (id === key) {
         if (nunjucksTag) {
           const { type, template, range } = nunjucksTag as nunjucksTagContextMenuOptions;
@@ -288,7 +301,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     return () => {
       unsubscribe();
     };
-  }, [id]);
+  }, [id, isEnterprisePlan]);
 
   useImperativeHandle(ref, () => ({
     selectAll: () => codeMirror.current?.setSelection({ line: 0, ch: 0 }, { line: codeMirror.current.lineCount(), ch: 0 }),

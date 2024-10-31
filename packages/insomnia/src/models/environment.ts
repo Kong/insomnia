@@ -9,6 +9,7 @@ import { type BaseModel } from './index';
 export const name = 'Environment';
 export const type = 'Environment';
 export const prefix = 'env';
+export const vaultEnvironmentPrefix = 'vault:';
 export const canDuplicate = true;
 export const canSync = true;
 // for those keys do not need to add in model init method
@@ -35,7 +36,8 @@ export enum EnvironmentType {
 };
 export enum EnvironmentKvPairDataType {
   JSON = 'json',
-  STRING = 'str'
+  STRING = 'str',
+  SECRET = 'secret',
 }
 export interface EnvironmentKvPairData {
   id: string;
@@ -51,14 +53,23 @@ export type UserUploadEnvironment = Pick<Environment, 'data' | 'dataPropertyOrde
 export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: Record<string, any> | null) {
   const ordered = orderedJSON.order(data, dataPropertyOrder, JSON_ORDER_SEPARATOR);
   const kvPair: EnvironmentKvPairData[] = [];
+  const keyNameRegex = new RegExp(`^${vaultEnvironmentPrefix}:`);
+  const getItemType = (isSecretItem: boolean, isValidObject: boolean): EnvironmentKvPairDataType => {
+    if (isSecretItem) {
+      return EnvironmentKvPairDataType.SECRET;
+    }
+    return isValidObject ? EnvironmentKvPairDataType.JSON : EnvironmentKvPairDataType.STRING;
+  };
   Object.keys(ordered).forEach(key => {
+    const isSecretItem = key.startsWith(vaultEnvironmentPrefix);
     const val = ordered[key];
-    const isValObject = val && typeof val === 'object' && data !== null;
+    const isValidObject = val && typeof val === 'object' && data !== null;
     kvPair.push({
       id: generateId('envPair'),
-      name: key,
-      value: isValObject ? JSON.stringify(val) : String(val),
-      type: isValObject ? EnvironmentKvPairDataType.JSON : EnvironmentKvPairDataType.STRING,
+      // remove "vault:" prefix when convert to key-value pair
+      name: key.replace(keyNameRegex, ''),
+      value: isValidObject ? JSON.stringify(val) : String(val),
+      type: getItemType(isSecretItem, isValidObject),
       enabled: true,
     });
   });
@@ -70,7 +81,9 @@ export function getDataFromKVPair(kvPair: EnvironmentKvPairData[]) {
   kvPair.forEach(pair => {
     const { name, value, type, enabled } = pair;
     if (enabled) {
-      data[name] = type === EnvironmentKvPairDataType.JSON ? JSON.parse(value) : value;
+      // add "vault:" prefix to secret item key
+      const pairName = type === EnvironmentKvPairDataType.SECRET ? `${vaultEnvironmentPrefix}${name}` : name;
+      data[pairName] = type === EnvironmentKvPairDataType.JSON ? JSON.parse(value) : value;
     }
   });
   return {

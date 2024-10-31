@@ -231,6 +231,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
                 <EnvironmentKVEditor
                   key={activeRequestGroup ? activeRequestGroup._id : 'n/a'}
                   data={activeRequestGroup?.kvPairData || []}
+                  isPrivate={false}
                   onChange={handleKVPairChange}
                 /> :
                 <EnvironmentEditor

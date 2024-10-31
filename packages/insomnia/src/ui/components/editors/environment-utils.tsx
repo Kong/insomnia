@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { type Environment, type EnvironmentKvPairData, EnvironmentType, getKVPairFromData } from '../../../models/environment';
+import { type Environment, type EnvironmentKvPairData, EnvironmentType, getKVPairFromData, vaultEnvironmentPrefix } from '../../../models/environment';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
@@ -17,6 +17,10 @@ export const ensureKeyIsValid = (key: string, isRoot: boolean): string | null =>
 
   if (key === NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME && isRoot) {
     return `"${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}" is a reserved key`;
+  }
+
+  if (key.startsWith(vaultEnvironmentPrefix) && isRoot) {
+    return `${key} cannot begin with "${vaultEnvironmentPrefix}"`;
   }
 
   return null;
