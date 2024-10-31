@@ -17,6 +17,7 @@ import { ResponseDebugModal } from '../components/modals/response-debug-modal';
 import { SelectModal } from '../components/modals/select-modal';
 import { SettingsModal } from '../components/modals/settings-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
+import { UpgradeModal } from '../components/modals/upgrade-modal';
 import { WrapperModal } from '../components/modals/wrapper-modal';
 import type { WorkspaceLoaderData } from './workspace';
 
@@ -78,6 +79,10 @@ const Modals: FC = () => {
 
         <SyncMergeModal
           ref={instance => registerModal(instance, 'SyncMergeModal')}
+        />
+
+        <UpgradeModal
+          ref={instance => registerModal(instance, 'UpgradeModal')}
         />
 
       </ErrorBoundary>
