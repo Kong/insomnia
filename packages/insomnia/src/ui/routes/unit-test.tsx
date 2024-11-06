@@ -36,6 +36,7 @@ import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { showModal } from '../../ui/components/modals';
 import { AskModal } from '../../ui/components/modals/ask-modal';
 import { invariant } from '../../utils/invariant';
+import { DocumentTab } from '../components/document-tab';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { EditableInput } from '../components/editable-input';
@@ -47,6 +48,9 @@ import { showPrompt } from '../components/modals';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
+import { OrganizationTabList } from '../components/tabs/tabList';
+import { useInsomniaTab } from '../hooks/tab';
+import { useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 import { TestRunStatus } from './test-results';
 import TestSuiteRoute from './test-suite';
@@ -93,10 +97,15 @@ const TestRoute: FC = () => {
 
   const {
     activeProject,
+    activeWorkspace,
     activeCookieJar,
     caCertificate,
     clientCertificates,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+
+  const { unitTestSuite } = useRouteLoaderData(
+    ':testSuiteId'
+  ) as { unitTestSuite: UnitTestSuite } || {};
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
@@ -283,6 +292,19 @@ const TestRoute: FC = () => {
     }
   }, [settings.forceVerticalLayout, direction]);
 
+  const { organizations } = useOrganizationLoaderData();
+  const activeOrganization = organizations.find(o => o.id === organizationId);
+
+  useInsomniaTab({
+    organizationId,
+    projectId,
+    workspaceId,
+    activeProject,
+    activeWorkspace,
+    activeOrganization,
+    unitTestSuite,
+  });
+
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel id="sidebar" className='sidebar theme--sidebar divide-solid divide-y divide-[--hl-md]' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
@@ -304,6 +326,11 @@ const TestRoute: FC = () => {
                   <WorkspaceDropdown />
                 </Breadcrumb>
               </Breadcrumbs>
+              <DocumentTab
+                organizationId={organizationId}
+                projectId={projectId}
+                workspaceId={workspaceId}
+              />
               <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
                 <div className="flex w-full items-center gap-2 justify-between">
                   <EnvironmentPicker
@@ -450,6 +477,7 @@ const TestRoute: FC = () => {
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
       <Panel>
+        <OrganizationTabList />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" minSize={10} className='pane-one theme--pane relative overflow-hidden'>
             <Routes>
