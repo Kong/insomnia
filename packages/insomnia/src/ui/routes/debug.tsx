@@ -68,10 +68,11 @@ import {
   isWebSocketRequestId,
   type WebSocketRequest,
 } from '../../models/websocket-request';
-import { isScratchpad } from '../../models/workspace';
+import { isDesign, isScratchpad } from '../../models/workspace';
 import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '../../utils/grpc';
 import { invariant } from '../../utils/invariant';
 import { DropdownHint } from '../components/base/dropdown/dropdown-hint';
+import { DocumentTab } from '../components/document-tab';
 import { RequestActionsDropdown } from '../components/dropdowns/request-actions-dropdown';
 import { RequestGroupActionsDropdown } from '../components/dropdowns/request-group-actions-dropdown';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
@@ -98,9 +99,11 @@ import { PlaceholderRequestPane } from '../components/panes/placeholder-request-
 import { RequestGroupPane } from '../components/panes/request-group-pane';
 import { RequestPane } from '../components/panes/request-pane';
 import { ResponsePane } from '../components/panes/response-pane';
+import { OrganizationTabList } from '../components/tabs/tabList';
 import { getMethodShortHand } from '../components/tags/method-tag';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
+import { useInsomniaTab } from '../hooks/tab';
 import { useExecutionState } from '../hooks/use-execution-state';
 import { useReadyState } from '../hooks/use-ready-state';
 import {
@@ -110,11 +113,13 @@ import {
   useRequestMetaPatcher,
   useRequestPatcher,
 } from '../hooks/use-request';
+import { useOrganizationLoaderData } from './organization';
 import type {
   GrpcRequestLoaderData,
   RequestLoaderData,
   WebSocketRequestLoaderData,
 } from './request';
+import type { RequestGroupLoaderData } from './request-group';
 import { useRootLoaderData } from './root';
 import Runner from './runner';
 import type { Child, WorkspaceLoaderData } from './workspace';
@@ -214,6 +219,12 @@ export const Debug: FC = () => {
     requestId?: string;
     requestGroupId?: string;
   };
+
+  const { activeRequestGroup } = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData || {};
+
+  const { organizations } = useOrganizationLoaderData();
+  const activeOrganization = organizations.find(o => o.id === organizationId);
+
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(
     grpcRequests.map(r => ({
       requestId: r._id,
@@ -744,13 +755,24 @@ export const Debug: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useInsomniaTab({
+    organizationId,
+    projectId,
+    workspaceId,
+    activeProject,
+    activeWorkspace,
+    activeRequest,
+    activeRequestGroup,
+    activeOrganization,
+  });
+
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={10} collapsible>
         <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
-          <div className="flex flex-col items-start">
-            <div className='flex w-full'>
-              <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 border-solid border-[--hl-md] border-b p-[--padding-sm] font-bold w-full'>
+          <div className="flex flex-col items-start divide-solid divide-y divide-[--hl-md]">
+            <div className='flex w-full h-[40px]'>
+              <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 px-[--padding-sm] font-bold w-full'>
                 <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                   <NavLink
                     data-testid="project"
@@ -776,6 +798,13 @@ export const Debug: FC = () => {
                 </Breadcrumb>
               </Breadcrumbs>
             </div>
+            {isDesign(activeWorkspace) && (
+              <DocumentTab
+                organizationId={organizationId}
+                projectId={projectId}
+                workspaceId={workspaceId}
+              />
+            )}
             <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
               <div className="flex w-full items-center gap-2 justify-between">
                 <EnvironmentPicker
@@ -1126,6 +1155,7 @@ export const Debug: FC = () => {
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
       <Panel>
+        <OrganizationTabList />
         <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
           <Routes>
             <Route

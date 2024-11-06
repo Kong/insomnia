@@ -17,11 +17,14 @@ import { handleToggleEnvironmentType } from '../components/editors/environment-u
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showAlert } from '../components/modals';
+import { OrganizationTabList } from '../components/tabs/tabList';
+import { useInsomniaTab } from '../hooks/tab';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
+import { useOrganizationLoaderData } from './organization';
 import type { WorkspaceLoaderData } from './workspace';
 
 const Environments = () => {
-  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const { organizationId = '', projectId = '', workspaceId = '' } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   const routeData = useRouteLoaderData(
     ':workspaceId'
   ) as WorkspaceLoaderData;
@@ -40,6 +43,7 @@ const Environments = () => {
     activeEnvironment,
     subEnvironments,
     activeWorkspaceMeta,
+    activeWorkspace,
   } = routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
   const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
@@ -256,6 +260,18 @@ const Environments = () => {
     sidebar_toggle: toggleSidebar,
   });
 
+  const { organizations } = useOrganizationLoaderData();
+  const activeOrganization = organizations.find(o => o.id === organizationId);
+
+  useInsomniaTab({
+    organizationId,
+    projectId,
+    workspaceId,
+    activeProject,
+    activeWorkspace,
+    activeOrganization,
+  });
+
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel id="sidebar" className='sidebar theme--sidebar flex flex-col justify-between overflow-hidden divide-solid divide-y divide-[--hl-md]' maxSize={40} minSize={10} collapsible>
@@ -410,6 +426,7 @@ const Environments = () => {
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
       <Panel id="pane-one" className='pane-one theme--pane'>
+        <OrganizationTabList />
         <div className='flex-1 flex flex-col h-full divide-solid divide-y divide-[--hl-md] overflow-hidden'>
           <div className='flex flex-shrink-0 basis-[--line-height-sm] items-center p-[--padding-sm] justify-between gap-2 w-full overflow-hidden'>
             <Heading className='flex flex-grow items-center gap-2 text-lg py-2 px-4 overflow-hidden'>
