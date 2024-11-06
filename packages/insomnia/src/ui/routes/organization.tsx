@@ -35,7 +35,7 @@ import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { findPersonalOrganization, isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, type Organization } from '../../models/organization';
 import { type Project, type as ProjectType } from '../../models/project';
-import { isDesign, isScratchpad } from '../../models/workspace';
+import { isScratchpad } from '../../models/workspace';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { insomniaFetch } from '../../ui/insomniaFetch';
@@ -519,7 +519,7 @@ const OrganizationRoute = () => {
     isScratchpad(workspaceData.activeWorkspace);
   const isScratchPadBannerVisible = !isScratchPadBannerDismissed && isScratchpadWorkspace;
   const untrackedProjectsFetcher = useFetcher<UntrackedProjectsLoaderData>();
-  const { organizationId, projectId, workspaceId } = useParams() as {
+  const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId?: string;
     workspaceId?: string;
