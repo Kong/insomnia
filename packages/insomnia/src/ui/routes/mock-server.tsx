@@ -191,7 +191,6 @@ const MockServerRoute = () => {
     activeProject,
     activeWorkspace,
     activeOrganization,
-    mockRouteId,
     activeMockRoute: mockRoutes.find(s => s._id === mockRouteId),
   });
 
