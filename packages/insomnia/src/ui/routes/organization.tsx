@@ -57,6 +57,7 @@ import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
 import { useAIContext } from '../context/app/ai-context';
 import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-stream-context';
+import { InsomniaTabProvider } from '../context/app/insomnia-tab-context';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
 import { syncProjects } from './project';
 import { useRootLoaderData } from './root';
@@ -603,41 +604,17 @@ const OrganizationRoute = () => {
 
   return (
     <InsomniaEventStreamProvider>
+      <InsomniaTabProvider>
       <div className="w-full h-full">
         <div className={`w-full h-full divide-x divide-solid divide-[--hl-md] ${isOrganizationSidebarOpen ? 'with-navbar' : ''} ${isScratchPadBannerVisible ? 'with-banner' : ''} grid-template-app-layout grid relative bg-[--color-bg]`}>
-          <header className="[grid-area:Header] grid grid-cols-3 items-center border-b border-solid border-[--hl-md]">
+            <header className="[grid-area:Header] grid grid-cols-2 items-center border-b border-solid border-[--hl-md]">
             <div className="flex items-center gap-2">
               <div className="flex shrink-0 w-[50px] justify-center py-2">
                 <InsomniaLogo loading={loadingAI} />
               </div>
               <CommandPalette />
               {!user ? <GitHubStarsButton /> : null}
-            </div>
-            <div className="flex place-content-stretch gap-2 flex-nowrap items-center justify-center">
-              {workspaceData && isDesign(workspaceData?.activeWorkspace) && (
-                <nav className="flex rounded-full justify-between content-evenly font-semibold bg-[--hl-xs] p-[--padding-xxs]">
-                  {[
-                    { id: 'spec', name: 'spec' },
-                    { name: 'collection', id: 'debug' },
-                    { id: 'test', name: 'tests' },
-                  ].map(item => (
-                    <NavLink
-                      key={item.id}
-                      to={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${item.id}`}
-                      className={({ isActive, isPending }) =>
-                        `${isActive
-                          ? 'text-[--color-font] bg-[--color-bg]'
-                          : ''
-                        } ${isPending ? 'animate-pulse' : ''} no-underline transition-colors text-center outline-none min-w-[4rem] uppercase text-[--color-font] text-xs px-[--padding-xs] py-[--padding-xxs] rounded-full`
-                      }
-                      data-testid={`workspace-${item.id}`}
-                    >
-                      {item.name}
-                    </NavLink>
-                  ))}
-                </nav>
-              )}
-            </div>
+              </div>
             <div className="flex gap-[--padding-sm] items-center justify-end p-2">
               {user ? (
                 <Fragment>
@@ -1085,6 +1062,7 @@ const OrganizationRoute = () => {
         </div>
         <Toast />
       </div>
+      </InsomniaTabProvider>
     </InsomniaEventStreamProvider>
   );
 };
