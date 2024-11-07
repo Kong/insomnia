@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { matchPath, useLocation } from 'react-router-dom';
 
+import { database } from '../../common/database';
 import type { GrpcRequest } from '../../models/grpc-request';
 import type { MockRoute } from '../../models/mock-route';
 import type { Organization } from '../../models/organization';
@@ -289,4 +290,9 @@ export const useInsomniaTab = ({
     }
   }, [addTab, appTabsRef, changeActiveTab, getCurrentTab, location.pathname, organizationId, packTabInfo]);
 
+  useEffect(() => {
+    database.onChange(async (e) => {
+      console.log('database change', e);
+    });
+  }, []);
 };
