@@ -78,6 +78,7 @@ import { SpectralRunner } from '../worker/spectral-run';
 import { useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 import type { WorkspaceLoaderData } from './workspace';
+import { INSOMNIA_TAB_HEIGHT } from '../constant';
 
 interface LoaderData {
   apiSpec: ApiSpec;
@@ -471,8 +472,7 @@ const Design: FC = () => {
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel id="sidebar" className='sidebar theme--sidebar' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
         <div className='flex h-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden'>
-          <div className="flex flex-col items-start">
-            <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 border-solid border-[--hl-md] border-b p-[--padding-sm] font-bold w-full'>
+          <Breadcrumbs className={`flex h-[${INSOMNIA_TAB_HEIGHT}] px-[--padding-sm] list-none items-center m-0 gap-2 font-bold w-full`}>
               <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                 <NavLink
                   data-testid="project"
@@ -514,8 +514,7 @@ const Design: FC = () => {
               >
                 <Icon icon="file-contract" className='w-5 flex-shrink-0' />
                 <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length > 0 ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})` : ''}</span>
-              </Button>
-            </div>
+            </Button>
           </div>
           <div className="flex flex-shrink-0 items-center gap-2 p-[--padding-sm]">
             <Heading className="text-[--hl] uppercase">Spec</Heading>

@@ -2,6 +2,7 @@ import React from 'react';
 import { GridList, type Key, type Selection } from 'react-aria-components';
 import { useNavigate } from 'react-router-dom';
 
+import { INSOMNIA_TAB_HEIGHT } from '../../constant';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { Icon } from '../icon';
 import { type BaseTab, InsomniaTab, TabEnum } from './tab';
@@ -57,7 +58,7 @@ export const OrganizationTabList = ({ showActiveStatus = true }) => {
         defaultSelectedKeys={['req_737492dce0c3460a8a55762e5d1bbd99']}
         selectionMode="single"
         selectionBehavior='replace'
-        className="flex h-[40px]"
+        className={`flex h-[${INSOMNIA_TAB_HEIGHT}] w-[calc(100%-50px)] overflow-x-scroll hide-scrollbars`}
         items={tabList}
       >
         {item => <InsomniaTab tab={item} />}
