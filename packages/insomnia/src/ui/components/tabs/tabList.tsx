@@ -35,7 +35,7 @@ export const OrganizationTabList = ({ showActiveStatus = true }) => {
   console.log('activeTabId', activeTabId);
   const navigate = useNavigate();
 
-  const { changeActiveTab, deleteTabById, deleteAllTabsUnderWorkspace, updateTabById } = useInsomniaTabContext();
+  const { changeActiveTab, deleteTabById, deleteAllTabsUnderWorkspace, deleteAllTabsUnderProject, updateTabById, updateProjectName, updateWorkspaceName } = useInsomniaTabContext();
 
   const handleSelectionChange = (keys: Selection) => {
     console.log('changeActiveTab');
@@ -63,11 +63,16 @@ export const OrganizationTabList = ({ showActiveStatus = true }) => {
       models.workspace.type,
       models.environment.type,
       models.mockRoute.type,
+      models.project.type,
     ];
     return list.includes(docType);
   };
 
   const handleDelete = useCallback((docId: string, docType: string) => {
+    if (docType === models.project.type) {
+      // delete all tabs of this project
+      deleteAllTabsUnderProject?.(docId);
+    }
     if (docType === models.workspace.type) {
       // delete all tabs of this workspace
       deleteAllTabsUnderWorkspace?.(docId);
@@ -75,11 +80,24 @@ export const OrganizationTabList = ({ showActiveStatus = true }) => {
       // delete tab by id
       deleteTabById(docId);
     }
-  }, [deleteAllTabsUnderWorkspace, deleteTabById]);
+  }, [deleteAllTabsUnderProject, deleteAllTabsUnderWorkspace, deleteTabById]);
 
-  const haneldUpdate = useCallback((docId: string, newName: string, method?: string, tag?: string) => {
-    updateTabById?.(docId, newName, method, tag);
-  }, [updateTabById]);
+  const handleUpdate = useCallback((doc: models.BaseModel) => {
+    // currently have 2 types of update, rename and change request method
+    if (doc.type === models.request.type) {
+      const tag = getMethodShortHand(doc as Request);
+      const method = (doc as Request).method;
+      updateTabById?.(doc._id, doc.name, method, tag);
+    } else if (doc.type === models.project.type) {
+      // update project name(for tooltip)
+      updateProjectName?.(doc._id, doc.name);
+    } else if (doc.type === models.workspace.type) {
+      // update workspace name(for tooltip)
+      updateWorkspaceName?.(doc._id, doc.name);
+    } else {
+      updateTabById?.(doc._id, doc.name);
+    }
+  }, [updateProjectName, updateTabById, updateWorkspaceName]);
 
   useEffect(() => {
     // sync tabList with database
@@ -88,19 +106,12 @@ export const OrganizationTabList = ({ showActiveStatus = true }) => {
       for (const change of changes) {
         const changeType = change[0];
         const doc = change[1];
-
+        debugger;
         if (needHandleChange(changeType, doc.type)) {
           if (changeType === 'remove') {
             handleDelete(doc._id, doc.type);
           } else if (changeType === 'update') {
-            // currently have 2 types of update, rename and change request method
-            if (doc.type === models.request.type) {
-              const tag = getMethodShortHand(doc as Request);
-              const method = (doc as Request).method;
-              haneldUpdate(doc._id, doc.name, method, tag);
-            } else {
-              haneldUpdate(doc._id, doc.name);
-            }
+            handleUpdate(doc);
           }
         }
       }
@@ -110,7 +121,7 @@ export const OrganizationTabList = ({ showActiveStatus = true }) => {
     return () => {
       database.offChange(callback);
     };
-  }, [deleteTabById, handleDelete, haneldUpdate]);
+  }, [deleteTabById, handleDelete, handleUpdate]);
 
   if (!tabList.length) {
     return null;
