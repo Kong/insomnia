@@ -5,7 +5,7 @@ import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
 
-export const enum TabEnum {
+export enum TabEnum {
   Request = 'request',
   Folder = 'folder',
   Env = 'environment',
@@ -25,14 +25,16 @@ export interface BaseTab {
   organizationId: string;
   projectId: string;
   workspaceId: string;
-  organizationName: string;
   projectName: string;
   workspaceName: string;
   id: string;
-  [key: string]: string;
+  // tag is used to display the request method in the tab
+  // method is used to display the tag color
+  tag?: string;
+  method?: string;
 };
 
-const REQUEST_TAG_MAP: Record<string, string> = {
+const REQUEST_METHOD_STYLE_MAP: Record<string, string> = {
   'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
   'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
   'GQL': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
@@ -83,7 +85,7 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
 
     if (type === TabEnum.Request || type === TabEnum.MockRoute) {
       return (
-        <span className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center ${REQUEST_TAG_MAP[tab.tag]}`}>{tab.tag}</span>
+        <span className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center ${REQUEST_METHOD_STYLE_MAP[tab?.method || tab?.tag || '']}`}>{tab.tag}</span>
       );
     }
 

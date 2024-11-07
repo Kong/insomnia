@@ -1,10 +1,8 @@
 import { useCallback, useEffect } from 'react';
 import { matchPath, useLocation } from 'react-router-dom';
 
-import { database } from '../../common/database';
 import type { GrpcRequest } from '../../models/grpc-request';
 import type { MockRoute } from '../../models/mock-route';
-import type { Organization } from '../../models/organization';
 import type { Project } from '../../models/project';
 import type { Request } from '../../models/request';
 import type { RequestGroup } from '../../models/request-group';
@@ -24,7 +22,6 @@ interface InsomniaTabProps {
   activeWorkspace: Workspace;
   activeRequest?: Request | GrpcRequest | WebSocketRequest;
   activeRequestGroup?: RequestGroup;
-  activeOrganization?: Organization;
   activeMockRoute?: MockRoute;
   unitTestSuite?: UnitTestSuite;
 }
@@ -37,7 +34,6 @@ export const useInsomniaTab = ({
   activeWorkspace,
   activeRequest,
   activeRequestGroup,
-  activeOrganization,
   activeMockRoute,
   unitTestSuite,
 }: InsomniaTabProps) => {
@@ -181,10 +177,10 @@ export const useInsomniaTab = ({
         projectId: projectId,
         workspaceId: workspaceId,
         id: getTabId(type),
-        tag: getRequestMethodShortHand(activeRequest),
-        organizationName: activeOrganization?.name || '',
         projectName: activeProject.name,
         workspaceName: activeWorkspace.name,
+        tag: getRequestMethodShortHand(activeRequest),
+        method: (activeRequest as Request)?.method || '',
       };
     }
 
@@ -197,10 +193,9 @@ export const useInsomniaTab = ({
         projectId: projectId,
         workspaceId: workspaceId,
         id: getTabId(type),
-        tag: getRequestMethodShortHand(activeRequest),
-        organizationName: activeOrganization?.name || '',
         projectName: activeProject.name,
         workspaceName: activeWorkspace.name,
+        tag: getRequestMethodShortHand(activeRequest),
       };
     }
 
@@ -213,7 +208,6 @@ export const useInsomniaTab = ({
         projectId: projectId,
         workspaceId: workspaceId,
         id: getTabId(type),
-        organizationName: activeOrganization?.name || '',
         projectName: activeProject.name,
         workspaceName: activeWorkspace.name,
       };
@@ -228,7 +222,6 @@ export const useInsomniaTab = ({
         projectId: projectId,
         workspaceId: workspaceId,
         id: getTabId(type),
-        organizationName: activeOrganization?.name || '',
         projectName: activeProject.name,
         workspaceName: activeWorkspace.name,
       };
@@ -243,10 +236,9 @@ export const useInsomniaTab = ({
         projectId: projectId,
         workspaceId: workspaceId,
         id: getTabId(type),
-        organizationName: activeOrganization?.name || '',
+        tag: formatMethodName(activeMockRoute?.method || ''),
         projectName: activeProject.name,
         workspaceName: activeWorkspace.name,
-        tag: formatMethodName(activeMockRoute?.method || ''),
       };
     }
 
@@ -259,14 +251,13 @@ export const useInsomniaTab = ({
         projectId: projectId,
         workspaceId: workspaceId,
         id: getTabId(type),
-        organizationName: activeOrganization?.name || '',
         projectName: activeProject.name,
         workspaceName: activeWorkspace.name,
       };
     }
 
     return;
-  }, [activeMockRoute?.method, activeMockRoute?.name, activeOrganization?.name, activeProject.name, activeRequest, activeWorkspace.name, generateTabUrl, getTabId, organizationId, projectId, unitTestSuite?.name, workspaceId]);
+  }, [activeMockRoute?.method, activeMockRoute?.name, activeProject.name, activeRequest, activeWorkspace.name, generateTabUrl, getTabId, organizationId, projectId, unitTestSuite?.name, workspaceId]);
 
   useEffect(() => {
     const type = getTabType(location.pathname);
@@ -289,10 +280,4 @@ export const useInsomniaTab = ({
       }
     }
   }, [addTab, appTabsRef, changeActiveTab, getCurrentTab, location.pathname, organizationId, packTabInfo]);
-
-  useEffect(() => {
-    database.onChange(async (e) => {
-      console.log('database change', e);
-    });
-  }, []);
 };

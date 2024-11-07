@@ -20,12 +20,11 @@ import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { SvgIcon } from '../components/svg-icon';
 import { OrganizationTabList } from '../components/tabs/tabList';
 import { formatMethodName } from '../components/tags/method-tag';
+import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useInsomniaTab } from '../hooks/tab';
 import { MockRouteResponse, MockRouteRoute, useMockRoutePatcher } from './mock-route';
-import { useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 import type { WorkspaceLoaderData } from './workspace';
-import { INSOMNIA_TAB_HEIGHT } from '../constant';
 export interface MockServerLoaderData {
   mockServerId: string;
   mockRoutes: MockRoute[];
@@ -182,16 +181,12 @@ const MockServerRoute = () => {
     }
   }, [settings.forceVerticalLayout, direction]);
 
-  const { organizations } = useOrganizationLoaderData();
-  const activeOrganization = organizations.find(o => o.id === organizationId);
-
   useInsomniaTab({
     organizationId,
     projectId,
     workspaceId,
-    activeProject,
     activeWorkspace,
-    activeOrganization,
+    activeProject,
     activeMockRoute: mockRoutes.find(s => s._id === mockRouteId),
   });
 
