@@ -18,6 +18,9 @@ interface ContextProps {
   addTab: (tab: BaseTab) => void;
   changeActiveTab: (id: string) => void;
   deleteAllTabsUnderWorkspace?: (workspaceId: string) => void;
+  deleteAllTabsUnderProject?: (projectId: string) => void;
+  updateProjectName?: (projectId: string, name: string) => void;
+  updateWorkspaceName?: (projectId: string, name: string) => void;
   updateTabById?: (tabId: string, name: string, method?: string, tag?: string) => void;
 }
 
@@ -122,6 +125,20 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     });
   }, [organizationId, updateInsomniaTabs]);
 
+  const deleteAllTabsUnderProject = useCallback((projectId: string) => {
+    const currentTabs = appTabsRef?.current?.[organizationId];
+    if (!currentTabs) {
+      return;
+    }
+    const newTabList = currentTabs.tabList.filter(tab => tab.projectId !== projectId);
+
+    updateInsomniaTabs({
+      organizationId,
+      tabList: newTabList,
+      activeTabId: '',
+    });
+  }, [organizationId, updateInsomniaTabs]);
+
   const updateTabById = useCallback((tabId: string, name: string, method: string = '', tag: string = '') => {
     const currentTabs = appTabsRef?.current?.[organizationId];
     if (!currentTabs) {
@@ -157,15 +174,61 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     });
   }, [organizationId, updateInsomniaTabs]);
 
+  const updateProjectName = useCallback((projectId: string, name: string) => {
+    const currentTabs = appTabsRef?.current?.[organizationId];
+
+    if (!currentTabs) {
+      return;
+    }
+    const newTabList = currentTabs.tabList.map(tab => {
+      if (tab.projectId === projectId) {
+        return {
+          ...tab,
+          projectName: name,
+        };
+      }
+      return tab;
+    });
+    updateInsomniaTabs({
+      organizationId,
+      tabList: newTabList,
+      activeTabId: currentTabs.activeTabId || '',
+    });
+  }, [organizationId, updateInsomniaTabs]);
+
+  const updateWorkspaceName = useCallback((workspaceId: string, name: string) => {
+    const currentTabs = appTabsRef?.current?.[organizationId];
+    if (!currentTabs) {
+      return;
+    }
+    const newTabList = currentTabs.tabList.map(tab => {
+      if (tab.workspaceId === workspaceId) {
+        return {
+          ...tab,
+          workspaceName: name,
+        };
+      }
+      return tab;
+    });
+    updateInsomniaTabs({
+      organizationId,
+      tabList: newTabList,
+      activeTabId: currentTabs.activeTabId || '',
+    });
+  }, [organizationId, updateInsomniaTabs]);
+
   return (
     <InsomniaTabContext.Provider
       value={{
         currentOrgTabs: appTabs?.[organizationId] || { tabList: [], activeTabId: '' },
         deleteTabById,
         deleteAllTabsUnderWorkspace,
+        deleteAllTabsUnderProject,
         addTab,
         updateTabById,
         changeActiveTab,
+        updateProjectName,
+        updateWorkspaceName,
         appTabsRef,
       }}
     >
