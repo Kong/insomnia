@@ -1,4 +1,4 @@
-import React, { createContext, type FC, type PropsWithChildren, useCallback, useContext, useEffect, useRef } from 'react';
+import React, { createContext, type FC, type PropsWithChildren, useCallback, useContext, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
 
@@ -17,6 +17,8 @@ interface ContextProps {
   deleteTabById: (id: string) => void;
   addTab: (tab: BaseTab) => void;
   changeActiveTab: (id: string) => void;
+  deleteAllTabsUnderWorkspace?: (workspaceId: string) => void;
+  updateTabById?: (tabId: string, name: string, method?: string, tag?: string) => void;
 }
 
 const InsomniaTabContext = createContext<ContextProps>({
@@ -64,6 +66,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [setAppTabs]);
 
   const addTab = useCallback((tab: BaseTab) => {
+    console.log('addTab');
     const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
 
     updateInsomniaTabs({
@@ -73,12 +76,8 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     });
   }, [organizationId, updateInsomniaTabs]);
 
-  useEffect(() => {
-    console.log('addTab change');
-  }, [addTab]);
-
   const deleteTabById = useCallback((id: string) => {
-    const currentTabs = appTabs?.[organizationId];
+    const currentTabs = appTabsRef?.current?.[organizationId];
     if (!currentTabs) {
       return;
     }
@@ -95,6 +94,9 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     }
 
     const index = currentTabs.tabList.findIndex(tab => tab.id === id);
+    if (index === -1) {
+      return;
+    }
     const newTabList = currentTabs.tabList.filter(tab => tab.id !== id);
     if (currentTabs.activeTabId === id) {
       navigate(newTabList[index - 1 < 0 ? 0 : index - 1]?.url || '');
@@ -104,7 +106,44 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       tabList: newTabList,
       activeTabId: currentTabs.activeTabId === id ? newTabList[index - 1 < 0 ? 0 : index - 1]?.id : currentTabs.activeTabId as string,
     });
-  }, [appTabs, navigate, organizationId, projectId, updateInsomniaTabs]);
+  }, [navigate, organizationId, projectId, updateInsomniaTabs]);
+
+  const deleteAllTabsUnderWorkspace = useCallback((workspaceId: string) => {
+    const currentTabs = appTabsRef?.current?.[organizationId];
+    if (!currentTabs) {
+      return;
+    }
+    const newTabList = currentTabs.tabList.filter(tab => tab.workspaceId !== workspaceId);
+
+    updateInsomniaTabs({
+      organizationId,
+      tabList: newTabList,
+      activeTabId: '',
+    });
+  }, [organizationId, updateInsomniaTabs]);
+
+  const updateTabById = useCallback((tabId: string, name: string, method: string = '', tag: string = '') => {
+    const currentTabs = appTabsRef?.current?.[organizationId];
+    if (!currentTabs) {
+      return;
+    }
+    const newTabList = currentTabs.tabList.map(tab => {
+      if (tab.id === tabId) {
+        return {
+          ...tab,
+          name,
+          tag,
+          method,
+        };
+      }
+      return tab;
+    });
+    updateInsomniaTabs({
+      organizationId,
+      tabList: newTabList,
+      activeTabId: currentTabs.activeTabId || '',
+    });
+  }, [organizationId, updateInsomniaTabs]);
 
   const changeActiveTab = useCallback((id: string) => {
     const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
@@ -123,7 +162,9 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       value={{
         currentOrgTabs: appTabs?.[organizationId] || { tabList: [], activeTabId: '' },
         deleteTabById,
+        deleteAllTabsUnderWorkspace,
         addTab,
+        updateTabById,
         changeActiveTab,
         appTabsRef,
       }}

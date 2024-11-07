@@ -49,13 +49,12 @@ import { CookiesModal } from '../components/modals/cookies-modal';
 import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '../components/tabs/tabList';
+import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useInsomniaTab } from '../hooks/tab';
-import { useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 import { TestRunStatus } from './test-results';
 import TestSuiteRoute from './test-suite';
 import type { WorkspaceLoaderData } from './workspace';
-import { INSOMNIA_TAB_HEIGHT } from '../constant';
 
 interface LoaderData {
   unitTestSuites: UnitTestSuite[];
@@ -293,17 +292,13 @@ const TestRoute: FC = () => {
     }
   }, [settings.forceVerticalLayout, direction]);
 
-  const { organizations } = useOrganizationLoaderData();
-  const activeOrganization = organizations.find(o => o.id === organizationId);
-
   useInsomniaTab({
     organizationId,
     projectId,
     workspaceId,
-    activeProject,
     activeWorkspace,
-    activeOrganization,
     unitTestSuite,
+    activeProject,
   });
 
   return (
