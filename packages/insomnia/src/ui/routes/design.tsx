@@ -68,6 +68,7 @@ import { CertificatesModal } from '../components/modals/workspace-certificates-m
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '../components/tabs/tabList';
 import { formatMethodName } from '../components/tags/method-tag';
+import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useAIContext } from '../context/app/ai-context';
 import { useInsomniaTab } from '../hooks/tab';
 import {
@@ -75,10 +76,8 @@ import {
   useGitVCSVersion,
 } from '../hooks/use-vcs-version';
 import { SpectralRunner } from '../worker/spectral-run';
-import { useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 import type { WorkspaceLoaderData } from './workspace';
-import { INSOMNIA_TAB_HEIGHT } from '../constant';
 
 interface LoaderData {
   apiSpec: ApiSpec;
@@ -456,16 +455,12 @@ const Design: FC = () => {
     }
   }, [settings.forceVerticalLayout, direction]);
 
-  const { organizations } = useOrganizationLoaderData();
-  const activeOrganization = organizations.find(o => o.id === organizationId);
-
   useInsomniaTab({
     organizationId,
     projectId,
     workspaceId,
-    activeProject,
     activeWorkspace,
-    activeOrganization,
+    activeProject,
   });
 
   return (
