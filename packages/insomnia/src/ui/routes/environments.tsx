@@ -22,6 +22,7 @@ import { useInsomniaTab } from '../hooks/tab';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
 import { useOrganizationLoaderData } from './organization';
 import type { WorkspaceLoaderData } from './workspace';
+import { INSOMNIA_TAB_HEIGHT } from '../constant';
 
 const Environments = () => {
   const { organizationId = '', projectId = '', workspaceId = '' } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
@@ -275,7 +276,7 @@ const Environments = () => {
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel id="sidebar" className='sidebar theme--sidebar flex flex-col justify-between overflow-hidden divide-solid divide-y divide-[--hl-md]' maxSize={40} minSize={10} collapsible>
-        <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 p-[--padding-sm] font-bold w-full'>
+        <Breadcrumbs className={`flex h-[${INSOMNIA_TAB_HEIGHT}] px-[--padding-sm] list-none items-center m-0 gap-2 font-bold w-full`}>
           <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
             <NavLink
               data-testid="project"
