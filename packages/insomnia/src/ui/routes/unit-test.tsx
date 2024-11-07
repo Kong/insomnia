@@ -55,6 +55,7 @@ import { useRootLoaderData } from './root';
 import { TestRunStatus } from './test-results';
 import TestSuiteRoute from './test-suite';
 import type { WorkspaceLoaderData } from './workspace';
+import { INSOMNIA_TAB_HEIGHT } from '../constant';
 
 interface LoaderData {
   unitTestSuites: UnitTestSuite[];
@@ -311,7 +312,7 @@ const TestRoute: FC = () => {
         <ErrorBoundary showAlert>
           <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
             <div className="flex flex-col items-start divide-solid divide-y divide-[--hl-md]">
-              <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 p-[--padding-sm] font-bold w-full'>
+              <Breadcrumbs className={`flex h-[${INSOMNIA_TAB_HEIGHT}] list-none items-center m-0 gap-2 px-[--padding-sm] font-bold w-full`}>
                 <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                   <NavLink
                     data-testid="project"

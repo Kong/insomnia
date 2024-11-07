@@ -103,6 +103,7 @@ import { OrganizationTabList } from '../components/tabs/tabList';
 import { getMethodShortHand } from '../components/tags/method-tag';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
+import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useInsomniaTab } from '../hooks/tab';
 import { useExecutionState } from '../hooks/use-execution-state';
 import { useReadyState } from '../hooks/use-ready-state';
@@ -771,7 +772,7 @@ export const Debug: FC = () => {
       <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={10} collapsible>
         <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
           <div className="flex flex-col items-start divide-solid divide-y divide-[--hl-md]">
-            <div className='flex w-full h-[40px]'>
+            <div className={`flex w-full h-[${INSOMNIA_TAB_HEIGHT}]`}>
               <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 px-[--padding-sm] font-bold w-full'>
                 <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                   <NavLink
