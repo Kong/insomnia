@@ -18,11 +18,10 @@ import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showAlert } from '../components/modals';
 import { OrganizationTabList } from '../components/tabs/tabList';
+import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useInsomniaTab } from '../hooks/tab';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
-import { useOrganizationLoaderData } from './organization';
 import type { WorkspaceLoaderData } from './workspace';
-import { INSOMNIA_TAB_HEIGHT } from '../constant';
 
 const Environments = () => {
   const { organizationId = '', projectId = '', workspaceId = '' } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
@@ -261,16 +260,12 @@ const Environments = () => {
     sidebar_toggle: toggleSidebar,
   });
 
-  const { organizations } = useOrganizationLoaderData();
-  const activeOrganization = organizations.find(o => o.id === organizationId);
-
   useInsomniaTab({
     organizationId,
     projectId,
     workspaceId,
-    activeProject,
     activeWorkspace,
-    activeOrganization,
+    activeProject,
   });
 
   return (
