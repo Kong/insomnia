@@ -28,7 +28,9 @@ export type HandleChannels =
   | 'webSocket.open'
   | 'webSocket.readyState'
   | 'writeFile'
-  | 'extractJsonFileFromPostmanDataDumpArchive';
+  | 'extractJsonFileFromPostmanDataDumpArchive'
+  | 'cloudService.authenticate'
+  | 'cloudService.getSecret';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
@@ -69,7 +71,9 @@ export type MainOnChannels =
   | 'addExecutionStep'
   | 'completeExecutionStep'
   | 'updateLatestStepName'
-  | 'startExecution';
+  | 'startExecution'
+  | 'cloudService.setCacheMaxAge'
+  | 'cloudService.clearCache';
 export type RendererOnChannels =
   'clear-all-models'
   | 'clear-model'

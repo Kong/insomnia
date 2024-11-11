@@ -1,6 +1,7 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 import _ from 'lodash';
 
+import type { BaseModel } from '../models';
 import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
 import objectPath from './third_party/objectPath';
 
@@ -15,12 +16,14 @@ export interface NunjucksParsedTagArg {
   displayName?: DisplayName;
   quotedBy?: '"' | "'";
   validate?: (value: any) => string;
+  modelFilter?: (model: BaseModel, tagArg: NunjucksParsedTagArg[]) => boolean;
   hide?: (arg0: NunjucksParsedTagArg[]) => boolean;
   model?: string;
   options?: PluginArgumentEnumOption[];
   itemTypes?: ('file' | 'directory')[];
   extensions?: string[];
   description?: string;
+  requireSubForm?: boolean;
 }
 
 export interface NunjucksActionTag {
