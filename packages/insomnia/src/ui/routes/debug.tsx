@@ -767,7 +767,7 @@ export const Debug: FC = () => {
       <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={10} collapsible>
         <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
           <div className="flex flex-col items-start divide-solid divide-y divide-[--hl-md]">
-            <div className={`flex w-full h-[${INSOMNIA_TAB_HEIGHT}]`}>
+            <div className={`flex w-full h-[${INSOMNIA_TAB_HEIGHT}px]`}>
               <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 px-[--padding-sm] font-bold w-full'>
                 <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                   <NavLink

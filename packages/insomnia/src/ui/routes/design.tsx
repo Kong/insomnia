@@ -467,7 +467,7 @@ const Design: FC = () => {
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel id="sidebar" className='sidebar theme--sidebar' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
         <div className='flex h-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden'>
-          <Breadcrumbs className={`flex h-[${INSOMNIA_TAB_HEIGHT}] px-[--padding-sm] list-none items-center m-0 gap-2 font-bold w-full`}>
+          <Breadcrumbs className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] px-[--padding-sm] list-none items-center m-0 gap-2 font-bold w-full`}>
               <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                 <NavLink
                   data-testid="project"
