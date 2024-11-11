@@ -194,7 +194,7 @@ const MockServerRoute = () => {
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel id="sidebar" className='sidebar theme--sidebar' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
       <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
-          <div className={`flex items-center gap-2 h-[${INSOMNIA_TAB_HEIGHT}] px-[--padding-sm]`}>
+          <div className={`flex items-center gap-2 h-[${INSOMNIA_TAB_HEIGHT}px] px-[--padding-sm]`}>
           <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 font-bold w-full'>
             <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
               <NavLink data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm" to={`/organization/${organizationId}/project/${projectId}`}>
