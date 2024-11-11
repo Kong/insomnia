@@ -75,7 +75,9 @@ export type MainOnChannels =
   | 'addExecutionStep'
   | 'completeExecutionStep'
   | 'updateLatestStepName'
-  | 'startExecution';
+  | 'startExecution'
+  | 'cloudService.setCacheMaxAge'
+  | 'cloudService.clearCache';
 export type RendererOnChannels =
   'clear-all-models'
   | 'clear-model'

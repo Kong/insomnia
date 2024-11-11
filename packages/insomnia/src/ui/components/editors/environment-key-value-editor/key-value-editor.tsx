@@ -234,7 +234,6 @@ export const EnvironmentKVEditor = ({ data, onChange, isPrivate = false }: Edito
           }
           {type === EnvironmentKvPairDataType.SECRET &&
             <PasswordInput
-              className='w-full h-full'
               value={value}
               itemId={id}
               enabled={enabled}
