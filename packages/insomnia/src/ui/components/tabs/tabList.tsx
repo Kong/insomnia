@@ -106,7 +106,6 @@ export const OrganizationTabList = ({ showActiveStatus = true }) => {
       for (const change of changes) {
         const changeType = change[0];
         const doc = change[1];
-        debugger;
         if (needHandleChange(changeType, doc.type)) {
           if (changeType === 'remove') {
             handleDelete(doc._id, doc.type);
@@ -128,7 +127,7 @@ export const OrganizationTabList = ({ showActiveStatus = true }) => {
   };
 
   return (
-    <div className='flex items-center border-b border-solid border-[--hl-sm]'>
+    <div className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] box-content border-b border-solid border-[--hl-sm]`}>
       <GridList
         aria-label="Insomnia Tabs"
         onSelectionChange={handleSelectionChange}
@@ -137,12 +136,15 @@ export const OrganizationTabList = ({ showActiveStatus = true }) => {
         defaultSelectedKeys={['req_737492dce0c3460a8a55762e5d1bbd99']}
         selectionMode="single"
         selectionBehavior='replace'
-        className={`flex h-[${INSOMNIA_TAB_HEIGHT}] max-w-[calc(100%-50px)] overflow-x-scroll hide-scrollbars`}
+        // Use +1 height to mask the wrapper border, and let the custom element in InsomniaTab act as the fake border.（we need different border for active tab）
+        className={`flex h-[${INSOMNIA_TAB_HEIGHT + 1}px] bg-[--color-bg] max-w-[calc(100%-50px)] overflow-x-scroll hide-scrollbars`}
         items={tabList}
       >
         {item => <InsomniaTab tab={item} />}
       </GridList>
-      <Icon icon="plus" className='ml-[15px] cursor-pointer' />
+      <div className='flex items-center'>
+        <Icon icon="plus" className='ml-[15px] cursor-pointer' />
+      </div>
     </div>
   );
 };
