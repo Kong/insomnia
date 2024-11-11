@@ -195,7 +195,6 @@ export const useInsomniaTab = ({
         id: getTabId(type),
         projectName: activeProject.name,
         workspaceName: activeWorkspace.name,
-        tag: getRequestMethodShortHand(activeRequest),
       };
     }
 
@@ -239,6 +238,7 @@ export const useInsomniaTab = ({
         tag: formatMethodName(activeMockRoute?.method || ''),
         projectName: activeProject.name,
         workspaceName: activeWorkspace.name,
+        method: activeMockRoute?.method || '',
       };
     }
 

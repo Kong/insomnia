@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import * as models from '../../../models/index';
+import type { MockRoute } from '../../../models/mock-route';
 import type { Request } from '../../../models/request';
 import { INSOMNIA_TAB_HEIGHT } from '../../constant';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { Icon } from '../icon';
-import { getMethodShortHand } from '../tags/method-tag';
+import { formatMethodName, getRequestMethodShortHand } from '../tags/method-tag';
 import { type BaseTab, InsomniaTab, TabEnum } from './tab';
 
 export interface OrganizationTabs {
@@ -84,9 +85,13 @@ export const OrganizationTabList = ({ showActiveStatus = true }) => {
 
   const handleUpdate = useCallback((doc: models.BaseModel) => {
     // currently have 2 types of update, rename and change request method
-    if (doc.type === models.request.type) {
-      const tag = getMethodShortHand(doc as Request);
+    if (doc.type === models.request.type || doc.type === models.grpcRequest.type || doc.type === models.webSocketRequest.type) {
+      const tag = getRequestMethodShortHand(doc as Request);
       const method = (doc as Request).method;
+      updateTabById?.(doc._id, doc.name, method, tag);
+    } else if (doc.type === models.mockRoute.type) {
+      const method = (doc as MockRoute).method;
+      const tag = formatMethodName(method);
       updateTabById?.(doc._id, doc.name, method, tag);
     } else if (doc.type === models.project.type) {
       // update project name(for tooltip)
