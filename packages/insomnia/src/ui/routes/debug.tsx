@@ -1151,7 +1151,7 @@ export const Debug: FC = () => {
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
       <Panel>
-        <OrganizationTabList />
+        <OrganizationTabList currentPage='debug' />
         <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
           <Routes>
             <Route
