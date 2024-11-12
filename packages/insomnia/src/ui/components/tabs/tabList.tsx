@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from 'react';
-import { GridList, type Selection } from 'react-aria-components';
+import { Button, GridList, Menu, MenuItem, MenuTrigger, Popover, type Selection } from 'react-aria-components';
 import { useNavigate } from 'react-router-dom';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
@@ -148,7 +148,21 @@ export const OrganizationTabList = ({ showActiveStatus = true }) => {
         {item => <InsomniaTab tab={item} />}
       </GridList>
       <div className='flex items-center'>
-        <Icon icon="plus" className='ml-[15px] cursor-pointer' />
+        <MenuTrigger>
+          <Button aria-label="Menu">
+            <Icon icon="plus" className='ml-[15px] cursor-pointer' />
+          </Button>
+          <Popover>
+            <Menu className='border max-w-lg select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none'>
+              <MenuItem className="aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors" onAction={() => { }}>
+                save to current workspace
+              </MenuItem>
+              <MenuItem className="aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors" onAction={() => { }}>
+                save to other workspace
+              </MenuItem>
+            </Menu>
+          </Popover>
+        </MenuTrigger>
       </div>
     </div>
   );
