@@ -9,7 +9,6 @@ import deepEqual from 'deep-equal';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Toolbar } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router-dom';
 import { useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
@@ -23,7 +22,7 @@ import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
 import { useEditorRefresh } from '../../hooks/use-editor-refresh';
-import type { OrganizationLoaderData } from '../../routes/organization';
+import { usePlanData } from '../../hooks/use-plan';
 import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -191,8 +190,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
   const {
     settings,
   } = useRootLoaderData();
-  const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
-  const isEnterprisePlan = currentPlan?.type.includes('enterprise');
+  const { isOwner, isEnterprisePlan } = usePlanData();
   const indentSize = settings.editorIndentSize;
   const indentWithTabs = shouldIndentWithTabs({ mode, indentWithTabs: settings.editorIndentWithTabs });
   const indentChars = indentWithTabs ? '\t' : new Array((indentSize || TAB_SIZE) + 1).join(' ');
@@ -558,6 +556,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
           showModal(UpgradeModal, {
             newPlan: 'enterprise',
             featureName: displayName,
+            isOwner,
           });
           return;
         }
@@ -591,7 +590,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     return () => {
       unsubscribe();
     };
-  }, [id, isEnterprisePlan]);
+  }, [id, isEnterprisePlan, isOwner]);
   useEffect(() => tryToSetOption('hintOptions', hintOptions), [hintOptions]);
   useEffect(() => tryToSetOption('info', infoOptions), [infoOptions]);
   useEffect(() => tryToSetOption('jump', jumpOptions), [jumpOptions]);

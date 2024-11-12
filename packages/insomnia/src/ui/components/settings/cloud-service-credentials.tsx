@@ -3,11 +3,14 @@ import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-compone
 import { useFetcher } from 'react-router-dom';
 
 import { type CloudProviderCredential, type CloudProviderName, getProviderDisplayName } from '../../../models/cloud-credential';
+import { usePlanData } from '../../hooks/use-plan';
 import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
 import { CloudCredentialModal } from '../modals/cloud-credential-modal/cloud-credential-modal';
+import { UpgradeNotice } from '../upgrade-notices';
+import { NumberSetting } from './number-setting';
 
 interface createCredentialItemType {
   name: string;
@@ -31,6 +34,7 @@ const createCredentialItemList: createCredentialItemType[] = [
 const buttonClassName = 'disabled:opacity-50 h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] transition-all text-sm py-1 px-2';
 
 export const CloudServiceCredentialList = () => {
+  const { isOwner, isEnterprisePlan } = usePlanData();
   const { cloudCredentials } = useRootLoaderData();
   const [modalState, setModalState] = useState<{ show: boolean; provider: CloudProviderName; credential?: CloudProviderCredential }>();
   const deleteCredentialFetcher = useFetcher();
@@ -61,9 +65,20 @@ export const CloudServiceCredentialList = () => {
     });
   };
 
+  if (!isEnterprisePlan) {
+    return (
+      <UpgradeNotice
+        isOwner={isOwner}
+        featureName='Cloud Credentials feature'
+        newPlan='enterprise'
+      />
+    );
+  }
+
   return (
     <div>
-      <div className='flex justify-end'>
+      <div className='flex justify-between items-end'>
+        <h2 className='font-bold text-lg bg-[--color-bg] z-10'>Service Provider Credential List</h2>
         <MenuTrigger>
           <Button
             aria-label="Create in project"
@@ -139,6 +154,24 @@ export const CloudServiceCredentialList = () => {
           </tbody>
         </table>
       }
+      <div>
+        <h2 className='font-bold pt-5 pb-2 text-lg bg-[--color-bg] z-10'>Cloud Secret Config</h2>
+        <div className="form-row items-end justify-between">
+          <NumberSetting
+            label="Vault Secret Cache Duration(min)"
+            setting="vaultSecretCacheDuration"
+            help="Enter the amount of time in minutes external vault secrets are cached in Insomnia. Enter 0 to disable cache. Click the Reset Cache button to clear all cache."
+            min={0}
+            max={720}
+          />
+          <button
+            className="w-32 flex items-center gap-2 border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs] pointer mb-[--padding-sm] ml-[--padding-sm]"
+            onClick={() => window.main.cloudService.clearCache()}
+          >
+            Reset Cache
+          </button>
+        </div>
+      </div>
       {modalState && modalState.show &&
         <CloudCredentialModal
           provider={modalState.provider}

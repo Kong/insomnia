@@ -27,7 +27,7 @@ export function registerCloudServiceHandlers() {
   ipcMainHandle('cloudService.authenticate', (_event, options) => cspAuthentication(options));
   ipcMainHandle('cloudService.getSecret', (_event, options) => getSecret(options));
   ipcMainOn('cloudService.clearCache', () => clearVaultCache());
-  ipcMainOn('cloudService.setCacheMaxAge', (_event, maxAge, unit) => setCacheMaxAge(maxAge, unit));
+  ipcMainOn('cloudService.setCacheMaxAge', (_event, { maxAge, unit }) => setCacheMaxAge(maxAge, unit));
 }
 
 type CredentialType = AWSTemporaryCredential;

@@ -45,6 +45,8 @@ const grpc: gRPCBridgeAPI = {
 const cloudService: cloudServiceBridgeAPI = {
   authenticate: options => ipcRenderer.invoke('cloudService.authenticate', options),
   getSecret: options => ipcRenderer.invoke('cloudService.getSecret', options),
+  setCacheMaxAge: options => ipcRenderer.send('cloudService.setCacheMaxAge', options),
+  clearCache: () => ipcRenderer.send('cloudService.clearCache'),
 };
 
 const main: Window['main'] = {
