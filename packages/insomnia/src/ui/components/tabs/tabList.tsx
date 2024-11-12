@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Button, GridList, Menu, MenuItem, MenuTrigger, Popover, type Selection } from 'react-aria-components';
-import { useNavigate } from 'react-router-dom';
+import { useFetcher, useNavigate } from 'react-router-dom';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import * as models from '../../../models/index';
@@ -9,6 +9,7 @@ import type { Request } from '../../../models/request';
 import { INSOMNIA_TAB_HEIGHT } from '../../constant';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { Icon } from '../icon';
+import { AddRequestToCollectionModal } from '../modals/add-request-to-collection-modal';
 import { formatMethodName, getRequestMethodShortHand } from '../tags/method-tag';
 import { type BaseTab, InsomniaTab, TabEnum } from './tab';
 
@@ -30,11 +31,15 @@ export const TAB_ROUTER_PATH: Record<TabEnum, string> = {
   [TabEnum.TESTSUITE]: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/*',
 };
 
-export const OrganizationTabList = ({ showActiveStatus = true }) => {
+export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' }) => {
   const { currentOrgTabs } = useInsomniaTabContext();
   const { tabList, activeTabId } = currentOrgTabs;
   console.log('activeTabId', activeTabId);
   const navigate = useNavigate();
+
+  const [showAddRequestModal, setShowAddRequestModal] = useState(false);
+
+  const requestFetcher = useFetcher();
 
   const { changeActiveTab, deleteTabById, deleteAllTabsUnderWorkspace, deleteAllTabsUnderProject, updateTabById, updateProjectName, updateWorkspaceName } = useInsomniaTabContext();
 
@@ -127,6 +132,25 @@ export const OrganizationTabList = ({ showActiveStatus = true }) => {
     };
   }, [deleteTabById, handleDelete, handleUpdate]);
 
+  const addRequest = () => {
+    const currentTab = tabList.find(tab => tab.id === activeTabId);
+    if (currentTab) {
+      const { organizationId, projectId, workspaceId } = currentTab;
+      requestFetcher.submit(
+        { requestType: 'HTTP', parentId: workspaceId },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
+          method: 'post',
+          encType: 'application/json',
+        },
+      );
+    }
+  };
+
+  const addRequestToCollection = () => {
+    setShowAddRequestModal(true);
+  };
+
   if (!tabList.length) {
     return null;
   };
@@ -154,16 +178,19 @@ export const OrganizationTabList = ({ showActiveStatus = true }) => {
           </Button>
           <Popover>
             <Menu className='border max-w-lg select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none'>
-              <MenuItem className="aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors" onAction={() => { }}>
-                save to current workspace
-              </MenuItem>
-              <MenuItem className="aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors" onAction={() => { }}>
-                save to other workspace
+              {currentPage === 'debug' && (
+                <MenuItem className="aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors" onAction={addRequest}>
+                  add request to current collection
+                </MenuItem>
+              )}
+              <MenuItem className="aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors" onAction={addRequestToCollection}>
+                add request to other collection
               </MenuItem>
             </Menu>
           </Popover>
         </MenuTrigger>
       </div>
+      {showAddRequestModal && <AddRequestToCollectionModal onHide={() => setShowAddRequestModal(false)} />}
     </div>
   );
 };
