@@ -4,7 +4,6 @@ import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { type EditorConfiguration, type EditorEventMap } from 'codemirror';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
 import { useMount, useUnmount } from 'react-use';
 
 import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
@@ -14,7 +13,7 @@ import { getTagDefinitions } from '../../../templating/index';
 import { extractNunjucksTagFromCoords, type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '../../hooks/use-editor-refresh';
-import type { OrganizationLoaderData } from '../../routes/organization';
+import { usePlanData } from '../../hooks/use-plan';
 import { useRootLoaderData } from '../../routes/root';
 import { showModal } from '../modals';
 import { NunjucksModal } from '../modals/nunjucks-modal';
@@ -60,8 +59,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   const {
     settings,
   } = useRootLoaderData();
-  const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
-  const isEnterprisePlan = currentPlan?.type.includes('enterprise');
+  const { isOwner, isEnterprisePlan } = usePlanData();
   const { handleRender, handleGetRenderContext } = useNunjucks();
 
   const initEditor = useCallback(() => {
@@ -268,6 +266,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         showModal(UpgradeModal, {
           newPlan: 'enterprise',
           featureName: displayName,
+          isOwner,
         });
         return;
       }
@@ -301,7 +300,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     return () => {
       unsubscribe();
     };
-  }, [id, isEnterprisePlan]);
+  }, [id, isEnterprisePlan, isOwner]);
 
   useImperativeHandle(ref, () => ({
     selectAll: () => codeMirror.current?.setSelection({ line: 0, ch: 0 }, { line: codeMirror.current.lineCount(), ch: 0 }),

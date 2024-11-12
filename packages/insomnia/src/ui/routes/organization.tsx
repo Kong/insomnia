@@ -90,7 +90,22 @@ export interface UserProfileResponse {
 }
 
 export type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
-
+export const formatCurrentPlanType = (type: PersonalPlanType) => {
+  switch (type) {
+    case 'free':
+      return 'Hobby';
+    case 'individual':
+      return 'Individual';
+    case 'team':
+      return 'Pro';
+    case 'enterprise':
+      return 'Enterprise';
+    case 'enterprise-member':
+      return 'Enterprise Member';
+    default:
+      return 'Free';
+  }
+};
 type PaymentSchedules = 'month' | 'year';
 
 export interface CurrentPlan {

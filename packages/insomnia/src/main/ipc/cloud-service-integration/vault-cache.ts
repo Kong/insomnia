@@ -6,6 +6,25 @@ export interface VaultCacheOptions {
 }
 export type MaxAgeUnit = 'ms' | 's' | 'min' | 'h';
 
+// convert time unit to milliseconds
+export const timeToMs = (time: number, unit: MaxAgeUnit = 'ms') => {
+  if (typeof time === 'number' && time > 0) {
+    switch (unit) {
+      case 'ms':
+        return time;
+      case 's':
+        return time * 1000;
+      case 'min':
+        return time * 1000 * 60;
+      case 'h':
+        return time * 1000 * 60 * 60;
+      default:
+        return time;
+    }
+  }
+  return 0;
+};
+
 export class VaultCache<K = string, T = any> {
   _cache: QuickLRU<K, T>;
   // The maximum number of milliseconds an item should remain in cache, default 30 mins
@@ -64,26 +83,7 @@ export class VaultCache<K = string, T = any> {
   }
 
   setMaxAge(maxAge: number, unit: MaxAgeUnit = 'ms') {
-    let newMaxAage = this._maxAge;
-    if (typeof maxAge === 'number' && maxAge > 0) {
-      switch (unit) {
-        case 'ms':
-          newMaxAage = maxAge;
-          break;
-        case 's':
-          newMaxAage = maxAge * 1000;
-          break;
-        case 'min':
-          newMaxAage = maxAge * 1000 * 60;
-          break;
-        case 'h':
-          newMaxAage = maxAge * 1000 * 60 * 60;
-          break;
-        default:
-          newMaxAage = maxAge;
-      }
-      this._maxAge = newMaxAage;
-    }
+    this._maxAge = timeToMs(maxAge, unit);
   }
 
   clear() {
