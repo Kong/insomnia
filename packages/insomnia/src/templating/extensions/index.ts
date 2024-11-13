@@ -99,7 +99,7 @@ export interface PluginTemplateTag {
   args: NunjucksParsedTagArg[];
   name: string;
   displayName: DisplayName;
-  isEnterprise?: boolean;
+  needsEnterprisePlan?: boolean;
   disablePreview?: (args: any[]) => boolean;
   description: string;
   actions?: NunjucksActionTag[];

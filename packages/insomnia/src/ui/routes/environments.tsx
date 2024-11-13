@@ -6,7 +6,7 @@ import { NavLink, useFetcher, useParams, useRouteLoaderData } from 'react-router
 
 import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { debounce } from '../../common/misc';
-import { type Environment, type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair } from '../../models/environment';
+import { type Environment, type EnvironmentKvPairData, EnvironmentKvPairDataType, EnvironmentType, getDataFromKVPair } from '../../models/environment';
 import { isRemoteProject } from '../../models/project';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
@@ -46,6 +46,8 @@ const Environments = () => {
   const isUsingGitSync = Boolean(features.gitSync.enabled && (activeWorkspaceMeta?.gitRepositoryId));
 
   const selectedEnvironment = [baseEnvironment, ...subEnvironments].find(env => env._id === selectedEnvironmentId);
+  // Do not allowed to switch to json environment if contains secret item
+  const allowSwitchEnvironment = !selectedEnvironment?.kvPairData?.some(d => d.type === EnvironmentKvPairDataType.SECRET);
 
   const environmentActionsList: {
     id: string;
@@ -455,7 +457,7 @@ const Environments = () => {
                 />
               </Label>
             )}
-            {selectedEnvironment && (
+            {selectedEnvironment && allowSwitchEnvironment && (
               <ToggleButton
                 onChange={isSelected => {
                   const toggleSwitchEnvironmentType = (newEnvironmentType: EnvironmentType, kvPairData: EnvironmentKvPairData[]) => {

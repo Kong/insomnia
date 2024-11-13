@@ -9,7 +9,8 @@ import { type BaseModel } from './index';
 export const name = 'Environment';
 export const type = 'Environment';
 export const prefix = 'env';
-export const vaultEnvironmentPrefix = 'vault:';
+export const vaultEnvironmentPath = 'vault';
+export const vaultEnvironmentMaskValue = '••••••';
 export const canDuplicate = true;
 export const canSync = true;
 // for those keys do not need to add in model init method
@@ -53,25 +54,29 @@ export type UserUploadEnvironment = Pick<Environment, 'data' | 'dataPropertyOrde
 export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: Record<string, any> | null) {
   const ordered = orderedJSON.order(data, dataPropertyOrder, JSON_ORDER_SEPARATOR);
   const kvPair: EnvironmentKvPairData[] = [];
-  const keyNameRegex = new RegExp(`^${vaultEnvironmentPrefix}:`);
-  const getItemType = (isSecretItem: boolean, isValidObject: boolean): EnvironmentKvPairDataType => {
-    if (isSecretItem) {
-      return EnvironmentKvPairDataType.SECRET;
-    }
-    return isValidObject ? EnvironmentKvPairDataType.JSON : EnvironmentKvPairDataType.STRING;
-  };
   Object.keys(ordered).forEach(key => {
-    const isSecretItem = key.startsWith(vaultEnvironmentPrefix);
     const val = ordered[key];
-    const isValidObject = val && typeof val === 'object' && data !== null;
-    kvPair.push({
-      id: generateId('envPair'),
-      // remove "vault:" prefix when convert to key-value pair
-      name: key.replace(keyNameRegex, ''),
-      value: isValidObject ? JSON.stringify(val) : String(val),
-      type: getItemType(isSecretItem, isValidObject),
-      enabled: true,
-    });
+    // get all secret items from vaultEnvironmentPath
+    if (key === vaultEnvironmentPath && val === 'object') {
+      Object.keys(val).forEach(secretKey => {
+        kvPair.push({
+          id: generateId('envPair'),
+          name: secretKey,
+          value: val[secretKey],
+          type: EnvironmentKvPairDataType.SECRET,
+          enabled: true,
+        });
+      });
+    } else {
+      const isValidObject = val && typeof val === 'object' && data !== null;
+      kvPair.push({
+        id: generateId('envPair'),
+        name: key,
+        value: isValidObject ? JSON.stringify(val) : String(val),
+        type: isValidObject ? EnvironmentKvPairDataType.JSON : EnvironmentKvPairDataType.STRING,
+        enabled: true,
+      });
+    };
   });
   return kvPair;
 }
@@ -81,9 +86,15 @@ export function getDataFromKVPair(kvPair: EnvironmentKvPairData[]) {
   kvPair.forEach(pair => {
     const { name, value, type, enabled } = pair;
     if (enabled) {
-      // add "vault:" prefix to secret item key
-      const pairName = type === EnvironmentKvPairDataType.SECRET ? `${vaultEnvironmentPrefix}${name}` : name;
-      data[pairName] = type === EnvironmentKvPairDataType.JSON ? JSON.parse(value) : value;
+      if (type === EnvironmentKvPairDataType.SECRET) {
+        if (!data[vaultEnvironmentPath]) {
+          // create object storing all secret items
+          data[vaultEnvironmentPath] = {};
+        };
+        data[vaultEnvironmentPath][name] = value;
+      } else {
+        data[name] = type === EnvironmentKvPairDataType.JSON ? JSON.parse(value) : value;
+      }
     }
   });
   return {

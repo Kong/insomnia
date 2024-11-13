@@ -5,7 +5,7 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
 import { debounce } from '../../../common/misc';
-import { type Environment, type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair } from '../../../models/environment';
+import { type Environment, type EnvironmentKvPairData, EnvironmentKvPairDataType, EnvironmentType, getDataFromKVPair } from '../../../models/environment';
 import { isRemoteProject } from '../../../models/project';
 import { responseTagRegex } from '../../../templating/utils';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
@@ -51,6 +51,8 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
     }
     return false;
   }, [selectedEnvironment]);
+  // Do not allowed to switch to json environment if contains secret item
+  const allowSwitchEnvironment = !selectedEnvironment?.kvPairData?.some(d => d.type === EnvironmentKvPairDataType.SECRET);
 
   const environmentActionsList: {
     id: string;
@@ -438,7 +440,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                         />
                       </Label>
                     )}
-                    {selectedEnvironment && (
+                    {selectedEnvironment && allowSwitchEnvironment && (
                       <ToggleButton
                         onChange={isSelected => {
                           const toggleSwitchEnvironmentType = (newEnvironmentType: EnvironmentType, kvPairData: EnvironmentKvPairData[]) => {

@@ -260,8 +260,8 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   }, [onChange]);
 
   useEffect(() => {
-    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag, nunjucksTag, isEnterprise, displayName }) => {
-      if (isEnterprise && !isEnterprisePlan) {
+    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag, nunjucksTag, needsEnterprisePlan, displayName }) => {
+      if (needsEnterprisePlan && !isEnterprisePlan) {
         // show modal if current user is not an enteprise user and the command is an enterprise feature
         showModal(UpgradeModal, {
           newPlan: 'enterprise',
