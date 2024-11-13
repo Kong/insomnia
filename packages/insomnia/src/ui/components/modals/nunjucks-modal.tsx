@@ -73,6 +73,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
   return (
     <Modal
       ref={modalRef}
+      className='!z-10'
       onHide={() => {
         state.onDone(state.template);
         setState(state => ({

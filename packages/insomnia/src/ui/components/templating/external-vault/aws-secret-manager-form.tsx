@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 
 import type { AWSSecretConfig } from '../../../../main/ipc/cloud-service-integration/types';
+import type { NunjucksParsedTag } from '../../../../templating/utils';
 import { HelpTooltip } from '../../help-tooltip';
 
 export interface AWSSecretManagerFormProps {
   formData: AWSSecretConfig;
   onChange: (newConfig: AWSSecretConfig) => void;
+  activeTagData: NunjucksParsedTag;
 }
 const secretTypeOptions = [
   {

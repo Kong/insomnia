@@ -158,7 +158,7 @@ export const CloudServiceCredentialList = () => {
         <h2 className='font-bold pt-5 pb-2 text-lg bg-[--color-bg] z-10'>Cloud Secret Config</h2>
         <div className="form-row items-end justify-between">
           <NumberSetting
-            label="Vault Secret Cache Duration(min)"
+            label="Secret Cache Duration(min)"
             setting="vaultSecretCacheDuration"
             help="Enter the amount of time in minutes external vault secrets are cached in Insomnia. Enter 0 to disable cache. Click the Reset Cache button to clear all cache."
             min={0}

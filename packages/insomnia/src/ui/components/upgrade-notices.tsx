@@ -21,25 +21,21 @@ export const UpgradeNotice = (props: UpgradeNoticeProps) => {
   };
 
   return (
-    <div className='mt-[--padding-lg] flex flex-col gap-3 justify-center items-center'>
+    <div className='flex flex-col gap-3 justify-center items-center notice pad surprise'>
       <InsomniaLogo className='h-16 w-full' />
       <Heading className="text-2xl bg-[--color-bg]">
         Upgrade Plan
       </Heading>
       <p>{message}</p>
-      {isOwner ?
-        (
-          <Button
-            aria-label="Upgrade Plan"
-            className="px-4 text-[--color-font-surprise] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-2 h-full font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-md hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-            onPress={handleUpgradePlan}
-          >
-            Upgrade
-          </Button>
-        ) :
-        (
-          <p>{upgradeDetail}</p>
-        )
+      <p>{upgradeDetail}</p>
+      {isOwner &&
+        <Button
+          aria-label="Upgrade Plan"
+          className="btn btn--clicky mt-[--padding-md]"
+          onPress={handleUpgradePlan}
+        >
+          Upgrade <i className="fa fa-external-link" />
+        </Button>
       }
     </div>
   );

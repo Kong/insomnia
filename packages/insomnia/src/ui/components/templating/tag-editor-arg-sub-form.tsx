@@ -1,5 +1,6 @@
 import React from 'react';
 
+import type { BaseModel } from '../../../models';
 import type { NunjucksParsedTag } from '../../../templating/utils';
 import { ExternalVaultForm } from './external-vault/external-vault-form';
 
@@ -8,6 +9,7 @@ export interface ArgConfigFormProps {
   activeTagDefinition: NunjucksParsedTag;
   activeTagData: NunjucksParsedTag;
   onChange: (newConfigValue: string) => void;
+  docs: Record<string, BaseModel[]>;
 }
 const formTagNameMapping = {
   'vault': ExternalVaultForm,
