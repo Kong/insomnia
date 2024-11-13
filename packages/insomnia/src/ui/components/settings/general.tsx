@@ -1,5 +1,4 @@
 import React, { type FC, Fragment } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
 
 import {
   EditorKeyMap,
@@ -14,7 +13,6 @@ import { docsKeyMaps } from '../../../common/documentation';
 import { type HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
 import { strings } from '../../../common/strings';
 import { initNewOAuthSession } from '../../../network/o-auth-2/get-token';
-import type { OrganizationLoaderData } from '../../routes/organization';
 import { useRootLoaderData } from '../../routes/root';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
@@ -28,8 +26,7 @@ export const General: FC = () => {
     settings,
     userSession,
   } = useRootLoaderData();
-  const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
-  const isEnterprisePlan = currentPlan?.type.includes('enterprise');
+
   const isLoggedIn = Boolean(userSession.id);
 
   return (
@@ -272,26 +269,6 @@ export const General: FC = () => {
           help="If checked, validates SSL certificates during authentication flows."
         />
       </div>
-      {isEnterprisePlan &&
-        <>
-          <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>External Vault</h2>
-          <div className="form-row items-end justify-between">
-            <NumberSetting
-              label="Vault Secret Cache Duration(min)"
-              setting="vaultSecretCacheDuration"
-              help="Enter the amount of time in minutes external vault secrets are cached in Insomnia. Enter 0 to disable cache. Click the Reset Cache button to clear all cache."
-              min={0}
-              max={720}
-            />
-            <button
-              className="w-32 flex items-center gap-2 border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs] pointer mb-[--padding-sm] ml-[--padding-sm]"
-              onClick={() => window.main.cloudService.clearCache()}
-            >
-              Reset Cache
-            </button>
-          </div>
-        </>
-      }
 
       {updatesSupported() && (
         <Fragment>

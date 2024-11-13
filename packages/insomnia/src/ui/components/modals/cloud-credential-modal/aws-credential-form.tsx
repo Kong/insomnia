@@ -53,6 +53,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
       className='flex flex-col gap-2 flex-shrink-0'
       onSubmit={e => {
         e.preventDefault();
+        e.stopPropagation();
         const formData = new FormData(e.currentTarget);
         const { name, accessKeyId, secretAccessKey, sessionToken, region } = Object.fromEntries(formData.entries()) as Record<string, string>;
         // hard-code here since we only support AWS temporary token for now
