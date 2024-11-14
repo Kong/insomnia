@@ -607,14 +607,14 @@ const OrganizationRoute = () => {
       <InsomniaTabProvider>
       <div className="w-full h-full">
         <div className={`w-full h-full divide-x divide-solid divide-[--hl-md] ${isOrganizationSidebarOpen ? 'with-navbar' : ''} ${isScratchPadBannerVisible ? 'with-banner' : ''} grid-template-app-layout grid relative bg-[--color-bg]`}>
-            <header className="[grid-area:Header] grid grid-cols-2 items-center border-b border-solid border-[--hl-md]">
+            <header className="[grid-area:Header] grid grid-cols-3 items-center border-b border-solid border-[--hl-md]">
             <div className="flex items-center gap-2">
               <div className="flex shrink-0 w-[50px] justify-center py-2">
                 <InsomniaLogo loading={loadingAI} />
-              </div>
-              <CommandPalette />
+                </div>
               {!user ? <GitHubStarsButton /> : null}
               </div>
+              <CommandPalette />
             <div className="flex gap-[--padding-sm] items-center justify-end p-2">
               {user ? (
                 <Fragment>
