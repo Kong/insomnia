@@ -164,7 +164,8 @@ export const loader: LoaderFunction = async ({ params, request }) => {
     const startOfQuery = request.url.indexOf('?');
     const urlWithoutQuery = startOfQuery > 0 ? request.url.slice(0, startOfQuery) : request.url;
     const isDisplayingRunner = urlWithoutQuery.includes('/runner');
-    if (activeRequest && !isDisplayingRunner) {
+    const doNotSkipToActiveRequest = request.url.includes('doNotSkipToActiveRequest=true');
+    if (activeRequest && !isDisplayingRunner && !doNotSkipToActiveRequest) {
       return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`);
     }
   }
