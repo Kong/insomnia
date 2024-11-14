@@ -51,7 +51,7 @@ export const useInsomniaTab = ({
     }
 
     if (type === TabEnum.Collection) {
-      return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`;
+      return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug?doNotSkipToActiveRequest=true`;
     }
 
     if (type === TabEnum.Env) {

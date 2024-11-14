@@ -6,7 +6,7 @@ import { type ChangeBufferEvent, type ChangeType, database } from '../../../comm
 import * as models from '../../../models/index';
 import type { MockRoute } from '../../../models/mock-route';
 import type { Request } from '../../../models/request';
-import { INSOMNIA_TAB_HEIGHT } from '../../constant';
+import { INNER_TAB_HEIGHT, INSOMNIA_TAB_HEIGHT } from '../../constant';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { Icon } from '../icon';
 import { AddRequestToCollectionModal } from '../modals/add-request-to-collection-modal';
@@ -165,8 +165,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         defaultSelectedKeys={['req_737492dce0c3460a8a55762e5d1bbd99']}
         selectionMode="single"
         selectionBehavior='replace'
-        // Use +1 height to mask the wrapper border, and let the custom element in InsomniaTab act as the fake border.（we need different border for active tab）
-        className={`flex h-[${INSOMNIA_TAB_HEIGHT + 1}px] bg-[--color-bg] max-w-[calc(100%-50px)] overflow-x-scroll hide-scrollbars`}
+        className={`flex h-[${INNER_TAB_HEIGHT}px] bg-[--color-bg] max-w-[calc(100%-50px)] overflow-x-scroll hide-scrollbars`} // Use +1 height to mask the wrapper border, and let the custom element in InsomniaTab act as the fake border.（we need different border for active tab）
         items={tabList}
       >
         {item => <InsomniaTab tab={item} />}
