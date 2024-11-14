@@ -103,6 +103,26 @@ export function getDataFromKVPair(kvPair: EnvironmentKvPairData[]) {
   };
 }
 
+// mask vault environment varibale if necessary
+export function maskVaultEnvironmentData(environment: Environment) {
+  if (environment.isPrivate) {
+    const { data, kvPairData } = environment;
+    const shouldMask = kvPairData?.some(pair => pair.type === EnvironmentKvPairDataType.SECRET);
+    if (shouldMask) {
+      kvPairData?.forEach(pair => {
+        const { type } = pair;
+        if (type === EnvironmentKvPairDataType.SECRET) {
+          pair.value = vaultEnvironmentMaskValue;
+        }
+      });
+      Object.keys(data[vaultEnvironmentPath]).forEach(vaultKey => {
+        data[vaultEnvironmentPath][vaultKey] = vaultEnvironmentMaskValue;
+      });
+    }
+  };
+  return environment;
+}
+
 export const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => (
   model.type === type
 );
