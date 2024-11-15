@@ -549,9 +549,9 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     }
   };
   useEffect(() => {
-    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag, nunjucksTag, isEnterprise, displayName }) => {
+    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag, nunjucksTag, needsEnterprisePlan, displayName }) => {
       if (id === key) {
-        if (isEnterprise && !isEnterprisePlan) {
+        if (needsEnterprisePlan && !isEnterprisePlan) {
           // show modal if current user is not an enteprise user and the command is an enterprise feature
           showModal(UpgradeModal, {
             newPlan: 'enterprise',

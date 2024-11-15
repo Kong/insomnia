@@ -1,5 +1,8 @@
 import React, { type FC, useEffect, useState } from 'react';
 
+import type { RenderPurpose } from '../../../common/render';
+import { vaultEnvironmentPath } from '../../../models/environment';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 
 interface Props {
@@ -8,11 +11,14 @@ interface Props {
 }
 
 export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {
-  const { handleRender, handleGetRenderContext } = useNunjucks();
+  const [purpose, setPurpose] = useState<RenderPurpose | ''>('');
+  const renderContext = purpose === '' ? {} : { purpose };
+  const { handleRender, handleGetRenderContext } = useNunjucks({ renderContext });
   const [selected, setSelected] = useState(defaultValue);
   const [options, setOptions] = useState<{ name: string; value: any }[]>([]);
   const [preview, setPreview] = useState('');
   const [error, setError] = useState('');
+  const isVaultVariable = selected && selected.replace('{{', '').replace('}}', '').trim().startsWith(`${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}.${vaultEnvironmentPath}`);
 
   useEffect(() => {
     let isMounted = true;
@@ -69,6 +75,22 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {
         </div>
       )}
       <div className="form-control form-control--outlined">
+        {isVaultVariable &&
+          <button
+            type="button"
+            style={{
+              zIndex: 10,
+              position: 'relative',
+            }}
+            className="txt-sm pull-right icon inline-block"
+            onClick={() => setPurpose(prevPurpose => prevPurpose === '' ? 'preview' : '')}
+          >
+            {purpose === '' ?
+              <i className="fa-regular fa-eye" /> :
+              <i className="fa-regular fa-eye-slash" />
+            }
+          </button>
+        }
         <label>
           Live Preview
           <textarea className={`${error ? 'danger' : ''}`} value={preview || error} readOnly />
