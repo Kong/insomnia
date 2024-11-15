@@ -111,20 +111,20 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
     <GridListItem
       textValue='tab'
       id={tab.id}
-      className="outline-none"
+      className="outline-none aria-selected:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:hover:bg-[--hl-sm] hover:bg-[--hl-sm]"
     >
       {({ isSelected, isHovered }) => (
         <Tooltip message={`${tab.projectName} / ${tab.workspaceName}`} className='h-full'>
           <div className={`relative flex items-center h-full px-[20px] flex-nowrap border-solid border-r border-[--hl-sm] hover:text-[--color-font] outline-none max-w-[200px] cursor-pointer ${(!isSelected && !isHovered) && 'opacity-[0.7]'}`}>
             {renderTabIcon(tab.type)}
             <span className='ml-[8px] text-nowrap overflow-hidden text-ellipsis'>{tab.name}</span>
-            <div className="bg-[--color-bg] h-[36px] w-[20px] flex justify-center items-center absolute right-0">
-              {isHovered && (
+            {isHovered && (
+              <div className="h-[36px] w-[20px] flex justify-center items-center absolute right-0">
                 <Button className='hover:bg-[--hl-md] h-[15px] w-[15px] flex justify-center items-center' onPress={() => handleClose(tab.id)}>
                   <Icon icon="close" />
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
             <span className={`block absolute bottom-[0px] left-0 right-0 h-[1px] bg-[--color-bg] ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
             <span className={`block absolute bottom-[0px] left-0 right-0 h-[1px] bg-[--hl-sm] ${!isSelected ? 'opacity-100' : 'opacity-0'}`} />
           </div>
