@@ -11,6 +11,7 @@ import type { RenderPurpose } from '../../../common/render';
 import type { AWSSecretConfig } from '../../../main/ipc/cloud-service-integration/types';
 import * as models from '../../../models';
 import type { CloudProviderCredential, CloudProviderName } from '../../../models/cloud-credential';
+import { vaultEnvironmentMaskValue } from '../../../models/environment';
 import type { Request, RequestParameter } from '../../../models/request';
 import type { Response } from '../../../models/response';
 import type { TemplateTag } from '../../../plugins';
@@ -26,7 +27,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
       displayName: 'External Vault',
       description: 'Link secret from external vault',
       // external vault is an enterprise feature
-      isEnterprise: true,
+      needsEnterprisePlan: true,
       args: [
         {
           displayName: 'Vault Service Provider',
@@ -52,7 +53,6 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         },
       ],
       async run(context, provider: CloudProviderName, credentialId: string, configStr: string) {
-        const defaultMaskValue = '******';
         if (!provider) {
           throw new Error('Vault service provider is required');
         }
@@ -111,7 +111,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             }
           }
         }
-        return defaultMaskValue;
+        return vaultEnvironmentMaskValue;
       },
     },
   },

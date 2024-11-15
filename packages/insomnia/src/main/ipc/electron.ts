@@ -171,7 +171,7 @@ export function registerElectronHandlers() {
         .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
         .map(l => {
           const actions = l.templateTag.args?.[0];
-          const isEnterprise = l.templateTag.isEnterprise || false;
+          const needsEnterprisePlan = l.templateTag.needsEnterprisePlan || false;
           const additionalArgs = l.templateTag.args?.slice(1);
           const hasSubmenu = actions?.options?.length;
           return {
@@ -181,7 +181,7 @@ export function registerElectronHandlers() {
                 click: () => {
                   const tag = `{% ${l.templateTag.name} ${l.templateTag.args?.map(getTemplateValue).join(', ')} %}`;
                   const displayName = l.templateTag.displayName;
-                  event.sender.send('nunjucks-context-menu-command', { key, tag, isEnterprise, displayName });
+                  event.sender.send('nunjucks-context-menu-command', { key, tag, needsEnterprisePlan, displayName });
                 },
               } :
               {
@@ -191,7 +191,7 @@ export function registerElectronHandlers() {
                     const additionalTagFields = additionalArgs.length ? ', ' + additionalArgs.map(getTemplateValue).join(', ') : '';
                     const displayName = action.displayName;
                     const tag = `{% ${l.templateTag.name} '${action.value}'${additionalTagFields} %}`;
-                    event.sender.send('nunjucks-context-menu-command', { key, tag, isEnterprise, displayName });
+                    event.sender.send('nunjucks-context-menu-command', { key, tag, needsEnterprisePlan, displayName });
                   },
                 })),
               }),
