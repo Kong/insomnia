@@ -1,17 +1,15 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
-import { useParams } from 'react-router-dom';
 
 import { getAppWebsiteBaseURL } from '../../../common/constants';
-import { isOwnerOfOrganization } from '../../../models/organization';
-import { useOrganizationLoaderData } from '../../routes/organization';
-import { useRootLoaderData } from '../../routes/root';
+import type { PersonalPlanType } from '../../routes/organization';
 import { type ModalProps } from '../base/modal';
 import { AskModal, type AskModalHandle, type AskModalOptions } from './ask-modal';
 
-type UpgradePlanType = 'team' | 'enterprise';
+type UpgradePlanType = Exclude<PersonalPlanType, 'free' | 'individual'>;
 export interface UpgradeModalOptions extends Partial<AskModalOptions> {
   newPlan: UpgradePlanType;
   featureName: string;
+  isOwner: boolean;
 }
 export interface UpgradeModalHandle {
   show: (options: UpgradeModalOptions) => void;
@@ -19,18 +17,6 @@ export interface UpgradeModalHandle {
 }
 export const UpgradeModal = forwardRef<UpgradeModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<AskModalHandle>(null);
-  const { organizationId } = useParams<{ organizationId: string }>();
-  const { organizations } = useOrganizationLoaderData();
-  const { userSession } = useRootLoaderData();
-  const currentOrg = organizations.find(organization => (organization.id === organizationId));
-  const accountId = userSession.accountId;
-  let isOwner = false;
-  if (currentOrg && accountId) {
-    isOwner = isOwnerOfOrganization({
-      organization: currentOrg,
-      accountId: userSession.accountId,
-    });
-  }
   useImperativeHandle(ref, () => ({
     hide: () => {
       modalRef.current?.hide();
@@ -43,6 +29,7 @@ export const UpgradeModal = forwardRef<UpgradeModalHandle, ModalProps>((_, ref) 
         yesText = 'Upgrade',
         noText = 'Cancel',
         color = 'surpirse',
+        isOwner,
       } = options;
       const planDetail = newPlan === 'team' ? 'Team plan or above' : 'Enterprise plan';
       const upgradeDetail = isOwner ? 'please upgrade your plan.' : 'please contat the organization owner to upgrade the plan.';
@@ -63,7 +50,7 @@ export const UpgradeModal = forwardRef<UpgradeModalHandle, ModalProps>((_, ref) 
         });
       }
     },
-  }), [isOwner]);
+  }), []);
 
   return (
     <AskModal
