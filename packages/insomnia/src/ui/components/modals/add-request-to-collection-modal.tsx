@@ -51,7 +51,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
   }, []);
 
   const isBtnDisabled = requestFetcher.state !== 'idle'
-    || !selectedProjectId;
+    || !selectedProjectId || !selectedWorkspaceId;
 
   const createNewRequest = async () => {
     requestFetcher.submit(
@@ -71,7 +71,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
         <ModalBody className="wide">
           <div className="form-control form-control--outlined">
             <label>
-              {strings.project.singular}:
+              {strings.project.plural}:
               <select name="projectId" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
                 {projectOptions.map(project => (
                   <option key={project._id} value={project._id}>
@@ -94,7 +94,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
 
           <div className="form-control form-control--outlined">
             <label>
-              {strings.workspace.singular}:
+              {strings.collection.plural}:
               <select name="workspaceId" value={selectedWorkspaceId} onChange={e => setSelectedWorkspaceId(e.target.value)}>
                 {workspaceOptions.map(workspace => (
                   <option key={workspace._id} value={workspace._id}>
@@ -111,7 +111,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
                 color: 'var(--color-danger)',
               }}
             >
-              Workspace is required
+              Collection is required
             </p>
           )}
           {requestFetcher.data?.error && (
@@ -136,7 +136,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
               className="btn"
               onClick={createNewRequest}
             >
-              {requestFetcher.state !== 'idle' && <Icon icon='spinner' className='animate-spin' />} Save
+              {requestFetcher.state !== 'idle' && <Icon icon='spinner' className='animate-spin' />} Add
             </button>
           </div>
         </ModalFooter>
