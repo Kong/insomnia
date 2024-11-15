@@ -171,7 +171,7 @@ export const useInsomniaTab = ({
     if (type === TabEnum.Request) {
       return {
         type,
-        name: activeRequest?.name || 'Untitled request',
+        name: activeRequest?.name || 'New Request',
         url: generateTabUrl(type),
         organizationId: organizationId,
         projectId: projectId,
@@ -187,7 +187,7 @@ export const useInsomniaTab = ({
     if (type === TabEnum.Folder) {
       return {
         type,
-        name: 'My folder',
+        name: activeRequestGroup?.name || 'My Folder',
         url: generateTabUrl(type),
         organizationId: organizationId,
         projectId: projectId,
@@ -257,7 +257,7 @@ export const useInsomniaTab = ({
     }
 
     return;
-  }, [activeMockRoute?.method, activeMockRoute?.name, activeProject.name, activeRequest, activeWorkspace.name, generateTabUrl, getTabId, organizationId, projectId, unitTestSuite?.name, workspaceId]);
+  }, [activeMockRoute?.method, activeMockRoute?.name, activeProject.name, activeRequest, activeRequestGroup?.name, activeWorkspace.name, generateTabUrl, getTabId, organizationId, projectId, unitTestSuite?.name, workspaceId]);
 
   useEffect(() => {
     const type = getTabType(location.pathname);
