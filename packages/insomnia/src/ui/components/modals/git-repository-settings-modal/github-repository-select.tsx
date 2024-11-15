@@ -15,13 +15,17 @@ interface GitHubRepository {
 
 const GITHUB_USER_REPOS_URL = `${getGitHubRestApiUrl()}/user/repos`;
 
+function isGitHubAppUserToken(token: string) {
+  // old oauth tokens start with 'gho_' and app user tokens start with 'ghu_'
+  return token.startsWith('ghu_');
+}
+
 export const GitHubRepositorySelect = (
   { uri, token }: {
     uri?: string;
     token: string;
   }) => {
   const [loading, setLoading] = useState(false);
-  const [changing, setChanging] = useState(false);
   const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
   const [selectedRepository, setSelectedRepository] = useState<GitHubRepository | null>(null);
 
@@ -78,20 +82,13 @@ export const GitHubRepositorySelect = (
     setLoading(true);
 
     fetchRepositories();
-  }, [token, changing, uri, fetchRepositories]);
-
-  if (loading) {
-    return <><h2 className="font-bold">Repository Settings</h2>
-      {uri && <div className="flex flex-row gap-2 items-center justify-between"><h2>Current repository: <span className="font-extrabold">{uri}</span></h2></div>}
-      <div>Loading repositories...</div></>;
-  }
+  }, [token, uri, fetchRepositories]);
 
   return (
     <>
-      <h2 className="font-bold">Repository Settings</h2>
-      {uri && <div className="flex flex-row gap-2 items-center justify-between"><h2>Current repository: <span className="font-extrabold">{uri}</span></h2>
-      </div>}
-      {loading ? <div>loading repositories...</div> : (changing || !uri) && <><div className="flex flex-row items-center gap-2">
+      <h2 className="font-bold">Repository</h2>
+      {uri && <div className='form-control form-control--outlined'><input className="form-control" disabled defaultValue={uri} /></div>}
+      {loading ? <div>Loading repositories... <Icon icon="spinner" className="animate-spin" /></div> : !uri && <><div className="flex flex-row items-center gap-2">
         <ComboBox
           aria-label="Repositories"
           allowsCustomValue={false}
@@ -128,18 +125,18 @@ export const GitHubRepositorySelect = (
           type="button"
           disabled={loading}
           onClick={() => {
+            setLoading(true);
             setRepositories([]);
-            setChanging(true);
             fetchRepositories();
           }}
         >
           <Icon icon="refresh" />
         </Button>
       </div>
-        <div className="flex gap-1 text-sm">
+        {isGitHubAppUserToken(token) && <div className="flex gap-1 text-sm">
           Can't find a repository?
           <a className="underline text-purple-500" href={`${getAppWebsiteBaseURL()}/oauth/github-app`}>Configure the App <i className="fa-solid fa-up-right-from-square" /></a>
-        </div></>}
+        </div>}</>}
     </>
   );
 };

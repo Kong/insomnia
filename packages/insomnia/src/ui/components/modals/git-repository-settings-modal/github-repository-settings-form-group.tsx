@@ -222,8 +222,6 @@ const GitHubRepositoryForm = ({
       }}
     >
       {user && (
-        <>
-          <h2 className="font-bold mb-2">GitHub User</h2>
           <div
             style={{
               display: 'flex',
@@ -259,8 +257,7 @@ const GitHubRepositoryForm = ({
             <Button type="button" onClick={handleSignOut}>
               Sign out
             </Button>
-          </div>
-        </>
+        </div>
       )}
       {token && <GitHubRepositorySelect uri={uri} token={token} />}
       {error && (
