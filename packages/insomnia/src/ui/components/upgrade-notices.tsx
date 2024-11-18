@@ -23,7 +23,7 @@ export const UpgradeNotice = (props: UpgradeNoticeProps) => {
   return (
     <div className='flex flex-col gap-3 justify-center items-center notice pad surprise'>
       <InsomniaLogo className='h-16 w-full' />
-      <Heading className="text-2xl bg-[--color-bg]">
+      <Heading className="text-2xl">
         Upgrade Plan
       </Heading>
       <p>{message}</p>
