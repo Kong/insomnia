@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button, GridList, Menu, MenuItem, MenuTrigger, Popover, type Selection } from 'react-aria-components';
 import { useFetcher, useNavigate } from 'react-router-dom';
@@ -8,6 +9,7 @@ import type { MockRoute } from '../../../models/mock-route';
 import type { Request } from '../../../models/request';
 import { INSOMNIA_TAB_HEIGHT } from '../../constant';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
+import { type Size, useResizeObserver } from '../../hooks/use-resize-observer';
 import { Icon } from '../icon';
 import { AddRequestToCollectionModal } from '../modals/add-request-to-collection-modal';
 import { formatMethodName, getRequestMethodShortHand } from '../tags/method-tag';
@@ -38,6 +40,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   const navigate = useNavigate();
 
   const [showAddRequestModal, setShowAddRequestModal] = useState(false);
+  const [isOverFlow, setIsOverFlow] = useState(false);
 
   const requestFetcher = useFetcher();
 
@@ -151,27 +154,69 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     setShowAddRequestModal(true);
   };
 
+  const tabListInnerRef = React.useRef<HTMLDivElement>(null);
+  const tabListWrapperRef = React.useRef<HTMLDivElement>(null);
+  const componentWrapperRef = React.useRef<HTMLDivElement>(null);
+
+  const onResize = () => {
+    console.log('resize');
+    const innerWidth = tabListInnerRef.current?.clientWidth;
+    const componentWrapperWidth = componentWrapperRef.current?.clientWidth;
+    if (innerWidth && componentWrapperWidth && innerWidth > componentWrapperWidth - 50) {
+      setIsOverFlow(true);
+    } else {
+      setIsOverFlow(false);
+    }
+  };
+
+  const debouncedOnResize = _.debounce<(size: Size) => void>(onResize, 500);
+
+  useResizeObserver(tabListWrapperRef, debouncedOnResize);
+
+  const scrollLeft = () => {
+    if (!tabListWrapperRef.current) {
+      return;
+    }
+    tabListWrapperRef.current.scrollLeft -= 150;
+  };
+
+  const scrollRight = () => {
+    if (!tabListWrapperRef.current) {
+      return;
+    }
+    tabListWrapperRef.current.scrollLeft += 150;
+  };
+
   if (!tabList.length) {
     return null;
   };
 
   return (
-    <div className="flex box-content border-b border-solid border-[--hl-sm]" style={{ height: `${INSOMNIA_TAB_HEIGHT}px` }}>
-      <GridList
-        aria-label="Insomnia Tabs"
-        onSelectionChange={handleSelectionChange}
-        selectedKeys={showActiveStatus && activeTabId ? [activeTabId] : []}
-        disallowEmptySelection
-        defaultSelectedKeys={['req_737492dce0c3460a8a55762e5d1bbd99']}
-        selectionMode="single"
-        selectionBehavior='replace'
-        className="flex bg-[--color-bg] max-w-[calc(100%-50px)] overflow-x-scroll hide-scrollbars h-[41px]"
-        // Use +1 height to mask the wrapper border, and let the custom element in InsomniaTab act as the fake border.（we need different border for active tab）
-        style={{ height: `${INSOMNIA_TAB_HEIGHT + 1}px` }}
-        items={tabList}
-      >
-        {item => <InsomniaTab tab={item} />}
-      </GridList>
+    <div className="flex box-content border-b border-solid border-[--hl-sm] bg-[--color-bg]" style={{ height: `${INSOMNIA_TAB_HEIGHT}px` }} ref={componentWrapperRef}>
+      <Button onPress={scrollLeft}>
+        <Icon icon="chevron-left" className={`w-[40px] cursor-pointer ${isOverFlow ? 'block' : 'hidden'}`} />
+      </Button>
+      <div className='max-w-[calc(100%-50px)] overflow-x-scroll hide-scrollbars scroll-smooth' ref={tabListWrapperRef}>
+        <GridList
+          aria-label="Insomnia Tabs"
+          onSelectionChange={handleSelectionChange}
+          selectedKeys={showActiveStatus && activeTabId ? [activeTabId] : []}
+          disallowEmptySelection
+          defaultSelectedKeys={['req_737492dce0c3460a8a55762e5d1bbd99']}
+          selectionMode="single"
+          selectionBehavior='replace'
+          className="flex h-[41px] w-fit"
+          // Use +1 height to mask the wrapper border, and let the custom element in InsomniaTab act as the fake border.（we need different border for active tab）
+          style={{ height: `${INSOMNIA_TAB_HEIGHT + 1}px` }}
+          items={tabList}
+          ref={tabListInnerRef}
+        >
+          {item => <InsomniaTab tab={item} />}
+        </GridList>
+      </div>
+      <Button onPress={scrollRight}>
+        <Icon icon="chevron-right" className={`w-[40px] cursor-pointer ${isOverFlow ? 'block' : 'hidden'}`} />
+      </Button>
       <div className='flex items-center'>
         <MenuTrigger>
           <Button aria-label="Menu">
