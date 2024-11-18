@@ -194,9 +194,9 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   return (
     <div className="flex box-content border-b border-solid border-[--hl-sm] bg-[--color-bg]" style={{ height: `${INSOMNIA_TAB_HEIGHT}px` }} ref={componentWrapperRef}>
       <Button onPress={scrollLeft}>
-        <Icon icon="chevron-left" className={`w-[40px] cursor-pointer ${isOverFlow ? 'block' : 'hidden'}`} />
+        <Icon icon="chevron-left" className={`w-[30px] cursor-pointer ${isOverFlow ? 'block' : 'hidden'}`} />
       </Button>
-      <div className='max-w-[calc(100%-50px)] overflow-x-scroll hide-scrollbars scroll-smooth' ref={tabListWrapperRef}>
+      <div className='max-w-[calc(100%-100px)] overflow-x-scroll hide-scrollbars scroll-smooth' ref={tabListWrapperRef}>
         <GridList
           aria-label="Insomnia Tabs"
           onSelectionChange={handleSelectionChange}
@@ -215,7 +215,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         </GridList>
       </div>
       <Button onPress={scrollRight}>
-        <Icon icon="chevron-right" className={`w-[40px] cursor-pointer ${isOverFlow ? 'block' : 'hidden'}`} />
+        <Icon icon="chevron-right" className={`w-[30px] cursor-pointer ${isOverFlow ? 'block' : 'hidden'}`} />
       </Button>
       <div className='flex items-center'>
         <MenuTrigger>
