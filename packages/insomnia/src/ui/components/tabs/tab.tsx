@@ -111,7 +111,7 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
     <GridListItem
       textValue='tab'
       id={tab.id}
-      className="outline-none aria-selected:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:hover:bg-[--hl-sm] hover:bg-[--hl-sm]"
+      className="outline-none aria-selected:text-[--color-font] aria-selected:bg-[--hl-sm] hover:bg-[--hl-xs]"
     >
       {({ isSelected, isHovered }) => (
         <Tooltip message={`${tab.projectName} / ${tab.workspaceName}`} className='h-full'>
