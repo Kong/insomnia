@@ -53,6 +53,8 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
   const isBtnDisabled = requestFetcher.state !== 'idle'
     || !selectedProjectId || !selectedWorkspaceId;
 
+  const previousRequestFetcherState = useRef('idle');
+
   const createNewRequest = async () => {
     requestFetcher.submit(
       { requestType: 'HTTP', parentId: selectedWorkspaceId },
@@ -62,7 +64,16 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
         encType: 'application/json',
       },
     );
+    previousRequestFetcherState.current = 'loading';
   };
+
+  useEffect(() => {
+    if (previousRequestFetcherState?.current === 'loading' && requestFetcher.state === 'idle') {
+      // when action is completed, close the modal
+      onHide();
+      previousRequestFetcherState.current = 'idle';
+    }
+  }, [onHide, requestFetcher.state]);
 
   return (
     <OverlayContainer onClick={e => e.stopPropagation()}>
