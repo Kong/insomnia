@@ -505,7 +505,7 @@ const Environments = () => {
             <EnvironmentKVEditor
               key={selectedEnvironment._id}
               data={selectedEnvironment.kvPairData || []}
-            isPrivate={selectedEnvironment.isPrivate}
+              isPrivate={selectedEnvironment.isPrivate}
               onChange={handleKVPairChange}
             />
           }
