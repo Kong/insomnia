@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, type ButtonProps, DropIndicator, ListBox, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, Toolbar, useDragAndDrop } from 'react-aria-components';
 
 import { generateId } from '../../../../common/misc';
@@ -39,7 +39,12 @@ const ItemButton = (props: ButtonProps & { tabIndex?: number }) => {
 };
 
 export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
-  const kvPairs: EnvironmentKvPairData[] = data.length > 0 ? [...data] : [createNewPair()];
+  const kvPairs: EnvironmentKvPairData[] = useMemo(
+    () => data.length > 0 ? [...data] : [createNewPair()],
+    // ensure same array data will not generate duplicate kvPairs to avoid flash issue
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(data)]
+  );
   const codeModalRef = useRef<CodePromptModalHandle>(null);
   const [kvPairError, setKvPairError] = useState<{ id: string; error: string }[]>([]);
 
@@ -271,7 +276,6 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
             <Icon icon={enabled ? 'check-square' : 'square'} />
           </ItemButton>
           <PromptButton
-            disabled={kvPairs.length <= 1}
             className="flex	items-center disabled:opacity-50 justify-center h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             fullWidth
             confirmMessage=''
