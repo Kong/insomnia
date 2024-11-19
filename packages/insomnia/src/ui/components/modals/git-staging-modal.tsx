@@ -3,7 +3,7 @@ import React, { type FC, useEffect } from 'react';
 import { Button, Dialog, GridList, GridListItem, Heading, Label, Modal, ModalOverlay, TextArea, TextField, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
-import type { CommitToGitRepoResult, GitChangesLoaderData, GitDiffResult } from '../../routes/git-actions';
+import type { GitChangesLoaderData, GitDiffResult } from '../../routes/git-actions';
 import { Icon } from '../icon';
 import { showAlert } from '.';
 
@@ -74,10 +74,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
     workspaceId: string;
   };
   const gitChangesFetcher = useFetcher<GitChangesLoaderData>();
-  const gitCommitFetcher = useFetcher<CommitToGitRepoResult>();
-  const rollbackFetcher = useFetcher<{
-    errors?: string[];
-  }>();
+
   const stageChangesFetcher = useFetcher<{
     errors?: string[];
   }>();
@@ -163,20 +160,10 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
   };
 
   const { Form, formAction, state, data } = useFetcher<{ errors?: string[] }>();
-  const errors = gitCommitFetcher.data?.errors || rollbackFetcher.data?.errors;
 
   const isCreatingSnapshot = state === 'loading' && formAction === '/organization/:organizationId/project/:projectId/workspace/:workspaceId/git/commit';
   const isPushing = state === 'loading' && formAction === '/organization/:organizationId/project/:projectId/workspace/:workspaceId/git/commit-and-push';
   const previewDiffItem = diffChangesFetcher.data && 'diff' in diffChangesFetcher.data ? diffChangesFetcher.data.diff : null;
-
-  useEffect(() => {
-    if (errors && errors?.length > 0) {
-      showAlert({
-        title: 'Push Failed',
-        message: errors.join('\n'),
-      });
-    }
-  }, [errors]);
 
   const allChanges = [...changes.staged, ...changes.unstaged];
   const allChangesLength = allChanges.length;
