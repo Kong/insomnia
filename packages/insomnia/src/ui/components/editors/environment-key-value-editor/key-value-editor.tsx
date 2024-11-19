@@ -41,7 +41,7 @@ const ItemButton = (props: ButtonProps & { tabIndex?: number }) => {
 export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
   const kvPairs: EnvironmentKvPairData[] = useMemo(
     () => data.length > 0 ? [...data] : [createNewPair()],
-    // ensure same array data will not generate duplicate kvPairs to avoid flash issue
+    // Ensure same array data will not generate different kvPairs to avoid flash issue
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [JSON.stringify(data)]
   );
