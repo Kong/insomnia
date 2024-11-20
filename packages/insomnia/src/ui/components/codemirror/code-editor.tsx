@@ -548,7 +548,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     }
   };
   useEffect(() => {
-    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag, nunjucksTag }) => {
+    const unsubscribe = window.main.on('nunjucks-context-menu-command', (_, { key, tag, nunjucksTag }) => {
       if (id === key) {
         if (nunjucksTag) {
           const { type, template, range } = nunjucksTag as nunjucksTagContextMenuOptions;
@@ -659,10 +659,10 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
           const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
           if (nunjucksTag) {
             // show context menu for nunjucks tag
-            window.main.showContextMenu({ key: id, nunjucksTag });
+            window.main.showNunjucksContextMenu({ key: id, nunjucksTag });
           }
         } else {
-          window.main.showContextMenu({ key: id });
+          window.main.showNunjucksContextMenu({ key: id });
         }
       }}
     >
