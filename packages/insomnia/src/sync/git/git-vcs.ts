@@ -636,9 +636,13 @@ export class GitVCS {
     }
   }
 
-  async pull(gitCredentials?: GitCredentials | null) {
+  async _hasUncommittedChanges() {
     const changes = await this.status();
-    const hasUncommittedChanges = changes.staged.length > 0 || changes.unstaged.length > 0;
+    return changes.staged.length > 0 || changes.unstaged.length > 0;
+  }
+
+  async pull(gitCredentials?: GitCredentials | null) {
+    const hasUncommittedChanges = await this._hasUncommittedChanges();
     if (hasUncommittedChanges) {
       throw new Error('Cannot pull with uncommitted changes, please commit local changes first.');
     }
@@ -658,7 +662,6 @@ export class GitVCS {
             err,
             oursBranch,
             theirsBranch,
-            gitCredentials
           );
         } else {
           throw err;
@@ -671,7 +674,6 @@ export class GitVCS {
     mergeConflictError: InstanceType<typeof git.Errors.MergeConflictError>,
     oursBranch: string,
     theirsBranch: string,
-    gitCredentials?: GitCredentials | null,
   ) {
     const {
       filepaths, bothModified, deleteByUs, deleteByTheirs,
@@ -691,13 +693,11 @@ export class GitVCS {
 
       const oursHeadCommitOid = await git.resolveRef({
         ...this._baseOpts,
-        ...gitCallbacks(gitCredentials),
         ref: oursBranch,
       });
 
       const theirsHeadCommitOid = await git.resolveRef({
         ...this._baseOpts,
-        ...gitCallbacks(gitCredentials),
         ref: theirsBranch,
       });
 
@@ -706,7 +706,6 @@ export class GitVCS {
       function readBlob(filepath: string, oid: string) {
         return git.readBlob({
           ..._baseOpts,
-          ...gitCallbacks(gitCredentials),
           oid,
           filepath,
         }).then(
@@ -820,14 +819,38 @@ export class GitVCS {
     });
   }
 
-  async merge(theirBranch: string) {
-    const ours = await this.getCurrentBranch();
-    console.log(`[git] Merge ${ours} <-- ${theirBranch}`);
+  async merge({
+    theirsBranch,
+    allowUncommittedChangesBeforeMerge = false,
+  }: {
+    theirsBranch: string;
+    allowUncommittedChangesBeforeMerge?: boolean;
+  }) {
+    if (!allowUncommittedChangesBeforeMerge) {
+      const hasUncommittedChanges = await this._hasUncommittedChanges();
+      if (hasUncommittedChanges) {
+        throw new Error('There are uncommitted changes on current branch. Please commit them before merging.');
+      }
+    }
+    const oursBranch = await this.getCurrentBranch();
+    console.log(`[git] Merge ${oursBranch} <-- ${theirsBranch}`);
     return git.merge({
       ...this._baseOpts,
-      ours,
-      theirs: theirBranch,
-    });
+      ours: oursBranch,
+      theirs: theirsBranch,
+    }).catch(
+      async err => {
+        if (err instanceof git.Errors.MergeConflictError) {
+          return await this._collectMergeConflicts(
+            err,
+            oursBranch,
+            theirsBranch,
+          );
+        } else {
+          throw err;
+        }
+      },
+    );
   }
 
   async fetch({

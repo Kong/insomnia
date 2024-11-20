@@ -961,11 +961,6 @@ async function renderApp() {
                                         action: async (...args) =>
                                           (await import('./routes/git-actions')).checkoutGitBranchAction(...args),
                                       },
-                                      {
-                                        path: 'merge',
-                                        action: async (...args) =>
-                                          (await import('./routes/git-actions')).mergeGitBranchAction(...args),
-                                      },
                                     ],
                                   },
                                 ],

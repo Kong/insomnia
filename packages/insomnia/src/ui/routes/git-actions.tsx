@@ -295,6 +295,8 @@ export interface GitChangesLoaderData {
 export const gitChangesLoader: LoaderFunction = async ({
   params,
 }): Promise<GitChangesLoaderData> => {
+  console.log('gitChangesLoader exec');
+
   const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
 
@@ -1067,66 +1069,47 @@ export const checkoutGitBranchAction: ActionFunction = async ({
   return {};
 };
 
-export interface MergeGitBranchResult {
-  errors?: string[];
-}
+export const mergeGitBranch = async ({
+  theirsBranch,
+  workspaceId,
+  allowUncommittedChangesBeforeMerge = false,
+}: {
+  theirsBranch: string;
+  workspaceId: string;
+  allowUncommittedChangesBeforeMerge?: boolean;
+}) => {
+  const {
+    providerName,
+  } = await getGitRepoInfo(workspaceId);
+  invariant(typeof theirsBranch === 'string', 'Branch name is required');
 
-export const mergeGitBranchAction: ActionFunction = async ({
-  request,
-  params,
-}): Promise<MergeGitBranchResult> => {
-  const { workspaceId } = params;
-  invariant(workspaceId, 'Workspace ID is required');
-
-  const workspace = await models.workspace.getById(workspaceId);
-
-  invariant(workspace, 'Workspace not found');
-
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-
-  const repoId = workspaceMeta?.gitRepositoryId;
-
-  invariant(repoId, 'Workspace is not linked to a git repository');
-
-  const repo = await models.gitRepository.getById(repoId);
-  invariant(repo, 'Git Repository not found');
-
-  const formData = await request.formData();
-  const branch = formData.get('branch');
-  invariant(typeof branch === 'string', 'Branch name is required');
+  const bufferId = await database.bufferChanges();
 
   try {
-    const providerName = getOauth2FormatName(repo?.credentials);
-    await GitVCS.merge(branch);
-    // Apparently merge doesn't update the working dir so need to checkout too
-    const bufferId = await database.bufferChanges();
-
-    await GitVCS.checkout(branch);
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.vcsAction, properties: {
-        ...vcsSegmentEventProperties('git', 'checkout_branch'),
-        providerName,
-      },
+    await GitVCS.merge({
+      theirsBranch,
+      allowUncommittedChangesBeforeMerge,
     });
-    await database.flushChanges(bufferId, true);
     window.main.trackSegmentEvent({
       event: SegmentEvent.vcsAction, properties: {
         ...vcsSegmentEventProperties('git', 'merge_branch'),
         providerName,
       },
     });
-    checkGitCanPush(workspaceId);
   } catch (err) {
     if (err instanceof Errors.HttpError) {
-      return {
-        errors: [`${err.message}, ${err.data.response}`],
-      };
+      err = new Error(`${err.message}, ${err.data.response}`);
     }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    return { errors: [errorMessage] };
-  }
+    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    window.main.trackSegmentEvent({
+      event:
+        SegmentEvent.vcsAction, properties:
+        vcsSegmentEventProperties('git', 'merge_branch', errorMessage),
+    });
 
-  return {};
+    throw err;
+  }
+  await database.flushChanges(bufferId, true);
 };
 
 export interface DeleteGitBranchResult {
@@ -1183,6 +1166,7 @@ export const pushToGitRemoteAction: ActionFunction = async ({
   request,
   params,
 }): Promise<PushToGitRemoteResult> => {
+  debugger;
   const { workspaceId } = params;
   invariant(workspaceId, 'Workspace ID is required');
   const workspace = await models.workspace.getById(workspaceId);
@@ -1267,24 +1251,29 @@ export const pushToGitRemoteAction: ActionFunction = async ({
   return {};
 };
 
-export const pullFromGitRemote = async (workspaceId: string) => {
+async function getGitRepoInfo(workspaceId: string) {
   invariant(workspaceId, 'Workspace ID is required');
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
-
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-
   const repoId = workspaceMeta?.gitRepositoryId;
-
   invariant(repoId, 'Workspace is not linked to a git repository');
-
   const gitRepository = await models.gitRepository.getById(repoId);
-
   invariant(gitRepository, 'Git Repository not found');
+  const providerName = getOauth2FormatName(gitRepository.credentials);
+  return {
+    gitRepository,
+    providerName,
+  };
+}
+
+export const pullFromGitRemote = async (workspaceId: string) => {
+  const {
+    gitRepository,
+    providerName,
+  } = await getGitRepoInfo(workspaceId);
 
   const bufferId = await database.bufferChanges();
-
-  const providerName = getOauth2FormatName(gitRepository.credentials);
 
   try {
     await GitVCS.pull(gitRepository.credentials);
