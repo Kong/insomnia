@@ -44,7 +44,17 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
   const requestFetcher = useFetcher();
 
-  const { changeActiveTab, deleteTabById, deleteAllTabsUnderWorkspace, deleteAllTabsUnderProject, updateTabById, updateProjectName, updateWorkspaceName } = useInsomniaTabContext();
+  const {
+    changeActiveTab,
+    closeTabById,
+    closeAllTabsUnderWorkspace,
+    closeAllTabsUnderProject,
+    updateTabById,
+    updateProjectName,
+    updateWorkspaceName,
+    closeAllTabs,
+    closeOtherTabs,
+  } = useInsomniaTabContext();
 
   const handleSelectionChange = (keys: Selection) => {
     console.log('changeActiveTab');
@@ -80,16 +90,16 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   const handleDelete = useCallback((docId: string, docType: string) => {
     if (docType === models.project.type) {
       // delete all tabs of this project
-      deleteAllTabsUnderProject?.(docId);
+      closeAllTabsUnderProject?.(docId);
     }
     if (docType === models.workspace.type) {
       // delete all tabs of this workspace
-      deleteAllTabsUnderWorkspace?.(docId);
+      closeAllTabsUnderWorkspace?.(docId);
     } else {
       // delete tab by id
-      deleteTabById(docId);
+      closeTabById(docId);
     }
-  }, [deleteAllTabsUnderProject, deleteAllTabsUnderWorkspace, deleteTabById]);
+  }, [closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById]);
 
   const handleUpdate = useCallback((doc: models.BaseModel) => {
     // currently have 2 types of update, rename and change request method
@@ -133,7 +143,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     return () => {
       database.offChange(callback);
     };
-  }, [deleteTabById, handleDelete, handleUpdate]);
+  }, [handleDelete, handleUpdate]);
 
   const addRequest = () => {
     const currentTab = tabList.find(tab => tab.id === activeTabId);
@@ -186,6 +196,28 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     }
     tabListWrapperRef.current.scrollLeft += 150;
   };
+
+  useEffect(() => {
+    const unsubscribe = window.main.on('contextMenuCommand', (_, { key, label, extra }) => {
+      if (key !== 'insomniaTab') {
+        return;
+      }
+      switch (label) {
+        case 'Close All':
+          closeAllTabs?.();
+          break;
+        case 'Close Others':
+          closeOtherTabs?.(extra?.currentTabId);
+          break;
+        default:
+          break;
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [closeAllTabs, closeOtherTabs]);
 
   if (!tabList.length) {
     return null;
