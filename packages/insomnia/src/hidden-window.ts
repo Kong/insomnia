@@ -8,11 +8,9 @@ export interface HiddenBrowserWindowBridgeAPI {
   runScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
 };
 
-export function initializeSentry() {
-  Sentry.init({
-    ...SENTRY_OPTIONS,
-  });
-}
+Sentry.init({
+  ...SENTRY_OPTIONS,
+});
 
 window.bridge.onmessage(async (data, callback) => {
   window.bridge.setBusy(true);
@@ -27,8 +25,12 @@ window.bridge.onmessage(async (data, callback) => {
     const result = await window.bridge.Promise.race([timeoutPromise, runScript(data)]);
     callback(result);
   } catch (err) {
-    Sentry.captureException(err);
     const errMessage = err.message ? `message: ${err.message}; stack: ${err.stack}` : err;
+    Sentry.captureException(errMessage, {
+      tags: {
+        source: 'hidden-window',
+      },
+    });
     callback({ error: errMessage });
   } finally {
     window.bridge.setBusy(false);
