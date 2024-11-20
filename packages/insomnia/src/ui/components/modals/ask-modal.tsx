@@ -69,6 +69,7 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
           </button>
           <button
             className="btn"
+            autoFocus
             style={{ color: `var(--color-font-${color})`, backgroundColor: `var(--color-${color})` }}
             onClick={() => {
               modalRef.current?.hide();
