@@ -69,7 +69,8 @@ const main: Window['main'] = {
   curl,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
-  showContextMenu: options => ipcRenderer.send('show-context-menu', options),
+  showNunjucksContextMenu: options => ipcRenderer.send('show-nunjucks-context-menu', options),
+  showContextMenu: options => ipcRenderer.send('showContextMenu', options),
   database: {
     caCertificate: {
       create: options => ipcRenderer.invoke('database.caCertificate.create', options),

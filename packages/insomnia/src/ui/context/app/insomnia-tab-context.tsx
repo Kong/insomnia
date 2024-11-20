@@ -14,14 +14,16 @@ interface UpdateInsomniaTabParams {
 interface ContextProps {
   currentOrgTabs: OrganizationTabs;
   appTabsRef?: React.MutableRefObject<InsomniaTabs | undefined>;
-  deleteTabById: (id: string) => void;
+  closeTabById: (id: string) => void;
   addTab: (tab: BaseTab) => void;
   changeActiveTab: (id: string) => void;
-  deleteAllTabsUnderWorkspace?: (workspaceId: string) => void;
-  deleteAllTabsUnderProject?: (projectId: string) => void;
+  closeAllTabsUnderWorkspace?: (workspaceId: string) => void;
+  closeAllTabsUnderProject?: (projectId: string) => void;
   updateProjectName?: (projectId: string, name: string) => void;
   updateWorkspaceName?: (projectId: string, name: string) => void;
   updateTabById?: (tabId: string, name: string, method?: string, tag?: string) => void;
+  closeAllTabs?: () => void;
+  closeOtherTabs?: (id: string) => void;
 }
 
 const InsomniaTabContext = createContext<ContextProps>({
@@ -29,7 +31,7 @@ const InsomniaTabContext = createContext<ContextProps>({
     tabList: [],
     activeTabId: '',
   },
-  deleteTabById: () => { },
+  closeTabById: () => { },
   addTab: () => { },
   changeActiveTab: () => { },
 });
@@ -79,7 +81,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     });
   }, [organizationId, updateInsomniaTabs]);
 
-  const deleteTabById = useCallback((id: string) => {
+  const closeTabById = useCallback((id: string) => {
     const currentTabs = appTabsRef?.current?.[organizationId];
     if (!currentTabs) {
       return;
@@ -111,7 +113,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     });
   }, [navigate, organizationId, projectId, updateInsomniaTabs]);
 
-  const deleteAllTabsUnderWorkspace = useCallback((workspaceId: string) => {
+  const closeAllTabsUnderWorkspace = useCallback((workspaceId: string) => {
     const currentTabs = appTabsRef?.current?.[organizationId];
     if (!currentTabs) {
       return;
@@ -125,7 +127,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     });
   }, [organizationId, updateInsomniaTabs]);
 
-  const deleteAllTabsUnderProject = useCallback((projectId: string) => {
+  const closeAllTabsUnderProject = useCallback((projectId: string) => {
     const currentTabs = appTabsRef?.current?.[organizationId];
     if (!currentTabs) {
       return;
@@ -138,6 +140,35 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       activeTabId: '',
     });
   }, [organizationId, updateInsomniaTabs]);
+
+  const closeAllTabs = useCallback(() => {
+    navigate(`/organization/${organizationId}/project/${projectId}`);
+    updateInsomniaTabs({
+      organizationId,
+      tabList: [],
+      activeTabId: '',
+    });
+  }, [navigate, organizationId, projectId, updateInsomniaTabs]);
+
+  const closeOtherTabs = useCallback((id: string) => {
+    const currentTabs = appTabsRef?.current?.[organizationId];
+    if (!currentTabs) {
+      return;
+    }
+    const reservedTab = currentTabs.tabList.find(tab => tab.id === id);
+    if (!reservedTab) {
+      return;
+    }
+
+    if (currentTabs.activeTabId !== id) {
+      navigate(reservedTab.url);
+    }
+    updateInsomniaTabs({
+      organizationId,
+      tabList: [reservedTab],
+      activeTabId: id,
+    });
+  }, [navigate, organizationId, updateInsomniaTabs]);
 
   const updateTabById = useCallback((tabId: string, name: string, method: string = '', tag: string = '') => {
     const currentTabs = appTabsRef?.current?.[organizationId];
@@ -221,15 +252,17 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     <InsomniaTabContext.Provider
       value={{
         currentOrgTabs: appTabs?.[organizationId] || { tabList: [], activeTabId: '' },
-        deleteTabById,
-        deleteAllTabsUnderWorkspace,
-        deleteAllTabsUnderProject,
+        closeTabById,
+        closeAllTabsUnderWorkspace,
+        closeAllTabsUnderProject,
         addTab,
         updateTabById,
         changeActiveTab,
         updateProjectName,
         updateWorkspaceName,
         appTabsRef,
+        closeAllTabs,
+        closeOtherTabs,
       }}
     >
       {children}
