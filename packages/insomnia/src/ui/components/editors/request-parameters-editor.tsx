@@ -74,11 +74,8 @@ export const RequestParametersEditor: FC<Props> = ({
     );
   }
 
-  const pairsIds = activeRequest.parameters.map((param, index) => param.id || index).join(',');
-
   return (
     <KeyValueEditor
-      key={pairsIds}
       allowMultiline
       namePlaceholder="name"
       valuePlaceholder="value"

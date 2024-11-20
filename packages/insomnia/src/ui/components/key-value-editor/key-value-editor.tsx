@@ -1,4 +1,4 @@
-import React, { type FC, Fragment, useCallback } from 'react';
+import React, { type FC, Fragment, useCallback, useMemo } from 'react';
 import { Button, DropIndicator, ListBox, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, ToggleButton, Toolbar, useDragAndDrop } from 'react-aria-components';
 
 import { describeByteSize, generateId } from '../../../common/misc';
@@ -63,17 +63,19 @@ export const KeyValueEditor: FC<Props> = ({
 }) => {
   const [showDescription, setShowDescription] = React.useState(false);
   const { enabled: nunjucksEnabled } = useNunjucksEnabled();
-  let pairsListItems = pairs.length > 0 ? pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) : [createEmptyPair()];
+  let pairsListItems = useMemo(
+    () => pairs.length > 0 ? pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) : [createEmptyPair()],
+    // Ensure same array data will not generate different kvPairs to avoid flash issue
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(pairs)]
+  );
   const initialReadOnlyItems = readOnlyPairs?.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) || [];
 
   const upsertPair = useCallback(function upsertPair(pairsListItems: Pair[], pair: Pair) {
     if (pairsListItems.find(item => item.id === pair.id)) {
-      pairsListItems = pairsListItems.map(item => (item.id === pair.id ? pair : item));
-      onChange(pairsListItems);
+      onChange(pairsListItems.map(item => (item.id === pair.id ? pair : item)));
     } else {
-      const id = pair.id === 'pair-empty' ? generateId('pair') : pair.id;
-      pairsListItems = pairsListItems.concat({ ...pair, id });
-      onChange(pairsListItems);
+      onChange([...pairsListItems, pair]);
     }
   }, [onChange]);
 
@@ -305,7 +307,6 @@ export const KeyValueEditor: FC<Props> = ({
       <ListBox
         aria-label='Key-value pairs'
         selectionMode='none'
-        // dependencies={[showDescription, nunjucksEnabled]}
         className="flex pt-1 flex-col w-full overflow-y-auto flex-1 relative"
         dragAndDropHooks={dragAndDropHooks}
         dependencies={[upsertPair, showDescription, nunjucksEnabled]}
