@@ -113,10 +113,10 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
       key: 'insomniaTab',
       menuItems: [
         {
-          label: 'Close All',
+          label: 'Close all',
         },
         {
-          label: 'Close Others',
+          label: 'Close others',
         },
       ],
       extra: {
