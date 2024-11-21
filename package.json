@@ -66,7 +66,6 @@
   },
   "dependencies": {
     "@types/decompress": "^4.2.7",
-    "consola": "^3.2.3",
     "decompress": "^4.2.1"
   }
 }
