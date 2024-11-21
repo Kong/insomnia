@@ -271,6 +271,16 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
     }
   });
 
+  mainBrowserWindow.on('focus', () => {
+    console.log('[main] window focus');
+    mainBrowserWindow.webContents.send('mainWindowFocusChange', true);
+  });
+
+  mainBrowserWindow.on('blur', () => {
+    console.log('[main] window blur');
+    mainBrowserWindow.webContents.send('mainWindowFocusChange', false);
+  });
+
   const applicationMenu: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}Application`,
     submenu: [

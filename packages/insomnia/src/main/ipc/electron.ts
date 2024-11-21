@@ -86,7 +86,8 @@ export type RendererOnChannels =
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
   | 'toggle-sidebar'
-  | 'updaterStatus';
+  | 'updaterStatus'
+  | 'mainWindowFocusChange';
 export const ipcMainOn = (
   channel: MainOnChannels,
   listener: (

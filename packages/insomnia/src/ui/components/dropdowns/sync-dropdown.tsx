@@ -1,5 +1,5 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { type FC, Fragment, useEffect, useState } from 'react';
+import React, { type FC, Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Collection, Menu, MenuItem, MenuTrigger, Popover, Section, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 import { useInterval } from 'react-use';
@@ -38,6 +38,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
   const [isSyncHistoryModalOpen, setIsSyncHistoryModalOpen] = useState(false);
   const [isSyncStagingModalOpen, setIsSyncStagingModalOpen] = useState(false);
   const [isSyncBranchesModalOpen, setIsSyncBranchesModalOpen] = useState(false);
+  const [isWindowFocused, setIsWindowFocused] = useState(true);
 
   const pushFetcher = useFetcher();
   const pullFetcher = useFetcher();
@@ -52,12 +53,31 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
     }
   }, [organizationId, projectId, syncDataLoaderFetcher, workspaceId]);
 
-  useInterval(() => {
-    syncDataActionFetcher.submit({}, {
+  const triggerSync = useCallback(() => {
+    const submit = syncDataActionFetcher.submit;
+    submit({}, {
       method: 'POST',
       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
     });
-  }, ONE_MINUTE_IN_MS);
+  }, [organizationId, projectId, syncDataActionFetcher.submit, workspaceId]);
+
+  useEffect(() => {
+    const unsubscribe = window.main.on('mainWindowFocusChange', (_, isFocus) => {
+      setIsWindowFocused(isFocus);
+      if (isFocus) {
+        // trigger sync when user comes back to the app
+        triggerSync();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [triggerSync]);
+
+  useInterval(() => {
+    triggerSync();
+  }, isWindowFocused ? ONE_MINUTE_IN_MS : null);
 
   const error = checkoutFetcher.data?.error || pullFetcher.data?.error || pushFetcher.data?.error || rollbackFetcher.data?.error;
 
