@@ -1197,10 +1197,10 @@ const ProjectRoute: FC = () => {
             </div>
           </Panel>
           <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
-          <Panel id="pane-one" className='pane-one theme--pane'>
+          <Panel id="pane-one" className='pane-one theme--pane flex flex-col'>
             <OrganizationTabList showActiveStatus={false} />
             {activeProject ? (
-              <div className="w-full h-full flex flex-col overflow-hidden">
+              <div className="w-full flex flex-col overflow-hidden">
                 {billing.isActive ? null : <div className='p-[--padding-md] pb-0'>
                   <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
                     <p className='text-base'>
@@ -1483,7 +1483,7 @@ const ProjectRoute: FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="w-full h-full flex flex-col gap-2 items-center justify-center overflow-hidden">
+                <div className="w-full flex flex-col gap-2 items-center justify-center overflow-hidden">
                 <p className='text-lg'>
                   This is an empty Organization. To get started create your first project.
                 </p>
