@@ -4,6 +4,7 @@ import { Button, GridListItem } from 'react-aria-components';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
+import { TAB_CONTEXT_MENU_COMMAND } from './tabList';
 
 export enum TabEnum {
   Request = 'request',
@@ -113,10 +114,10 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
       key: 'insomniaTab',
       menuItems: [
         {
-          label: 'Close all',
+          label: TAB_CONTEXT_MENU_COMMAND.CLOSE_ALL,
         },
         {
-          label: 'Close others',
+          label: TAB_CONTEXT_MENU_COMMAND.CLOSE_OTHERS,
         },
       ],
       extra: {
