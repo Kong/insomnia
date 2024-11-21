@@ -41,6 +41,8 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
   const [showAddRequestModal, setShowAddRequestModal] = useState(false);
   const [isOverFlow, setIsOverFlow] = useState(false);
+  const [leftScrollDisable, setLeftScrollDisable] = useState(false);
+  const [rightScrollDisable, setRightScrollDisable] = useState(false);
 
   const requestFetcher = useFetcher();
 
@@ -166,13 +168,12 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
   const tabListInnerRef = React.useRef<HTMLDivElement>(null);
   const tabListWrapperRef = React.useRef<HTMLDivElement>(null);
-  const componentWrapperRef = React.useRef<HTMLDivElement>(null);
 
   const onResize = () => {
     console.log('resize');
     const innerWidth = tabListInnerRef.current?.clientWidth;
-    const componentWrapperWidth = componentWrapperRef.current?.clientWidth;
-    if (innerWidth && componentWrapperWidth && innerWidth > componentWrapperWidth - 50) {
+    const wrapperWidth = tabListWrapperRef.current?.clientWidth;
+    if (innerWidth && wrapperWidth && innerWidth > wrapperWidth) {
       setIsOverFlow(true);
     } else {
       setIsOverFlow(false);
@@ -219,22 +220,46 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     };
   }, [closeAllTabs, closeOtherTabs]);
 
+  const calculateScrollButtonStatus = (target: HTMLDivElement) => {
+    const { scrollLeft, scrollWidth, clientWidth } = target;
+    if (scrollLeft === 0) {
+      setLeftScrollDisable(true);
+    } else {
+      setLeftScrollDisable(false);
+    }
+
+    if (scrollLeft + clientWidth >= scrollWidth - 1) {
+      setRightScrollDisable(true);
+    } else {
+      setRightScrollDisable(false);
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent) => {
+    calculateScrollButtonStatus(e.target as HTMLDivElement);
+  };
+
+  useEffect(() => {
+    if (isOverFlow && tabListWrapperRef?.current) {
+      calculateScrollButtonStatus(tabListWrapperRef?.current);
+    }
+  }, [isOverFlow]);
+
   if (!tabList.length) {
     return null;
   };
 
   return (
-    <div className="flex box-content border-b border-solid border-[--hl-sm] bg-[--color-bg]" style={{ height: `${INSOMNIA_TAB_HEIGHT}px` }} ref={componentWrapperRef}>
-      <Button onPress={scrollLeft}>
-        <Icon icon="chevron-left" className={`w-[30px] cursor-pointer ${isOverFlow ? 'block' : 'hidden'}`} />
+    <div className="flex box-content border-b border-solid border-[--hl-sm] bg-[--color-bg]" style={{ height: `${INSOMNIA_TAB_HEIGHT}px` }} >
+      <Button onPress={scrollLeft} isDisabled={leftScrollDisable} className={`${leftScrollDisable && 'cursor-not-allowed'}`}>
+        <Icon icon="chevron-left" className={`w-[30px] ${isOverFlow ? 'block' : 'hidden'}`} />
       </Button>
-      <div className='max-w-[calc(100%-100px)] overflow-x-scroll hide-scrollbars scroll-smooth' ref={tabListWrapperRef}>
+      <div className='max-w-[calc(100%-40px)] overflow-x-scroll hide-scrollbars scroll-smooth' ref={tabListWrapperRef} onScroll={handleScroll}>
         <GridList
           aria-label="Insomnia Tabs"
           onSelectionChange={handleSelectionChange}
           selectedKeys={showActiveStatus && activeTabId ? [activeTabId] : []}
           disallowEmptySelection
-          defaultSelectedKeys={['req_737492dce0c3460a8a55762e5d1bbd99']}
           selectionMode="single"
           selectionBehavior='replace'
           className="flex h-[41px] w-fit"
@@ -246,13 +271,13 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
           {item => <InsomniaTab tab={item} />}
         </GridList>
       </div>
-      <Button onPress={scrollRight}>
-        <Icon icon="chevron-right" className={`w-[30px] cursor-pointer ${isOverFlow ? 'block' : 'hidden'}`} />
+      <Button onPress={scrollRight} isDisabled={rightScrollDisable} className={`${rightScrollDisable && 'cursor-not-allowed'}`} >
+        <Icon icon="chevron-right" className={`w-[30px] ${isOverFlow ? 'block' : 'hidden'}`} />
       </Button>
-      <div className='flex items-center'>
+      <div className='flex items-center w-[40px] justify-center flex-shrink-0'>
         <MenuTrigger>
           <Button aria-label="Menu">
-            <Icon icon="plus" className='ml-[15px] cursor-pointer' />
+            <Icon icon="plus" className='cursor-pointer' />
           </Button>
           <Popover>
             <Menu className='border max-w-lg select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none'>
