@@ -999,7 +999,7 @@ const Design: FC = () => {
         </div>
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
-      <Panel>
+      <Panel className='flex flex-col'>
         <OrganizationTabList />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" minSize={10} className='pane-one theme--pane'>
