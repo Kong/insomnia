@@ -142,10 +142,13 @@ const LocalBranchItem = ({
                               handledMergeConflicts: conflicts,
                               commitMessage: data.commitMessage,
                               commitParent: data.commitParent,
-                            }).finally(() => {
+                            }).then(
+                              resolve,
+                              reject,
+                            ).finally(() => {
+                              checkGitCanPush(workspaceId);
                               revalidate();
                             });
-                            resolve(undefined);
                           } else {
                             // user aborted merge
                             reject(new Error('You aborted the merge, no changes were made to working tree.'));
@@ -153,8 +156,6 @@ const LocalBranchItem = ({
                         },
                       });
                     });
-
-                    checkGitCanPush(workspaceId);
                   } else {
                     throw new Error(`Merge failed: ${err.message}`);
                   }

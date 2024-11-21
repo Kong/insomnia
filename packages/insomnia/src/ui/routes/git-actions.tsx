@@ -295,8 +295,6 @@ export interface GitChangesLoaderData {
 export const gitChangesLoader: LoaderFunction = async ({
   params,
 }): Promise<GitChangesLoaderData> => {
-  console.log('gitChangesLoader exec');
-
   const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
 
@@ -1166,7 +1164,6 @@ export const pushToGitRemoteAction: ActionFunction = async ({
   request,
   params,
 }): Promise<PushToGitRemoteResult> => {
-  debugger;
   const { workspaceId } = params;
   invariant(workspaceId, 'Workspace ID is required');
   const workspace = await models.workspace.getById(workspaceId);

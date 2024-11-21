@@ -670,6 +670,7 @@ export class GitVCS {
     );
   }
 
+  // Collect merge conflict details from isomorphic-git git.Errors.MergeConflictError and throw a MergeConflictError which will be used to display the conflicts in the SyncMergeModal
   async _collectMergeConflicts(
     mergeConflictError: InstanceType<typeof git.Errors.MergeConflictError>,
     oursBranch: string,
