@@ -70,6 +70,7 @@ export function init(): BaseSettings {
     useBulkParametersEditor: false,
     validateAuthSSL: true,
     validateSSL: true,
+    vaultSecretCacheDuration: 30,
   };
 }
 

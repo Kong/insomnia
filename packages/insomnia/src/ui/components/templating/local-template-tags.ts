@@ -7,6 +7,11 @@ import os from 'os';
 import { CookieJar } from 'tough-cookie';
 import * as uuid from 'uuid';
 
+import type { RenderPurpose } from '../../../common/render';
+import type { AWSSecretConfig } from '../../../main/ipc/cloud-service-integraion/types';
+import * as models from '../../../models';
+import type { CloudProviderCredential, CloudProviderName } from '../../../models/cloud-credential';
+import { vaultEnvironmentMaskValue } from '../../../models/environment';
 import type { Request, RequestParameter } from '../../../models/request';
 import type { Response } from '../../../models/response';
 import type { TemplateTag } from '../../../plugins';
@@ -16,6 +21,100 @@ import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } fro
 import { fakerFunctions } from './faker-functions';
 
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
+  {
+    templateTag: {
+      name: 'vault',
+      displayName: 'External Vault',
+      description: 'Link secret from external vault',
+      // external vault is an enterprise feature
+      needsEnterprisePlan: true,
+      args: [
+        {
+          displayName: 'Vault Service Provider',
+          type: 'enum',
+          options: [
+            { displayName: 'AWS Secrets Manager', value: 'aws' },
+          ],
+        },
+        {
+          displayName: 'Credential For Vault Service Provider',
+          type: 'model',
+          modelFilter: (credentialModel, args) => {
+            const providerNameFromArg = args[0].value;
+            const { provider } = credentialModel as CloudProviderCredential;
+            return providerNameFromArg === provider;
+          },
+          model: 'CloudCredential',
+        },
+        {
+          type: 'string',
+          defaultValue: '{}',
+          requireSubForm: true,
+        },
+      ],
+      async run(context, provider: CloudProviderName, credentialId: string, configStr: string) {
+        if (!provider) {
+          throw new Error('Vault service provider is required');
+        }
+        if (!credentialId) {
+          throw new Error('Credential is required');
+        };
+        const providerCredential = await models.cloudCrendential.getById(credentialId);
+        if (!providerCredential) {
+          throw new Error('No Cloud Credential found');
+        }
+        const renderContext = context.renderPurpose as RenderPurpose;
+        // Get secret from external vaults when send request or in tag-preview, otherwise return defautl mask value
+        if (renderContext === 'preview' || renderContext === 'send') {
+          let secretConfig = {};
+          try {
+            secretConfig = JSON.parse(configStr);
+          } catch (error) {
+            throw new Error('Invalid vault secret config');
+          }
+          if (provider === 'aws') {
+            const {
+              SecretId, VersionId, VersionStage, SecretKey,
+              SecretType = 'plaintext',
+            } = secretConfig as AWSSecretConfig;
+            if (!SecretId) {
+              throw new Error('Secret Name or ARN is required');
+            }
+            const getSecretOption = {
+              provider,
+              secretId: SecretId,
+              config: {
+                VersionId, VersionStage,
+              },
+              credentials: providerCredential.credentials,
+            };
+            const secretResult = await window.main.cloudService.getSecret(getSecretOption);
+            const { success, error, result } = secretResult;
+            if (success && result) {
+              const { SecretString } = result!;
+              let parsedJSON;
+              if (SecretType === 'plaintext' || !SecretKey) {
+                return SecretString;
+              } else {
+                try {
+                  parsedJSON = JSON.parse(SecretString || '{}');
+                } catch (error) {
+                  throw new Error(`Secret value ${SecretString} can not parsed to key/value pair, please change Secret Type to plaintext`);
+                }
+                if (SecretKey in parsedJSON) {
+                  return parsedJSON[SecretKey];
+                }
+                throw new Error(`Secret key ${SecretKey} does not exist in key/value secret ${SecretString}`);
+              }
+            } else {
+              throw new Error(error?.errorMessage);
+            }
+          }
+        }
+        return vaultEnvironmentMaskValue;
+      },
+    },
+  },
   {
     templateTag: {
       name: 'faker',

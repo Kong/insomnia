@@ -36,6 +36,8 @@
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.3.6",
     "@apidevtools/swagger-parser": "10.1.0",
+    "@aws-sdk/client-secrets-manager": "^3.686.0",
+    "@aws-sdk/client-sts": "^3.686.0",
     "@bufbuild/protobuf": "^1.8.0",
     "@connectrpc/connect": "^1.4.0",
     "@connectrpc/connect-node": "^1.4.0",
@@ -162,6 +164,7 @@
     "objectpath": "^2.0.0",
     "openapi-types": "^12.1.3",
     "postcss": "^8.4.38",
+    "quick-lru": "^7.0.0",
     "react": "^18.2.0",
     "react-aria": "3.32.1",
     "react-aria-components": "^1.1.1",

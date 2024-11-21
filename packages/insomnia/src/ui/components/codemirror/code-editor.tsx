@@ -22,12 +22,14 @@ import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
 import { useEditorRefresh } from '../../hooks/use-editor-refresh';
+import { usePlanData } from '../../hooks/use-plan';
 import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { NunjucksModal } from '../modals/nunjucks-modal';
+import { UpgradeModal } from '../modals/upgrade-modal';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
 const TAB_SIZE = 4;
@@ -188,6 +190,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
   const {
     settings,
   } = useRootLoaderData();
+  const { isOwner, isEnterprisePlan } = usePlanData();
   const indentSize = settings.editorIndentSize;
   const indentWithTabs = shouldIndentWithTabs({ mode, indentWithTabs: settings.editorIndentWithTabs });
   const indentChars = indentWithTabs ? '\t' : new Array((indentSize || TAB_SIZE) + 1).join(' ');
@@ -546,8 +549,17 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     }
   };
   useEffect(() => {
-    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag, nunjucksTag }) => {
+    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag, nunjucksTag, needsEnterprisePlan, displayName }) => {
       if (id === key) {
+        if (needsEnterprisePlan && !isEnterprisePlan) {
+          // show modal if current user is not an enteprise user and the command is an enterprise feature
+          showModal(UpgradeModal, {
+            newPlan: 'enterprise',
+            featureName: displayName,
+            isOwner,
+          });
+          return;
+        }
         if (nunjucksTag) {
           const { type, template, range } = nunjucksTag as nunjucksTagContextMenuOptions;
           switch (type) {
@@ -578,7 +590,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     return () => {
       unsubscribe();
     };
-  }, [id]);
+  }, [id, isEnterprisePlan, isOwner]);
   useEffect(() => tryToSetOption('hintOptions', hintOptions), [hintOptions]);
   useEffect(() => tryToSetOption('info', infoOptions), [infoOptions]);
   useEffect(() => tryToSetOption('jump', jumpOptions), [jumpOptions]);

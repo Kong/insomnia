@@ -18,7 +18,7 @@ import { database as db } from './database';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
-export type RenderPurpose = 'send' | 'general' | 'no-render';
+export type RenderPurpose = 'send' | 'general' | 'preview' | 'no-render';
 export const RENDER_PURPOSE_SEND: RenderPurpose = 'send';
 export const RENDER_PURPOSE_GENERAL: RenderPurpose = 'general';
 export const RENDER_PURPOSE_NO_RENDER: RenderPurpose = 'no-render';
@@ -372,7 +372,7 @@ interface BaseRenderContextOptions {
   ignoreUndefinedEnvVariable?: boolean;
 }
 
-interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
+export interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
   ancestors?: RenderContextAncestor[];
 }
 export async function getRenderContext(

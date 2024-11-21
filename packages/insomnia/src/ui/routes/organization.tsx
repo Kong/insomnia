@@ -86,8 +86,8 @@ interface UserProfileResponse {
   family_name: string;
 }
 
-type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
-const formatCurrentPlanType = (type: PersonalPlanType) => {
+export type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
+export const formatCurrentPlanType = (type: PersonalPlanType) => {
   switch (type) {
     case 'free':
       return 'Hobby';
