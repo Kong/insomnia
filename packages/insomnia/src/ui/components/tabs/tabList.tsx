@@ -20,6 +20,11 @@ export interface OrganizationTabs {
   activeTabId?: string;
 }
 
+export const enum TAB_CONTEXT_MENU_COMMAND {
+  CLOSE_ALL = 'Close all',
+  CLOSE_OTHERS = 'Close others',
+}
+
 export const TAB_ROUTER_PATH: Record<TabEnum, string> = {
   [TabEnum.Collection]: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug',
   [TabEnum.Folder]: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request-group/:requestGroupId',
@@ -204,10 +209,10 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         return;
       }
       switch (label) {
-        case 'Close All':
+        case TAB_CONTEXT_MENU_COMMAND.CLOSE_ALL:
           closeAllTabs?.();
           break;
-        case 'Close Others':
+        case TAB_CONTEXT_MENU_COMMAND.CLOSE_OTHERS:
           closeOtherTabs?.(extra?.currentTabId);
           break;
         default:
