@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { VaultCache } from '../cloud-service-integration/vault-cache';
+import { VaultCache } from '../cloud-service-integraion/vault-cache';
 
 describe('test cache', () => {
   it('should get item after set', () => {
