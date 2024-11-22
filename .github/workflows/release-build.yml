@@ -257,16 +257,9 @@ jobs:
         uses: kt3k/update-pr-description@v2.0.0
         with:
           pr_body: |
-            **WARNING: Do not merge this PR. This is an automated release PR. It should be released using the "Publish" workflow.**
+            # WARNING: <ins>Do not merge</ins> this PR. Use the "Publish" workflow.
 
-            Download release artifacts [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-
-            ## Steps for Publish:
-
-            You can update the changelog.md in this branch, run git log to get the latest changes:
-            ```bash
-            git log --no-merges --oneline --pretty=format:'* %s by @%an' --since="<last release tag>" --until="release/${{ steps.release_version.outputs.version }}"
-            ```
+            ## Publish workflow:
 
             When ready to publish, trigger [Publish](https://github.com/${{ github.repository }}/actions/workflows/release-publish.yml) workflow with these variables:
             - Release version (`version`): `${{ steps.release_version.outputs.version }}`
@@ -276,7 +269,21 @@ jobs:
             gh workflow run release-publish.yml -f version=${{ steps.release_version.outputs.version }} --repo ${{ github.repository }}
             ```
 
-            Release notes will be generated automatically based on the commit messages during publish. Remove any unwanted notes manually afterwards.
+            > Release notes will be generated automatically based on the commit messages during publish. Remove any unwanted notes manually afterwards.
+
+            ## Release artifacts:
+
+            Download release artifacts [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            <details>
+            <summary>Edit Changelog file...</summary>
+
+            You can update the changelog.md in this branch, run git log to get the latest changes:
+
+            ```bash
+            git log --no-merges --oneline --pretty=format:'* %s by @%an' --since="<last release tag>" --until="release/${{ steps.release_version.outputs.version }}"
+            ```
+            </details>
 
             <details>
             <summary>Conflicts? Merge branch step failed on the publish workflow? Try this...</summary>
