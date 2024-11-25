@@ -19,6 +19,7 @@ interface Props<T> {
   tabIndex?: number;
   title?: string;
   fullWidth?: boolean;
+  ariaLabel?: string;
   onClick?: (event: MouseEvent<HTMLButtonElement>, value?: T) => void;
   referToOnClickReturnValue?: boolean;
 }
@@ -33,6 +34,7 @@ export const PromptButton = <T, >({
   title,
   className,
   fullWidth = false,
+  ariaLabel = '',
   children,
   referToOnClickReturnValue = false,
 }: PropsWithChildren<Props<T>>) => {
@@ -105,6 +107,7 @@ export const PromptButton = <T, >({
       tabIndex={tabIndex}
       title={title}
       className={className}
+      aria-label={ariaLabel}
       style={{
         width: fullWidth ? '100%' : 'auto',
       }}
