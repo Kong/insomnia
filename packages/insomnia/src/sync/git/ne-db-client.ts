@@ -93,7 +93,14 @@ export class NeDBClient {
       return;
     }
 
-    const doc: BaseModel = YAML.parse(data.toString());
+    const dataStr = data.toString();
+
+    // Skip the file if there is a conflict marker
+    if (dataStr.split('\n').includes('=======')) {
+      return;
+    }
+
+    const doc: BaseModel = YAML.parse(dataStr);
 
     if (id !== doc._id) {
       throw new Error(`Doc _id does not match file path [${doc._id} != ${id || 'null'}]`);

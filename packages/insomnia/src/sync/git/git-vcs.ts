@@ -798,6 +798,11 @@ export class GitVCS {
     commitParent: string[];
   }) {
     console.log('[git] continue to merge after resolving merge conflicts', await this.getCurrentBranch());
+
+    // Because wo don't need to do anything with the conflicts that user has chosen to keep 'ours'
+    // Here we just filter in conflicts that user has chosen to keep 'theirs'
+    handledMergeConflicts = handledMergeConflicts.filter(conflict => conflict.choose !== conflict.mineBlob);
+
     for (const conflict of handledMergeConflicts) {
       assertIsPromiseFsClient(this._baseOpts.fs);
       if (conflict.theirsBlobContent) {
@@ -813,6 +818,10 @@ export class GitVCS {
         await git.remove({ ...this._baseOpts, filepath: conflict.key });
       }
     }
+
+    // Add other non-conflicted files to the stage area
+    await git.add({ ...this._baseOpts, filepath: '.' });
+
     await git.commit({
       ...this._baseOpts,
       message: commitMessage,
@@ -839,6 +848,7 @@ export class GitVCS {
       ...this._baseOpts,
       ours: oursBranch,
       theirs: theirsBranch,
+      abortOnConflict: false,
     }).catch(
       async err => {
         if (err instanceof git.Errors.MergeConflictError) {

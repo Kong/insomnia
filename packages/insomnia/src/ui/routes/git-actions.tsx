@@ -1088,6 +1088,9 @@ export const mergeGitBranch = async ({
       theirsBranch,
       allowUncommittedChangesBeforeMerge,
     });
+    // isomorphic-git does not update the working area after merge, we need to do it manually by checking out the current branch
+    const currentBranch = await GitVCS.getCurrentBranch();
+    await GitVCS.checkout(currentBranch);
     window.main.trackSegmentEvent({
       event: SegmentEvent.vcsAction, properties: {
         ...vcsSegmentEventProperties('git', 'merge_branch'),
@@ -1308,9 +1311,6 @@ export const continueMerge = async (
       commitParent: string[];
   }
 ) => {
-  // filter in conflicts that user has chosen to keep 'theirs'
-  handledMergeConflicts = handledMergeConflicts.filter(conflict => conflict.choose !== conflict.mineBlob);
-
   const bufferId = await database.bufferChanges();
 
   await GitVCS.continueMerge({
