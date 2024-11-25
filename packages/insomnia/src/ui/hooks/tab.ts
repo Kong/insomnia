@@ -38,7 +38,6 @@ export const useInsomniaTab = ({
   unitTestSuite,
 }: InsomniaTabProps) => {
 
-  console.log(activeMockRoute, 'activeMockRoute');
   const { appTabsRef, addTab, changeActiveTab } = useInsomniaTabContext();
 
   const generateTabUrl = useCallback((type: TabEnum) => {
@@ -87,7 +86,6 @@ export const useInsomniaTab = ({
   const location = useLocation();
 
   const getTabType = (pathname: string) => {
-    console.log(pathname);
     for (const type in TAB_ROUTER_PATH) {
       const ifMatch = matchPath({
         path: TAB_ROUTER_PATH[type as TabEnum],
@@ -261,9 +259,7 @@ export const useInsomniaTab = ({
 
   useEffect(() => {
     const type = getTabType(location.pathname);
-    console.log('tabType:', type);
     const currentTab = getCurrentTab(type);
-    console.log('currentTabExist:', currentTab);
     if (!currentTab && type) {
       const tabInfo = packTabInfo(type);
       if (tabInfo) {
