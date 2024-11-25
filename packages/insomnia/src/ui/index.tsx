@@ -121,15 +121,17 @@ async function renderApp() {
         errorElement: <ErrorRoute />,
         children: [
           {
-            path: 'onboarding/*',
-            element: <Onboarding />,
-            errorElement: <ErrorRoute />,
-          },
-          {
-            path: 'onboarding/migrate',
-            loader: async (...args) => (await import('./routes/onboarding.migrate')).loader(...args),
-            action: async (...args) => (await import('./routes/onboarding.migrate')).action(...args),
-            element: <Migrate />,
+            path: 'onboarding',
+            children: [{
+              path: '*',
+              element: <Onboarding />,
+              errorElement: <ErrorRoute />,
+            }, {
+                path: 'migrate',
+                loader: async (...args) => (await import('./routes/onboarding.migrate')).loader(...args),
+                action: async (...args) => (await import('./routes/onboarding.migrate')).action(...args),
+                element: <Migrate />,
+              }],
           },
           {
             path: 'commands',
@@ -549,7 +551,7 @@ async function renderApp() {
                             ),
                             children: [
                               {
-                                path: `${ACTIVITY_DEBUG}/*`,
+                                path: `${ACTIVITY_DEBUG}`,
                                 loader: async (...args) =>
                                   (await import('./routes/debug')).loader(
                                     ...args,
@@ -740,7 +742,7 @@ async function renderApp() {
                                 ],
                               },
                               {
-                                path: 'mock-server/*',
+                                path: 'mock-server',
                                 id: 'mock-server',
                                 loader: async (...args) =>
                                   (await import('./routes/mock-server')).loader(
@@ -917,7 +919,7 @@ async function renderApp() {
                                 ],
                               },
                               {
-                                path: 'test/*',
+                                path: 'test',
                                 loader: async (...args) =>
                                   (await import('./routes/unit-test')).loader(
                                     ...args,
@@ -1385,6 +1387,13 @@ async function renderApp() {
     ],
     {
       initialEntries: [initialEntry],
+      future: {
+        v7_relativeSplatPath: true,
+        v7_fetcherPersist: true,
+        v7_normalizeFormMethod: true,
+        v7_partialHydration: true,
+        v7_skipActionErrorRevalidation: true,
+      },
     }
   );
 
@@ -1412,7 +1421,12 @@ async function renderApp() {
   });
 
   ReactDOM.createRoot(root).render(
-    <RouterProvider router={router} />
+    <RouterProvider
+      future={{
+        v7_startTransition: true,
+      }}
+      router={router}
+    />
   );
 }
 
