@@ -41,7 +41,6 @@ export const TAB_ROUTER_PATH: Record<TabEnum, string> = {
 export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' }) => {
   const { currentOrgTabs } = useInsomniaTabContext();
   const { tabList, activeTabId } = currentOrgTabs;
-  console.log('activeTabId', activeTabId);
   const navigate = useNavigate();
 
   const [showAddRequestModal, setShowAddRequestModal] = useState(false);
@@ -64,9 +63,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   } = useInsomniaTabContext();
 
   const handleSelectionChange = (keys: Selection) => {
-    console.log('changeActiveTab');
     if (keys !== 'all') {
-      console.log('tab change', keys);
       const key = [...keys.values()]?.[0] as string;
       const tab = tabList.find(tab => tab.id === key);
       tab?.url && navigate(tab?.url);
@@ -132,7 +129,6 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   useEffect(() => {
     // sync tabList with database
     const callback = async (changes: ChangeBufferEvent[]) => {
-      console.log('database change', changes);
       for (const change of changes) {
         const changeType = change[0];
         const doc = change[1];
@@ -175,7 +171,6 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   const tabListWrapperRef = React.useRef<HTMLDivElement>(null);
 
   const onResize = () => {
-    console.log('resize');
     const innerWidth = tabListInnerRef.current?.clientWidth;
     const wrapperWidth = tabListWrapperRef.current?.clientWidth;
     if (innerWidth && wrapperWidth && innerWidth > wrapperWidth) {
