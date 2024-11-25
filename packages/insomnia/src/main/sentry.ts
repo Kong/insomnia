@@ -54,5 +54,8 @@ export function initializeSentry() {
        */
       shouldSend: () => enabled,
     },
+    integrations: [
+      Sentry.anrIntegration({ captureStackTrace: true }),
+    ],
   });
 }

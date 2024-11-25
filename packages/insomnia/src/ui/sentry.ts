@@ -10,6 +10,9 @@ export function initializeSentry() {
     // set 0.1 sample rate for traces, only send 10% of traces, and check whether the limit is exceeded
     // https://konghq.sentry.io/settings/billing/overview/?category=transactions
     tracesSampleRate: 0.1,
+    anrDetection: {
+      captureStackTrace: true,
+    },
   });
   Sentry.getCurrentScope().setUser(null);
 }
