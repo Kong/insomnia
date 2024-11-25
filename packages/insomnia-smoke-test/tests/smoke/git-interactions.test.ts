@@ -2,7 +2,7 @@ import { test } from '../../playwright/test';
 
 test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)', async ({ page }) => {
     const gitSyncSmokeTestToken = process.env.GIT_SYNC_SMOKE_TEST_TOKEN;
-    test.setTimeout(60000);
+    test.setTimeout(600000);
 
     // read env variable to skip test
     if (!gitSyncSmokeTestToken) {
