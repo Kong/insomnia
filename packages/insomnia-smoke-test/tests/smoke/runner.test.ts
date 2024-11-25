@@ -247,4 +247,25 @@ test.describe('runner features tests', async () => {
 
         await verifyResultRows(page, 0, 0, 4, expectedTestOrder, 1);
     });
+
+    test('can detect sync and async test failure', async ({ page }) => {
+        await page.getByTestId('run-collection-btn-quick').click();
+
+        await page.locator('.runner-request-list-async-test').click();
+
+        // send
+        await page.getByRole('button', { name: 'Run', exact: true }).click();
+
+        // check result
+        await page.getByText('0 / 4').first().click();
+
+        const expectedTestOrder = [
+            'async_pre_test',
+            'sync_pre_test',
+            'async_post_test',
+            'sync_post_test',
+        ];
+
+        await verifyResultRows(page, 0, 0, 4, expectedTestOrder, 1);
+    });
 });

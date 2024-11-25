@@ -373,6 +373,31 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     _type: request
+  - _id: req_76bf52b201cf47269f5845795a721001
+    parentId: wrk_418cad89191c418395abfeb2277fd26f
+    modified: 1636707449232
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: printLogs
+    description: ""
+    method: POST
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    preRequestScript: |-
+      console.log("it won't print");
+    afterResponseScript: |-
+      console.log("it won't print");
+    metaSortKey: 164
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
   - _id: req_76bf52b201cf47269f5845795a711002
     parentId: wrk_418cad89191c418395abfeb2277fd26f
     modified: 1636707449232

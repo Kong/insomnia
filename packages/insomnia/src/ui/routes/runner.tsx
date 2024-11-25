@@ -941,13 +941,13 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   });
   startExecution(workspaceId);
 
+  const noLogRuntime = {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    appendTimeline: async (_timelinePath: string, _logs: string[]) => { }, // no op
+  };
+
   try {
-    const runtime = keepLog ?
-      defaultSendActionRuntime :
-      {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        appendTimeline: async (_timelinePath: string, _logs: string[]) => { }, // no op
-      };
+    const runtime = keepLog ? defaultSendActionRuntime : noLogRuntime;
 
     for (let i = 0; i < iterationCount; i++) {
       // nextRequestIdOrName is used to manual set next request in iteration from pre-request script
