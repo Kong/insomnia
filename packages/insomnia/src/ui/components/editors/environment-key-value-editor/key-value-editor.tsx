@@ -222,13 +222,13 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
                 }
               }}
             >
-              <i className="fa fa-pencil-square-o space-right" />Click to Edit
+              <i className="fa fa-pencil-square-o space-right" aria-label='Edit JSON' />Click to Edit
             </ItemButton>
           }
         </div>
         <div className={`${cellCommonStyle} w-32`} >
           <MenuTrigger>
-            <ItemButton className="py-1 px-[--padding-sm] w-full font-bold flex flex-1 items-center justify-between aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] text-sm" tabIndex={-1}>
+            <ItemButton className="py-1 px-[--padding-sm] w-full font-bold flex flex-1 items-center justify-between aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] text-sm" tabIndex={-1} aria-label='Type Selection'>
               <span className="flex truncate items-center justify-center gap-2" >{kvPairItemTypes.find(t => t.id === type)?.name}</span>
               <Icon icon="caret-down" />
             </ItemButton>
@@ -271,6 +271,7 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
           <ItemButton
             className="flex items-center justify-center h-7 aspect-square rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             tabIndex={-1}
+            aria-label={enabled ? 'Disable Row' : 'Enable Row'}
             onPress={() => handleItemChange(id, 'enabled', !enabled)}
           >
             <Icon icon={enabled ? 'check-square' : 'square'} />
@@ -280,6 +281,7 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
             fullWidth
             confirmMessage=''
             doneMessage=''
+            ariaLabel='Delete Row'
             tabIndex={-1}
             onClick={() => handleDeleteItem(id)}
           >
@@ -295,6 +297,7 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
       <Toolbar className="content-box z-10 bg-[var(--color-bg)] flex flex-shrink-0 h-[var(--line-height-sm)] text-[var(--font-size-sm)]">
         <Button
           className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+          aria-label='Add Row'
           onPress={() => {
             handleAddItem();
           }}
@@ -306,6 +309,7 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
           onClick={() => {
             onChange([]);
           }}
+          ariaLabel='Delete All'
           className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
         >
           <Icon icon="trash-can" />
@@ -316,7 +320,7 @@ export const EnvironmentKVEditor = ({ data, onChange }: EditorProps) => {
         aria-label='Environment Key Value Pair'
         selectionMode='none'
         dragAndDropHooks={dragAndDropHooks}
-        dependencies={[kvPairError]}
+        dependencies={[kvPairError, data]}
         className="p-[--padding-sm] w-full overflow-y-auto h-full"
         items={kvPairs}
       >

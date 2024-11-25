@@ -169,7 +169,7 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
         ) : null}
         <div className="margin-left faint italic txt-sm">{hint ? `* ${hint}` : ''}</div>
         {error !== '' && <p className="notice error w-full" style={{ marginTop: 0, marginBottom: 0 }}>{error}</p>}
-        <button className="btn" onClick={() => modalRef.current?.hide()} disabled={error !== ''}>
+        <button className="btn" onClick={() => modalRef.current?.hide()} disabled={error !== ''} aria-label='Modal Submit'>
           {submitName || 'Submit'}
         </button>
       </ModalFooter>

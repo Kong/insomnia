@@ -459,6 +459,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                         }}
                         isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
                         className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
+                        aria-label={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR ? 'Table Edit' : 'Raw Edit'}
                       >
                         {({ isSelected }) => (
                           <Fragment>
