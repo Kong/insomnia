@@ -71,7 +71,6 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [setAppTabs]);
 
   const addTab = useCallback((tab: BaseTab) => {
-    console.log('addTab');
     const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
 
     updateInsomniaTabs({
