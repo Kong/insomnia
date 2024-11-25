@@ -18,7 +18,7 @@ import {
   useFetcher,
   useParams,
   useRouteLoaderData,
-} from 'react-router-dom';
+} from 'react-router';
 
 import { database } from '../../common/database';
 import { documentationLinks } from '../../common/documentation';

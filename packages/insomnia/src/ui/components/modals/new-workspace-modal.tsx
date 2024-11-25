@@ -18,7 +18,7 @@ import {
   UNSTABLE_TreeItem as TreeItem,
   UNSTABLE_TreeItemContent as TreeItemContent,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import { isGitProject, ORG_STORAGE_RULE, type Project } from '../../../models/project';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';

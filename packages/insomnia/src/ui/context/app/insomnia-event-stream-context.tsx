@@ -1,5 +1,5 @@
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import { CDN_INVALIDATION_TTL } from '../../../common/constants';
 import type { Organization } from '../../../models/organization';

@@ -1,7 +1,7 @@
 import { readFile } from 'fs/promises';
 import React, { type FunctionComponent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router';
 import { useMount } from 'react-use';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';

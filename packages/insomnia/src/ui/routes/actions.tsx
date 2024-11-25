@@ -2,7 +2,7 @@ import type { IRuleResult } from '@stoplight/spectral-core';
 import { generate, runTests, type Test } from 'insomnia-testing';
 import type { TestResults } from 'insomnia-testing/src/run/entities';
 import path from 'path';
-import { type ActionFunction, redirect } from 'react-router-dom';
+import { type ActionFunction, redirect } from 'react-router';
 
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
 import { ACTIVITY_DEBUG, getAIServiceURL } from '../../common/constants';

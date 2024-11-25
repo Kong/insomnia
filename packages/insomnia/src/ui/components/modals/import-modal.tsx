@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Heading } from 'react-aria-components';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher } from 'react-router';
 
 import type { ScanResult } from '../../../common/import';
 import { isScratchpadProject } from '../../../models/project';

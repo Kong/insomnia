@@ -7,7 +7,7 @@ import {
   matchPath,
   Outlet,
   RouterProvider,
-} from 'react-router-dom';
+} from 'react-router';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '../account/session';
 import {

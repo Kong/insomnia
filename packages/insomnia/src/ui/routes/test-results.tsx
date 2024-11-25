@@ -1,6 +1,6 @@
 import React, { type FC } from 'react';
 import { Heading } from 'react-aria-components';
-import { type LoaderFunction, redirect, useRouteLoaderData } from 'react-router-dom';
+import { type LoaderFunction, redirect, useRouteLoaderData } from 'react-router';
 
 import { database } from '../../common/database';
 import * as models from '../../models';

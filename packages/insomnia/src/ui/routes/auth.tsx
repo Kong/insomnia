@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Link, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router';
 
 import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';

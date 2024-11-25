@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Cell, Column, Dialog, Heading, Modal, ModalOverlay, Row, Table, TableBody, TableHeader } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import type { Snapshot } from '../../../sync/types';
 import { useRootLoaderData } from '../../routes/root';

@@ -9,7 +9,7 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher } from 'react-router';
 
 import type { GitRepository } from '../../../models/git-repository';
 import {

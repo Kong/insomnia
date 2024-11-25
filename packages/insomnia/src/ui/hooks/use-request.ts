@@ -1,5 +1,5 @@
 
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import type { GrpcRequest } from '../../models/grpc-request';
 import type { GrpcRequestMeta } from '../../models/grpc-request-meta';

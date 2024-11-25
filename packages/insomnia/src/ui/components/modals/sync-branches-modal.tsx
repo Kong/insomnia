@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Button, Dialog, GridList, GridListItem, Heading, Input, Label, Modal, ModalOverlay, TextField } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';

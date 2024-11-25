@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
 import { useInterval } from 'react-use';
 
 import { getMockServiceBinURL, HTTP_METHODS } from '../../../common/constants';

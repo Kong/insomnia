@@ -1,5 +1,5 @@
 import React, { type FC } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
 
 import type { AuthTypeOAuth1 } from '../../../../models/request';
 import {

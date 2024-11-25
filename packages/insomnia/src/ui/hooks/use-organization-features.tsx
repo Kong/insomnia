@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import { isScratchpadOrganizationId } from '../../models/organization';
 import type { OrganizationFeatureLoaderData } from '../routes/organization';

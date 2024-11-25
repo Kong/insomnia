@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Cell, Column, Dialog, Heading, Input, Label, Modal, ModalOverlay, Radio, RadioGroup, Row, Tab, Table, TableBody, TableHeader, TabList, TabPanel, Tabs, TextField } from 'react-aria-components';
-import { useFetcher, useNavigation, useParams } from 'react-router-dom';
+import { useFetcher, useNavigation, useParams } from 'react-router';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 import { type GitRepository } from '../../../models/git-repository';

@@ -7,7 +7,7 @@ import {
   useNavigate,
   useNavigation,
   useRouteError,
-} from 'react-router-dom';
+} from 'react-router';
 
 import { Icon } from '../components/icon';
 

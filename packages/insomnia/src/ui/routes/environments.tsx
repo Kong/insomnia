@@ -2,7 +2,7 @@ import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 import { Breadcrumb, Breadcrumbs, Button, DropIndicator, GridList, GridListItem, Heading, Label, Menu, MenuItem, MenuTrigger, Popover, Text, ToggleButton, useDragAndDrop } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { NavLink, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { NavLink, useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { debounce } from '../../common/misc';

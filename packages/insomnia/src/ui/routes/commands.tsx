@@ -1,4 +1,4 @@
-import type { LoaderFunction } from 'react-router-dom';
+import type { LoaderFunction } from 'react-router';
 
 import { database } from '../../common/database';
 import { fuzzyMatch } from '../../common/misc';

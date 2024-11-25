@@ -1,6 +1,6 @@
 import React, { type FC, useEffect, useState } from 'react';
 import { Button, Dialog, GridList, GridListItem, Heading, Input, Label, Modal, ModalOverlay, TextField } from 'react-aria-components';
-import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
+import { useFetcher, useParams, useRevalidator } from 'react-router';
 
 import type { MergeConflict } from '../../../sync/types';
 import { checkGitCanPush, continueMerge, type CreateNewGitBranchResult, type GitBranchesLoaderData, type GitChangesLoaderData, mergeGitBranch } from '../../routes/git-actions';
