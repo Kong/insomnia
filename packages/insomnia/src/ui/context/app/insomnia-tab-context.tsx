@@ -236,6 +236,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
         return {
           ...tab,
           workspaceName: name,
+          name: tab.id === workspaceId ? name : tab.name,
         };
       }
       return tab;
