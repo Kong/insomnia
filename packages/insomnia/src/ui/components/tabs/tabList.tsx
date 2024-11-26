@@ -119,7 +119,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       // update project name(for tooltip)
       updateProjectName?.(doc._id, doc.name);
     } else if (doc.type === models.workspace.type) {
-      // update workspace name(for tooltip)
+      // update workspace name(for tooltip) & update name for workspace tab
       updateWorkspaceName?.(doc._id, doc.name);
     } else {
       updateTabById?.(doc._id, doc.name);
