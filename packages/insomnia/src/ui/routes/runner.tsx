@@ -693,7 +693,7 @@ export const Runner: FC<{}> = () => {
             {showCLIModal && (
               <CLIPreviewModal
                 onClose={() => setShowCLIModal(false)}
-                requestIds={Array.from(reqList.selectedKeys) as string[]}
+                requestIds={Array.from(reqList.items).map(item => item.id).filter(id => new Set(reqList.selectedKeys).has(id))}
                 allSelected={Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length}
                 iterationCount={iterationCount}
                 delay={delay}
