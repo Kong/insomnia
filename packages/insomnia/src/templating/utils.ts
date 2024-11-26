@@ -1,7 +1,9 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 import _ from 'lodash';
 
-import type { BaseModel } from '../models';
+import type { RenderPurpose } from '../common/render';
+import { type BaseModel, userSession } from '../models';
+import { decryptSecretValue, vaultEnvironmentMaskValue, vaultEnvironmentPath } from '../models/environment';
 import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
 import objectPath from './third_party/objectPath';
 
@@ -302,6 +304,29 @@ export function extractUndefinedVariableKey(text: string = '', templatingContext
     }
   }
   return missingVariables;
+}
+
+export async function maskOrDecryptContextIfNecessary(context: Record<string, any> & { getPurpose: () => RenderPurpose | undefined }) {
+  // all secret variables are under vaultEnvironmentPath property in context
+  const vaultEnvironmentData = context[vaultEnvironmentPath];
+  const renderPurpose = typeof context.getPurpose === 'function' && context.getPurpose();
+  const shouldDecrypt = renderPurpose === 'preview' || renderPurpose === 'send';
+  if (vaultEnvironmentData) {
+    if (shouldDecrypt) {
+      const { symmetricKey } = await userSession.getOrCreate();
+      // decrypt all secert values under vaultEnvironmentPath property in context
+      Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
+        const encryptedValue = vaultEnvironmentData[vaultContextKey];
+        vaultEnvironmentData[vaultContextKey] = decryptSecretValue(encryptedValue, symmetricKey);
+      });
+    } else {
+      // mask all secert values under vaultEnvironmentPath property in context
+      Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
+        vaultEnvironmentData[vaultContextKey] = vaultEnvironmentMaskValue;
+      });
+    }
+  }
+  return context;
 }
 
 export function extractNunjucksTagFromCoords(

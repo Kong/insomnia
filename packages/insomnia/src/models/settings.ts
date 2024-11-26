@@ -72,6 +72,7 @@ export function init(): BaseSettings {
     validateSSL: true,
     saveVaultKeyLocally: true,
     enableVaultInScripts: false,
+    saveVaultKeyToOSSecretManager: true,
   };
 }
 

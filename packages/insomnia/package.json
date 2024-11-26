@@ -71,6 +71,7 @@
     "jshint": "^2.13.6",
     "jsonlint-mod-fixed": "1.7.7",
     "jsonpath-plus": "^6.0.1",
+    "keytar": "^7.9.0",
     "marked": "^5.1.1",
     "mime-types": "^2.1.35",
     "mocha": "^10.4.0",

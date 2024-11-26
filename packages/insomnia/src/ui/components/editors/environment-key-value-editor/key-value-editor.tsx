@@ -2,10 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, type ButtonProps, DropIndicator, ListBox, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, Toolbar, useDragAndDrop } from 'react-aria-components';
 
 import { generateId } from '../../../../common/misc';
-import { type EnvironmentKvPairData, EnvironmentKvPairDataType } from '../../../../models/environment';
+import { decryptSecretValue, encryptSecretValue, type EnvironmentKvPairData, EnvironmentKvPairDataType } from '../../../../models/environment';
+import { base64decode } from '../../../routes/auth.vaultKey';
 import { PromptButton } from '../../base/prompt-button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { Icon } from '../../icon';
+import { showModal } from '../../modals';
+import { AskModal } from '../../modals/ask-modal';
 import { CodePromptModal, type CodePromptModalHandle } from '../../modals/code-prompt-modal';
 import { Tooltip } from '../../tooltip';
 import { checkNestedKeys, ensureKeyIsValid } from '../environment-utils';
@@ -14,7 +17,8 @@ import { PasswordInput } from './password-input';
 interface EditorProps {
   data: EnvironmentKvPairData[];
   onChange: (newPair: EnvironmentKvPairData[]) => void;
-  isPrivate: boolean;
+  vaultKey?: string;
+  isPrivate?: boolean;
 }
 const cellCommonStyle = 'h-full px-2 flex items-center';
 
@@ -40,15 +44,29 @@ const ItemButton = (props: ButtonProps & { tabIndex?: number }) => {
   return <Button {...restProps} ref={btnRef} />;
 };
 
-export const EnvironmentKVEditor = ({ data, onChange, isPrivate = false }: EditorProps) => {
+export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate = false }: EditorProps) => {
   const kvPairs: EnvironmentKvPairData[] = useMemo(
     () => data.length > 0 ? [...data] : [createNewPair()],
     // Ensure same array data will not generate different kvPairs to avoid flash issue
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [JSON.stringify(data)]
-  );
-  const codeModalRef = useRef<CodePromptModalHandle>(null);
+  );  const codeModalRef = useRef<CodePromptModalHandle>(null);
   const [kvPairError, setKvPairError] = useState<{ id: string; error: string }[]>([]);
+  const symmetricKey = vaultKey === '' ? {} : base64decode(vaultKey, true);
+
+  const commonItemTypes = [
+    {
+      id: EnvironmentKvPairDataType.STRING,
+      name: 'Text',
+    },
+    {
+      id: EnvironmentKvPairDataType.JSON,
+      name: 'JSON',
+    },
+  ];
+  const secretItemType = [{ id: EnvironmentKvPairDataType.SECRET, name: 'Secret' }];
+  // Use private environment to store vault secrets if vault key is available
+  const kvPairItemTypes = isPrivate && !!vaultKey ? commonItemTypes.concat(secretItemType) : commonItemTypes;
 
   const repositionInArray = (moveItems: string[], targetIndex: number) => {
     const removed = kvPairs.filter(pair => pair.id !== moveItems[0]);
@@ -106,6 +124,32 @@ export const EnvironmentKVEditor = ({ data, onChange, isPrivate = false }: Edito
     onChange(kvPairs);
   };
 
+  const handleItemTypeChange = (id: string, newType: EnvironmentKvPairDataType) => {
+    const targetItem = kvPairs.find(pair => pair.id === id);
+    if (targetItem) {
+      const { type: originType, value: originValue } = targetItem;
+      if (originType === EnvironmentKvPairDataType.SECRET) {
+        const newTypeDisplayText = kvPairItemTypes.find(item => item.id === newType)?.name;
+        // need confirm if user changes from secret type which will decrypt and reveal value;
+        showModal(AskModal, {
+          title: `Change from Secret to ${newTypeDisplayText}`,
+          message: 'This will make the value unmasked and unencrypted. Besides, none-secret item will not be wrapped with vault namespace when using as environment variable.',
+          yesText: 'Change',
+          noText: 'Cancel',
+          onDone: async (yes: boolean) => {
+            if (yes) {
+              handleItemChange(id, 'type', newType);
+              // decrypt and save the value
+              handleItemChange(id, 'value', decryptSecretValue(originValue, symmetricKey));
+            }
+          },
+        });
+      } else {
+        handleItemChange(id, 'type', newType);
+      }
+    }
+  };
+
   const handleAddItem = (id?: string) => {
     const newPair = createNewPair();
     const insertIdx = id ? kvPairs.findIndex(d => d.id === id) : kvPairs.length - 1;
@@ -126,20 +170,6 @@ export const EnvironmentKVEditor = ({ data, onChange, isPrivate = false }: Edito
       return false;
     }
   };
-
-  const commonItemTypes = [
-    {
-      id: EnvironmentKvPairDataType.STRING,
-      name: 'Text',
-    },
-    {
-      id: EnvironmentKvPairDataType.JSON,
-      name: 'JSON',
-    },
-  ];
-  const secretItemType = [{ id: EnvironmentKvPairDataType.SECRET, name: 'Secret' }];
-  // Use private environment to store vault secrets
-  const kvPairItemTypes = isPrivate ? commonItemTypes.concat(secretItemType) : commonItemTypes;
 
   const renderPairItem = (kvPair: EnvironmentKvPairData) => {
     const { id, name, value, type, enabled = false } = kvPair;
@@ -234,12 +264,14 @@ export const EnvironmentKVEditor = ({ data, onChange, isPrivate = false }: Edito
           }
           {type === EnvironmentKvPairDataType.SECRET &&
             <PasswordInput
-              value={value}
               itemId={id}
               enabled={enabled}
               placeholder='Input Secret'
-              // Todo add encryption and decryption logic
-              onChange={newValue => handleItemChange(id, 'value', newValue)}
+              value={decryptSecretValue(value, symmetricKey)}
+              onChange={newValue => {
+                const encryptedValue = encryptSecretValue(newValue, symmetricKey);
+                handleItemChange(id, 'value', encryptedValue);
+              }}
             />
           }
         </div>
@@ -265,7 +297,7 @@ export const EnvironmentKVEditor = ({ data, onChange, isPrivate = false }: Edito
                     className="aria-disabled:text-[--hl-lg] aria-disabled:cursor-not-allowed aria-disabled:bg-transparent flex gap-2 pl-[--padding-sm] pr-[--padding-xl] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full
                       text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none transition-colors text-sm react-aria-ListBoxItem"
                     aria-label={item.name}
-                    onAction={() => handleItemChange(id, 'type', item.id)}
+                    onAction={() => handleItemTypeChange(id, item.id)}
                   >
                     {({ isSelected }) => (
                       <>
