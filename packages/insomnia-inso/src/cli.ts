@@ -542,6 +542,11 @@ export const go = (args?: string[]) => {
         return process.exit(1);
       }
 
+      // sort requests
+      const requestOrder = new Map<string, number>();
+      requestsToRun.forEach((req: BaseModel, order: number) => requestOrder.set(req._id, order));
+      requestsToRun = requestsToRun.sort((a, b) => (requestOrder.get(a._id) || requestsToRun.length) - (requestOrder.get(b._id) || requestsToRun.length));
+
       try {
         const iterationCount = parseInt(options.iterationCount, 10);
 

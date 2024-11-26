@@ -139,10 +139,23 @@ describe('inso dev bundle', () => {
       expect(result.stdout).toContain('Adding SSL KEY certificate');
     });
 
-    it('send request with settings enabled (followRedirects disabled)', async () => {
+    it('send request with settings enabled (by testing followRedirects)', async () => {
       const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withSettings" --verbose "Insomnia Designer"';
       const result = await runCliFromRoot(input);
       expect(result.stdout).not.toContain("Issue another request to this URL: 'https://insomnia.rest/'");
+    });
+
+    it('run collection: run requests in specified order', async () => {
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/three-requests.yml -i req_6063adcdab5b409e9b4f00f47322df4a -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -e env_86e135 --verbose';
+      const result = await runCliFromRoot(input);
+
+      expect(result.code).toBe(0);
+      const firstReqLogPosition = result.stdout.indexOf('Running request: 2 req_6063adcdab5b409e9b4f00f47322df4a');
+      const secondReqLogPosition = result.stdout.indexOf('Running request: 1 req_3fd28aabbb18447abab1f45e6ee4bdc1');
+
+      expect(firstReqLogPosition).toBeGreaterThanOrEqual(0);
+      expect(secondReqLogPosition).toBeGreaterThanOrEqual(0);
+      expect(firstReqLogPosition < secondReqLogPosition).toBeGreaterThanOrEqual(0);
     });
   });
 });
