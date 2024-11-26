@@ -133,7 +133,7 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
       className="outline-none aria-selected:text-[--color-font] aria-selected:bg-[--hl-sm] hover:bg-[--hl-xs]"
     >
       {({ isSelected, isHovered }) => (
-        <Tooltip message={`${tab.projectName} / ${tab.workspaceName}`} className='h-full'>
+        <Tooltip delay={1000} message={`${tab.projectName} / ${tab.workspaceName}`} className='h-full'>
           <div onContextMenu={handleContextMenu} className={`relative flex items-center h-full px-[10px] flex-nowrap border-solid border-r border-[--hl-sm] hover:text-[--color-font] outline-none max-w-[200px] cursor-pointer ${(!isSelected && !isHovered) && 'opacity-[0.7]'}`}>
             {renderTabIcon(tab.type)}
             <span className='mx-[8px] text-nowrap overflow-hidden text-ellipsis'>{tab.name}</span>
