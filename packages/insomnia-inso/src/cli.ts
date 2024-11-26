@@ -543,9 +543,11 @@ export const go = (args?: string[]) => {
       }
 
       // sort requests
-      const requestOrder = new Map<string, number>();
-      requestsToRun.forEach((req: BaseModel, order: number) => requestOrder.set(req._id, order));
-      requestsToRun = requestsToRun.sort((a, b) => (requestOrder.get(a._id) || requestsToRun.length) - (requestOrder.get(b._id) || requestsToRun.length));
+      if (options.item.length) {
+        const requestOrder = new Map<string, number>();
+        options.item.forEach((reqId: string, order: number) => requestOrder.set(reqId, order));
+        requestsToRun = requestsToRun.sort((a, b) => (requestOrder.get(a._id) || requestsToRun.length) - (requestOrder.get(b._id) || requestsToRun.length));
+      }
 
       try {
         const iterationCount = parseInt(options.iterationCount, 10);
