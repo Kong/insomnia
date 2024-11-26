@@ -34,7 +34,7 @@ export const PromptButton = <T, >({
   title,
   className,
   fullWidth = false,
-  ariaLabel = '',
+  ariaLabel,
   children,
   referToOnClickReturnValue = false,
 }: PropsWithChildren<Props<T>>) => {
