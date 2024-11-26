@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer, webUtils as _webUtils } from 'electron';
 
 import type { cloudServiceBridgeAPI } from './main/ipc/cloud-service-integration/cloud-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
+import type { keyChainBridgeAPI } from './main/ipc/keyChain';
 import type { CurlBridgeAPI } from './main/network/curl';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 import { invariant } from './utils/invariant';
@@ -49,6 +50,14 @@ const cloudService: cloudServiceBridgeAPI = {
   clearCache: () => ipcRenderer.send('cloudService.clearCache'),
 };
 
+const keyChain: keyChainBridgeAPI = {
+  saveToKeyChain: (accountId, key) => ipcRenderer.invoke('keyChain.saveToKeyChain', accountId, key),
+  retrieveFromKeyChain: accountId => ipcRenderer.invoke('keyChain.retrieveFromKeyChain', accountId),
+  deleteFromKeyChian: accountId => ipcRenderer.invoke('keyChain.deleteFromKeyChian', accountId),
+  encryptString: raw => ipcRenderer.invoke('keyChain.encryptString', raw),
+  decryptString: cipherText => ipcRenderer.invoke('keyChain.decryptString', cipherText),
+};
+
 const main: Window['main'] = {
   startExecution: options => ipcRenderer.send('startExecution', options),
   addExecutionStep: options => ipcRenderer.send('addExecutionStep', options),
@@ -77,6 +86,7 @@ const main: Window['main'] = {
   grpc,
   curl,
   cloudService,
+  keyChain,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   showContextMenu: options => ipcRenderer.send('show-context-menu', options),

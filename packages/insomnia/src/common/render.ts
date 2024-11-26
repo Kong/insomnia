@@ -214,7 +214,7 @@ export async function buildRenderContext(
   }
 
   // Render the context with itself to fill in the rest.
-  const finalRenderContext = renderContext;
+  const finalRenderContext = await templatingUtils.maskOrDecryptContextIfNecessary(renderContext as Record<string, any> & BaseRenderContext);
 
   const keys = _getOrderedEnvironmentKeys(finalRenderContext);
 
@@ -542,7 +542,7 @@ export async function getRenderContext(
 interface BaseRenderContext {
   getMeta: () => {};
   getKeysContext: () => {};
-  getPurpose: () => string | undefined;
+  getPurpose: () => RenderPurpose | undefined;
   getExtraInfo: (key: string) => string | null;
   getEnvironmentId: () => string | undefined;
   getGlobalEnvironmentId: () => string | undefined;

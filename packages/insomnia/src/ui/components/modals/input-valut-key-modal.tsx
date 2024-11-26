@@ -1,18 +1,77 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Input, Modal, ModalOverlay } from 'react-aria-components';
+import { useFetcher } from 'react-router-dom';
 
 import { Icon } from '../icon';
+import { showModal } from '.';
+import { AskModal } from './ask-modal';
 
 export interface InputVaultKeyModalProps {
-  onClose: () => void;
+  onClose: (vaultKey?: string) => void;
+  allowClose?: boolean;
 }
 
 export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
-  const { onClose } = props;
+  const { onClose, allowClose = true } = props;
   const [vaultKey, setVaultKey] = useState('');
+  const [error, setError] = useState('');
+  const resetVaultKeyFetcher = useFetcher();
+  const validateVaultKeyFetcher = useFetcher();
+  const isLoading = resetVaultKeyFetcher.state !== 'idle' || validateVaultKeyFetcher.state !== 'idle';
 
-  const handleInputVaultKey = () => { };
-  const resetVaultKey = () => { };
+  useEffect(() => {
+    // close modal and return new vault key after reset
+    if (resetVaultKeyFetcher.data && !resetVaultKeyFetcher.data.error && resetVaultKeyFetcher.state === 'idle') {
+      onClose(resetVaultKeyFetcher.data);
+    };
+  }, [resetVaultKeyFetcher.data, resetVaultKeyFetcher.state, onClose]);
+
+  useEffect(() => {
+    if (resetVaultKeyFetcher?.data?.error && resetVaultKeyFetcher.state === 'idle') {
+      setError(resetVaultKeyFetcher.data.error);
+    }
+  }, [resetVaultKeyFetcher.data, resetVaultKeyFetcher.state]);
+
+  useEffect(() => {
+    // close modal and return user input vault key if srp validation success
+    if (validateVaultKeyFetcher.data && !validateVaultKeyFetcher.data.error && validateVaultKeyFetcher.state === 'idle') {
+      onClose(validateVaultKeyFetcher.data.vaultKey);
+    };
+  }, [validateVaultKeyFetcher.data, validateVaultKeyFetcher.state, onClose]);
+
+  useEffect(() => {
+    if (validateVaultKeyFetcher?.data?.error && validateVaultKeyFetcher.state === 'idle') {
+      setError(validateVaultKeyFetcher.data.error);
+    }
+  }, [validateVaultKeyFetcher.data, validateVaultKeyFetcher.state]);
+
+  const handleValidateVaultKey = () => {
+    validateVaultKeyFetcher.submit(
+      {
+        vaultKey,
+      },
+      {
+        action: '/auth/validateVaultKey',
+        method: 'POST',
+        encType: 'application/json',
+      });
+  };
+  const resetVaultKey = () => {
+    showModal(AskModal, {
+      title: 'Reset Vault Key',
+      message: 'Are you sure you sure to reset vault key? This will clear all secrets in private environment among all devices.',
+      yesText: 'Yes',
+      noText: 'No',
+      onDone: async (yes: boolean) => {
+        if (yes) {
+          resetVaultKeyFetcher.submit('', {
+            action: '/auth/createVaultKey',
+            method: 'POST',
+          });
+        }
+      },
+    });
+  };
 
   return (
     <ModalOverlay
@@ -36,12 +95,14 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
             <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
               <div className='flex gap-2 items-center justify-between'>
                 <Heading slot="title" className='text-2xl'>Enter Vault Key</Heading>
-                <Button
-                  className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                  onPress={close}
-                >
-                  <Icon icon="x" />
-                </Button>
+                {allowClose &&
+                  <Button
+                    className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    onPress={close}
+                  >
+                    <Icon icon="x" />
+                  </Button>
+                }
               </div>
               <div className='rounded grow shrink-0 w-full basis-12 flex flex-col gap-3 select-none'>
                 <label>
@@ -54,6 +115,9 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                   onChange={e => setVaultKey(e.target.value)}
                 />
               </div>
+              {error &&
+                <p className="notice error margin-top-sm no-margin-bottom">{error}</p>
+              }
               <div className="flex justify-between mt-2 items-center">
                 <div>
                   <span className='faint text-sm'>Forget Vault Key?</span>
@@ -66,8 +130,10 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                 </div>
                 <Button
                   className="hover:no-underline ml-4 flex items-center gap-2 bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-                  onPress={handleInputVaultKey}
+                  onPress={handleValidateVaultKey}
+                  isDisabled={isLoading}
                 >
+                  {isLoading && <Icon icon="spinner" className="text-[--color-font] animate-spin m-auto inline-block mr-2" />}
                   Unlock
                 </Button>
               </div>

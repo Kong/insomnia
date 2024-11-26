@@ -30,7 +30,12 @@ export type HandleChannels =
   | 'writeFile'
   | 'extractJsonFileFromPostmanDataDumpArchive'
   | 'cloudService.authenticate'
-  | 'cloudService.getSecret';
+  | 'cloudService.getSecret'
+  | 'keyChain.saveToKeyChain'
+  | 'keyChain.retrieveFromKeyChain'
+  | 'keyChain.deleteFromKeyChain'
+  | 'keyChain.encryptString'
+  | 'keyChain.decryptString';
 
 export const ipcMainHandle = (
   channel: HandleChannels,

@@ -18,6 +18,7 @@ import type { cloudServiceBridgeAPI } from './cloud-service-integration/cloud-se
 import { ipcMainHandle, ipcMainOn, ipcMainOnce, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
+import type { keyChainBridgeAPI } from './keyChain';
 
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;
@@ -39,6 +40,7 @@ export interface RendererToMainBridgeAPI {
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
   cloudService: cloudServiceBridgeAPI;
+  keyChain: keyChainBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   showContextMenu: (options: { key: string; nunjucksTag?: { template: string; range: MarkerRange } }) => void;

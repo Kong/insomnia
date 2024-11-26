@@ -145,5 +145,7 @@ export interface Settings {
   useBulkParametersEditor: boolean;
   validateAuthSSL: boolean;
   validateSSL: boolean;
+  // vault related settings
+  saveVaultKeyToOSSecretManager: boolean;
   vaultSecretCacheDuration: number;
 }
