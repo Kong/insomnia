@@ -52,7 +52,6 @@ const CookieSchema = z.object({
 });
 
 const CookieJarSchema = z.object({
-  type: z.literal('CookieJar'),
   name: z.string(),
   cookies: z.array(CookieSchema).optional(),
   meta: MetaSchema.optional(),
@@ -60,9 +59,8 @@ const CookieJarSchema = z.object({
 
 const EnvironmentSchema = z.object({
   name: z.string().optional(),
-  description: z.string().optional(),
   data: jsonSchema,
-  color: z.string().optional(),
+  color: z.string().optional().nullable(),
   meta: MetaSchema.optional(),
 });
 
@@ -130,7 +128,6 @@ export const GRPCRequestSchema = z.object({
 // });
 
 const MockRouteSchema = z.object({
-  type: z.literal('MockRoute'),
   body: z.string(),
   statusCode: z.number(),
   statusText: z.string(),
@@ -291,6 +288,7 @@ const AuthenticationSchema = z.union([
   }, {
     description: 'No Authentication',
   }),
+  z.object({}),
 ]);
 
 export const RequestGroupSchema = z.object({
@@ -315,7 +313,7 @@ export const RequestSchema = z.object({
   url: z.string(),
   method: z.string(),
   body: z.object({
-    mimeType: z.string().optional(),
+    mimeType: z.string().optional().nullable(),
     text: z.string().optional(),
     fileName: z.string().optional(),
     params: z.array(z.object({
@@ -463,3 +461,7 @@ export const insomniaFileSchema = z.union([collectionSchema, apiSpecSchema, mock
 export type InsomniaFile = z.infer<typeof insomniaFileSchema>;
 
 // writeFile('collection-schema.json', JSON.stringify(zodToJsonSchema(insomniaFileSchema), null, 2));
+export type Z_GRPCRequest = z.infer<typeof GRPCRequestSchema>;
+export type Z_RequestGroup = z.infer<typeof RequestGroupWithChildrenSchema>;
+export type Z_Request = z.infer<typeof RequestSchema>;
+export type Z_WebsocketRequest = z.infer<typeof WebsocketRequestSchema>;
