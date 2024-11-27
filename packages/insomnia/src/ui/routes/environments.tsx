@@ -17,7 +17,10 @@ import { handleToggleEnvironmentType } from '../components/editors/environment-u
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showAlert } from '../components/modals';
+import { InputVaultKeyModal } from '../components/modals/input-valut-key-modal';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
+import { decryptVaultKeyFromSession } from './auth.vaultKey';
+import { useRootLoaderData } from './root';
 import type { WorkspaceLoaderData } from './workspace';
 
 const Environments = () => {
@@ -28,6 +31,8 @@ const Environments = () => {
 
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
   const { features } = useOrganizationPermissions();
+  const { userSession } = useRootLoaderData();
+  const { vaultKey: vaultKeyInSession, vaultSalt } = userSession;
 
   const createEnvironmentFetcher = useFetcher();
   const deleteEnvironmentFetcher = useFetcher();
@@ -42,12 +47,18 @@ const Environments = () => {
     activeWorkspaceMeta,
   } = routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
+  const [vaultKey, setVaultKey] = useState('');
   const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
   const isUsingGitSync = Boolean(features.gitSync.enabled && (activeWorkspaceMeta?.gitRepositoryId));
 
-  const selectedEnvironment = [baseEnvironment, ...subEnvironments].find(env => env._id === selectedEnvironmentId);
+  const allEnvironment = [baseEnvironment, ...subEnvironments];
+  const selectedEnvironment = allEnvironment.find(env => env._id === selectedEnvironmentId);
   // Do not allowed to switch to json environment if contains secret item
   const allowSwitchEnvironment = !selectedEnvironment?.kvPairData?.some(d => d.type === EnvironmentKvPairDataType.SECRET);
+  // Check if there's any environment contains secret item
+  const containsSecret = allEnvironment.some(env => env.isPrivate &&
+    env.kvPairData?.some(pairData => pairData.type === EnvironmentKvPairDataType.SECRET));
+  const showInputVaultKeyModal = containsSecret && !vaultKeyInSession;
 
   const environmentActionsList: {
     id: string;
@@ -248,11 +259,27 @@ const Environments = () => {
     sidebarPanelRef.current?.setLayout(layout);
   }
 
+  const handleInputVaultKeyModalClose = (newVaultKey?: string) => {
+    if (newVaultKey) {
+      setVaultKey(newVaultKey);
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
 
     return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    if (vaultKeyInSession && vaultSalt) {
+      async function updateVaultKey(key: string) {
+        const decryptedVaultKey = await decryptVaultKeyFromSession(key);
+        setVaultKey(decryptedVaultKey);
+      }
+      updateVaultKey(vaultKeyInSession);
+    }
+  }, [vaultKeyInSession, vaultSalt]);
 
   useDocBodyKeyboardShortcuts({
     sidebar_toggle: toggleSidebar,
@@ -507,7 +534,11 @@ const Environments = () => {
               data={selectedEnvironment.kvPairData || []}
               isPrivate={selectedEnvironment.isPrivate}
               onChange={handleKVPairChange}
+              vaultKey={vaultKey}
             />
+          }
+          {showInputVaultKeyModal &&
+            <InputVaultKeyModal onClose={handleInputVaultKeyModalClose} allowClose={false} />
           }
         </div>
       </Panel>
