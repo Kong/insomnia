@@ -1,7 +1,9 @@
+import fs from 'fs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 
+import { getProductName } from '../../../common/constants';
 import { decryptVaultKeyFromSession } from '../../routes/auth.vaultKey';
 import { useRootLoaderData } from '../../routes/root';
 import { type CopyBtnHanlde, CopyButton } from '../base/copy-button';
@@ -63,6 +65,27 @@ export const VaultKeyPanel = () => {
     setShowModal(false);
   };
 
+  const donwloadVaultKey = async () => {
+    const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
+      title: 'Download Vault Key',
+      buttonLabel: 'Save',
+      defaultPath: `${getProductName()}-vault-key-${Date.now()}.txt`,
+    });
+
+    if (canceled || !outputPath) {
+      return;
+    }
+
+    const to = fs.createWriteStream(outputPath);
+
+    to.on('error', err => {
+      console.warn('Failed to save vault key', err);
+    });
+
+    to.write(vaultKeyValue);
+    to.end();
+  };
+
   return (
     <div>
       {/* Show Gen Vault button when vault salt does not exist */}
@@ -85,8 +108,7 @@ export const VaultKeyPanel = () => {
         <>
           <div className="form-row pad-top-sm flex-col">
             <div className="mb-[var(--padding-xs)]">
-              <span className="font-semibold">Vault Key</span>
-
+            <span className="font-semibold">Vault Key</span>
             <HelpTooltip className="space-left">The vault key will be needed when you login again.</HelpTooltip>
           </div>
           <div className="flex items-center gap-3 bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm] w-full">
@@ -100,7 +122,7 @@ export const VaultKeyPanel = () => {
             >
               <i className="fa fa-copy" />
             </CopyButton>
-            <Button>
+            <Button onPress={donwloadVaultKey}>
               <i className="fa-solid fa-download" />
             </Button>
           </div>

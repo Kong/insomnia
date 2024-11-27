@@ -149,19 +149,6 @@ export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWeb
   }
 };
 
-// remove all secret items when user reset vault key
-export const removeAllSecrets = async (allEnvironments: Environment[]) => {
-  const privateEnvironments = allEnvironments.filter(env => env.isPrivate);
-  privateEnvironments.forEach(async privateEnv => {
-    const { kvPairData, data } = privateEnv;
-    if (vaultEnvironmentPath in data) {
-      const { [vaultEnvironmentPath]: secretData, ...restData } = data;
-      const filteredKvPairData = kvPairData?.filter(kvPair => kvPair.type !== EnvironmentKvPairDataType.SECRET);
-      await update(privateEnv, { data: restData, kvPairData: filteredKvPairData });
-    }
-  });
-};
-
 export const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => (
   model.type === type
 );
