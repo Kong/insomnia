@@ -1,6 +1,7 @@
 import * as crypto from 'crypto';
 import orderedJSON from 'json-order';
 
+import * as crypt from '../account/crypt';
 import { JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
@@ -104,7 +105,7 @@ export function getDataFromKVPair(kvPair: EnvironmentKvPairData[]) {
 }
 
 // mask vault environment varibale if necessary
-export function maskVaultEnvironmentData(environment: Environment) {
+export const maskVaultEnvironmentData = (environment: Environment) => {
   if (environment.isPrivate) {
     const { data, kvPairData } = environment;
     const shouldMask = kvPairData?.some(pair => pair.type === EnvironmentKvPairDataType.SECRET);
@@ -121,7 +122,45 @@ export function maskVaultEnvironmentData(environment: Environment) {
     }
   };
   return environment;
-}
+};
+
+export const encryptSecretValue = (rawValue: string, symmetricKey: JsonWebKey) => {
+  if (typeof symmetricKey !== 'object' || Object.keys(symmetricKey).length === 0) {
+    // invalid symmetricKey
+    return rawValue;
+  }
+  const encryptReuslt = crypt.encryptAES(symmetricKey, rawValue);
+  const encryptedValue = Buffer.from(JSON.stringify(encryptReuslt), 'utf-8').toString('base64');
+  return encryptedValue;
+};
+
+export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWebKey) => {
+  if (typeof symmetricKey !== 'object' || Object.keys(symmetricKey).length === 0) {
+    // invalid symmetricKey
+    return encryptedValue;
+  }
+  try {
+    const rawValue = Buffer.from(encryptedValue, 'base64').toString('utf-8');
+    const jsonWebKey = JSON.parse(rawValue);
+    return crypt.decryptAES(symmetricKey, jsonWebKey);
+  } catch (error) {
+    // return origin value if failed to decrypt
+    return encryptedValue;
+  }
+};
+
+// remove all secret items when user reset vault key
+export const removeAllSecrets = async (allEnvironments: Environment[]) => {
+  const privateEnvironments = allEnvironments.filter(env => env.isPrivate);
+  privateEnvironments.forEach(async privateEnv => {
+    const { kvPairData, data } = privateEnv;
+    if (vaultEnvironmentPath in data) {
+      const { [vaultEnvironmentPath]: secretData, ...restData } = data;
+      const filteredKvPairData = kvPairData?.filter(kvPair => kvPair.type !== EnvironmentKvPairDataType.SECRET);
+      await update(privateEnv, { data: restData, kvPairData: filteredKvPairData });
+    }
+  });
+};
 
 export const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => (
   model.type === type
