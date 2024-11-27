@@ -155,7 +155,8 @@ describe('inso dev bundle', () => {
 
       expect(firstReqLogPosition).toBeGreaterThanOrEqual(0);
       expect(secondReqLogPosition).toBeGreaterThanOrEqual(0);
-      expect(firstReqLogPosition < secondReqLogPosition).toBeTruthy;
+
+      expect(secondReqLogPosition).toBeGreaterThan(firstReqLogPosition);
     });
   });
 });

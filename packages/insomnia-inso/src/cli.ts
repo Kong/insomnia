@@ -545,7 +545,7 @@ export const go = (args?: string[]) => {
       // sort requests
       if (options.item.length) {
         const requestOrder = new Map<string, number>();
-        options.item.forEach((reqId: string, order: number) => requestOrder.set(reqId, order));
+        options.item.forEach((reqId: string, order: number) => requestOrder.set(reqId, order + 1));
         requestsToRun = requestsToRun.sort((a, b) => (requestOrder.get(a._id) || requestsToRun.length) - (requestOrder.get(b._id) || requestsToRun.length));
       }
 
