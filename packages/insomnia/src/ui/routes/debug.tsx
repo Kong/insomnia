@@ -1,7 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { type FC, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { type FC, Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -69,6 +69,7 @@ import {
   type WebSocketRequest,
 } from '../../models/websocket-request';
 import { isDesign, isScratchpad } from '../../models/workspace';
+import { scrollElementIntoView } from '../../utils';
 import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '../../utils/grpc';
 import { invariant } from '../../utils/invariant';
 import { DropdownHint } from '../components/base/dropdown/dropdown-hint';
@@ -1271,6 +1272,12 @@ const CollectionGridListItem = ({
 
   const isSelected = item.doc._id === params.requestId || item.doc._id === params.requestGroupId;
 
+  const scrollIntoView = useCallback((node: HTMLDivElement) => {
+    if (isSelected && node) {
+      scrollElementIntoView(node, { behavior: 'instant' });
+    }
+  }, [isSelected]);
+
   return (
     <GridListItem
       id={item.doc._id}
@@ -1280,6 +1287,7 @@ const CollectionGridListItem = ({
       style={style}
     >
       <div
+        ref={scrollIntoView}
         onContextMenu={e => {
           e.preventDefault();
           setIsContextMenuOpen(true);
