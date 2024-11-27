@@ -1,6 +1,6 @@
 import type { RequestContext } from 'insomnia-sdk';
 import porderedJSON from 'json-order';
-import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelResizeHandle } from 'react-resizable-panels';
 import { type ActionFunction, type LoaderFunction, redirect, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
@@ -253,6 +253,18 @@ export const Runner: FC<{}> = () => {
 
     return requestRows.some((row: RequestRow, index: number) => row.id !== reqList.items[index].id);
   }, [requestRows, reqList]);
+
+  const previousWorkspaceId = useRef('');
+
+  useEffect(() => {
+    if (previousWorkspaceId.current && previousWorkspaceId.current !== workspaceId) {
+      // reset the list when workspace changes
+      const keys = reqList.items.map(item => item.id);
+      reqList.remove(...keys);
+      reqList.append(...requestRows);
+    }
+    previousWorkspaceId.current = workspaceId;
+  }, [reqList, requestRows, workspaceId]);
 
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
     getItems: keys => {
