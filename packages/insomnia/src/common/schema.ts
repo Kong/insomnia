@@ -1,6 +1,6 @@
-import { writeFile } from 'fs/promises';
+// import { writeFile } from 'fs/promises';
 import { z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+// import { zodToJsonSchema } from 'zod-to-json-schema';
 
 const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 type Literal = z.infer<typeof literalSchema>;
@@ -15,6 +15,8 @@ const MetaSchema = z.object({
   modified: z.number().optional(),
   isPrivate: z.boolean().optional(),
 });
+
+export type Meta = z.infer<typeof MetaSchema>;
 
 const CACertificateSchema = z.object({
   path: z.string(),
@@ -42,11 +44,11 @@ const CookieSchema = z.object({
   secure: z.boolean(),
   httpOnly: z.boolean(),
   extensions: z.array(jsonSchema),
-  creation: z.date().nullable(),
-  creationIndex: z.number().nullable(),
-  hostOnly: z.boolean().nullable(),
-  pathIsDefault: z.boolean().nullable(),
-  lastAccessed: z.date().nullable(),
+  creation: z.date().optional(),
+  creationIndex: z.number().optional(),
+  hostOnly: z.boolean().optional(),
+  pathIsDefault: z.boolean().optional(),
+  lastAccessed: z.date().optional(),
 });
 
 const CookieJarSchema = z.object({
@@ -87,20 +89,20 @@ const EnvironmentSchema = z.object({
 //   meta: MetaSchema,
 // });
 
-const GRPCRequestSchema = z.object({
+export const GRPCRequestSchema = z.object({
   name: z.string(),
   url: z.string(),
   description: z.string().optional(),
   protoFileId: z.string().optional().nullable(),
   protoMethodName: z.string().optional(),
   body: z.object({
-    text: z.string().nullable(),
+    text: z.string().optional(),
   }).optional(),
   metadata: z.array(z.object({
     name: z.string(),
     value: z.string(),
-    description: z.string().nullable(),
-    disabled: z.boolean().nullable(),
+    description: z.string().optional(),
+    disabled: z.boolean().optional(),
   })).optional(),
   metaSortKey: z.number().optional(),
   isPrivate: z.boolean().default(false).optional(),
@@ -291,7 +293,7 @@ const AuthenticationSchema = z.union([
   }),
 ]);
 
-const RequestGroupSchema = z.object({
+export const RequestGroupSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   environment: jsonSchema.optional(),
@@ -307,7 +309,7 @@ const RequestGroupSchema = z.object({
   meta: MetaSchema.optional(),
 });
 
-const RequestSchema = z.object({
+export const RequestSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   url: z.string(),
@@ -356,7 +358,7 @@ const RequestSchema = z.object({
   meta: MetaSchema.optional(),
 });
 
-const WebsocketRequestSchema = z.object({
+export const WebsocketRequestSchema = z.object({
   name: z.string(),
   url: z.string(),
   description: z.string().optional(),
@@ -388,6 +390,7 @@ type RequestGroup = z.infer<typeof RequestGroupSchema> & {
   children: (Request | GRPCRequest | WebsocketRequest | RequestGroup)[];
 };
 
+// @ts-expect-error zod doesn't support recursive types
 const RequestGroupWithChildrenSchema: z.ZodType<RequestGroup> = RequestGroupSchema.extend({
   children: z.lazy(() => z.union([RequestSchema, GRPCRequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array()).optional(),
 });
@@ -395,7 +398,7 @@ const RequestGroupWithChildrenSchema: z.ZodType<RequestGroup> = RequestGroupSche
 const TestSchema = z.object({
   name: z.string(),
   code: z.string(),
-  requestId: z.string().nullable().optional(),
+  requestId: z.string().nullable(),
   metaSortKey: z.number().optional(),
   meta: MetaSchema.optional(),
 });
@@ -455,6 +458,8 @@ const globalEnvironmentsSchema = z.object({
   environments: z.array(EnvironmentSchema),
 });
 
-const insomniaFileSchema = z.union([collectionSchema, apiSpecSchema, mockServerSchema, globalEnvironmentsSchema]);
+export const insomniaFileSchema = z.union([collectionSchema, apiSpecSchema, mockServerSchema, globalEnvironmentsSchema]);
 
-writeFile('collection-schema.json', JSON.stringify(zodToJsonSchema(insomniaFileSchema), null, 2));
+export type InsomniaFile = z.infer<typeof insomniaFileSchema>;
+
+// writeFile('collection-schema.json', JSON.stringify(zodToJsonSchema(insomniaFileSchema), null, 2));
