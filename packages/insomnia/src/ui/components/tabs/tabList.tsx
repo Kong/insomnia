@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import _, { set } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button, GridList, Menu, MenuItem, MenuTrigger, Popover, type Selection } from 'react-aria-components';
 import { useFetcher, useNavigate } from 'react-router-dom';
@@ -188,14 +188,18 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     if (!tabListWrapperRef.current) {
       return;
     }
+    tabListWrapperRef.current.style.scrollBehavior = 'smooth';
     tabListWrapperRef.current.scrollLeft -= 150;
+    tabListWrapperRef.current.style.scrollBehavior = 'auto';
   };
 
   const scrollRight = () => {
     if (!tabListWrapperRef.current) {
       return;
     }
+    tabListWrapperRef.current.style.scrollBehavior = 'smooth';
     tabListWrapperRef.current.scrollLeft += 150;
+    tabListWrapperRef.current.style.scrollBehavior = 'auto';
   };
 
   useEffect(() => {
@@ -254,7 +258,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       <Button onPress={scrollLeft} isDisabled={leftScrollDisable} className={`${leftScrollDisable && 'cursor-not-allowed'}`}>
         <Icon icon="chevron-left" className={`w-[30px] ${isOverFlow ? 'block' : 'hidden'}`} />
       </Button>
-      <div className='max-w-[calc(100%-40px)] overflow-x-scroll hide-scrollbars scroll-smooth' ref={tabListWrapperRef} onScroll={handleScroll}>
+      <div className='max-w-[calc(100%-40px)] overflow-x-scroll hide-scrollbars' ref={tabListWrapperRef} onScroll={handleScroll}>
         <GridList
           aria-label="Insomnia Tabs"
           onSelectionChange={handleSelectionChange}
