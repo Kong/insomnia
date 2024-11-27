@@ -235,6 +235,7 @@ export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {
   [EXPORT_TYPE_MOCK_SERVER]: mockServer,
   [EXPORT_TYPE_MOCK_ROUTE]: mockRoute,
   [EXPORT_TYPE_GRPC_REQUEST]: grpcRequest,
+  // @TODO Maybe we don't need this to be exported
   [EXPORT_TYPE_RUNNER_TEST_RESULT]: runnerTestResult,
   [EXPORT_TYPE_REQUEST_GROUP]: requestGroup,
   [EXPORT_TYPE_UNIT_TEST_SUITE]: unitTestSuite,
