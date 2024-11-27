@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Button, GridListItem } from 'react-aria-components';
 
+import { scrollElementIntoView } from '../../../utils';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
@@ -73,7 +74,7 @@ const WORKSPACE_TAB_UI_MAP: Record<string, any> = {
 
 export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
 
-  const { closeTabById } = useInsomniaTabContext();
+  const { closeTabById, currentOrgTabs } = useInsomniaTabContext();
 
   const renderTabIcon = (type: TabEnum) => {
     if (WORKSPACE_TAB_UI_MAP[type]) {
@@ -126,11 +127,18 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
     });
   };
 
+  const scrollIntoView = useCallback((node: HTMLDivElement) => {
+    if (node && currentOrgTabs.activeTabId === tab.id) {
+      scrollElementIntoView(node, { behavior: 'instant' });
+    }
+  }, [currentOrgTabs.activeTabId, tab.id]);
+
   return (
     <GridListItem
       textValue='tab'
       id={tab.id}
       className="outline-none aria-selected:text-[--color-font] aria-selected:bg-[--hl-sm] hover:bg-[--hl-xs]"
+      ref={scrollIntoView}
     >
       {({ isSelected, isHovered }) => (
         <Tooltip delay={1000} message={`${tab.projectName} / ${tab.workspaceName}`} className='h-full'>
