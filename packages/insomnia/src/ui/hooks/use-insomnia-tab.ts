@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { matchPath, useLocation } from 'react-router-dom';
+import { matchPath, useLocation, useSearchParams } from 'react-router-dom';
 
 import type { GrpcRequest } from '../../models/grpc-request';
 import type { MockRoute } from '../../models/mock-route';
@@ -40,6 +40,7 @@ export const useInsomniaTab = ({
 
   const { appTabsRef, addTab, changeActiveTab } = useInsomniaTabContext();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   const generateTabUrl = useCallback((type: TabEnum) => {
     if (type === TabEnum.Request) {
@@ -98,6 +99,14 @@ export const useInsomniaTab = ({
     return null;
   };
 
+  const getRunnerTabId = useCallback(() => {
+    const folderId = searchParams.get('folder');
+    if (folderId) {
+      return `runner_${folderId}`;
+    }
+    return `runner_${workspaceId}`;
+  }, [searchParams, workspaceId]);
+
   const getCurrentTab = useCallback((type: TabEnum | null) => {
     if (!type) {
       return undefined;
@@ -113,7 +122,8 @@ export const useInsomniaTab = ({
 
     if (type === TabEnum.Runner) {
       // collection runner tab id is prefixed with 'runner_'
-      return currentOrgTabs?.tabList.find(tab => tab.id === `runner_${workspaceId}`);
+      const runnerTabId = getRunnerTabId();
+      return currentOrgTabs?.tabList.find(tab => tab.id === runnerTabId);
     }
 
     if (type === TabEnum.MockRoute) {
@@ -128,7 +138,7 @@ export const useInsomniaTab = ({
       return currentOrgTabs?.tabList.find(tab => tab.id === workspaceId);
     }
     return undefined;
-  }, [activeMockRoute?._id, activeRequest?._id, activeRequestGroup?._id, appTabsRef, organizationId, unitTestSuite?._id, workspaceId]);
+  }, [activeMockRoute?._id, activeRequest?._id, activeRequestGroup?._id, appTabsRef, getRunnerTabId, organizationId, unitTestSuite?._id, workspaceId]);
 
   const getTabId = useCallback((type: TabEnum | null): string => {
     if (!type) {
@@ -143,7 +153,8 @@ export const useInsomniaTab = ({
     }
 
     if (type === TabEnum.Runner) {
-      return `runner_${workspaceId}`;
+      const runnerTabId = getRunnerTabId();
+      return runnerTabId;
     }
 
     if (type === TabEnum.MockRoute) {
@@ -159,7 +170,7 @@ export const useInsomniaTab = ({
     }
 
     return '';
-  }, [activeMockRoute?._id, activeRequest?._id, activeRequestGroup?._id, unitTestSuite?._id, workspaceId]);
+  }, [activeMockRoute?._id, activeRequest?._id, activeRequestGroup?._id, getRunnerTabId, unitTestSuite?._id, workspaceId]);
 
   const packTabInfo = useCallback((type: TabEnum): BaseTab | undefined => {
     if (!type) {
