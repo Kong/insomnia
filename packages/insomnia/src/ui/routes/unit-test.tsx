@@ -50,7 +50,7 @@ import { CertificatesModal } from '../components/modals/workspace-certificates-m
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '../components/tabs/tabList';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
-import { useInsomniaTab } from '../hooks/tab';
+import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useRootLoaderData } from './root';
 import { TestRunStatus } from './test-results';
 import TestSuiteRoute from './test-suite';

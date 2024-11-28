@@ -39,6 +39,7 @@ export const useInsomniaTab = ({
 }: InsomniaTabProps) => {
 
   const { appTabsRef, addTab, changeActiveTab } = useInsomniaTabContext();
+  const location = useLocation();
 
   const generateTabUrl = useCallback((type: TabEnum) => {
     if (type === TabEnum.Request) {
@@ -58,7 +59,7 @@ export const useInsomniaTab = ({
     }
 
     if (type === TabEnum.Runner) {
-      return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner`;
+      return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner${location.search}`;
     }
 
     if (type === TabEnum.Mock) {
@@ -81,9 +82,7 @@ export const useInsomniaTab = ({
       return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite?._id}`;
     }
     return '';
-  }, [activeMockRoute?._id, activeRequest?._id, activeRequestGroup?._id, organizationId, projectId, unitTestSuite?._id, workspaceId]);
-
-  const location = useLocation();
+  }, [activeMockRoute?._id, activeRequest?._id, activeRequestGroup?._id, location.search, organizationId, projectId, unitTestSuite?._id, workspaceId]);
 
   const getTabType = (pathname: string) => {
     for (const type in TAB_ROUTER_PATH) {
@@ -275,5 +274,5 @@ export const useInsomniaTab = ({
         changeActiveTab(currentTab.id);
       }
     }
-  }, [addTab, appTabsRef, changeActiveTab, getCurrentTab, location.pathname, organizationId, packTabInfo]);
+  }, [addTab, appTabsRef, changeActiveTab, getCurrentTab, location.pathname, location.search, organizationId, packTabInfo]);
 };
