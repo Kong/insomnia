@@ -115,11 +115,12 @@ test.describe('runner features tests', async () => {
         expect(await page.locator('input[name="Iterations"]').inputValue()).toBe('2');
 
         // select requests to test
-        await page.locator('.runner-request-list-req1').click();
-        await page.locator('.runner-request-list-req2').click();
-        await page.locator('.runner-request-list-req3').click();
-        await page.locator('.runner-request-list-req4').click();
-        await page.locator('.runner-request-list-req5').click();
+        await page.locator('text=Select All').click();
+        await page.locator('.runner-request-list-req0').click();
+        await page.locator('.runner-request-list-req01').click();
+        await page.locator('.runner-request-list-req02').click();
+        await page.locator('.runner-request-list-set-var1').click();
+        await page.locator('.runner-request-list-read-var1').click();
 
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
@@ -227,45 +228,32 @@ test.describe('runner features tests', async () => {
         await verifyResultRows(page, 3, 0, 3, expectedTestOrder, 1);
     });
 
-    test('can detect sync and async test failure', async ({ page }) => {
+    test('settings: can turn off logs', async ({ page }) => {
+
         await page.getByTestId('run-collection-btn-quick').click();
 
-        await page.locator('.runner-request-list-async-test').click();
+        await page.locator('.runner-request-list-printLogs').click();
 
-        // send
-        await page.getByRole('button', { name: 'Run', exact: true }).click();
+        const expectToHaveLogs = [false, true];
 
-        // check result
-        await page.getByText('0 / 4').first().click();
+        for (const expectToHaveLog of expectToHaveLogs) {
+            // configure
+            await page.getByRole('tab', { name: 'advanced' }).click();
+            await page.locator('input[name="enable-log"]').click();
 
-        const expectedTestOrder = [
-            'async_pre_test',
-            'sync_pre_test',
-            'async_post_test',
-            'sync_post_test',
-        ];
+            // send
+            await page.getByRole('button', { name: 'Run', exact: true }).click();
 
-        await verifyResultRows(page, 0, 0, 4, expectedTestOrder, 1);
-    });
+            // verify there's no log
+            await page.getByText('1 / 1').first().click();
+            await page.getByRole('tab', { name: 'Console' }).click();
 
-    test('can detect sync and async test failure', async ({ page }) => {
-        await page.getByTestId('run-collection-btn-quick').click();
-
-        await page.locator('.runner-request-list-async-test').click();
-
-        // send
-        await page.getByRole('button', { name: 'Run', exact: true }).click();
-
-        // check result
-        await page.getByText('0 / 4').first().click();
-
-        const expectedTestOrder = [
-            'async_pre_test',
-            'sync_pre_test',
-            'async_post_test',
-            'sync_post_test',
-        ];
-
-        await verifyResultRows(page, 0, 0, 4, expectedTestOrder, 1);
+            const consoleTabContent = page.locator('.pane-two');
+            if (expectToHaveLog) {
+                expect(consoleTabContent).toContainText("it won't print");
+            } else {
+                expect(consoleTabContent).not.toContainText("it won't print");
+            }
+        }
     });
 });

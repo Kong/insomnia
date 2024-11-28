@@ -389,6 +389,9 @@ resources:
       console.log("it won't print");
     afterResponseScript: |-
       console.log("it won't print");
+      insomnia.test('happy tests', () => {
+        insomnia.expect(200).to.eql(200);
+      });
     metaSortKey: 164
     isPrivate: false
     settingStoreCookies: true
