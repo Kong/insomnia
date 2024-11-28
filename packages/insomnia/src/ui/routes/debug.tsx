@@ -105,8 +105,8 @@ import { getMethodShortHand } from '../components/tags/method-tag';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
-import { useInsomniaTab } from '../hooks/tab';
 import { useExecutionState } from '../hooks/use-execution-state';
+import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useReadyState } from '../hooks/use-ready-state';
 import {
   type CreateRequestType,
