@@ -121,6 +121,7 @@ test.describe('runner features tests', async () => {
         await page.locator('.runner-request-list-req02').click();
         await page.locator('.runner-request-list-set-var1').click();
         await page.locator('.runner-request-list-read-var1').click();
+        await page.locator('input[name="enable-log"]').click();
 
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
