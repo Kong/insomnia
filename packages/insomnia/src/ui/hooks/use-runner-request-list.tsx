@@ -61,7 +61,6 @@ export const useRunnerRequestList = (workspaceId: string, targetFolderId: string
 
   useEffect(() => {
     if ((previousWorkspaceId && previousWorkspaceId !== workspaceId) || (previousTargetFolderId !== undefined && previousTargetFolderId !== targetFolderId)) {
-      console.log('reset list');
       // reset the list when workspace changes
       const keys = reqList.items.map(item => item.id);
       reqList.remove(...keys);
