@@ -4,7 +4,6 @@ import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } fro
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelResizeHandle } from 'react-resizable-panels';
 import { type ActionFunction, type LoaderFunction, redirect, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
-import { useListData } from 'react-stately';
 import { useInterval } from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -14,8 +13,6 @@ import type { ResponseTimelineEntry } from '../../main/network/libcurl-promise';
 import type { TimingStep } from '../../main/network/request-timing';
 import * as models from '../../models';
 import type { UserUploadEnvironment } from '../../models/environment';
-import { isRequest, type Request } from '../../models/request';
-import { isRequestGroup } from '../../models/request-group';
 import type { RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
 import { cancelRequestById } from '../../network/cancellation';
 import { invariant } from '../../utils/invariant';
@@ -33,10 +30,10 @@ import { RunnerTestResultPane } from '../components/panes/runner-test-result-pan
 import { ResponseTimer } from '../components/response-timer';
 import { getTimeAndUnit } from '../components/tags/time-tag';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
+import { useRunnerRequestList } from '../hooks/use-runner-request-list';
 import type { OrganizationLoaderData } from './organization';
 import { type CollectionRunnerContext, defaultSendActionRuntime, type RunnerSource, sendActionImplementation } from './request';
 import { useRootLoaderData } from './root';
-import type { Child, WorkspaceLoaderData } from './workspace';
 
 const inputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
 const iterationInputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
@@ -101,7 +98,7 @@ export const repositionInArray = (allItems: string[], itemsToMove: string[], tar
   return items;
 };
 
-interface RequestRow {
+export interface RequestRow {
   id: string;
   name: string;
   ancestorNames: string[];
@@ -112,16 +109,17 @@ interface RequestRow {
 };
 
 export const Runner: FC<{}> = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [shouldRefresh, setShouldRefresh] = useState(false);
+  const [searchParams] = useSearchParams();
   const [errorMsg, setErrorMsg] = useState<null | string>(null);
-  const [targetFolderId, setTargetFolderId] = useState<string | null>(null);
 
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  const targetFolderId = searchParams.get('folder') || '';
+  const shouldRefreshRef = useRef(false);
 
-  if (searchParams.has('refresh-pane') || searchParams.has('error') || searchParams.has('folder')) {
+  if (searchParams.has('refresh-pane') || searchParams.has('error')) {
+    console.log('searchParams', searchParams.toString());
     if (searchParams.has('refresh-pane')) {
-      setShouldRefresh(true);
+      shouldRefreshRef.current = true;
       searchParams.delete('refresh-pane');
     }
 
@@ -143,15 +141,6 @@ export const Runner: FC<{}> = () => {
     } else {
       setErrorMsg(null);
     }
-
-    if (searchParams.has('folder')) {
-      setTargetFolderId(searchParams.get('folder'));
-      searchParams.delete('folder');
-    } else {
-      setTargetFolderId(null);
-    }
-
-    setSearchParams({});
   }
 
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -171,10 +160,12 @@ export const Runner: FC<{}> = () => {
   invariant(iterationCount, 'iterationCount should not be null');
 
   const { settings } = useRootLoaderData();
-  const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showCLIModal, setShowCLIModal] = useState(false);
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
+
+  const { reqList, requestRows, entityMap } = useRunnerRequestList(workspaceId, targetFolderId);
+
   useEffect(() => {
     if (settings.forceVerticalLayout) {
       setDirection('vertical');
@@ -196,55 +187,6 @@ export const Runner: FC<{}> = () => {
     }
   }, [settings.forceVerticalLayout, direction]);
 
-  const getEntityById = new Map<string, Child>();
-
-  const requestRows: RequestRow[] = collection
-    .filter(item => {
-      getEntityById.set(item.doc._id, item);
-      return isRequest(item.doc);
-    })
-    .map((item: Child) => {
-      const ancestorNames: string[] = [];
-      const ancestorIds: string[] = [];
-      if (item.ancestors) {
-        item.ancestors.forEach(ancestorId => {
-          const ancestor = getEntityById.get(ancestorId);
-          if (ancestor && isRequestGroup(ancestor?.doc)) {
-            ancestorNames.push(ancestor?.doc.name);
-            ancestorIds.push(ancestor?.doc._id);
-          }
-        });
-      }
-
-      const requestDoc = item.doc as Request;
-      invariant('method' in item.doc, 'Only Request is supported at the moment');
-      return {
-        id: item.doc._id,
-        name: item.doc.name,
-        ancestorNames,
-        ancestorIds,
-        method: requestDoc.method,
-        url: item.doc.url,
-        parentId: item.doc.parentId,
-      };
-    })
-    .filter(item => {
-      if (targetFolderId) {
-        return item.ancestorIds.includes(targetFolderId);
-      }
-      return true;
-    });
-
-  const reqList = useListData({
-    initialItems: requestRows,
-    filter: item => {
-      if (targetFolderId) {
-        return item.ancestorIds.includes(targetFolderId);
-      }
-      return true;
-    },
-  });
-
   const isConsistencyChanged = useMemo(() => {
     if (requestRows.length !== reqList.items.length) {
       return true;
@@ -255,22 +197,10 @@ export const Runner: FC<{}> = () => {
     return requestRows.some((row: RequestRow, index: number) => row.id !== reqList.items[index].id);
   }, [requestRows, reqList]);
 
-  const previousWorkspaceId = useRef('');
-
-  useEffect(() => {
-    if (previousWorkspaceId.current && previousWorkspaceId.current !== workspaceId) {
-      // reset the list when workspace changes
-      const keys = reqList.items.map(item => item.id);
-      reqList.remove(...keys);
-      reqList.append(...requestRows);
-    }
-    previousWorkspaceId.current = workspaceId;
-  }, [reqList, requestRows, workspaceId]);
-
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
     getItems: keys => {
       return [...keys].map(key => {
-        const name = getEntityById.get(key as string)?.doc.name || '';
+        const name = entityMap.get(key as string)?.doc.name || '';
         return {
           'text/plain': key.toString(),
           name,
@@ -426,14 +356,14 @@ export const Runner: FC<{}> = () => {
             unit: durationUnit,
           });
         } else {
-          if (shouldRefresh) {
+          if (shouldRefreshRef.current) {
             const results = await models.runnerTestResult.findByParentId(workspaceId) || [];
             setTestHistory(results.reverse());
             if (results.length > 0) {
               const latestResult = results[0];
               setExecutionResult(latestResult);
             }
-            setShouldRefresh(false);
+            shouldRefreshRef.current = false;
           }
         }
       }
