@@ -287,5 +287,5 @@ export const useInsomniaTab = ({
         changeActiveTab(currentTab.id);
       }
     }
-  }, [addTab, appTabsRef, changeActiveTab, getCurrentTab, location.pathname, organizationId, packTabInfo]);
+  }, [addTab, appTabsRef, changeActiveTab, getCurrentTab, location.pathname, location.search, organizationId, packTabInfo]);
 };
