@@ -70,7 +70,7 @@ import { OrganizationTabList } from '../components/tabs/tabList';
 import { formatMethodName } from '../components/tags/method-tag';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useAIContext } from '../context/app/ai-context';
-import { useInsomniaTab } from '../hooks/tab';
+import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import {
   useActiveApiSpecSyncVCSVersion,
   useGitVCSVersion,
