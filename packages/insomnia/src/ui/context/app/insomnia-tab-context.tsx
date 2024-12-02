@@ -21,7 +21,8 @@ interface ContextProps {
   closeAllTabsUnderProject?: (projectId: string) => void;
   updateProjectName?: (projectId: string, name: string) => void;
   updateWorkspaceName?: (projectId: string, name: string) => void;
-  updateTabById?: (tabId: string, name: string, method?: string, tag?: string) => void;
+  updateTabById?: (tabId: string, patches: Partial<BaseTab>) => void;
+  batchUpdateTabs?: (updates: { id: string; fields: Partial<BaseTab> }[]) => void;
   closeAllTabs?: () => void;
   closeOtherTabs?: (id: string) => void;
 }
@@ -169,7 +170,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     });
   }, [navigate, organizationId, updateInsomniaTabs]);
 
-  const updateTabById = useCallback((tabId: string, name: string, method: string = '', tag: string = '') => {
+  const updateTabById = useCallback((tabId: string, patches: Partial<BaseTab>) => {
     const currentTabs = appTabsRef?.current?.[organizationId];
     if (!currentTabs) {
       return;
@@ -178,9 +179,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       if (tab.id === tabId) {
         return {
           ...tab,
-          name,
-          tag,
-          method,
+          ...patches,
         };
       }
       return tab;
@@ -248,6 +247,30 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     });
   }, [organizationId, updateInsomniaTabs]);
 
+  const batchUpdateTabs = useCallback((updates: { id: string; fields: Partial<BaseTab> }[]) => {
+    const currentTabs = appTabsRef?.current?.[organizationId];
+    if (!currentTabs) {
+      return;
+    }
+
+    const newTabList = currentTabs.tabList.map(tab => {
+      const update = updates.find(update => update.id === tab.id);
+      if (update) {
+        return {
+          ...tab,
+          ...update.fields,
+        };
+      }
+      return tab;
+    });
+
+    updateInsomniaTabs({
+      organizationId,
+      tabList: newTabList,
+      activeTabId: currentTabs.activeTabId || '',
+    });
+  }, [organizationId, updateInsomniaTabs]);
+
   return (
     <InsomniaTabContext.Provider
       value={{
@@ -255,14 +278,15 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
         closeTabById,
         closeAllTabsUnderWorkspace,
         closeAllTabsUnderProject,
+        closeAllTabs,
+        closeOtherTabs,
         addTab,
         updateTabById,
         changeActiveTab,
         updateProjectName,
         updateWorkspaceName,
+        batchUpdateTabs,
         appTabsRef,
-        closeAllTabs,
-        closeOtherTabs,
       }}
     >
       {children}
