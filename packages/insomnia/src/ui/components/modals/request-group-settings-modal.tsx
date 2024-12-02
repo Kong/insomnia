@@ -7,6 +7,7 @@ import type { RequestGroup } from '../../../models/request-group';
 import { invariant } from '../../../utils/invariant';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
 import type { ListWorkspacesLoaderData } from '../../routes/project';
+import { revalidateWorkspaceActiveRequestByFolder } from '../../routes/workspace';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -49,6 +50,8 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
   const handleMoveToWorkspace = async () => {
     invariant(workspaceToCopyTo, 'Workspace ID is required');
     patchRequestGroup(requestGroup._id, { parentId: workspaceToCopyTo });
+    // if the folder is moved to a different workspace, we need to revalidate the active request
+    revalidateWorkspaceActiveRequestByFolder(requestGroup, workspaceId);
     modalRef.current?.hide();
     navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceToCopyTo}/debug`);
   };

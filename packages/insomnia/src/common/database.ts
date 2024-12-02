@@ -116,7 +116,7 @@ export const database = {
       },
       ...patches,
     );
-    return database.update<T>(doc);
+    return database.update<T>(doc, false, patches);
   },
 
   /** duplicate doc and its decendents recursively */
@@ -524,7 +524,7 @@ export const database = {
     notifyOfChange('remove', doc, fromSync);
   },
 
-  update: async function<T extends BaseModel>(doc: T, fromSync = false) {
+  update: async function <T extends BaseModel>(doc: T, fromSync = false, patches: Patch<T>[] = []) {
     if (db._empty) {
       return _send<T>('update', ...arguments);
     }
@@ -550,7 +550,7 @@ export const database = {
 
           resolve(docWithDefaults);
           // NOTE: This needs to be after we resolve
-          notifyOfChange('update', docWithDefaults, fromSync);
+          notifyOfChange('update', docWithDefaults, fromSync, patches);
         },
       );
     });
@@ -698,7 +698,8 @@ let bufferChangesId = 1;
 export type ChangeBufferEvent<T extends BaseModel = BaseModel> = [
   event: ChangeType,
   doc: T,
-  fromSync: boolean
+  fromSync: boolean,
+  patches: Patch<T>[],
 ];
 
 let changeBuffer: ChangeBufferEvent[] = [];
@@ -709,10 +710,11 @@ let changeListeners: ChangeListener[] = [];
 
 /** push changes into the buffer, so that changeListeners can get change contents when database.flushChanges is called,
  * this method should be called whenever a document change happens */
-async function notifyOfChange<T extends BaseModel>(event: ChangeType, doc: T, fromSync: boolean) {
+async function notifyOfChange<T extends BaseModel>(event: ChangeType, doc: T, fromSync: boolean, patches: Patch<T>[] = []) {
   const updatedDoc = doc;
 
-  changeBuffer.push([event, updatedDoc, fromSync]);
+  // TODO: Use object is better than array
+  changeBuffer.push([event, updatedDoc, fromSync, patches]);
 
   // Flush right away if we're not buffering
   if (!bufferingChanges) {
