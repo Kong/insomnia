@@ -1,12 +1,13 @@
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button, GridList, Menu, MenuItem, MenuTrigger, Popover, type Selection } from 'react-aria-components';
-import { useFetcher, useNavigate } from 'react-router-dom';
+import { useFetcher, useNavigate, useParams } from 'react-router-dom';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import * as models from '../../../models/index';
 import type { MockRoute } from '../../../models/mock-route';
-import type { Request } from '../../../models/request';
+import { isRequest, type Request } from '../../../models/request';
+import { isRequestGroup } from '../../../models/request-group';
 import { INSOMNIA_TAB_HEIGHT } from '../../constant';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { type Size, useResizeObserver } from '../../hooks/use-resize-observer';
@@ -39,7 +40,7 @@ export const TAB_ROUTER_PATH: Record<TabEnum, string> = {
 };
 
 export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' }) => {
-  const { currentOrgTabs } = useInsomniaTabContext();
+  const { currentOrgTabs, batchUpdateTabs } = useInsomniaTabContext();
   const { tabList, activeTabId } = currentOrgTabs;
   const navigate = useNavigate();
 
@@ -49,6 +50,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   const [rightScrollDisable, setRightScrollDisable] = useState(false);
 
   const requestFetcher = useFetcher();
+  const { organizationId, projectId } = useParams();
 
   const {
     changeActiveTab,
@@ -105,26 +107,79 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     }
   }, [closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById]);
 
-  const handleUpdate = useCallback((doc: models.BaseModel) => {
-    // currently have 2 types of update, rename and change request method
-    if (doc.type === models.request.type || doc.type === models.grpcRequest.type || doc.type === models.webSocketRequest.type) {
-      const tag = getRequestMethodShortHand(doc as Request);
-      const method = (doc as Request).method;
-      updateTabById?.(doc._id, doc.name, method, tag);
-    } else if (doc.type === models.mockRoute.type) {
-      const method = (doc as MockRoute).method;
-      const tag = formatMethodName(method);
-      updateTabById?.(doc._id, doc.name, method, tag);
-    } else if (doc.type === models.project.type) {
-      // update project name(for tooltip)
-      updateProjectName?.(doc._id, doc.name);
-    } else if (doc.type === models.workspace.type) {
-      // update workspace name(for tooltip) & update name for workspace tab
-      updateWorkspaceName?.(doc._id, doc.name);
-    } else {
-      updateTabById?.(doc._id, doc.name);
+  const handleUpdate = useCallback(async (doc: models.BaseModel, patches: Partial<models.BaseModel>[]) => {
+    const patchObj: Record<string, any> = {};
+    patches.forEach(patch => {
+      Object.assign(patchObj, patch);
+    });
+    // only need to handle name, method, parentId change
+    if (!patchObj.name && !patchObj.method && !patchObj.parentId) {
+      return;
     }
-  }, [updateProjectName, updateTabById, updateWorkspaceName]);
+    if (patchObj.name) {
+      if (doc.type === models.project.type) {
+        // update project name(for tooltip)
+        updateProjectName?.(doc._id, doc.name);
+      } else if (doc.type === models.workspace.type) {
+        // update workspace name(for tooltip) & update name for workspace tab
+        updateWorkspaceName?.(doc._id, doc.name);
+      } else {
+        updateTabById?.(doc._id, {
+          name: doc.name,
+        });
+      }
+    }
+
+    if (patchObj.method) {
+      if (doc.type === models.request.type || doc.type === models.grpcRequest.type || doc.type === models.webSocketRequest.type) {
+        const tag = getRequestMethodShortHand(doc as Request);
+        const method = (doc as Request).method;
+        updateTabById?.(doc._id, {
+          method,
+          tag,
+        });
+      } else if (doc.type === models.mockRoute.type) {
+        const method = (doc as MockRoute).method;
+        const tag = formatMethodName(method);
+        updateTabById?.(doc._id, {
+          method,
+          tag,
+        });
+      }
+    }
+
+    // move request or requestGroup to another collection
+    if (patchObj.parentId && !patchObj.metaSortKey && (patchObj.parentId as string).startsWith('wrk_')) {
+      const workspace = await models.workspace.getById(patchObj.parentId);
+      if (workspace) {
+        if (isRequest(doc)) {
+          debugger;
+          updateTabById?.(doc._id, {
+            workspaceId: workspace._id,
+            workspaceName: workspace.name,
+            url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${doc._id}`,
+          });
+        } else if (isRequestGroup(doc)) {
+          const folderEntities = await database.withDescendants(doc, models.request.type, [models.request.type, models.requestGroup.type]);
+          console.log('folderEntities:', folderEntities);
+          const batchUpdates = [doc, ...folderEntities].map(entity => {
+            return {
+              id: entity._id,
+              fields: {
+                workspaceId: workspace._id,
+                workspaceName: workspace.name,
+                url: isRequestGroup(entity)
+                  ? `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request-group/${entity._id}`
+                  : `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${entity._id}`,
+              },
+            };
+          });
+          batchUpdateTabs?.(batchUpdates);
+        }
+      }
+    }
+
+  }, [organizationId, projectId, updateProjectName, updateTabById, updateWorkspaceName, batchUpdateTabs]);
 
   useEffect(() => {
     // sync tabList with database
@@ -136,7 +191,8 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
           if (changeType === 'remove') {
             handleDelete(doc._id, doc.type);
           } else if (changeType === 'update') {
-            handleUpdate(doc);
+            const patches = change[3];
+            handleUpdate(doc, patches);
           }
         }
       }
