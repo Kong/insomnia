@@ -1157,15 +1157,15 @@ async function renderApp() {
               },
               {
                 path: 'createVaultKey',
-                action: async (...args) => (await import('./routes/auth.vaultKey')).createVaultKey(...args),
+                action: async (...args) => (await import('./routes/auth.vaultKey')).createVaultKeyAction(...args),
               },
               {
                 path: 'validateVaultKey',
-                action: async (...args) => (await import('./routes/auth.vaultKey')).validateVaultKey(...args),
+                action: async (...args) => (await import('./routes/auth.vaultKey')).validateVaultKeyAction(...args),
               },
               {
                 path: 'resetVaultKey',
-                action: async (...args) => (await import('./routes/auth.vaultKey')).createVaultKey(...args),
+                action: async (...args) => (await import('./routes/auth.vaultKey')).resetVaultKeyAction(...args),
               },
             ],
           },

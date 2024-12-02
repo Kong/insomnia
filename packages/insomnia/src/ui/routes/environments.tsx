@@ -274,7 +274,7 @@ const Environments = () => {
   useEffect(() => {
     if (vaultKeyInSession && vaultSalt) {
       async function updateVaultKey(key: string) {
-        const decryptedVaultKey = await decryptVaultKeyFromSession(key);
+        const decryptedVaultKey = await decryptVaultKeyFromSession(key, false);
         setVaultKey(decryptedVaultKey);
       }
       updateVaultKey(vaultKeyInSession);

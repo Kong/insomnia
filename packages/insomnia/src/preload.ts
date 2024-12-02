@@ -53,7 +53,7 @@ const cloudService: cloudServiceBridgeAPI = {
 const keyChain: keyChainBridgeAPI = {
   saveToKeyChain: (accountId, key) => ipcRenderer.invoke('keyChain.saveToKeyChain', accountId, key),
   retrieveFromKeyChain: accountId => ipcRenderer.invoke('keyChain.retrieveFromKeyChain', accountId),
-  deleteFromKeyChian: accountId => ipcRenderer.invoke('keyChain.deleteFromKeyChian', accountId),
+  deleteFromKeyChian: accountId => ipcRenderer.invoke('keyChain.deleteFromKeyChain', accountId),
   encryptString: raw => ipcRenderer.invoke('keyChain.encryptString', raw),
   decryptString: cipherText => ipcRenderer.invoke('keyChain.decryptString', cipherText),
 };
