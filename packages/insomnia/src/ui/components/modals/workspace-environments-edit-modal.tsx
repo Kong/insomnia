@@ -463,10 +463,8 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                       >
                         {({ isSelected }) => (
                           <Fragment>
-                            <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
-                            <span>{
-                              isSelected ? 'Table Edit' : 'Raw Edit'
-                            }</span>
+                            <Icon icon={!isSelected ? 'toggle-on' : 'toggle-off'} className={`${!isSelected ? 'text-[--color-success]' : ''}`} />
+                            <span>Table View</span>
                           </Fragment>
                         )}
                       </ToggleButton>
