@@ -4,6 +4,7 @@ import _ from 'lodash';
 import type { RenderPurpose } from '../common/render';
 import { type BaseModel, userSession } from '../models';
 import { decryptSecretValue, vaultEnvironmentMaskValue, vaultEnvironmentPath } from '../models/environment';
+import { decryptVaultKeyFromSession } from '../ui/routes/auth.vaultKey';
 import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
 import objectPath from './third_party/objectPath';
 
@@ -313,12 +314,18 @@ export async function maskOrDecryptContextIfNecessary(context: Record<string, an
   const shouldDecrypt = renderPurpose === 'preview' || renderPurpose === 'send';
   if (vaultEnvironmentData) {
     if (shouldDecrypt) {
-      const { symmetricKey } = await userSession.getOrCreate();
-      // decrypt all secert values under vaultEnvironmentPath property in context
-      Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
-        const encryptedValue = vaultEnvironmentData[vaultContextKey];
-        vaultEnvironmentData[vaultContextKey] = decryptSecretValue(encryptedValue, symmetricKey);
-      });
+      const { vaultKey } = await userSession.getOrCreate();
+      if (vaultKey) {
+        const symmetricKey = await decryptVaultKeyFromSession(vaultKey, true) as JsonWebKey;
+        // decrypt all secert values under vaultEnvironmentPath property in context
+        Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
+          const encryptedValue = vaultEnvironmentData[vaultContextKey];
+          vaultEnvironmentData[vaultContextKey] = decryptSecretValue(encryptedValue, symmetricKey);
+        });
+      } else {
+        // remove all values under vaultEnvironmentPath if no vault key found
+        context[vaultEnvironmentPath] = {};
+      }
     } else {
       // mask all secert values under vaultEnvironmentPath property in context
       Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
