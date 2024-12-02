@@ -137,7 +137,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                             setCertificatePath(file.path);
                           }}
                         >
-                          <Button className="flex flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
+                          <Button data-test-id='add-client-certificate-file-chooser' className="flex flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
                             {!certificatePath && <Icon icon="plus" />}
                             <span className='truncate' title={certificatePath}>{certificatePath ? certificatePath : 'Add certificate file'}</span>
                           </Button>
@@ -164,7 +164,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                             setKeyPath(file.path);
                           }}
                         >
-                          <Button className="flex flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
+                          <Button data-test-id='add-client-certificate-key-file-chooser' className="flex flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
                             {!keyPath && <Icon icon="plus" />}
                             <span className='truncate' title={keyPath}>{keyPath ? keyPath : 'Add key file'}</span>
                           </Button>

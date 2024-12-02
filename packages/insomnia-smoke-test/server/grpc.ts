@@ -2,11 +2,10 @@
 /* eslint-disable camelcase */
 // inspiration: https://github.com/grpc/grpc/blob/master/examples/node/dynamic_codegen/route_guide/route_guide_server.js
 import * as grpc from '@grpc/grpc-js';
-import { ServerCredentials } from '@grpc/grpc-js';
 import { HandleCall } from '@grpc/grpc-js/build/src/server-call';
 import * as protoLoader from '@grpc/proto-loader';
 import { addReflection } from '@ravanallc/grpc-server-reflection';
-import fs, { readFileSync } from 'fs';
+import fs from 'fs';
 import path from 'path';
 
 const PROTO_PATH = path.resolve('../../packages/insomnia/src/network/grpc/__fixtures__/library/route_guide.proto');
@@ -168,16 +167,13 @@ const routeChat: HandleCall<any, any> = (call: any) => {
     /* For each note sent, respond with all previous notes that correspond to
      * the same point */
     if (routeNotes.hasOwnProperty(key)) {
-      // @ts-expect-error typescript
       routeNotes[key].forEach(function(note: any) {
         call.write(note);
       });
     } else {
-      // @ts-expect-error typescript
       routeNotes[key] = [];
     }
     // Then add the new note to the list
-    // @ts-expect-error typescript
     routeNotes[key].push(JSON.parse(JSON.stringify(note)));
   });
   call.on('end', function() {
@@ -218,6 +214,7 @@ export const startGRPCServer = (port: number) => {
         resolve();
       });
     });
+
     const serverWithTLS = new grpc.Server();
 
     // Enable reflection
@@ -230,10 +227,10 @@ export const startGRPCServer = (port: number) => {
       recordRoute: recordRoute,
       routeChat: routeChat,
     });
-    const rootCert = readFileSync(path.join(__dirname, '../fixtures/certificates/rootCA.pem'));
-    const serverCert = readFileSync(path.join(__dirname, '../fixtures/certificates/localhost.pem'));
-    const serverKey = readFileSync(path.join(__dirname, '../fixtures/certificates/localhost-key.pem'));
-    const serverCredentials = ServerCredentials.createSsl(
+    const rootCert = fs.readFileSync(path.join(__dirname, '../fixtures/certificates/rootCA.pem'));
+    const serverCert = fs.readFileSync(path.join(__dirname, '../fixtures/certificates/localhost.pem'));
+    const serverKey = fs.readFileSync(path.join(__dirname, '../fixtures/certificates/localhost-key.pem'));
+    const serverCredentials = grpc.ServerCredentials.createSsl(
       rootCert,
       [
         {
@@ -241,10 +238,11 @@ export const startGRPCServer = (port: number) => {
           private_key: serverKey,
         },
       ],
-      true
+      true // mTLS enabled, temporarily change to false for local testing if needed
     );
     serverWithTLS.bindAsync('localhost:50052', serverCredentials, error => {
       if (error) {
+        console.error(error);
         return reject(error);
       }
 

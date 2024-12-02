@@ -213,7 +213,6 @@ const getMethodsFromReflection = async (
   if (reflectionApi.enabled) {
     return getMethodsFromReflectionServer(reflectionApi);
   }
-  try {
     const { url } = parseGrpcUrl(host);
     const client = new grpcReflection.Client(
       url,
@@ -263,9 +262,6 @@ const getMethodsFromReflection = async (
       return methods;
     });
     return (await Promise.all(methodsPromises)).flat();
-  } catch (error) {
-    throw error;
-  }
 };
 export const loadMethodsFromReflection = async (options: {
   url: string;
@@ -316,7 +312,8 @@ export const getMethodType = ({
 };
 
 export const getSelectedMethod = async (
-  request: GrpcRequest
+  request: GrpcRequest,
+  ipcParams: GrpcIpcRequestParams,
 ): Promise<MethodDefs | undefined> => {
   if (request.protoFileId) {
     const protoFile = await models.protoFile.getById(request.protoFileId);
@@ -335,6 +332,9 @@ export const getSelectedMethod = async (
     request.metadata,
     settings.validateSSL,
     request.reflectionApi,
+    ipcParams.clientCert,
+    ipcParams.clientKey,
+    ipcParams.caCertificate,
   );
   invariant(methods, 'No reflection methods found');
   return methods.find(c => c.path === request.protoMethodName);
@@ -362,23 +362,24 @@ const isEnumDefinition = (definition: AnyDefinition): definition is EnumTypeDefi
 };
 
 const getChannelCredentials = ({ url, rejectUnauthorized, clientCert, clientKey, caCertificate }: { url: string; rejectUnauthorized: boolean; clientCert?: string; clientKey?: string; caCertificate?: string }): ChannelCredentials => {
-  if (url.toLowerCase().startsWith('grpc:')) {
-    return ChannelCredentials.createInsecure();
-  }
   if (caCertificate && clientKey && clientCert) {
     return ChannelCredentials.createSsl(Buffer.from(caCertificate, 'utf8'), Buffer.from(clientKey, 'utf8'), Buffer.from(clientCert, 'utf8'), { rejectUnauthorized });
   }
   if (caCertificate) {
     return ChannelCredentials.createSsl(Buffer.from(caCertificate, 'utf8'), null, null, { rejectUnauthorized });
   }
-  return ChannelCredentials.createSsl(null, null, null, { rejectUnauthorized });
+  if (url.toLowerCase().startsWith('grpcs:')) {
+    return ChannelCredentials.createSsl(null, null, null, { rejectUnauthorized });
+  }
+  return ChannelCredentials.createInsecure();
 };
 
 export const start = (
   event: IpcMainEvent,
-  { request, rejectUnauthorized, clientCert, clientKey, caCertificate }: GrpcIpcRequestParams,
+  ipcParams: GrpcIpcRequestParams,
 ) => {
-  getSelectedMethod(request)?.then(method => {
+  const { request, rejectUnauthorized, clientCert, clientKey, caCertificate } = ipcParams;
+  getSelectedMethod(request, ipcParams)?.then(method => {
     if (!method) {
       event.reply('grpc.error', request._id, new Error(`The gRPC method ${request.protoMethodName} could not be found`));
       return;
@@ -457,6 +458,8 @@ export const start = (
       event.reply('grpc.error', request._id, error);
     }
     return;
+  }).catch(error => {
+    event.reply('grpc.error', request._id, error);
   });
 };
 
