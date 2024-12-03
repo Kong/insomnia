@@ -566,8 +566,10 @@ export const go = (args?: string[]) => {
             const bSortKey = b.ancestors[j];
             if (aSortKey < bSortKey) {
               compareResult = -1;
+              break;
             } else if (aSortKey > bSortKey) {
               compareResult = 1;
+              break;
             }
           }
           if (compareResult !== 0) {
