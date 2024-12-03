@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Button, GridList, Menu, MenuItem, MenuTrigger, Popover, type Selection } from 'react-aria-components';
+import { Button, DropIndicator, GridList, Menu, MenuItem, MenuTrigger, Popover, type Selection, useDragAndDrop } from 'react-aria-components';
 import { useFetcher, useNavigate, useParams } from 'react-router-dom';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
@@ -40,7 +40,7 @@ export const TAB_ROUTER_PATH: Record<TabEnum, string> = {
 };
 
 export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' }) => {
-  const { currentOrgTabs, batchUpdateTabs } = useInsomniaTabContext();
+  const { currentOrgTabs, batchUpdateTabs, moveBefore, moveAfter } = useInsomniaTabContext();
   const { tabList, activeTabId } = currentOrgTabs;
   const navigate = useNavigate();
 
@@ -305,6 +305,26 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     }
   }, [isOverFlow]);
 
+  const { dragAndDropHooks } = useDragAndDrop({
+    getItems: keys => [...keys].map(key => ({ 'text/plain': key.toString() })),
+    onReorder: e => {
+      const moveKey = Array.from(e.keys)[0].toString();
+      if (e.target.dropPosition === 'before') {
+        moveBefore?.(e.target.key.toString(), moveKey);;
+      } else if (e.target.dropPosition === 'after') {
+        moveAfter?.(e.target.key.toString(), moveKey);
+      }
+    },
+    renderDropIndicator(target) {
+      return (
+        <DropIndicator
+          target={target}
+          className="outline-[--color-surprise] outline-1 outline !border-none"
+        />
+      );
+    },
+  });
+
   if (!tabList.length) {
     return null;
   };
@@ -323,6 +343,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
           selectionMode="single"
           selectionBehavior='replace'
           className="flex h-[41px] w-fit"
+          dragAndDropHooks={dragAndDropHooks}
           // Use +1 height to mask the wrapper border, and let the custom element in InsomniaTab act as the fake border.（we need different border for active tab）
           style={{ height: `${INSOMNIA_TAB_HEIGHT + 1}px` }}
           items={tabList}
