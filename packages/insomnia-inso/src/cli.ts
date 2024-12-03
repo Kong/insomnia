@@ -10,6 +10,7 @@ import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/con
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
 import { init, type as EnvironmentType, UserUploadEnvironment } from 'insomnia/src/models/environment';
 import { Request } from 'insomnia/src/models/request';
+import { RequestGroup } from 'insomnia/src/models/request-group';
 import { deserializeNDJSON } from 'insomnia/src/utils/ndjson';
 import { type RequestTestResult } from 'insomnia-sdk';
 import { generate, runTestsCli } from 'insomnia-testing';
@@ -24,6 +25,7 @@ import { Database, isFile, loadDb } from './db';
 import { insomniaExportAdapter } from './db/adapters/insomnia-adapter';
 import { loadApiSpec, promptApiSpec } from './db/models/api-spec';
 import { loadEnvironment, promptEnvironment } from './db/models/environment';
+import { BaseModel } from './db/models/types';
 import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
 import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
@@ -187,7 +189,7 @@ const getRequestsToRunFromListOrWorkspace = (db: Database, workspaceId: string, 
   const hasItems = item.length > 0;
   if (hasItems) {
     const folderIds = item.filter(id => db.RequestGroup.find(rg => rg._id === id));
-    const allRequestGroupIds = getRequestGroupIdsRecursively(folderIds);
+    const allRequestGroupIds = [...folderIds, ...getRequestGroupIdsRecursively(folderIds)];
     const folderRequests = db.Request.filter(req => allRequestGroupIds.includes(req.parentId)) as Request[];
     const reqItems = db.Request.filter(req => item.includes(req._id)) as Request[];
 
@@ -522,6 +524,7 @@ export const go = (args?: string[]) => {
         logger.fatal('No environment identified; cannot run requests without a valid environment.');
         return process.exit(1);
       }
+
       let requestsToRun = getRequestsToRunFromListOrWorkspace(db, workspaceId, options.item);
       if (options.requestNamePattern) {
         requestsToRun = requestsToRun.filter(req => req.name.match(new RegExp(options.requestNamePattern)));
@@ -532,13 +535,56 @@ export const go = (args?: string[]) => {
       }
 
       // sort requests
-      if (options.item.length) {
+      const isRunningFolder = options.item.length === 1 && options.item[0].startsWith('fld_');
+      if (options.item.length && !isRunningFolder) {
         const requestOrder = new Map<string, number>();
         options.item.forEach((reqId: string, order: number) => requestOrder.set(reqId, order + 1));
         requestsToRun = requestsToRun.sort((a, b) => (requestOrder.get(a._id) || requestsToRun.length) - (requestOrder.get(b._id) || requestsToRun.length));
       } else {
+        const getAllParentGroupSortKeys = (doc: BaseModel): number[] => {
+          const parentFolder = db.RequestGroup.find(rg => rg._id === doc.parentId);
+          if (parentFolder === undefined) {
+            return [];
+          }
+          return [(parentFolder as RequestGroup).metaSortKey, ...getAllParentGroupSortKeys(parentFolder)];
+        };
+
         // sort by metaSortKey (manual sorting order)
-        requestsToRun = requestsToRun.sort((a, b) => a.metaSortKey - b.metaSortKey);
+        requestsToRun = requestsToRun.map(request => {
+          const allParentGroupSortKeys = getAllParentGroupSortKeys(request as BaseModel);
+
+          return {
+            ancestors: allParentGroupSortKeys.reverse(),
+            request,
+          };
+        }).sort((a, b) => {
+          let compareResult = 0;
+
+          let i = 0, j = 0;
+          for (; i < a.ancestors.length && j < b.ancestors.length; i++, j++) {
+            const aSortKey = a.ancestors[i];
+            const bSortKey = b.ancestors[j];
+            if (aSortKey < bSortKey) {
+              compareResult = -1;
+            } else if (aSortKey > bSortKey) {
+              compareResult = 1;
+            }
+          }
+          if (compareResult !== 0) {
+            return compareResult;
+          }
+
+          if (a.ancestors.length === b.ancestors.length) {
+            return a.request.metaSortKey - b.request.metaSortKey;
+          }
+
+          if (i < a.ancestors.length) {
+            return a.ancestors[i] - b.request.metaSortKey;
+          } else if (j < b.ancestors.length) {
+            return a.request.metaSortKey - b.ancestors[j];
+          }
+          return 0;
+        }).map(({ request }) => request);
       }
 
       try {

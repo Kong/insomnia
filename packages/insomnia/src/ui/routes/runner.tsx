@@ -471,6 +471,16 @@ export const Runner: FC<{}> = () => {
     setDeletedItems([...deletedItems, item._id]);
   };
 
+  const selectedRequestIdsForCliCommand =
+    targetFolderId !== null && targetFolderId !== ''
+      ? Array.from(reqList.items)
+        .filter(item => item.parentId === targetFolderId)
+        .map(item => item.id)
+        .filter(id => new Set(reqList.selectedKeys).has(id))
+      : Array.from(reqList.items)
+        .map(item => item.id)
+        .filter(id => new Set(reqList.selectedKeys).has(id));
+
   return (
     <>
       <Panel id="pane-one" className='pane-one theme--pane' minSize={35} maxSize={90}>
@@ -707,7 +717,8 @@ export const Runner: FC<{}> = () => {
             {showCLIModal && (
               <CLIPreviewModal
                 onClose={() => setShowCLIModal(false)}
-                requestIds={Array.from(reqList.items).map(item => item.id).filter(id => new Set(reqList.selectedKeys).has(id))}
+                requestIds={selectedRequestIdsForCliCommand}
+                targetFolderId={targetFolderId}
                 keepManualOrder={!isConsistencyChanged}
                 iterationCount={iterationCount}
                 delay={delay}

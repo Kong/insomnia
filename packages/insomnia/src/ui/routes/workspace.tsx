@@ -233,6 +233,7 @@ export const workspaceLoader: LoaderFunction = async ({
 
     return childrenWithChildren;
   };
+
   const requestTree = await getCollectionTree({
     parentId: activeWorkspace._id,
     level: 0,

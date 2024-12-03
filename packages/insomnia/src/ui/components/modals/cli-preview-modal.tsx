@@ -6,10 +6,21 @@ import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { CopyButton } from '../base/copy-button';
 import { Icon } from '../icon';
 
-export const CLIPreviewModal = ({ onClose, requestIds, keepManualOrder, iterationCount, delay, filePath, bail }: { onClose: () => void; requestIds: string[]; keepManualOrder: boolean; iterationCount: number; delay: number; filePath: string; bail: boolean }) => {
+function generateCommandArgumentsForRequests(workspaceId: string, targetFolderId: string | null, requestIds: string[], keepManualOrder: boolean) {
+  const shortWorkspaceId = workspaceId.slice(0, 10);
+
+  if (targetFolderId !== null && targetFolderId !== '') {
+    return keepManualOrder
+      ? shortWorkspaceId + ' -i ' + targetFolderId
+      : shortWorkspaceId + ' -i ' + requestIds.join(' -i ');
+  }
+  return keepManualOrder ? shortWorkspaceId : shortWorkspaceId + ' -i ' + requestIds.join(' -i ');
+}
+
+export const CLIPreviewModal = ({ onClose, requestIds, targetFolderId, keepManualOrder, iterationCount, delay, filePath, bail }: { onClose: () => void; requestIds: string[]; targetFolderId: string | null; keepManualOrder: boolean; iterationCount: number; delay: number; filePath: string; bail: boolean }) => {
   const { workspaceId } = useParams() as { workspaceId: string };
   const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const workspaceIdAndRequestIds = keepManualOrder ? workspaceId.slice(0, 10) : workspaceId.slice(0, 10) + ' -i ' + requestIds.join(' -i ');
+  const workspaceIdAndRequestIds = generateCommandArgumentsForRequests(workspaceId, targetFolderId, requestIds, keepManualOrder);
   const iterationCountArgument = iterationCount > 1 ? ` -n ${iterationCount}` : '';
   const delayArgument = delay > 0 ? ` --delay-request ${delay}` : '';
   const iterationFilePath = filePath ? ` -d "${filePath}"` : '';
