@@ -25,6 +25,8 @@ interface ContextProps {
   batchUpdateTabs?: (updates: { id: string; fields: Partial<BaseTab> }[]) => void;
   closeAllTabs?: () => void;
   closeOtherTabs?: (id: string) => void;
+  moveBefore?: (targetId: string, movingId: string) => void;
+  moveAfter?: (targetId: string, movingId: string) => void;
 }
 
 const InsomniaTabContext = createContext<ContextProps>({
@@ -271,6 +273,44 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     });
   }, [organizationId, updateInsomniaTabs]);
 
+  const moveBefore = useCallback((targetId: string, movingId: string) => {
+    const currentTabs = appTabsRef?.current?.[organizationId];
+    if (!currentTabs || targetId === movingId) {
+      return;
+    }
+
+    const newTabList = [...currentTabs.tabList];
+    const movingIndex = newTabList.findIndex(tab => tab.id === movingId);
+    const [movingTab] = newTabList.splice(movingIndex, 1);
+    const targetIndex = newTabList.findIndex(tab => tab.id === targetId);
+    newTabList.splice(targetIndex, 0, movingTab);
+
+    updateInsomniaTabs({
+      organizationId,
+      tabList: newTabList,
+      activeTabId: currentTabs.activeTabId || '',
+    });
+  }, [organizationId, updateInsomniaTabs]);
+
+  const moveAfter = useCallback((targetId: string, movingId: string) => {
+    const currentTabs = appTabsRef?.current?.[organizationId];
+    if (!currentTabs || targetId === movingId) {
+      return;
+    }
+
+    const newTabList = [...currentTabs.tabList];
+    const movingIndex = newTabList.findIndex(tab => tab.id === movingId);
+    const [movingTab] = newTabList.splice(movingIndex, 1);
+    const targetIndex = newTabList.findIndex(tab => tab.id === targetId);
+    newTabList.splice(targetIndex + 1, 0, movingTab);
+
+    updateInsomniaTabs({
+      organizationId,
+      tabList: newTabList,
+      activeTabId: currentTabs.activeTabId || '',
+    });
+  }, [organizationId, updateInsomniaTabs]);
+
   return (
     <InsomniaTabContext.Provider
       value={{
@@ -287,6 +327,8 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
         updateWorkspaceName,
         batchUpdateTabs,
         appTabsRef,
+        moveBefore,
+        moveAfter,
       }}
     >
       {children}
