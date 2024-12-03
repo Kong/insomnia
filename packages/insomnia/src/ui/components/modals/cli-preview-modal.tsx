@@ -9,12 +9,12 @@ import { Icon } from '../icon';
 export const CLIPreviewModal = ({ onClose, requestIds, keepManualOrder, iterationCount, delay, filePath, bail }: { onClose: () => void; requestIds: string[]; keepManualOrder: boolean; iterationCount: number; delay: number; filePath: string; bail: boolean }) => {
   const { workspaceId } = useParams() as { workspaceId: string };
   const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const workspaceIdOrRequestIds = keepManualOrder ? workspaceId.slice(0, 10) : '-i ' + requestIds.join(' -i ');
+  const workspaceIdAndRequestIds = keepManualOrder ? workspaceId.slice(0, 10) : workspaceId.slice(0, 10) + ' -i ' + requestIds.join(' -i ');
   const iterationCountArgument = iterationCount > 1 ? ` -n ${iterationCount}` : '';
   const delayArgument = delay > 0 ? ` --delay-request ${delay}` : '';
   const iterationFilePath = filePath ? ` -d "${filePath}"` : '';
   const bailArgument = bail ? ' --bail' : '';
-  const cliCommand = `inso run collection ${workspaceIdOrRequestIds} -e ${activeEnvironment._id.slice(0, 10)}${iterationCountArgument}${delayArgument}${iterationFilePath}${bailArgument}`;
+  const cliCommand = `inso run collection ${workspaceIdAndRequestIds} -e ${activeEnvironment._id.slice(0, 10)}${iterationCountArgument}${delayArgument}${iterationFilePath}${bailArgument}`;
 
   return (
     <ModalOverlay

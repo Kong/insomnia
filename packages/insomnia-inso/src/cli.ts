@@ -479,18 +479,7 @@ export const go = (args?: string[]) => {
         pathToSearch,
         filterTypes: [],
       });
-      if (identifier && options.item.length) {
-        logger.fatal('Providing both workspace and item list is not supported');
-        return process.exit(1);
-      }
-      if (options.item.length) {
-        const matches = [
-          ...db.Request.filter(req => options.item.includes(req._id)),
-          ...db.RequestGroup.filter(rg => options.item.includes(rg._id)),
-        ];
-        // overwrite identifier if found in request list parents
-        identifier = matches.find(req => req.parentId.startsWith('wrk_'))?.parentId;
-      }
+
       const workspace = await getWorkspaceOrFallback(db, identifier, options.ci);
       if (!workspace) {
         logger.fatal('No workspace found in the provided data store or fallbacks.');
