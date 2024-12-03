@@ -3,7 +3,7 @@ import { Button, type ButtonProps, DropIndicator, ListBox, ListBoxItem, Menu, Me
 
 import { generateId } from '../../../../common/misc';
 import { decryptSecretValue, encryptSecretValue, type EnvironmentKvPairData, EnvironmentKvPairDataType } from '../../../../models/environment';
-import { base64decode } from '../../../routes/auth.vaultKey';
+import { base64decode } from '../../../../utils/vault';
 import { PromptButton } from '../../base/prompt-button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { Icon } from '../../icon';

@@ -8,6 +8,7 @@ import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { debounce } from '../../common/misc';
 import { type Environment, type EnvironmentKvPairData, EnvironmentKvPairDataType, EnvironmentType, getDataFromKVPair } from '../../models/environment';
 import { isRemoteProject } from '../../models/project';
+import { decryptVaultKeyFromSession } from '../../utils/vault';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { EditableInput } from '../components/editable-input';
@@ -19,7 +20,6 @@ import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showAlert } from '../components/modals';
 import { InputVaultKeyModal } from '../components/modals/input-valut-key-modal';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
-import { decryptVaultKeyFromSession } from './auth.vaultKey';
 import { useRootLoaderData } from './root';
 import type { WorkspaceLoaderData } from './workspace';
 

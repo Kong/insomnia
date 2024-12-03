@@ -4,7 +4,7 @@ import { Button } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 
 import { getProductName } from '../../../common/constants';
-import { decryptVaultKeyFromSession } from '../../routes/auth.vaultKey';
+import { decryptVaultKeyFromSession, saveVaultKeyToKeyChainIfNecessary } from '../../../utils/vault';
 import { useRootLoaderData } from '../../routes/root';
 import { type CopyBtnHanlde, CopyButton } from '../base/copy-button';
 import { HelpTooltip } from '../help-tooltip';
@@ -12,9 +12,54 @@ import { Icon } from '../icon';
 import { InputVaultKeyModal } from '../modals/input-valut-key-modal';
 import { BooleanSetting } from './boolean-setting';
 
-export const VaultKeyPanel = () => {
+export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
   const copyBtnRef = useRef<CopyBtnHanlde>(null);
-  const { userSession } = useRootLoaderData();
+
+  const donwloadVaultKey = async () => {
+    const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
+      title: 'Download Vault Key',
+      buttonLabel: 'Save',
+      defaultPath: `${getProductName()}-vault-key-${Date.now()}.txt`,
+    });
+
+    if (canceled || !outputPath) {
+      return;
+    }
+
+    const to = fs.createWriteStream(outputPath);
+
+    to.on('error', err => {
+      console.warn('Failed to save vault key', err);
+    });
+
+    to.write(vaultKey);
+    to.end();
+  };
+
+  return (
+    <div className="flex items-center gap-3 bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm] w-full">
+      <div className="w-[calc(100%-50px)] truncate" onDoubleClick={() => copyBtnRef.current?.copy()}>{vaultKey}</div>
+      <CopyButton
+        size="small"
+        ref={copyBtnRef}
+        content={vaultKey}
+        title="Copy Vault Key"
+        style={{ borderWidth: 0 }}
+      >
+        <i className="fa fa-copy" />
+      </CopyButton>
+      <Button onPress={donwloadVaultKey}>
+        <i className="fa-solid fa-download" />
+      </Button>
+    </div>
+
+  );
+};
+
+export const VaultKeyPanel = () => {
+  const { userSession, settings } = useRootLoaderData();
+  const { accountId } = userSession;
+  const { saveVaultKeyToOSSecretManager } = settings;
   const [isGenerating, setGenerating] = useState(false);
   const [vaultKeyValue, setVaultKeyValue] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -26,7 +71,7 @@ export const VaultKeyPanel = () => {
   const showVaultKey = useCallback(async () => {
     if (vaultKey) {
       // decrypt vault key saved in user session
-      const decryptedVaultKey = await decryptVaultKeyFromSession(vaultKey);
+      const decryptedVaultKey = await decryptVaultKeyFromSession(vaultKey, false);
       setVaultKeyValue(decryptedVaultKey);
     }
   }, [vaultKey]);
@@ -65,26 +110,16 @@ export const VaultKeyPanel = () => {
     setShowModal(false);
   };
 
-  const donwloadVaultKey = async () => {
-    const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
-      title: 'Download Vault Key',
-      buttonLabel: 'Save',
-      defaultPath: `${getProductName()}-vault-key-${Date.now()}.txt`,
-    });
-
-    if (canceled || !outputPath) {
-      return;
-    }
-
-    const to = fs.createWriteStream(outputPath);
-
-    to.on('error', err => {
-      console.warn('Failed to save vault key', err);
-    });
-
-    to.write(vaultKeyValue);
-    to.end();
-  };
+  useEffect(() => {
+    // save or delete vault key to keychain
+    if (saveVaultKeyToOSSecretManager) {
+      if (vaultKeyValue.length > 0) {
+        saveVaultKeyToKeyChainIfNecessary(accountId, vaultKeyValue);
+      };
+    } else {
+      window.main.keyChain.deleteFromKeyChian(accountId);
+    };
+  }, [saveVaultKeyToOSSecretManager, accountId, vaultKeyValue]);
 
   return (
     <div>
@@ -111,21 +146,7 @@ export const VaultKeyPanel = () => {
             <span className="font-semibold">Vault Key</span>
             <HelpTooltip className="space-left">The vault key will be needed when you login again.</HelpTooltip>
           </div>
-          <div className="flex items-center gap-3 bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm] w-full">
-            <div className="w-[calc(100%-50px)] truncate" onDoubleClick={() => copyBtnRef.current?.copy()}>{vaultKeyValue}</div>
-            <CopyButton
-              size="small"
-              ref={copyBtnRef}
-              content={vaultKeyValue}
-              title="Copy Vault Key"
-              style={{ borderWidth: 0 }}
-            >
-              <i className="fa fa-copy" />
-            </CopyButton>
-            <Button onPress={donwloadVaultKey}>
-              <i className="fa-solid fa-download" />
-            </Button>
-          </div>
+          <VaultKeyDisplayInput vaultKey={vaultKeyValue} />
         </div>
         <div className="form-row pad-top-sm">
           <BooleanSetting
