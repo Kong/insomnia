@@ -330,8 +330,8 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   };
 
   return (
-    <div className="flex box-content border-b border-solid border-[--hl-sm] bg-[--color-bg]" style={{ height: `${INSOMNIA_TAB_HEIGHT}px` }} >
-      <Button onPress={scrollLeft} isDisabled={leftScrollDisable} className={`${leftScrollDisable && 'cursor-not-allowed'}`}>
+    <div className="flex box-content bg-[--color-bg]" style={{ height: `${INSOMNIA_TAB_HEIGHT + 1}px` }} >
+      <Button onPress={scrollLeft} isDisabled={leftScrollDisable} className={`${leftScrollDisable && 'cursor-not-allowed'} border-b border-solid border-[--hl-sm]`}>
         <Icon icon="chevron-left" className={`w-[30px] ${isOverFlow ? 'block' : 'hidden'}`} />
       </Button>
       <div className='max-w-[calc(100%-40px)] overflow-x-scroll hide-scrollbars' ref={tabListWrapperRef} onScroll={handleScroll}>
@@ -344,20 +344,18 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
           selectionBehavior='replace'
           className="flex h-[41px] w-fit"
           dragAndDropHooks={dragAndDropHooks}
-          // Use +1 height to mask the wrapper border, and let the custom element in InsomniaTab act as the fake border.（we need different border for active tab）
-          style={{ height: `${INSOMNIA_TAB_HEIGHT + 1}px` }}
           items={tabList}
           ref={tabListInnerRef}
         >
           {item => <InsomniaTab tab={item} />}
         </GridList>
       </div>
-      <Button onPress={scrollRight} isDisabled={rightScrollDisable} className={`${rightScrollDisable && 'cursor-not-allowed'}`} >
+      <Button onPress={scrollRight} isDisabled={rightScrollDisable} className={`${rightScrollDisable && 'cursor-not-allowed'} border-b border-solid border-[--hl-sm]`} >
         <Icon icon="chevron-right" className={`w-[30px] ${isOverFlow ? 'block' : 'hidden'}`} />
       </Button>
-      <div className='flex items-center w-[40px] justify-center flex-shrink-0'>
+      <div className='flex items-center justify-start flex-shrink-0 flex-grow border-b border-solid border-[--hl-sm]'>
         <MenuTrigger>
-          <Button aria-label="Menu">
+          <Button aria-label="Menu" className="w-[40px] text-center">
             <Icon icon="plus" className='cursor-pointer' />
           </Button>
           <Popover>
