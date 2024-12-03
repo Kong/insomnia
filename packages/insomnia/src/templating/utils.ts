@@ -4,7 +4,7 @@ import _ from 'lodash';
 import type { RenderPurpose } from '../common/render';
 import { type BaseModel, userSession } from '../models';
 import { decryptSecretValue, vaultEnvironmentMaskValue, vaultEnvironmentPath } from '../models/environment';
-import { decryptVaultKeyFromSession } from '../ui/routes/auth.vaultKey';
+import { decryptVaultKeyFromSession } from '../utils/vault';
 import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
 import objectPath from './third_party/objectPath';
 
