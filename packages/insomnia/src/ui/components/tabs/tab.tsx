@@ -151,7 +151,7 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
             <span className={`block absolute bottom-[0px] left-0 right-0 h-[1px] bg-[--color-bg] ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
             <span className={`block absolute bottom-[0px] left-0 right-0 h-[1px] bg-[--hl-sm] ${!isSelected ? 'opacity-100' : 'opacity-0'}`} />
           </div>
-          <Button slot="drag" />
+          <Button slot="drag" className="hidden" />
         </Tooltip>
       )}
     </GridListItem>
