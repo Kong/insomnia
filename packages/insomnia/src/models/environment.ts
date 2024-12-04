@@ -5,7 +5,9 @@ import * as crypt from '../account/crypt';
 import { JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
-import { type BaseModel } from './index';
+import { type BaseModel, project, workspace } from './index';
+import type { Project } from './project';
+import type { Workspace } from './workspace';
 
 export const name = 'Environment';
 export const type = 'Environment';
@@ -147,6 +149,38 @@ export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWeb
     // return origin value if failed to decrypt
     return encryptedValue;
   }
+};
+
+// remove all secret items when user reset vault key
+export const removeAllSecrets = async (orgnizationIds: string[]) => {
+  const allProjects = await db.find<Project>(project.type, {
+    parentId: { $in: orgnizationIds },
+  });
+  const allProjectIds = allProjects.map(project => project._id);
+  const allGlobalEnvironmentWorkspaces = await db.find<Workspace>(workspace.type, {
+    parentId: { $in: allProjectIds },
+    scope: workspace.WorkspaceScopeKeys.environment,
+  });
+  const allGlobalBaseEnvironments = await db.find<Environment>(type, {
+    parentId: {
+      $in: allGlobalEnvironmentWorkspaces.map(w => w._id),
+    },
+  });
+  const allGlobalSubEnvironments = await db.find<Environment>(type, {
+    parentId: {
+      $in: allGlobalBaseEnvironments.map(e => e._id),
+    },
+  });
+  const allGlobalEnvironments = allGlobalBaseEnvironments.concat(allGlobalSubEnvironments);
+  const allGloablPrivateEnvironments = allGlobalEnvironments.filter(env => env.isPrivate);
+  allGloablPrivateEnvironments.forEach(async privateEnv => {
+    const { kvPairData, data } = privateEnv;
+    if (vaultEnvironmentPath in data) {
+      const { [vaultEnvironmentPath]: secretData, ...restData } = data;
+      const filteredKvPairData = kvPairData?.filter(kvPair => kvPair.type !== EnvironmentKvPairDataType.SECRET);
+      await update(privateEnv, { data: restData, kvPairData: filteredKvPairData });
+    }
+  });
 };
 
 export const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => (

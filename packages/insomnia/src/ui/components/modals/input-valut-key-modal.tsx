@@ -2,11 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Input, Modal, ModalOverlay } from 'react-aria-components';
 import { useFetcher, useRouteLoaderData } from 'react-router-dom';
 
-import { database } from '../../../common/database';
-import { environment, project, workspace } from '../../../models';
-import { type Environment, EnvironmentKvPairDataType, vaultEnvironmentPath } from '../../../models/environment';
-import type { Project } from '../../../models/project';
-import type { Workspace } from '../../../models/workspace';
+import { removeAllSecrets } from '../../../models/environment';
 import type { OrganizationLoaderData } from '../../routes/organization';
 import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
@@ -71,38 +67,6 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
         method: 'POST',
         encType: 'application/json',
       });
-  };
-
-  // remove all secret items when user reset vault key
-  const removeAllSecrets = async (orgnizationIds: string[]) => {
-    const allProjects = await database.find<Project>(project.type, {
-      parentId: { $in: orgnizationIds },
-    });
-    const allProjectIds = allProjects.map(project => project._id);
-    const allGlobalEnvironmentWorkspaces = await database.find<Workspace>(workspace.type, {
-      parentId: { $in: allProjectIds },
-      scope: workspace.WorkspaceScopeKeys.environment,
-    });
-    const allGlobalBaseEnvironments = await database.find<Environment>(environment.type, {
-      parentId: {
-        $in: allGlobalEnvironmentWorkspaces.map(w => w._id),
-      },
-    });
-    const allGlobalSubEnvironments = await database.find<Environment>(environment.type, {
-      parentId: {
-        $in: allGlobalBaseEnvironments.map(e => e._id),
-      },
-    });
-    const allGlobalEnvironments = allGlobalBaseEnvironments.concat(allGlobalSubEnvironments);
-    const allGloablPrivateEnvironments = allGlobalEnvironments.filter(env => env.isPrivate);
-    allGloablPrivateEnvironments.forEach(async privateEnv => {
-      const { kvPairData, data } = privateEnv;
-      if (vaultEnvironmentPath in data) {
-        const { [vaultEnvironmentPath]: secretData, ...restData } = data;
-        const filteredKvPairData = kvPairData?.filter(kvPair => kvPair.type !== EnvironmentKvPairDataType.SECRET);
-        await environment.update(privateEnv, { data: restData, kvPairData: filteredKvPairData });
-      }
-    });
   };
 
   const resetVaultKey = () => {

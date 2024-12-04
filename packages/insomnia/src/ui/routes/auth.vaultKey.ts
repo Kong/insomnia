@@ -3,6 +3,7 @@ import { ipcRenderer } from 'electron';
 import { type ActionFunction } from 'react-router-dom';
 
 import { userSession as sessionModel } from '../../models';
+import { removeAllSecrets } from '../../models/environment';
 import type { UserSession } from '../../models/user-session';
 import { base64encode, saveVaultKeyIfNecessary } from '../../utils/vault';
 import type { ToastNotification } from '../components/toast';
