@@ -105,6 +105,7 @@ interface RequestRow {
   id: string;
   name: string;
   ancestorNames: string[];
+  ancestorIds: string[];
   method: string;
   url: string;
   parentId: string;
@@ -198,22 +199,18 @@ export const Runner: FC<{}> = () => {
 
   const requestRows: RequestRow[] = collection
     .filter(item => {
-      if (targetFolderId) {
-        return item.doc.parentId === targetFolderId;
-      }
-      return true;
-    })
-    .filter(item => {
       getEntityById.set(item.doc._id, item);
       return isRequest(item.doc);
     })
     .map((item: Child) => {
       const ancestorNames: string[] = [];
+      const ancestorIds: string[] = [];
       if (item.ancestors) {
         item.ancestors.forEach(ancestorId => {
           const ancestor = getEntityById.get(ancestorId);
           if (ancestor && isRequestGroup(ancestor?.doc)) {
             ancestorNames.push(ancestor?.doc.name);
+            ancestorIds.push(ancestor?.doc._id);
           }
         });
       }
@@ -224,17 +221,24 @@ export const Runner: FC<{}> = () => {
         id: item.doc._id,
         name: item.doc.name,
         ancestorNames,
+        ancestorIds,
         method: requestDoc.method,
         url: item.doc.url,
         parentId: item.doc.parentId,
       };
+    })
+    .filter(item => {
+      if (targetFolderId) {
+        return item.ancestorIds.includes(targetFolderId);
+      }
+      return true;
     });
 
   const reqList = useListData({
     initialItems: requestRows,
     filter: item => {
       if (targetFolderId) {
-        return item.parentId === targetFolderId;
+        return item.ancestorIds.includes(targetFolderId);
       }
       return true;
     },
@@ -470,7 +474,7 @@ export const Runner: FC<{}> = () => {
   const selectedRequestIdsForCliCommand =
     targetFolderId !== null && targetFolderId !== ''
       ? Array.from(reqList.items)
-        .filter(item => item.parentId === targetFolderId)
+        .filter(item => item.ancestorIds.includes(targetFolderId))
         .map(item => item.id)
         .filter(id => new Set(reqList.selectedKeys).has(id))
       : Array.from(reqList.items)
