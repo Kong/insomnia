@@ -1,10 +1,13 @@
 
 import * as srp from '@getinsomnia/srp-js';
+import { ipcRenderer } from 'electron';
 import { type ActionFunction } from 'react-router-dom';
 
 import { userSession as sessionModel } from '../../models';
+import { removeAllSecrets } from '../../models/environment';
 import type { UserSession } from '../../models/user-session';
 import { base64encode, saveVaultKeyToKeyChainIfNecessary } from '../../utils/vault';
+import type { ToastNotification } from '../components/toast';
 import { insomniaFetch } from '../insomniaFetch';
 
 const {
@@ -141,6 +144,36 @@ export const createVaultKeyAction: ActionFunction = async () => {
 
 export const resetVaultKeyAction: ActionFunction = async () => {
   return createVaultKey('reset');
+};
+
+export const clearVaultKeyAction: ActionFunction = async ({ request }) => {
+  const { organizations = [] } = await request.json();
+
+  const userSession = await sessionModel.getOrCreate();
+  const { vaultSalt, id: sessionId } = userSession;
+  const { salt: newVaultSalt } = await insomniaFetch<{
+    salt?: string;
+    error?: string;
+  }>({
+    method: 'GET',
+    path: '/v1/user/vault',
+    sessionId,
+  });
+  // User on other device has reset the vault key.
+  if (newVaultSalt && vaultSalt !== newVaultSalt) {
+    // remove all secret environment variables
+    await removeAllSecrets(organizations);
+    // Update vault salt and delelte vault key from session
+    sessionModel.update(userSession, { vaultSalt: newVaultSalt, vaultKey: '' });
+    // show notification
+    const notification: ToastNotification = {
+      key: `Vault key reset ${newVaultSalt}`,
+      message: 'Your vault key has been reset, all you local secrets have been deleted.',
+    };
+    ipcRenderer.emit('show-notification', null, notification);
+    return true;
+  }
+  return false;
 };
 
 export const validateVaultKeyAction: ActionFunction = async ({ request }) => {

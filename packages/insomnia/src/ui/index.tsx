@@ -1167,6 +1167,10 @@ async function renderApp() {
                 path: 'resetVaultKey',
                 action: async (...args) => (await import('./routes/auth.vaultKey')).resetVaultKeyAction(...args),
               },
+              {
+                path: 'clearVaultKey',
+                action: async (...args) => (await import('./routes/auth.vaultKey')).clearVaultKeyAction(...args),
+              },
             ],
           },
         ],
