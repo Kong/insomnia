@@ -4,11 +4,14 @@ import { Button } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 
 import { getProductName } from '../../../common/constants';
+import { userSession as sessionModel } from '../../../models';
 import { decryptVaultKeyFromSession, saveVaultKeyToKeyChainIfNecessary } from '../../../utils/vault';
 import { useRootLoaderData } from '../../routes/root';
 import { type CopyBtnHanlde, CopyButton } from '../base/copy-button';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
+import { showModal } from '../modals';
+import { AskModal } from '../modals/ask-modal';
 import { InputVaultKeyModal } from '../modals/input-valut-key-modal';
 import { BooleanSetting } from './boolean-setting';
 
@@ -58,13 +61,13 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
 
 export const VaultKeyPanel = () => {
   const { userSession, settings } = useRootLoaderData();
-  const { accountId } = userSession;
   const { saveVaultKeyToOSSecretManager } = settings;
   const [isGenerating, setGenerating] = useState(false);
   const [vaultKeyValue, setVaultKeyValue] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const { vaultKey, vaultSalt } = userSession;
+  const [showInputVaultKeyModal, setShowModal] = useState(false);
+  const { accountId, vaultKey, vaultSalt } = userSession;
   const vaultKeyFetcher = useFetcher();
+  const vaultSaltFetcher = useFetcher();
   const vaultSaltExists = typeof vaultSalt === 'string' && vaultSalt.length > 0;
   const vaultKeyExists = typeof vaultKey === 'string' && vaultKey.length > 0;
 
@@ -92,7 +95,25 @@ export const VaultKeyPanel = () => {
   useEffect(() => {
     if (vaultKeyFetcher.data && vaultKeyFetcher.data.error && vaultKeyFetcher.state === 'idle') {
       setGenerating(false);
+      // user has created vault key in another device;
+      if (vaultKeyFetcher.data.error.toLowerCase() === 'conflict') {
+        // get vault salt from server
+        vaultSaltFetcher.submit('', {
+          action: '/auth/updateVaultSalt',
+          method: 'POST',
+        });
+        showModal(AskModal, {
+          title: 'Vault Key Already Exists',
+          message: 'You have generated the vault key in other device. Please input your vault key',
+          yesText: 'OK',
+          noText: 'Cancel',
+          onDone: async () => {
+            console.log('1');
+          },
+        });
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- vaultSaltFetcher should only be triggered once
   }, [vaultKeyFetcher.data, vaultKeyFetcher.state]);
 
   const generateVaultKey = async () => {
@@ -170,7 +191,7 @@ export const VaultKeyPanel = () => {
           </Button>
         </div>
       }
-      {showModal &&
+      {showInputVaultKeyModal &&
         <InputVaultKeyModal onClose={handleModalClose} />
       }
     </div>

@@ -1156,6 +1156,10 @@ async function renderApp() {
                 element: <Authorize />,
               },
               {
+                path: 'updateVaultSalt',
+                action: async (...args) => (await import('./routes/auth.vaultKey')).updateVaultSaltAction(...args),
+              },
+              {
                 path: 'createVaultKey',
                 action: async (...args) => (await import('./routes/auth.vaultKey')).createVaultKeyAction(...args),
               },

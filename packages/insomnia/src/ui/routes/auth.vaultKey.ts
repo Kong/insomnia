@@ -18,12 +18,16 @@ const {
   params,
   srpGenKey,
 } = srp;
+interface FetchError {
+  error?: string;
+  message?: string;
+}
 
 export const vaultKeyParams = params[2048];
 const vaultKeyRequestBathPath = '/v1/user/vault';
 
 const createVaultKeyRequest = async (sessionId: string, salt: string, verifier: string) =>
-  insomniaFetch({
+  insomniaFetch<FetchError>({
     method: 'POST',
     path: vaultKeyRequestBathPath,
     data: { salt, verifier },
@@ -33,7 +37,7 @@ const createVaultKeyRequest = async (sessionId: string, salt: string, verifier: 
   });
 
 const resetVaultKeyRequest = async (sessionId: string, salt: string, verifier: string) =>
-  insomniaFetch({
+  insomniaFetch<FetchError>({
     method: 'POST',
     path: `${vaultKeyRequestBathPath}/reset`,
     sessionId,
@@ -73,9 +77,15 @@ const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
       .toString('hex');
     // send or reset saltAuth & verifier to server
     if (type === 'create') {
-      await createVaultKeyRequest(sessionId, vaultSalt, verifier);
+      const response = await createVaultKeyRequest(sessionId, vaultSalt, verifier);
+      if (response?.error) {
+        return { error: response?.error };
+      };
     } else {
-      await resetVaultKeyRequest(sessionId, vaultSalt, verifier);
+      const response = await resetVaultKeyRequest(sessionId, vaultSalt, verifier);
+      if (response?.error) {
+        return { error: response?.error };
+      };
     };
 
     // save encrypted vault key and vault salt to session
@@ -144,6 +154,23 @@ export const createVaultKeyAction: ActionFunction = async () => {
 
 export const resetVaultKeyAction: ActionFunction = async () => {
   return createVaultKey('reset');
+};
+
+export const updateVaultSaltAction: ActionFunction = async () => {
+  const userSession = await sessionModel.getOrCreate();
+  const { id: sessionId } = userSession;
+  const { salt: vaultSalt } = await insomniaFetch<{
+    salt?: string;
+    error?: string;
+  }>({
+    method: 'GET',
+    path: '/v1/user/vault',
+    sessionId,
+  });
+  if (vaultSalt) {
+    await sessionModel.update(userSession, { vaultSalt });
+  };
+  return vaultSalt;
 };
 
 export const clearVaultKeyAction: ActionFunction = async ({ request }) => {
