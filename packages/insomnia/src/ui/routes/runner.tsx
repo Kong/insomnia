@@ -251,7 +251,7 @@ export const Runner: FC<{}> = () => {
       return row.id !== reqList.items[index].id;
     });
 
-    return changedItemIndex === -1;
+    return changedItemIndex !== -1;
   }, [requestRows, reqList]);
 
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
