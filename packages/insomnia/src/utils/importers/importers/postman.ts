@@ -933,7 +933,7 @@ export class ImportPostman {
   };
 }
 
-export const convert: Converter = (rawData, extProp = {}) => {
+export const convert: Converter = rawData => {
   requestCount = 1;
   requestGroupCount = 1;
 
@@ -950,7 +950,6 @@ export const convert: Converter = (rawData, extProp = {}) => {
       const ordered = list.map((item, index) => ({
         ...item,
         metaSortKey: -1 * (now - index),
-        ...extProp,
       }));
       return ordered;
     }

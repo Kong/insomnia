@@ -8,7 +8,7 @@ import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs
 import { ACTIVITY_DEBUG, getAIServiceURL } from '../../common/constants';
 import { database } from '../../common/database';
 import { database as db } from '../../common/database';
-import { importResourcesToWorkspace, scanResources } from '../../common/import';
+import { importResourcesToWorkspace, scanResources, type ScanResult } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { EnvironmentType } from '../../models/environment';
@@ -869,9 +869,7 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({
     throw new Error('Error Generating Configuration');
   }
 
-  await scanResources({
-    content: apiSpec.contents,
-  });
+  await scanResources([apiSpec.contents]);
 
   await importResourcesToWorkspace({
     workspaceId,
@@ -911,16 +909,16 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
     throw new Error('Error Generating Configuration');
   }
 
-  const resources = await scanResources({
-    content: apiSpec.contents,
-  });
+  const resources = await scanResources([apiSpec.contents]);
+
+  const allRequestsFromResources = resources.reduce((accumulator, scanResult) => accumulator.concat(scanResult.requests ?? []), [] as NonNullable<ScanResult['requests']>);
 
   const aiGeneratedRequestGroup = await models.requestGroup.create({
     name: 'AI Generated Requests',
     parentId: workspaceId,
   });
 
-  const requests = resources.requests?.filter(isRequest).map(request => {
+  const requests = allRequestsFromResources.filter(isRequest).map(request => {
     return {
       ...request,
       _id: generateId(models.request.prefix),
