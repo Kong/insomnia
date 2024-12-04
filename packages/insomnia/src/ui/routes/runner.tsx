@@ -243,15 +243,11 @@ export const Runner: FC<{}> = () => {
   const isConsistencyChanged = useMemo(() => {
     if (requestRows.length !== reqList.items.length) {
       return true;
-    } else if (Array.from(reqList.selectedKeys).length !== requestRows.length) {
+    } else if (reqList.selectedKeys !== 'all' && Array.from(reqList.selectedKeys).length !== requestRows.length) {
       return true;
     }
 
-    const changedItemIndex = requestRows.findIndex((row: RequestRow, index: number) => {
-      return row.id !== reqList.items[index].id;
-    });
-
-    return changedItemIndex !== -1;
+    return requestRows.some((row: RequestRow, index: number) => row.id !== reqList.items[index].id);
   }, [requestRows, reqList]);
 
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
