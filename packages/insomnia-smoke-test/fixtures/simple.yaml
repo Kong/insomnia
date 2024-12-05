@@ -24,6 +24,8 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     _type: request
+    preRequestScript: |-
+      console.log('executing pre-request script');
   - _id: fld_01de564274824ecaad272330339ea6b2
     parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
     modified: 1668533312225
@@ -101,6 +103,8 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     _type: request
+    preRequestScript: |-
+      console.log('executing pre-request script');
   - _id: req_579daeabc7534a52b242bdaaaf6ca4dc
     parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
     modified: 1666867670885
@@ -122,6 +126,8 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     _type: request
+    preRequestScript: |-
+      console.log('executing pre-request script');
   - _id: env_42a94488fcd6106a75fb3ededd6bb4fbd267aa95
     parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
     modified: 1666867924188

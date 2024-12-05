@@ -1,3 +1,4 @@
+import fs from 'fs/promises';
 import path from 'path';
 
 import { type BaseModel, types as modelTypes } from '../models';
@@ -122,6 +123,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
   return async function sendRequest(requestId: string, iteration?: number) {
     const requestData = await fetchInsoRequestData(requestId, environmentId);
     const getCurrentRowOfIterationData = wrapAroundIterationOverIterationData(iterationData, iteration);
+    await fs.mkdir(path.dirname(requestData.timelinePath), { recursive: true });
 
     const mutatedContext = await tryToExecutePreRequestScript(requestData, transientVariables, getCurrentRowOfIterationData, iteration, iterationCount);
     if (mutatedContext === null) {
