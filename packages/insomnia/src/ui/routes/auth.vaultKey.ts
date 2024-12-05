@@ -174,10 +174,10 @@ export const updateVaultSaltAction: ActionFunction = async () => {
 };
 
 export const clearVaultKeyAction: ActionFunction = async ({ request }) => {
-  const { organizations = [] } = await request.json();
+  const { organizations = [], sessionId: resetVaultClientSessionId } = await request.json();
 
   const userSession = await sessionModel.getOrCreate();
-  const { vaultSalt, id: sessionId } = userSession;
+  const { id: sessionId } = userSession;
   const { salt: newVaultSalt } = await insomniaFetch<{
     salt?: string;
     error?: string;
@@ -185,9 +185,11 @@ export const clearVaultKeyAction: ActionFunction = async ({ request }) => {
     method: 'GET',
     path: '/v1/user/vault',
     sessionId,
-  });
+  }).catch(error => {
+    console.error(`failed to get vault salt ${error.toString()}`);
+  }) || {};
   // User on other device has reset the vault key.
-  if (newVaultSalt && vaultSalt !== newVaultSalt) {
+  if (resetVaultClientSessionId !== sessionId) {
     // remove all secret environment variables
     await removeAllSecrets(organizations);
     // Update vault salt and delelte vault key from session

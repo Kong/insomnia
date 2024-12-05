@@ -56,6 +56,7 @@ interface FileChangedEvent {
 interface VaultKeyChangeEvent {
   type: 'VaultKeyChanged';
   topic: string;
+  sessionId: string;
 };
 
 export interface UserPresence {
@@ -186,6 +187,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
             } else if (event.type === 'VaultKeyChanged') {
               clearVaultKeyFetcher.submit({
                 organizations: organizations?.map(org => org.id) || [],
+                sessionId: event.sessionId,
               }, {
                 action: '/auth/clearVaultKey',
                 method: 'POST',
