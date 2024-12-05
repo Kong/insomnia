@@ -24,9 +24,6 @@ export function registergKeyChainHandlers() {
 const saveToKeyChain = async (accountId: string, key: string) => {
   try {
     await keytar.setPassword(serviceName, accountId, key);
-    if (safeStorage.isEncryptionAvailable()) {
-      return safeStorage.encryptString(key);
-    }
     return key;
   } catch (error) {
     console.error(`Can not save key to keychain ${error.toString()}`);

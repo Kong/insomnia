@@ -486,7 +486,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                   )}
                   {selectedEnvironment && selectedEnvironment.environmentType === EnvironmentType.KVPAIR &&
                     <EnvironmentKVEditor
-                    key={selectedEnvironment._id}
+                      key={selectedEnvironment._id}
                       data={selectedEnvironment.kvPairData || []}
                       onChange={handleKVPairChange}
                     />
