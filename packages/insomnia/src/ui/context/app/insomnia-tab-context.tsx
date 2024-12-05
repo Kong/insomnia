@@ -106,12 +106,13 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     }
     const newTabList = currentTabs.tabList.filter(tab => tab.id !== id);
     if (currentTabs.activeTabId === id) {
-      navigate(newTabList[index - 1 < 0 ? 0 : index - 1]?.url || '');
+      const url = newTabList[Math.max(index - 1, 0)]?.url;
+      navigate(url);
     }
     updateInsomniaTabs({
       organizationId,
       tabList: newTabList,
-      activeTabId: currentTabs.activeTabId === id ? newTabList[index - 1 < 0 ? 0 : index - 1]?.id : currentTabs.activeTabId as string,
+      activeTabId: currentTabs.activeTabId === id ? newTabList[Math.max(index - 1, 0)]?.id : currentTabs.activeTabId as string,
     });
   }, [navigate, organizationId, projectId, updateInsomniaTabs]);
 
@@ -198,12 +199,15 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     if (!currentTabs) {
       return;
     }
+    const tab = currentTabs?.tabList.find(tab => tab.id === id);
+    // keep the search params when navigate to another tab
+    tab?.url && navigate(tab.url);
     updateInsomniaTabs({
       organizationId,
       tabList: currentTabs.tabList,
       activeTabId: id,
     });
-  }, [organizationId, updateInsomniaTabs]);
+  }, [navigate, organizationId, updateInsomniaTabs]);
 
   const updateProjectName = useCallback((projectId: string, name: string) => {
     const currentTabs = appTabsRef?.current?.[organizationId];

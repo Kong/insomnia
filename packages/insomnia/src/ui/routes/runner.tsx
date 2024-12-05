@@ -1,4 +1,4 @@
-import type { RequestContext } from 'insomnia-sdk';
+import { type RequestContext } from 'insomnia-sdk';
 import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
@@ -109,39 +109,43 @@ export interface RequestRow {
 };
 
 export const Runner: FC<{}> = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [errorMsg, setErrorMsg] = useState<null | string>(null);
 
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const targetFolderId = searchParams.get('folder') || '';
   const shouldRefreshRef = useRef(false);
 
-  if (searchParams.has('refresh-pane') || searchParams.has('error')) {
-    console.log('searchParams', searchParams.toString());
-    if (searchParams.has('refresh-pane')) {
-      shouldRefreshRef.current = true;
-      searchParams.delete('refresh-pane');
-    }
+  useEffect(() => {
+    if (searchParams.has('refresh-pane') || searchParams.has('error')) {
+      const copySearchParams = new URLSearchParams(searchParams);
+      if (searchParams.has('refresh-pane')) {
+        shouldRefreshRef.current = true;
+        copySearchParams.delete('refresh-pane');
+      }
 
-    if (searchParams.has('error')) {
-      setErrorMsg(searchParams.get('error'));
-      // TODO: this should be removed when we are able categorized errors better and display them in different ways.
-      showAlert({
-        title: 'Unexpected Runner Failure',
-        message: (
-          <div>
-            <p>The runner failed due to an unhandled error:</p>
-            <code className="wide selectable">
-              <pre>{searchParams.get('error')}</pre>
-            </code>
-          </div>
-        ),
-      });
-      searchParams.delete('error');
-    } else {
-      setErrorMsg(null);
+      if (searchParams.has('error')) {
+        setErrorMsg(searchParams.get('error'));
+        // TODO: this should be removed when we are able categorized errors better and display them in different ways.
+        showAlert({
+          title: 'Unexpected Runner Failure',
+          message: (
+            <div>
+              <p>The runner failed due to an unhandled error:</p>
+              <code className="wide selectable">
+                <pre>{searchParams.get('error')}</pre>
+              </code>
+            </div>
+          ),
+        });
+        copySearchParams.delete('error');
+      } else {
+        setErrorMsg(null);
+      }
+
+      setSearchParams(copySearchParams);
     }
-  }
+  }, [searchParams, setSearchParams]);
 
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
