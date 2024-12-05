@@ -172,7 +172,7 @@ export const updateVaultSaltAction: ActionFunction = async () => {
 };
 
 export const clearVaultKeyAction: ActionFunction = async ({ request }) => {
-  const { sessionId: resetVaultClientSessionId } = await request.json();
+  const { organizations = [], sessionId: resetVaultClientSessionId } = await request.json();
 
   const userSession = await sessionModel.getOrCreate();
   const { id: sessionId } = userSession;
@@ -188,6 +188,8 @@ export const clearVaultKeyAction: ActionFunction = async ({ request }) => {
   }) || {};
   // User on other device has reset the vault key.
   if (resetVaultClientSessionId !== sessionId) {
+    // remove all secret environment variables
+    await removeAllSecrets(organizations);
     // Update vault salt and delelte vault key from session
     sessionModel.update(userSession, { vaultSalt: newVaultSalt, vaultKey: '' });
     // show notification
