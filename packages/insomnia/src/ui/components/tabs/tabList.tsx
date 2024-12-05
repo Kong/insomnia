@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button, DropIndicator, GridList, Menu, MenuItem, MenuTrigger, Popover, type Selection, useDragAndDrop } from 'react-aria-components';
-import { useFetcher, useNavigate, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import * as models from '../../../models/index';
@@ -42,7 +42,6 @@ export const TAB_ROUTER_PATH: Record<TabEnum, string> = {
 export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' }) => {
   const { currentOrgTabs, batchUpdateTabs, moveBefore, moveAfter } = useInsomniaTabContext();
   const { tabList, activeTabId } = currentOrgTabs;
-  const navigate = useNavigate();
 
   const [showAddRequestModal, setShowAddRequestModal] = useState(false);
   const [isOverFlow, setIsOverFlow] = useState(false);
@@ -67,8 +66,6 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   const handleSelectionChange = (keys: Selection) => {
     if (keys !== 'all') {
       const key = [...keys.values()]?.[0] as string;
-      const tab = tabList.find(tab => tab.id === key);
-      tab?.url && navigate(tab?.url);
       changeActiveTab(key);
     }
   };

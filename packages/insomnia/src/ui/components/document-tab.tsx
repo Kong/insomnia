@@ -1,3 +1,4 @@
+import classnames from 'classnames';
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 
@@ -19,12 +20,10 @@ export const DocumentTab = ({ organizationId, projectId, workspaceId, className 
         <NavLink
           key={item.id}
           to={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${item.id}`}
-          className={({ isActive, isPending }) =>
-            `${isActive
-              ? 'text-[--color-font] bg-[--color-surprise]'
-              : ''
-            } ${isPending ? 'animate-pulse' : ''} text-center rounded-full px-2`
-          }
+          className={({ isActive, isPending }) => classnames('text-center rounded-full px-2', {
+            'text-[--color-font] bg-[--color-surprise]': isActive,
+            'animate-pulse': isPending,
+          })}
           data-testid={`workspace-${item.id}`}
         >
           {item.name}
