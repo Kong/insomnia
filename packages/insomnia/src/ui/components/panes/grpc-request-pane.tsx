@@ -13,6 +13,7 @@ import * as models from '../../../models';
 import type { GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { urlMatchesCertHost } from '../../../network/url-matches-cert-host';
+import { getGrpcConnectionErrorDetails } from '../../../utils/grpc';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { setDefaultProtocol } from '../../../utils/url/protocol';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -234,7 +235,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     setGrpcState({ ...grpcState, methods });
                     patchRequest(requestId, { protoFileId: '', protoMethodName: '' });
                   } catch (error) {
-                    showModal(ErrorModal, { error });
+                    showModal(ErrorModal, { error, ...getGrpcConnectionErrorDetails(error) });
                   }
                 }}
               >

@@ -362,13 +362,16 @@ const isEnumDefinition = (definition: AnyDefinition): definition is EnumTypeDefi
 };
 
 const getChannelCredentials = ({ url, rejectUnauthorized, clientCert, clientKey, caCertificate }: { url: string; rejectUnauthorized: boolean; clientCert?: string; clientKey?: string; caCertificate?: string }): ChannelCredentials => {
-  if (caCertificate && clientKey && clientCert) {
-    return ChannelCredentials.createSsl(Buffer.from(caCertificate, 'utf8'), Buffer.from(clientKey, 'utf8'), Buffer.from(clientCert, 'utf8'), { rejectUnauthorized });
-  }
-  if (caCertificate) {
-    return ChannelCredentials.createSsl(Buffer.from(caCertificate, 'utf8'), null, null, { rejectUnauthorized });
-  }
   if (url.toLowerCase().startsWith('grpcs:')) {
+    if (caCertificate && clientKey && clientCert) {
+      return ChannelCredentials.createSsl(Buffer.from(caCertificate, 'utf8'), Buffer.from(clientKey, 'utf8'), Buffer.from(clientCert, 'utf8'), { rejectUnauthorized });
+    }
+    if (clientKey && clientCert) {
+      return ChannelCredentials.createSsl(null, Buffer.from(clientKey, 'utf8'), Buffer.from(clientCert, 'utf8'), { rejectUnauthorized });
+    }
+    if (caCertificate) {
+      return ChannelCredentials.createSsl(Buffer.from(caCertificate, 'utf8'), null, null, { rejectUnauthorized });
+    }
     return ChannelCredentials.createSsl(null, null, null, { rejectUnauthorized });
   }
   return ChannelCredentials.createInsecure();

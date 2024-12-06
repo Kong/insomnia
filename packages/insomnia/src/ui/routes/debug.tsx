@@ -69,6 +69,7 @@ import {
   type WebSocketRequest,
 } from '../../models/websocket-request';
 import { isScratchpad } from '../../models/workspace';
+import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '../../utils/grpc';
 import { invariant } from '../../utils/invariant';
 import { DropdownHint } from '../components/base/dropdown/dropdown-hint';
 import { RequestActionsDropdown } from '../components/dropdowns/request-actions-dropdown';
@@ -83,6 +84,7 @@ import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
 import { CookiesModal } from '../components/modals/cookies-modal';
+import { ErrorModal } from '../components/modals/error-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { ImportModal } from '../components/modals/import-modal';
 import { PasteCurlModal } from '../components/modals/paste-curl-modal';
@@ -301,6 +303,9 @@ export const Debug: FC = () => {
   useEffect(
     () =>
       window.main.on('grpc.error', (_, id, error) => {
+        if (isGrpcConnectionError(error)) {
+          showModal(ErrorModal, { error, ...getGrpcConnectionErrorDetails(error) });
+        }
         setGrpcStates(state =>
           state.map(s => (s.requestId === id ? { ...s, error } : s)),
         );

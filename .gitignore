@@ -34,3 +34,4 @@ packages/insomnia-smoke-test/traces
 dist
 .history
 *.node
+rootCA2.*

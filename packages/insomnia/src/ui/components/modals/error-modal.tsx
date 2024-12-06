@@ -39,7 +39,7 @@ export const ErrorModal = forwardRef<ErrorModalHandle, ModalProps>((_, ref) => {
     <Modal ref={modalRef}>
       <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
       <ModalBody className="wide pad">
-        {message ? <div className="notice error pre">{message}</div> : null}
+        {message ? <div className="notice error pre whitespace-pre-wrap">{message}</div> : null}
         {error && (
           <details>
             <summary>Stack trace</summary>
