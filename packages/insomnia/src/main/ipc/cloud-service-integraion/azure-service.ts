@@ -4,7 +4,7 @@ import { net, shell } from 'electron';
 
 import { INSOMNIA_AZURE_CLIENT_ID, INSOMNIA_AZURE_REDIRECT_URI, INSOMNIA_FETCH_TIME_OUT } from '../../../common/constants';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
-import type { CloudServiceResult, ICloudService } from './types';
+import { type CloudServiceResult, type ICloudService, OAuthCloudService } from './types';
 
 export type AzureVaultType = 'key' | 'secret';
 export interface AzureGetSecretConfig {
@@ -86,10 +86,11 @@ const generatePkceCodes = async () => {
 // generate Pkce Code on initialize
 generatePkceCodes();
 
-export class AzureService implements ICloudService {
+export class AzureService extends OAuthCloudService implements ICloudService {
   _credential: AuthenticationResult;
 
   constructor(credential: AuthenticationResult) {
+    super();
     this._credential = credential;
   }
 
@@ -105,7 +106,31 @@ export class AzureService implements ICloudService {
     shell.openExternal(authUrl);
   }
 
-  async authorize(code: string): Promise<CloudServiceResult<AuthenticationResult>> {
+  static async exchangeCode(code: string): Promise<CloudServiceResult<AuthenticationResult>> {
+    const azureClient = await getAzureClient();
+    try {
+      const authResult = await azureClient.acquireTokenByCode({
+        scopes,
+        redirectUri: redirect_uri,
+        code,
+        codeVerifier: verifier,
+      });
+      // generate new Pkce codes after a sucess auth
+      await generatePkceCodes();
+      return {
+        success: true,
+        result: authResult,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        result: null,
+        error: error.toString(),
+      };
+    }
+  };
+
+  async authenticate(code: string): Promise<CloudServiceResult<AuthenticationResult>> {
     const azureClient = await getAzureClient();
     try {
       const authResult = await azureClient.acquireTokenByCode({
