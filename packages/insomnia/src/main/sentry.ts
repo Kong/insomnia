@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/electron/main';
 
 import * as session from '../account/session';
+import { isDevelopment } from '../common/constants';
 import { type ChangeBufferEvent, database as db } from '../common/database';
 import { SENTRY_OPTIONS } from '../common/sentry';
 import * as models from '../models/index';
@@ -54,7 +55,7 @@ export function initializeSentry() {
        */
       shouldSend: () => enabled,
     },
-    integrations: [
+    integrations: isDevelopment() ? [] : [
       Sentry.anrIntegration({ captureStackTrace: true }),
     ],
   });
