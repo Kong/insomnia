@@ -49,14 +49,16 @@ export const Tooltip = (props: Props) => {
   });
 
   return (
-    <div
-      ref={triggerRef}
-      className={tooltipClasses}
-      style={{ position: 'relative', ...style }}
-      {...trigger.triggerProps}
-      onClick={props.onClick}
-    >
-      {children}
+    <>
+      <div
+        ref={triggerRef}
+        className={tooltipClasses}
+        style={{ position: 'relative', ...style }}
+        {...trigger.triggerProps}
+        onClick={props.onClick}
+      >
+        {children}
+      </div>
       {state.isOpen && (
         <OverlayContainer>
           <div
@@ -69,6 +71,6 @@ export const Tooltip = (props: Props) => {
           </div>
         </OverlayContainer>
       )}
-    </div>
+    </>
   );
 };
