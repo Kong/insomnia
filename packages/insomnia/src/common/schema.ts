@@ -1,8 +1,7 @@
-// import { writeFile } from 'fs/promises';
 import { z } from 'zod';
-// import { zodToJsonSchema } from 'zod-to-json-schema';
 
 const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+
 type Literal = z.infer<typeof literalSchema>;
 type Json = Literal | { [key: string]: Json } | Json[];
 const jsonSchema: z.ZodType<Json> = z.lazy(() =>
@@ -14,6 +13,7 @@ const MetaSchema = z.object({
   created: z.number().optional(),
   modified: z.number().optional(),
   isPrivate: z.boolean().optional(),
+  description: z.string().optional(),
 });
 
 export type Meta = z.infer<typeof MetaSchema>;
@@ -61,7 +61,9 @@ const EnvironmentSchema = z.object({
   name: z.string().optional(),
   data: jsonSchema,
   color: z.string().optional().nullable(),
-  meta: MetaSchema.optional(),
+  meta: MetaSchema.extend({
+    sortKey: z.number().optional(),
+  }).optional(),
 });
 
 // const GitRepositorySchema = z.object({
@@ -90,7 +92,6 @@ const EnvironmentSchema = z.object({
 export const GRPCRequestSchema = z.object({
   name: z.string(),
   url: z.string(),
-  description: z.string().optional(),
   protoFileId: z.string().optional().nullable(),
   protoMethodName: z.string().optional(),
   body: z.object({
@@ -102,15 +103,15 @@ export const GRPCRequestSchema = z.object({
     description: z.string().optional(),
     disabled: z.boolean().optional(),
   })).optional(),
-  metaSortKey: z.number().optional(),
-  isPrivate: z.boolean().default(false).optional(),
   reflectionApi: z.object({
     enabled: z.boolean(),
     url: z.string(),
     apiKey: z.string(),
     module: z.string(),
   }).optional(),
-  meta: MetaSchema.optional(),
+  meta: MetaSchema.extend({
+    sortKey: z.number().optional(),
+  }).optional(),
 });
 
 // const OAuth2TokenSchema = z.object({
@@ -138,7 +139,7 @@ const MockRouteSchema = z.object({
     name: z.string(),
     value: z.string(),
   })),
-  meta: MetaSchema,
+  meta: MetaSchema.optional(),
 });
 
 // const ProtoDirectorySchema = z.object({
@@ -291,20 +292,48 @@ const AuthenticationSchema = z.union([
   z.object({}),
 ]);
 
+export const ScriptsSchema = z.object({
+  preRequest: z.string().optional(),
+  afterResponse: z.string().optional(),
+});
+
+export const RequestSettingsSchema = z.object({
+  storeCookies: z.boolean().default(false),
+  sendCookies: z.boolean().default(false),
+  disableRenderRequestBody: z.boolean().default(false),
+  encodeUrl: z.boolean().default(true),
+  rebuildPath: z.boolean().default(true),
+  followRedirects: z.enum(['global', 'on', 'off']).default('global'),
+});
+
+export const WebSocketRequestSettingsSchema = z.object({
+  encodeUrl: z.boolean().default(true),
+  storeCookies: z.boolean().default(true),
+  sendCookies: z.boolean().default(true),
+  followRedirects: z.enum(['global', 'on', 'off']).default('global'),
+});
+
+export const RequestParametersSchema = z.array(z.object({
+  name: z.string(),
+  value: z.string(),
+}));
+
+export const RequestHeadersSchema = z.array(z.object({
+  name: z.string(),
+  value: z.string(),
+}));
+
 export const RequestGroupSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   environment: jsonSchema.optional(),
   environmentPropertyOrder: jsonSchema.optional(),
-  metaSortKey: z.number().optional(),
-  preRequestScript: z.string().optional(),
-  afterResponseScript: z.string().optional(),
+  scripts: ScriptsSchema.optional(),
   authentication: AuthenticationSchema.optional(),
-  headers: z.array(z.object({
-    name: z.string(),
-    value: z.string(),
-  })).optional(),
-  meta: MetaSchema.optional(),
+  headers: RequestHeadersSchema.optional(),
+  meta: MetaSchema.extend({
+    sortKey: z.number().optional(),
+  }).optional(),
 });
 
 export const RequestSchema = z.object({
@@ -327,8 +356,6 @@ export const RequestSchema = z.object({
       type: z.string().optional(),
     })).optional(),
   }).optional(),
-  preRequestScript: z.string().optional(),
-  afterResponseScript: z.string().optional(),
   headers: z.array(z.object({
     name: z.string(),
     value: z.string(),
@@ -345,40 +372,36 @@ export const RequestSchema = z.object({
     value: z.string(),
   })).optional(),
   authentication: AuthenticationSchema.optional(),
-  metaSortKey: z.number().optional(),
-  isPrivate: z.boolean().default(false).optional(),
-  settingStoreCookies: z.boolean().default(false),
-  settingSendCookies: z.boolean().default(false),
-  settingDisableRenderRequestBody: z.boolean().default(false),
-  settingEncodeUrl: z.boolean().default(true),
-  settingRebuildPath: z.boolean().default(true),
-  settingFollowRedirects: z.enum(['global', 'on', 'off']).default('global'),
-  meta: MetaSchema.optional(),
+  scripts: ScriptsSchema.optional(),
+  settings: RequestSettingsSchema.optional().default({
+    disableRenderRequestBody: false,
+    encodeUrl: true,
+    followRedirects: 'global',
+    rebuildPath: true,
+    sendCookies: true,
+    storeCookies: true,
+  }),
+  meta: MetaSchema.extend({
+    sortKey: z.number().optional(),
+  }).optional(),
 });
 
 export const WebsocketRequestSchema = z.object({
   name: z.string(),
   url: z.string(),
-  description: z.string().optional(),
-  metaSortKey: z.number().optional(),
-  headers: z.array(z.object({
-    name: z.string(),
-    value: z.string(),
-  })).optional(),
+  headers: RequestHeadersSchema.optional(),
   authentication: AuthenticationSchema.optional(),
-  parameters: z.array(z.object({
-    name: z.string(),
-    value: z.string(),
-  })).optional(),
-  pathParameters: z.array(z.object({
-    name: z.string(),
-    value: z.string(),
-  })).optional(),
-  settingEncodeUrl: z.boolean().default(true),
-  settingStoreCookies: z.boolean().default(true),
-  settingSendCookies: z.boolean().default(true),
-  settingFollowRedirects: z.enum(['global', 'on', 'off']).default('global'),
-  meta: MetaSchema.optional(),
+  parameters: RequestParametersSchema.optional(),
+  pathParameters: RequestParametersSchema.optional(),
+  settings: WebSocketRequestSettingsSchema.optional().default({
+    encodeUrl: true,
+    followRedirects: 'global',
+    sendCookies: true,
+    storeCookies: true,
+  }),
+  meta: MetaSchema.extend({
+    sortKey: z.number().optional(),
+  }).optional(),
 });
 
 type Request = z.infer<typeof RequestSchema>;
@@ -397,14 +420,16 @@ const TestSchema = z.object({
   name: z.string(),
   code: z.string(),
   requestId: z.string().nullable(),
-  metaSortKey: z.number().optional(),
-  meta: MetaSchema.optional(),
+  meta: MetaSchema.extend({
+    sortKey: z.number().optional(),
+  }).optional(),
 });
 
 const TestSuiteSchema = z.object({
   name: z.string(),
-  metaSortKey: z.number().optional(),
-  meta: MetaSchema.optional(),
+  meta: MetaSchema.extend({
+    sortKey: z.number().optional(),
+  }).optional(),
   tests: z.array(TestSchema).optional(),
 });
 
@@ -460,7 +485,6 @@ export const insomniaFileSchema = z.union([collectionSchema, apiSpecSchema, mock
 
 export type InsomniaFile = z.infer<typeof insomniaFileSchema>;
 
-// writeFile('collection-schema.json', JSON.stringify(zodToJsonSchema(insomniaFileSchema), null, 2));
 export type Z_GRPCRequest = z.infer<typeof GRPCRequestSchema>;
 export type Z_RequestGroup = z.infer<typeof RequestGroupWithChildrenSchema>;
 export type Z_Request = z.infer<typeof RequestSchema>;
