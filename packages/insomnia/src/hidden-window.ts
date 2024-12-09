@@ -16,7 +16,8 @@ window.bridge.onmessage(async (data, callback) => {
   window.bridge.setBusy(true);
 
   try {
-    const timeout = data.context.timeout || 5000;
+    const validTimeout = data.context.timeout !== undefined && data.context.timeout !== null ? data.context.timeout : 60000;
+    const timeout = validTimeout > 0 ? validTimeout : 1e13; // 317 years
     const timeoutPromise = new window.bridge.Promise(resolve => {
       setTimeout(() => {
         resolve({ error: 'Timeout: Running script took too long' });
