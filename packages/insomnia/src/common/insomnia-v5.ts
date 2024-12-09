@@ -404,6 +404,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
             created: resource.created,
             modified: resource.modified,
             isPrivate: resource.isPrivate,
+            description: resource.description,
           },
           name: resource.name,
           url: resource.url,
