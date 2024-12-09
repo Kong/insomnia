@@ -21,12 +21,12 @@ const createCredentialItemList: createCredentialItemType[] = [
   {
     id: 'aws',
     name: getProviderDisplayName('aws'),
-    icon: <i className="fa-brands fa-amazon" />
+    icon: <i className="fa-brands fa-amazon" />,
   },
   {
     id: 'azure',
     name: getProviderDisplayName('azure'),
-    icon: <i className="fa-brands fa-microsoft" />
+    icon: <i className="fa-brands fa-microsoft" />,
   },
   // TODO support gcp
   // {
