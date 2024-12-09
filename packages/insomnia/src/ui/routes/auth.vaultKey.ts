@@ -79,12 +79,12 @@ const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
     if (type === 'create') {
       const response = await createVaultKeyRequest(sessionId, vaultSalt, verifier);
       if (response?.error) {
-        return { error: response?.error };
+        return { error: `${response?.error}: ${response?.message}` };
       };
     } else {
       const response = await resetVaultKeyRequest(sessionId, vaultSalt, verifier);
       if (response?.error) {
-        return { error: response?.error };
+        return { error: `${response?.error}: ${response?.message}` };
       };
     };
 

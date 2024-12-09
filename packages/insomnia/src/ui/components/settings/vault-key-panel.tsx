@@ -4,13 +4,12 @@ import { Button } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 
 import { getProductName } from '../../../common/constants';
-import { userSession as sessionModel } from '../../../models';
 import { decryptVaultKeyFromSession, saveVaultKeyToKeyChainIfNecessary } from '../../../utils/vault';
 import { useRootLoaderData } from '../../routes/root';
 import { type CopyBtnHanlde, CopyButton } from '../base/copy-button';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
-import { showModal } from '../modals';
+import { showError, showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
 import { InputVaultKeyModal } from '../modals/input-valut-key-modal';
 import { BooleanSetting } from './boolean-setting';
@@ -96,7 +95,7 @@ export const VaultKeyPanel = () => {
     if (vaultKeyFetcher.data && vaultKeyFetcher.data.error && vaultKeyFetcher.state === 'idle') {
       setGenerating(false);
       // user has created vault key in another device;
-      if (vaultKeyFetcher.data.error.toLowerCase() === 'conflict') {
+      if (vaultKeyFetcher.data.error.toLowerCase().includes('conflict')) {
         // get vault salt from server
         vaultSaltFetcher.submit('', {
           action: '/auth/updateVaultSalt',
@@ -107,9 +106,11 @@ export const VaultKeyPanel = () => {
           message: 'You have generated the vault key in other device. Please input your vault key',
           yesText: 'OK',
           noText: 'Cancel',
-          onDone: async () => {
-            console.log('1');
-          },
+        });
+      } else {
+        showError({
+          title: 'Can not generate vault key',
+          message: vaultKeyFetcher.data.error,
         });
       }
     }
