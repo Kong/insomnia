@@ -223,6 +223,8 @@ const Root = () => {
                     encType: 'application/json',
                   }
                 );
+                // close the authentication modal if necessary
+                document.getElementById('close-add-cloud-crendeital-modal')?.click();
                 showModal(SettingsModal, { tab: TAB_CLOUD_CREDENTIAL });
               } else {
                 showError({

@@ -4,9 +4,9 @@ import { useFetcher } from 'react-router-dom';
 
 import { type BaseCloudCredential, type CloudProviderCredential, type CloudProviderName, getProviderDisplayName } from '../../../../models/cloud-credential';
 import { Icon } from '../../icon';
-import { AWSCredentialForm } from './aws-credential-form';
 import { showModal } from '..';
 import { SettingsModal, TAB_CLOUD_CREDENTIAL } from '../settings-modal';
+import { AWSCredentialForm } from './aws-credential-form';
 
 export interface CloudCredentialModalProps {
   provider: CloudProviderName;
@@ -101,6 +101,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                 <Heading slot="title" className='text-2xl'>{providerCredential ? `Edit ${providerDisplayName} credential` : `Authenticate With ${providerDisplayName}`}</Heading>
                 <Button
                   className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  id="close-add-cloud-crendeital-modal"
                   onPress={close}
                 >
                   <Icon icon="x" />
