@@ -5,6 +5,8 @@ import { useFetcher } from 'react-router-dom';
 import { type BaseCloudCredential, type CloudProviderCredential, type CloudProviderName, getProviderDisplayName } from '../../../../models/cloud-credential';
 import { Icon } from '../../icon';
 import { AWSCredentialForm } from './aws-credential-form';
+import { showModal } from '..';
+import { SettingsModal, TAB_CLOUD_CREDENTIAL } from '../settings-modal';
 
 export interface CloudCredentialModalProps {
   provider: CloudProviderName;
@@ -58,6 +60,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
             credentials: result!,
             isAuthenticated: true,
           });
+          showModal(SettingsModal, { tab: TAB_CLOUD_CREDENTIAL });
         } else {
           setError(error!.errorMessage);
         }
