@@ -104,7 +104,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     }
   }, [closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById]);
 
-  const handleUpdate = useCallback(async (doc: models.BaseModel, patches: Partial<models.BaseModel>[]) => {
+  const handleUpdate = useCallback(async (doc: models.BaseModel, patches: Partial<models.BaseModel>[] = []) => {
     const patchObj: Record<string, any> = {};
     patches.forEach(patch => {
       Object.assign(patchObj, patch);
@@ -181,6 +181,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   useEffect(() => {
     // sync tabList with database
     const callback = async (changes: ChangeBufferEvent[]) => {
+      console.log('tabList changes:', changes);
       for (const change of changes) {
         const changeType = change[0];
         const doc = change[1];
