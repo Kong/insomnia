@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
 
-import { AWSCredentialType, type BaseCloudCredential, type CloudProviderCredential, type CloudProviderName } from '../../../../models/cloud-credential';
+import { AWSCredentialType, type AWSTemporaryCredential, type BaseCloudCredential, type CloudProviderCredential, type CloudProviderName } from '../../../../models/cloud-credential';
 import { Icon } from '../../icon';
 
 export interface AWSCredentialFormProps {
@@ -37,7 +37,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
   const { data, onSubmit, isLoading, errorMessage } = props;
   const isEdit = !!data;
   const { name, credentials } = data || initialFormValue;
-  const { accessKeyId, secretAccessKey, sessionToken, region } = credentials!;
+  const { accessKeyId, secretAccessKey, sessionToken, region } = credentials! as AWSTemporaryCredential;
   const [hideValueItemNames, setHideValueItemNames] = useState(['accessKeyId', 'secretAccessKey', 'sessionToken']);
 
   const showOrHideItemValue = (name: string) => {

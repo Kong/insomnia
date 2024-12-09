@@ -21,11 +21,11 @@ const createCredentialItemList: createCredentialItemType[] = [
     id: 'aws',
     name: getProviderDisplayName('aws'),
   },
-  // TODO only support aws for now
-  // {
-  //   id: 'azure',
-  //   name: getProviderDisplayName('azure'),
-  // },
+  {
+    id: 'azure',
+    name: getProviderDisplayName('azure'),
+  },
+  // TODO support gcp
   // {
   //   id: 'gcp',
   //   name: getProviderDisplayName('gcp'),
@@ -65,6 +65,10 @@ export const CloudServiceCredentialList = () => {
     });
   };
 
+  const handleCreateCloudServiceCredential = (key: CloudProviderName) => {
+    setModalState({ show: true, provider: key as CloudProviderName });
+  };
+
   if (!isEnterprisePlan) {
     return (
       <UpgradeNotice
@@ -91,9 +95,9 @@ export const CloudServiceCredentialList = () => {
             placement='bottom right'
           >
             <Menu
-              aria-label="Create in project actions"
+              aria-label="Create cloud service credential actions"
               selectionMode="single"
-              onAction={key => setModalState({ show: true, provider: key as CloudProviderName })}
+              onAction={key => handleCreateCloudServiceCredential(key as CloudProviderName)}
               items={createCredentialItemList}
               className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
             >
@@ -134,12 +138,14 @@ export const CloudServiceCredentialList = () => {
                   </td>
                   <td className='w-52 whitespace-nowrap'>
                     <div className='flex gap-2'>
-                      <Button
-                        className={`${buttonClassName} w-16`}
-                        onPress={() => setModalState({ show: true, provider: provider!, credential: cloudCred })}
-                      >
-                        <Icon icon="edit" />&nbsp;&nbsp;Edit
-                      </Button>
+                      {provider === 'aws' &&
+                        <Button
+                          className={`${buttonClassName} w-16`}
+                          onPress={() => setModalState({ show: true, provider: provider!, credential: cloudCred })}
+                        >
+                          <Icon icon="edit" />&nbsp;&nbsp;Edit
+                        </Button>
+                      }
                       <Button
                         className={`${buttonClassName} w-20`}
                         onPress={() => handleDeleteItem(_id, name)}

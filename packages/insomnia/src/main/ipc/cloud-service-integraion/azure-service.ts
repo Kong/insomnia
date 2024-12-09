@@ -1,4 +1,4 @@
-import { type AuthenticationResult, CryptoProvider, PublicClientApplication } from '@azure/msal-node';
+import { type AuthenticationResult, AuthError, CryptoProvider, PublicClientApplication } from '@azure/msal-node';
 import crypto from 'crypto';
 import { net, shell } from 'electron';
 
@@ -106,7 +106,7 @@ export class AzureService extends OAuthCloudService implements ICloudService {
     shell.openExternal(authUrl);
   }
 
-  static async exchangeCode(code: string): Promise<CloudServiceResult<AuthenticationResult>> {
+  static async exchangeCode({ code }: { code: string }): Promise<CloudServiceResult<AuthenticationResult>> {
     const azureClient = await getAzureClient();
     try {
       const authResult = await azureClient.acquireTokenByCode({
@@ -115,50 +115,43 @@ export class AzureService extends OAuthCloudService implements ICloudService {
         code,
         codeVerifier: verifier,
       });
-      // generate new Pkce codes after a sucess auth
+      // generate new Pkce codes after a success auth
       await generatePkceCodes();
       return {
         success: true,
         result: authResult,
       };
     } catch (error) {
+      if (error instanceof AuthError) {
+        const { errorMessage, errorCode } = error;
+        return {
+          success: false,
+          result: null,
+          error: { errorMessage, errorCode },
+        };
+      }
       return {
         success: false,
         result: null,
-        error: error.toString(),
+        error: { errorMessage: error.toString(), errorCode: '' },
       };
     }
-  };
+  }
 
-  async authenticate(code: string): Promise<CloudServiceResult<AuthenticationResult>> {
-    const azureClient = await getAzureClient();
-    try {
-      const authResult = await azureClient.acquireTokenByCode({
-        scopes,
-        redirectUri: redirect_uri,
-        code,
-        codeVerifier: verifier,
-      });
-      // generate new Pkce codes after a sucess auth
-      await generatePkceCodes();
-      return {
-        success: true,
-        result: authResult,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        result: null,
-        error: error.toString(),
-      };
-    }
-  };
+  async authenticate() {
+    // Azure uses OAuth authenticaion flow.
+  }
+
+  getUniqueCacheKey(identifier: string) {
+    const uniqueKey = identifier;
+    const uniqueKeyHash = crypto.createHash('md5').update(uniqueKey).digest('hex');
+    return uniqueKeyHash;
+  }
 
   async getSecret(identifier: string): Promise<CloudServiceResult<AzureSecretResponse>> {
     const { accessToken } = this._credential;
     const apiVersion = '7.4';
-    // Using Azure rest api to get key/secret. Refer:
-    // https://learn.microsoft.com/en-us/rest/api/keyvault/keys/get-key/get-key?view=rest-keyvault-keys-7.4&tabs=HTTP
+    // Using Azure rest api to get secret. Refer:
     // https://learn.microsoft.com/en-us/rest/api/keyvault/secrets/get-secret/get-secret?view=rest-keyvault-secrets-7.4&tabs=HTTP
     try {
       const params = new URLSearchParams({
@@ -189,14 +182,8 @@ export class AzureService extends OAuthCloudService implements ICloudService {
       return {
         success: false,
         result: null,
-        error: error.toString(),
+        error: { errorMessage: error.toString(), errorCode: '' },
       };
     }
-  }
-
-  getUniqueCacheKey(identifier: string) {
-    const uniqueKey = identifier;
-    const uniqueKeyHash = crypto.createHash('md5').update(uniqueKey).digest('hex');
-    return uniqueKeyHash;
   }
 }

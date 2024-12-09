@@ -14,7 +14,7 @@ export class AWSService implements ICloudService {
     this._credential = credential;
   }
 
-  async authorize(): Promise<CloudServiceResult<GetCallerIdentityCommandOutput>> {
+  async authenticate(): Promise<CloudServiceResult<GetCallerIdentityCommandOutput>> {
     const { region, accessKeyId, secretAccessKey, sessionToken } = this._credential;
     const stsClient = new STSClient({
       region,

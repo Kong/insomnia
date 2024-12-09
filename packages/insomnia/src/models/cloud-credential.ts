@@ -1,3 +1,5 @@
+import type { AuthenticationResult as AzureOAuthCredential } from '@azure/msal-node';
+
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
@@ -12,7 +14,7 @@ export interface AWSTemporaryCredential {
   sessionToken: string;
   region: string;
 }
-export type CloudeProviderCredentialType = AWSTemporaryCredential;
+export type CloudeProviderCredentialType = AWSTemporaryCredential | AzureOAuthCredential;
 
 export interface BaseCloudCredential {
   name: string;
@@ -70,6 +72,10 @@ export function update(credential: CloudProviderCredential, patch: Partial<Cloud
 
 export function remove(credential: CloudProviderCredential) {
   return db.remove(credential);
+}
+
+export function getByName(name: string, provider: CloudProviderName) {
+  return db.find<CloudProviderCredential>(type, { name, provider });
 }
 
 export function all() {

@@ -8,7 +8,7 @@ import { CookieJar } from 'tough-cookie';
 import * as uuid from 'uuid';
 
 import type { RenderPurpose } from '../../../common/render';
-import type { AWSSecretConfig } from '../../../main/ipc/cloud-service-integraion/types';
+import type { ExternalVaultConfig } from '../../../main/ipc/cloud-service-integraion/types';
 import * as models from '../../../models';
 import type { CloudProviderCredential, CloudProviderName } from '../../../models/cloud-credential';
 import { vaultEnvironmentMaskValue } from '../../../models/environment';
@@ -18,6 +18,7 @@ import type { TemplateTag } from '../../../plugins';
 import type { PluginTemplateTag } from '../../../templating/extensions';
 import { invariant } from '../../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
+import { getExternalVault } from './external-vault';
 import { fakerFunctions } from './faker-functions';
 
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
@@ -34,6 +35,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           type: 'enum',
           options: [
             { displayName: 'AWS Secrets Manager', value: 'aws' },
+            { displayName: 'Azure Key Vault', value: 'azure' },
           ],
         },
         {
@@ -72,44 +74,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           } catch (error) {
             throw new Error('Invalid vault secret config');
           }
-          if (provider === 'aws') {
-            const {
-              SecretId, VersionId, VersionStage, SecretKey,
-              SecretType = 'plaintext',
-            } = secretConfig as AWSSecretConfig;
-            if (!SecretId) {
-              throw new Error('Secret Name or ARN is required');
-            }
-            const getSecretOption = {
-              provider,
-              secretId: SecretId,
-              config: {
-                VersionId, VersionStage,
-              },
-              credentials: providerCredential.credentials,
-            };
-            const secretResult = await window.main.cloudService.getSecret(getSecretOption);
-            const { success, error, result } = secretResult;
-            if (success && result) {
-              const { SecretString } = result!;
-              let parsedJSON;
-              if (SecretType === 'plaintext' || !SecretKey) {
-                return SecretString;
-              } else {
-                try {
-                  parsedJSON = JSON.parse(SecretString || '{}');
-                } catch (error) {
-                  throw new Error(`Secret value ${SecretString} can not parsed to key/value pair, please change Secret Type to plaintext`);
-                }
-                if (SecretKey in parsedJSON) {
-                  return parsedJSON[SecretKey];
-                }
-                throw new Error(`Secret key ${SecretKey} does not exist in key/value secret ${SecretString}`);
-              }
-            } else {
-              throw new Error(error?.errorMessage);
-            }
-          }
+          return getExternalVault(provider, providerCredential, secretConfig as ExternalVaultConfig);
         }
         return vaultEnvironmentMaskValue;
       },
