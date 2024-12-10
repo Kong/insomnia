@@ -17,6 +17,27 @@ import { EXPORT_TYPE_API_SPEC, EXPORT_TYPE_COOKIE_JAR, EXPORT_TYPE_ENVIRONMENT, 
 import { database } from './database';
 import { type InsomniaFile, insomniaFileSchema, type Meta, WebsocketRequestSchema, type Z_GRPCRequest, type Z_Request, type Z_RequestGroup, type Z_WebsocketRequest } from './schema';
 
+function filterEmptyValue(value: string | number | boolean | null | undefined) {
+  return value !== null && value !== undefined && value !== '' && !(typeof value === 'object' && Object.keys(value).length === 0);
+}
+
+function removeEmptyFields(data: any): any {
+  if (Array.isArray(data)) {
+    const list = data.map(removeEmptyFields).filter(filterEmptyValue);
+    return list.length > 0 ? list : undefined;
+  } else if (data && typeof data === 'object') {
+    const object = Object.fromEntries(
+      Object.entries(data)
+        .map(([key, value]) => [key, removeEmptyFields(value)])
+        .filter(([, value]) => value !== undefined),
+    );
+
+    return Object.keys(object).length > 0 ? object : undefined;
+  }
+
+  return filterEmptyValue(data) ? data : undefined;
+}
+
 function mapMetaToInsomniaMeta(meta: Meta): {
   _id: string;
   created: number;
@@ -601,7 +622,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
       environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)),
     };
 
-    return stringify(collection);
+    return stringify(removeEmptyFields(collection));
   } else if (workspace.scope === 'design') {
     const spec: InsomniaFile = {
       type: 'spec.insomnia.rest/5.0',
@@ -620,7 +641,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
       environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)),
     };
 
-    return stringify(spec);
+    return stringify(removeEmptyFields(spec));
   } else if (workspace.scope === 'environment') {
     const environment: InsomniaFile = {
       type: 'environment.insomnia.rest/5.0',
@@ -635,7 +656,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
       environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)) || [],
     };
 
-    return stringify(environment);
+    return stringify(removeEmptyFields(environment));
   } else if (workspace.scope === 'mock-server') {
     const mockServer: InsomniaFile = {
       type: 'mock.insomnia.rest/5.0',
@@ -652,7 +673,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
       useInsomniaCloud: exportableResources.filter(models.mockServer.isMockServer)[0].useInsomniaCloud,
     };
 
-    return stringify(mockServer);
+    return stringify(removeEmptyFields(mockServer), {});
   } else {
     throw new Error('Unknown workspace scope');
   }
