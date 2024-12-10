@@ -36,7 +36,7 @@ export const description = 'Importer for Postman collections';
 type PostmanCollection = V200Schema | V210Schema;
 type EventList = V200EventList | V210EventList;
 
-type Authetication = V200Auth | V210Auth;
+type Authentication = V200Auth | V210Auth;
 
 type Body = V200Request1['body'] | V210Request1['body'];
 
@@ -479,7 +479,7 @@ export class ImportPostman {
     };
   };
 
-  importAuthentication = (authentication?: Authetication | null, originalHeaders: Header[] = []) => {
+  importAuthentication = (authentication?: Authentication | null, originalHeaders: Header[] = []) => {
     const isAuthorizationHeader = ({ key }: Header) => key === 'Authorization';
     const authorizationHeader = originalHeaders.find(isAuthorizationHeader)?.value;
 
@@ -586,7 +586,7 @@ export class ImportPostman {
     }
   };
 
-  importAwsV4Authentication = (auth: Authetication) => {
+  importAwsV4Authentication = (auth: Authentication) => {
     if (!auth.awsv4) {
       return {};
     }
@@ -652,7 +652,7 @@ export class ImportPostman {
     };
   };
 
-  importBasicAuthentication = (auth: Authetication) => {
+  importBasicAuthentication = (auth: Authentication) => {
     if (!auth.basic) {
       return {};
     }
@@ -701,7 +701,7 @@ export class ImportPostman {
     return item;
   };
 
-  importBearerTokenAuthentication = (auth: Authetication) => {
+  importBearerTokenAuthentication = (auth: Authentication) => {
     if (!auth.bearer) {
       return {};
     }
@@ -742,7 +742,7 @@ export class ImportPostman {
     };
   };
 
-  importDigestAuthentication = (auth: Authetication) => {
+  importDigestAuthentication = (auth: Authentication) => {
     if (!auth.digest) {
       return {};
     }
@@ -783,7 +783,7 @@ export class ImportPostman {
     return item;
   };
 
-  importOauth1Authentication = (auth: Authetication) => {
+  importOauth1Authentication = (auth: Authentication) => {
     if (!auth.oauth1) {
       return {};
     }
@@ -859,20 +859,33 @@ export class ImportPostman {
 
   };
 
-  importApiKeyAuthentication = (auth: Authetication) => {
+  importApiKeyAuthentication = (auth: Authentication) => {
     if (!auth.apikey) {
       return {};
     }
-    const apikey = auth.apikey as V210Auth['apikey'];
+    const apikey = auth.apikey as V200Auth['apikey'] | V210Auth['apikey'];
+    let keyVal, valueVal, inVal: string;
+    if (Array.isArray(apikey)) {
+      // V2.1
+      keyVal = this.findValueByKey(apikey, 'key');
+      valueVal = this.findValueByKey(apikey, 'value');
+      inVal = this.findValueByKey(apikey, 'in');
+    } else {
+      // V2.0
+      keyVal = apikey?.key as string;
+      valueVal = apikey?.value as string;
+      inVal = apikey?.in as string;
+    }
+
     return {
       type: 'apikey',
-      key: this.findValueByKey(apikey, 'key'),
-      value: this.findValueByKey(apikey, 'value'),
-      addTo: this.findValueByKey(apikey, 'in')  === 'query' ? 'queryParams' : 'header',
+      key: keyVal,
+      value: valueVal,
+      addTo: inVal === 'query' ? 'queryParams' : 'header',
       disabled: false,
     };
   };
-  importOauth2Authentication = (auth: Authetication): AuthTypeOAuth2 | {} => {
+  importOauth2Authentication = (auth: Authentication): AuthTypeOAuth2 | {} => {
     if (!auth.oauth2) {
       return {};
     }

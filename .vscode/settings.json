@@ -16,6 +16,7 @@
     "editor.defaultFormatter": "vscode.json-language-features"
   },
   "cSpell.words": [
+    "apikey",
     "Dismissable",
     "getinsomnia",
     "inso",
