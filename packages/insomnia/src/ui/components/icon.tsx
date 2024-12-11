@@ -11,5 +11,5 @@ import React from 'react';
 library.add(fas, far, fab);
 
 export const Icon = (props: FontAwesomeIconProps) => (
-  <FontAwesomeIcon {...props} aria-hidden pointerEvents="none" />
+  <FontAwesomeIcon {...props} />
 );

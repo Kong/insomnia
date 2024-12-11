@@ -259,7 +259,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                               unstageChanges(changes.staged.map(entry => entry.path));
                             }}
                           >
-                            <Icon icon="minus" />
+                            <Icon icon="minus" aria-hidden pointerEvents="none" />
                           </Button>
                           <Tooltip
                             offset={8}
@@ -305,7 +305,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                                         unstageChanges([item.entry.path]);
                                       }}
                                     >
-                                      <Icon icon="minus" />
+                                      <Icon icon="minus" aria-hidden pointerEvents="none" />
                                     </Button>
                                     <Tooltip
                                       offset={8}
@@ -370,7 +370,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                                 stageChanges(changes.unstaged.map(entry => entry.path));
                               }}
                             >
-                              <Icon icon="plus" />
+                              <Icon icon="plus" aria-hidden pointerEvents="none" />
                             </Button>
                             <Tooltip
                               offset={8}
@@ -438,7 +438,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                                         stageChanges([item.entry.path]);
                                       }}
                                     >
-                                      <Icon icon="plus" />
+                                      <Icon icon="plus" aria-hidden pointerEvents="none" />
                                     </Button>
                                     <Tooltip
                                       offset={8}
