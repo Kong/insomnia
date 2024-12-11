@@ -82,10 +82,10 @@ export class InsomniaObject {
     }
 
     get test() {
-        const testHandler: TestHandler = (msg: string, fn: () => void) => {
+        const testHandler: TestHandler = (msg: string, fn: () => Promise<void>) => {
             this._test(msg, fn, this.pushRequestTestResult);
         };
-        testHandler.skip = (msg: string, fn: () => void) => {
+        testHandler.skip = (msg: string, fn: () => Promise<void>) => {
             this._skip(msg, fn, this.pushRequestTestResult);
         };
 

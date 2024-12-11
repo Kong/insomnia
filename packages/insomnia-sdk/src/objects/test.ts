@@ -1,34 +1,40 @@
+let testsInObservation = new Array<Promise<void>>();
+
 export function test(
     msg: string,
-    fn: () => void,
+    fn: () => Promise<void>,
     log: (testResult: RequestTestResult) => void,
 ) {
-    const started = performance.now();
+    const observedAsyncFn = async () => {
+        const started = performance.now();
 
-    try {
-        fn();
-        const executionTime = performance.now() - started;
-        log({
-            testCase: msg,
-            status: 'passed',
-            executionTime,
-            category: 'unknown',
-        });
-    } catch (e) {
-        const executionTime = performance.now() - started;
-        log({
-            testCase: msg,
-            status: 'failed',
-            executionTime,
-            errorMessage: `${e}`,
-            category: 'unknown',
-        });
-    }
+        try {
+            await fn();
+            const executionTime = performance.now() - started;
+            log({
+                testCase: msg,
+                status: 'passed',
+                executionTime,
+                category: 'unknown',
+            });
+        } catch (e) {
+            const executionTime = performance.now() - started;
+            log({
+                testCase: msg,
+                status: 'failed',
+                executionTime,
+                errorMessage: `${e}`,
+                category: 'unknown',
+            });
+        }
+    };
+
+    testsInObservation.push(observedAsyncFn());
 }
 
 export function skip(
     msg: string,
-    _: () => void,
+    _: () => Promise<void>,
     log: (testResult: RequestTestResult) => void,
 ) {
     log({
@@ -50,6 +56,16 @@ export interface RequestTestResult {
 }
 
 export interface TestHandler {
-    (msg: string, fn: () => void): void;
-    skip?: (msg: string, fn: () => void) => void;
+    (msg: string, fn: () => Promise<void>): void;
+    skip?: (msg: string, fn: () => Promise<void>) => void;
 };
+
+export async function waitUntilTestsFinished() {
+    try {
+        await Promise.allSettled(testsInObservation);
+    } catch (e) {
+        throw `Failed to run test(s): ${e}`;
+    } finally {
+        testsInObservation = [];
+    }
+}
