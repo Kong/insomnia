@@ -83,21 +83,20 @@ test.describe('runner features tests', async () => {
             expect(summarizedPassedCount).toEqual(expectedPassed);
             expect(summarizedTotalCount).toEqual(expectedTotal);
         };
-        await page.getByText('6 / 8').click();
-        await verifyTestCounts(6, 8);
+        await page.getByText('5 / 7').click();
+        await verifyTestCounts(5, 7);
 
         const expectedTestOrder = [
             'folder-pre-check',
-            'req1-pre-check',
             'req1-pre-check-skipped',
+            'req1-pre-check',
             'folder-post-check',
-            'req1-post-check',
             'expected 200 to deeply equal 201',
             'req2-pre-check',
             'req2-post-check',
         ];
 
-        await verifyResultRows(page, 6, 1, 8, expectedTestOrder);
+        await verifyResultRows(page, 5, 1, 7, expectedTestOrder);
     });
 
     test('run collection runner with data upload', async ({ page }) => {
@@ -115,12 +114,11 @@ test.describe('runner features tests', async () => {
         expect(await page.locator('input[name="Iterations"]').inputValue()).toBe('2');
 
         // select requests to test
-        await page.locator('text=Select All').click();
-        await page.locator('.runner-request-list-req0').click();
-        await page.locator('.runner-request-list-req01').click();
-        await page.locator('.runner-request-list-req02').click();
-        await page.locator('.runner-request-list-set-var1').click();
-        await page.locator('.runner-request-list-read-var1').click();
+        await page.locator('.runner-request-list-req1').click();
+        await page.locator('.runner-request-list-req2').click();
+        await page.locator('.runner-request-list-req3').click();
+        await page.locator('.runner-request-list-req4').click();
+        await page.locator('.runner-request-list-req5').click();
 
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
@@ -134,12 +132,12 @@ test.describe('runner features tests', async () => {
             // req2 should be skipped from pre-request script
             expect(iterationTestResultElement).not.toContainText('req2');
         }
-        await verifyResultRows(page, 4, 1, 6, [
+
+        await verifyResultRows(page, 3, 1, 5, [
             'folder-pre-check',
-            'req1-pre-check',
             'req1-pre-check-skipped',
+            'req1-pre-check',
             'folder-post-check',
-            'req1-post-check',
             'expected 200 to deeply equal 201',
         ]);
 
@@ -226,5 +224,17 @@ test.describe('runner features tests', async () => {
         ];
 
         await verifyResultRows(page, 3, 0, 3, expectedTestOrder, 1);
+    });
+
+    test('can detect sync and async test failure', async ({ page }) => {
+        await page.getByTestId('run-collection-btn-quick').click();
+
+        await page.locator('.runner-request-list-async-test').click();
+
+        // send
+        await page.getByRole('button', { name: 'Run', exact: true }).click();
+
+        // check result
+        await page.getByText('0 / 4').first().click();
     });
 });
