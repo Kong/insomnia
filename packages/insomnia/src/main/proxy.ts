@@ -7,15 +7,14 @@ import { setDefaultProtocol } from '../utils/url/protocol';
 
 // Update the proxy settings before making the request.
 async function updateProxy() {
-  const { proxyEnabled, httpProxy, httpsProxy, noProxy } = await settings.get();
+  // Supported values for proxyUrl are like: http://localhost:8888, https://localhost:8888 or localhost:8888
+  // This function tries to parse the proxyUrl and return the hostname in order to allow all the above values to work.
+  function parseProxyFromUrl(proxyUrl: string) {
+    const url = new URL(setDefaultProtocol(proxyUrl));
+    return `${url.hostname}${url.port ? `:${url.port}` : ''}`;
+  }
 
-  if (proxyEnabled) {
-    // Supported values for proxyUrl are like: http://localhost:8888, https://localhost:8888 or localhost:8888
-    // This function tries to parse the proxyUrl and return the hostname in order to allow all the above values to work.
-    function parseProxyFromUrl(proxyUrl: string) {
-      const url = new URL(setDefaultProtocol(proxyUrl));
-      return `${url.hostname}${url.port ? `:${url.port}` : ''}`;
-    }
+  function setProxy(httpProxy: string, httpsProxy: string, noProxy: string) {
     const proxyRules = [];
     if (httpProxy) {
       proxyRules.push(`http=${parseProxyFromUrl(httpProxy)}`);
@@ -24,7 +23,7 @@ async function updateProxy() {
       proxyRules.push(`https=${parseProxyFromUrl(httpsProxy)}`);
     }
 
-    session.defaultSession.resolveProxy;
+    // session.defaultSession.resolveProxy;
     // Set proxy rules in the main session https://www.electronjs.org/docs/latest/api/structures/proxy-config
     session.defaultSession.setProxy({
       proxyRules: proxyRules.join(';'),
@@ -36,9 +35,20 @@ async function updateProxy() {
       ].join(','),
       mode: 'system',
     });
+  }
+
+  const { proxyEnabled, httpProxy, httpsProxy, noProxy } = await settings.get();
+  if (proxyEnabled) {
+    setProxy(httpProxy, httpsProxy, noProxy);
     return;
   }
-  session.defaultSession.setProxy({ proxyRules: '', proxyBypassRules: '', mode: 'system' });
+
+  // otherwise, respect the system proxy settings.
+  setProxy(
+    (process.env.HTTP_PROXY || process.env.http_proxy || '').trim(),
+    (process.env.HTTPS_PROXY || process.env.https_proxy || '').trim(),
+    (process.env.NO_PROXY || process.env.no_proxy || '').trim()
+  );
 }
 
 export async function watchProxySettings() {
