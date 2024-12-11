@@ -27,10 +27,9 @@ test.describe('after-response script features tests', async () => {
         // verify
         await page.getByRole('tab', { name: 'Tests' }).click();
 
-        const rows = page.getByTestId('test-result-row');
-        await expect(rows.first()).toContainText('PASS');
-        await expect(rows.nth(1)).toContainText('FAIL');
-        await expect(rows.nth(1)).toContainText('AssertionError:');
+        const responsePane = page.getByTestId('response-pane');
+        await expect(responsePane).toContainText('PASS');
+        await expect(responsePane).toContainText('FAILunhappy tests | AssertionError: expected 199 to deeply equal 200After-response Test');
     });
 
     test('environment and baseEnvironment can be persisted', async ({ page }) => {
