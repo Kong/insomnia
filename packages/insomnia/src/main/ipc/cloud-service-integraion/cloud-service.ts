@@ -1,10 +1,12 @@
 import type { AuthenticationResult as AzureOAuthCredential } from '@azure/msal-node';
+import type { JWTInput } from 'google-auth-library';
 
 import * as models from '../../../models';
 import type { AWSTemporaryCredential, CloudeProviderCredentialType, CloudProviderName } from '../../../models/cloud-credential';
 import { ipcMainHandle, ipcMainOn } from '../electron';
 import { type AWSGetSecretConfig, AWSService } from './aws-service';
 import { AzureService } from './azure-service';
+import { type GCPGetSecretConfig, GCPService } from './gcp-servcie';
 import { type MaxAgeUnit, VaultCache } from './vault-cache';
 
 // in-memory cache for fetched vault secrets
@@ -24,9 +26,9 @@ export interface CloudServiceAuthOption {
 }
 export interface CloudServiceSecretOption<T extends {}> extends CloudServiceAuthOption {
   secretId: string;
-  config?: T;
+  config: T;
 }
-export type CloudServiceGetSecretConfig = AWSGetSecretConfig;
+export type CloudServiceGetSecretConfig = AWSGetSecretConfig | GCPGetSecretConfig;
 
 export function registerCloudServiceHandlers() {
   ipcMainHandle('cloudService.authenticate', (_event, options) => cspAuthentication(options));
@@ -45,6 +47,8 @@ class ServiceFactory {
         return new AWSService(credential as AWSTemporaryCredential);
       case 'azure':
         return new AzureService(credential as AzureOAuthCredential);
+      case 'gcp':
+        return new GCPService(credential as JWTInput);
       default:
         throw new Error('Invalid cloud service provider name');
     }

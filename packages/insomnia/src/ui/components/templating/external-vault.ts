@@ -1,6 +1,7 @@
 import type { AWSGetSecretConfig } from '../../../main/ipc/cloud-service-integraion/aws-service';
 import type { CloudServiceSecretOption } from '../../../main/ipc/cloud-service-integraion/cloud-service';
-import type { AWSSecretConfig, AzureSecretConfig, ExternalVaultConfig } from '../../../main/ipc/cloud-service-integraion/types';
+import type { GCPGetSecretConfig } from '../../../main/ipc/cloud-service-integraion/gcp-servcie';
+import type { AWSSecretConfig, AzureSecretConfig, ExternalVaultConfig, GCPSecretConfig } from '../../../main/ipc/cloud-service-integraion/types';
 import type { CloudProviderCredential, CloudProviderName } from '../../../models/cloud-credential';
 
 export const getExternalVault = async (provider: CloudProviderName, providerCredential: CloudProviderCredential, secretConfig: ExternalVaultConfig) => {
@@ -9,6 +10,8 @@ export const getExternalVault = async (provider: CloudProviderName, providerCred
       return getAWSSecret(secretConfig as AWSSecretConfig, providerCredential);
     case 'azure':
       return getAzureSecret(secretConfig as AzureSecretConfig, providerCredential);
+    case 'gcp':
+      return getGCPSecret(secretConfig as GCPSecretConfig, providerCredential);
     default:
       return '';
   }
@@ -62,6 +65,27 @@ export const getAzureSecret = async (secretConfig: AzureSecretConfig, providerCr
     provider: 'azure',
     secretId: secretIdentifier,
     credentials: providerCredential.credentials,
+    config: {},
+  };
+  const secretResult = await window.main.cloudService.getSecret(getSecretOption);
+  const { success, error, result } = secretResult;
+  if (success && result) {
+    return result.value;
+  } else {
+    throw new Error(error?.errorMessage);
+  }
+};
+
+export const getGCPSecret = async (secretConfig: GCPSecretConfig, providerCredential: CloudProviderCredential) => {
+  const { secretName, version } = secretConfig;
+  if (!secretName) {
+    throw new Error('Secret Name is required');
+  }
+  const getSecretOption: CloudServiceSecretOption<GCPGetSecretConfig> = {
+    provider: 'gcp',
+    secretId: secretName,
+    credentials: providerCredential.credentials,
+    config: { version },
   };
   const secretResult = await window.main.cloudService.getSecret(getSecretOption);
   const { success, error, result } = secretResult;

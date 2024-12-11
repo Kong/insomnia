@@ -21,19 +21,18 @@ const createCredentialItemList: createCredentialItemType[] = [
   {
     id: 'aws',
     name: getProviderDisplayName('aws'),
-    icon: <i className="fa-brands fa-amazon" />,
+    icon: <i className="ml-1 fa-brands fa-amazon" />,
   },
   {
     id: 'azure',
     name: getProviderDisplayName('azure'),
-    icon: <i className="fa-brands fa-microsoft" />,
+    icon: <i className="ml-1 fa-brands fa-microsoft" />,
   },
-  // TODO support gcp
-  // {
-  //   id: 'gcp',
-  //   name: getProviderDisplayName('gcp'),
-  //   icon: <i className="fa-brands fa-google" />
-  // },
+  {
+    id: 'gcp',
+    name: getProviderDisplayName('gcp'),
+    icon: <i className="ml-1 fa-brands fa-google" />,
+  },
 ];
 const buttonClassName = 'disabled:opacity-50 h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] transition-all text-sm py-1 px-2';
 

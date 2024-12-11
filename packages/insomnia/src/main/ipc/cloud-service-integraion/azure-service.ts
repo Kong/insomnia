@@ -142,7 +142,8 @@ export class AzureService extends OAuthCloudService implements ICloudService {
     // Azure uses OAuth authenticaion flow.
   }
 
-  getUniqueCacheKey(identifier: string) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getUniqueCacheKey(identifier: string, _config?: any) {
     const uniqueKey = identifier;
     const uniqueKeyHash = crypto.createHash('md5').update(uniqueKey).digest('hex');
     return uniqueKeyHash;

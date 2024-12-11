@@ -2,15 +2,14 @@ export interface CloudServiceError {
   errorCode: string;
   errorMessage: string;
 }
-export interface CloudServiceResult<T> {
+export interface CloudServiceResult<T extends Record<string, any>> {
   success: boolean;
-  result: T | null;
+  result?: T | null;
   error?: CloudServiceError;
 }
 export interface ICloudService {
   authenticate(...args: any[]): Promise<any>;
-  getSecret<T extends {}>(secretName: string, config?: T): Promise<any>;
-  getSecret(secretName: string): Promise<any>;
+  getSecret(secretName: string, config: any): Promise<any>;
   getUniqueCacheKey<T extends {} = {}>(secretName: string, config?: T): string;
 }
 
@@ -28,7 +27,13 @@ export interface AzureSecretConfig {
   secretIdentifier: string;
   secretType: AzureSecretType;
 }
-export type ExternalVaultConfig = AWSSecretConfig | AzureSecretConfig;
+
+export interface GCPSecretConfig {
+  secretName: string;
+  version?: string;
+}
+
+export type ExternalVaultConfig = AWSSecretConfig | AzureSecretConfig | GCPSecretConfig;
 
 export abstract class OAuthCloudService {
   static async openAuthUrl() {

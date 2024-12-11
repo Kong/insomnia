@@ -7,6 +7,7 @@ import { Icon } from '../../icon';
 import { showModal } from '..';
 import { SettingsModal, TAB_CLOUD_CREDENTIAL } from '../settings-modal';
 import { AWSCredentialForm } from './aws-credential-form';
+import { GCPCredentialForm } from './gcp-credential-form';
 
 export interface CloudCredentialModalProps {
   provider: CloudProviderName;
@@ -148,6 +149,14 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                     </p>
                   )}
                 </div>
+              }
+              {provider === 'gcp' &&
+                <GCPCredentialForm
+                  data={providerCredential}
+                  isLoading={cloudCredentialFetcher.state !== 'idle'}
+                  onSubmit={handleFormSubmit}
+                  errorMessage={fetchErrorMessage}
+                />
               }
             </div>
           )}

@@ -1,4 +1,5 @@
 import type { AuthenticationResult as AzureOAuthCredential } from '@azure/msal-node';
+import type { JWTInput } from 'google-auth-library';
 
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
@@ -14,7 +15,7 @@ export interface AWSTemporaryCredential {
   sessionToken: string;
   region: string;
 }
-export type CloudeProviderCredentialType = AWSTemporaryCredential | AzureOAuthCredential;
+export type CloudeProviderCredentialType = AWSTemporaryCredential | AzureOAuthCredential | JWTInput;
 
 export interface BaseCloudCredential {
   name: string;
