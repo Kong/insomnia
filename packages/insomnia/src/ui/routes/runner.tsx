@@ -1,9 +1,9 @@
 import { type RequestContext } from 'insomnia-sdk';
 import porderedJSON from 'json-order';
-import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelResizeHandle } from 'react-resizable-panels';
-import { type ActionFunction, type LoaderFunction, redirect, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -109,43 +109,11 @@ export interface RequestRow {
 };
 
 export const Runner: FC<{}> = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [errorMsg, setErrorMsg] = useState<null | string>(null);
 
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const targetFolderId = searchParams.get('folder') || '';
-  const shouldRefreshRef = useRef(false);
-
-  useEffect(() => {
-    if (searchParams.has('refresh-pane') || searchParams.has('error')) {
-      const copySearchParams = new URLSearchParams(searchParams);
-      if (searchParams.has('refresh-pane')) {
-        shouldRefreshRef.current = true;
-        copySearchParams.delete('refresh-pane');
-      }
-
-      if (searchParams.has('error')) {
-        setErrorMsg(searchParams.get('error'));
-        // TODO: this should be removed when we are able categorized errors better and display them in different ways.
-        showAlert({
-          title: 'Unexpected Runner Failure',
-          message: (
-            <div>
-              <p>The runner failed due to an unhandled error:</p>
-              <code className="wide selectable">
-                <pre>{searchParams.get('error')}</pre>
-              </code>
-            </div>
-          ),
-        });
-        copySearchParams.delete('error');
-      } else {
-        setErrorMsg(null);
-      }
-
-      setSearchParams(copySearchParams);
-    }
-  }, [searchParams, setSearchParams]);
 
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
@@ -159,6 +127,8 @@ export const Runner: FC<{}> = () => {
   const [file, setFile] = useState<File | null>(null);
   const [bail, setBail] = useState<boolean>(true);
   const [isRunning, setIsRunning] = useState(false);
+
+  const runnerId = targetFolderId ? `${workspaceId}-${targetFolderId}` : workspaceId;
 
   invariant(iterationCount, 'iterationCount should not be null');
 
@@ -282,6 +252,7 @@ export const Runner: FC<{}> = () => {
         method: 'post',
         encType: 'application/json',
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner/run`,
+        navigate: false,
       }
     );
   };
@@ -303,11 +274,11 @@ export const Runner: FC<{}> = () => {
   const [testHistory, setTestHistory] = useState<RunnerTestResult[]>([]);
   useEffect(() => {
     const readResults = async () => {
-      const results = await models.runnerTestResult.findByParentId(workspaceId) || [];
+      const results = await models.runnerTestResult.findByParentId(runnerId) || [];
       setTestHistory(results.reverse());
     };
     readResults();
-  }, [workspaceId]);
+  }, [runnerId]);
 
   useEffect(() => {
     if (uploadData.length >= 1) {
@@ -340,9 +311,23 @@ export const Runner: FC<{}> = () => {
     refreshTimeline();
   }, [executionResult, errorMsg]);
 
+  const showErrorAlert = (error: string) => {
+    showAlert({
+      title: 'Unexpected Runner Failure',
+      message: (
+        <div>
+          <p>The runner failed due to an unhandled error:</p>
+          <code className="wide selectable">
+            <pre>{error}</pre>
+          </code>
+        </div>
+      ),
+    });
+  };
+
   useInterval(() => {
     const refreshPanes = async () => {
-      const latestTimingSteps = await window.main.getExecution({ requestId: workspaceId });
+      const latestTimingSteps = await window.main.getExecution({ requestId: runnerId });
       if (latestTimingSteps) {
         // there is a timingStep item and it is not ended (duration is not assigned)
         const isRunning = latestTimingSteps.length > 0 && latestTimingSteps[latestTimingSteps.length - 1].stepName !== 'Done';
@@ -351,21 +336,22 @@ export const Runner: FC<{}> = () => {
         if (isRunning) {
           const duration = Date.now() - latestTimingSteps[latestTimingSteps.length - 1].startedAt;
           const { number: durationNumber, unit: durationUnit } = getTimeAndUnit(duration);
-
           setTimingSteps(latestTimingSteps);
           setTotalTime({
             duration: durationNumber,
             unit: durationUnit,
           });
         } else {
-          if (shouldRefreshRef.current) {
-            const results = await models.runnerTestResult.findByParentId(workspaceId) || [];
-            setTestHistory(results.reverse());
-            if (results.length > 0) {
-              const latestResult = results[0];
-              setExecutionResult(latestResult);
-            }
-            shouldRefreshRef.current = false;
+          const results = await models.runnerTestResult.findByParentId(runnerId) || [];
+          setTestHistory(results.reverse());
+          const { error } = getExecution(runnerId);
+          if (error) {
+            showErrorAlert(error);
+            updateExecution(runnerId, { error: '' });
+          }
+          if (results.length > 0) {
+            const latestResult = results[0];
+            setExecutionResult(latestResult);
           }
         }
       }
@@ -373,6 +359,17 @@ export const Runner: FC<{}> = () => {
 
     refreshPanes();
   }, 1000);
+
+  useEffect(() => {
+    setIsRunning(false);
+    setTimingSteps([]);
+    setTotalTime({
+      duration: 0,
+      unit: 'ms',
+    });
+    setExecutionResult(null);
+    setErrorMsg(null);
+  }, [runnerId]);
 
   const { passedTestCount, totalTestCount, testResultCountTagColor } = useMemo(() => {
     let passedTestCount = 0;
@@ -731,7 +728,7 @@ export const Runner: FC<{}> = () => {
           </TabList>
           <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='console'>
             <ResponseTimelineViewer
-              key={workspaceId}
+              key={runnerId}
               timeline={timelines}
             />
           </TabPanel>
@@ -750,8 +747,8 @@ export const Runner: FC<{}> = () => {
             {isRunning &&
               <div className="h-full w-full text-md flex items-center">
                 <ResponseTimer
-                  handleCancel={() => cancelExecution(workspaceId)}
-                  activeRequestId={workspaceId}
+                  handleCancel={() => cancelExecution(runnerId)}
+                  activeRequestId={runnerId}
                   steps={timingSteps}
                 />
               </div>
@@ -798,31 +795,39 @@ const RequestItem = (
 // This is required for tracking the active request for one runner execution
 // Then in runner cancellation, both the active request and the runner execution will be canceled
 // TODO(george): Potentially it could be merged with maps in request-timing.ts and cancellation.ts
-const runnerExecutions = new Map<string, string>();
+interface ExecutionInfo {
+  activeRequestId?: string;
+  error?: string;
+};
+const runnerExecutions = new Map<string, ExecutionInfo>();
 function startExecution(workspaceId: string) {
-  runnerExecutions.set(workspaceId, '');
+  runnerExecutions.set(workspaceId, {});
 }
 
 function stopExecution(workspaceId: string) {
   runnerExecutions.delete(workspaceId);
 }
 
-function updateExecution(workspaceId: string, requestId: string) {
-  runnerExecutions.set(workspaceId, requestId);
+function updateExecution(workspaceId: string, executionInfo: ExecutionInfo) {
+  const info = runnerExecutions.get(workspaceId);
+  runnerExecutions.set(workspaceId, {
+    ...info,
+    ...executionInfo,
+  });
 }
 
 function getExecution(workspaceId: string) {
-  return runnerExecutions.get(workspaceId);
+  return runnerExecutions.get(workspaceId) || {};
 }
 
 function cancelExecution(workspaceId: string) {
-  const activeRequestId = getExecution(workspaceId);
+  const { activeRequestId } = getExecution(workspaceId);
   if (activeRequestId) {
     cancelRequestById(activeRequestId);
     window.main.completeExecutionStep({ requestId: activeRequestId });
     window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
     window.main.completeExecutionStep({ requestId: workspaceId });
-    stopExecution(workspaceId);
+    // stopExecution(workspaceId);
   }
 }
 const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], currentIteration?: number): UserUploadEnvironment | undefined => {
@@ -852,6 +857,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
 
   const { requests, iterationCount, delay, userUploadEnvs, bail, targetFolderId } = await request.json() as runCollectionActionParams;
   const source: RunnerSource = 'runner';
+  const runnerId = targetFolderId ? `${workspaceId}-${targetFolderId}` : workspaceId;
 
   let testCtx: CollectionRunnerContext = {
     source,
@@ -876,12 +882,12 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     },
   };
 
-  window.main.startExecution({ requestId: workspaceId });
+  window.main.startExecution({ requestId: runnerId });
   window.main.addExecutionStep({
-    requestId: workspaceId,
+    requestId: runnerId,
     stepName: 'Initializing',
   });
-  startExecution(workspaceId);
+  startExecution(runnerId);
 
   try {
     for (let i = 0; i < iterationCount; i++) {
@@ -893,7 +899,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       let j = 0;
       while (j < requests.length) {
         // TODO: we might find a better way to do runner cancellation
-        if (getExecution(workspaceId) === undefined) {
+        if (getExecution(runnerId) === undefined) {
           throw 'Runner has been stopped';
         }
 
@@ -928,9 +934,11 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
             }
           }
 
-          updateExecution(workspaceId, targetRequest.id);
+          updateExecution(runnerId, {
+            activeRequestId: targetRequest.id,
+          });
           window.main.updateLatestStepName({
-            requestId: workspaceId,
+            requestId: runnerId,
             stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"`,
           });
 
@@ -1023,17 +1031,21 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       };
     }
 
-    window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
-    window.main.completeExecutionStep({ requestId: workspaceId });
+    window.main.updateLatestStepName({ requestId: runnerId, stepName: 'Done' });
+    window.main.completeExecutionStep({ requestId: runnerId });
   } catch (e) {
     // the error could be from third party
-    const errMsg = encodeURIComponent(e.error || e);
-    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane&error=${errMsg}&folder=${targetFolderId}`);
+    const errMsg = e.error || e;
+    updateExecution(runnerId, {
+      error: errMsg,
+    });
+    return null;
+    // return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane&error=${errMsg}&folder=${targetFolderId}`);
   } finally {
-    cancelExecution(workspaceId);
+    cancelExecution(runnerId);
 
     await models.runnerTestResult.create({
-      parentId: workspaceId,
+      parentId: runnerId,
       source: testCtx.source,
       iterations: testCtx.iterationCount,
       duration: testCtx.duration,
@@ -1042,8 +1054,8 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       responsesInfo: testCtx.responsesInfo,
     });
   }
-
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane&folder=${targetFolderId}`);
+  return null;
+  // return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane&folder=${targetFolderId}`);
 };
 
 export const collectionRunnerStatusLoader: LoaderFunction = async ({ params }) => {
