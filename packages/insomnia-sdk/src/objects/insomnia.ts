@@ -177,7 +177,7 @@ export async function initInsomniaObject(
 
     // hack: sanitize a template reference if it exists in the hostname
     // so we can filter certificates without a full render on the request
-    const host = reqUrl.getHost().replaceAll(/{{\s*\_\./g, '{{');
+    const host = reqUrl.getHost().replace(/{{\s*\_\./g, '{{');
     const renderedHost = variables.replaceIn(host);
 
     const filteredCerts = filterClientCertificates(rawObj.clientCertificates || [], renderedHost, 'https:');
