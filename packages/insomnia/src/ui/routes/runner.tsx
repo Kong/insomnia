@@ -306,6 +306,8 @@ export const Runner: FC<{}> = () => {
       if (executionResult) {
         const mergedTimelines = await aggregateAllTimelines(errorMsg, executionResult);
         setTimelines(mergedTimelines);
+      } else {
+        setTimelines([]);
       }
     };
     refreshTimeline();
@@ -325,51 +327,51 @@ export const Runner: FC<{}> = () => {
     });
   };
 
-  useInterval(() => {
-    const refreshPanes = async () => {
-      const latestTimingSteps = await window.main.getExecution({ requestId: runnerId });
-      if (latestTimingSteps) {
-        // there is a timingStep item and it is not ended (duration is not assigned)
-        const isRunning = latestTimingSteps.length > 0 && latestTimingSteps[latestTimingSteps.length - 1].stepName !== 'Done';
-        setIsRunning(isRunning);
+  const refreshPanes = useCallback(async () => {
+    const latestTimingSteps = await window.main.getExecution({ requestId: runnerId });
+    let isRunning = false;
+    if (latestTimingSteps) {
+    // there is a timingStep item and it is not ended (duration is not assigned)
+      isRunning = latestTimingSteps.length > 0 && latestTimingSteps[latestTimingSteps.length - 1].stepName !== 'Done';
+    }
+    setIsRunning(isRunning);
 
-        if (isRunning) {
-          const duration = Date.now() - latestTimingSteps[latestTimingSteps.length - 1].startedAt;
-          const { number: durationNumber, unit: durationUnit } = getTimeAndUnit(duration);
-          setTimingSteps(latestTimingSteps);
-          setTotalTime({
-            duration: durationNumber,
-            unit: durationUnit,
-          });
-        } else {
-          const results = await models.runnerTestResult.findByParentId(runnerId) || [];
-          setTestHistory(results.reverse());
-          const { error } = getExecution(runnerId);
-          if (error) {
-            showErrorAlert(error);
-            updateExecution(runnerId, { error: '' });
-          }
-          if (results.length > 0) {
-            const latestResult = results[0];
-            setExecutionResult(latestResult);
-          }
+    if (isRunning) {
+      const duration = Date.now() - latestTimingSteps[latestTimingSteps.length - 1].startedAt;
+      const { number: durationNumber, unit: durationUnit } = getTimeAndUnit(duration);
+      setTimingSteps(latestTimingSteps);
+      setTotalTime({
+        duration: durationNumber,
+        unit: durationUnit,
+      });
+    } else {
+      const results = await models.runnerTestResult.findByParentId(runnerId) || [];
+      // show execution result
+      if (results.length > 0) {
+        setTestHistory(results.reverse());
+        const latestResult = results[0];
+        setExecutionResult(latestResult);
+        const { error } = getExecution(runnerId);
+        if (error) {
+          setErrorMsg(error);
+          showErrorAlert(error);
+          updateExecution(runnerId, { error: '' });
         }
+      } else {
+        // show initial empty panel
+        setExecutionResult(null);
+        setErrorMsg(null);
       }
-    };
+    }
+  }, [runnerId]);
 
+  useInterval(() => {
     refreshPanes();
-  }, 1000);
+  }, isRunning ? 1000 : null);
 
   useEffect(() => {
-    setIsRunning(false);
-    setTimingSteps([]);
-    setTotalTime({
-      duration: 0,
-      unit: 'ms',
-    });
-    setExecutionResult(null);
-    setErrorMsg(null);
-  }, [runnerId]);
+    refreshPanes();
+  }, [refreshPanes]);
 
   const { passedTestCount, totalTestCount, testResultCountTagColor } = useMemo(() => {
     let passedTestCount = 0;
