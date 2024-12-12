@@ -298,9 +298,11 @@ export const ScriptsSchema = z.object({
 });
 
 export const RequestSettingsSchema = z.object({
-  storeCookies: z.boolean().default(false),
-  sendCookies: z.boolean().default(false),
-  disableRenderRequestBody: z.boolean().default(false),
+  cookies: z.object({
+    store: z.boolean().default(false),
+    send: z.boolean().default(false),
+  }),
+  renderRequestBody: z.boolean().default(true),
   encodeUrl: z.boolean().default(true),
   rebuildPath: z.boolean().default(true),
   followRedirects: z.enum(['global', 'on', 'off']).default('global'),
@@ -308,8 +310,10 @@ export const RequestSettingsSchema = z.object({
 
 export const WebSocketRequestSettingsSchema = z.object({
   encodeUrl: z.boolean().default(true),
-  storeCookies: z.boolean().default(true),
-  sendCookies: z.boolean().default(true),
+  cookies: z.object({
+    store: z.boolean().default(true),
+    send: z.boolean().default(true),
+  }),
   followRedirects: z.enum(['global', 'on', 'off']).default('global'),
 });
 
@@ -374,12 +378,14 @@ export const RequestSchema = z.object({
   authentication: AuthenticationSchema.optional(),
   scripts: ScriptsSchema.optional(),
   settings: RequestSettingsSchema.optional().default({
-    disableRenderRequestBody: false,
+    renderRequestBody: true,
     encodeUrl: true,
     followRedirects: 'global',
     rebuildPath: true,
-    sendCookies: true,
-    storeCookies: true,
+    cookies: {
+      send: true,
+      store: true,
+    },
   }),
   meta: MetaSchema.extend({
     sortKey: z.number().optional(),
@@ -396,8 +402,10 @@ export const WebsocketRequestSchema = z.object({
   settings: WebSocketRequestSettingsSchema.optional().default({
     encodeUrl: true,
     followRedirects: 'global',
-    sendCookies: true,
-    storeCookies: true,
+    cookies: {
+      send: true,
+      store: true,
+    },
   }),
   meta: MetaSchema.extend({
     sortKey: z.number().optional(),
