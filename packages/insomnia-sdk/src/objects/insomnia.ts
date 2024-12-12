@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
 import type { RequestHeader } from 'insomnia/src/models/request';
 import type { Settings } from 'insomnia/src/models/settings';
+import { filterClientCertificates } from 'insomnia/src/network/certificate';
 
 import { toPreRequestAuth } from './auth';
 import { CookieObject } from './cookies';
@@ -167,16 +168,29 @@ export async function initInsomniaObject(
         localVars: localVariables,
     });
 
-    const existClientCert = rawObj.clientCertificates != null && rawObj.clientCertificates.length > 0;
-    const certificate = existClientCert && rawObj.clientCertificates[0] ?
+    const reqUrl = toUrlObject(rawObj.request.url);
+    reqUrl.addQueryParams(
+        rawObj.request.parameters
+            .filter(param => !param.disabled)
+            .map(param => ({ key: param.name, value: param.value }))
+    );
+
+    // hack: sanitize a template reference if it exists in the hostname
+    // so we can filter certificates without a full render on the request
+    const host = reqUrl.getHost().replaceAll(/{{\s*\_\./g, '{{');
+    const renderedHost = variables.replaceIn(host);
+
+    const filteredCerts = filterClientCertificates(rawObj.clientCertificates || [], renderedHost, 'https:');
+    const existingClientCert = filteredCerts != null && filteredCerts.length > 0 && filteredCerts[0];
+    const certificate = existingClientCert ?
         {
-            disabled: rawObj.clientCertificates[0].disabled,
+            disabled: existingClientCert.disabled,
             name: 'The first certificate from Settings',
-            matches: [rawObj.clientCertificates[0].host],
-            key: { src: rawObj.clientCertificates[0].key || '' },
-            cert: { src: rawObj.clientCertificates[0].cert || '' },
-            passphrase: rawObj.clientCertificates[0].passphrase || undefined,
-            pfx: { src: rawObj.clientCertificates[0].pfx || '' }, // PFX or PKCS12 Certificate
+            matches: [existingClientCert.host],
+            key: { src: existingClientCert.key || '' },
+            cert: { src: existingClientCert.cert || '' },
+            passphrase: existingClientCert.passphrase || undefined,
+            pfx: { src: existingClientCert.pfx || '' }, // PFX or PKCS12 Certificate
         } :
         { disabled: true };
 
@@ -185,13 +199,6 @@ export async function initInsomniaObject(
         rawObj.settings.httpsProxy,
         rawObj.settings.proxyEnabled,
         rawObj.settings.noProxy,
-    );
-
-    const reqUrl = toUrlObject(rawObj.request.url);
-    reqUrl.addQueryParams(
-        rawObj.request.parameters
-            .filter(param => !param.disabled)
-            .map(param => ({ key: param.name, value: param.value }))
     );
 
     const reqOpt: RequestOptions = {

@@ -534,10 +534,8 @@ export function mergeClientCertificates(
             modified: 0,
             created: 0,
             isPrivate: false,
-            name: updatedReq.name || '',
-            host: updatedReq.url.getHost() || '',
-            disabled: updatedReq.disabled || false,
-
+            name: updatedReq.certificate.name || '',
+            disabled: updatedReq.certificate.disabled || false,
             key: updatedReq.certificate.key?.src,
             cert: updatedReq.certificate.cert?.src,
             passphrase: updatedReq.certificate.passphrase || null,

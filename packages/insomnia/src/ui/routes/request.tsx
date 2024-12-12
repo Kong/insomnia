@@ -483,14 +483,14 @@ export const sendActionImplementation = async ({
   iterationCount,
   transientVariables,
 }: {
-    requestId: string;
+  requestId: string;
   shouldPromptForPathAfterResponse: boolean | undefined;
   ignoreUndefinedEnvVariable: boolean | undefined;
   testResultCollector?: RunnerContextForRequest;
-    iteration?: number;
-    iterationCount?: number;
-    userUploadEnvironment?: UserUploadEnvironment;
-    transientVariables?: Environment;
+  iteration?: number;
+  iterationCount?: number;
+  userUploadEnvironment?: UserUploadEnvironment;
+  transientVariables?: Environment;
 }) => {
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);

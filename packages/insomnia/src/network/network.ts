@@ -205,6 +205,7 @@ export const tryToExecutePreRequestScript = async (
       globals: activeGlobalEnvironment,
       userUploadEnvironment,
       requestTestResults: new Array<RequestTestResult>(),
+      transientVariables,
     };
   }
   const joinedScript = [...folderScripts].join('\n');
@@ -550,8 +551,8 @@ export const tryToInterpolateRequest = async ({
   purpose?: RenderPurpose;
   extraInfo?: ExtraRenderInfo;
   baseEnvironment?: Environment;
-    userUploadEnvironment?: UserUploadEnvironment;
-    transientVariables?: Environment;
+  userUploadEnvironment?: UserUploadEnvironment;
+  transientVariables?: Environment;
   ignoreUndefinedEnvVariable?: boolean;
 }
 ) => {
