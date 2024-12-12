@@ -17,7 +17,7 @@ const initialFormValue = {
   name: '',
 };
 export const providerType: CloudProviderName = 'gcp';
-const requiredFields = ['type', 'project_id', 'private_key_id', 'private_key', 'client_email'];
+const requiredFields = ['project_id', 'private_key_id', 'private_key', 'client_email'];
 const validateUserInputKey = (serviceAccountKey: object) => {
   let isValidInput = true;
   let errorMessage = '';
@@ -165,7 +165,7 @@ export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
             >
               <Button className="flex flex-1 flex-shrink-0 border-solid border border-[--hl-`sm] py-1 gap-2 items-center justify-center px-4 aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent transition-all text-base">
                 <Icon icon="upload" />
-                <span>{serviceAccountKey ? 'Change Key File' : 'Select Key File'}</span>
+                <span>{(serviceAccountKey || isEdit) ? 'Change Key File' : 'Select Key File'}</span>
               </Button>
             </FileTrigger>
           </div> :

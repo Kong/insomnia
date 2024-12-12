@@ -5,6 +5,7 @@ import { useFetcher } from 'react-router-dom';
 import { type CloudProviderCredential, type CloudProviderName, getProviderDisplayName } from '../../../models/cloud-credential';
 import { usePlanData } from '../../hooks/use-plan';
 import { useRootLoaderData } from '../../routes/root';
+import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
@@ -131,18 +132,23 @@ export const CloudServiceCredentialList = () => {
           </thead>
           <tbody>
             {cloudCredentials.map(cloudCred => {
-              const { _id, name, provider } = cloudCred;
+              const { _id, name, provider, credentials } = cloudCred;
               return (
                 <tr key={_id}>
                   <td >
                     {name}
+                    {provider === 'gcp' &&
+                      <HelpTooltip info className="space-left">
+                        {`Client Email: ${credentials.client_email}`}
+                      </HelpTooltip>
+                    }
                   </td>
                   <td className='w-36'>
                     {getProviderDisplayName(provider!)}
                   </td>
                   <td className='w-52 whitespace-nowrap'>
                     <div className='flex gap-2'>
-                      {provider === 'aws' &&
+                      {(provider === 'aws' || provider === 'gcp') &&
                         <Button
                           className={`${buttonClassName} w-16`}
                           onPress={() => setModalState({ show: true, provider: provider!, credential: cloudCred })}

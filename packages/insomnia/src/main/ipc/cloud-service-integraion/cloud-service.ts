@@ -2,7 +2,7 @@ import type { AuthenticationResult as AzureOAuthCredential } from '@azure/msal-n
 import type { JWTInput } from 'google-auth-library';
 
 import * as models from '../../../models';
-import type { AWSTemporaryCredential, CloudeProviderCredentialType, CloudProviderName } from '../../../models/cloud-credential';
+import type { AWSTemporaryCredential, BaseCloudCredential, CloudProviderName } from '../../../models/cloud-credential';
 import { ipcMainHandle, ipcMainOn } from '../electron';
 import { type AWSGetSecretConfig, AWSService } from './aws-service';
 import { AzureService } from './azure-service';
@@ -22,7 +22,7 @@ export interface cloudServiceBridgeAPI {
 }
 export interface CloudServiceAuthOption {
   provider: CloudProviderName;
-  credentials: CloudeProviderCredentialType;
+  credentials: BaseCloudCredential['credentials'];
 }
 export interface CloudServiceSecretOption<T extends {}> extends CloudServiceAuthOption {
   secretId: string;
@@ -41,7 +41,7 @@ export function registerCloudServiceHandlers() {
 
 // factory pattern to create cloud service class based on its provider name
 class ServiceFactory {
-  static createCloudService(name: CloudProviderName, credential: CloudeProviderCredentialType) {
+  static createCloudService(name: CloudProviderName, credential: BaseCloudCredential['credentials']) {
     switch (name) {
       case 'aws':
         return new AWSService(credential as AWSTemporaryCredential);

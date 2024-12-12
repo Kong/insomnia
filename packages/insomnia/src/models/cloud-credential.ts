@@ -15,13 +15,26 @@ export interface AWSTemporaryCredential {
   sessionToken: string;
   region: string;
 }
-export type CloudeProviderCredentialType = AWSTemporaryCredential | AzureOAuthCredential | JWTInput;
-
-export interface BaseCloudCredential {
+interface IBaseCloudCredential {
   name: string;
   provider: CloudProviderName;
-  credentials: CloudeProviderCredentialType;
 }
+export interface AWSCloudCredential extends IBaseCloudCredential {
+  name: string;
+  provider: 'aws';
+  credentials: AWSTemporaryCredential;
+}
+export interface AzureCloudCredential extends IBaseCloudCredential {
+  name: string;
+  provider: 'azure';
+  credentials: AzureOAuthCredential;
+}
+export interface GCPCloudCredential extends IBaseCloudCredential {
+  name: string;
+  provider: 'gcp';
+  credentials: JWTInput;
+}
+export type BaseCloudCredential = AWSCloudCredential | AzureCloudCredential | GCPCloudCredential;
 export type CloudProviderCredential = BaseModel & BaseCloudCredential;
 
 export const name = 'Cloud Credential';

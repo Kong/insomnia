@@ -14,16 +14,19 @@ export class GCPService implements ICloudService {
     this._credential = credential;
   }
 
-  async authenticate(): Promise<CloudServiceResult<{ projectId: string }>> {
+  async authenticate(): Promise<CloudServiceResult<{}>> {
     const credentials = this._credential;
     const auth = new GoogleAuth({
       credentials,
+      scopes: ['https://www.googleapis.com/auth/cloud-platform'], // General scope for GCP
     });
     try {
-      const projectId = await auth.getProjectId();
+      const client = await auth.getClient();
+      // use get access token to validate credential
+      await client.getAccessToken();
       return {
         success: true,
-        result: { projectId },
+        result: {},
       };
     } catch (error) {
       return {
