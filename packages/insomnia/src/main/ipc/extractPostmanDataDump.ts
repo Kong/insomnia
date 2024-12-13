@@ -33,21 +33,33 @@ export default async function extractPostmanDataDumpHandler(_event: unknown, dat
     };
   }
 
-  const collectionList: string[] = [];
-  const envList: string[] = [];
+  interface FileDetail {
+    contentStr: string;
+    oriFileName: string;
+  }
+
+  const collectionList: FileDetail[] = [];
+  const envList: FileDetail[] = [];
 
   // get collections and environments listed in archive.json
   try {
     files.filter(file => file !== archiveJsonFile).forEach(file => {
       const id = path.basename(file.path, '.json');
+      const oriFileName = path.basename(file.path);
       if (id in archiveJsonData.collection) {
-        collectionList.push(file.data.toString());
+        collectionList.push({
+          contentStr: file.data.toString(),
+          oriFileName,
+        });
       } else if (id in archiveJsonData.environment) {
         const fileContentStr = file.data.toString();
         const fileJson = JSON.parse(fileContentStr);
         // Set the scope to environment, because it's not set in the file
         fileJson._postman_variable_scope = 'environment';
-        envList.push(JSON.stringify(fileJson));
+        envList.push({
+          contentStr: JSON.stringify(fileJson),
+          oriFileName,
+        });
       }
     });
   } catch (err) {

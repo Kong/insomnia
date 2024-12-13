@@ -81,12 +81,10 @@ export interface ImportRequest<T extends {} = {}> extends Comment {
   afterResponseScript?: string;
   metaSortKey?: number;
   scope?: string;
-  workspaceUuid?: string;
 }
 
 export type Converter<T extends {} = {}> = (
   rawData: string,
-  extProp?: Record<string, any>,
 ) => ImportRequest<T>[] | Promise<ImportRequest<T>[] | null> | null;
 
 export interface Importer {

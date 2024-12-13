@@ -18,7 +18,6 @@ export interface BaseWorkspace {
   description: string;
   certificates?: any; // deprecated
   scope: 'design' | 'collection' | 'mock-server' | 'environment';
-  workspaceUuid?: string;
 }
 
 export type WorkspaceScope = BaseWorkspace['scope'];

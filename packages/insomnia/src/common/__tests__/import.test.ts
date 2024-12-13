@@ -41,12 +41,10 @@ describe('importRaw()', () => {
 
     const projectToImportTo = await project.create();
 
-    const scanResult = await importUtil.scanResources({
-      content,
-    });
+    const scanResult = await importUtil.scanResources([content]);
 
-    expect(scanResult.type?.id).toBe('curl');
-    expect(scanResult.errors.length).toBe(0);
+    expect(scanResult[0].type?.id).toBe('curl');
+    expect(scanResult[0].errors.length).toBe(0);
 
     await importUtil.importResourcesToProject({
       projectId: projectToImportTo._id,
@@ -73,12 +71,10 @@ describe('importRaw()', () => {
 
     const existingWorkspace = await workspace.create();
 
-    const scanResult = await importUtil.scanResources({
-      content,
-    });
+    const scanResult = await importUtil.scanResources([content]);
 
-    expect(scanResult.type?.id).toBe('curl');
-    expect(scanResult.errors.length).toBe(0);
+    expect(scanResult[0].type?.id).toBe('curl');
+    expect(scanResult[0].errors.length).toBe(0);
 
     await importUtil.importResourcesToWorkspace({
       workspaceId: existingWorkspace._id,
@@ -97,12 +93,10 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'postman', 'aws-signature-auth-v2_0-input.json');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
     const projectToImportTo = await project.create();
-    const scanResult = await importUtil.scanResources({
-      content,
-    });
+    const scanResult = await importUtil.scanResources([content]);
 
-    expect(scanResult.type?.id).toBe('postman');
-    expect(scanResult.errors.length).toBe(0);
+    expect(scanResult[0].type?.id).toBe('postman');
+    expect(scanResult[0].errors.length).toBe(0);
 
     await importUtil.importResourcesToProject({
       projectId: projectToImportTo._id,
@@ -126,12 +120,10 @@ describe('importRaw()', () => {
 
     const existingWorkspace = await workspace.create();
 
-    const scanResult = await importUtil.scanResources({
-      content,
-    });
+    const scanResult = await importUtil.scanResources([content]);
 
-    expect(scanResult.type?.id).toBe('postman');
-    expect(scanResult.errors.length).toBe(0);
+    expect(scanResult[0].type?.id).toBe('postman');
+    expect(scanResult[0].errors.length).toBe(0);
 
     await importUtil.importResourcesToWorkspace({
       workspaceId: existingWorkspace._id,
@@ -149,12 +141,10 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const scanResult = await importUtil.scanResources({
-      content,
-    });
+    const scanResult = await importUtil.scanResources([content]);
 
-    expect(scanResult.type?.id).toBe('openapi3');
-    expect(scanResult.errors.length).toBe(0);
+    expect(scanResult[0].type?.id).toBe('openapi3');
+    expect(scanResult[0].errors.length).toBe(0);
   });
 
 });
