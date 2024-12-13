@@ -16,9 +16,10 @@ import type { Workspace } from '../../../models/workspace';
 import * as plugins from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import * as templating from '../../../templating';
-import type {
-  NunjucksParsedTag,
-  NunjucksParsedTagArg,
+import {
+  sanitizeStrForWin32,
+  type NunjucksParsedTag,
+  type NunjucksParsedTagArg,
 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
@@ -104,7 +105,7 @@ export const TagEditor: FC<Props> = props => {
     // Fix strings: arg.value expects an escaped value (based on updateArg logic)
     for (const arg of activeTagData.args) {
       if (typeof arg.value === 'string') {
-        arg.value = arg.value.replace(/\\/g, '\\\\');
+        arg.value = sanitizeStrForWin32(arg.value);
       }
     }
     await Promise.all([
@@ -137,7 +138,7 @@ export const TagEditor: FC<Props> = props => {
     }
     // Fix strings
     if (typeof argValue === 'string') {
-      argValue = argValue.replace(/\\/g, '\\\\');
+      argValue = sanitizeStrForWin32(argValue);
     }
     // Ensure all arguments exist
     const defaultArgs = templateUtils.tokenizeTag(templateUtils.getDefaultFill(
@@ -342,7 +343,7 @@ export const TagEditor: FC<Props> = props => {
             const encoding = argDefinition.encoding || 'utf8';
             argInput = (<input
               type="text"
-              defaultValue={strValue.replace(/\\\\/g, '\\') || ''}
+              defaultValue={sanitizeStrForWin32(strValue)}
               placeholder={placeholder}
               onChange={handleChange}
               data-encoding={encoding}
@@ -365,7 +366,7 @@ export const TagEditor: FC<Props> = props => {
               showFileName
               className="btn btn--clicky btn--super-compact"
               onChange={path => updateArg(path, index)}
-              path={strValue.replace(/\\\\/g, '\\')}
+              path={sanitizeStrForWin32(strValue)}
               itemtypes={argDefinition.itemTypes}
               extensions={argDefinition.extensions}
             />);

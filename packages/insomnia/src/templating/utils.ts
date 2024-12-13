@@ -327,3 +327,7 @@ export interface nunjucksTagContextMenuOptions extends Exclude<ReturnType<typeof
 }
 
 export const responseTagRegex = new RegExp('{% *response *.* %}');
+
+export function sanitizeStrForWin32(path: string) {
+  return path.replace(/\\/g, '\\\\\\\\');
+}
