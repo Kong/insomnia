@@ -17,9 +17,9 @@ import * as plugins from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import * as templating from '../../../templating';
 import {
-  sanitizeStrForWin32,
   type NunjucksParsedTag,
   type NunjucksParsedTagArg,
+  sanitizeStrForWin32,
 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
