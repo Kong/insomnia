@@ -515,6 +515,8 @@ export function mergeClientCertificates(
             ...baseCertificate,
             key: null,
             cert: null,
+            name: updatedReq.certificate.name || '',
+            disabled: updatedReq.certificate.disabled || false,
             passphrase: updatedReq.certificate.passphrase || null,
             pfx: updatedReq.certificate.pfx?.src,
         }];

@@ -180,7 +180,9 @@ export async function initInsomniaObject(
     const host = reqUrl.getHost().replace(/{{\s*\_\./g, '{{');
     const renderedHost = variables.replaceIn(host);
 
-    const filteredCerts = filterClientCertificates(rawObj.clientCertificates || [], renderedHost, 'https:');
+    const renderedBaseUrl = toUrlObject(`${reqUrl.protocol}//${renderedHost}`);
+
+    const filteredCerts = filterClientCertificates(rawObj.clientCertificates || [], renderedBaseUrl.toString());
     const existingClientCert = filteredCerts != null && filteredCerts.length > 0 && filteredCerts[0];
     const certificate = existingClientCert ?
         {

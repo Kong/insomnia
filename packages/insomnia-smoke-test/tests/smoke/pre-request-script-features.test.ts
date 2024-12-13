@@ -381,7 +381,7 @@ test.describe('pre-request features tests', async () => {
         // update proxy configuration
         await page.locator('text=Add Certificates').click();
         await page.locator('text=Add client certificate').click();
-        await page.locator('[name="host"]').fill('a.com');
+        await page.locator('[name="host"]').fill('127.0.0.1');
         await page.locator('[data-key="pfx"]').click();
 
         const fileChooserPromise = page.waitForEvent('filechooser');
