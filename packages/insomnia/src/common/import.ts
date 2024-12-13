@@ -116,9 +116,9 @@ interface ResourceCacheType {
 
 let resourceCacheList: ResourceCacheType[] = [];
 
-export function scanResources(contentList: string[] | ImportFileDetail[]): Promise<ScanResult[]> {
+export async function scanResources(contentList: string[] | ImportFileDetail[]): Promise<ScanResult[]> {
   resourceCacheList = [];
-  return Promise.allSettled(contentList.map(async content => {
+  const results = await Promise.allSettled(contentList.map(async content => {
     const contentStr = typeof content === 'string' ? content : content.contentStr;
     const oriFileName = typeof content === 'string' ? '' : content.oriFileName;
 
@@ -181,14 +181,13 @@ export function scanResources(contentList: string[] | ImportFileDetail[]): Promi
       oriFileName,
       errors: [],
     };
-  })).then(
-    results => results.map(
-      retObj => retObj.status === 'fulfilled'
-        ? retObj.value
-        : {
-          errors: [retObj.reason.toString()],
-        }
-    )
+  }));
+  return results.map(
+    retObj => retObj.status === 'fulfilled'
+      ? retObj.value
+      : {
+        errors: [retObj.reason.toString()],
+      }
   );
 }
 

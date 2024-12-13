@@ -26,14 +26,7 @@ import { Button } from '../themed-button';
 
 const Pill: FC<PropsWithChildren> = ({ children }) => (
   <div
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 'var(--padding-xs)',
-      padding: 'var(--padding-sm)',
-      borderRadius: 'var(--radius-md)',
-      fontSize: 'var(--font-size-xs)',
-    }}
+    className="flex items-center gap-[var(--padding-xs)] p-[var(--padding-sm)] rounded-[var(--radius-md)] text-[length:var(--font-size-xs)]"
   >
     {children}
   </div>
@@ -59,25 +52,12 @@ const Radio: FC<{
         defaultChecked={defaultChecked}
         onChange={onChange}
         style={{
-          position: 'absolute',
-          width: '1px',
-          height: '1px',
-          padding: '0',
-          margin: '-1px',
-          overflow: 'hidden',
           clip: 'rect(0,0,0,0)',
-          whiteSpace: 'nowrap',
-          borderWidth: '0',
         }}
+        className="absolute w-px h-px overflow-hidden whitespace-nowrap -m-px p-0 border-0"
       />
       <label
-        style={{
-          padding: 'var(--padding-sm)',
-          borderRadius: 'var(--radius-md)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--padding-sm)',
-        }}
+        className="p-[var(--padding-sm)] rounded-[var(--radius-md)] flex items-center gap-[var(--padding-sm)]"
         data-test-id={`import-from-${value}`}
         htmlFor={id}
       >{children}</label>
@@ -131,7 +111,7 @@ const FileField: FC = () => {
   return (
     <div>
       <input
-        style={{ display: 'none' }}
+        className="hidden"
         onChange={e => {
           const files = e.target.files;
           if (files) {
@@ -152,34 +132,18 @@ const FileField: FC = () => {
       />
       <label
         {...dropProps}
-        style={{
-          padding: 'var(--padding-sm)',
-          borderRadius: 'var(--radius-md)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--padding-sm)',
-          backgroundColor: 'var(--hl-xs)',
-          flexWrap: 'wrap',
-          border: isDropTarget ? '1px solid var(--color-surprise)' : '1px solid var(--hl-md)',
-        }}
+        className={classNames(
+          'p-[var(--padding-sm)] rounded-[var(--radius-md)] flex items-center gap-[var(--padding-sm)] bg-[color:var(--hl-xs)] flex-wrap border border-solid',
+          {
+            'border-[color:var(--color-surprise)]': isDropTarget,
+            'border-[color:var(--hl-md)]': !isDropTarget,
+          }
+        )}
         htmlFor={id}
       >
         <input type="hidden" name="filePaths" value={filePaths} />
         {filePathList.length ? (<div
-          style={{
-            backgroundColor: 'var(--color-bg)',
-            borderRadius: 'var(--radius-md)',
-            textOverflow: 'ellipsis',
-            overflow: 'hidden',
-            whiteSpace: 'nowrap',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 'var(--padding-md)',
-            gap: 'var(--padding-sm)',
-            width: '100%',
-          }}
+          className="bg-[color:var(--color-bg)] rounded-[var(--radius-md)] text-ellipsis overflow-hidden whitespace-nowrap flex flex-col items-center justify-center p-[var(--padding-md)] gap-[var(--padding-sm)] w-full"
         >
           {entryList.map(({ name, type }) => (
             <div
@@ -194,15 +158,7 @@ const FileField: FC = () => {
           ))}
         </div>) : (
             <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: 'var(--padding-md)',
-                gap: 'var(--padding-sm)',
-                width: '100%',
-              }}
+              className="flex flex-col items-center justify-center p-[var(--padding-md)] gap-[var(--padding-sm)] w-full"
             >
               <div>
                 <i className="fa fa-upload fa-xl" />
@@ -210,9 +166,7 @@ const FileField: FC = () => {
               <div>
                 Drag and Drop or{' '}
                 <span
-                  style={{
-                    color: 'var(--color-surprise)',
-                  }}
+                  className="text-[color:var(--color-surprise)]"
                 >
                   Choose Files
                 </span>{' '}
@@ -514,37 +468,20 @@ const ScanResourcesForm = ({
   return (
     <Fragment>
       <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        className='flex flex-col'
       >
         <form
           aria-label="Import from"
           id={id}
           onSubmit={onSubmit}
           method="post"
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 'var(--padding-sm)',
-          }}
+          className='flex flex-col gap-[var(--padding-sm)]'
         >
           <fieldset
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 'var(--padding-md)',
-            }}
+            className='flex flex-col gap-[var(--padding-md)]'
           >
             <div
-              style={{
-                display: 'flex',
-                padding: 'var(--padding-xs)',
-                border: '1px solid var(--hl-md)',
-                borderRadius: 'var(--radius-md)',
-                backgroundColor: 'var(--hl-xs)',
-              }}
+              className='flex p-[var(--padding-xs)] border border-[color:var(--hl-md)] rounded-[var(--radius-md)] bg-[color:var(--hl-xs)] border-solid'
             >
               <Radio
                 onChange={() => setImportFrom('file')}
@@ -592,37 +529,23 @@ const ScanResourcesForm = ({
         </form>
         {scanResults && (
           <div
-            style={{
-              overflowY: 'auto',
-            }}
-            className='margin-top-sm'
+            className='margin-top-sm overflow-y-auto'
           >
             <ScanResultsTable scanResults={scanResults} />
           </div>
         )}
       </div>
       <div
-        style={{
-          display: 'flex',
-          gap: 'var(--padding-sm)',
-          justifyContent: 'space-between',
-          alignItems: 'flex-end',
-        }}
+        className='flex gap-[var(--padding-sm)] justify-between items-end'
       >
         <div>
           <div
-            style={{
-              paddingBottom: 'var(--padding-sm)',
-            }}
+            className='pb-[var(--padding-sm)]'
           >
             Supported Formats
           </div>
           <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 'var(--padding-sm)',
-            }}
+            className='flex flex-wrap gap-[var(--padding-sm)]'
           >
             <Pill>
               <InsomniaIcon />
@@ -658,12 +581,8 @@ const ScanResourcesForm = ({
           variant="contained"
           bg="surprise"
           type="submit"
-          style={{
-            height: '40px',
-            gap: 'var(--padding-sm)',
-          }}
           form={id}
-          className="btn"
+          className="btn h-10 gap-[var(--padding-sm)]"
         >
           <i className="fa fa-file-import" /> Scan
           {loading && (<Icon icon="spinner" className="animate-spin ml-[4px]" />)}
@@ -697,11 +616,7 @@ const ImportResourcesForm = ({
   return (
     <Fragment>
       <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--padding-md)',
-        }}
+        className='flex flex-col gap-[var(--padding-md)]'
       >
         <form
           onSubmit={onSubmit}
@@ -715,9 +630,7 @@ const ImportResourcesForm = ({
           <input hidden name="workspaceId" readOnly value={defaultWorkspaceId} />
         </form>
         <div
-          style={{
-            overflowY: 'auto',
-          }}
+          className='overflow-y-auto'
         >
           <ScanResultsTable scanResults={scanResults} />
         </div>
@@ -732,25 +645,15 @@ const ImportResourcesForm = ({
       </div>
 
       <div
-        style={{
-          display: 'flex',
-          gap: 'var(--padding-sm)',
-          width: '100%',
-          justifyContent: 'flex-end',
-          alignItems: 'flex-end',
-        }}
+        className='flex gap-[var(--padding-sm)] w-full justify-end items-end'
       >
         <Button
           variant="contained"
           bg="surprise"
           type="submit"
           disabled={disabled}
-          style={{
-            height: '40px',
-            gap: 'var(--padding-sm)',
-          }}
           form={id}
-          className="btn"
+          className="btn h-10 gap-[var(--padding-sm)]"
         >
           {loading ? (
             <div>
@@ -781,14 +684,9 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
               <tr className="table--no-outline-row">
                 <td className="bg-[color:var(--hl-xxs)]">
                   <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 'var(--padding-sm)',
-                    }}
                     className={classNames({
                       'text-danger': hasErrors,
-                    })}
+                    }, 'flex items-center gap-[var(--padding-sm)]')}
                   >
                     {hasErrors ? (
                       <Fragment>
@@ -850,13 +748,7 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
                       className="table--no-outline-row"
                     >
                       <td>
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 'var(--padding-md)',
-                          }}
-                        >
+                          <div className="flex items-center gap-[var(--padding-md)]">
                           {scanResult.apiSpecs.length}{' '}
                           {scanResult.apiSpecs.length === 1 ? 'OpenAPI Spec' : 'OpenAPI Specs'}
                         </div>
