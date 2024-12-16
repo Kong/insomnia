@@ -173,7 +173,7 @@ async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: bool
     throwOnUndefined,
     // Strict mode
     tags: {
-      blockStart: '{%',
+      blockStart: '{% ',
       blockEnd: '%}',
       variableStart: '{{',
       variableEnd: '}}',

@@ -44,7 +44,8 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
     },
     show: ({ onDone, template, editorId }) => {
       setState({
-        isTag: template.indexOf('{%') === 0,
+        // both '{%}' and '{%%}' are not tags
+        isTag: template.indexOf('{%') === 0 && template.indexOf('%}') > 2,
         template,
         onDone,
         editorId,
