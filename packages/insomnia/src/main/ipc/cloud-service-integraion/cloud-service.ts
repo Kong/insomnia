@@ -1,5 +1,4 @@
 import type { AuthenticationResult as AzureOAuthCredential } from '@azure/msal-node';
-import type { JWTInput } from 'google-auth-library';
 
 import * as models from '../../../models';
 import type { AWSTemporaryCredential, BaseCloudCredential, CloudProviderName } from '../../../models/cloud-credential';
@@ -48,7 +47,7 @@ class ServiceFactory {
       case 'azure':
         return new AzureService(credential as AzureOAuthCredential);
       case 'gcp':
-        return new GCPService(credential as JWTInput);
+        return new GCPService(credential as string);
       default:
         throw new Error('Invalid cloud service provider name');
     }

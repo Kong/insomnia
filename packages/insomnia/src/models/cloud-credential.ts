@@ -1,5 +1,4 @@
 import type { AuthenticationResult as AzureOAuthCredential } from '@azure/msal-node';
-import type { JWTInput } from 'google-auth-library';
 
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
@@ -32,7 +31,7 @@ export interface AzureCloudCredential extends IBaseCloudCredential {
 export interface GCPCloudCredential extends IBaseCloudCredential {
   name: string;
   provider: 'gcp';
-  credentials: JWTInput;
+  credentials: string;
 }
 export type BaseCloudCredential = AWSCloudCredential | AzureCloudCredential | GCPCloudCredential;
 export type CloudProviderCredential = BaseModel & BaseCloudCredential;
