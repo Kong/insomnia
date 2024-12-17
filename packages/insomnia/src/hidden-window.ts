@@ -2,7 +2,6 @@ import * as Sentry from '@sentry/electron/renderer';
 import { SENTRY_OPTIONS } from 'insomnia/src/common/sentry';
 import { initInsomniaObject, InsomniaObject } from 'insomnia-sdk';
 import { Console, mergeClientCertificates, mergeCookieJar, mergeRequests, mergeSettings, type RequestContext } from 'insomnia-sdk';
-import { waitUntilTestsFinished } from 'insomnia-sdk/src/objects/test';
 import * as _ from 'lodash';
 
 export interface HiddenBrowserWindowBridgeAPI {
@@ -38,6 +37,11 @@ window.bridge.onmessage(async (data, callback) => {
   }
 });
 
+// as insomnia.test accepts an async function, prepend await to it as user don't write it
+function translateTestHandlers(script: string): string {
+  return script.replaceAll('insomnia.test(', 'await insomnia.test(');
+}
+
 // This function is duplicated in scriptExecutor.ts to run in nodejs
 // TODO: consider removing this implementation and using only nodejs scripting
 const runScript = async (
@@ -47,6 +51,7 @@ const runScript = async (
 
   const executionContext = await initInsomniaObject(context, scriptConsole.log);
 
+  const translatedScript = translateTestHandlers(script);
   const AsyncFunction = (async () => { }).constructor;
   const executeScript = AsyncFunction(
     'insomnia',
@@ -58,12 +63,10 @@ const runScript = async (
     'setImmediate',
     'queueMicrotask',
     'process',
-    'waitUntilTestsFinished',
     `
       const $ = insomnia;
       window.bridge.resetAsyncTasks(); // exclude unnecessary ones
-      ${script};
-      await waitUntilTestsFinished();
+      ${translatedScript};
       window.bridge.stopMonitorAsyncTasks();  // the next one should not be monitored
       await window.bridge.asyncTasksAllSettled();
       return insomnia;`
@@ -78,7 +81,6 @@ const runScript = async (
     undefined,
     undefined,
     undefined,
-    waitUntilTestsFinished,
   );
   if (mutatedInsomniaObject == null || !(mutatedInsomniaObject instanceof InsomniaObject)) {
     throw Error('insomnia object is invalid or script returns earlier than expected.');

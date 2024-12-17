@@ -83,20 +83,21 @@ test.describe('runner features tests', async () => {
             expect(summarizedPassedCount).toEqual(expectedPassed);
             expect(summarizedTotalCount).toEqual(expectedTotal);
         };
-        await page.getByText('5 / 7').click();
-        await verifyTestCounts(5, 7);
+        await page.getByText('6 / 8').click();
+        await verifyTestCounts(6, 8);
 
         const expectedTestOrder = [
             'folder-pre-check',
-            'req1-pre-check-skipped',
             'req1-pre-check',
+            'req1-pre-check-skipped',
             'folder-post-check',
+            'req1-post-check',
             'expected 200 to deeply equal 201',
             'req2-pre-check',
             'req2-post-check',
         ];
 
-        await verifyResultRows(page, 5, 1, 7, expectedTestOrder);
+        await verifyResultRows(page, 6, 1, 8, expectedTestOrder);
     });
 
     test('run collection runner with data upload', async ({ page }) => {
@@ -132,12 +133,12 @@ test.describe('runner features tests', async () => {
             // req2 should be skipped from pre-request script
             expect(iterationTestResultElement).not.toContainText('req2');
         }
-
-        await verifyResultRows(page, 3, 1, 5, [
+        await verifyResultRows(page, 4, 1, 6, [
             'folder-pre-check',
-            'req1-pre-check-skipped',
             'req1-pre-check',
+            'req1-pre-check-skipped',
             'folder-post-check',
+            'req1-post-check',
             'expected 200 to deeply equal 201',
         ]);
 
@@ -236,5 +237,15 @@ test.describe('runner features tests', async () => {
 
         // check result
         await page.getByText('0 / 4').first().click();
+
+        const expectedTestOrder = [
+            'async_pre_test',
+            'sync_pre_test',
+            'async_post_test',
+            'sync_post_test',
+        ];
+
+        await page.waitForTimeout(10000);
+        await verifyResultRows(page, 0, 0, 4, expectedTestOrder, 1);
     });
 });

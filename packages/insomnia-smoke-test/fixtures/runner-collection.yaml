@@ -37,6 +37,9 @@ resources:
     metaSortKey: -1636141014553
     isPrivate: false
     afterResponseScript: |-
+      insomnia.test('req1-post-check', () => {
+          insomnia.expect(insomnia.response.code).to.eql(200);
+      });
       insomnia.test('req1-post-check-failed', () => {
           insomnia.expect(insomnia.response.code).to.eql(201);
       });
@@ -383,17 +386,19 @@ resources:
     headers: []
     authentication: {}
     preRequestScript: |-
-      insomnia.test('sync_pre_test_failed', () => {
+      insomnia.test('async_pre_test', async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
         insomnia.expect(false).to.eql(true);
       });
-      insomnia.test('async_pre_test_failed', async () => {
+      insomnia.test('sync_pre_test', () => {
         insomnia.expect(false).to.eql(true);
       });
     afterResponseScript: |-
-      insomnia.test('sync_post_test_failed', () => {
+      insomnia.test('async_post_test', async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
         insomnia.expect(false).to.eql(true);
       });
-      insomnia.test('async_post_test_failed', async () => {
+      insomnia.test('sync_post_test', () => {
         insomnia.expect(false).to.eql(true);
       });
     metaSortKey: 164

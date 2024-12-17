@@ -82,11 +82,11 @@ export class InsomniaObject {
     }
 
     get test() {
-        const testHandler: TestHandler = (msg: string, fn: () => Promise<void>) => {
-            this._test(msg, fn, this.pushRequestTestResult);
+        const testHandler: TestHandler = async (msg: string, fn: () => Promise<void>) => {
+            await this._test(msg, fn, this.pushRequestTestResult);
         };
-        testHandler.skip = (msg: string, fn: () => Promise<void>) => {
-            this._skip(msg, fn, this.pushRequestTestResult);
+        testHandler.skip = async (msg: string, fn: () => Promise<void>) => {
+            await this._skip(msg, fn, this.pushRequestTestResult);
         };
 
         return testHandler;
