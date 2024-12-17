@@ -39,8 +39,8 @@ window.bridge.onmessage(async (data, callback) => {
 
 // as insomnia.test accepts an async function, prepend await to it as user don't write it
 function translateTestHandlers(script: string): string {
-  const replacedTests = script.replace('insomnia.test(', 'await insomnia.test(');
-  return replacedTests.replace('insomnia.test.skip(', 'await insomnia.test.skip(');
+  const replacedTests = script.replace(/insomnia\.test\(/g, 'await insomnia.test(');
+  return replacedTests.replace(/insomnia\.test\.skip\(/g, 'await insomnia.test.skip(');
 }
 
 // This function is duplicated in scriptExecutor.ts to run in nodejs
