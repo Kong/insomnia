@@ -109,6 +109,10 @@ export interface RequestRow {
   parentId: string;
 };
 
+const defaultAdvancedConfig = {
+  bail: true,
+};
+
 export const Runner: FC<{}> = () => {
   const [searchParams] = useSearchParams();
   const [errorMsg, setErrorMsg] = useState<null | string>(null);
@@ -122,7 +126,6 @@ export const Runner: FC<{}> = () => {
     workspaceId: string;
     direction: 'vertical' | 'horizontal';
   };
-  const [file, setFile] = useState<File | null>(null);
   const [isRunning, setIsRunning] = useState(false);
 
   const runnerId = targetFolderId ? targetFolderId : workspaceId;
@@ -133,7 +136,7 @@ export const Runner: FC<{}> = () => {
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
 
   const { runnerStateMap, updateRunnerState } = useRunnerContext();
-  const { iterationCount = 1, delay = 0, selectedKeys, advancedConfig, uploadData = [] } = runnerStateMap[runnerId] || {};
+  const { iterationCount = 1, delay = 0, selectedKeys, advancedConfig = defaultAdvancedConfig, uploadData = [], file } = runnerStateMap[runnerId] || {};
   invariant(iterationCount, 'iterationCount should not be null');
 
   const { reqList, requestRows, entityMap } = useRunnerRequestList(workspaceId, targetFolderId);
@@ -248,7 +251,7 @@ export const Runner: FC<{}> = () => {
       iterationCount,
       userUploadEnvs,
       delay,
-      bail: advancedConfig?.bail || true,
+      bail: advancedConfig?.bail,
       targetFolderId: targetFolderId || '',
     };
     submit(
@@ -685,9 +688,9 @@ export const Runner: FC<{}> = () => {
             {showUploadModal && (
               <UploadDataModal
                 onUploadFile={(file, uploadData) => {
-                  setFile(file);
                   updateRunnerState(runnerId, {
                     uploadData,
+                    file,
                     iterationCount: uploadData.length >= 1 ? uploadData.length : iterationCount,
                   });
                 }}

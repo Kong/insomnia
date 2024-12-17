@@ -9,9 +9,10 @@ interface RunnerState {
   delay: number;
   uploadData: UploadDataType[];
   advancedConfig: Record<string, boolean>;
+  file: File | null;
 }
 
-type RunnerStateMap = Record<string, RunnerState>;
+type RunnerStateMap = Record<string, Partial<RunnerState> | undefined>;
 interface ContextProps {
   runnerStateMap: RunnerStateMap;
   updateRunnerState: (runnerId: string, patch: Partial<RunnerState>) => void;
