@@ -820,9 +820,9 @@ function startExecution(workspaceId: string) {
   runnerExecutions.set(workspaceId, {});
 }
 
-function stopExecution(workspaceId: string) {
-  runnerExecutions.delete(workspaceId);
-}
+// function stopExecution(workspaceId: string) {
+//   runnerExecutions.delete(workspaceId);
+// }
 
 function updateExecution(workspaceId: string, executionInfo: ExecutionInfo) {
   const info = runnerExecutions.get(workspaceId);
