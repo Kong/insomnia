@@ -48,6 +48,14 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
   const docs: BaseModel[] = [];
 
   const settings = await models.settings.getOrCreate();
+
+  if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY) {
+    settings.proxyEnabled = true;
+    settings.httpProxy = process.env.HTTP_PROXY || '';
+    settings.httpsProxy = process.env.HTTPS_PROXY || '';
+    settings.noProxy = process.env.NO_PROXY || '';
+  }
+
   docs.push({ ...settings, ...settingsOverrides });
 
   for (const type of Object.keys(memDB)) {
