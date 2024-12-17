@@ -245,7 +245,6 @@ test.describe('runner features tests', async () => {
             'sync_post_test',
         ];
 
-        await page.waitForTimeout(10000);
         await verifyResultRows(page, 0, 0, 4, expectedTestOrder, 1);
     });
 });
