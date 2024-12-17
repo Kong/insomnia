@@ -30,6 +30,7 @@ import { RunnerTestResultPane } from '../components/panes/runner-test-result-pan
 import { ResponseTimer } from '../components/response-timer';
 import { getTimeAndUnit } from '../components/tags/time-tag';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
+import { useRunnerContext } from '../context/app/runner-context';
 import { useRunnerRequestList } from '../hooks/use-runner-request-list';
 import type { OrganizationLoaderData } from './organization';
 import { type CollectionRunnerContext, type RunnerSource, sendActionImplementation } from './request';
@@ -121,23 +122,27 @@ export const Runner: FC<{}> = () => {
     workspaceId: string;
     direction: 'vertical' | 'horizontal';
   };
-  const [iterationCount, setIterationCount] = useState<number>(1);
-  const [delay, setDelay] = useState<number>(0);
-  const [uploadData, setUploadData] = useState<UploadDataType[]>([]);
   const [file, setFile] = useState<File | null>(null);
-  const [bail, setBail] = useState<boolean>(true);
   const [isRunning, setIsRunning] = useState(false);
 
-  const runnerId = targetFolderId ? `${workspaceId}-${targetFolderId}` : workspaceId;
-
-  invariant(iterationCount, 'iterationCount should not be null');
+  const runnerId = targetFolderId ? targetFolderId : workspaceId;
 
   const { settings } = useRootLoaderData();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showCLIModal, setShowCLIModal] = useState(false);
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
 
+  const { runnerStateMap, updateRunnerState } = useRunnerContext();
+  const { iterationCount = 1, delay = 0, selectedKeys, advancedConfig, uploadData = [] } = runnerStateMap[runnerId] || {};
+  invariant(iterationCount, 'iterationCount should not be null');
+
   const { reqList, requestRows, entityMap } = useRunnerRequestList(workspaceId, targetFolderId);
+  const reqListRef = React.useRef(reqList);
+
+  useEffect(() => {
+    // sync the selected keys
+    reqListRef?.current?.setSelectedKeys(selectedKeys || new Set([]));
+  }, [runnerId, selectedKeys]);
 
   useEffect(() => {
     if (settings.forceVerticalLayout) {
@@ -243,7 +248,7 @@ export const Runner: FC<{}> = () => {
       iterationCount,
       userUploadEnvs,
       delay,
-      bail,
+      bail: advancedConfig?.bail || true,
       targetFolderId: targetFolderId || '',
     };
     submit(
@@ -265,9 +270,12 @@ export const Runner: FC<{}> = () => {
     if (Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length) {
       // unselect all
       reqList.setSelectedKeys(new Set([]));
+      updateRunnerState(runnerId, { selectedKeys: new Set([]) });
     } else {
       // select all
-      reqList.setSelectedKeys(new Set(reqList.items.map(item => item.id)));
+      const allKeys = reqList.items.map(item => item.id);
+      reqList.setSelectedKeys(new Set(allKeys));
+      updateRunnerState(runnerId, { selectedKeys: new Set(allKeys) });
     }
   };
 
@@ -279,12 +287,6 @@ export const Runner: FC<{}> = () => {
     };
     readResults();
   }, [runnerId]);
-
-  useEffect(() => {
-    if (uploadData.length >= 1) {
-      setIterationCount(uploadData.length);
-    }
-  }, [setIterationCount, uploadData]);
 
   const [timingSteps, setTimingSteps] = useState<TimingStep[]>([]);
   const [totalTime, setTotalTime] = useState({
@@ -444,7 +446,7 @@ export const Runner: FC<{}> = () => {
                         onChange={e => {
                           try {
                             if (parseInt(e.target.value, 10) > 0) {
-                              setIterationCount(parseInt(e.target.value, 10));
+                              updateRunnerState(runnerId, { iterationCount: parseInt(e.target.value, 10) });
                             }
                           } catch (ex) { }
                         }}
@@ -462,7 +464,7 @@ export const Runner: FC<{}> = () => {
                           try {
                             const delay = parseInt(e.target.value, 10);
                             if (delay >= 0) {
-                              setDelay(delay); // also update the temp settings
+                              updateRunnerState(runnerId, { delay }); // also update the temp settings
                             }
                           } catch (ex) { }
                         }}
@@ -557,8 +559,10 @@ export const Runner: FC<{}> = () => {
                     items={reqList.items}
                     selectionMode="multiple"
                     selectedKeys={reqList.selectedKeys}
-                    onSelectionChange={reqList.setSelectedKeys}
-                    defaultSelectedKeys={allKeys}
+                    onSelectionChange={keys => {
+                      reqList.setSelectedKeys(keys);
+                      updateRunnerState(runnerId, { selectedKeys: keys });
+                    }}
                     aria-label="Request Collection"
                     dragAndDropHooks={requestsDnD}
                     className="w-full h-full leading-8 text-base overflow-auto"
@@ -617,10 +621,17 @@ export const Runner: FC<{}> = () => {
                     <label className="flex items-center gap-2">
                       <input
                         name='bail'
-                        onChange={() => setBail(!bail)}
+                        onChange={() => {
+                          updateRunnerState(runnerId, {
+                            advancedConfig: {
+                              ...advancedConfig,
+                              bail: !advancedConfig?.bail,
+                            },
+                          });
+                        }}
                         type="checkbox"
                         disabled={isRunning}
-                        checked={bail}
+                        checked={advancedConfig?.bail}
                       />
                       Stop run if an error occurs
                     </label>
@@ -668,14 +679,17 @@ export const Runner: FC<{}> = () => {
                 iterationCount={iterationCount}
                 delay={delay}
                 filePath={file?.path || ''}
-                bail={bail}
+                bail={advancedConfig?.bail}
               />
             )}
             {showUploadModal && (
               <UploadDataModal
                 onUploadFile={(file, uploadData) => {
                   setFile(file);
-                  setUploadData(uploadData); // also update the temp settings
+                  updateRunnerState(runnerId, {
+                    uploadData,
+                    iterationCount: uploadData.length >= 1 ? uploadData.length : iterationCount,
+                  });
                 }}
                 userUploadData={uploadData}
                 onClose={() => setShowUploadModal(false)}
@@ -859,7 +873,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
 
   const { requests, iterationCount, delay, userUploadEnvs, bail, targetFolderId } = await request.json() as runCollectionActionParams;
   const source: RunnerSource = 'runner';
-  const runnerId = targetFolderId ? `${workspaceId}-${targetFolderId}` : workspaceId;
+  const runnerId = targetFolderId ? targetFolderId : workspaceId;
 
   let testCtx: CollectionRunnerContext = {
     source,
