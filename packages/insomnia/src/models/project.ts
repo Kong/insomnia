@@ -15,19 +15,31 @@ export const isLocalProject = (project: Pick<Project, 'remoteId'>): project is L
 export const isRemoteProject = (project: Pick<Project, 'remoteId'>): project is RemoteProject => !isLocalProject(project);
 export const projectHasSettings = (project: Pick<Project, '_id'>) => !isScratchpadProject(project);
 
-interface CommonProject {
-  name: string;
-}
+export enum PROJECT_STORAGE_TYPE {
+  LOCAL = 'local',
+  CLOUD = 'cloud',
+  GIT = 'git',
+};
 
-export interface RemoteProject extends BaseModel, CommonProject {
+export interface RemoteProject extends BaseModel {
+  storageType: PROJECT_STORAGE_TYPE.CLOUD;
   remoteId: string;
+  gitRepositoryId: null;
 }
 
-export interface LocalProject extends BaseModel, CommonProject {
+export interface GitProject extends BaseModel {
+  storageType: PROJECT_STORAGE_TYPE.GIT;
   remoteId: null;
+  gitRepositoryId: string;
 }
 
-export type Project = LocalProject | RemoteProject;
+export interface LocalProject extends BaseModel {
+  storageType: PROJECT_STORAGE_TYPE.LOCAL;
+  remoteId: null;
+  gitRepositoryId: null;
+}
+
+export type Project = LocalProject | RemoteProject | GitProject;
 
 export const isProject = (model: Pick<BaseModel, 'type'>): model is Project => (
   model.type === type
