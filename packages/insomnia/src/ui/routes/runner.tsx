@@ -15,6 +15,7 @@ import * as models from '../../models';
 import type { UserUploadEnvironment } from '../../models/environment';
 import type { RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
 import { cancelRequestById } from '../../network/cancellation';
+import { moveAfter, moveBefore } from '../../utils';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { Dropdown, DropdownItem, ItemContent } from '../components/base/dropdown';
@@ -136,16 +137,10 @@ export const Runner: FC<{}> = () => {
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
 
   const { runnerStateMap, updateRunnerState } = useRunnerContext();
-  const { iterationCount = 1, delay = 0, selectedKeys, advancedConfig = defaultAdvancedConfig, uploadData = [], file } = runnerStateMap[runnerId] || {};
+  const { iterationCount = 1, delay = 0, selectedKeys = new Set<Key>(), advancedConfig = defaultAdvancedConfig, uploadData = [], file } = runnerStateMap[runnerId] || {};
   invariant(iterationCount, 'iterationCount should not be null');
 
-  const { reqList, requestRows, entityMap } = useRunnerRequestList(workspaceId, targetFolderId);
-  const reqListRef = React.useRef(reqList);
-
-  useEffect(() => {
-    // sync the selected keys
-    reqListRef?.current?.setSelectedKeys(selectedKeys || new Set([]));
-  }, [runnerId, selectedKeys]);
+  const { reqList, requestRows, entityMap } = useRunnerRequestList(targetFolderId, runnerId);
 
   useEffect(() => {
     if (settings.forceVerticalLayout) {
@@ -169,14 +164,14 @@ export const Runner: FC<{}> = () => {
   }, [settings.forceVerticalLayout, direction]);
 
   const isConsistencyChanged = useMemo(() => {
-    if (requestRows.length !== reqList.items.length) {
+    if (requestRows.length !== reqList.length) {
       return true;
-    } else if (reqList.selectedKeys !== 'all' && Array.from(reqList.selectedKeys).length !== requestRows.length) {
+    } else if (selectedKeys !== 'all' && Array.from(selectedKeys).length !== requestRows.length) {
       return true;
     }
 
-    return requestRows.some((row: RequestRow, index: number) => row.id !== reqList.items[index].id);
-  }, [requestRows, reqList]);
+    return requestRows.some((row: RequestRow, index: number) => row.id !== reqList[index].id);
+  }, [reqList, requestRows, selectedKeys]);
 
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
     getItems: keys => {
@@ -189,11 +184,13 @@ export const Runner: FC<{}> = () => {
       });
     },
     onReorder: event => {
+      let newList = reqList;
       if (event.target.dropPosition === 'before') {
-        reqList.moveBefore(event.target.key, event.keys);
+        newList = moveBefore(reqList, event.target.key, event.keys);
       } else if (event.target.dropPosition === 'after') {
-        reqList.moveAfter(event.target.key, event.keys);
+        newList = moveAfter(reqList, event.target.key, event.keys);
       }
+      updateRunnerState(runnerId, { reqList: newList });
     },
     renderDragPreview(items) {
       return (
@@ -204,7 +201,7 @@ export const Runner: FC<{}> = () => {
     },
     renderDropIndicator(target) {
       if (target.type === 'item') {
-        const item = reqList.items.find(item => item.id === target.key);
+        const item = reqList.find(item => item.id === target.key);
         if (item) {
           return (
             <DropIndicator
@@ -229,9 +226,8 @@ export const Runner: FC<{}> = () => {
 
     window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount } });
 
-    const selected = new Set(reqList.selectedKeys);
-    const requests = Array.from(reqList.items)
-      .filter(item => selected.has(item.id));
+    const selected = new Set(selectedKeys);
+    const requests = reqList.filter(item => selected.has(item.id));
 
     // convert uploadData to environment data
     const userUploadEnvs = uploadData.map(data => {
@@ -270,14 +266,12 @@ export const Runner: FC<{}> = () => {
     navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}`);
   };
   const onToggleSelection = () => {
-    if (Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length) {
+    if (Array.from(selectedKeys).length === reqList.length) {
       // unselect all
-      reqList.setSelectedKeys(new Set([]));
       updateRunnerState(runnerId, { selectedKeys: new Set([]) });
     } else {
       // select all
-      const allKeys = reqList.items.map(item => item.id);
-      reqList.setSelectedKeys(new Set(allKeys));
+      const allKeys = reqList.map(item => item.id);
       updateRunnerState(runnerId, { selectedKeys: new Set(allKeys) });
     }
   };
@@ -409,11 +403,11 @@ export const Runner: FC<{}> = () => {
     setSelectedTab('test-results');
   }, [setSelectedTab]);
 
-  const allKeys = reqList.items.map(item => item.id);
+  const allKeys = reqList.map(item => item.id);
   const disabledKeys = useMemo(() => {
     return isRunning ? allKeys : [];
   }, [isRunning, allKeys]);
-  const isDisabled = isRunning || Array.from(reqList.selectedKeys).length === 0;
+  const isDisabled = isRunning || Array.from(selectedKeys).length === 0;
 
   const [deletedItems, setDeletedItems] = useState<string[]>([]);
   const deleteHistoryItem = (item: RunnerTestResult) => {
@@ -423,13 +417,13 @@ export const Runner: FC<{}> = () => {
 
   const selectedRequestIdsForCliCommand =
     targetFolderId !== null && targetFolderId !== ''
-      ? Array.from(reqList.items)
+      ? reqList
         .filter(item => item.ancestorIds.includes(targetFolderId))
         .map(item => item.id)
-        .filter(id => new Set(reqList.selectedKeys).has(id))
-      : Array.from(reqList.items)
+        .filter(id => selectedKeys === 'all' || selectedKeys.has(id))
+      : reqList
         .map(item => item.id)
-        .filter(id => new Set(reqList.selectedKeys).has(id));
+        .filter(id => selectedKeys === 'all' || selectedKeys.has(id));
 
   return (
     <>
@@ -548,9 +542,9 @@ export const Runner: FC<{}> = () => {
                 <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
                   <span className="mr-2">
                     {
-                      Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length ?
+                      Array.from(selectedKeys).length === Array.from(reqList).length ?
                         <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-check fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Unselect All</span></span> :
-                        Array.from(reqList.selectedKeys).length === 0 ?
+                        Array.from(selectedKeys).length === 0 ?
                           <span onClick={onToggleSelection}><i className="fa fa-square fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span> :
                           <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-minus fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span>
                     }
@@ -559,11 +553,10 @@ export const Runner: FC<{}> = () => {
                 <PaneBody placeholder className='p-0'>
                   <GridList
                     id="runner-request-list"
-                    items={reqList.items}
+                    items={reqList}
                     selectionMode="multiple"
-                    selectedKeys={reqList.selectedKeys}
+                    selectedKeys={selectedKeys}
                     onSelectionChange={keys => {
-                      reqList.setSelectedKeys(keys);
                       updateRunnerState(runnerId, { selectedKeys: keys });
                     }}
                     aria-label="Request Collection"

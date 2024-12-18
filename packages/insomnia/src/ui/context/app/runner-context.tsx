@@ -2,6 +2,7 @@ import React, { createContext, type FC, type PropsWithChildren, useCallback, use
 import type { Selection } from 'react-aria-components';
 
 import type { UploadDataType } from '../../components/modals/upload-runner-data-modal';
+import type { RequestRow } from '../../routes/runner';
 
 interface RunnerState {
   selectedKeys: Selection;
@@ -10,6 +11,7 @@ interface RunnerState {
   uploadData: UploadDataType[];
   advancedConfig: Record<string, boolean>;
   file: File | null;
+  reqList: RequestRow[];
 }
 
 type RunnerStateMap = Record<string, Partial<RunnerState> | undefined>;
