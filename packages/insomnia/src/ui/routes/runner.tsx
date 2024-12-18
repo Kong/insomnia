@@ -228,8 +228,9 @@ export const Runner: FC<{}> = () => {
 
     window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount } });
 
-    const selected = new Set(selectedKeys);
-    const requests = reqList.filter(item => selected.has(item.id));
+    const requests = selectedKeys === 'all'
+      ? reqList
+      : reqList.filter(item => (selectedKeys as Set<Key>).has(item.id));
 
     // convert uploadData to environment data
     const userUploadEnvs = uploadData.map(data => {
@@ -269,7 +270,7 @@ export const Runner: FC<{}> = () => {
     navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}`);
   };
   const onToggleSelection = () => {
-    if (Array.from(selectedKeys).length === reqList.length) {
+    if (selectedKeys === 'all' || Array.from(selectedKeys).length === Array.from(reqList).length) {
       // unselect all
       updateRunnerState(organizationId, runnerId, { selectedKeys: new Set([]) });
     } else {
@@ -545,7 +546,7 @@ export const Runner: FC<{}> = () => {
                 <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
                   <span className="mr-2">
                     {
-                      Array.from(selectedKeys).length === Array.from(reqList).length ?
+                      (selectedKeys === 'all' || Array.from(selectedKeys).length === Array.from(reqList).length) ?
                         <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-check fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Unselect All</span></span> :
                         Array.from(selectedKeys).length === 0 ?
                           <span onClick={onToggleSelection}><i className="fa fa-square fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span> :
