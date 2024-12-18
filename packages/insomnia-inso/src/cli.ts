@@ -436,10 +436,12 @@ export const go = (args?: string[]) => {
       };
 
       const proxyOptions: {
+        proxyEnabled: boolean;
         httpProxy?: string;
         httpsProxy?: string;
         noProxy?: string;
       } = {
+        proxyEnabled: Boolean(options.httpProxy || options.httpsProxy),
         httpProxy: options.httpProxy,
         httpsProxy: options.httpsProxy,
         noProxy: options.noProxy,
@@ -640,10 +642,12 @@ export const go = (args?: string[]) => {
         };
 
         const proxyOptions: {
+          proxyEnabled: boolean;
           httpProxy?: string;
           httpsProxy?: string;
           noProxy?: string;
         } = {
+          proxyEnabled: Boolean(options.httpProxy || options.httpsProxy),
           httpProxy: options.httpProxy,
           httpsProxy: options.httpsProxy,
           noProxy: options.noProxy,
