@@ -48,7 +48,6 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
   const docs: BaseModel[] = [];
 
   const settings = await models.settings.getOrCreate();
-
   docs.push({ ...settings, ...settingsOverrides });
 
   for (const type of Object.keys(memDB)) {
