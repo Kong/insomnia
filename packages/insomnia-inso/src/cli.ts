@@ -309,6 +309,25 @@ export const go = (args?: string[]) => {
   const program = new commander.Command();
   const version = process.env.VERSION || packageJson.version;
 
+  const proxySettings: {
+    proxyEnabled: boolean;
+    httpProxy: string;
+    httpsProxy: string;
+    noProxy: string;
+  } = {
+    proxyEnabled: false,
+    httpProxy: '',
+    httpsProxy: '',
+    noProxy: '',
+  };
+
+  if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY) {
+    proxySettings.proxyEnabled = true;
+    proxySettings.httpProxy = process.env.HTTP_PROXY || '';
+    proxySettings.httpsProxy = process.env.HTTPS_PROXY || '';
+    proxySettings.noProxy = process.env.NO_PROXY || '';
+  }
+
   // export and lint logic
   // Provide a path to a file which looks like an insomnia db
   // it may contain multiple workspaces, and specs.
@@ -354,7 +373,10 @@ export const go = (args?: string[]) => {
     .option('-b, --bail', 'abort ("bail") after first test failure', false)
     .option('--keepFile', 'do not delete the generated test file', false)
     .option('-k, --disableCertValidation', 'disable certificate validation for requests with SSL', false)
-    .action(async (identifier, cmd: { env: string; testNamePattern: string; reporter: TestReporter; bail: boolean; keepFile: boolean; disableCertValidation: boolean; ci: boolean }) => {
+    .option('--httpsProxy <proxy>', 'proxy server for https requests', proxySettings.httpsProxy)
+    .option('--httpProxy <proxy>', 'proxy server for http requests', proxySettings.httpProxy)
+    .option('--noProxy <proxy>', 'proxy server for no proxy requests', proxySettings.noProxy)
+    .action(async (identifier, cmd: { env: string; testNamePattern: string; reporter: TestReporter; bail: boolean; keepFile: boolean; disableCertValidation: boolean; ci: boolean; httpsProxy?: string; httpProxy?: string; noProxy?: string }) => {
       const globals: GlobalOptions = program.optsWithGlobals();
       const commandOptions = { ...globals, ...cmd };
       const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
@@ -413,8 +435,18 @@ export const go = (args?: string[]) => {
         data: {},
       };
 
+      const proxyOptions: {
+        httpProxy?: string;
+        httpsProxy?: string;
+        noProxy?: string;
+      } = {
+        httpProxy: options.httpProxy,
+        httpsProxy: options.httpsProxy,
+        noProxy: options.noProxy,
+      };
+
       try {
-        const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, transientVariables, { validateSSL: !options.disableCertValidation });
+        const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, transientVariables, { validateSSL: !options.disableCertValidation, ...proxyOptions });
         // Generate test file
         const testFileContents = generate(suites.map(suite => ({
           name: suite.name,
@@ -454,7 +486,10 @@ export const go = (args?: string[]) => {
     .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}]`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first non-200 response', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
-    .action(async (identifier, cmd: { env: string; globals: string; disableCertValidation: boolean; requestNamePattern: string; bail: boolean; item: string[]; delayRequest: string; iterationCount: string; iterationData: string; envVar: string[] }) => {
+    .option('--httpsProxy <proxy>', 'proxy server for https requests', proxySettings.httpsProxy)
+    .option('--httpProxy <proxy>', 'proxy server for http requests', proxySettings.httpProxy)
+    .option('--noProxy <proxy>', 'proxy server for no proxy requests', proxySettings.noProxy)
+    .action(async (identifier, cmd: { env: string; globals: string; disableCertValidation: boolean; requestNamePattern: string; bail: boolean; item: string[]; delayRequest: string; iterationCount: string; iterationData: string; envVar: string[]; httpsProxy?: string; httpProxy?: string; noProxy?: string }) => {
       const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
 
       const commandOptions = { ...globals, ...cmd };
@@ -603,7 +638,18 @@ export const go = (args?: string[]) => {
           name: 'Transient Variables',
           data: {},
         };
-        const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, transientVariables, { validateSSL: !options.disableCertValidation }, iterationData, iterationCount);
+
+        const proxyOptions: {
+          httpProxy?: string;
+          httpsProxy?: string;
+          noProxy?: string;
+        } = {
+          httpProxy: options.httpProxy,
+          httpsProxy: options.httpsProxy,
+          noProxy: options.noProxy,
+        };
+
+        const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, transientVariables, { validateSSL: !options.disableCertValidation, ...proxyOptions }, iterationData, iterationCount);
         let success = true;
         for (let i = 0; i < iterationCount; i++) {
           let reqIndex = 0;
