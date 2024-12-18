@@ -716,7 +716,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
                   >
                     <Icon icon="clock" />
                   </Button>
-                  <Popover className="min-w-max">
+                  <Popover className="min-w-max overflow-y-hidden flex flex-col">
                     <Menu
                       aria-label="Filter history menu"
                       selectionMode="single"
@@ -736,7 +736,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
                         name: filter,
                         key: index,
                       }))}
-                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
                     >
                       {item => (
                         <MenuItem

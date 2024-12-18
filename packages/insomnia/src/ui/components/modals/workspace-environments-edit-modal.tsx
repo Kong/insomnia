@@ -321,7 +321,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                             >
                               <Icon icon="caret-down" />
                             </Button>
-                            <Popover className="min-w-max">
+                            <Popover className="min-w-max overflow-y-hidden flex flex-col">
                               <Menu
                                 aria-label="Environment Actions menu"
                                 selectionMode="single"
@@ -331,7 +331,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                                     ?.action(item);
                                 }}
                                 items={environmentActionsList}
-                                className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                                className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
                               >
                                 {item => (
                                   <MenuItem
@@ -356,7 +356,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                               >
                                 <Icon icon="plus-circle" />
                               </Button>
-                              <Popover className="min-w-max">
+                              <Popover className="min-w-max overflow-y-hidden flex flex-col">
                                 <Menu
                                   aria-label="Create Environment menu"
                                   selectionMode="single"
@@ -366,7 +366,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                                       ?.action(item);
                                   }}
                                   items={createEnvironmentActionsList}
-                                  className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                                  className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
                                 >
                                   {item => (
                                     <MenuItem

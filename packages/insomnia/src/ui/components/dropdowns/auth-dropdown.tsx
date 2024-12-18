@@ -254,10 +254,10 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
         </SelectValue>
         <Icon icon="caret-down" />
       </Button>
-      <Popover className="min-w-max">
+      <Popover className="min-w-max overflow-y-hidden flex flex-col">
         <ListBox
           items={authTypeSections}
-          className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+          className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
         >
           {section => (
             <Section>

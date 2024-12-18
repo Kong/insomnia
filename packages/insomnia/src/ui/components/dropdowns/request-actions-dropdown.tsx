@@ -276,13 +276,13 @@ export const RequestActionsDropdown = ({
         >
           <Icon icon="caret-down" />
         </Button>
-        <Popover className="min-w-max">
+        <Popover className="min-w-max overflow-y-hidden flex flex-col">
           <Menu
             aria-label="Request Actions Menu"
             selectionMode="single"
             onAction={key => requestActionList.find(i => i.items.find(a => a.id === key))?.items.find(a => a.id === key)?.action()}
             items={requestActionList}
-            className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+            className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
           >
             {section => (
               <Section className='flex-1 flex flex-col'>

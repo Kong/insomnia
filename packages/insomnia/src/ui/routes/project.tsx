@@ -1007,10 +1007,10 @@ const ProjectRoute: FC = () => {
                     </SelectValue>
                     <Icon icon="caret-down" />
                   </Button>
-                  <Popover className="min-w-max">
+                  <Popover className="min-w-max overflow-y-hidden flex flex-col">
                     <ListBox
                       items={organizations}
-                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
                     >
                       {item => (
                         <ListBoxItem
@@ -1269,7 +1269,7 @@ const ProjectRoute: FC = () => {
                     >
                       <Icon icon="sort" />
                     </Button>
-                    <Popover className="min-w-max">
+                    <Popover className="min-w-max overflow-y-hidden flex flex-col">
                       <ListBox
                         items={DASHBOARD_SORT_ORDERS.map(order => {
                           return {
@@ -1277,7 +1277,7 @@ const ProjectRoute: FC = () => {
                             name: dashboardSortOrderName[order],
                           };
                         })}
-                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
                       >
                         {item => (
                           <ListBoxItem
@@ -1312,7 +1312,7 @@ const ProjectRoute: FC = () => {
                     >
                       <Icon icon="plus-circle" /> Create
                     </Button>
-                    <Popover className="min-w-max">
+                    <Popover className="min-w-max overflow-y-hidden flex flex-col">
                       <Menu
                         aria-label="Create in project actions"
                         selectionMode="single"
@@ -1325,7 +1325,7 @@ const ProjectRoute: FC = () => {
                           }
                         }}
                         items={createInProjectActionList}
-                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
                       >
                         {item => (
                           <MenuItem
