@@ -23,6 +23,7 @@ import { SvgIcnErrors } from './assets/svgr/IcnErrors';
 import { SvgIcnFile } from './assets/svgr/IcnFile';
 import { SvgIcnFolder } from './assets/svgr/IcnFolder';
 import { SvgIcnFolderOpen } from './assets/svgr/IcnFolderOpen';
+import { SvgIcnGCPLogo } from './assets/svgr/IcnGCPlogo';
 import { SvgIcnGear } from './assets/svgr/IcnGear';
 import { SvgIcnGitBranch } from './assets/svgr/IcnGitBranch';
 import { SvgIcnGithubLogo } from './assets/svgr/IcnGithubLogo';
@@ -131,6 +132,7 @@ export const IconEnum = {
   receive: 'receive',
   sent: 'sent',
   systemEvent: 'system-event',
+  gcpLogo: 'gcp-logo',
   /** Blank icon */
   empty: 'empty',
 } as const;
@@ -193,6 +195,7 @@ const icons: Record<IconId, [ThemeKeys, NamedExoticComponent<SVGProps<SVGSVGElem
   [IconEnum.sent]: [ThemeEnum.default, SvgIcnSent],
   [IconEnum.checkmarkCircle]: [ThemeEnum.default, SvgIcnCheckmarkCircle],
   [IconEnum.systemEvent]: [ThemeEnum.default, SvgIcnSystemEvent],
+  [IconEnum.gcpLogo]: [ThemeEnum.default, SvgIcnGCPLogo],
 };
 
 export type IconId = ValueOf<typeof IconEnum>;
