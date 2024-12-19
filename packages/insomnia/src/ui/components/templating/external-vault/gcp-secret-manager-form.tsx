@@ -17,7 +17,7 @@ export const GCPSecretManagerForm = (props: GCPSecretManagerFormProps) => {
     version = 'latest',
   } = formData;
   const handleOnChange = () => {
-    const formElement = document.getElementById('aws-secret-manager-form') as HTMLFormElement;
+    const formElement = document.getElementById('gcp-secret-manager-form') as HTMLFormElement;
     if (formElement) {
       const formData = new FormData(formElement);
       const newConfig = Object.fromEntries(formData.entries());
@@ -25,7 +25,7 @@ export const GCPSecretManagerForm = (props: GCPSecretManagerFormProps) => {
     }
   };
   return (
-    <form id='aws-secret-manager-form'>
+    <form id='gcp-secret-manager-form'>
       <div className="form-row">
         <div className="form-control">
           <label>
