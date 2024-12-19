@@ -455,8 +455,8 @@ export const Debug: FC = () => {
   // Close all websocket connections when the active environment changes
   useEffect(() => {
     return () => {
-      window.main.webSocket.closeAll();
-      window.main.grpc.closeAll();
+      // window.main.webSocket.closeAll();
+      // window.main.grpc.closeAll();
     };
   }, [activeEnvironment?._id]);
 
