@@ -75,6 +75,7 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
           provider={provider}
           providerCredential={selectedCredentialDoc}
           onClose={() => setShowModal(false)}
+          onComplete={() => onChange(configValue)}
         />
       }
     </>
