@@ -288,18 +288,19 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     preRequestScript: |-
+      const { Certificate } = require('insomnia-collection');
       // print the original one
-      console.log('key:', insomnia.request.certificate.key.src);
-      console.log('cert:', insomnia.request.certificate.cert.src);
-      console.log('passphrass:', insomnia.request.certificate.passphrass);
-      console.log('pfx:', insomnia.request.certificate.pfx.src);
+      // console.log('key:', insomnia.request.certificate.key.src);
+      // console.log('cert:', insomnia.request.certificate.cert.src);
+      // console.log('passphrass:', insomnia.request.certificate.passphrass);
+      // console.log('pfx:', insomnia.request.certificate.pfx.src);
       // update
-      insomnia.request.certificate.update({
-          disabled: true,
-          key: {src: 'invalid.key'},
-          cert: {src: 'invalid.cert'},
+      insomnia.request.certificate = new Certificate({
+          disabled: false,
+          key: {src: ''},
+          cert: {src: ''},
           passphrase: '',
-          pfx: {src: ''},
+          pfx: {src: 'fake.pfx'},
       });    
     _type: request
   - _id: req_89dade2ee9ee42fbb22d588783a9df3e

@@ -397,7 +397,7 @@ test.describe('pre-request features tests', async () => {
         await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
         // verify
         await page.getByRole('tab', { name: 'Console' }).click();
-        await expect(responsePane).toContainText('fixtures/certificates/fake.pfx'); // original proxy
+        await expect(responsePane).toContainText('Adding SSL P12 certificate');
     });
 
     test('pre: insomnia.test and insomnia.expect can work together', async ({ page }) => {
