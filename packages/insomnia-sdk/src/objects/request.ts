@@ -511,13 +511,18 @@ export function mergeClientCertificates(
         };
 
     if (updatedReq.certificate.pfx && updatedReq.certificate.pfx?.src !== '') {
-        return [{
+        const specifiedCert: ClientCertificate = {
             ...baseCertificate,
             key: null,
             cert: null,
+            name: updatedReq.certificate.name || '',
+            disabled: updatedReq.certificate.disabled || false,
             passphrase: updatedReq.certificate.passphrase || null,
             pfx: updatedReq.certificate.pfx?.src,
-        }];
+            host: '*',
+        };
+
+        return [specifiedCert, ...originalClientCertificates];
     } else if (
         updatedReq &&
         updatedReq.certificate.key &&
@@ -525,7 +530,7 @@ export function mergeClientCertificates(
         updatedReq.certificate.key?.src !== '' &&
         updatedReq.certificate.cert?.src !== ''
     ) {
-        return [{
+        const specifiedCert: ClientCertificate = {
             ...baseCertificate,
 
             _id: '',
@@ -534,15 +539,17 @@ export function mergeClientCertificates(
             modified: 0,
             created: 0,
             isPrivate: false,
-            name: updatedReq.name || '',
-            host: updatedReq.url.getHost() || '',
-            disabled: updatedReq.disabled || false,
+            name: updatedReq.certificate.name || '',
+            disabled: updatedReq.certificate.disabled || false,
+            host: '*',
 
             key: updatedReq.certificate.key?.src,
             cert: updatedReq.certificate.cert?.src,
             passphrase: updatedReq.certificate.passphrase || null,
             pfx: null,
-        }];
+        };
+
+        return [specifiedCert, ...originalClientCertificates];
     }
 
     throw Error('Invalid certificate configuration: "cert+key" and "pfx" can not be set at the same time');
