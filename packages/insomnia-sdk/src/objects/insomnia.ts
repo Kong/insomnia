@@ -167,18 +167,18 @@ export async function initInsomniaObject(
         localVars: localVariables,
     });
 
-    const existClientCert = rawObj.clientCertificates != null && rawObj.clientCertificates.length > 0;
-    const certificate = existClientCert && rawObj.clientCertificates[0] ?
-        {
-            disabled: rawObj.clientCertificates[0].disabled,
-            name: 'The first certificate from Settings',
-            matches: [rawObj.clientCertificates[0].host],
-            key: { src: rawObj.clientCertificates[0].key || '' },
-            cert: { src: rawObj.clientCertificates[0].cert || '' },
-            passphrase: rawObj.clientCertificates[0].passphrase || undefined,
-            pfx: { src: rawObj.clientCertificates[0].pfx || '' }, // PFX or PKCS12 Certificate
-        } :
-        { disabled: true };
+    // const existClientCert = rawObj.clientCertificates != null && rawObj.clientCertificates.length > 0;
+    // const certificate = existClientCert && rawObj.clientCertificates[0] ?
+    //     {
+    //         disabled: rawObj.clientCertificates[0].disabled,
+    //         name: 'The first certificate from Settings',
+    //         matches: [rawObj.clientCertificates[0].host],
+    //         key: { src: rawObj.clientCertificates[0].key || '' },
+    //         cert: { src: rawObj.clientCertificates[0].cert || '' },
+    //         passphrase: rawObj.clientCertificates[0].passphrase || undefined,
+    //         pfx: { src: rawObj.clientCertificates[0].pfx || '' }, // PFX or PKCS12 Certificate
+    //     } :
+    //     { disabled: true };
 
     const proxy = transformToSdkProxyOptions(
         rawObj.settings.httpProxy,
@@ -204,7 +204,9 @@ export async function initInsomniaObject(
         body: toScriptRequestBody(rawObj.request.body),
         auth: toPreRequestAuth(rawObj.request.authentication),
         proxy,
-        certificate,
+        // the certificate is undefined
+        // as it is difficult to find the best cert before rendering
+        certificate: undefined,
         pathParameters: rawObj.request.pathParameters,
     };
     const request = new ScriptRequest(reqOpt);
