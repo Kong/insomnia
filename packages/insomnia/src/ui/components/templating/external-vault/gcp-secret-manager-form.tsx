@@ -43,7 +43,7 @@ export const GCPSecretManagerForm = (props: GCPSecretManagerFormProps) => {
           <label>
             Version
             <HelpTooltip className="space-left">
-              Optional version of the secret to retrieve, by default as latest
+              Optional version of the secret to retrieve, by default as latest.
             </HelpTooltip>
             <input
               name='version'

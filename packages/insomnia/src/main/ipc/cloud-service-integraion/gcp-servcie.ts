@@ -98,7 +98,8 @@ export class GCPService implements ICloudService {
   }
 
   async getSecret(secretName: string, config: GCPGetSecretConfig): Promise<CloudServiceResult<{ value: string }>> {
-    const { version = 'latest' } = config;
+    const { version } = config;
+    const secretVersion = version || 'latest';
     const validateResult = this._validateKeyPath();
     if (validateResult.isValid) {
       const { credentials } = validateResult;
@@ -107,12 +108,16 @@ export class GCPService implements ICloudService {
         credentials,
       });
       const fullPathSecretNamePattern = /^projects\/[a-z0-9-]+\/secrets\/[a-zA-Z0-9_-]+$/;
+      const fullPathSecretNameWithVersionPattern = /^projects\/[a-z0-9-]+\/secrets\/[a-zA-Z0-9_-]+\/versions\/[a-zA-Z0-9_-]+$/;
       let finalSecretName: string;
       if (fullPathSecretNamePattern.test(secretName)) {
         // if secret name in pattern /projects/<project_id>/secrets/<secret_name> which is copied from gcp
-        finalSecretName = `${secretName}/versions/${version}`;
+        finalSecretName = `${secretName}/versions/${secretVersion}`;
+      } else if (fullPathSecretNameWithVersionPattern.test(secretName)) {
+        // if secret name with version in pattern /projects/<project_id>/secrets/<secret_name>/versions/<version> which is copied from gcp
+        finalSecretName = secretName;
       } else {
-        finalSecretName = `projects/${project_id}/secrets/${secretName}/versions/${version}`;
+        finalSecretName = `projects/${project_id}/secrets/${secretName}/versions/${secretVersion}`;
       }
       try {
         const [versionResponse] = await secretClient.accessSecretVersion({ name: finalSecretName });
