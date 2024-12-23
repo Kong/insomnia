@@ -283,13 +283,6 @@ async function renderApp() {
                               ).moveWorkspaceIntoProjectAction(...args),
                           },
                           {
-                            path: 'update',
-                            action: async (...args) =>
-                              (
-                                await import('./routes/actions')
-                              ).updateProjectAction(...args),
-                          },
-                          {
                             path: 'git',
                             children: [
                               {

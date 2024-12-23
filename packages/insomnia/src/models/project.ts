@@ -11,6 +11,7 @@ export const canSync = false;
 export const SCRATCHPAD_PROJECT_ID = `${prefix}_scratchpad`;
 
 export const isScratchpadProject = (project: Pick<Project, '_id'>) => project._id === SCRATCHPAD_PROJECT_ID;
+// TODO: check all
 export const isLocalProject = (project: Pick<Project, 'remoteId'>): project is LocalProject => project.remoteId === null;
 export const isRemoteProject = (project: Pick<Project, 'remoteId'>): project is RemoteProject => !isLocalProject(project);
 export const projectHasSettings = (project: Pick<Project, '_id'>) => !isScratchpadProject(project);
@@ -53,6 +54,8 @@ export function init(): Partial<Project> {
   return {
     name: 'My Project',
     remoteId: null, // `null` is necessary for the model init logic to work properly
+    gitRepositoryId: null,
+    storageType: PROJECT_STORAGE_TYPE.LOCAL,
   };
 }
 

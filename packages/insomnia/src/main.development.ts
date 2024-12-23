@@ -23,7 +23,7 @@ import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
-import type { Project, RemoteProject } from './models/project';
+import { PROJECT_STORAGE_TYPE, type Project, type RemoteProject } from './models/project';
 import type { Stats } from './models/stats';
 import type { ToastNotification } from './ui/components/toast';
 
@@ -231,7 +231,13 @@ async function _createModelInstances() {
     const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
       console.log('[main] Initializing Scratch Pad Project');
-      await models.project.create({ _id: models.project.SCRATCHPAD_PROJECT_ID, name: getProductName(), remoteId: null, parentId: models.organization.SCRATCHPAD_ORGANIZATION_ID });
+      await models.project.create({
+        _id: models.project.SCRATCHPAD_PROJECT_ID,
+        name: getProductName(),
+        remoteId: null,
+        parentId: models.organization.SCRATCHPAD_ORGANIZATION_ID,
+        storageType: PROJECT_STORAGE_TYPE.LOCAL,
+      });
     }
 
     if (!scratchPad) {
