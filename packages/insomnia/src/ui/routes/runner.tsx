@@ -129,6 +129,7 @@ export const Runner: FC<{}> = () => {
   };
   const [isRunning, setIsRunning] = useState(false);
 
+  // For backward compatibility，the runnerId we use for testResult in database is no prefix with 'runner_'
   const runnerId = targetFolderId ? targetFolderId : workspaceId;
 
   const { settings } = useRootLoaderData();

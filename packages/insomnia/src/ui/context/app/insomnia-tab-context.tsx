@@ -4,6 +4,7 @@ import { useLocalStorage } from 'react-use';
 
 import type { BaseTab } from '../../components/tabs/tab';
 import type { OrganizationTabs } from '../../components/tabs/tabList';
+import uiEventBus, { UIEventType } from '../../eventBus';
 
 interface UpdateInsomniaTabParams {
   organizationId: string;
@@ -97,6 +98,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
         tabList: [],
         activeTabId: '',
       });
+      uiEventBus.emit(UIEventType.CLOSE_TAB, [id]);
       return;
     }
 
@@ -114,6 +116,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       tabList: newTabList,
       activeTabId: currentTabs.activeTabId === id ? newTabList[Math.max(index - 1, 0)]?.id : currentTabs.activeTabId as string,
     });
+    uiEventBus.emit(UIEventType.CLOSE_TAB, [id]);
   }, [navigate, organizationId, projectId, updateInsomniaTabs]);
 
   const closeAllTabsUnderWorkspace = useCallback((workspaceId: string) => {
@@ -121,6 +124,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     if (!currentTabs) {
       return;
     }
+    const closeIds = currentTabs.tabList.filter(tab => tab.workspaceId === workspaceId).map(tab => tab.id);
     const newTabList = currentTabs.tabList.filter(tab => tab.workspaceId !== workspaceId);
 
     updateInsomniaTabs({
@@ -128,6 +132,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       tabList: newTabList,
       activeTabId: '',
     });
+    uiEventBus.emit(UIEventType.CLOSE_TAB, closeIds);
   }, [organizationId, updateInsomniaTabs]);
 
   const closeAllTabsUnderProject = useCallback((projectId: string) => {
@@ -135,6 +140,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     if (!currentTabs) {
       return;
     }
+    const closeIds = currentTabs.tabList.filter(tab => tab.projectId === projectId).map(tab => tab.id);
     const newTabList = currentTabs.tabList.filter(tab => tab.projectId !== projectId);
 
     updateInsomniaTabs({
@@ -142,6 +148,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       tabList: newTabList,
       activeTabId: '',
     });
+    uiEventBus.emit(UIEventType.CLOSE_TAB, closeIds);
   }, [organizationId, updateInsomniaTabs]);
 
   const closeAllTabs = useCallback(() => {
@@ -151,6 +158,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       tabList: [],
       activeTabId: '',
     });
+    uiEventBus.emit(UIEventType.CLOSE_TAB, 'all');
   }, [navigate, organizationId, projectId, updateInsomniaTabs]);
 
   const closeOtherTabs = useCallback((id: string) => {
@@ -171,6 +179,8 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       tabList: [reservedTab],
       activeTabId: id,
     });
+    const closeIds = currentTabs.tabList.filter(tab => tab.id !== id).map(tab => tab.id);
+    uiEventBus.emit(UIEventType.CLOSE_TAB, closeIds);
   }, [navigate, organizationId, updateInsomniaTabs]);
 
   const updateTabById = useCallback((tabId: string, patches: Partial<BaseTab>) => {
