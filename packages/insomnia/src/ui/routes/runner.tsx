@@ -1053,7 +1053,6 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       error: errMsg,
     });
     return null;
-    // return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane&error=${errMsg}&folder=${targetFolderId}`);
   } finally {
     cancelExecution(runnerId);
 
@@ -1068,7 +1067,6 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     });
   }
   return null;
-  // return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane&folder=${targetFolderId}`);
 };
 
 export const collectionRunnerStatusLoader: LoaderFunction = async ({ params }) => {
