@@ -20,6 +20,7 @@ interface ContextProps {
   changeActiveTab: (id: string) => void;
   closeAllTabsUnderWorkspace?: (workspaceId: string) => void;
   closeAllTabsUnderProject?: (projectId: string) => void;
+  batchCloseTabs?: (ids: string[]) => void;
   updateProjectName?: (projectId: string, name: string) => void;
   updateWorkspaceName?: (projectId: string, name: string) => void;
   updateTabById?: (tabId: string, patches: Partial<BaseTab>) => void;
@@ -117,6 +118,38 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       activeTabId: currentTabs.activeTabId === id ? newTabList[Math.max(index - 1, 0)]?.id : currentTabs.activeTabId as string,
     });
     uiEventBus.emit(UIEventType.CLOSE_TAB, [id]);
+  }, [navigate, organizationId, projectId, updateInsomniaTabs]);
+
+  const batchCloseTabs = useCallback((deleteIds: string[]) => {
+    const currentTabs = appTabsRef?.current?.[organizationId];
+    if (!currentTabs) {
+      return;
+    }
+
+    if (currentTabs.tabList.every(tab => deleteIds.includes(tab.id))) {
+      navigate(`/organization/${organizationId}/project/${projectId}`);
+      updateInsomniaTabs({
+        organizationId,
+        tabList: [],
+        activeTabId: '',
+      });
+      uiEventBus.emit(UIEventType.CLOSE_TAB, 'all');
+      return;
+    }
+
+    const index = currentTabs.tabList.findIndex(tab => deleteIds.includes(tab.id));
+    const newTabList = currentTabs.tabList.filter(tab => !deleteIds.includes(tab.id));
+    if (deleteIds.includes(currentTabs.activeTabId || '')) {
+      const url = newTabList[Math.max(index - 1, 0)]?.url;
+      navigate(url);
+    }
+
+    updateInsomniaTabs({
+      organizationId,
+      tabList: newTabList,
+      activeTabId: deleteIds.includes(currentTabs.activeTabId || '') ? newTabList[Math.max(index - 1, 0)]?.id : currentTabs.activeTabId as string,
+    });
+    uiEventBus.emit(UIEventType.CLOSE_TAB, deleteIds);
   }, [navigate, organizationId, projectId, updateInsomniaTabs]);
 
   const closeAllTabsUnderWorkspace = useCallback((workspaceId: string) => {
@@ -334,6 +367,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
         closeAllTabsUnderProject,
         closeAllTabs,
         closeOtherTabs,
+        batchCloseTabs,
         addTab,
         updateTabById,
         changeActiveTab,
