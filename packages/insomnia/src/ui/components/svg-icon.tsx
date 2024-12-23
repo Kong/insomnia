@@ -2,6 +2,7 @@ import React, { type NamedExoticComponent, type SVGProps } from 'react';
 import type { ValueOf } from 'type-fest';
 
 import { SvgIcnArrowRight } from './assets/svgr/IcnArrowRight';
+import { SvgIcnAzureLogo } from './assets/svgr/IcnAzureLogo';
 import { SvgIcnBitbucketLogo } from './assets/svgr/IcnBitbucketLogo';
 import { SvgIcnBrackets } from './assets/svgr/IcnBrackets';
 import { SvgIcnBug } from './assets/svgr/IcnBug';
@@ -23,7 +24,7 @@ import { SvgIcnErrors } from './assets/svgr/IcnErrors';
 import { SvgIcnFile } from './assets/svgr/IcnFile';
 import { SvgIcnFolder } from './assets/svgr/IcnFolder';
 import { SvgIcnFolderOpen } from './assets/svgr/IcnFolderOpen';
-import { SvgIcnGCPLogo } from './assets/svgr/IcnGCPlogo';
+import { SvgIcnGCPLogo } from './assets/svgr/IcnGCPLogo';
 import { SvgIcnGear } from './assets/svgr/IcnGear';
 import { SvgIcnGitBranch } from './assets/svgr/IcnGitBranch';
 import { SvgIcnGithubLogo } from './assets/svgr/IcnGithubLogo';
@@ -133,6 +134,7 @@ export const IconEnum = {
   sent: 'sent',
   systemEvent: 'system-event',
   gcpLogo: 'gcp-logo',
+  azureLogo: 'azure-logo',
   /** Blank icon */
   empty: 'empty',
 } as const;
@@ -196,6 +198,7 @@ const icons: Record<IconId, [ThemeKeys, NamedExoticComponent<SVGProps<SVGSVGElem
   [IconEnum.checkmarkCircle]: [ThemeEnum.default, SvgIcnCheckmarkCircle],
   [IconEnum.systemEvent]: [ThemeEnum.default, SvgIcnSystemEvent],
   [IconEnum.gcpLogo]: [ThemeEnum.default, SvgIcnGCPLogo],
+  [IconEnum.azureLogo]: [ThemeEnum.default, SvgIcnAzureLogo],
 };
 
 export type IconId = ValueOf<typeof IconEnum>;

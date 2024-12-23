@@ -27,7 +27,7 @@ const createCredentialItemList: createCredentialItemType[] = [
   {
     id: 'azure',
     name: getProviderDisplayName('azure'),
-    icon: <i className="ml-1 fa-brands fa-microsoft" />,
+    icon: <SvgIcon icon='azure-logo' className='ml-1' />,
   },
   {
     id: 'gcp',
@@ -133,13 +133,19 @@ export const CloudServiceCredentialList = () => {
           <tbody>
             {cloudCredentials.map(cloudCred => {
               const { _id, name, provider } = cloudCred;
+              const credentialItem = createCredentialItemList.find(item => item.id === provider);
               return (
                 <tr key={_id}>
                   <td >
                     {name}
                   </td>
                   <td className='w-36'>
-                    {getProviderDisplayName(provider!)}
+                    {credentialItem && (
+                      <div className='flex items-center gap-2'>
+                        {credentialItem.icon}
+                        <span>{credentialItem.name}</span>
+                      </div>
+                    )}
                   </td>
                   <td className='w-52 whitespace-nowrap'>
                     <div className='flex gap-2'>
