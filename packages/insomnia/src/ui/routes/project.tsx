@@ -3,27 +3,20 @@ import * as Sentry from '@sentry/electron/renderer';
 import React, { type FC, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
-  Dialog,
   GridList,
   GridListItem,
   Heading,
   Input,
-  Label,
   Link,
   ListBox,
   ListBoxItem,
   Menu,
   MenuItem,
   MenuTrigger,
-  Modal,
-  ModalOverlay,
   Popover,
-  Radio,
-  RadioGroup,
   SearchField,
   Select,
   SelectValue,
-  TextField,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -65,6 +58,7 @@ import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganization
 import {
   isRemoteProject,
   type Project,
+  PROJECT_STORAGE_TYPE,
   SCRATCHPAD_PROJECT_ID,
 } from '../../models/project';
 import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '../../models/workspace';
@@ -80,7 +74,7 @@ import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
-import { showAlert, showPrompt } from '../components/modals';
+import { showPrompt } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '../components/modals/import-modal';
@@ -176,6 +170,7 @@ async function syncTeamProjects({
         remoteId: prj.id,
         name: prj.name,
         parentId: organizationId,
+        storageType: PROJECT_STORAGE_TYPE.CLOUD,
       }
     );
   }));
@@ -570,6 +565,8 @@ export const loader: LoaderFunction = async ({
     }),
   ]);
 
+  console.log('organizationProjects', organizationProjects);
+
   const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
   const learningFeaturePromise = getLearningFeature(fallbackLearningFeature);
 
@@ -616,6 +613,7 @@ const ProjectRoute: FC = () => {
     remoteFilesPromise,
     projectsSyncStatusPromise,
   } = useLoaderData() as ProjectLoaderData;
+  console.log('projects', projects);
   const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = useLocalStorage('learning-feature-dismissed', '');
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
@@ -631,7 +629,6 @@ const ProjectRoute: FC = () => {
 
   const { userSession } = useRootLoaderData();
   const pullFileFetcher = useFetcher();
-  const updateProjectFetcher = useFetcher();
   const loadingBackendProjects = useFetchers().filter(fetcher => fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`).map(f => f.formData?.get('backendProjectId'));
 
   const { organizations } = useOrganizationLoaderData();
@@ -661,7 +658,6 @@ const ProjectRoute: FC = () => {
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
-  const [projectType, setProjectType] = useState<'local' | 'remote' | ''>('');
   const organization = organizations.find(o => o.id === organizationId);
   const isUserOwner = organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && isPersonalOrganization(organization);
@@ -1115,6 +1111,7 @@ const ProjectRoute: FC = () => {
                               organizationId={organizationId}
                               project={item}
                               storage={storage}
+                              isGitSyncEnabled={isGitSyncEnabled}
                             />
                           )}
                         </div>
@@ -1510,21 +1507,23 @@ const ProjectRoute: FC = () => {
             setIsOpen: setIsNewProjectModalOpen,
             orgStorageRule: storage,
             organizationId,
-            activeProject,
+            projectToEdit: null,
             isGitSyncEnabled,
           }}
         />
-        <ProjectEditModal
-          {...{
-            modalType: PROJECT_EDIT_MODAL_TYPE.EDIT,
-            isOpen: isUpdateProjectModalOpen,
-            setIsOpen: setIsUpdateProjectModalOpen,
-            orgStorageRule: storage,
-            organizationId,
-            activeProject,
-            isGitSyncEnabled,
-          }}
-        />
+        {activeProject && (
+          <ProjectEditModal
+            {...{
+              modalType: PROJECT_EDIT_MODAL_TYPE.EDIT,
+              isOpen: isUpdateProjectModalOpen,
+              setIsOpen: setIsUpdateProjectModalOpen,
+              orgStorageRule: storage,
+              organizationId,
+              projectToEdit: activeProject,
+              isGitSyncEnabled,
+            }}
+          />
+        )}
         {activeProject && importModalType && (
           <ImportModal
             onHide={() => setImportModalType(null)}
