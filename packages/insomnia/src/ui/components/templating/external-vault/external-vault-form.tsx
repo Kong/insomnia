@@ -60,7 +60,7 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
 
   return (
     <>
-      {selectedCredentialDoc &&
+      {selectedCredentialDoc && provider !== 'azure' &&
         <Button
           className="px-2 py-1 mb-[--padding-sm] h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-info] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
           style={{ marginTop: 'calc(var(--padding-sm) * -1)' }}
