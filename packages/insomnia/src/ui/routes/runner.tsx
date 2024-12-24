@@ -817,10 +817,6 @@ function startExecution(workspaceId: string) {
   runnerExecutions.set(workspaceId, {});
 }
 
-// function stopExecution(workspaceId: string) {
-//   runnerExecutions.delete(workspaceId);
-// }
-
 function updateExecution(workspaceId: string, executionInfo: ExecutionInfo) {
   const info = runnerExecutions.get(workspaceId);
   runnerExecutions.set(workspaceId, {
@@ -840,7 +836,6 @@ function cancelExecution(workspaceId: string) {
     window.main.completeExecutionStep({ requestId: activeRequestId });
     window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
     window.main.completeExecutionStep({ requestId: workspaceId });
-    // stopExecution(workspaceId);
   }
 }
 const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], currentIteration?: number): UserUploadEnvironment | undefined => {
