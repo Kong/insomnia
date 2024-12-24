@@ -1,7 +1,9 @@
+import type { AuthenticationResult } from '@azure/msal-node';
 import React, { useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 
+import { isDevelopment } from '../../../common/constants';
 import { type CloudProviderCredential, type CloudProviderName, getProviderDisplayName } from '../../../models/cloud-credential';
 import { usePlanData } from '../../hooks/use-plan';
 import { useRootLoaderData } from '../../routes/root';
@@ -10,6 +12,7 @@ import { showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
 import { CloudCredentialModal } from '../modals/cloud-credential-modal/cloud-credential-modal';
 import { SvgIcon } from '../svg-icon';
+import { Tooltip } from '../tooltip';
 import { UpgradeNotice } from '../upgrade-notice';
 import { NumberSetting } from './number-setting';
 
@@ -70,7 +73,12 @@ export const CloudServiceCredentialList = () => {
   };
 
   const handleCreateCloudServiceCredential = (key: CloudProviderName) => {
-    setModalState({ show: true, provider: key as CloudProviderName });
+    if (key === 'azure' && !isDevelopment()) {
+      // open Azure oauth page directly in production
+      window.main.cloudService.openAuthUrl('azure');
+    } else {
+      setModalState({ show: true, provider: key as CloudProviderName });
+    }
   };
 
   if (!isEnterprisePlan) {
@@ -132,12 +140,24 @@ export const CloudServiceCredentialList = () => {
           </thead>
           <tbody>
             {cloudCredentials.map(cloudCred => {
-              const { _id, name, provider } = cloudCred;
+              const { _id, name, provider, credentials } = cloudCred;
+              let isTokenExpired = false;
+              if (provider === 'azure') {
+                const tokenExpiresOn = (credentials as AuthenticationResult).expiresOn;
+                if (tokenExpiresOn && new Date() > new Date(tokenExpiresOn)) {
+                  isTokenExpired = true;
+                }
+              };
               const credentialItem = createCredentialItemList.find(item => item.id === provider);
               return (
                 <tr key={_id}>
                   <td >
                     {name}
+                    {provider === 'azure' && isTokenExpired &&
+                      <Tooltip message='Token is expired' position='top'>
+                        <i className="ml-1 fa fa-exclamation-circle text-[--color-warning]" />
+                      </Tooltip>
+                    }
                   </td>
                   <td className='w-36'>
                     {credentialItem && (
@@ -149,12 +169,20 @@ export const CloudServiceCredentialList = () => {
                   </td>
                   <td className='w-52 whitespace-nowrap'>
                     <div className='flex gap-2'>
-                      {(provider === 'aws' || provider === 'gcp') &&
+                      {provider !== 'azure' &&
                         <Button
                           className={`${buttonClassName} w-16`}
                           onPress={() => setModalState({ show: true, provider: provider!, credential: cloudCred })}
                         >
                           <Icon icon="edit" />&nbsp;&nbsp;Edit
+                        </Button>
+                      }
+                      {provider === 'azure' && isTokenExpired &&
+                        <Button
+                          className={`${buttonClassName} w-20`}
+                          onPress={() => handleCreateCloudServiceCredential('azure')}
+                        >
+                          <Icon icon="rotate" /> Renew
                         </Button>
                       }
                       <Button
