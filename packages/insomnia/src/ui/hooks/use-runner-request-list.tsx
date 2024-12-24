@@ -8,7 +8,7 @@ import { useRunnerContext } from '../context/app/runner-context';
 import type { RequestRow } from '../routes/runner';
 import type { Child, WorkspaceLoaderData } from '../routes/workspace';
 
-export const useRunnerRequestList = (targetFolderId: string, runnerId: string) => {
+export const useRunnerRequestList = (organizationId: string, targetFolderId: string, runnerId: string) => {
   const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const entityMapRef = useRef(new Map<string, Child>());
 
@@ -51,18 +51,18 @@ export const useRunnerRequestList = (targetFolderId: string, runnerId: string) =
       });
   }, [collection, targetFolderId]);
 
-  const { runnerStateMap, updateRunnerState } = useRunnerContext();
+  const { runnerStateMap, runnerStateRef, updateRunnerState } = useRunnerContext();
 
   useEffect(() => {
-    if (!runnerStateMap[runnerId]) {
-      updateRunnerState(runnerId, {
+    if (!runnerStateRef?.current?.[organizationId]?.[runnerId]) {
+      updateRunnerState(organizationId, runnerId, {
         reqList: requestRows,
       });
     }
-  }, [requestRows, runnerId, runnerStateMap, updateRunnerState]);
+  }, [organizationId, requestRows, runnerId, runnerStateRef, updateRunnerState]);
 
   return {
-    reqList: runnerStateMap[runnerId]?.reqList || [],
+    reqList: runnerStateMap[organizationId]?.[runnerId]?.reqList || [],
     requestRows,
     entityMap: entityMapRef.current,
   };

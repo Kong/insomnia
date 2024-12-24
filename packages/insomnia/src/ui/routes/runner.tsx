@@ -138,10 +138,10 @@ export const Runner: FC<{}> = () => {
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
 
   const { runnerStateMap, updateRunnerState } = useRunnerContext();
-  const { iterationCount = 1, delay = 0, selectedKeys = new Set<Key>(), advancedConfig = defaultAdvancedConfig, uploadData = [], file } = runnerStateMap[runnerId] || {};
+  const { iterationCount = 1, delay = 0, selectedKeys = new Set<Key>(), advancedConfig = defaultAdvancedConfig, uploadData = [], file } = runnerStateMap?.[organizationId]?.[runnerId] || {};
   invariant(iterationCount, 'iterationCount should not be null');
 
-  const { reqList, requestRows, entityMap } = useRunnerRequestList(targetFolderId, runnerId);
+  const { reqList, requestRows, entityMap } = useRunnerRequestList(organizationId, targetFolderId, runnerId);
 
   useEffect(() => {
     if (settings.forceVerticalLayout) {
@@ -191,7 +191,7 @@ export const Runner: FC<{}> = () => {
       } else if (event.target.dropPosition === 'after') {
         newList = moveAfter(reqList, event.target.key, event.keys);
       }
-      updateRunnerState(runnerId, { reqList: newList });
+      updateRunnerState(organizationId, runnerId, { reqList: newList });
     },
     renderDragPreview(items) {
       return (
@@ -269,11 +269,11 @@ export const Runner: FC<{}> = () => {
   const onToggleSelection = () => {
     if (Array.from(selectedKeys).length === reqList.length) {
       // unselect all
-      updateRunnerState(runnerId, { selectedKeys: new Set([]) });
+      updateRunnerState(organizationId, runnerId, { selectedKeys: new Set([]) });
     } else {
       // select all
       const allKeys = reqList.map(item => item.id);
-      updateRunnerState(runnerId, { selectedKeys: new Set(allKeys) });
+      updateRunnerState(organizationId, runnerId, { selectedKeys: new Set(allKeys) });
     }
   };
 
@@ -444,7 +444,7 @@ export const Runner: FC<{}> = () => {
                         onChange={e => {
                           try {
                             if (parseInt(e.target.value, 10) > 0) {
-                              updateRunnerState(runnerId, { iterationCount: parseInt(e.target.value, 10) });
+                              updateRunnerState(organizationId, runnerId, { iterationCount: parseInt(e.target.value, 10) });
                             }
                           } catch (ex) { }
                         }}
@@ -462,7 +462,7 @@ export const Runner: FC<{}> = () => {
                           try {
                             const delay = parseInt(e.target.value, 10);
                             if (delay >= 0) {
-                              updateRunnerState(runnerId, { delay }); // also update the temp settings
+                              updateRunnerState(organizationId, runnerId, { delay }); // also update the temp settings
                             }
                           } catch (ex) { }
                         }}
@@ -558,7 +558,7 @@ export const Runner: FC<{}> = () => {
                     selectionMode="multiple"
                     selectedKeys={selectedKeys}
                     onSelectionChange={keys => {
-                      updateRunnerState(runnerId, { selectedKeys: keys });
+                      updateRunnerState(organizationId, runnerId, { selectedKeys: keys });
                     }}
                     aria-label="Request Collection"
                     dragAndDropHooks={requestsDnD}
@@ -619,7 +619,7 @@ export const Runner: FC<{}> = () => {
                       <input
                         name='bail'
                         onChange={() => {
-                          updateRunnerState(runnerId, {
+                          updateRunnerState(organizationId, runnerId, {
                             advancedConfig: {
                               ...advancedConfig,
                               bail: !advancedConfig?.bail,
@@ -682,7 +682,7 @@ export const Runner: FC<{}> = () => {
             {showUploadModal && (
               <UploadDataModal
                 onUploadFile={(file, uploadData) => {
-                  updateRunnerState(runnerId, {
+                  updateRunnerState(organizationId, runnerId, {
                     uploadData,
                     file,
                     iterationCount: uploadData.length >= 1 ? uploadData.length : iterationCount,
