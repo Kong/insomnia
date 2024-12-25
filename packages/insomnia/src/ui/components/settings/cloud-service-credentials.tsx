@@ -74,7 +74,7 @@ export const CloudServiceCredentialList = () => {
 
   const handleCreateCloudServiceCredential = (key: CloudProviderName) => {
     if (key === 'azure' && !isDevelopment()) {
-      // open Azure oauth page directly in production
+      // open Azure oauth page directly in production build
       window.main.cloudService.openAuthUrl('azure');
     } else {
       setModalState({ show: true, provider: key as CloudProviderName });
@@ -141,11 +141,11 @@ export const CloudServiceCredentialList = () => {
           <tbody>
             {cloudCredentials.map(cloudCred => {
               const { _id, name, provider, credentials } = cloudCred;
-              let isTokenExpired = false;
+              let isAzureTokenExpired = true;
               if (provider === 'azure') {
                 const tokenExpiresOn = (credentials as AuthenticationResult).expiresOn;
                 if (tokenExpiresOn && new Date() > new Date(tokenExpiresOn)) {
-                  isTokenExpired = true;
+                  isAzureTokenExpired = true;
                 }
               };
               const credentialItem = createCredentialItemList.find(item => item.id === provider);
@@ -153,7 +153,7 @@ export const CloudServiceCredentialList = () => {
                 <tr key={_id}>
                   <td >
                     {name}
-                    {provider === 'azure' && isTokenExpired &&
+                    {provider === 'azure' && isAzureTokenExpired &&
                       <Tooltip message='Token is expired' position='top'>
                         <i className="ml-1 fa fa-exclamation-circle text-[--color-warning]" />
                       </Tooltip>
@@ -177,7 +177,7 @@ export const CloudServiceCredentialList = () => {
                           <Icon icon="edit" />&nbsp;&nbsp;Edit
                         </Button>
                       }
-                      {provider === 'azure' && isTokenExpired &&
+                      {provider === 'azure' && isAzureTokenExpired &&
                         <Button
                           className={`${buttonClassName} w-20`}
                           onPress={() => handleCreateCloudServiceCredential('azure')}

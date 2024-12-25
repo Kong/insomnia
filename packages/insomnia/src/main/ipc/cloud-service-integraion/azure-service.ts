@@ -139,7 +139,7 @@ export class AzureService extends OAuthCloudService implements ICloudService {
   }
 
   async authenticate() {
-    // Azure uses OAuth authenticaion flow.
+    // This method is not implemented as Azure utilizes OAuth authentication flow.
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -174,9 +174,12 @@ export class AzureService extends OAuthCloudService implements ICloudService {
           result: secretBody,
         };
       } else {
+        const errorBody = await secretResponse.json() as { error?: { code: string; message: string } };
+        const errorMessage = errorBody.error?.message || secretResponse.statusText || 'Unknown error, failed to get secret';
         return {
           success: false,
           result: null,
+          error: { errorMessage, errorCode: errorBody.error?.code || secretResponse.status.toString() },
         };
       }
     } catch (error) {
