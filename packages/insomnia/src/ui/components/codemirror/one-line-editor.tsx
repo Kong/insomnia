@@ -223,6 +223,16 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   useEditorRefresh(reinitialize);
 
   useEffect(() => {
+    if (codeMirror.current) {
+      // https://github.com/Kong/insomnia/issues/8265
+      // we have a unique key for request panel, when connect to websocket, unique will change and component will mount again automatically
+      // but when disconnect, the unique key will not change, so we need to update some configurations manually
+      codeMirror.current.setOption('readOnly', readOnly);
+      codeMirror.current.setOption('keyMap', !readOnly && settings.editorKeyMap ? settings.editorKeyMap : 'default');
+    }
+  }, [readOnly, settings.editorKeyMap]);
+
+  useEffect(() => {
       // Prevent these things if we're type === "password"
       const preventDefault = (_: CodeMirror.Editor, event: Event) => type?.toLowerCase() === 'password' && event.preventDefault();
       codeMirror.current?.on('copy', preventDefault);
