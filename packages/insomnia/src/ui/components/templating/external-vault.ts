@@ -23,7 +23,7 @@ export const getAWSSecret = async (secretConfig: AWSSecretConfig, providerCreden
     SecretType = 'plaintext',
   } = secretConfig;
   if (!SecretId) {
-    throw new Error('Secret Name or ARN is required');
+    throw new Error('Get secret from AWS failed: Secret Name or ARN is required');
   }
   const getSecretOption: CloudServiceSecretOption<AWSGetSecretConfig> = {
     provider: 'aws',
@@ -44,22 +44,22 @@ export const getAWSSecret = async (secretConfig: AWSSecretConfig, providerCreden
       try {
         parsedJSON = JSON.parse(SecretString || '{}');
       } catch (error) {
-        throw new Error(`Secret value ${SecretString} can not parsed to key/value pair, please change Secret Type to plaintext`);
+        throw new Error(`Get secret from AWS failed: Secret value ${SecretString} can not parsed to key/value pair, please change Secret Type to plaintext`);
       }
       if (SecretKey in parsedJSON) {
         return parsedJSON[SecretKey];
       }
-      throw new Error(`Secret key ${SecretKey} does not exist in key/value secret ${SecretString}`);
+      throw new Error(`Get secret from AWS failed: Secret key ${SecretKey} does not exist in key/value secret ${SecretString}`);
     }
   } else {
-    throw new Error(error?.errorMessage);
+    throw new Error(`Get secret from AWS failed: ${error?.errorMessage}`);
   }
 };
 
 export const getAzureSecret = async (secretConfig: AzureSecretConfig, providerCredential: CloudProviderCredential) => {
   const { secretIdentifier } = secretConfig;
   if (!secretIdentifier) {
-    throw new Error('Secret Identifieror is required');
+    throw new Error('Get secret from Azure failed: Secret Identifieror is required');
   }
   const getSecretOption: CloudServiceSecretOption<{}> = {
     provider: 'azure',
@@ -72,14 +72,14 @@ export const getAzureSecret = async (secretConfig: AzureSecretConfig, providerCr
   if (success && result) {
     return result.value;
   } else {
-    throw new Error(error?.errorMessage);
+    throw new Error(`Get secret from Azure failed: ${error?.errorMessage}`);
   }
 };
 
 export const getGCPSecret = async (secretConfig: GCPSecretConfig, providerCredential: CloudProviderCredential) => {
   const { secretName, version } = secretConfig;
   if (!secretName) {
-    throw new Error('Secret Name is required');
+    throw new Error('Get secret from GCP failed: Secret Name is required');
   }
   const getSecretOption: CloudServiceSecretOption<GCPGetSecretConfig> = {
     provider: 'gcp',
@@ -92,6 +92,6 @@ export const getGCPSecret = async (secretConfig: GCPSecretConfig, providerCreden
   if (success && result) {
     return result.value;
   } else {
-    throw new Error(error?.errorMessage);
+    throw new Error(`Get secret from GCP failed: ${error?.errorMessage}`);
   }
 };

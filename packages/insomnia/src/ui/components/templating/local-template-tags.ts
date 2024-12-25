@@ -57,14 +57,14 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
       ],
       async run(context, provider: CloudProviderName, credentialId: string, configStr: string) {
         if (!provider) {
-          throw new Error('Vault service provider is required');
+          throw new Error('Get secret from external vault failed: Vault service provider is required');
         }
         if (!credentialId) {
-          throw new Error('Credential is required');
+          throw new Error('Get secret from external vault failed: Credential is required');
         };
         const providerCredential = await models.cloudCrendential.getById(credentialId);
         if (!providerCredential) {
-          throw new Error('No Cloud Credential found');
+          throw new Error('Get secret from external vault failed: No Cloud Credential found');
         }
         const renderContext = context.renderPurpose as RenderPurpose;
         // Get secret from external vaults when send request or in tag-preview, otherwise return defautl mask value
@@ -73,7 +73,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           try {
             secretConfig = JSON.parse(configStr);
           } catch (error) {
-            throw new Error('Invalid vault secret config');
+            throw new Error('Get secret from external vault failed: Invalid vault secret config');
           }
           return getExternalVault(provider, providerCredential, secretConfig as ExternalVaultConfig);
         }
