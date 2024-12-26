@@ -105,8 +105,7 @@ import { getMethodShortHand } from '../components/tags/method-tag';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
-import { useCloseGrpc } from '../hooks/use-close-grpc';
-import { useCloseWebSocket } from '../hooks/use-close-websocket';
+import { useCloseConnection } from '../hooks/use-close-connection';
 import { useExecutionState } from '../hooks/use-execution-state';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useReadyState } from '../hooks/use-ready-state';
@@ -455,8 +454,7 @@ export const Debug: FC = () => {
     },
   });
 
-  useCloseWebSocket();
-  useCloseGrpc();
+  useCloseConnection();
 
   const isRealtimeRequest =
     activeRequest &&
