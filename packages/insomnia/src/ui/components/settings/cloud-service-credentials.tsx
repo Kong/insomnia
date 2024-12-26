@@ -141,10 +141,10 @@ export const CloudServiceCredentialList = () => {
           <tbody>
             {cloudCredentials.map(cloudCred => {
               const { _id, name, provider, credentials } = cloudCred;
-              let isAzureTokenExpired = true;
+              let isAzureTokenExpired = false;
               if (provider === 'azure') {
                 const tokenExpiresOn = (credentials as AuthenticationResult).expiresOn;
-                if (tokenExpiresOn && new Date() > new Date(tokenExpiresOn)) {
+                if (tokenExpiresOn && new Date() >= new Date(tokenExpiresOn)) {
                   isAzureTokenExpired = true;
                 }
               };
