@@ -21,7 +21,7 @@ export const DocumentTab = ({ organizationId, projectId, workspaceId, className 
           key={item.id}
           to={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${item.id}`}
           className={({ isActive, isPending }) => classnames('text-center rounded-full px-2', {
-            'text-[--color-font] bg-[--color-surprise]': isActive,
+            'text-[--color-font-surprise] bg-[--color-surprise]': isActive,
             'animate-pulse': isPending,
           })}
           data-testid={`workspace-${item.id}`}
