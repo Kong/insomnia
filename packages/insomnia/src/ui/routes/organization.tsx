@@ -59,6 +59,7 @@ import { Toast } from '../components/toast';
 import { useAIContext } from '../context/app/ai-context';
 import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-stream-context';
 import { InsomniaTabProvider } from '../context/app/insomnia-tab-context';
+import { RunnerProvider } from '../context/app/runner-context';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
 import { syncProjects } from './project';
 import { useRootLoaderData } from './root';
@@ -820,7 +821,9 @@ const OrganizationRoute = () => {
             </nav>
           </div>}
           <div className='[grid-area:Content] overflow-hidden border-b border-[--hl-md]'>
-            <Outlet />
+              <RunnerProvider>
+                <Outlet />
+              </RunnerProvider>
           </div>
           <div className="relative [grid-area:Statusbar] flex items-center overflow-hidden">
             <div className='flex justify-center items-center gap-2 flex-shrink-0 h-full w-[50px] border-solid border-r border-r-[--hl-md]'>
