@@ -1,15 +1,14 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
-import { useListData } from 'react-stately';
-import { usePrevious } from 'react-use';
 
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import { invariant } from '../../utils/invariant';
+import { useRunnerContext } from '../context/app/runner-context';
 import type { RequestRow } from '../routes/runner';
 import type { Child, WorkspaceLoaderData } from '../routes/workspace';
 
-export const useRunnerRequestList = (workspaceId: string, targetFolderId: string) => {
+export const useRunnerRequestList = (organizationId: string, targetFolderId: string, runnerId: string) => {
   const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const entityMapRef = useRef(new Map<string, Child>());
 
@@ -52,24 +51,18 @@ export const useRunnerRequestList = (workspaceId: string, targetFolderId: string
       });
   }, [collection, targetFolderId]);
 
-  const reqList = useListData({
-    initialItems: requestRows,
-  });
-
-  const previousWorkspaceId = usePrevious(workspaceId);
-  const previousTargetFolderId = usePrevious(targetFolderId);
+  const { runnerStateMap, runnerStateRef, updateRunnerState } = useRunnerContext();
 
   useEffect(() => {
-    if ((previousWorkspaceId && previousWorkspaceId !== workspaceId) || (previousTargetFolderId !== undefined && previousTargetFolderId !== targetFolderId)) {
-      // reset the list when workspace changes
-      const keys = reqList.items.map(item => item.id);
-      reqList.remove(...keys);
-      reqList.append(...requestRows);
+    if (!runnerStateRef?.current?.[organizationId]?.[runnerId]) {
+      updateRunnerState(organizationId, runnerId, {
+        reqList: requestRows,
+      });
     }
-  }, [reqList, requestRows, workspaceId, targetFolderId, previousWorkspaceId, previousTargetFolderId]);
+  }, [organizationId, requestRows, runnerId, runnerStateRef, updateRunnerState]);
 
   return {
-    reqList,
+    reqList: runnerStateMap[organizationId]?.[runnerId]?.reqList || [],
     requestRows,
     entityMap: entityMapRef.current,
   };

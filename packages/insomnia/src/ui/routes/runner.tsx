@@ -1,9 +1,9 @@
 import { type RequestContext } from 'insomnia-sdk';
 import porderedJSON from 'json-order';
-import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelResizeHandle } from 'react-resizable-panels';
-import { type ActionFunction, type LoaderFunction, redirect, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -15,6 +15,7 @@ import * as models from '../../models';
 import type { UserUploadEnvironment } from '../../models/environment';
 import type { RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
 import { cancelRequestById } from '../../network/cancellation';
+import { moveAfter, moveBefore } from '../../utils';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { Dropdown, DropdownItem, ItemContent } from '../components/base/dropdown';
@@ -30,6 +31,7 @@ import { RunnerTestResultPane } from '../components/panes/runner-test-result-pan
 import { ResponseTimer } from '../components/response-timer';
 import { getTimeAndUnit } from '../components/tags/time-tag';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
+import { useRunnerContext } from '../context/app/runner-context';
 import { useRunnerRequestList } from '../hooks/use-runner-request-list';
 import type { OrganizationLoaderData } from './organization';
 import { type CollectionRunnerContext, defaultSendActionRuntime, type RunnerSource, sendActionImplementation } from './request';
@@ -108,44 +110,16 @@ export interface RequestRow {
   parentId: string;
 };
 
+const defaultAdvancedConfig = {
+  bail: true,
+};
+
 export const Runner: FC<{}> = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [errorMsg, setErrorMsg] = useState<null | string>(null);
 
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const targetFolderId = searchParams.get('folder') || '';
-  const shouldRefreshRef = useRef(false);
-
-  useEffect(() => {
-    if (searchParams.has('refresh-pane') || searchParams.has('error')) {
-      const copySearchParams = new URLSearchParams(searchParams);
-      if (searchParams.has('refresh-pane')) {
-        shouldRefreshRef.current = true;
-        copySearchParams.delete('refresh-pane');
-      }
-
-      if (searchParams.has('error')) {
-        setErrorMsg(searchParams.get('error'));
-        // TODO: this should be removed when we are able categorized errors better and display them in different ways.
-        showAlert({
-          title: 'Unexpected Runner Failure',
-          message: (
-            <div>
-              <p>The runner failed due to an unhandled error:</p>
-              <code className="wide selectable">
-                <pre>{searchParams.get('error')}</pre>
-              </code>
-            </div>
-          ),
-        });
-        copySearchParams.delete('error');
-      } else {
-        setErrorMsg(null);
-      }
-
-      setSearchParams(copySearchParams);
-    }
-  }, [searchParams, setSearchParams]);
 
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
@@ -153,22 +127,22 @@ export const Runner: FC<{}> = () => {
     workspaceId: string;
     direction: 'vertical' | 'horizontal';
   };
-  const [iterationCount, setIterationCount] = useState<number>(1);
-  const [delay, setDelay] = useState<number>(0);
-  const [uploadData, setUploadData] = useState<UploadDataType[]>([]);
-  const [file, setFile] = useState<File | null>(null);
-  const [bail, setBail] = useState<boolean>(true);
   const [keepLog, setKeepLog] = useState<boolean>(true);
   const [isRunning, setIsRunning] = useState(false);
 
-  invariant(iterationCount, 'iterationCount should not be null');
+  // For backward compatibility，the runnerId we use for testResult in database is no prefix with 'runner_'
+  const runnerId = targetFolderId ? targetFolderId : workspaceId;
 
   const { settings } = useRootLoaderData();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showCLIModal, setShowCLIModal] = useState(false);
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
 
-  const { reqList, requestRows, entityMap } = useRunnerRequestList(workspaceId, targetFolderId);
+  const { runnerStateMap, updateRunnerState } = useRunnerContext();
+  const { iterationCount = 1, delay = 0, selectedKeys = new Set<Key>(), advancedConfig = defaultAdvancedConfig, uploadData = [], file } = runnerStateMap?.[organizationId]?.[runnerId] || {};
+  invariant(iterationCount, 'iterationCount should not be null');
+
+  const { reqList, requestRows, entityMap } = useRunnerRequestList(organizationId, targetFolderId, runnerId);
 
   useEffect(() => {
     if (settings.forceVerticalLayout) {
@@ -192,14 +166,14 @@ export const Runner: FC<{}> = () => {
   }, [settings.forceVerticalLayout, direction]);
 
   const isConsistencyChanged = useMemo(() => {
-    if (requestRows.length !== reqList.items.length) {
+    if (requestRows.length !== reqList.length) {
       return true;
-    } else if (reqList.selectedKeys !== 'all' && Array.from(reqList.selectedKeys).length !== requestRows.length) {
+    } else if (selectedKeys !== 'all' && Array.from(selectedKeys).length !== requestRows.length) {
       return true;
     }
 
-    return requestRows.some((row: RequestRow, index: number) => row.id !== reqList.items[index].id);
-  }, [requestRows, reqList]);
+    return requestRows.some((row: RequestRow, index: number) => row.id !== reqList[index].id);
+  }, [reqList, requestRows, selectedKeys]);
 
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
     getItems: keys => {
@@ -212,11 +186,13 @@ export const Runner: FC<{}> = () => {
       });
     },
     onReorder: event => {
+      let newList = reqList;
       if (event.target.dropPosition === 'before') {
-        reqList.moveBefore(event.target.key, event.keys);
+        newList = moveBefore(reqList, event.target.key, event.keys);
       } else if (event.target.dropPosition === 'after') {
-        reqList.moveAfter(event.target.key, event.keys);
+        newList = moveAfter(reqList, event.target.key, event.keys);
       }
+      updateRunnerState(organizationId, runnerId, { reqList: newList });
     },
     renderDragPreview(items) {
       return (
@@ -227,7 +203,7 @@ export const Runner: FC<{}> = () => {
     },
     renderDropIndicator(target) {
       if (target.type === 'item') {
-        const item = reqList.items.find(item => item.id === target.key);
+        const item = reqList.find(item => item.id === target.key);
         if (item) {
           return (
             <DropIndicator
@@ -252,9 +228,8 @@ export const Runner: FC<{}> = () => {
 
     window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount } });
 
-    const selected = new Set(reqList.selectedKeys);
-    const requests = Array.from(reqList.items)
-      .filter(item => selected.has(item.id));
+    const selected = new Set(selectedKeys);
+    const requests = reqList.filter(item => selected.has(item.id));
 
     // convert uploadData to environment data
     const userUploadEnvs = uploadData.map(data => {
@@ -274,7 +249,7 @@ export const Runner: FC<{}> = () => {
       iterationCount,
       userUploadEnvs,
       delay,
-      bail,
+      bail: advancedConfig?.bail,
       keepLog,
       targetFolderId: targetFolderId || '',
     };
@@ -284,6 +259,7 @@ export const Runner: FC<{}> = () => {
         method: 'post',
         encType: 'application/json',
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner/run`,
+        navigate: false,
       }
     );
   };
@@ -293,29 +269,24 @@ export const Runner: FC<{}> = () => {
     navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}`);
   };
   const onToggleSelection = () => {
-    if (Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length) {
+    if (Array.from(selectedKeys).length === reqList.length) {
       // unselect all
-      reqList.setSelectedKeys(new Set([]));
+      updateRunnerState(organizationId, runnerId, { selectedKeys: new Set([]) });
     } else {
       // select all
-      reqList.setSelectedKeys(new Set(reqList.items.map(item => item.id)));
+      const allKeys = reqList.map(item => item.id);
+      updateRunnerState(organizationId, runnerId, { selectedKeys: new Set(allKeys) });
     }
   };
 
   const [testHistory, setTestHistory] = useState<RunnerTestResult[]>([]);
   useEffect(() => {
     const readResults = async () => {
-      const results = await models.runnerTestResult.findByParentId(workspaceId) || [];
+      const results = await models.runnerTestResult.findByParentId(runnerId) || [];
       setTestHistory(results.reverse());
     };
     readResults();
-  }, [workspaceId]);
-
-  useEffect(() => {
-    if (uploadData.length >= 1) {
-      setIterationCount(uploadData.length);
-    }
-  }, [setIterationCount, uploadData]);
+  }, [runnerId]);
 
   const [timingSteps, setTimingSteps] = useState<TimingStep[]>([]);
   const [totalTime, setTotalTime] = useState({
@@ -337,44 +308,72 @@ export const Runner: FC<{}> = () => {
       if (executionResult) {
         const mergedTimelines = await aggregateAllTimelines(errorMsg, executionResult);
         setTimelines(mergedTimelines);
+      } else {
+        setTimelines([]);
       }
     };
     refreshTimeline();
   }, [executionResult, errorMsg]);
 
-  useInterval(() => {
-    const refreshPanes = async () => {
-      const latestTimingSteps = await window.main.getExecution({ requestId: workspaceId });
-      if (latestTimingSteps) {
-        // there is a timingStep item and it is not ended (duration is not assigned)
-        const isRunning = latestTimingSteps.length > 0 && latestTimingSteps[latestTimingSteps.length - 1].stepName !== 'Done';
-        setIsRunning(isRunning);
+  const showErrorAlert = (error: string) => {
+    showAlert({
+      title: 'Unexpected Runner Failure',
+      message: (
+        <div>
+          <p>The runner failed due to an unhandled error:</p>
+          <code className="wide selectable">
+            <pre>{error}</pre>
+          </code>
+        </div>
+      ),
+    });
+  };
 
-        if (isRunning) {
-          const duration = Date.now() - latestTimingSteps[latestTimingSteps.length - 1].startedAt;
-          const { number: durationNumber, unit: durationUnit } = getTimeAndUnit(duration);
+  const refreshPanes = useCallback(async () => {
+    const latestTimingSteps = await window.main.getExecution({ requestId: runnerId });
+    let isRunning = false;
+    if (latestTimingSteps) {
+    // there is a timingStep item and it is not ended (duration is not assigned)
+      isRunning = latestTimingSteps.length > 0 && latestTimingSteps[latestTimingSteps.length - 1].stepName !== 'Done';
+    }
+    setIsRunning(isRunning);
 
-          setTimingSteps(latestTimingSteps);
-          setTotalTime({
-            duration: durationNumber,
-            unit: durationUnit,
-          });
-        } else {
-          if (shouldRefreshRef.current) {
-            const results = await models.runnerTestResult.findByParentId(workspaceId) || [];
-            setTestHistory(results.reverse());
-            if (results.length > 0) {
-              const latestResult = results[0];
-              setExecutionResult(latestResult);
-            }
-            shouldRefreshRef.current = false;
-          }
+    if (isRunning) {
+      const duration = Date.now() - latestTimingSteps[latestTimingSteps.length - 1].startedAt;
+      const { number: durationNumber, unit: durationUnit } = getTimeAndUnit(duration);
+      setTimingSteps(latestTimingSteps);
+      setTotalTime({
+        duration: durationNumber,
+        unit: durationUnit,
+      });
+    } else {
+      const results = await models.runnerTestResult.findByParentId(runnerId) || [];
+      // show execution result
+      if (results.length > 0) {
+        setTestHistory(results.reverse());
+        const latestResult = results[0];
+        setExecutionResult(latestResult);
+        const { error } = getExecution(runnerId);
+        if (error) {
+          setErrorMsg(error);
+          showErrorAlert(error);
+          updateExecution(runnerId, { error: '' });
         }
+      } else {
+        // show initial empty panel
+        setExecutionResult(null);
+        setErrorMsg(null);
       }
-    };
+    }
+  }, [runnerId]);
 
+  useInterval(() => {
     refreshPanes();
-  }, 1000);
+  }, isRunning ? 1000 : null);
+
+  useEffect(() => {
+    refreshPanes();
+  }, [refreshPanes]);
 
   const { passedTestCount, totalTestCount, testResultCountTagColor } = useMemo(() => {
     let passedTestCount = 0;
@@ -407,11 +406,11 @@ export const Runner: FC<{}> = () => {
     setSelectedTab('test-results');
   }, [setSelectedTab]);
 
-  const allKeys = reqList.items.map(item => item.id);
+  const allKeys = reqList.map(item => item.id);
   const disabledKeys = useMemo(() => {
     return isRunning ? allKeys : [];
   }, [isRunning, allKeys]);
-  const isDisabled = isRunning || Array.from(reqList.selectedKeys).length === 0;
+  const isDisabled = isRunning || Array.from(selectedKeys).length === 0;
 
   const [deletedItems, setDeletedItems] = useState<string[]>([]);
   const deleteHistoryItem = (item: RunnerTestResult) => {
@@ -421,13 +420,13 @@ export const Runner: FC<{}> = () => {
 
   const selectedRequestIdsForCliCommand =
     targetFolderId !== null && targetFolderId !== ''
-      ? Array.from(reqList.items)
+      ? reqList
         .filter(item => item.ancestorIds.includes(targetFolderId))
         .map(item => item.id)
-        .filter(id => new Set(reqList.selectedKeys).has(id))
-      : Array.from(reqList.items)
+        .filter(id => selectedKeys === 'all' || selectedKeys.has(id))
+      : reqList
         .map(item => item.id)
-        .filter(id => new Set(reqList.selectedKeys).has(id));
+        .filter(id => selectedKeys === 'all' || selectedKeys.has(id));
 
   return (
     <>
@@ -447,7 +446,7 @@ export const Runner: FC<{}> = () => {
                         onChange={e => {
                           try {
                             if (parseInt(e.target.value, 10) > 0) {
-                              setIterationCount(parseInt(e.target.value, 10));
+                              updateRunnerState(organizationId, runnerId, { iterationCount: parseInt(e.target.value, 10) });
                             }
                           } catch (ex) { }
                         }}
@@ -465,7 +464,7 @@ export const Runner: FC<{}> = () => {
                           try {
                             const delay = parseInt(e.target.value, 10);
                             if (delay >= 0) {
-                              setDelay(delay); // also update the temp settings
+                              updateRunnerState(organizationId, runnerId, { delay }); // also update the temp settings
                             }
                           } catch (ex) { }
                         }}
@@ -546,9 +545,9 @@ export const Runner: FC<{}> = () => {
                 <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
                   <span className="mr-2">
                     {
-                      Array.from(reqList.selectedKeys).length === Array.from(reqList.items).length ?
+                      Array.from(selectedKeys).length === Array.from(reqList).length ?
                         <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-check fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Unselect All</span></span> :
-                        Array.from(reqList.selectedKeys).length === 0 ?
+                        Array.from(selectedKeys).length === 0 ?
                           <span onClick={onToggleSelection}><i className="fa fa-square fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span> :
                           <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-minus fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span>
                     }
@@ -557,11 +556,12 @@ export const Runner: FC<{}> = () => {
                 <PaneBody placeholder className='p-0'>
                   <GridList
                     id="runner-request-list"
-                    items={reqList.items}
+                    items={reqList}
                     selectionMode="multiple"
-                    selectedKeys={reqList.selectedKeys}
-                    onSelectionChange={reqList.setSelectedKeys}
-                    defaultSelectedKeys={allKeys}
+                    selectedKeys={selectedKeys}
+                    onSelectionChange={keys => {
+                      updateRunnerState(organizationId, runnerId, { selectedKeys: keys });
+                    }}
                     aria-label="Request Collection"
                     dragAndDropHooks={requestsDnD}
                     className="w-full h-full leading-8 text-base overflow-auto"
@@ -621,10 +621,17 @@ export const Runner: FC<{}> = () => {
                     <label className="flex items-center gap-2">
                       <input
                         name='bail'
-                        onChange={() => setBail(!bail)}
+                        onChange={() => {
+                          updateRunnerState(organizationId, runnerId, {
+                            advancedConfig: {
+                              ...advancedConfig,
+                              bail: !advancedConfig?.bail,
+                            },
+                          });
+                        }}
                         type="checkbox"
                         disabled={isRunning}
-                        checked={bail}
+                        checked={advancedConfig?.bail}
                       />
                       Stop run if an error occurs
                     </label>
@@ -672,14 +679,17 @@ export const Runner: FC<{}> = () => {
                 iterationCount={iterationCount}
                 delay={delay}
                 filePath={file?.path || ''}
-                bail={bail}
+                bail={advancedConfig?.bail}
               />
             )}
             {showUploadModal && (
               <UploadDataModal
                 onUploadFile={(file, uploadData) => {
-                  setFile(file);
-                  setUploadData(uploadData); // also update the temp settings
+                  updateRunnerState(organizationId, runnerId, {
+                    uploadData,
+                    file,
+                    iterationCount: uploadData.length >= 1 ? uploadData.length : iterationCount,
+                  });
                 }}
                 userUploadData={uploadData}
                 onClose={() => setShowUploadModal(false)}
@@ -734,7 +744,7 @@ export const Runner: FC<{}> = () => {
           </TabList>
           <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='console'>
             <ResponseTimelineViewer
-              key={workspaceId}
+              key={runnerId}
               timeline={timelines}
             />
           </TabPanel>
@@ -753,8 +763,8 @@ export const Runner: FC<{}> = () => {
             {isRunning &&
               <div className="h-full w-full text-md flex items-center">
                 <ResponseTimer
-                  handleCancel={() => cancelExecution(workspaceId)}
-                  activeRequestId={workspaceId}
+                  handleCancel={() => cancelExecution(runnerId)}
+                  activeRequestId={runnerId}
                   steps={timingSteps}
                 />
               </div>
@@ -801,31 +811,34 @@ const RequestItem = (
 // This is required for tracking the active request for one runner execution
 // Then in runner cancellation, both the active request and the runner execution will be canceled
 // TODO(george): Potentially it could be merged with maps in request-timing.ts and cancellation.ts
-const runnerExecutions = new Map<string, string>();
+interface ExecutionInfo {
+  activeRequestId?: string;
+  error?: string;
+};
+const runnerExecutions = new Map<string, ExecutionInfo>();
 function startExecution(workspaceId: string) {
-  runnerExecutions.set(workspaceId, '');
+  runnerExecutions.set(workspaceId, {});
 }
 
-function stopExecution(workspaceId: string) {
-  runnerExecutions.delete(workspaceId);
-}
-
-function updateExecution(workspaceId: string, requestId: string) {
-  runnerExecutions.set(workspaceId, requestId);
+function updateExecution(workspaceId: string, executionInfo: ExecutionInfo) {
+  const info = runnerExecutions.get(workspaceId);
+  runnerExecutions.set(workspaceId, {
+    ...info,
+    ...executionInfo,
+  });
 }
 
 function getExecution(workspaceId: string) {
-  return runnerExecutions.get(workspaceId);
+  return runnerExecutions.get(workspaceId) || {};
 }
 
 function cancelExecution(workspaceId: string) {
-  const activeRequestId = getExecution(workspaceId);
+  const { activeRequestId } = getExecution(workspaceId);
   if (activeRequestId) {
     cancelRequestById(activeRequestId);
     window.main.completeExecutionStep({ requestId: activeRequestId });
     window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
     window.main.completeExecutionStep({ requestId: workspaceId });
-    stopExecution(workspaceId);
   }
 }
 const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], currentIteration?: number): UserUploadEnvironment | undefined => {
@@ -856,6 +869,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
 
   const { requests, iterationCount, delay, userUploadEnvs, bail, targetFolderId, keepLog } = await request.json() as runCollectionActionParams;
   const source: RunnerSource = 'runner';
+  const runnerId = targetFolderId ? targetFolderId : workspaceId;
 
   let testCtx: CollectionRunnerContext = {
     source,
@@ -880,12 +894,12 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
     },
   };
 
-  window.main.startExecution({ requestId: workspaceId });
+  window.main.startExecution({ requestId: runnerId });
   window.main.addExecutionStep({
-    requestId: workspaceId,
+    requestId: runnerId,
     stepName: 'Initializing',
   });
-  startExecution(workspaceId);
+  startExecution(runnerId);
 
   const noLogRuntime = {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -904,7 +918,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       let j = 0;
       while (j < requests.length) {
         // TODO: we might find a better way to do runner cancellation
-        if (getExecution(workspaceId) === undefined) {
+        if (getExecution(runnerId) === undefined) {
           throw 'Runner has been stopped';
         }
 
@@ -939,9 +953,11 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
             }
           }
 
-          updateExecution(workspaceId, targetRequest.id);
+          updateExecution(runnerId, {
+            activeRequestId: targetRequest.id,
+          });
           window.main.updateLatestStepName({
-            requestId: workspaceId,
+            requestId: runnerId,
             stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"`,
           });
 
@@ -1035,17 +1051,20 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       };
     }
 
-    window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
-    window.main.completeExecutionStep({ requestId: workspaceId });
+    window.main.updateLatestStepName({ requestId: runnerId, stepName: 'Done' });
+    window.main.completeExecutionStep({ requestId: runnerId });
   } catch (e) {
     // the error could be from third party
-    const errMsg = encodeURIComponent(e.error || e);
-    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane&error=${errMsg}&folder=${targetFolderId}`);
+    const errMsg = e.error || e;
+    updateExecution(runnerId, {
+      error: errMsg,
+    });
+    return null;
   } finally {
-    cancelExecution(workspaceId);
+    cancelExecution(runnerId);
 
     await models.runnerTestResult.create({
-      parentId: workspaceId,
+      parentId: runnerId,
       source: testCtx.source,
       iterations: testCtx.iterationCount,
       duration: testCtx.duration,
@@ -1054,8 +1073,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
       responsesInfo: testCtx.responsesInfo,
     });
   }
-
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?refresh-pane&folder=${targetFolderId}`);
+  return null;
 };
 
 export const collectionRunnerStatusLoader: LoaderFunction = async ({ params }) => {
