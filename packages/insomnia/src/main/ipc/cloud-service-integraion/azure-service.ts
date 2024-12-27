@@ -36,7 +36,7 @@ export const azureEndpointHost = 'https://login.microsoftonline.com';
 export const authority = `${azureEndpointHost}/common`;
 
 const getAzureConfig = async () => {
-  // Validate and use the environment variables if provided
+  // Validate and use the environment variables if provided for dev mode
   if (
     (INSOMNIA_AZURE_REDIRECT_URI && !INSOMNIA_AZURE_CLIENT_ID) ||
     (!INSOMNIA_AZURE_REDIRECT_URI && INSOMNIA_AZURE_CLIENT_ID)
