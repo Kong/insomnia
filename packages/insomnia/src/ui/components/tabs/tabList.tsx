@@ -56,6 +56,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     closeTabById,
     closeAllTabsUnderWorkspace,
     closeAllTabsUnderProject,
+    batchCloseTabs,
     updateTabById,
     updateProjectName,
     updateWorkspaceName,
@@ -98,11 +99,14 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     if (docType === models.workspace.type) {
       // delete all tabs of this workspace
       closeAllTabsUnderWorkspace?.(docId);
+    } else if (docType === models.requestGroup.type) {
+      // when delete a folder, we need also delete the corresponding folder runner tab(if exists)
+      batchCloseTabs?.([docId, `runner_${docId}`]);
     } else {
       // delete tab by id
       closeTabById(docId);
     }
-  }, [closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById]);
+  }, [batchCloseTabs, closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById]);
 
   const handleUpdate = useCallback(async (doc: models.BaseModel, patches: Partial<models.BaseModel>[] = []) => {
     const patchObj: Record<string, any> = {};
