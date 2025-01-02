@@ -168,20 +168,15 @@ export async function initInsomniaObject(
         localVars: localVariables,
     });
 
-    const reqUrl = toUrlObject(rawObj.request.url);
-    reqUrl.addQueryParams(
-        rawObj.request.parameters
-            .filter(param => !param.disabled)
-            .map(param => ({ key: param.name, value: param.value }))
-    );
+    // replace all variables in the raw URL before parsing it
+    const sanitizedRawUrl = `${rawObj.request.url}`.replace(/{{\s*\_\./g, '{{');
+    const renderedRawUrl = variables.replaceIn(sanitizedRawUrl);
 
-    // hack: sanitize a template reference if it exists in the hostname
-    // so we can filter certificates without a full render on the request
-    const host = reqUrl.getHost().replace(/{{\s*\_\./g, '{{');
-    const renderedHost = variables.replaceIn(host);
+    // parse the URL to get the host + protocol
+    const renderedUrl = toUrlObject(renderedRawUrl);
 
-    const renderedBaseUrl = toUrlObject(`${reqUrl.protocol}//${renderedHost}`);
-
+    // filter client certificates by the rendered base URL
+    const renderedBaseUrl = toUrlObject(`${renderedUrl.protocol || 'http:'}//${renderedUrl.getHost()}`);
     const filteredCerts = filterClientCertificates(rawObj.clientCertificates || [], renderedBaseUrl.toString());
     const existingClientCert = filteredCerts != null && filteredCerts.length > 0 && filteredCerts[0];
     const certificate = existingClientCert ?
@@ -201,6 +196,13 @@ export async function initInsomniaObject(
         rawObj.settings.httpsProxy,
         rawObj.settings.proxyEnabled,
         rawObj.settings.noProxy,
+    );
+
+    const reqUrl = toUrlObject(rawObj.request.url);
+    reqUrl.addQueryParams(
+        rawObj.request.parameters
+            .filter(param => !param.disabled)
+            .map(param => ({ key: param.name, value: param.value }))
     );
 
     const reqOpt: RequestOptions = {
