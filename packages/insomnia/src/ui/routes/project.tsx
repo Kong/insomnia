@@ -755,6 +755,7 @@ const ProjectRoute: FC = () => {
       navigate(
         `/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${activity}`
       );
+      return;
     },
   }));
 
