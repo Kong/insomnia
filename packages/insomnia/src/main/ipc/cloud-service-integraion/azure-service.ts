@@ -36,7 +36,7 @@ export const azureEndpointHost = 'https://login.microsoftonline.com';
 export const authority = `${azureEndpointHost}/common`;
 
 const getAzureConfig = async () => {
-  // Validate and use the environment variables if provided
+  // Validate and use the environment variables if provided for dev mode
   if (
     (INSOMNIA_AZURE_REDIRECT_URI && !INSOMNIA_AZURE_CLIENT_ID) ||
     (!INSOMNIA_AZURE_REDIRECT_URI && INSOMNIA_AZURE_CLIENT_ID)
@@ -139,10 +139,11 @@ export class AzureService extends OAuthCloudService implements ICloudService {
   }
 
   async authenticate() {
-    // Azure uses OAuth authenticaion flow.
+    // This method is not implemented as Azure utilizes OAuth authentication flow.
   }
 
-  getUniqueCacheKey(identifier: string) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getUniqueCacheKey(identifier: string, _config?: any) {
     const uniqueKey = identifier;
     const uniqueKeyHash = crypto.createHash('md5').update(uniqueKey).digest('hex');
     return uniqueKeyHash;
@@ -173,9 +174,12 @@ export class AzureService extends OAuthCloudService implements ICloudService {
           result: secretBody,
         };
       } else {
+        const errorBody = await secretResponse.json() as { error?: { code: string; message: string } };
+        const errorMessage = errorBody.error?.message || secretResponse.statusText || 'Unknown error, failed to get secret';
         return {
           success: false,
           result: null,
+          error: { errorMessage, errorCode: errorBody.error?.code || secretResponse.status.toString() },
         };
       }
     } catch (error) {

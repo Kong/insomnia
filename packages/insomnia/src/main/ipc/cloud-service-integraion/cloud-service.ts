@@ -1,10 +1,11 @@
 import type { AuthenticationResult as AzureOAuthCredential } from '@azure/msal-node';
 
 import * as models from '../../../models';
-import type { AWSTemporaryCredential, CloudeProviderCredentialType, CloudProviderName } from '../../../models/cloud-credential';
+import type { AWSTemporaryCredential, BaseCloudCredential, CloudProviderName } from '../../../models/cloud-credential';
 import { ipcMainHandle, ipcMainOn } from '../electron';
 import { type AWSGetSecretConfig, AWSService } from './aws-service';
 import { AzureService } from './azure-service';
+import { type GCPGetSecretConfig, GCPService } from './gcp-servcie';
 import { type MaxAgeUnit, VaultCache } from './vault-cache';
 
 // in-memory cache for fetched vault secrets
@@ -20,13 +21,13 @@ export interface cloudServiceBridgeAPI {
 }
 export interface CloudServiceAuthOption {
   provider: CloudProviderName;
-  credentials: CloudeProviderCredentialType;
+  credentials: BaseCloudCredential['credentials'];
 }
 export interface CloudServiceSecretOption<T extends {}> extends CloudServiceAuthOption {
   secretId: string;
-  config?: T;
+  config: T;
 }
-export type CloudServiceGetSecretConfig = AWSGetSecretConfig;
+export type CloudServiceGetSecretConfig = AWSGetSecretConfig | GCPGetSecretConfig;
 
 export function registerCloudServiceHandlers() {
   ipcMainHandle('cloudService.authenticate', (_event, options) => cspAuthentication(options));
@@ -39,12 +40,14 @@ export function registerCloudServiceHandlers() {
 
 // factory pattern to create cloud service class based on its provider name
 class ServiceFactory {
-  static createCloudService(name: CloudProviderName, credential: CloudeProviderCredentialType) {
+  static createCloudService(name: CloudProviderName, credential: BaseCloudCredential['credentials']) {
     switch (name) {
       case 'aws':
         return new AWSService(credential as AWSTemporaryCredential);
       case 'azure':
         return new AzureService(credential as AzureOAuthCredential);
+      case 'gcp':
+        return new GCPService(credential as string);
       default:
         throw new Error('Invalid cloud service provider name');
     }

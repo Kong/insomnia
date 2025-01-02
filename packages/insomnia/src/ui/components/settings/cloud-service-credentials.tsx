@@ -1,7 +1,9 @@
+import type { AuthenticationResult } from '@azure/msal-node';
 import React, { useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 
+import { isDevelopment } from '../../../common/constants';
 import { type CloudProviderCredential, type CloudProviderName, getProviderDisplayName } from '../../../models/cloud-credential';
 import { usePlanData } from '../../hooks/use-plan';
 import { useRootLoaderData } from '../../routes/root';
@@ -9,6 +11,8 @@ import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
 import { CloudCredentialModal } from '../modals/cloud-credential-modal/cloud-credential-modal';
+import { SvgIcon } from '../svg-icon';
+import { Tooltip } from '../tooltip';
 import { UpgradeNotice } from '../upgrade-notice';
 import { NumberSetting } from './number-setting';
 
@@ -21,19 +25,18 @@ const createCredentialItemList: createCredentialItemType[] = [
   {
     id: 'aws',
     name: getProviderDisplayName('aws'),
-    icon: <i className="fa-brands fa-amazon" />,
+    icon: <i className="ml-1 fa-brands fa-aws" />,
   },
   {
     id: 'azure',
     name: getProviderDisplayName('azure'),
-    icon: <i className="fa-brands fa-microsoft" />,
+    icon: <SvgIcon icon='azure-logo' className='ml-1' />,
   },
-  // TODO support gcp
-  // {
-  //   id: 'gcp',
-  //   name: getProviderDisplayName('gcp'),
-  //   icon: <i className="fa-brands fa-google" />
-  // },
+  {
+    id: 'gcp',
+    name: getProviderDisplayName('gcp'),
+    icon: <SvgIcon icon='gcp-logo' className='ml-1' />,
+  },
 ];
 const buttonClassName = 'disabled:opacity-50 h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] transition-all text-sm py-1 px-2';
 
@@ -70,7 +73,12 @@ export const CloudServiceCredentialList = () => {
   };
 
   const handleCreateCloudServiceCredential = (key: CloudProviderName) => {
-    setModalState({ show: true, provider: key as CloudProviderName });
+    if (key === 'azure' && !isDevelopment()) {
+      // open Azure oauth page directly in production build
+      window.main.cloudService.openAuthUrl('azure');
+    } else {
+      setModalState({ show: true, provider: key as CloudProviderName });
+    }
   };
 
   if (!isEnterprisePlan) {
@@ -132,23 +140,49 @@ export const CloudServiceCredentialList = () => {
           </thead>
           <tbody>
             {cloudCredentials.map(cloudCred => {
-              const { _id, name, provider } = cloudCred;
+              const { _id, name, provider, credentials } = cloudCred;
+              let isAzureTokenExpired = false;
+              if (provider === 'azure') {
+                const tokenExpiresOn = (credentials as AuthenticationResult).expiresOn;
+                if (tokenExpiresOn && new Date() >= new Date(tokenExpiresOn)) {
+                  isAzureTokenExpired = true;
+                }
+              };
+              const credentialItem = createCredentialItemList.find(item => item.id === provider);
               return (
                 <tr key={_id}>
                   <td >
                     {name}
+                    {provider === 'azure' && isAzureTokenExpired &&
+                      <Tooltip message='Token is expired' position='top'>
+                        <i className="ml-1 fa fa-exclamation-circle text-[--color-warning]" />
+                      </Tooltip>
+                    }
                   </td>
                   <td className='w-36'>
-                    {getProviderDisplayName(provider!)}
+                    {credentialItem && (
+                      <div className='flex items-center gap-2'>
+                        {credentialItem.icon}
+                        <span>{credentialItem.name}</span>
+                      </div>
+                    )}
                   </td>
                   <td className='w-52 whitespace-nowrap'>
                     <div className='flex gap-2'>
-                      {provider === 'aws' &&
+                      {provider !== 'azure' &&
                         <Button
                           className={`${buttonClassName} w-16`}
                           onPress={() => setModalState({ show: true, provider: provider!, credential: cloudCred })}
                         >
                           <Icon icon="edit" />&nbsp;&nbsp;Edit
+                        </Button>
+                      }
+                      {provider === 'azure' && isAzureTokenExpired &&
+                        <Button
+                          className={`${buttonClassName} w-20`}
+                          onPress={() => handleCreateCloudServiceCredential('azure')}
+                        >
+                          <Icon icon="rotate" /> Renew
                         </Button>
                       }
                       <Button

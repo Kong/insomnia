@@ -7,15 +7,17 @@ import { Icon } from '../../icon';
 import { showModal } from '..';
 import { SettingsModal, TAB_CLOUD_CREDENTIAL } from '../settings-modal';
 import { AWSCredentialForm } from './aws-credential-form';
+import { GCPCredentialForm } from './gcp-credential-form';
 
 export interface CloudCredentialModalProps {
   provider: CloudProviderName;
   providerCredential?: CloudProviderCredential;
   onClose: (data?: any) => void;
+  onComplete?: (data?: any) => void;
 };
 
 export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
-  const { provider, providerCredential, onClose } = props;
+  const { provider, providerCredential, onClose, onComplete } = props;
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState('');
   const [manulInputUrl, setManualInputUrl] = useState('');
@@ -73,9 +75,11 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
   useEffect(() => {
     // close modal if submit success
     if (cloudCredentialFetcher.data && !cloudCredentialFetcher.data.error && cloudCredentialFetcher.state === 'idle') {
-      onClose(cloudCredentialFetcher.data);
+      const newCredentialData = cloudCredentialFetcher.data;
+      onClose(newCredentialData);
+      onComplete && onComplete(newCredentialData);
     };
-  }, [cloudCredentialFetcher.data, cloudCredentialFetcher.state, onClose]);
+  }, [cloudCredentialFetcher.data, cloudCredentialFetcher.state, onClose, onComplete]);
 
   return (
     <ModalOverlay
@@ -148,6 +152,14 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                     </p>
                   )}
                 </div>
+              }
+              {provider === 'gcp' &&
+                <GCPCredentialForm
+                  data={providerCredential}
+                  isLoading={cloudCredentialFetcher.state !== 'idle'}
+                  onSubmit={handleFormSubmit}
+                  errorMessage={fetchErrorMessage}
+                />
               }
             </div>
           )}
