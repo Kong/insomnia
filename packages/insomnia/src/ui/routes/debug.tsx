@@ -680,11 +680,11 @@ export const Debug: FC = () => {
           icon: 'terminal',
           action: () => setPasteCurlModalOpen(true),
         },
-          {
-            id: 'from-file',
-            name: 'From File',
-            icon: 'file-import',
-            action: () => setIsImportModalOpen(true),
+        {
+          id: 'from-file',
+          name: 'From File',
+          icon: 'file-import',
+          action: () => setIsImportModalOpen(true),
         }],
       }];
 
@@ -1140,6 +1140,7 @@ export const Debug: FC = () => {
                         )}
                         {isGrpcRequestId(requestId) && grpcState && (
                           <GrpcRequestPane
+                            key={grpcState.requestId}
                             grpcState={grpcState}
                             setGrpcState={setGrpcState}
                             reloadRequests={reloadRequests}
