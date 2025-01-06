@@ -67,7 +67,6 @@ jobs:
 
       - name: Test critical path on packaged electron app
         run: |
-          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           npm run test:package -w packages/insomnia-smoke-test -- --project=Critical
         env:
           INSOMNIA_UPDATES_URL: http://localhost:4010
