@@ -1,6 +1,5 @@
 import { contextBridge, ipcRenderer, webUtils as _webUtils } from 'electron';
 
-import type { cloudServiceBridgeAPI } from './main/ipc/cloud-service-integration/cloud-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { keyChainBridgeAPI } from './main/ipc/keyChain';
 import type { CurlBridgeAPI } from './main/network/curl';
@@ -43,13 +42,6 @@ const grpc: gRPCBridgeAPI = {
   loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
 };
 
-const cloudService: cloudServiceBridgeAPI = {
-  authenticate: options => ipcRenderer.invoke('cloudService.authenticate', options),
-  getSecret: options => ipcRenderer.invoke('cloudService.getSecret', options),
-  setCacheMaxAge: options => ipcRenderer.send('cloudService.setCacheMaxAge', options),
-  clearCache: () => ipcRenderer.send('cloudService.clearCache'),
-};
-
 const keyChain: keyChainBridgeAPI = {
   saveToKeyChain: (accountId, key) => ipcRenderer.invoke('keyChain.saveToKeyChain', accountId, key),
   retrieveFromKeyChain: accountId => ipcRenderer.invoke('keyChain.retrieveFromKeyChain', accountId),
@@ -85,7 +77,6 @@ const main: Window['main'] = {
   webSocket,
   grpc,
   curl,
-  cloudService,
   keyChain,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),

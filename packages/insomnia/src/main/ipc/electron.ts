@@ -29,8 +29,6 @@ export type HandleChannels =
   | 'webSocket.readyState'
   | 'writeFile'
   | 'extractJsonFileFromPostmanDataDumpArchive'
-  | 'cloudService.authenticate'
-  | 'cloudService.getSecret'
   | 'keyChain.saveToKeyChain'
   | 'keyChain.retrieveFromKeyChain'
   | 'keyChain.deleteFromKeyChain'
@@ -76,9 +74,7 @@ export type MainOnChannels =
   | 'addExecutionStep'
   | 'completeExecutionStep'
   | 'updateLatestStepName'
-  | 'startExecution'
-  | 'cloudService.setCacheMaxAge'
-  | 'cloudService.clearCache';
+  | 'startExecution';
 export type RendererOnChannels =
   'clear-all-models'
   | 'clear-model'

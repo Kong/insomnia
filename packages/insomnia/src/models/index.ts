@@ -20,7 +20,6 @@ import { generateId } from '../common/misc';
 import * as _apiSpec from './api-spec';
 import * as _caCertificate from './ca-certificate';
 import * as _clientCertificate from './client-certificate';
-import * as _cloudCredential from './cloud-credential';
 import * as _cookieJar from './cookie-jar';
 import * as _environment from './environment';
 import * as _gitRepository from './git-repository';
@@ -100,7 +99,6 @@ export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
 export * as organization from './organization';
 export const userSession = _userSession;
-export const cloudCrendential = _cloudCredential;
 
 export function all() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
@@ -140,7 +138,6 @@ export function all() {
     webSocketRequest,
     webSocketResponse,
     userSession,
-    cloudCrendential,
   ] as const;
 }
 
