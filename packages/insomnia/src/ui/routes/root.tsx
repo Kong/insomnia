@@ -6,7 +6,6 @@ import { type LoaderFunction, Outlet, useFetcher, useNavigate, useParams, useRou
 
 import { isDevelopment } from '../../common/constants';
 import * as models from '../../models';
-import type { CloudProviderCredential } from '../../models/cloud-credential';
 import type { Settings } from '../../models/settings';
 import type { UserSession } from '../../models/user-session';
 import { reloadPlugins } from '../../plugins';
@@ -34,7 +33,6 @@ export interface RootLoaderData {
   settings: Settings;
   workspaceCount: number;
   userSession: UserSession;
-  cloudCredentials: CloudProviderCredential[];
 }
 
 export const useRootLoaderData = () => {
@@ -45,13 +43,11 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
   const settings = await models.settings.get();
   const workspaceCount = await models.workspace.count();
   const userSession = await models.userSession.getOrCreate();
-  const cloudCredentials = await models.cloudCrendential.all();
 
   return {
     settings,
     workspaceCount,
     userSession,
-    cloudCredentials,
   };
 };
 
