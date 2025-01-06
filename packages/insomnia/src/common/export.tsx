@@ -27,7 +27,6 @@ import { showAlert, showError, showModal } from '../ui/components/modals';
 import { AskModal } from '../ui/components/modals/ask-modal';
 import { SelectModal } from '../ui/components/modals/select-modal';
 import type { Insomnia4Data } from '../utils/importers/importers';
-import { invariant } from '../utils/invariant';
 import {
   EXPORT_TYPE_API_SPEC,
   EXPORT_TYPE_COOKIE_JAR,
@@ -431,27 +430,6 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
     },
   });
 };
-// const exportMockServer = async (workspace: Workspace, selectedFormat: 'json' | 'yaml') => {
-//   const data: Insomnia4Data = {
-//     _type: 'export',
-//     __export_format: EXPORT_FORMAT,
-//     __export_date: new Date(),
-//     __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
-//     resources: [],
-//   };
-//   const mockServer = await models.mockServer.getByParentId(workspace._id);
-//   invariant(mockServer, 'expected mock server to be defined');
-//   const mockRoutes = await models.mockRoute.findByParentId(mockServer._id);
-
-//   // unclear why we need a _type here, or if they should match prefix or not
-//   data.resources.push({ ...workspace, _type: 'workspace' });
-//   data.resources.push({ ...mockServer, _type: 'mock' });
-//   mockRoutes.map(mockRoute => data.resources.push({ ...mockRoute, _type: 'mock_route' }));
-//   if (selectedFormat === 'yaml') {
-//     return YAML.stringify(data);
-//   }
-//   return JSON.stringify(data);
-// };
 
 export const exportMockServerToFile = async (workspace: Workspace) => {
   const fileName = await showSaveExportedFileDialog({
