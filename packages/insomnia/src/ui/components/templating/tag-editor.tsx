@@ -9,7 +9,6 @@ import { docsAfterResponseScript } from '../../../common/documentation';
 import { delay, fnOrString } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';
 import * as models from '../../../models';
-import { type as cloudCredentialModelType } from '../../../models/cloud-credential';
 import type { BaseModel } from '../../../models/index';
 import { isRequest, type Request } from '../../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
@@ -29,7 +28,6 @@ import { FileInputButton } from '../base/file-input-button';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { localTemplateTags } from './local-template-tags';
-import { ArgConfigSubForm, couldRenderForm } from './tag-editor-arg-sub-form';
 
 interface Props {
   defaultValue: string;
@@ -90,8 +88,6 @@ export const TagEditor: FC<Props> = props => {
     for (const doc of await db.withDescendants(props.workspace, models.request.type)) {
       allDocs[doc.type].push(doc);
     }
-    // add global Cloud Credential data
-    allDocs[cloudCredentialModelType] = await db.find(cloudCredentialModelType);
     // @ts-expect-error -- type unsoundness
     allDocs[models.request.type] = sortRequests((allDocs[models.request.type] || []).concat(allDocs[models.requestGroup.type] || []), props.workspace._id);
     setState(state => ({ ...state, allDocs, loadingDocs: false }));
@@ -342,7 +338,6 @@ export const TagEditor: FC<Props> = props => {
         const isVariableAllowed = argDefinition.type !== 'model';
         if (!isVariable) {
           if (argDefinition.type === 'string') {
-            const tagDefinitionName = activeTagDefinition.name;
             const placeholder =
               typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
             const encoding = argDefinition.encoding || 'utf8';
