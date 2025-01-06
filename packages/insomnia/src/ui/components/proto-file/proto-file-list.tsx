@@ -20,6 +20,7 @@ interface Props {
   protoDirectories: ExpandedProtoDirectory[];
   selectedId?: string;
   handleSelect: SelectProtoFileHandler;
+  handleUnselect: SelectProtoFileHandler;
   handleDelete: DeleteProtoFileHandler;
   handleUpdate: UpdateProtoFileHandler;
   handleDeleteDirectory: DeleteProtoDirectoryHandler;
@@ -29,6 +30,7 @@ const recursiveRender = (
   indent: number,
   { dir, files, subDirs }: ExpandedProtoDirectory,
   handleSelect: SelectProtoFileHandler,
+  handleUnselect: SelectProtoFileHandler,
   handleUpdate: UpdateProtoFileHandler,
   handleDelete: DeleteProtoFileHandler,
   handleDeleteDirectory: DeleteProtoDirectoryHandler,
@@ -69,7 +71,17 @@ const recursiveRender = (
       onClick={() => handleSelect(f._id)}
     >
       <>
-        <Checkbox className="py-0" isSelected={f._id === selectedId} onChange={isSelected => isSelected && handleSelect(f._id)}>
+        <Checkbox
+          className="py-0"
+          isSelected={f._id === selectedId}
+          onChange={isSelected => {
+            if (isSelected) {
+              handleSelect(f._id);
+            } else {
+              handleUnselect(f._id);
+            }
+          }}
+        >
           {({ isSelected }) => {
             return <>
               {isSelected ?
@@ -115,6 +127,7 @@ const recursiveRender = (
       indent + 1,
       sd,
       handleSelect,
+      handleUnselect,
       handleUpdate,
       handleDelete,
       handleDeleteDirectory,
@@ -133,6 +146,7 @@ export const ProtoFileList: FunctionComponent<Props> = props => (
         0,
         dir,
         props.handleSelect,
+        props.handleUnselect,
         props.handleUpdate,
         props.handleDelete,
         props.handleDeleteDirectory,

@@ -58,6 +58,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   reloadRequests,
 }) => {
   const { activeRequest } = useRouteLoaderData('request/:requestId') as GrpcRequestLoaderData;
+  const {
+    activeEnvironment,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const environmentId = activeEnvironment._id;
   const { settings } = useRootLoaderData();
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
   const { requestMessages, running, methods } = grpcState;
@@ -86,10 +90,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
   const patchRequest = useRequestPatcher();
-  const {
-    activeEnvironment,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const environmentId = activeEnvironment._id;
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}`;
   const method = methods.find(c => c.fullPath === activeRequest.protoMethodName);
@@ -381,7 +381,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
         defaultId={activeRequest.protoFileId}
         onHide={() => setIsProtoModalOpen(false)}
         onSave={async (protoFileId: string) => {
-          if (activeRequest.protoFileId !== protoFileId) {
+          if (!protoFileId) {
+            patchRequest(requestId, { protoFileId: '', protoMethodName: '' });
+            setGrpcState({ ...grpcState, methods: [] });
+            setIsProtoModalOpen(false);
+          } else {
             try {
               const methods = await window.main.grpc.loadMethods(protoFileId);
               patchRequest(requestId, { protoFileId, protoMethodName: '' });
@@ -394,8 +398,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 error,
               });
             }
-          } else {
-            setIsProtoModalOpen(false);
           }
         }}
       />}

@@ -99,9 +99,9 @@ export interface Props {
   reloadRequests: (requestIds: string[]) => void;
 }
 
-export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave, reloadRequests }) => {
+export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
   const modalRef = useRef<ModalHandle>(null);
-  const { workspaceId } = useParams() as { workspaceId: string };
+  const { workspaceId } = useParams() as { workspaceId: string; requestId: string };
 
   const [selectedId, setSelectedId] = useState(defaultId);
   const [protoDirectories, setProtoDirectories] = useState<ExpandedProtoDirectory[]>([]);
@@ -205,7 +205,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave, reloadRe
     if (!filePath) {
       return;
     }
-    if (!await isProtofileValid(filePath)) {
+    if (!(await isProtofileValid(filePath))) {
       return;
     }
     const contents = await fs.promises.readFile(filePath, 'utf-8');
@@ -216,8 +216,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave, reloadRe
     const impacted = await models.grpcRequest.findByProtoFileId(updatedFile._id);
     const requestIds = impacted.map(g => g._id);
     if (requestIds?.length) {
-      requestIds.forEach(requestId => window.main.grpc.cancel(requestId));
-      reloadRequests(requestIds);
+      requestIds.forEach(async requestId => window.main.grpc.cancel(requestId));
     }
   };
 
@@ -294,6 +293,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave, reloadRe
           protoDirectories={protoDirectories}
           selectedId={selectedId}
           handleSelect={id => setSelectedId(id)}
+          handleUnselect={() => setSelectedId('')}
           handleUpdate={handleUpdate}
           handleDelete={handleDeleteFile}
           handleDeleteDirectory={handleDeleteDirectory}
@@ -305,11 +305,10 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave, reloadRe
             className="btn"
             onClick={event => {
               event.preventDefault();
-              if (typeof onSave === 'function' && selectedId) {
-                onSave(selectedId);
+              if (typeof onSave === 'function') {
+                onSave(selectedId || '');
               }
             }}
-            disabled={!selectedId}
           >
             Save
           </button>

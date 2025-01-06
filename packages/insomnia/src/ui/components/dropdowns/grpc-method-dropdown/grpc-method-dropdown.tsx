@@ -70,6 +70,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
   }));
   const selectedPath = selectedMethod?.fullPath;
 
+  console.log(methods, disabled);
   return (
     <Select
       aria-label="Select gRPC method"
