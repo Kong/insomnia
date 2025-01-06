@@ -136,7 +136,7 @@ export async function scanResources(contentList: string[] | ImportFileDetail[]):
           },
           data: {
             // @ts-expect-error -- TSCONVERSION
-            resources: result,
+            resources: insomnia5Import,
           },
         };
       } else {

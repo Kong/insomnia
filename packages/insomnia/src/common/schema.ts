@@ -43,12 +43,12 @@ const CookieSchema = z.object({
   path: z.string(),
   secure: z.boolean(),
   httpOnly: z.boolean(),
-  extensions: z.array(jsonSchema),
-  creation: z.date().optional(),
+  extensions: z.array(jsonSchema).optional(),
+  creation: z.coerce.date().optional(),
   creationIndex: z.number().optional(),
   hostOnly: z.boolean().optional(),
   pathIsDefault: z.boolean().optional(),
-  lastAccessed: z.date().optional(),
+  lastAccessed: z.coerce.date().optional(),
 });
 
 const CookieJarSchema = z.object({
@@ -59,7 +59,7 @@ const CookieJarSchema = z.object({
 
 const EnvironmentSchema = z.object({
   name: z.string().optional(),
-  data: jsonSchema,
+  data: jsonSchema.optional(),
   color: z.string().optional().nullable(),
   meta: MetaSchema.extend({
     sortKey: z.number().optional(),

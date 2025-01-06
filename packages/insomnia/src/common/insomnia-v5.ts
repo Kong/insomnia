@@ -109,7 +109,7 @@ function getEnvironments(file: InsomniaFile): Environment[] {
       _type: EXPORT_TYPE_ENVIRONMENT,
       name: environment.name || 'Imported Environment',
       parentId: file.meta?.id || '__WORKSPACE_ID__',
-      data: environment.data as Record<string, string>,
+      data: environment.data as Record<string, string> || {},
       dataPropertyOrder: {},
       color: environment.color || null,
     })) || [];
@@ -539,7 +539,6 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
   }
 
   function getCookieJarFromResources(resources: CookieJar[]): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['cookieJar'] {
-    // @ts-expect-error -- TSCONVERSION
     return resources.map(resource => ({
       meta: {
         id: resource._id,
