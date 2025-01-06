@@ -51,6 +51,7 @@ jobs:
       - name: Smoke test electron app
         run: |
           GIT_SYNC_SMOKE_TEST_TOKEN=${{env.GIT_SYNC_SMOKE_TEST_TOKEN}} \
+          DEBUG=pw:browser \
           npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
         env:
           GIT_SYNC_SMOKE_TEST_TOKEN: ${{ secrets.GIT_SYNC_SMOKE_TEST_TOKEN }}
