@@ -425,12 +425,10 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = await request.json() as SendActionParams;
 
   try {
-    const runtime = defaultSendActionRuntime;
     return await sendActionImplementation({
       requestId,
       shouldPromptForPathAfterResponse,
       ignoreUndefinedEnvVariable,
-      runtime,
     });
   } catch (err) {
     console.log('[request] Failed to send request', err);
@@ -486,31 +484,33 @@ export interface RunnerContextForRequest {
   responseId: string;
 }
 
-export const sendActionImplementation = async ({
-  requestId,
-  userUploadEnvironment,
-  shouldPromptForPathAfterResponse,
-  ignoreUndefinedEnvVariable,
-  testResultCollector,
-  iteration,
-  iterationCount,
-  transientVariables,
-  runtime,
-}: {
-  requestId: string;
-  shouldPromptForPathAfterResponse: boolean | undefined;
-  ignoreUndefinedEnvVariable: boolean | undefined;
-  testResultCollector?: RunnerContextForRequest;
-  iteration?: number;
-  iterationCount?: number;
-  userUploadEnvironment?: UserUploadEnvironment;
-  transientVariables?: Environment;
-  runtime: SendActionRuntime;
+export const sendActionImplementation = async (options: {
+    requestId: string;
+    shouldPromptForPathAfterResponse: boolean | undefined;
+    ignoreUndefinedEnvVariable: boolean | undefined;
+    testResultCollector?: RunnerContextForRequest;
+    iteration?: number;
+    iterationCount?: number;
+    userUploadEnvironment?: UserUploadEnvironment;
+    transientVariables?: Environment;
+    runtime?: SendActionRuntime;
 }) => {
+  const {
+    requestId,
+    userUploadEnvironment,
+    shouldPromptForPathAfterResponse,
+    ignoreUndefinedEnvVariable,
+    testResultCollector,
+    iteration,
+    iterationCount,
+    transientVariables: nullableTransientVariables,
+    runtime = defaultSendActionRuntime,
+  } = options;
+
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
   const requestMeta = await models.requestMeta.getByParentId(requestId);
-  transientVariables = transientVariables || {
+  const transientVariables = nullableTransientVariables || {
     ...models.environment.init(),
     _id: uuidv4(),
     type: models.environment.type,

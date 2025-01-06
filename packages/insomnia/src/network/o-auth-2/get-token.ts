@@ -10,7 +10,6 @@ import type { AuthTypeOAuth2, OAuth2ResponseType, RequestHeader, RequestParamete
 import type { Request } from '../../models/request';
 import { isRequestGroupId } from '../../models/request-group';
 import type { Response } from '../../models/response';
-import { defaultSendActionRuntime } from '../../ui/routes/request';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
@@ -343,7 +342,6 @@ const sendAccessTokenRequest = async (requestOrGroupId: string, authentication: 
     { ...settings, validateSSL: settings.validateAuthSSL },
     timelinePath,
     responseId,
-    defaultSendActionRuntime,
   );
   const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
 

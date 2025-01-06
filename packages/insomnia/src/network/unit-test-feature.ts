@@ -1,6 +1,5 @@
 import { stats } from '../models';
 import { getBodyBuffer } from '../models/response';
-import { defaultSendActionRuntime } from '../ui/routes/request';
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from './network';
 
@@ -30,7 +29,6 @@ export function getSendRequestCallback() {
       settings,
       timelinePath,
       responseId,
-      defaultSendActionRuntime,
     );
     const res = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;

@@ -18,7 +18,6 @@ import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promis
 import { DEFAULT_BOUNDARY } from '../../main/network/multipart';
 import { _getAwsAuthHeaders } from '../../main/network/parse-header-strings';
 import * as models from '../../models';
-import { defaultSendActionRuntime } from '../../ui/routes/request';
 import * as networkUtils from '../network';
 import { getSetCookiesFromResponseHeaders } from '../network';
 
@@ -103,7 +102,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       settings,
       '/tmp/res_id',
       'res_id',
-      defaultSendActionRuntime,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -183,7 +181,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       settings,
       '/tmp/res_id',
       'res_id',
-      defaultSendActionRuntime,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -288,7 +285,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       settings,
       '/tmp/res_id',
       'res_id',
-      defaultSendActionRuntime,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -353,7 +349,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       settings,
       '/tmp/res_id',
       'res_id',
-      defaultSendActionRuntime,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -438,7 +433,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       settings,
       '/tmp/res_id',
       'res_id',
-      defaultSendActionRuntime,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -504,7 +498,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       settings,
       '/tmp/res_id',
       'res_id',
-      defaultSendActionRuntime,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -549,7 +542,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       settings,
       '/tmp/res_id',
       'res_id',
-      defaultSendActionRuntime,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -593,7 +585,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       settings,
       '/tmp/res_id',
       'res_id',
-      defaultSendActionRuntime,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -638,7 +629,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       settings,
       '/tmp/res_id',
       'res_id',
-      defaultSendActionRuntime,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -744,7 +734,6 @@ describe('sendCurlAndWriteTimeline()', () => {
       { ...settings, validateSSL: false },
       '/tmp/res_id',
       'res_id',
-      defaultSendActionRuntime,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -800,7 +789,6 @@ describe('sendCurlAndWriteTimeline()', () => {
     },
       '/tmp/res_id',
       'res_id',
-      defaultSendActionRuntime,
     );
     expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
     expect(getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);

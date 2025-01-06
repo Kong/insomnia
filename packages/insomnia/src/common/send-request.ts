@@ -152,7 +152,6 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       mutatedContext.settings,
       requestData.timelinePath,
       requestData.responseId,
-      defaultSendActionRuntime,
     );
     const res = await responseTransform(response, environmentId, renderedRequest, renderedResult.context);
     const postMutatedContext = await tryToExecuteAfterResponseScript({

@@ -2,7 +2,6 @@ import { type ExtraRenderInfo } from '../../common/render';
 import * as models from '../../models';
 import type { Request } from '../../models/request';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
-import { defaultSendActionRuntime } from '../../ui/routes/request';
 
 export function init() {
   return {
@@ -27,7 +26,6 @@ export function init() {
           settings,
           timelinePath,
           responseId,
-          defaultSendActionRuntime,
         );
         const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
         return models.response.create(responsePatch, settings.maxHistoryResponses);
