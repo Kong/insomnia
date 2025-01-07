@@ -1,440 +1,348 @@
-_type: export
-__export_format: 4
-__export_date: 2024-09-02T10:16:27.510Z
-__export_source: insomnia.desktop.app:v10.0.0-beta.0
-resources:
-  - _id: req_6e3019b084e64aa384dc7be5b9436d85
-    parentId: fld_4db06340d2114065bc438630b6f6f862
-    modified: 1725268214718
-    created: 1636141014552
-    url: http://127.0.0.1:4010/echo
-    name: req1
-    description: ""
-    method: POST
-    body:
-      mimeType: application/json
-      text: |-
-        {
-        	"scope": "{{ _.scope }}",
-        	"value": "{{ _.value }}"
-        }
-    parameters: []
-    headers:
-      - name: Content-Type
-        value: application/json
-    authentication: {}
-    preRequestScript: |-
-      insomnia.test('req1-pre-check', () => {
-        insomnia.expect(200).to.eql(200);
-      });
-      insomnia.test.skip('req1-pre-check-skipped', () => {
-        insomnia.expect(200).to.eql(200);
-      });
+type: collection.insomnia.rest/5.0
+name: Runner
+meta:
+  id: wrk_4ee3f4f5af5b4ca78d88adeec079d12d
+  created: 1736279896356
+  modified: 1736279896356
+collection:
+  - name: FolderWithEnv
+    meta:
+      id: fld_1ccfc1cf4c96443fa0ea8c5c52184bc4
+      created: 1668533312225
+      modified: 1668533312225
+      sortKey: -1668533312225
+    children:
+      - url: http://127.0.0.1:4010/echo
+        name: req1
+        meta:
+          id: req_4856553f65f04d55b16258f4e45474c6
+          created: 1636141014552
+          modified: 1725268214718
+          isPrivate: false
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"scope": "{{ _.scope }}",
+            	"value": "{{ _.value }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        scripts:
+          preRequest: |-
+            insomnia.test('req1-pre-check', () => {
+              insomnia.expect(200).to.eql(200);
+            });
+            insomnia.test.skip('req1-pre-check-skipped', () => {
+              insomnia.expect(200).to.eql(200);
+            });
 
-      if (insomnia.iterationData.get('scope') === 'uploda data') {
-      	insomnia.execution.setNextRequest('req3');
-      }
-    metaSortKey: -1636141014553
-    isPrivate: false
-    afterResponseScript: |-
-      insomnia.test('req1-post-check', () => {
+            if (insomnia.iterationData.get('scope') === 'uploda data') {
+            	insomnia.execution.setNextRequest('req3');
+            }
+          afterResponse: |-
+            insomnia.test('req1-post-check', () => {
+                insomnia.expect(insomnia.response.code).to.eql(200);
+            });
+            insomnia.test('req1-post-check-failed', () => {
+                insomnia.expect(insomnia.response.code).to.eql(201);
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+    scripts:
+      afterResponse: |-
+        insomnia.environment.unset('onlySetByFolderPreScript');
+        insomnia.test('folder-post-check', () => {
           insomnia.expect(insomnia.response.code).to.eql(200);
-      });
-      insomnia.test('req1-post-check-failed', () => {
-          insomnia.expect(insomnia.response.code).to.eql(201);
-      });
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: fld_4db06340d2114065bc438630b6f6f862
-    parentId: wrk_418cad89191c418395abfeb2277fd26f
-    modified: 1668533312225
-    created: 1668533312225
-    name: FolderWithEnv
-    description: ""
+        });
+      preRequest: |-
+        insomnia.environment.set('onlySetByFolderPreScript', 888);
+        insomnia.test('folder-pre-check', () => {
+          insomnia.expect(200).to.eql(200);
+        });
     environment:
       folderEnv: fromFolder
-    environmentPropertyOrder: null
-    metaSortKey: -1668533312225
-    preRequestScript: |-
-      insomnia.environment.set('onlySetByFolderPreScript', 888);
-      insomnia.test('folder-pre-check', () => {
-        insomnia.expect(200).to.eql(200);
-      });
-    afterResponseScript: |-
-      insomnia.environment.unset('onlySetByFolderPreScript');
-      insomnia.test('folder-post-check', () => {
-        insomnia.expect(insomnia.response.code).to.eql(200);
-      });
-    _type: request_group
-  - _id: wrk_418cad89191c418395abfeb2277fd26f
-    parentId: null
-    modified: 1725266070777
-    created: 1725266070777
-    name: Runner
-    description: ""
-    scope: collection
-    _type: workspace
-  - _id: req_76bf52b201cf47269f5845795a7fe686
-    parentId: wrk_418cad89191c418395abfeb2277fd26f
-    modified: 1636707449231
-    created: 1636141014552
-    url: http://127.0.0.1:4010/echo
-    name: req2
-    description: ""
+  - url: http://127.0.0.1:4010/echo
+    name: req0
+    meta:
+      id: req_05ff5585f15f427382af0dff35666c3e
+      created: 1636141014550
+      modified: 1636707449230
+      isPrivate: false
     method: POST
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    preRequestScript: |-
-      insomnia.test('req2-pre-check', () => {
-      insomnia.expect(200).to.eql(200);
-      });
-    metaSortKey: -1636141014555
-    isPrivate: false
-    afterResponseScript: |-
-      insomnia.test('req2-post-check', () => {
-          insomnia.expect(insomnia.response.code).to.eql(200);
-      });
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_535025e1e3454db79c96f3da9a60b0aa
-    parentId: wrk_418cad89191c418395abfeb2277fd26f
-    modified: 1725268229269
-    created: 1636141014552
-    url: http://127.0.0.1:4010/echo
+    scripts:
+      afterResponse: |-
+        insomnia.test.skip('req0-post-check', () => {
+          insomnia.expect(200).to.eql(200);
+        });
+        insomnia.execution.setNextRequest('req02');
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: req01
+    meta:
+      id: req_47f95f5f29bc4a52b263480cd8c19e36
+      created: 1636141014551
+      modified: 1636707449231
+      isPrivate: false
+    method: POST
+    scripts:
+      afterResponse: |-
+        insomnia.test('req01-post-check', () => {
+          insomnia.expect(200).to.eql(200);
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: set-var1
+    meta:
+      id: req_1a62d7d577de477b9cee717e0488d1ae
+      created: 1636141014552
+      modified: 1636707449232
+      isPrivate: false
+    method: POST
+    scripts:
+      preRequest: insomnia.variables.set('var1', 666);
+      afterResponse: |-
+        insomnia.test('set-var1-check', () => {
+          insomnia.expect(insomnia.variables.get('var1')).to.eql(666);
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
     name: req3
-    description: ""
+    meta:
+      id: req_1cb49b2702af4de6b8dbd0052bb7e464
+      created: 1636141014552
+      modified: 1725268229269
+      isPrivate: false
     method: POST
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    preRequestScript: |-
-      insomnia.test('req3-pre-check', () => {
-      insomnia.expect(200).to.eql(200);
-      });
+    scripts:
+      preRequest: |-
+        insomnia.test('req3-pre-check', () => {
+        insomnia.expect(200).to.eql(200);
+        });
 
-      if (insomnia.iterationData.get('scope') === 'uploda data') {
-      	insomnia.execution.skipRequest();
-      }
-    metaSortKey: -1636141014553
-    isPrivate: false
-    afterResponseScript: |-
-      insomnia.test('req3-post-check', () => {
-          insomnia.expect(insomnia.response.code).to.eql(200);
-      });
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: env_b17a7b4225104ee8b279db252237ef75
-    parentId: wrk_418cad89191c418395abfeb2277fd26f
+        if (insomnia.iterationData.get('scope') === 'uploda data') {
+        	insomnia.execution.skipRequest();
+        }
+      afterResponse: |-
+        insomnia.test('req3-post-check', () => {
+            insomnia.expect(insomnia.response.code).to.eql(200);
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: async-test
+    meta:
+      id: req_2ba50822f5414b3a9e9635c9dac37f38
+      created: 1636141014552
+      modified: 1636707449232
+      isPrivate: false
+    method: POST
+    scripts:
+      preRequest: |-
+        insomnia.test('async_pre_test', async () => {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          insomnia.expect(false).to.eql(true);
+        });
+        insomnia.test('sync_pre_test', () => {
+          insomnia.expect(false).to.eql(true);
+        });
+      afterResponse: |-
+        insomnia.test('async_post_test', async () => {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          insomnia.expect(false).to.eql(true);
+        });
+        insomnia.test('sync_post_test', () => {
+          insomnia.expect(false).to.eql(true);
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: read-var1
+    meta:
+      id: req_2edf665b2c554beaa6e7e0c4bc2275a1
+      created: 1636141014552
+      modified: 1636707449232
+      isPrivate: false
+    method: POST
+    scripts:
+      preRequest: |-
+        insomnia.test('read-var1-pre-check', () => {
+          insomnia.expect(insomnia.variables.get('var1')).to.eql(666);
+        });
+      afterResponse: |-
+        insomnia.test('read-var1-post-check', () => {
+          insomnia.expect(insomnia.variables.get('var1')).to.eql(666);
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: req4
+    meta:
+      id: req_4353f6b1e15e4216b3ad6c3c3bc0b53e
+      created: 1636141014552
+      modified: 1636707449231
+      isPrivate: false
+    method: POST
+    scripts:
+      preRequest: |-
+        const executed = insomnia.environment.get('executed') || 0;
+        if (executed < 2) {
+          insomnia.environment.set('executed', executed + 1);
+          insomnia.execution.setNextRequest('req4');
+        }
+      afterResponse: |-
+        insomnia.test('req4-post-check', () => {
+            insomnia.expect(insomnia.response.code).to.eql(200);
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: req5
+    meta:
+      id: req_5c650c470a734e5b97edf390fc7a032b
+      created: 1636141014552
+      modified: 1636707449231
+      isPrivate: false
+    method: POST
+    scripts:
+      afterResponse: |-
+        const executed = insomnia.environment.get('executedReq5') || 0;
+        if (executed < 2) {
+          insomnia.environment.set('executedReq5', executed + 1);
+          insomnia.execution.setNextRequest('req5');
+        }
+        insomnia.test('req5-post-check', () => {
+            insomnia.expect(insomnia.response.code).to.eql(200);
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: req02
+    meta:
+      id: req_d47c76647bf845119c1aed5b960b0063
+      created: 1636141014552
+      modified: 1636707449232
+      isPrivate: false
+    method: POST
+    scripts:
+      afterResponse: |-
+        insomnia.test('req02-post-check', () => {
+          insomnia.expect(200).to.eql(200);
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: req2
+    meta:
+      id: req_dd725d13d3cc4708a974cf4fc760d790
+      created: 1636141014552
+      modified: 1636707449231
+      isPrivate: false
+    method: POST
+    scripts:
+      preRequest: |-
+        insomnia.test('req2-pre-check', () => {
+        insomnia.expect(200).to.eql(200);
+        });
+      afterResponse: |-
+        insomnia.test('req2-post-check', () => {
+            insomnia.expect(insomnia.response.code).to.eql(200);
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_4bcae35d34fd4bc3aa72f97b8acee9c0
+    created: 1707808692807
     modified: 1725272172993
-    created: 1707808692805
-    name: Base Environment
+environments:
+  - name: Base Environment
+    meta:
+      id: env_21ebe3b2c8364fce9d785d4cffd33644
+      created: 1707808692805
+      modified: 1725272172993
+      isPrivate: false
     data:
       scope: collection_base
       value: collection_base
-    dataPropertyOrder:
-      "&":
-        - scope
-        - value
-    color: null
-    isPrivate: false
-    metaSortKey: 1707808692805
-    _type: environment
-  - _id: jar_d3d36dc8edd344a38f45a8275bbf6d68
-    parentId: wrk_418cad89191c418395abfeb2277fd26f
-    modified: 1725272172993
-    created: 1707808692807
-    name: Default Jar
-    cookies: []
-    _type: cookie_jar
-  - _id: env_119caaf9c6b54e03941fbeb86c5f017a
-    parentId: env_b17a7b4225104ee8b279db252237ef75
-    modified: 1725267402752
-    created: 1725267312624
-    name: Sub Env
+  - name: Sub Env
+    meta:
+      id: env_62e71e5337f044e687a9bc11256ee80f
+      created: 1725267312624
+      modified: 1725267402752
+      isPrivate: true
     data:
       scope: collection_sub
       value: collection_sub
-    dataPropertyOrder:
-      "&":
-        - scope
-        - value
-    color: null
-    isPrivate: true
-    metaSortKey: 1725267312624
-    _type: environment
-  - _id: req_76bf52b201cf47269f5845795a7fe688
-    parentId: wrk_418cad89191c418395abfeb2277fd26f
-    modified: 1636707449231
-    created: 1636141014552
-    url: http://127.0.0.1:4010/echo
-    name: req4
-    description: ""
-    method: POST
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    preRequestScript: |-
-      const executed = insomnia.environment.get('executed') || 0;
-      if (executed < 2) {
-        insomnia.environment.set('executed', executed + 1);
-        insomnia.execution.setNextRequest('req4');
-      }
-    metaSortKey: -1636141014555
-    isPrivate: false
-    afterResponseScript: |-
-      insomnia.test('req4-post-check', () => {
-          insomnia.expect(insomnia.response.code).to.eql(200);
-      });
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_76bf52b201cf47269f5845795a7fe689
-    parentId: wrk_418cad89191c418395abfeb2277fd26f
-    modified: 1636707449231
-    created: 1636141014552
-    url: http://127.0.0.1:4010/echo
-    name: req5
-    description: ""
-    method: POST
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    afterResponseScript: |-
-      const executed = insomnia.environment.get('executedReq5') || 0;
-      if (executed < 2) {
-        insomnia.environment.set('executedReq5', executed + 1);
-        insomnia.execution.setNextRequest('req5');
-      }
-      insomnia.test('req5-post-check', () => {
-          insomnia.expect(insomnia.response.code).to.eql(200);
-      });
-    metaSortKey: -1636141014555
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_76bf52b201cf47269f5845795a7f0000
-    parentId: wrk_418cad89191c418395abfeb2277fd26f
-    modified: 1636707449230
-    created: 1636141014550
-    url: http://127.0.0.1:4010/echo
-    name: req0
-    description: ""
-    method: POST
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    afterResponseScript: |-
-      insomnia.test.skip('req0-post-check', () => {
-        insomnia.expect(200).to.eql(200);
-      });
-      insomnia.execution.setNextRequest('req02');
-    metaSortKey: -1636141014552
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_76bf52b201cf47269f5845795a7f0001
-    parentId: wrk_418cad89191c418395abfeb2277fd26f
-    modified: 1636707449231
-    created: 1636141014551
-    url: http://127.0.0.1:4010/echo
-    name: req01
-    description: ""
-    method: POST
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    afterResponseScript: |-
-      insomnia.test('req01-post-check', () => {
-        insomnia.expect(200).to.eql(200);
-      });
-    metaSortKey: -1636141014551
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_76bf52b201cf47269f5845795a7f0002
-    parentId: wrk_418cad89191c418395abfeb2277fd26f
-    modified: 1636707449232
-    created: 1636141014552
-    url: http://127.0.0.1:4010/echo
-    name: req02
-    description: ""
-    method: POST
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    afterResponseScript: |-
-      insomnia.test('req02-post-check', () => {
-        insomnia.expect(200).to.eql(200);
-      });
-    metaSortKey: -1636141014550
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_76bf52b201cf47269f5845795a711000
-    parentId: wrk_418cad89191c418395abfeb2277fd26f
-    modified: 1636707449232
-    created: 1636141014552
-    url: http://127.0.0.1:4010/echo
-    name: set-var1
-    description: ""
-    method: POST
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    preRequestScript: |-
-      insomnia.variables.set('var1', 666);
-    afterResponseScript: |-
-      insomnia.test('set-var1-check', () => {
-        insomnia.expect(insomnia.variables.get('var1')).to.eql(666);
-      });
-    metaSortKey: 163
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_76bf52b201cf47269f5845795a711001
-    parentId: wrk_418cad89191c418395abfeb2277fd26f
-    modified: 1636707449232
-    created: 1636141014552
-    url: http://127.0.0.1:4010/echo
-    name: read-var1
-    description: ""
-    method: POST
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    preRequestScript: |-
-      insomnia.test('read-var1-pre-check', () => {
-        insomnia.expect(insomnia.variables.get('var1')).to.eql(666);
-      });
-    afterResponseScript: |-
-      insomnia.test('read-var1-post-check', () => {
-        insomnia.expect(insomnia.variables.get('var1')).to.eql(666);
-      });
-    metaSortKey: 164
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_76bf52b201cf47269f5845795a721001
-    parentId: wrk_418cad89191c418395abfeb2277fd26f
-    modified: 1636707449232
-    created: 1636141014552
-    url: http://127.0.0.1:4010/echo
-    name: printLogs
-    description: ""
-    method: POST
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    preRequestScript: |-
-      console.log("it won't print");
-    afterResponseScript: |-
-      console.log("it won't print");
-      insomnia.test('happy tests', () => {
-        insomnia.expect(200).to.eql(200);
-      });
-    metaSortKey: 164
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_76bf52b201cf47269f5845795a711002
-    parentId: wrk_418cad89191c418395abfeb2277fd26f
-    modified: 1636707449232
-    created: 1636141014552
-    url: http://127.0.0.1:4010/echo
-    name: async-test
-    description: ""
-    method: POST
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    preRequestScript: |-
-      insomnia.test('async_pre_test', async () => {
-        await new Promise((resolve) => setTimeout(resolve, 50));
-        insomnia.expect(false).to.eql(true);
-      });
-      insomnia.test('sync_pre_test', () => {
-        insomnia.expect(false).to.eql(true);
-      });
-    afterResponseScript: |-
-      insomnia.test('async_post_test', async () => {
-        await new Promise((resolve) => setTimeout(resolve, 50));
-        insomnia.expect(false).to.eql(true);
-      });
-      insomnia.test('sync_post_test', () => {
-        insomnia.expect(false).to.eql(true);
-      });
-    metaSortKey: 164
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request

@@ -96,19 +96,11 @@ resources:
     created: 1707808697304
     url: http://127.0.0.1:4010/echo
     name: transient var
-    description: ""
+    url: http://127.0.0.1:4010/echo
     method: POST
-    preRequestScript: |-
-      insomnia.variables.set('var', 666);
-    afterResponseScript: |-
-      insomnia.test('check var', () => {
-        insomnia.expect(insomnia.variables.get('var')).to.eql(666);
-      });
     body:
-      mimeType: "application/json"
-      text: |-
-        {}
-    parameters: []
+      mimeType: application/json
+      text: "{}"
     headers:
       - name: 'Content-Type'
         value: 'application/json'
@@ -138,6 +130,12 @@ resources:
     parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
     modified: 1707808692807
     created: 1707808692807
-    name: Default Jar
-    cookies: []
-    _type: cookie_jar
+    modified: 1707808692807
+  name: Default Jar
+environments:
+  - meta:
+      id: env_317fbd93c6b547c592ef7b114514a8f9
+      created: 1707808692805
+      modified: 1707808692805
+      isPrivate: false
+    name: Base Environment

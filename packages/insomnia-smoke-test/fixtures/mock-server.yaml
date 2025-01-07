@@ -1,70 +1,44 @@
-_type: export
-__export_format: 4
-__export_date: 2024-02-13T08:30:28.222Z
-__export_source: insomnia.desktop.app:v8.6.1
-resources:
-  - _id: wrk_916200a8d0c547e8acd3cbe7f61eace2
-    type: Workspace
-    parentId: proj_81ab89da399f466e9b3d32f8ec92b8c8
-    modified: 1707812060949
-    created: 1707812060949
-    name: My API Mock
-    description: ""
-    scope: mock-server
-    _type: workspace
-  - _id: mock_07f41ce980d9410f9634e9ae1e404cab
-    type: MockServer
-    parentId: wrk_916200a8d0c547e8acd3cbe7f61eace2
-    modified: 1707812060951
-    created: 1707812060951
-    name: My API Mock
-    url: http://localhost:8080
-    useInsomniaCloud: true
-    _type: mock
-  - _id: mock-route_4923148ad44e4426ba09347b0b732d7e
-    type: MockRoute
-    parentId: mock_07f41ce980d9410f9634e9ae1e404cab
-    modified: 1707812450193
-    created: 1707812109633
+type: mock.insomnia.rest/5.0
+name: My API Mock
+meta:
+  id: wrk_7b534dfd6f1e4362b7a87fcd181697a0
+  created: 1736278661319
+  modified: 1736278661319
+url: http://localhost:8080
+useInsomniaCloud: true
+routes:
+  - name: /
+    meta:
+      id: mock-route_fde6f70884d544368fe585d42d78926d
+      created: 1707812109633
+      modified: 1707812450193
     body: '{"message":"welcome"}'
     headers:
       - id: pair_b466a74db8ed40fcbbe8f84136f204f8
         name: X-Mockbin-Test
         value: "true"
-        description: ""
-    statusCode: 200
-    statusText: ""
-    name: /
-    mimeType: application/json
     method: GET
-    _type: mock_route
-  - _id: mock-route_3ed9f6dc6b4840d1b82ce047da2fdad2
-    type: MockRoute
-    parentId: mock_07f41ce980d9410f9634e9ae1e404cab
-    modified: 1707812454502
-    created: 1707812408451
+    mimeType: application/json
+    statusCode: 200
+  - name: /healthcheck
+    meta:
+      id: mock-route_47d18a5725e44020b319e94837644800
+      created: 1707812408451
+      modified: 1707812454502
     body: '{"uptime":12345678}'
     headers:
       - id: pair_d0a6e2d6a3614e05943cf156e52134d8
         name: X-Mockbin-Test
         value: test
-        description: ""
+    method: GET
+    mimeType: application/json
     statusCode: 200
-    statusText: ""
-    name: /healthcheck
-    mimeType: application/json
-    method: GET
-    _type: mock_route
-  - _id: mock-route_9df5850642c741eca8b52b0491827b9e
-    type: MockRoute
-    parentId: mock_07f41ce980d9410f9634e9ae1e404cab
-    modified: 1707812514106
-    created: 1707812462239
+  - name: /unauthorized
+    meta:
+      id: mock-route_2f3beb97a4954f149f3e85bdd2ae4251
+      created: 1707812462239
+      modified: 1707812514106
     body: '{"message":"email is required"}'
-    headers: []
-    statusCode: 401
-    statusText: ""
-    name: /unauthorized
-    mimeType: application/json
     method: GET
-    _type: mock_route
+    mimeType: application/json
+    statusCode: 401
