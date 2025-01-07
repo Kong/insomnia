@@ -101,7 +101,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -180,7 +180,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -284,7 +284,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -348,7 +348,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -432,7 +432,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -497,7 +497,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -541,7 +541,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -584,7 +584,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -628,7 +628,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -733,7 +733,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       { ...settings, validateSSL: false },
       '/tmp/res_id',
-      'res_id',
+      'res_id'
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -788,7 +788,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       preferredHttpVersion: HttpVersions.V1_0,
     },
       '/tmp/res_id',
-      'res_id',
+      'res_id'
     );
     expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
     expect(getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);

@@ -729,7 +729,6 @@ export const createAndSendToMockbinAction: ActionFunction = async ({ request }) 
     settings,
     timelinePath,
     responseId,
-    defaultSendActionRuntime,
   );
 
   const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);

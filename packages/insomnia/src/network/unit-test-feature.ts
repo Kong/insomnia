@@ -28,7 +28,7 @@ export function getSendRequestCallback() {
       caCert,
       settings,
       timelinePath,
-      responseId,
+      responseId
     );
     const res = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
