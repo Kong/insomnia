@@ -568,18 +568,32 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
         click: aboutMenuClickHandler,
       },
       {
+        label: 'Check for updates',
+        click: () => {
+          ipcMain.emit('manualUpdateCheck');
+        },
+      },
+      {
         type: 'separator',
       },
     );
   } else {
     // @ts-expect-error -- TSCONVERSION type splitting
-    helpMenu.submenu?.push({
-      type: 'separator',
-    },
+    helpMenu.submenu?.push(
+      {
+        type: 'separator',
+      },
+      {
+        label: 'Check for updates',
+        click: () => {
+          ipcMain.emit('manualUpdateCheck');
+        },
+      },
       {
         label: `${MNEMONIC_SYM}About`,
         click: aboutMenuClickHandler,
-      });
+      }
+    );
   }
 
   const developerMenu: MenuItemConstructorOptions = {
