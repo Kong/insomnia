@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 
 import * as bodyParser from 'body-parser';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
 import express from 'express';
 import { readFileSync } from 'fs';
 import { createHandler } from 'graphql-http/lib/use/http';
@@ -14,11 +14,12 @@ import gitlabApi from './gitlab-api';
 import { schema } from './graphql';
 import { startGRPCServer } from './grpc';
 import insomniaApi from './insomnia-api';
+import { mtlsRouter } from './mtls';
 import { oauthRoutes } from './oauth';
 import { startWebSocketServer } from './websocket';
 
 const app = express();
-app.use(cookieParser.default());
+app.use(cookieParser());
 const port = 4010;
 const httpsPort = 4011;
 const grpcPort = 50051;
@@ -64,6 +65,7 @@ app.get('/cookies', (_req, res) => {
 
 app.use('/file', express.static('fixtures/files'));
 app.use('/auth/basic', basicAuthRouter);
+app.use('/protected', mtlsRouter);
 
 githubApi(app);
 gitlabApi(app);
@@ -129,6 +131,9 @@ startWebSocketServer(app.listen(port, () => {
 startWebSocketServer(createServer({
   cert: readFileSync(join(__dirname, '../fixtures/certificates/localhost.pem')),
   key: readFileSync(join(__dirname, '../fixtures/certificates/localhost-key.pem')),
+  ca: readFileSync(join(__dirname, '../fixtures/certificates/rootCA.pem')),
+  requestCert: true,
+  rejectUnauthorized: false,
 }, app).listen(httpsPort, () => {
   console.log(`Listening at https://localhost:${httpsPort}`);
   console.log(`Listening at wss://localhost:${httpsPort}`);

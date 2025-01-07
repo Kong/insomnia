@@ -300,7 +300,7 @@ resources:
           cert: {src: 'invalid.cert'},
           passphrase: '',
           pfx: {src: ''},
-      });    
+      });
     _type: request
   - _id: req_89dade2ee9ee42fbb22d588783a9df3e
     parentId: fld_01de564274824ecaad272330339ea6b2

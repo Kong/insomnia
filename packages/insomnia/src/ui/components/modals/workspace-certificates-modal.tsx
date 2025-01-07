@@ -233,6 +233,7 @@ const ClientCertificateGridListItem = ({ certificate }: {
         )}
         <div className='flex items-center gap-2 h-6'>
           <ToggleButton
+            data-test-id="client-certificate-toggle"
             onChange={isSelected => {
               updateClientCertificateFetcher.submit({ ...certificate, disabled: !isSelected }, {
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/update`,

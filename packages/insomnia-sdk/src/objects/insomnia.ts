@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
 import type { RequestHeader } from 'insomnia/src/models/request';
 import type { Settings } from 'insomnia/src/models/settings';
+import { filterClientCertificates } from 'insomnia/src/network/certificate';
 
 import { toPreRequestAuth } from './auth';
 import { CookieObject } from './cookies';
@@ -167,16 +168,26 @@ export async function initInsomniaObject(
         localVars: localVariables,
     });
 
-    const existClientCert = rawObj.clientCertificates != null && rawObj.clientCertificates.length > 0;
-    const certificate = existClientCert && rawObj.clientCertificates[0] ?
+    // replace all variables in the raw URL before parsing it
+    const sanitizedRawUrl = `${rawObj.request.url}`.replace(/{{\s*\_\./g, '{{');
+    const renderedRawUrl = variables.replaceIn(sanitizedRawUrl);
+
+    // parse the URL to get the host + protocol
+    const renderedUrl = toUrlObject(renderedRawUrl);
+
+    // filter client certificates by the rendered base URL
+    const renderedBaseUrl = toUrlObject(`${renderedUrl.protocol || 'http:'}//${renderedUrl.getHost()}`);
+    const filteredCerts = filterClientCertificates(rawObj.clientCertificates || [], renderedBaseUrl.toString());
+    const existingClientCert = filteredCerts != null && filteredCerts.length > 0 && filteredCerts[0];
+    const certificate = existingClientCert ?
         {
-            disabled: rawObj.clientCertificates[0].disabled,
+            disabled: existingClientCert.disabled,
             name: 'The first certificate from Settings',
-            matches: [rawObj.clientCertificates[0].host],
-            key: { src: rawObj.clientCertificates[0].key || '' },
-            cert: { src: rawObj.clientCertificates[0].cert || '' },
-            passphrase: rawObj.clientCertificates[0].passphrase || undefined,
-            pfx: { src: rawObj.clientCertificates[0].pfx || '' }, // PFX or PKCS12 Certificate
+            matches: [existingClientCert.host],
+            key: { src: existingClientCert.key || '' },
+            cert: { src: existingClientCert.cert || '' },
+            passphrase: existingClientCert.passphrase || undefined,
+            pfx: { src: existingClientCert.pfx || '' }, // PFX or PKCS12 Certificate
         } :
         { disabled: true };
 
