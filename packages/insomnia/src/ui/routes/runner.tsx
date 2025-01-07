@@ -112,6 +112,7 @@ export interface RequestRow {
 
 const defaultAdvancedConfig = {
   bail: true,
+  keepLog: true,
 };
 
 export const Runner: FC<{}> = () => {
@@ -127,7 +128,6 @@ export const Runner: FC<{}> = () => {
     workspaceId: string;
     direction: 'vertical' | 'horizontal';
   };
-  const [keepLog, setKeepLog] = useState<boolean>(true);
   const [isRunning, setIsRunning] = useState(false);
 
   // For backward compatibility，the runnerId we use for testResult in database is no prefix with 'runner_'
@@ -250,7 +250,7 @@ export const Runner: FC<{}> = () => {
       userUploadEnvs,
       delay,
       bail: advancedConfig?.bail,
-      keepLog,
+      keepLog: advancedConfig?.keepLog,
       targetFolderId: targetFolderId || '',
     };
     submit(
@@ -608,10 +608,17 @@ export const Runner: FC<{}> = () => {
                     <label className="flex items-center gap-2">
                       <input
                         name='enable-log'
-                        onChange={() => setKeepLog(!keepLog)}
+                        onChange={() => {
+                          updateRunnerState(organizationId, runnerId, {
+                            advancedConfig: {
+                              ...advancedConfig,
+                              keepLog: !advancedConfig?.keepLog,
+                            },
+                          });
+                        }}
                         type="checkbox"
                         disabled={isRunning}
-                        checked={keepLog}
+                        checked={advancedConfig?.keepLog}
                       />
                       Keep logs after run
                       <HelpTooltip className="space-left">Disabling this will improve the performance while logs are not saved.</HelpTooltip>
