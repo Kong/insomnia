@@ -66,8 +66,7 @@ jobs:
       #     ELECTRON_ARTIFACT_SHAFILE: ${{runner.temp}}/electron.sha256
 
       - name: Test critical path on packaged electron app
-        run: |
-          npm run test:package -w packages/insomnia-smoke-test -- --project=Critical
+        run: npm run test:package -w packages/insomnia-smoke-test -- --project=Critical
         env:
           INSOMNIA_UPDATES_URL: http://localhost:4010
 

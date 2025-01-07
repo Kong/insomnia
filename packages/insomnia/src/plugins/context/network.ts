@@ -25,7 +25,7 @@ export function init() {
           caCert,
           settings,
           timelinePath,
-          responseId,
+          responseId
         );
         const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
         return models.response.create(responsePatch, settings.maxHistoryResponses);
