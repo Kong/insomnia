@@ -154,7 +154,6 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       const workspace = await models.workspace.getById(patchObj.parentId);
       if (workspace) {
         if (isRequest(doc)) {
-          debugger;
           updateTabById?.(doc._id, {
             workspaceId: workspace._id,
             workspaceName: workspace.name,
