@@ -420,6 +420,8 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
     resources.filter(resource => resource.parentId === parentId).forEach(resource => {
       if (models.request.isRequest(resource)) {
         const request: Z_Request = {
+          url: resource.url,
+          name: resource.name,
           meta: {
             id: resource._id,
             created: resource.created,
@@ -427,8 +429,6 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
             isPrivate: resource.isPrivate,
             description: resource.description,
           },
-          name: resource.name,
-          url: resource.url,
           method: resource.method,
           body: resource.body,
           parameters: resource.parameters,
@@ -453,6 +453,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
         collection.push(request);
       } else if (models.requestGroup.isRequestGroup(resource)) {
         const requestGroup: Z_RequestGroup = {
+          name: resource.name,
           meta: {
             id: resource._id,
             created: resource.created,
@@ -461,7 +462,6 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
             sortKey: resource.metaSortKey,
             description: resource.description,
           },
-          name: resource.name,
           children: getCollectionFromResources(resources, resource._id),
           scripts: {
             afterResponse: resource.afterResponseScript,
@@ -475,6 +475,8 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
         collection.push(requestGroup);
       } else if (models.webSocketRequest.isWebSocketRequest(resource)) {
         const webSocketRequest: Z_WebsocketRequest = {
+          url: resource.url,
+          name: resource.name,
           meta: {
             id: resource._id,
             created: resource.created,
@@ -482,7 +484,6 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
             isPrivate: resource.isPrivate,
             description: resource.description,
           },
-          name: resource.name,
           settings: {
             encodeUrl: resource.settingEncodeUrl,
             followRedirects: resource.settingFollowRedirects,
@@ -491,7 +492,6 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
               store: resource.settingStoreCookies,
             },
           },
-          url: resource.url,
           authentication: resource.authentication,
           headers: resource.headers,
           parameters: resource.parameters,
@@ -500,6 +500,8 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
         collection.push(webSocketRequest);
       } else if (models.grpcRequest.isGrpcRequest(resource)) {
         const grpcRequest: Z_GRPCRequest = {
+          url: resource.url,
+          name: resource.name,
           meta: {
             id: resource._id,
             created: resource.created,
@@ -508,9 +510,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
             sortKey: resource.metaSortKey,
             description: resource.description,
           },
-          name: resource.name,
           body: resource.body,
-          url: resource.url,
           metadata: resource.metadata,
           protoFileId: resource.protoFileId,
           protoMethodName: resource.protoMethodName,
@@ -526,13 +526,13 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
 
   function getEnvironmentsFromResources(resources: Environment[]): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['environments'] {
     return resources.map(resource => ({
+      name: resource.name,
       meta: {
         id: resource._id,
         created: resource.created,
         modified: resource.modified,
         isPrivate: resource.isPrivate,
       },
-      name: resource.name,
       data: resource.data,
       color: resource.color,
     }));
@@ -540,13 +540,13 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
 
   function getCookieJarFromResources(resources: CookieJar[]): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['cookieJar'] {
     return resources.map(resource => ({
+      name: resource.name,
       meta: {
         id: resource._id,
         created: resource.created,
         modified: resource.modified,
         isPrivate: resource.isPrivate,
       },
-      name: resource.name,
       cookies: resource.cookies,
     }))[0];
   }
@@ -558,21 +558,21 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
       const tests = resources.filter(models.unitTest.isUnitTest).filter(test => test.parentId === testSuite._id);
 
       testSuites.push({
+        name: testSuite.name,
         meta: {
           id: testSuite._id,
           created: testSuite.created,
           modified: testSuite.modified,
           isPrivate: testSuite.isPrivate,
         },
-        name: testSuite.name,
         tests: tests.map(test => ({
+          name: test.name,
           meta: {
             id: test._id,
             created: test.created,
             modified: test.modified,
             isPrivate: test.isPrivate,
           },
-          name: test.name,
           requestId: test.requestId,
           code: test.code,
         })),
@@ -593,13 +593,13 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
 
   function getRoutesFromResources(resources: MockRoute[]): Extract<InsomniaFile, { type: 'mock.insomnia.rest/5.0' }>['routes'] {
     return resources.map(resource => ({
+      name: resource.name,
       meta: {
         id: resource._id,
         created: resource.created,
         modified: resource.modified,
         isPrivate: resource.isPrivate,
       },
-      name: resource.name,
       body: resource.body,
       headers: resource.headers,
       method: resource.method,
@@ -637,11 +637,11 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
         isPrivate: workspace.isPrivate,
         description: workspace.description,
       },
-      spec: getSpecFromResources(exportableResources.filter(models.apiSpec.isApiSpec)),
-      testSuites: getTestSuitesFromResources(exportableResources.filter(models.unitTestSuite.isUnitTestSuite || models.unitTest.isUnitTest)),
       collection: getCollectionFromResources(exportableResources.filter(resource => models.requestGroup.isRequestGroup(resource) || models.request.isRequest(resource) || models.webSocketRequest.isWebSocketRequest(resource) || models.grpcRequest.isGrpcRequest(resource)), workspace._id),
       cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
       environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)),
+      spec: getSpecFromResources(exportableResources.filter(models.apiSpec.isApiSpec)),
+      testSuites: getTestSuitesFromResources(exportableResources.filter(models.unitTestSuite.isUnitTestSuite || models.unitTest.isUnitTest)),
     };
 
     return stringify(removeEmptyFields(spec));
@@ -672,8 +672,8 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
         description: workspace.description,
       },
       url: exportableResources.filter(models.mockServer.isMockServer)[0].url,
-      routes: getRoutesFromResources(exportableResources.filter(models.mockRoute.isMockRoute)),
       useInsomniaCloud: exportableResources.filter(models.mockServer.isMockServer)[0].useInsomniaCloud,
+      routes: getRoutesFromResources(exportableResources.filter(models.mockRoute.isMockRoute)),
     };
 
     return stringify(removeEmptyFields(mockServer), {});
