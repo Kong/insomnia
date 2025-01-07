@@ -144,6 +144,10 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
             }
           },
         });
+      } else if (newType === EnvironmentKvPairDataType.SECRET) {
+        // encrypt value if set to secret type
+        handleItemChange(id, 'value', encryptSecretValue(originValue, symmetricKey));
+        handleItemChange(id, 'type', newType);
       } else {
         handleItemChange(id, 'type', newType);
       }

@@ -176,6 +176,13 @@ export const VaultKeyPanel = () => {
             setting="saveVaultKeyToOSSecretManager"
           />
         </div>
+        <div className="form-row pad-top-sm">
+          <BooleanSetting
+            label="Enable vault in scripts"
+            help="Allow pre-request and after-response script to access vault secrets."
+            setting='enableVaultInScripts'
+          />
+        </div>
         </>
       }
       {/* User has not input vault key after re-login */}

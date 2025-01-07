@@ -72,6 +72,7 @@ export function init(): BaseSettings {
     validateSSL: true,
     vaultSecretCacheDuration: 30,
     saveVaultKeyToOSSecretManager: true,
+    enableVaultInScripts: false,
   };
 }
 
