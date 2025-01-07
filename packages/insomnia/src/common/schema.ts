@@ -66,29 +66,6 @@ const EnvironmentSchema = z.object({
   }).optional(),
 });
 
-// const GitRepositorySchema = z.object({
-//   type: z.literal('GitRepository'),
-//   needsFullClone: z.boolean().default(false),
-//   uriNeedsMigration: z.boolean().default(true),
-//   uri: z.string(),
-//   credentials: z.union([
-//     z.object({
-//       username: z.string(),
-//       password: z.string(),
-//     }).nullable(),
-//     z.object({
-//       oauth2format: z.enum(['github', 'gitlab']).optional(),
-//       username: z.string(),
-//       token: z.string(),
-//     }),
-//   ]),
-//   author: z.object({
-//     name: z.string(),
-//     email: z.string(),
-//   }),
-//   meta: MetaSchema,
-// });
-
 export const GRPCRequestSchema = z.object({
   name: z.string(),
   url: z.string(),
