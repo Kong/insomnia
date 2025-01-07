@@ -1,9 +1,9 @@
-import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button, DropIndicator, GridList, Menu, MenuItem, MenuTrigger, Popover, type Selection, useDragAndDrop } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
+import { debounce } from '../../../common/misc';
 import * as models from '../../../models/index';
 import type { MockRoute } from '../../../models/mock-route';
 import { isRequest, type Request } from '../../../models/request';
@@ -237,7 +237,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     }
   };
 
-  const debouncedOnResize = _.debounce<(size: Size) => void>(onResize, 500);
+  const debouncedOnResize = debounce<(size: Size) => void>(onResize, 500);
 
   useResizeObserver(tabListWrapperRef, debouncedOnResize);
 
