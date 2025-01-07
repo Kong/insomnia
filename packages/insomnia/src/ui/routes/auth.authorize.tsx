@@ -32,30 +32,34 @@ export const action: ActionFunction = async ({
   window.localStorage.setItem('hasUserLoggedInBefore', 'true');
   const userSession = await sessionModel.getOrCreate();
   const { accountId, id: sessionId } = userSession;
-  // check vault salt exists in server
-  const { salt: vaultSalt } = await insomniaFetch<{
-    salt?: string;
-    error?: string;
-  }>({
-    method: 'GET',
-    path: '/v1/user/vault',
-    sessionId,
-  });
-  if (vaultSalt) {
-    // save vault salt to session
-    await sessionModel.update(userSession, { vaultSalt });
-    // get vault key saved in keychain
-    const vaultKeyInKeyChain = await window.main.keyChain.retrieveFromKeyChain(accountId);
-    if (vaultKeyInKeyChain) {
-      // validate vault key with server
-      const validateResult = await validateVaultKey(userSession, vaultKeyInKeyChain, vaultSalt);
-      if (validateResult) {
-        // Encrypt vault key and save encrypted vault key & raw vault salt to session
-        const encryptedVaultKey = await window.main.keyChain.encryptString(vaultKeyInKeyChain);
-        await sessionModel.update(userSession, { vaultKey: encryptedVaultKey, vaultSalt });
-      };
-    }
-  };
+  try {
+    // check vault salt exists in server
+    const { salt: vaultSalt } = await insomniaFetch<{
+      salt?: string;
+      error?: string;
+    }>({
+      method: 'GET',
+      path: '/v1/user/vault',
+      sessionId,
+    });
+    if (vaultSalt) {
+      // save vault salt to session
+      await sessionModel.update(userSession, { vaultSalt });
+      // get vault key saved in keychain
+      const vaultKeyInKeyChain = await window.main.keyChain.retrieveFromKeyChain(accountId);
+      if (vaultKeyInKeyChain) {
+        // validate vault key with server
+        const validateResult = await validateVaultKey(userSession, vaultKeyInKeyChain, vaultSalt);
+        if (validateResult) {
+          // Encrypt vault key and save encrypted vault key & raw vault salt to session
+          const encryptedVaultKey = await window.main.keyChain.encryptString(vaultKeyInKeyChain);
+          await sessionModel.update(userSession, { vaultKey: encryptedVaultKey, vaultSalt });
+        };
+      }
+    };
+  } catch (err) {
+    console.log(err);
+  }
   return redirect('/organization');
 };
 
