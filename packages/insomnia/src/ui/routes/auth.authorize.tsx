@@ -58,7 +58,7 @@ export const action: ActionFunction = async ({
       }
     };
   } catch (err) {
-    console.log(err);
+    console.error(err);
   }
   return redirect('/organization');
 };
