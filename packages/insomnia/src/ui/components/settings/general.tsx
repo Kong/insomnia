@@ -270,7 +270,7 @@ export const General: FC = () => {
           help="If checked, validates SSL certificates during authentication flows."
         />
       </div>
-      <VaultKeyPanel />
+      {isLoggedIn && <VaultKeyPanel />}
 
       {updatesSupported() && (
         <Fragment>
