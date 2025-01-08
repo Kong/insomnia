@@ -389,7 +389,7 @@ export const start = (
     }
     const methodType = getMethodType(method);
     // Create client
-    const { url } = parseGrpcUrl(request.url);
+    const { url, path } = parseGrpcUrl(request.url);
 
     if (!url) {
       event.reply('grpc.error', request._id, new Error('URL not specified'));
@@ -405,10 +405,11 @@ export const start = (
 
     try {
       const messageBody = JSON.parse(request.body.text || '');
+      const requestPath = path + method.path;
       switch (methodType) {
         case 'unary':
           const unaryCall = client.makeUnaryRequest(
-            method.path,
+            requestPath,
             method.requestSerialize,
             method.responseDeserialize,
             messageBody,
@@ -420,7 +421,7 @@ export const start = (
           break;
         case 'client':
           const clientCall = client.makeClientStreamRequest(
-            method.path,
+            requestPath,
             method.requestSerialize,
             method.responseDeserialize,
             filterDisabledMetaData(request.metadata),
@@ -430,7 +431,7 @@ export const start = (
           break;
         case 'server':
           const serverCall = client.makeServerStreamRequest(
-            method.path,
+            requestPath,
             method.requestSerialize,
             method.responseDeserialize,
             messageBody,
@@ -441,7 +442,7 @@ export const start = (
           break;
         case 'bidi':
           const bidiCall = client.makeBidiStreamRequest(
-            method.path,
+            requestPath,
             method.requestSerialize,
             method.responseDeserialize,
             filterDisabledMetaData(request.metadata));
