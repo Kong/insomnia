@@ -7,7 +7,7 @@ import { filterClientCertificates } from 'insomnia/src/network/certificate';
 import { toPreRequestAuth } from './auth';
 import { getExistingConsole } from './console';
 import { CookieObject } from './cookies';
-import { Environment, Variables } from './environments';
+import { Environment, Variables, Vault } from './environments';
 import { Execution } from './execution';
 import { Folder, ParentFolders } from './folders';
 import type { RequestContext } from './interfaces';
@@ -30,6 +30,7 @@ export class InsomniaObject {
     public info: RequestInfo;
     public response?: ScriptResponse;
     public execution: Execution;
+    public vault?: Vault;
 
     public clientCertificates: ClientCertificate[];
     private _expect = expect;
@@ -60,6 +61,7 @@ export class InsomniaObject {
             execution: Execution;
             response?: ScriptResponse;
             parentFolders: ParentFolders;
+            vault?: Vault;
         },
     ) {
         this.globals = rawObj.globals;
@@ -71,6 +73,7 @@ export class InsomniaObject {
         this.cookies = rawObj.cookies;
         this.response = rawObj.response;
         this.execution = rawObj.execution;
+        this.vault = rawObj.vault;
 
         this.info = rawObj.requestInfo;
         this.request = rawObj.request;
@@ -156,6 +159,9 @@ export async function initInsomniaObject(
         new Environment(rawObj.iterationData.name, rawObj.iterationData.data) : new Environment('iterationData', {});
     const localVariables = rawObj.transientVariables ?
         new Environment(rawObj.transientVariables.name, rawObj.transientVariables.data) : new Environment('transientVariables', {});
+    const enableVaultInScripts = rawObj.settings?.enableVaultInScripts || false;
+    const vault = rawObj.vault ?
+        new Vault('vault', rawObj.vault, enableVaultInScripts) : new Vault('vault', {}, enableVaultInScripts);
     const cookies = new CookieObject(rawObj.cookieJar);
     // TODO: update follows when post-request script and iterationData are introduced
     const requestInfo = new RequestInfo({
@@ -255,6 +261,7 @@ export async function initInsomniaObject(
         environment,
         baseEnvironment,
         iterationData,
+        vault,
         variables,
         request,
         settings: rawObj.settings,
