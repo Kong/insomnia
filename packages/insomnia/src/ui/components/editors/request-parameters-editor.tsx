@@ -65,7 +65,7 @@ export const RequestParametersEditor: FC<Props> = ({
     return (
       <CodeEditor
         id="request-parameters-editor"
-        className='min-h-[8rem]'
+        className='flex-1'
         onChange={handleBulkUpdate}
         defaultValue={paramsString}
         enableNunjucks
