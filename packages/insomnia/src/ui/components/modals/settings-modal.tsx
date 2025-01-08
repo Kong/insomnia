@@ -135,7 +135,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
               <TextSetting
                 label="No proxy"
                 setting="noProxy"
-                help="Enter a comma-separated list of hostnames that don’t require a proxy."
+                help="Enter a comma-separated list of hostnames that don’t require a proxy. If you want a domain name to apply to all its subdomains too, prefix it with a dot (e.g. .example.com)."
                 placeholder="localhost,127.0.0.1"
                 disabled={!settings.proxyEnabled}
               />
