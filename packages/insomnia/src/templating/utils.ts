@@ -311,7 +311,13 @@ export async function maskOrDecryptContextIfNecessary(context: Record<string, an
   // all secret variables are under vaultEnvironmentPath property in context
   const vaultEnvironmentData = context[vaultEnvironmentPath];
   const renderPurpose = typeof context.getPurpose === 'function' && context.getPurpose();
-  const shouldDecrypt = renderPurpose === 'preview' || renderPurpose === 'send';
+  /**
+    * Decrypt secrets when renderPurpose is one of the following:
+    * - preview: render the template in variable editor to do the live preview
+    * - send: render the template when sending requests
+    * - script: render the template in pre-request or after-response script
+  */
+  const shouldDecrypt = renderPurpose === 'preview' || renderPurpose === 'send' || renderPurpose === 'script';
   if (vaultEnvironmentData) {
     if (shouldDecrypt) {
       const { vaultKey } = await userSession.getOrCreate();

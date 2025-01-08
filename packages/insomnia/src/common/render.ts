@@ -20,7 +20,7 @@ import { database as db } from './database';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
-export type RenderPurpose = 'send' | 'general' | 'preview' | 'no-render';
+export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
 export const RENDER_PURPOSE_SEND: RenderPurpose = 'send';
 export const RENDER_PURPOSE_GENERAL: RenderPurpose = 'general';
 export const RENDER_PURPOSE_NO_RENDER: RenderPurpose = 'no-render';
