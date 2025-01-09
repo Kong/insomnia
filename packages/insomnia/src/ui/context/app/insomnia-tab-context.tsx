@@ -4,7 +4,7 @@ import { useLocalStorage } from 'react-use';
 
 import type { BaseTab } from '../../components/tabs/tab';
 import type { OrganizationTabs } from '../../components/tabs/tabList';
-import uiEventBus, { UIEventType } from '../../eventBus';
+import uiEventBus from '../../eventBus';
 
 interface UpdateInsomniaTabParams {
   organizationId: string;
@@ -99,7 +99,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
         tabList: [],
         activeTabId: '',
       });
-      uiEventBus.emit(UIEventType.CLOSE_TAB, organizationId, [id]);
+      uiEventBus.emit('CLOSE_TAB', organizationId, [id]);
       return;
     }
 
@@ -117,7 +117,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       tabList: newTabList,
       activeTabId: currentTabs.activeTabId === id ? newTabList[Math.max(index - 1, 0)]?.id : currentTabs.activeTabId as string,
     });
-    uiEventBus.emit(UIEventType.CLOSE_TAB, organizationId, [id]);
+    uiEventBus.emit('CLOSE_TAB', organizationId, [id]);
   }, [navigate, organizationId, projectId, updateInsomniaTabs]);
 
   const batchCloseTabs = useCallback((deleteIds: string[]) => {
@@ -133,7 +133,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
         tabList: [],
         activeTabId: '',
       });
-      uiEventBus.emit(UIEventType.CLOSE_TAB, organizationId, 'all');
+      uiEventBus.emit('CLOSE_TAB', organizationId, 'all');
       return;
     }
 
@@ -149,7 +149,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       tabList: newTabList,
       activeTabId: deleteIds.includes(currentTabs.activeTabId || '') ? newTabList[Math.max(index - 1, 0)]?.id : currentTabs.activeTabId as string,
     });
-    uiEventBus.emit(UIEventType.CLOSE_TAB, organizationId, deleteIds);
+    uiEventBus.emit('CLOSE_TAB', organizationId, deleteIds);
   }, [navigate, organizationId, projectId, updateInsomniaTabs]);
 
   const closeAllTabsUnderWorkspace = useCallback((workspaceId: string) => {
@@ -165,7 +165,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       tabList: newTabList,
       activeTabId: '',
     });
-    uiEventBus.emit(UIEventType.CLOSE_TAB, organizationId, closeIds);
+    uiEventBus.emit('CLOSE_TAB', organizationId, closeIds);
   }, [organizationId, updateInsomniaTabs]);
 
   const closeAllTabsUnderProject = useCallback((projectId: string) => {
@@ -181,7 +181,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       tabList: newTabList,
       activeTabId: '',
     });
-    uiEventBus.emit(UIEventType.CLOSE_TAB, organizationId, closeIds);
+    uiEventBus.emit('CLOSE_TAB', organizationId, closeIds);
   }, [organizationId, updateInsomniaTabs]);
 
   const closeAllTabs = useCallback(() => {
@@ -191,7 +191,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       tabList: [],
       activeTabId: '',
     });
-    uiEventBus.emit(UIEventType.CLOSE_TAB, organizationId, 'all');
+    uiEventBus.emit('CLOSE_TAB', organizationId, 'all');
   }, [navigate, organizationId, projectId, updateInsomniaTabs]);
 
   const closeOtherTabs = useCallback((id: string) => {
@@ -213,7 +213,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       activeTabId: id,
     });
     const closeIds = currentTabs.tabList.filter(tab => tab.id !== id).map(tab => tab.id);
-    uiEventBus.emit(UIEventType.CLOSE_TAB, organizationId, closeIds);
+    uiEventBus.emit('CLOSE_TAB', organizationId, closeIds);
   }, [navigate, organizationId, updateInsomniaTabs]);
 
   const updateTabById = useCallback((tabId: string, patches: Partial<BaseTab>) => {
