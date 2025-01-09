@@ -1,11 +1,10 @@
 type EventHandler = (...args: any[]) => void;
 
-export enum UIEventType {
-  CLOSE_TAB = 'closeTab',
-}
+type UIEventType = 'CLOSE_TAB';
+
 class EventBus {
   private events: Record<UIEventType, EventHandler[]> = {
-    [UIEventType.CLOSE_TAB]: [],
+    CLOSE_TAB: [],
   };
 
   // Subscribe to event
