@@ -2,7 +2,7 @@ import React, { createContext, type FC, type PropsWithChildren, useCallback, use
 import type { Selection } from 'react-aria-components';
 
 import type { UploadDataType } from '../../components/modals/upload-runner-data-modal';
-import uiEventBus, { UIEventType } from '../../eventBus';
+import uiEventBus from '../../eventBus';
 import useStateRef from '../../hooks/use-state-ref';
 import type { RequestRow } from '../../routes/runner';
 
