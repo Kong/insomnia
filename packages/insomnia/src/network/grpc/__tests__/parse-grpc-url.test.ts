@@ -11,6 +11,7 @@ describe('parseGrpcUrl', () => {
     expect(parseGrpcUrl(input)).toStrictEqual({
       url: expected,
       enableTls: false,
+      path: '',
     });
   });
 
@@ -22,6 +23,7 @@ describe('parseGrpcUrl', () => {
     expect(parseGrpcUrl(input)).toStrictEqual({
       url: expected,
       enableTls: true,
+      path: '',
     });
   });
 
@@ -33,6 +35,7 @@ describe('parseGrpcUrl', () => {
     expect(parseGrpcUrl(input)).toStrictEqual({
       url: expected,
       enableTls: false,
+      path: '',
     });
   });
 
@@ -40,6 +43,7 @@ describe('parseGrpcUrl', () => {
     expect(parseGrpcUrl(input)).toStrictEqual({
       url: '',
       enableTls: false,
+      path: '',
     });
   });
 });
