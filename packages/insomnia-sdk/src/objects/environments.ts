@@ -162,4 +162,8 @@ export class Vault extends Environment {
         throw new Error('Vault can not be cleared in script');
     };
 
+    set = () => {
+        throw new Error('Vault can not be set in script');
+    };
+
 }
