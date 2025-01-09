@@ -23,6 +23,10 @@ import {
   type PressEvent,
   Radio,
   RadioGroup,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
   TextField,
 } from 'react-aria-components';
 import {
@@ -30,11 +34,15 @@ import {
 } from 'react-router-dom';
 
 import * as models from '../../../models';
+import type { GitRepository, OauthProviderName } from '../../../models/git-repository';
 import { type Project, PROJECT_STORAGE_TYPE } from '../../../models/project';
 import { invariant } from '../../../utils/invariant';
 import { insomniaFetch } from '../../insomniaFetch';
 import { ORG_STORAGE_RULE } from '../../routes/organization';
 import { Icon } from '../icon';
+import { CustomRepositorySettingsFormGroup } from './git-repository-settings-modal/custom-repository-settings-form-group';
+import { GitHubRepositorySetupFormGroup } from './git-repository-settings-modal/github-repository-settings-form-group';
+import { GitLabRepositorySetupFormGroup } from './git-repository-settings-modal/gitlab-repository-settings-form-group';
 
 export enum PROJECT_EDIT_MODAL_TYPE {
   NEW = 'new',
@@ -445,6 +453,11 @@ const ProjectEditModal: FC<ProjectEditModalNewProps | ProjectEditModalEditProps>
                 </div>
               )
             }
+            {
+              modalState === PROJECT_EDIT_MODAL_STATE.GIT_SYNC_INFO && (
+                <GitRepoSettingPanel />
+              )
+            }
           </div>
         </Dialog>
       </Modal>
@@ -742,6 +755,57 @@ async function updateProject({
   } catch (err) {
     throw new Error(err instanceof Error ? err.message : `An unexpected error occurred while renaming the project. Please try again. ${err}`);
   }
+};
+
+const GitRepoSettingPanel: FC<{}> = () => {
+  const [selectedTab, setTab] = useState<OauthProviderName>('github');
+  const onSubmit = useCallback((gitRepositoryPatch: Partial<GitRepository>) => { }, []);
+  return (
+    <Tabs
+      selectedKey={selectedTab}
+      onSelectionChange={key => {
+        setTab(key as OauthProviderName);
+      }}
+      aria-label='Git repository settings tabs'
+      className="flex-1 w-full h-full flex flex-col"
+    >
+      <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+        <Tab
+          className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+          id='github'
+        >
+          <div className="flex gap-2 items-center"><i className="fa fa-github" /> GitHub</div>
+        </Tab>
+        <Tab
+          className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+          id='gitlab'
+        >
+          <div className="flex gap-2 items-center"><i className="fa fa-gitlab" /> GitLab</div>
+        </Tab>
+        <Tab
+          className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+          id='custom'
+        >
+          <div className="flex gap-2 items-center"><i className="fa fa-code-fork" /> Git</div>
+        </Tab>
+      </TabList>
+      <TabPanel className='w-full h-full overflow-y-auto py-2' id='github'>
+        <GitHubRepositorySetupFormGroup
+          onSubmit={onSubmit}
+        />
+      </TabPanel>
+      <TabPanel className='w-full h-full overflow-y-auto py-2' id='gitlab'>
+        <GitLabRepositorySetupFormGroup
+          onSubmit={onSubmit}
+        />
+      </TabPanel>
+      <TabPanel className='w-full h-full overflow-y-auto py-2' id='custom'>
+        <CustomRepositorySettingsFormGroup
+          onSubmit={onSubmit}
+        />
+      </TabPanel>
+    </Tabs>
+  );
 };
 
 export default ProjectEditModal;
