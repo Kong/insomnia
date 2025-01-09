@@ -77,9 +77,9 @@ export const RunnerProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [setRunnerState]);
 
   useEffect(() => {
-    uiEventBus.on(UIEventType.CLOSE_TAB, handleTabClose);
+    uiEventBus.on('CLOSE_TAB', handleTabClose);
     return () => {
-      uiEventBus.off(UIEventType.CLOSE_TAB, handleTabClose);
+      uiEventBus.off('CLOSE_TAB', handleTabClose);
     };
   }, [handleTabClose]);
 
