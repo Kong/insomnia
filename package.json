@@ -65,6 +65,7 @@
     "vitest": "^2.0.4"
   },
   "dependencies": {
+    "@getinsomnia/node-libcurl": "^2.33.3",
     "@types/decompress": "^4.2.7",
     "decompress": "^4.2.1"
   }
