@@ -6,7 +6,7 @@ import { type ActionFunction } from 'react-router-dom';
 import { userSession as sessionModel } from '../../models';
 import { removeAllSecrets } from '../../models/environment';
 import type { UserSession } from '../../models/user-session';
-import { base64encode, saveVaultKeyToKeyChainIfNecessary } from '../../utils/vault';
+import { base64encode, saveVaultKeyIfNecessary } from '../../utils/vault';
 import type { ToastNotification } from '../components/toast';
 import { insomniaFetch } from '../insomniaFetch';
 
@@ -49,11 +49,10 @@ const resetVaultKeyRequest = async (sessionId: string, salt: string, verifier: s
 export const saveVaultKey = async (session: UserSession, vaultKey: string) => {
   const { accountId } = session;
   // save encrypted vault key and vault salt to session
-  const encryptedVaultKey = await window.main.keyChain.encryptString(vaultKey);
+  const encryptedVaultKey = await window.main.secretStorage.encryptString(vaultKey);
   await sessionModel.update(session, { vaultKey: encryptedVaultKey });
 
-  // save raw vault key to keychain if necessary
-  await saveVaultKeyToKeyChainIfNecessary(accountId, vaultKey);
+  await saveVaultKeyIfNecessary(accountId, vaultKey);
 };
 
 const createVaultKey = async (type: 'create' | 'reset' = 'create') => {

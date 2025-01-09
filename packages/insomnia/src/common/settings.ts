@@ -146,7 +146,7 @@ export interface Settings {
   validateAuthSSL: boolean;
   validateSSL: boolean;
   // vault related settings
-  saveVaultKeyToOSSecretManager: boolean;
+  saveVaultKeyLocally: boolean;
   vaultSecretCacheDuration: number;
   enableVaultInScripts: boolean;
 }

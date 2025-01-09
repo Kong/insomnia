@@ -29,11 +29,11 @@ export type HandleChannels =
   | 'webSocket.readyState'
   | 'writeFile'
   | 'extractJsonFileFromPostmanDataDumpArchive'
-  | 'keyChain.saveToKeyChain'
-  | 'keyChain.retrieveFromKeyChain'
-  | 'keyChain.deleteFromKeyChain'
-  | 'keyChain.encryptString'
-  | 'keyChain.decryptString';
+  | 'secretStorage.setSecret'
+  | 'secretStorage.getSecret'
+  | 'secretStorage.deleteSecret'
+  | 'secretStorage.encryptString'
+  | 'secretStorage.decryptString';
 
 export const ipcMainHandle = (
   channel: HandleChannels,

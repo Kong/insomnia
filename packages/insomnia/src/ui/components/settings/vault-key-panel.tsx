@@ -4,7 +4,7 @@ import { Button } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 
 import { getProductName } from '../../../common/constants';
-import { decryptVaultKeyFromSession, saveVaultKeyToKeyChainIfNecessary } from '../../../utils/vault';
+import { decryptVaultKeyFromSession, deleteVaultKeyFromStorage, saveVaultKeyIfNecessary } from '../../../utils/vault';
 import { useRootLoaderData } from '../../routes/root';
 import { type CopyBtnHanlde, CopyButton } from '../base/copy-button';
 import { HelpTooltip } from '../help-tooltip';
@@ -60,7 +60,7 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
 
 export const VaultKeyPanel = () => {
   const { userSession, settings } = useRootLoaderData();
-  const { saveVaultKeyToOSSecretManager } = settings;
+  const { saveVaultKeyLocally } = settings;
   const [isGenerating, setGenerating] = useState(false);
   const [vaultKeyValue, setVaultKeyValue] = useState('');
   const [showInputVaultKeyModal, setShowModal] = useState(false);
@@ -134,14 +134,14 @@ export const VaultKeyPanel = () => {
 
   useEffect(() => {
     // save or delete vault key to keychain
-    if (saveVaultKeyToOSSecretManager) {
+    if (saveVaultKeyLocally) {
       if (vaultKeyValue.length > 0) {
-        saveVaultKeyToKeyChainIfNecessary(accountId, vaultKeyValue);
+        saveVaultKeyIfNecessary(accountId, vaultKeyValue);
       };
     } else {
-      window.main.keyChain.deleteFromKeyChian(accountId);
+      deleteVaultKeyFromStorage(accountId);
     };
-  }, [saveVaultKeyToOSSecretManager, accountId, vaultKeyValue]);
+  }, [saveVaultKeyLocally, accountId, vaultKeyValue]);
 
   return (
     <div>
@@ -172,8 +172,8 @@ export const VaultKeyPanel = () => {
         </div>
         <div className="form-row pad-top-sm">
           <BooleanSetting
-            label="Save vault key to OS native secret manager"
-            setting="saveVaultKeyToOSSecretManager"
+            label="Save encrypted vault key locally"
+            setting="saveVaultKeyLocally"
           />
         </div>
         <div className="form-row pad-top-sm">

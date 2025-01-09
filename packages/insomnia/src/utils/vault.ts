@@ -21,7 +21,7 @@ export const base64decode = (base64Str: string, toObject: boolean) => {
 
 export const decryptVaultKeyFromSession = async (vaultKey: string, toJsonWebKey: boolean) => {
   if (vaultKey) {
-    const decryptedVaultKey = await window.main.keyChain.decryptString(vaultKey);
+    const decryptedVaultKey = await window.main.secretStorage.decryptString(vaultKey);
     if (toJsonWebKey) {
       return base64decode(decryptedVaultKey, true);
     };
@@ -30,11 +30,19 @@ export const decryptVaultKeyFromSession = async (vaultKey: string, toJsonWebKey:
   return '';
 };
 
-export const saveVaultKeyToKeyChainIfNecessary = async (accountId: string, vaultKey: string) => {
+export const saveVaultKeyIfNecessary = async (accountId: string, vaultKey: string) => {
   const userSetting = await settings.getOrCreate();
-  const { saveVaultKeyToOSSecretManager } = userSetting;
-  if (saveVaultKeyToOSSecretManager) {
-    // save vault key to os secret mangaer
-    window.main.keyChain.saveToKeyChain(accountId, vaultKey);
+  const { saveVaultKeyLocally } = userSetting;
+  if (saveVaultKeyLocally) {
+    await window.main.secretStorage.setSecret(`vault.${accountId}`, vaultKey);
   }
+};
+
+export const getVaultKeyFromStorage = async (accountId: string) => {
+  const savedVaultKey = await window.main.secretStorage.getSecret(`vault.${accountId}`);
+  return savedVaultKey;
+};
+
+export const deleteVaultKeyFromStorage = async (accountId: string) => {
+  await window.main.secretStorage.deleteSecret(`vault.${accountId}`);
 };

@@ -4,6 +4,7 @@ import { type ActionFunction, redirect, useFetcher, useFetchers, useNavigate } f
 
 import { userSession as sessionModel } from '../../models';
 import { invariant } from '../../utils/invariant';
+import { getVaultKeyFromStorage } from '../../utils/vault';
 import { SegmentEvent } from '../analytics';
 import { getLoginUrl, submitAuthCode } from '../auth-session-provider';
 import { Icon } from '../components/icon';
@@ -45,14 +46,14 @@ export const action: ActionFunction = async ({
     if (vaultSalt) {
       // save vault salt to session
       await sessionModel.update(userSession, { vaultSalt });
-      // get vault key saved in keychain
-      const vaultKeyInKeyChain = await window.main.keyChain.retrieveFromKeyChain(accountId);
-      if (vaultKeyInKeyChain) {
+      // get vault key saved in local
+      const localVaultKey = await getVaultKeyFromStorage(accountId);
+      if (localVaultKey) {
         // validate vault key with server
-        const validateResult = await validateVaultKey(userSession, vaultKeyInKeyChain, vaultSalt);
+        const validateResult = await validateVaultKey(userSession, localVaultKey, vaultSalt);
         if (validateResult) {
           // Encrypt vault key and save encrypted vault key & raw vault salt to session
-          const encryptedVaultKey = await window.main.keyChain.encryptString(vaultKeyInKeyChain);
+          const encryptedVaultKey = await window.main.secretStorage.encryptString(localVaultKey);
           await sessionModel.update(userSession, { vaultKey: encryptedVaultKey, vaultSalt });
         };
       }
