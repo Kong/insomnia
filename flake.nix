@@ -12,15 +12,15 @@
         (system:
           let
             pkgs = nixpkgs.legacyPackages.${system};
-            unstable =inputs.nixpkgs-unstable.legacyPackages.${system};
+            unstable = inputs.nixpkgs-unstable.legacyPackages.${system};
           in
           pkgs.mkShell {
             buildInputs = [
-              unstable.nodejs_20
+              pkgs.nodejs_20
               pkgs.yarn
             ];
 
-            ELECTRON_OVERRIDE_DIST_PATH = "${unstable.electron_31}/bin/";
+            ELECTRON_OVERRIDE_DIST_PATH = "${unstable.electron_33}/bin/";
             ELECTRON_SKIP_BINARY_DOWNLOAD = 1;
             LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib64:$LD_LIBRARY_PATH";
           });
