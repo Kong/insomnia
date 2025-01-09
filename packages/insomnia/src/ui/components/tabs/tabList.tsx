@@ -40,8 +40,6 @@ export const TAB_ROUTER_PATH: Record<TabEnum, string> = {
 };
 
 export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' }) => {
-  const { currentOrgTabs, batchUpdateTabs, moveBefore, moveAfter } = useInsomniaTabContext();
-  const { tabList, activeTabId } = currentOrgTabs;
 
   const [showAddRequestModal, setShowAddRequestModal] = useState(false);
   const [isOverFlow, setIsOverFlow] = useState(false);
@@ -62,7 +60,13 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     updateWorkspaceName,
     closeAllTabs,
     closeOtherTabs,
+    moveAfter,
+    moveBefore,
+    batchUpdateTabs,
+    currentOrgTabs,
   } = useInsomniaTabContext();
+
+  const { tabList, activeTabId } = currentOrgTabs;
 
   const handleSelectionChange = (keys: Selection) => {
     if (keys !== 'all') {
