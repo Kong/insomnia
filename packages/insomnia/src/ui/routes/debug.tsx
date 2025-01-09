@@ -454,7 +454,9 @@ export const Debug: FC = () => {
     },
   });
 
-  useCloseConnection();
+  useCloseConnection({
+    organizationId,
+  });
 
   const isRealtimeRequest =
     activeRequest &&

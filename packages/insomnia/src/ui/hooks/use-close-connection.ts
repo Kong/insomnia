@@ -8,7 +8,7 @@ import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import uiEventBus from '../eventBus';
 
 // this hook is use for control when to close connections(websocket & SSE & grpc stream & graphql subscription)
-export const useCloseConnection = () => {
+export const useCloseConnection = ({ organizationId }: { organizationId: string }) => {
 
   const closeConnectionById = async (id: string) => {
     if (isGrpcRequestId(id)) {
@@ -59,4 +59,13 @@ export const useCloseConnection = () => {
       uiEventBus.off('CHANGE_ACTIVE_ENV', handleActiveEnvironmentChange);
     };
   }, [handleTabClose, handleActiveEnvironmentChange]);
+
+  // close all connections when organizationId change
+  useEffect(() => {
+    return () => {
+      window.main.webSocket.closeAll();
+      window.main.grpc.closeAll();
+      window.main.curl.closeAll();
+    };
+  }, [organizationId]);
 };
