@@ -14,7 +14,7 @@ export class AWSService implements ICloudService {
     this._credential = credential;
   }
 
-  async authorize(): Promise<CloudServiceResult<GetCallerIdentityCommandOutput>> {
+  async authenticate(): Promise<CloudServiceResult<GetCallerIdentityCommandOutput>> {
     const { region, accessKeyId, secretAccessKey, sessionToken } = this._credential;
     const stsClient = new STSClient({
       region,
@@ -56,9 +56,9 @@ export class AWSService implements ICloudService {
     return uniqueKeyHash;
   }
 
-  async getSecret(secretNameOrARN: string, config?: AWSGetSecretConfig): Promise<CloudServiceResult<GetSecretValueCommandOutput>> {
+  async getSecret(secretNameOrARN: string, config: AWSGetSecretConfig = {}): Promise<CloudServiceResult<GetSecretValueCommandOutput>> {
     const { region, accessKeyId, secretAccessKey, sessionToken } = this._credential;
-    const { VersionId, VersionStage } = config || {};
+    const { VersionId, VersionStage } = config;
     const secretClient = new SecretsManagerClient({
       region,
       credentials: {

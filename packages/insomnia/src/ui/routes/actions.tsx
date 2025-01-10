@@ -1464,20 +1464,31 @@ export const toggleExpandAllRequestGroupsAction: ActionFunction = async ({ param
 
 export const createCloudCredentialAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
-  const { name, provider, credentials } = patch;
+  const { name, provider, credentials, isAuthenticated } = patch;
   invariant(typeof name === 'string', 'Name is required');
   invariant(provider, 'Cloud Provier name is required');
   if (name && provider && credentials) {
-    const authenciateResponse = await window.main.cloudService.authenticate({ provider, credentials });
-    const { success, error, result } = authenciateResponse;
-    if (success) {
-      await models.cloudCrendential.create(patch);
+    if (isAuthenticated) {
+      // find credential with same name for oauth authenticated cloud service
+      const existingCredential = await models.cloudCrendential.getByName(name, provider);
+      if (existingCredential.length === 0) {
+        await models.cloudCrendential.create(patch);
+      } else {
+        await models.cloudCrendential.update(existingCredential[0], patch);
+      }
+      return credentials;
     } else {
-      return {
-        error: error?.errorMessage,
-      };
+      const authenciateResponse = await window.main.cloudService.authenticate({ provider, credentials });
+      const { success, error, result } = authenciateResponse!;
+      if (success) {
+        await models.cloudCrendential.create(patch);
+      } else {
+        return {
+          error: error?.errorMessage,
+        };
+      }
+      return result;
     }
-    return result;
   }
   return { error: 'Invalid paramters for creating cloud credential' };
 };
@@ -1491,7 +1502,7 @@ export const updateCloudCredentialAction: ActionFunction = async ({ request, par
   invariant(provider, 'Cloud Provier name is required');
   if (name && provider && credentials) {
     const authenciateResponse = await window.main.cloudService.authenticate({ provider, credentials });
-    const { success, error, result } = authenciateResponse;
+    const { success, error, result } = authenciateResponse!;
     if (success) {
       const originCredential = await models.cloudCrendential.getById(cloudCredentialId);
       invariant(originCredential, 'No Cloud Credential found');
