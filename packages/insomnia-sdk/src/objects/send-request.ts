@@ -243,7 +243,7 @@ async function curlOutputToResponse(
                 };
             }
 
-            return cookieObj;
+            return undefined;
         })
         .filter(cookieOpt => cookieOpt !== undefined);
 

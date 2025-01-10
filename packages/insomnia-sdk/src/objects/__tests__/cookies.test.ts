@@ -64,6 +64,11 @@ describe('test Cookie object', () => {
         expect(
             Cookie.unparseSingle(cookie1Opt)
         ).toEqual(expectedCookieString);
+
+        const malformedCookieString = '=gingerale';
+        expect(
+            Cookie.parse(malformedCookieString)
+        ).toBeFalsy();
     });
 
     it('test cookie transforming', () => {
