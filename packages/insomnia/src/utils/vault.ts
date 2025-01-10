@@ -30,19 +30,21 @@ export const decryptVaultKeyFromSession = async (vaultKey: string, toJsonWebKey:
   return '';
 };
 
+const getVaultSecretKey = (accountId: string) => `vault_${accountId}`;
+
 export const saveVaultKeyIfNecessary = async (accountId: string, vaultKey: string) => {
   const userSetting = await settings.getOrCreate();
   const { saveVaultKeyLocally } = userSetting;
   if (saveVaultKeyLocally) {
-    await window.main.secretStorage.setSecret(`vault_${accountId}`, vaultKey);
+    await window.main.secretStorage.setSecret(getVaultSecretKey(accountId), vaultKey);
   }
 };
 
 export const getVaultKeyFromStorage = async (accountId: string) => {
-  const savedVaultKey = await window.main.secretStorage.getSecret(`vault_${accountId}`);
+  const savedVaultKey = await window.main.secretStorage.getSecret(getVaultSecretKey(accountId));
   return savedVaultKey;
 };
 
 export const deleteVaultKeyFromStorage = async (accountId: string) => {
-  await window.main.secretStorage.deleteSecret(`vault_${accountId}`);
+  await window.main.secretStorage.deleteSecret(getVaultSecretKey(accountId));
 };
