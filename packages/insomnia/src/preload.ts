@@ -124,7 +124,7 @@ const clipboard: Window['clipboard'] = {
   clear: () => ipcRenderer.send('clear'),
 };
 const webUtils: Window['webUtils'] = {
-  getPathForFile: (file: File) => webUtils.getPathForFile(file),
+  getPathForFile: (file: File) => _webUtils.getPathForFile(file),
 };
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);
