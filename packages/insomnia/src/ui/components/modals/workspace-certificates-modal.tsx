@@ -105,7 +105,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                             const files = Array.from(fileList);
                             const file = files[0];
 
-                            setPfxPath(file.path);
+                            setPfxPath(window.webUtils.getPathForFile(file));
                           }}
                         >
                           <Button className="flex flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
@@ -134,7 +134,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                             const files = Array.from(fileList);
                             const file = files[0];
 
-                            setCertificatePath(file.path);
+                            setCertificatePath(window.webUtils.getPathForFile(file));
                           }}
                         >
                           <Button data-test-id='add-client-certificate-file-chooser' className="flex flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
@@ -161,7 +161,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                             const files = Array.from(fileList);
                             const file = files[0];
 
-                            setKeyPath(file.path);
+                            setKeyPath(window.webUtils.getPathForFile(file));
                           }}
                         >
                           <Button data-test-id='add-client-certificate-key-file-chooser' className="flex flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
@@ -379,7 +379,7 @@ export const CertificatesModal = ({ onClose }: {
                           const files = Array.from(fileList);
                           const file = files[0];
 
-                          createCertificateFetcher.submit({ parentId: workspaceId, path: file.path }, {
+                          createCertificateFetcher.submit({ parentId: workspaceId, path: window.webUtils.getPathForFile(file) }, {
                             action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/new`,
                             method: 'post',
                             encType: 'application/json',

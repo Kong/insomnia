@@ -119,7 +119,7 @@ const FileField: FC = () => {
             setEntryList(fileList.map(file => ({ type: ENTRY_TYPE.FILE, name: file.name })));
             // Electron has added a path attribute to the File interface which exposes the file's real path on filesystem.
             // https://www.electronjs.org/docs/latest/api/file-object
-            setFilePathList(fileList.map(file => file.path));
+            setFilePathList(fileList.map(file => window.webUtils.getPathForFile(file)));
           } else {
             setEntryList([]);
             setFilePathList([]);
