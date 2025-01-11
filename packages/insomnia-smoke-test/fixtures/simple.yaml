@@ -119,30 +119,31 @@ cookieJar:
       secure: false
       httpOnly: false
 environments:
-  - name: Base Environment
-    meta:
-      id: env_e86a031c9817439bb89991d31a46e50c
-      created: 1666867357072
-      modified: 1666867924188
-      isPrivate: false
-    data:
-      foo: bar
-      current-env: base
-  - name: production
-    meta:
-      id: env_f5742e2375e24f25b65c2ae97fbbda30
-      created: 1666867721814
-      modified: 1666867928920
-      isPrivate: false
-    data:
-      foo: bar
-      current-env: production
-  - name: staging
-    meta:
-      id: env_fdc1a90ec92c42899f599a4e8ab40a5f
-      created: 1666867735110
-      modified: 1666867933395
-      isPrivate: false
-    data:
-      foo: bar
-      current-env: staging
+  name: Base Environment
+  meta:
+    id: env_e86a031c9817439bb89991d31a46e50c
+    created: 1666867357072
+    modified: 1666867924188
+    isPrivate: false
+  data:
+    foo: bar
+    current-env: base
+  subEnvironments:
+    - name: production
+      meta:
+        id: env_f5742e2375e24f25b65c2ae97fbbda30
+        created: 1666867721814
+        modified: 1666867928920
+        isPrivate: false
+      data:
+        foo: bar
+        current-env: production
+    - name: staging
+      meta:
+        id: env_fdc1a90ec92c42899f599a4e8ab40a5f
+        created: 1666867735110
+        modified: 1666867933395
+        isPrivate: false
+      data:
+        foo: bar
+        current-env: staging

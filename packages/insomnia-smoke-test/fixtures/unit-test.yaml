@@ -1,14 +1,14 @@
 type: spec.insomnia.rest/5.0
 name: unit-test.yaml
 meta:
-  id: wrk_6cacd51092ae4d05885cb6b74fb3167e
-  created: 1736280081271
-  modified: 1736280081271
+  id: wrk_70e6a145cbf445d0948eed001afae869
+  created: 1736531228373
+  modified: 1736531228373
 collection:
   - url: localhost:4010
     name: request A
     meta:
-      id: req_3212000ad3f24f539770813d9865219b
+      id: req_0d90cb103b114fceab26b2ddf31f94c9
       created: 1669039678415
       modified: 1669039709867
       isPrivate: false
@@ -33,7 +33,7 @@ collection:
   - url: localhost:4010/not-found
     name: request B
     meta:
-      id: req_c290703d5a6243a099e3083d9a0b7ae8
+      id: req_5b3c869841324716a49980330ed0fbcf
       created: 1669039715014
       modified: 1669039727273
       isPrivate: false
@@ -49,19 +49,38 @@ collection:
 cookieJar:
   name: Default Jar
   meta:
-    id: jar_08fc0e887a334b7a9cf67173f538a70a
+    id: jar_0ee43669b6914a2bb5fddbff54c986d7
     created: 1669039672710
     modified: 1669039672710
 environments:
-  - name: Base Environment
-    meta:
-      id: env_5a1ea234a2d04e53aada7773a245bbce
-      created: 1669039672710
-      modified: 1669039672710
-      isPrivate: false
+  name: Base Environment
+  meta:
+    id: env_f87fdef5c6d4456d99e907f97aef0c5d
+    created: 1669039672710
+    modified: 1669039672710
+    isPrivate: false
 testSuites:
   - name: Existing Test Suite
     meta:
-      id: uts_c3a7e18c832142e286d8abbb2bb5b8af
+      id: uts_bef94ab6d321403e81d5705f3621eb19
       created: 1669039741641
       modified: 1669039741641
+    tests:
+      - name: Request A is found
+        meta:
+          id: ut_8e97ae098d344a08a02aad5c30972560
+          created: 1669039749000
+          modified: 1669039779620
+        requestId: req_0d90cb103b114fceab26b2ddf31f94c9
+        code: |-
+          const response1 = await insomnia.send();
+          expect(response1.status).to.equal(200);
+      - name: Request B is not found
+        meta:
+          id: ut_9aca52f880cc4e0cbda693631b9ec35b
+          created: 1669039754892
+          modified: 1669039788840
+        requestId: req_5b3c869841324716a49980330ed0fbcf
+        code: |-
+          const response1 = await insomnia.send();
+          expect(response1.status).to.equal(404);

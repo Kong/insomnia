@@ -209,11 +209,11 @@ cookieJar:
       creation: 2021-11-18T23:53:05.310Z
       id: "429589439757017"
 environments:
-  - name: Base Environment
-    meta:
-      id: env_6fda0ba942704e71a81a02e2bf5fe5ff
-      created: 1636140994432
-      modified: 1636140994432
-      isPrivate: false
-    data:
-      customValue: fromEnvManager
+  name: Base Environment
+  meta:
+    id: env_6fda0ba942704e71a81a02e2bf5fe5ff
+    created: 1636140994432
+    modified: 1636140994432
+    isPrivate: false
+  data:
+    customValue: fromEnvManager

@@ -133,9 +133,9 @@ resources:
     modified: 1707808692807
   name: Default Jar
 environments:
-  - meta:
-      id: env_317fbd93c6b547c592ef7b114514a8f9
-      created: 1707808692805
-      modified: 1707808692805
-      isPrivate: false
-    name: Base Environment
+  meta:
+    id: env_317fbd93c6b547c592ef7b114514a8f9
+    created: 1707808692805
+    modified: 1707808692805
+    isPrivate: false
+  name: Base Environment

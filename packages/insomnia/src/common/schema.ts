@@ -34,15 +34,23 @@ const CACertificateSchema = z.object({
 //   meta: MetaSchema.optional(),
 // });
 
+/*
+- key: foo
+  value: bar
+  domain: domain.com
+  path: /
+  creation: 2021-11-18T23:53:05.310Z
+  id: "429589439757017"
+*/
 const CookieSchema = z.object({
   id: z.string(),
   key: z.string(),
   value: z.string(),
-  expires: z.union([z.date(), z.string(), z.number(), z.null()]),
+  expires: z.coerce.date().nullable().default(null),
   domain: z.string(),
   path: z.string(),
-  secure: z.boolean(),
-  httpOnly: z.boolean(),
+  secure: z.boolean().optional().default(false),
+  httpOnly: z.boolean().optional().default(false),
   extensions: z.array(jsonSchema).optional(),
   creation: z.coerce.date().optional(),
   creationIndex: z.number().optional(),
@@ -64,6 +72,14 @@ const EnvironmentSchema = z.object({
   meta: MetaSchema.extend({
     sortKey: z.number().optional(),
   }).optional(),
+  subEnvironments: z.array(z.object({
+    name: z.string(),
+    data: jsonSchema,
+    color: z.string().optional().nullable(),
+    meta: MetaSchema.extend({
+      sortKey: z.number().optional(),
+    }).optional(),
+  })).optional(),
 });
 
 export const GRPCRequestSchema = z.object({
@@ -81,29 +97,15 @@ export const GRPCRequestSchema = z.object({
     disabled: z.boolean().optional(),
   })).optional(),
   reflectionApi: z.object({
-    enabled: z.boolean(),
-    url: z.string(),
-    apiKey: z.string(),
-    module: z.string(),
-  }).optional(),
+    enabled: z.boolean().optional(),
+    url: z.string().optional(),
+    apiKey: z.string().optional(),
+    module: z.string().optional(),
+  }),
   meta: MetaSchema.extend({
     sortKey: z.number().optional(),
   }).optional(),
 });
-
-// const OAuth2TokenSchema = z.object({
-//   meta: MetaSchema,
-//   type: z.literal('OAuth2Token'),
-//   accessToken: z.string(),
-//   refreshToken: z.string(),
-//   identityToken: z.string(),
-//   expiresAt: z.number().nullable(),
-//   xResponseId: z.string().nullable(),
-//   xError: z.string().nullable(),
-//   error: z.string(),
-//   errorDescription: z.string(),
-//   errorUri: z.string(),
-// });
 
 const MockRouteSchema = z.object({
   body: z.string(),
@@ -398,7 +400,7 @@ type RequestGroup = z.infer<typeof RequestGroupSchema> & {
 
 // @ts-expect-error zod doesn't support recursive types
 const RequestGroupWithChildrenSchema: z.ZodType<RequestGroup> = RequestGroupSchema.extend({
-  children: z.lazy(() => z.union([RequestSchema, GRPCRequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array()).optional(),
+  children: z.lazy(() => z.union([GRPCRequestSchema, RequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array()).optional(),
 });
 
 const TestSchema = z.object({
@@ -429,9 +431,9 @@ const collectionSchema = z.object({
   meta: MetaSchema.optional(),
   name: z.string().optional(),
   description: z.string().optional(),
-  collection: z.union([RequestSchema, GRPCRequestSchema, RequestGroupWithChildrenSchema]).array(),
+  collection: z.union([GRPCRequestSchema, RequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array(),
   certificates: z.array(CACertificateSchema).optional(),
-  environments: z.array(EnvironmentSchema).optional(),
+  environments: EnvironmentSchema.optional(),
   cookieJar: CookieJarSchema.optional(),
 });
 
@@ -440,10 +442,10 @@ const apiSpecSchema = z.object({
   meta: MetaSchema.optional(),
   name: z.string().optional(),
   description: z.string().optional(),
-  spec: SpecSchema.optional(),
-  collection: z.union([RequestSchema, GRPCRequestSchema, RequestGroupWithChildrenSchema]).array(),
+  spec: SpecSchema.optional().default({ contents: {} }),
+  collection: z.union([GRPCRequestSchema, RequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array(),
   certificates: z.array(CACertificateSchema).optional(),
-  environments: z.array(EnvironmentSchema).optional(),
+  environments: EnvironmentSchema.optional(),
   cookieJar: CookieJarSchema.optional(),
   testSuites: z.array(TestSuiteSchema).optional(),
 });
@@ -463,10 +465,15 @@ const globalEnvironmentsSchema = z.object({
   meta: MetaSchema.optional(),
   name: z.string().optional(),
   description: z.string().optional(),
-  environments: z.array(EnvironmentSchema),
+  environments: EnvironmentSchema,
 });
 
-export const insomniaFileSchema = z.union([collectionSchema, apiSpecSchema, mockServerSchema, globalEnvironmentsSchema]);
+export const insomniaFileSchema = z.discriminatedUnion('type', [
+  collectionSchema,
+  apiSpecSchema,
+  mockServerSchema,
+  globalEnvironmentsSchema,
+]);
 
 export type InsomniaFile = z.infer<typeof insomniaFileSchema>;
 

@@ -328,21 +328,22 @@ cookieJar:
     created: 1707808692807
     modified: 1725272172993
 environments:
-  - name: Base Environment
-    meta:
-      id: env_21ebe3b2c8364fce9d785d4cffd33644
-      created: 1707808692805
-      modified: 1725272172993
-      isPrivate: false
-    data:
-      scope: collection_base
-      value: collection_base
-  - name: Sub Env
-    meta:
-      id: env_62e71e5337f044e687a9bc11256ee80f
-      created: 1725267312624
-      modified: 1725267402752
-      isPrivate: true
-    data:
-      scope: collection_sub
-      value: collection_sub
+  name: Base Environment
+  meta:
+    id: env_21ebe3b2c8364fce9d785d4cffd33644
+    created: 1707808692805
+    modified: 1725272172993
+    isPrivate: false
+  data:
+    scope: collection_base
+    value: collection_base
+  sybEnvironments:
+    - name: Sub Env
+      meta:
+        id: env_62e71e5337f044e687a9bc11256ee80f
+        created: 1725267312624
+        modified: 1725267402752
+        isPrivate: true
+      data:
+        scope: collection_sub
+        value: collection_sub
