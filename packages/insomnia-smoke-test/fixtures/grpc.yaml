@@ -126,9 +126,9 @@ cookieJar:
     created: 1635959595050
     modified: 1635959595050
 environments:
-  - name: Base Environment
-    meta:
-      id: env_f7c114d8c1094fa2b2203d46b6fef1c9
-      created: 1635959595049
-      modified: 1635959595049
-      isPrivate: false
+  name: Base Environment
+  meta:
+    id: env_f7c114d8c1094fa2b2203d46b6fef1c9
+    created: 1635959595049
+    modified: 1635959595049
+    isPrivate: false

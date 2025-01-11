@@ -99,20 +99,34 @@ function getWorkspace(file: InsomniaFile): Workspace {
 // }
 
 function getEnvironments(file: InsomniaFile): Environment[] {
-  if ('environments' in file) {
-    return file.environments?.map(environment => ({
+  if ('environments' in file && file.environments) {
+    const baseEnvironment: Environment = {
+      ...mapMetaToInsomniaMeta(file.environments.meta || {
+        id: '__ENVIRONMENT_ID__',
+      }),
+      type: 'Environment',
+      // @ts-expect-error -- TSCONVERSION
+      _type: EXPORT_TYPE_ENVIRONMENT,
+      parentId: file.meta?.id || '__WORKSPACE_ID__',
+      color: file.environments.color || null,
+      data: file.environments.data || {},
+      name: file.environments.name || 'Base Environment',
+    };
+
+    const subEnvironments = file.environments.subEnvironments?.map((environment, index) => ({
       ...mapMetaToInsomniaMeta(environment.meta || {
         id: '__ENVIRONMENT_ID__',
       }),
-      metaSortKey: environment.meta?.sortKey ?? 0,
       type: 'Environment',
+      // @ts-expect-error -- TSCONVERSION
       _type: EXPORT_TYPE_ENVIRONMENT,
-      name: environment.name || 'Imported Environment',
-      parentId: file.meta?.id || '__WORKSPACE_ID__',
-      data: environment.data as Record<string, string> || {},
-      dataPropertyOrder: {},
       color: environment.color || null,
+      data: environment.data || {},
+      name: environment.name || `Environment ${index}`,
+      parentId: baseEnvironment._id,
     })) || [];
+
+    return [baseEnvironment, ...subEnvironments];
   }
 
   return [];
@@ -525,17 +539,46 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
   }
 
   function getEnvironmentsFromResources(resources: Environment[]): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['environments'] {
-    return resources.map(resource => ({
-      name: resource.name,
+    const baseEnvironment = resources.find(environment => environment.parentId.startsWith('wrk_'));
+    if (!baseEnvironment) {
+      return {
+        name: 'Base Environment',
+        meta: {
+          id: '__BASE_ENVIRONMENT_ID__',
+          created: Date.now(),
+          modified: Date.now(),
+          isPrivate: false,
+        },
+        data: {},
+        color: null,
+        subEnvironments: [],
+      };
+    }
+
+    const subEnvironments = resources.filter(environment => environment.parentId === baseEnvironment?._id);
+
+    return {
+      name: baseEnvironment.name,
       meta: {
-        id: resource._id,
-        created: resource.created,
-        modified: resource.modified,
-        isPrivate: resource.isPrivate,
+        id: baseEnvironment._id,
+        created: baseEnvironment.created,
+        modified: baseEnvironment.modified,
+        isPrivate: baseEnvironment.isPrivate,
       },
-      data: resource.data,
-      color: resource.color,
-    }));
+      data: baseEnvironment.data,
+      color: baseEnvironment.color,
+      subEnvironments: subEnvironments.map(subEnvironment => ({
+        name: subEnvironment.name,
+        meta: {
+          id: subEnvironment._id,
+          created: subEnvironment.created,
+          modified: subEnvironment.modified,
+          isPrivate: subEnvironment.isPrivate,
+        },
+        data: subEnvironment.data,
+        color: subEnvironment.color,
+      })),
+    };
   }
 
   function getCookieJarFromResources(resources: CookieJar[]): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['cookieJar'] {
@@ -641,7 +684,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
       cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
       environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)),
       spec: getSpecFromResources(exportableResources.filter(models.apiSpec.isApiSpec)),
-      testSuites: getTestSuitesFromResources(exportableResources.filter(models.unitTestSuite.isUnitTestSuite || models.unitTest.isUnitTest)),
+      testSuites: getTestSuitesFromResources(exportableResources.filter(resource => models.unitTestSuite.isUnitTestSuite(resource) || models.unitTest.isUnitTest(resource))),
     };
 
     return stringify(removeEmptyFields(spec));

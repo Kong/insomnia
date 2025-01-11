@@ -1,14 +1,14 @@
 type: collection.insomnia.rest/5.0
 name: environments
 meta:
-  id: wrk_30e37203843945438d931b5a14861957
-  created: 1736278457439
-  modified: 1736278457439
+  id: wrk_ad6bef19552f4dfb897b042548c5fadf
+  created: 1736605608107
+  modified: 1736605608107
 collection:
   - url: localhost:4010/
     name: New Request
     meta:
-      id: req_b667374f045a4ff38864460861c41fc8
+      id: req_9ad12159ec754313b6046b8cd4cfe8f0
       created: 1670587797191
       modified: 1670587923683
       isPrivate: false
@@ -34,43 +34,44 @@ collection:
 cookieJar:
   name: Default Jar
   meta:
-    id: jar_25584f69a7c14ecca505b4184efca0df
+    id: jar_7b1db9ac4e3d4e75887274519fa35a3e
     created: 1670587793248
     modified: 1670587793248
 environments:
-  - name: Base Environment
-    meta:
-      id: env_283ae2c59d5a413ab7f092c29bf6f943
-      created: 1670587793246
-      modified: 1670587811762
-      isPrivate: false
-    data:
-      exampleString: baseenv0
-      exampleNumber: 1001
-      exampleObject:
-        anotherString: baseenv1
-        anotherNumber: 1001
-  - name: ExampleA
-    meta:
-      id: env_66c8271e2e83468b9a45cabe0d643cf1
-      created: 1670587812382
-      modified: 1670587818649
-      isPrivate: false
-    data:
-      exampleString: subenvA0
-      exampleNumber: 1111
-      exampleObject:
-        anotherString: subenvA1
-        anotherNumber: 1111
-  - name: ExampleB
-    meta:
-      id: env_02ff8a86d07a4290bd0c018232626f0b
-      created: 1670587826837
-      modified: 1670587831933
-      isPrivate: false
-    data:
-      exampleString: subenvB0
-      exampleNumber: 2222
-      exampleObject:
-        anotherString: subenvB1
-        anotherNumber: 2222
+  name: Base Environment
+  meta:
+    id: env_e8f80ce7346e48f58fa8e101e508f545
+    created: 1670587793246
+    modified: 1670587811762
+    isPrivate: false
+  data:
+    exampleString: baseenv0
+    exampleNumber: 1001
+    exampleObject:
+      anotherString: baseenv1
+      anotherNumber: 1001
+  subEnvironments:
+    - name: ExampleA
+      meta:
+        id: env_667a276741a94e06a2573461c13e27ef
+        created: 1670587812382
+        modified: 1670587818649
+        isPrivate: false
+      data:
+        exampleString: subenvA0
+        exampleNumber: 1111
+        exampleObject:
+          anotherString: subenvA1
+          anotherNumber: 1111
+    - name: ExampleB
+      meta:
+        id: env_df8891814c4547ce9c6ded6ec6312a72
+        created: 1670587826837
+        modified: 1736605621292
+        isPrivate: false
+      data:
+        exampleString: subenvB0
+        exampleNumber: 2222
+        exampleObject:
+          anotherString: subenvB1
+          anotherNumber: 2222

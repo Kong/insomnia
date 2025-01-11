@@ -1,25 +1,26 @@
 type: environment.insomnia.rest/5.0
 name: global-environment
 meta:
-  id: wrk_2fdc2071f2d34f21a43d1ae42e0f2803
-  created: 1736278493110
-  modified: 1736278493110
+  id: wrk_7a6debc2484d48db88897609ab21f0eb
+  created: 1736618596041
+  modified: 1736618596041
 environments:
-  - name: Base Environment
-    meta:
-      id: env_4c3a54fda2d44c0b8abc002cb2e6da27
-      created: 1728549301585
-      modified: 1728549418314
-      isPrivate: false
-    data:
-      global-base: 4444
-      exampleString: globalenv0
-  - name: New Environment
-    meta:
-      id: env_59d535c7b6aa48b0af7c98cf7e6a2114
-      created: 1728549316977
-      modified: 1728549426890
-      isPrivate: true
-    data:
-      global-sub: 55555
-      exampleString: globalenv1
+  name: Base Environment
+  meta:
+    id: env_aace0582bc8c4445be6689f340a08c20
+    created: 1728549301585
+    modified: 1728549418314
+    isPrivate: false
+  data:
+    global-base: 4444
+    exampleString: globalenv0
+  subEnvironments:
+    - name: New Environment
+      meta:
+        id: env_a9aa1b50ed15403aacc30d50be6a11a7
+        created: 1728549316977
+        modified: 1728549426890
+        isPrivate: true
+      data:
+        global-sub: 55555
+        exampleString: globalenv1

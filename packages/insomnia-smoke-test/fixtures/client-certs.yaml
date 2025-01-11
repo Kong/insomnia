@@ -54,11 +54,11 @@ cookieJar:
     created: 1733930502552
     modified: 1733953690813
 environments:
-  - name: Base Environment
-    meta:
-      id: env_1730ef46a4e546cf962b99b8cdc05d08
-      created: 1733930502551
-      modified: 1733953690814
-      isPrivate: false
-    data:
-      srvr: https://localhost:4011
+  name: Base Environment
+  meta:
+    id: env_1730ef46a4e546cf962b99b8cdc05d08
+    created: 1733930502551
+    modified: 1733953690814
+    isPrivate: false
+  data:
+    srvr: https://localhost:4011
