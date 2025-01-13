@@ -15,7 +15,7 @@ import { backupIfNewerVersionAvailable } from './main/backup';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
-import { registerSecretStorageHandlers } from './main/ipc/secretStorage';
+import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
 import { registerCurlHandlers } from './main/network/curl';
 import { registerWebSocketHandlers } from './main/network/websocket';
 import { watchProxySettings } from './main/proxy';

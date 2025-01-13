@@ -17,7 +17,7 @@ import type { WebSocketBridgeAPI } from '../network/websocket';
 import { ipcMainHandle, ipcMainOn, ipcMainOnce, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
-import type { secretStorageBridgeAPI } from './secretStorage';
+import type { secretStorageBridgeAPI } from './secret-storage';
 
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;

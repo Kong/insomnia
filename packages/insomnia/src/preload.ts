@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils as _webUtils } from 'electron';
 
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
-import type { secretStorageBridgeAPI } from './main/ipc/secretStorage';
+import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { CurlBridgeAPI } from './main/network/curl';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 import { invariant } from './utils/invariant';

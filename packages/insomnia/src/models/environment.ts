@@ -60,7 +60,7 @@ export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: 
   Object.keys(ordered).forEach(key => {
     const val = ordered[key];
     // get all secret items from vaultEnvironmentPath
-    if (key === vaultEnvironmentPath && val === 'object') {
+    if (key === vaultEnvironmentPath && typeof val === 'object') {
       Object.keys(val).forEach(secretKey => {
         kvPair.push({
           id: generateId('envPair'),
@@ -131,8 +131,8 @@ export const encryptSecretValue = (rawValue: string, symmetricKey: JsonWebKey) =
     // invalid symmetricKey
     return rawValue;
   }
-  const encryptReuslt = crypt.encryptAES(symmetricKey, rawValue);
-  const encryptedValue = Buffer.from(JSON.stringify(encryptReuslt), 'utf-8').toString('base64');
+  const encryptResult = crypt.encryptAES(symmetricKey, rawValue);
+  const encryptedValue = Buffer.from(JSON.stringify(encryptResult), 'utf-8').toString('base64');
   return encryptedValue;
 };
 
