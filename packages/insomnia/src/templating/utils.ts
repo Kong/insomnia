@@ -318,17 +318,18 @@ export async function maskOrDecryptContextIfNecessary(context: Record<string, an
     * - script: render the template in pre-request or after-response script
   */
   const shouldDecrypt = renderPurpose === 'preview' || renderPurpose === 'send' || renderPurpose === 'script';
-  if (vaultEnvironmentData) {
+  if (typeof vaultEnvironmentData === 'object') {
     if (shouldDecrypt) {
-      const { vaultKey } = await userSession.getOrCreate();
-      if (vaultKey) {
+      const { vaultKey, vaultSalt } = await userSession.getOrCreate();
+      const isVaultEnabled = !!vaultSalt;
+      if (isVaultEnabled && vaultKey) {
         const symmetricKey = await decryptVaultKeyFromSession(vaultKey, true) as JsonWebKey;
         // decrypt all secert values under vaultEnvironmentPath property in context
         Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
           const encryptedValue = vaultEnvironmentData[vaultContextKey];
           vaultEnvironmentData[vaultContextKey] = decryptSecretValue(encryptedValue, symmetricKey);
         });
-      } else {
+      } else if (isVaultEnabled && !vaultKey) {
         // remove all values under vaultEnvironmentPath if no vault key found
         context[vaultEnvironmentPath] = {};
       }

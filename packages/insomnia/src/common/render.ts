@@ -4,7 +4,7 @@ import orderedJSON from 'json-order';
 
 import * as models from '../models';
 import type { CookieJar } from '../models/cookie-jar';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
+import { type Environment, type UserUploadEnvironment, vaultEnvironmentPath, vaultEnvironmentRuntimePath } from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
 import { isProject, type Project } from '../models/project';
 import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
@@ -215,6 +215,22 @@ export async function buildRenderContext(
 
   // Render the context with itself to fill in the rest.
   const finalRenderContext = await templatingUtils.maskOrDecryptContextIfNecessary(renderContext as Record<string, any> & BaseRenderContext);
+  // Merge all vault environments under vaultEnvironmentPath to vaultEnvironmentRuntimePath which is more human readable.
+  // This will also keep all legacy environment variables defined under the vaultEnvironmentRuntimePath.
+  if (finalRenderContext[vaultEnvironmentPath]) {
+    if (typeof finalRenderContext[vaultEnvironmentRuntimePath] !== 'object') {
+      const errorMsg = `${vaultEnvironmentRuntimePath} is a reserved key for insomnia vault, please rename it.`;
+      const newError = new templating.RenderError(errorMsg);
+      newError.type = 'render';
+      newError.message = errorMsg;
+      throw newError;
+    }
+    finalRenderContext[vaultEnvironmentRuntimePath] = {
+      ...finalRenderContext[vaultEnvironmentPath],
+      ...finalRenderContext[vaultEnvironmentRuntimePath],
+    };
+    delete finalRenderContext[vaultEnvironmentPath];
+  };
 
   const keys = _getOrderedEnvironmentKeys(finalRenderContext);
 
