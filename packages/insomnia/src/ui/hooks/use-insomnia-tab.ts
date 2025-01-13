@@ -9,7 +9,7 @@ import type { RequestGroup } from '../../models/request-group';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import type { WebSocketRequest } from '../../models/websocket-request';
 import type { Workspace } from '../../models/workspace';
-import { type BaseTab, TabEnum } from '../components/tabs/tab';
+import { type BaseTab, type TabType } from '../components/tabs/tab';
 import { TAB_ROUTER_PATH } from '../components/tabs/tabList';
 import { formatMethodName, getRequestMethodShortHand } from '../components/tags/method-tag';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
@@ -42,57 +42,57 @@ export const useInsomniaTab = ({
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  const generateTabUrl = useCallback((type: TabEnum) => {
-    if (type === TabEnum.Request) {
+  const generateTabUrl = useCallback((type: TabType) => {
+    if (type === 'request') {
       return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest?._id}`;
     }
 
-    if (type === TabEnum.Folder) {
+    if (type === 'folder') {
       return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${activeRequestGroup?._id}`;
     }
 
-    if (type === TabEnum.Collection) {
+    if (type === 'collection') {
       return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug?doNotSkipToActiveRequest=true`;
     }
 
-    if (type === TabEnum.Env) {
+    if (type === 'environment') {
       return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment`;
     }
 
-    if (type === TabEnum.Runner) {
+    if (type === 'runner') {
       return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner${location.search}`;
     }
 
-    if (type === TabEnum.Mock) {
+    if (type === 'mockServer') {
       return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server`;
     }
 
-    if (type === TabEnum.MockRoute) {
+    if (type === 'mockRoute') {
       return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${activeMockRoute?._id}`;
     }
 
-    if (type === TabEnum.Document) {
+    if (type === 'document') {
       return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/spec`;
     }
 
-    if (type === TabEnum.TEST) {
+    if (type === 'test') {
       return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test`;
     }
 
-    if (type === TabEnum.TESTSUITE) {
+    if (type === 'testSuite') {
       return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite?._id}`;
     }
     return '';
   }, [activeMockRoute?._id, activeRequest?._id, activeRequestGroup?._id, location.search, organizationId, projectId, unitTestSuite?._id, workspaceId]);
 
-  const getTabType = (pathname: string) => {
+  const getTabType = (pathname: string): TabType | null => {
     for (const type in TAB_ROUTER_PATH) {
       const ifMatch = matchPath({
-        path: TAB_ROUTER_PATH[type as TabEnum],
+        path: TAB_ROUTER_PATH[type as TabType],
         end: true,
       }, pathname);
       if (ifMatch) {
-        return type as TabEnum;
+        return type as TabType;
       }
     }
 
@@ -107,76 +107,77 @@ export const useInsomniaTab = ({
     return `runner_${workspaceId}`;
   }, [searchParams, workspaceId]);
 
-  const getCurrentTab = useCallback((type: TabEnum | null) => {
+  const getCurrentTab = useCallback((type: TabType | null) => {
     if (!type) {
       return undefined;
     }
     const currentOrgTabs = appTabsRef?.current?.[organizationId];
-    if (type === TabEnum.Request) {
+    if (type === 'request') {
       return currentOrgTabs?.tabList.find(tab => tab.id === activeRequest?._id);
     }
 
-    if (type === TabEnum.Folder) {
+    if (type === 'folder') {
       return currentOrgTabs?.tabList.find(tab => tab.id === activeRequestGroup?._id);
     }
 
-    if (type === TabEnum.Runner) {
+    if (type === 'runner') {
       // collection runner tab id is prefixed with 'runner_'
       const runnerTabId = getRunnerTabId();
       return currentOrgTabs?.tabList.find(tab => tab.id === runnerTabId);
     }
 
-    if (type === TabEnum.MockRoute) {
+    if (type === 'mockRoute') {
       return currentOrgTabs?.tabList.find(tab => tab.id === activeMockRoute?._id);
     }
 
-    if (type === TabEnum.TESTSUITE) {
+    if (type === 'testSuite') {
       return currentOrgTabs?.tabList.find(tab => tab.id === unitTestSuite?._id);
     }
 
-    if ([TabEnum.Collection, TabEnum.Document, TabEnum.Env, TabEnum.Mock, TabEnum.TEST].includes(type)) {
+    const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test'];
+    if (collectionTabTypes.includes(type)) {
       return currentOrgTabs?.tabList.find(tab => tab.id === workspaceId);
     }
     return undefined;
   }, [activeMockRoute?._id, activeRequest?._id, activeRequestGroup?._id, appTabsRef, getRunnerTabId, organizationId, unitTestSuite?._id, workspaceId]);
 
-  const getTabId = useCallback((type: TabEnum | null): string => {
+  const getTabId = useCallback((type: TabType | null): string => {
     if (!type) {
       return '';
     }
-    if (type === TabEnum.Request) {
+    if (type === 'request') {
       return activeRequest?._id || '';
     }
 
-    if (type === TabEnum.Folder) {
+    if (type === 'folder') {
       return activeRequestGroup?._id || '';
     }
 
-    if (type === TabEnum.Runner) {
+    if (type === 'runner') {
       const runnerTabId = getRunnerTabId();
       return runnerTabId;
     }
 
-    if (type === TabEnum.MockRoute) {
+    if (type === 'mockRoute') {
       return activeMockRoute?._id || '';
     }
 
-    if (type === TabEnum.TESTSUITE) {
+    if (type === 'testSuite') {
       return unitTestSuite?._id || '';
     }
-
-    if ([TabEnum.Collection, TabEnum.Document, TabEnum.Env, TabEnum.Mock, TabEnum.TEST].includes(type)) {
+    const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test'];
+    if (collectionTabTypes.includes(type)) {
       return workspaceId;
     }
 
     return '';
   }, [activeMockRoute?._id, activeRequest?._id, activeRequestGroup?._id, getRunnerTabId, unitTestSuite?._id, workspaceId]);
 
-  const packTabInfo = useCallback((type: TabEnum): BaseTab | undefined => {
+  const packTabInfo = useCallback((type: TabType): BaseTab | undefined => {
     if (!type) {
       return undefined;
     }
-    if (type === TabEnum.Request) {
+    if (type === 'request') {
       return {
         type,
         name: activeRequest?.name || 'New Request',
@@ -192,7 +193,7 @@ export const useInsomniaTab = ({
       };
     }
 
-    if (type === TabEnum.Folder) {
+    if (type === 'folder') {
       return {
         type,
         name: activeRequestGroup?.name || 'My Folder',
@@ -206,7 +207,8 @@ export const useInsomniaTab = ({
       };
     }
 
-    if ([TabEnum.Collection, TabEnum.Document, TabEnum.Env, TabEnum.Mock, TabEnum.TEST].includes(type)) {
+    const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test'];
+    if (collectionTabTypes.includes(type)) {
       return {
         type,
         name: activeWorkspace.name,
@@ -220,7 +222,7 @@ export const useInsomniaTab = ({
       };
     }
 
-    if (type === TabEnum.Runner) {
+    if (type === 'runner') {
       return {
         type,
         name: 'Runner',
@@ -234,7 +236,7 @@ export const useInsomniaTab = ({
       };
     }
 
-    if (type === TabEnum.MockRoute) {
+    if (type === 'mockRoute') {
       return {
         type,
         name: activeMockRoute?.name || 'Untitled mock route',
@@ -250,7 +252,7 @@ export const useInsomniaTab = ({
       };
     }
 
-    if (type === TabEnum.TESTSUITE) {
+    if (type === 'testSuite') {
       return {
         type,
         name: unitTestSuite?.name || 'Untitled test suite',
