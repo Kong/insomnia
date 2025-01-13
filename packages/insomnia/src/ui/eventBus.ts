@@ -1,10 +1,10 @@
 type EventHandler = (...args: any[]) => void;
 
-type UIEventType = 'CLOSE_TAB';
-
+type UIEventType = 'CLOSE_TAB' | 'CHANGE_ACTIVE_ENV';
 class EventBus {
   private events: Record<UIEventType, EventHandler[]> = {
     CLOSE_TAB: [],
+    CHANGE_ACTIVE_ENV: [],
   };
 
   // Subscribe to event
