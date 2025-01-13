@@ -219,7 +219,7 @@ export async function buildRenderContext(
   // This will also keep all legacy environment variables defined under the vaultEnvironmentRuntimePath.
   if (finalRenderContext[vaultEnvironmentPath]) {
     if (finalRenderContext[vaultEnvironmentRuntimePath] && typeof finalRenderContext[vaultEnvironmentRuntimePath] !== 'object') {
-      const errorMsg = `${vaultEnvironmentRuntimePath} is a reserved key for insomnia vault, please rename it.`;
+      const errorMsg = `${vaultEnvironmentRuntimePath} is a reserved key for insomnia vault, please rename your environment with vault as key.`;
       const newError = new templating.RenderError(errorMsg);
       newError.type = 'render';
       newError.message = errorMsg;
