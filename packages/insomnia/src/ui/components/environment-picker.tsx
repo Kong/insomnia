@@ -5,6 +5,7 @@ import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-ro
 
 import { fuzzyMatch } from '../../common/misc';
 import { isRemoteProject } from '../../models/project';
+import uiEventBus from '../eventBus';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
 import type { WorkspaceLoaderData } from '../routes/workspace';
 import { Icon } from './icon';
@@ -239,7 +240,6 @@ export const EnvironmentPicker = ({
                     return;
                   }
                   const [environmentId] = keys.values();
-
                   setActiveEnvironmentFetcher.submit(
                     {
                       environmentId,
@@ -249,6 +249,7 @@ export const EnvironmentPicker = ({
                       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
                     }
                   );
+                  uiEventBus.emit('CHANGE_ACTIVE_ENV', workspaceId);
                 }}
                 className="p-2 select-none text-sm overflow-y-auto focus:outline-none"
               >

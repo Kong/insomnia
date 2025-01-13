@@ -105,6 +105,7 @@ import { getMethodShortHand } from '../components/tags/method-tag';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
+import { useCloseConnection } from '../hooks/use-close-connection';
 import { useExecutionState } from '../hooks/use-execution-state';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useReadyState } from '../hooks/use-ready-state';
@@ -452,13 +453,10 @@ export const Debug: FC = () => {
       }
     },
   });
-  // Close all websocket connections when the active environment changes
-  useEffect(() => {
-    return () => {
-      window.main.webSocket.closeAll();
-      window.main.grpc.closeAll();
-    };
-  }, [activeEnvironment?._id]);
+
+  useCloseConnection({
+    organizationId,
+  });
 
   const isRealtimeRequest =
     activeRequest &&
