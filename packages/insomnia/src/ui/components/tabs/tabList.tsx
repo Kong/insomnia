@@ -188,7 +188,6 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   useEffect(() => {
     // sync tabList with database
     const callback = async (changes: ChangeBufferEvent[]) => {
-      console.log('tabList changes:', changes);
       for (const change of changes) {
         const changeType = change[0];
         const doc = change[1];
