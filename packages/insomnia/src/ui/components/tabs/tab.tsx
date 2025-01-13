@@ -7,21 +7,9 @@ import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
 import { TAB_CONTEXT_MENU_COMMAND } from './tabList';
 
-export enum TabEnum {
-  Request = 'request',
-  Folder = 'folder',
-  Env = 'environment',
-  Mock = 'mock-server',
-  MockRoute = 'mock-route',
-  Document = 'document',
-  Collection = 'collection',
-  Runner = 'runner',
-  TEST = 'test',
-  TESTSUITE = 'test-suite',
-};
-
+export type TabType = 'request' | 'folder' | 'environment' | 'mockServer' | 'mockRoute' | 'document' | 'collection' | 'runner' | 'test' | 'testSuite';
 export interface BaseTab {
-  type: TabEnum;
+  type: TabType;
   name: string;
   url: string;
   organizationId: string;
@@ -49,23 +37,23 @@ const REQUEST_METHOD_STYLE_MAP: Record<string, string> = {
   'gRPC': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
 };
 
-const WORKSPACE_TAB_UI_MAP: Record<string, any> = {
-  [TabEnum.Collection]: {
+const WORKSPACE_TAB_UI_MAP: Partial<Record<TabType, any>> = {
+  request: {
     icon: 'bars',
     bgColor: 'bg-[--color-surprise]',
     textColor: 'text-[--color-font-surprise]',
   },
-  [TabEnum.Env]: {
+  environment: {
     icon: 'code',
     bgColor: 'bg-[--color-font]',
     textColor: 'text-[--color-bg]',
   },
-  [TabEnum.Mock]: {
+  mockServer: {
     icon: 'server',
     bgColor: 'bg-[--color-warning]',
     textColor: 'text-[--color-font-warning]',
   },
-  [TabEnum.Document]: {
+  document: {
     icon: 'file',
     bgColor: 'bg-[--color-info]',
     textColor: 'text-[--color-font-info]',
@@ -76,7 +64,7 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
 
   const { closeTabById, currentOrgTabs } = useInsomniaTabContext();
 
-  const renderTabIcon = (type: TabEnum) => {
+  const renderTabIcon = (type: TabType) => {
     if (WORKSPACE_TAB_UI_MAP[type]) {
       return (
         <div className={`${WORKSPACE_TAB_UI_MAP[type].bgColor} ${WORKSPACE_TAB_UI_MAP[type].textColor} px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
@@ -85,20 +73,20 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
       );
     }
 
-    if (type === TabEnum.Request || type === TabEnum.MockRoute) {
+    if (type === 'request' || type === 'mockRoute') {
       return (
         <span className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center ${REQUEST_METHOD_STYLE_MAP[tab?.method || tab?.tag || '']}`}>{tab.tag}</span>
       );
     }
 
-    if (type === TabEnum.Folder) {
+    if (type === 'folder') {
       return <Icon icon="folder" />;
     }
-    if (type === TabEnum.Runner) {
+    if (type === 'runner') {
       return <Icon icon="play" />;
     };
 
-    if (type === TabEnum.TESTSUITE) {
+    if (type === 'testSuite') {
       return <Icon icon="check" />;
     }
 

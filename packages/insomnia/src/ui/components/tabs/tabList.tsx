@@ -14,7 +14,7 @@ import { type Size, useResizeObserver } from '../../hooks/use-resize-observer';
 import { Icon } from '../icon';
 import { AddRequestToCollectionModal } from '../modals/add-request-to-collection-modal';
 import { formatMethodName, getRequestMethodShortHand } from '../tags/method-tag';
-import { type BaseTab, InsomniaTab, TabEnum } from './tab';
+import { type BaseTab, InsomniaTab, type TabType } from './tab';
 
 export interface OrganizationTabs {
   tabList: BaseTab[];
@@ -26,17 +26,17 @@ export const enum TAB_CONTEXT_MENU_COMMAND {
   CLOSE_OTHERS = 'Close others',
 }
 
-export const TAB_ROUTER_PATH: Record<TabEnum, string> = {
-  [TabEnum.Collection]: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug',
-  [TabEnum.Folder]: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request-group/:requestGroupId',
-  [TabEnum.Request]: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId',
-  [TabEnum.Env]: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/environment',
-  [TabEnum.Mock]: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server',
-  [TabEnum.Runner]: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/runner',
-  [TabEnum.Document]: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/spec',
-  [TabEnum.MockRoute]: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId',
-  [TabEnum.TEST]: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test',
-  [TabEnum.TESTSUITE]: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/*',
+export const TAB_ROUTER_PATH: Record<TabType, string> = {
+  collection: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug',
+  folder: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request-group/:requestGroupId',
+  request: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId',
+  environment: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/environment',
+  mockServer: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server',
+  runner: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/runner',
+  document: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/spec',
+  mockRoute: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId',
+  test: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test',
+  testSuite: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/*',
 };
 
 export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' }) => {
