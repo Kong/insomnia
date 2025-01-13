@@ -226,8 +226,8 @@ async function curlOutputToResponse(
     // TODO: tackle stream field but currently it is just a duplication of body
     const cookies = cookieHeaders
         .map(cookieHeader => {
-            const cookieObj = Cookie.parse(cookieHeader.value || '');
-            if (cookieObj != null) {
+            const cookieObj = Cookie.parse(cookieHeader.value || '', { loose: true });
+            if (cookieObj) {
                 return {
                     key: cookieObj.key,
                     value: cookieObj.value,
@@ -243,7 +243,7 @@ async function curlOutputToResponse(
                 };
             }
 
-            return undefined;
+            return cookieObj;
         })
         .filter(cookieOpt => cookieOpt !== undefined);
 

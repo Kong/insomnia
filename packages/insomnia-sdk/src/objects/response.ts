@@ -52,7 +52,7 @@ export class Response extends Property {
         this.body = options.body || '';
         this.code = options.code;
         this.cookies = new CookieList(
-            (options.cookie?.map(cookie => new Cookie(cookie)) || []).filter(cookie => cookie.isValid),
+            options.cookie?.map(cookie => new Cookie(cookie)) || [],
         );
         this.headers = new HeaderList(
             undefined,
@@ -294,7 +294,7 @@ export function toScriptResponse(
                 {},
             ).map(
                 setCookieHeader => Cookie.parse(setCookieHeader.value)
-        ).filter(cookie => cookie !== false)
+        )
         : [];
 
     const responseOption = {

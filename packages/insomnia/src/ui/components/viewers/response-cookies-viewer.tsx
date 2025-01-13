@@ -15,7 +15,7 @@ export const ResponseCookiesViewer: FC<Props> = props => {
     let cookie: Cookie | undefined | null = null;
 
     try {
-      cookie = h ? Cookie.parse(h.value || '') : null;
+      cookie = h ? Cookie.parse(h.value || '', { loose: true }) : null;
     } catch (err) {
       console.warn('Failed to parse set-cookie header', h);
     }

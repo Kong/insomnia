@@ -68,7 +68,16 @@ describe('test Cookie object', () => {
         const malformedCookieString = '=gingerale';
         expect(
             Cookie.parse(malformedCookieString)
-        ).toBeFalsy();
+        ).toEqual({
+            key: '',
+            value: 'gingerale',
+            expires: 'Infinity',
+            hostOnly: false,
+            httpOnly: false,
+            maxAge: null,
+            secure: false,
+            session: false,
+        });
     });
 
     it('test cookie transforming', () => {

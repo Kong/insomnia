@@ -29,7 +29,6 @@ export interface CookieOptions extends InsomniaCookieExtensions {
 export class Cookie extends Property {
     override readonly _kind: string = 'Cookie';
     protected cookie: ToughCookie;
-    public isValid: boolean = true;
     private extensions?: { key: string; value: string }[];
     private insoExtensions: InsomniaCookieExtensions = {};
 
@@ -39,7 +38,6 @@ export class Cookie extends Property {
         if (typeof cookieDef === 'string') {
             const cookieDefParsed = Cookie.parse(cookieDef);
             if (!cookieDefParsed) {
-                this.isValid = false;
                 throw Error('failed to parse cookie, the cookie string seems invalid');
             }
             cookieDef = cookieDefParsed;
@@ -71,10 +69,9 @@ export class Cookie extends Property {
     }
 
     static parse(cookieStr: string) {
-        const cookieObj = ToughCookie.parse(cookieStr);
+        const cookieObj = ToughCookie.parse(cookieStr, { loose: true });
         if (!cookieObj) {
-            // throw Error('failed to parse cookie, the cookie string seems invalid');
-            return false;
+            throw Error('failed to parse cookie, the cookie string seems invalid');
         }
 
         const hostOnly = cookieObj.extensions?.includes('HostOnly') || false;

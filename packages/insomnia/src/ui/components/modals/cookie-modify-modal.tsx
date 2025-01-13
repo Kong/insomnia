@@ -180,7 +180,7 @@ export const CookieModifyModal = ((props: ModalProps & CookieModifyModalOptions)
                         onChange={event => {
                           try {
                             // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
-                            const parsed = ToughCookie.parse(event.target.value)?.toJSON();
+                            const parsed = ToughCookie.parse(event.target.value, { loose: true })?.toJSON();
                             if (parsed) {
                               // Make sure cookie has an id
                               parsed.id = cookie.id;
