@@ -1,4 +1,4 @@
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import type { RenderPurpose } from '../../../common/render';
 import { vaultEnvironmentMaskValue, vaultEnvironmentRuntimePath } from '../../../models/environment';
@@ -12,8 +12,11 @@ interface Props {
 
 export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {
   const [purpose, setPurpose] = useState<RenderPurpose | ''>('');
-  const renderContext = purpose === '' ? {} : { purpose };
-  const { handleRender, handleGetRenderContext } = useNunjucks({ renderContext });
+  const useNunjuckOptions = useMemo(() => {
+    const renderContext = purpose === '' ? {} : { purpose };
+    return { renderContext };
+  }, [purpose]);
+  const { handleRender, handleGetRenderContext } = useNunjucks(useNunjuckOptions);
   const [selected, setSelected] = useState(defaultValue);
   const [options, setOptions] = useState<{ name: string; value: any }[]>([]);
   const [preview, setPreview] = useState('');
