@@ -1,7 +1,7 @@
 import React, { type FC, useEffect, useState } from 'react';
 
 import type { RenderPurpose } from '../../../common/render';
-import { vaultEnvironmentPath } from '../../../models/environment';
+import { vaultEnvironmentMaskValue, vaultEnvironmentRuntimePath } from '../../../models/environment';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 
@@ -18,7 +18,9 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {
   const [options, setOptions] = useState<{ name: string; value: any }[]>([]);
   const [preview, setPreview] = useState('');
   const [error, setError] = useState('');
-  const isVaultVariable = selected && selected.replace('{{', '').replace('}}', '').trim().startsWith(`${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}.${vaultEnvironmentPath}`);
+  const isVaultVariable = selected
+    && selected.replace('{{', '').replace('}}', '').trim().startsWith(`${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}.${vaultEnvironmentRuntimePath}`)
+    && preview === vaultEnvironmentMaskValue;
 
   useEffect(() => {
     let isMounted = true;
