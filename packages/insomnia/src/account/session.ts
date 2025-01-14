@@ -192,6 +192,8 @@ async function _unsetSessionData() {
     symmetricKey: {} as JsonWebKey,
     publicKey: {} as JsonWebKey,
     encPrivateKey: {} as crypt.AESMessage,
+    vaultSalt: '',
+    vaultKey: '',
   });
 }
 

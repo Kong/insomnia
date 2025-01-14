@@ -145,4 +145,7 @@ export interface Settings {
   useBulkParametersEditor: boolean;
   validateAuthSSL: boolean;
   validateSSL: boolean;
+  // vault related settings
+  saveVaultKeyLocally: boolean;
+  enableVaultInScripts: boolean;
 }

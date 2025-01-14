@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils as _webUtils } from 'electron';
 
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
+import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { CurlBridgeAPI } from './main/network/curl';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 import { invariant } from './utils/invariant';
@@ -40,6 +41,15 @@ const grpc: gRPCBridgeAPI = {
   loadMethods: options => ipcRenderer.invoke('grpc.loadMethods', options),
   loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
 };
+
+const secretStorage: secretStorageBridgeAPI = {
+  setSecret: (key, secret) => ipcRenderer.invoke('secretStorage.setSecret', key, secret),
+  getSecret: key => ipcRenderer.invoke('secretStorage.getSecret', key),
+  deleteSecret: key => ipcRenderer.invoke('secretStorage.deleteSecret', key),
+  encryptString: raw => ipcRenderer.invoke('secretStorage.encryptString', raw),
+  decryptString: cipherText => ipcRenderer.invoke('secretStorage.decryptString', cipherText),
+};
+
 const main: Window['main'] = {
   startExecution: options => ipcRenderer.send('startExecution', options),
   addExecutionStep: options => ipcRenderer.send('addExecutionStep', options),
@@ -67,6 +77,7 @@ const main: Window['main'] = {
   webSocket,
   grpc,
   curl,
+  secretStorage,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   showContextMenu: options => ipcRenderer.send('show-context-menu', options),

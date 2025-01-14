@@ -17,7 +17,7 @@ import type { WebSocketBridgeAPI } from '../network/websocket';
 import { ipcMainHandle, ipcMainOn, ipcMainOnce, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
-
+import type { secretStorageBridgeAPI } from './secret-storage';
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;
   openInBrowser: (url: string) => void;
@@ -37,6 +37,7 @@ export interface RendererToMainBridgeAPI {
   webSocket: WebSocketBridgeAPI;
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
+  secretStorage: secretStorageBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   showContextMenu: (options: { key: string; nunjucksTag?: { template: string; range: MarkerRange } }) => void;

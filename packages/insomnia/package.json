@@ -93,6 +93,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@fortawesome/react-fontawesome": "^0.2.0",
     "@getinsomnia/api-client": "0.0.4",
+    "@getinsomnia/srp-js": "1.0.0-alpha.1",
     "@sentry/electron": "^5.1.0",
     "@stoplight/spectral-core": "^1.18.3",
     "@stoplight/spectral-formats": "^1.6.0",

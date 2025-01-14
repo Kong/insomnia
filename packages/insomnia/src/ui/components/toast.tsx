@@ -19,8 +19,8 @@ const INSOMNIA_NOTIFICATIONS_SEEN = 'insomnia::notifications::seen';
 
 export interface ToastNotification {
   key: string;
-  url: string;
-  cta: string;
+  url?: string;
+  cta?: string;
   message: string;
 }
 
@@ -132,24 +132,26 @@ export const Toast: FC = () => {
             Dismiss
           </button>
           &nbsp;&nbsp;
-          <Link
-            button
-            className="btn btn--super-super-compact btn--outlined no-wrap"
-            onClick={() => {
-              if (notification) {
-                // Hide the currently showing notification
-                setVisible(false);
-                // Give time for toast to fade out, then remove it
-                setTimeout(() => {
-                  setNotification(null);
-                  checkForNotifications();
-                }, 1000);
-              }
-            }}
-            href={notification.url}
-          >
-            {notification.cta}
-          </Link>
+          {notification.url && notification.cta &&
+            <Link
+              button
+              className="btn btn--super-super-compact btn--outlined no-wrap"
+              onClick={() => {
+                if (notification) {
+                  // Hide the currently showing notification
+                  setVisible(false);
+                  // Give time for toast to fade out, then remove it
+                  setTimeout(() => {
+                    setNotification(null);
+                    checkForNotifications();
+                  }, 1000);
+                }
+              }}
+              href={notification.url}
+            >
+              {notification.cta}
+            </Link>
+          }
         </footer>
       </div>
     </div>

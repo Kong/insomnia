@@ -20,6 +20,7 @@ import { BooleanSetting } from './boolean-setting';
 import { EnumSetting } from './enum-setting';
 import { NumberSetting } from './number-setting';
 import { TextSetting } from './text-setting';
+import { VaultKeyPanel } from './vault-key-panel';
 
 export const General: FC = () => {
   const {
@@ -268,6 +269,7 @@ export const General: FC = () => {
           help="If checked, validates SSL certificates during authentication flows."
         />
       </div>
+      {isLoggedIn && <VaultKeyPanel />}
 
       {updatesSupported() && (
         <Fragment>

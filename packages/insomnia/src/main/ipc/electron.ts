@@ -28,7 +28,12 @@ export type HandleChannels =
   | 'webSocket.open'
   | 'webSocket.readyState'
   | 'writeFile'
-  | 'extractJsonFileFromPostmanDataDumpArchive';
+  | 'extractJsonFileFromPostmanDataDumpArchive'
+  | 'secretStorage.setSecret'
+  | 'secretStorage.getSecret'
+  | 'secretStorage.deleteSecret'
+  | 'secretStorage.encryptString'
+  | 'secretStorage.decryptString';
 
 export const ipcMainHandle = (
   channel: HandleChannels,

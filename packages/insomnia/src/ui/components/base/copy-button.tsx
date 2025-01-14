@@ -1,21 +1,25 @@
-import React, { type FC, useCallback, useState } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
 import { useInterval } from 'react-use';
 
 import { Button, type ButtonProps } from '../themed-button';
 
+export interface CopyBtnHanlde {
+  copy: () => void;
+}
 interface Props extends ButtonProps {
   confirmMessage?: string;
   content: string;
   title?: string;
 }
 
-export const CopyButton: FC<Props> = ({
-  children,
-  confirmMessage,
-  content,
-  title,
-  ...buttonProps
-}) => {
+export const CopyButton = forwardRef<CopyBtnHanlde, Props>((props, ref) => {
+  const {
+    children,
+    confirmMessage,
+    content,
+    title,
+    ...buttonProps
+  } = props;
   const [showConfirmation, setshowConfirmation] = useState(false);
   const onClick = useCallback(async (event: React.MouseEvent) => {
     event.preventDefault();
@@ -30,6 +34,15 @@ export const CopyButton: FC<Props> = ({
   useInterval(() => {
     setshowConfirmation(false);
   }, 2000);
+
+  useImperativeHandle(ref, () => ({
+    copy: () => {
+      if (content) {
+        window.clipboard.writeText(content);
+        setshowConfirmation(true);
+      }
+    },
+  }), [content]);
 
   const confirm = typeof confirmMessage === 'string' ? confirmMessage : 'Copied';
   return (
@@ -47,4 +60,4 @@ export const CopyButton: FC<Props> = ({
       )}
     </Button>
   );
-};
+});

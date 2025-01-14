@@ -1129,6 +1129,26 @@ async function renderApp() {
                 action: async (...args) => (await import('./routes/auth.authorize')).action(...args),
                 element: <Authorize />,
               },
+              {
+                path: 'updateVaultSalt',
+                action: async (...args) => (await import('./routes/auth.vaultKey')).updateVaultSaltAction(...args),
+              },
+              {
+                path: 'createVaultKey',
+                action: async (...args) => (await import('./routes/auth.vaultKey')).createVaultKeyAction(...args),
+              },
+              {
+                path: 'validateVaultKey',
+                action: async (...args) => (await import('./routes/auth.vaultKey')).validateVaultKeyAction(...args),
+              },
+              {
+                path: 'resetVaultKey',
+                action: async (...args) => (await import('./routes/auth.vaultKey')).resetVaultKeyAction(...args),
+              },
+              {
+                path: 'clearVaultKey',
+                action: async (...args) => (await import('./routes/auth.vaultKey')).clearVaultKeyAction(...args),
+              },
             ],
           },
         ],
