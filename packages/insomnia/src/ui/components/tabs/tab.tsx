@@ -38,7 +38,7 @@ const REQUEST_METHOD_STYLE_MAP: Record<string, string> = {
 };
 
 const WORKSPACE_TAB_UI_MAP: Partial<Record<TabType, any>> = {
-  request: {
+  collection: {
     icon: 'bars',
     bgColor: 'bg-[--color-surprise]',
     textColor: 'text-[--color-font-surprise]',
