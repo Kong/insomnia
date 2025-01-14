@@ -14,6 +14,7 @@ const MetaSchema = z.object({
   modified: z.number().optional(),
   isPrivate: z.boolean().optional(),
   description: z.string().optional(),
+  sortKey: z.number().optional(),
 });
 
 export type Meta = z.infer<typeof MetaSchema>;
@@ -24,24 +25,6 @@ const CACertificateSchema = z.object({
   meta: MetaSchema.optional(),
 });
 
-// const ClientCertificateSchema = z.object({
-//   host: z.string(),
-//   passphrase: z.string().nullable(),
-//   cert: z.string().nullable(),
-//   key: z.string().nullable(),
-//   pfx: z.string().nullable(),
-//   disabled: z.boolean().default(false),
-//   meta: MetaSchema.optional(),
-// });
-
-/*
-- key: foo
-  value: bar
-  domain: domain.com
-  path: /
-  creation: 2021-11-18T23:53:05.310Z
-  id: "429589439757017"
-*/
 const CookieSchema = z.object({
   id: z.string(),
   key: z.string(),
@@ -68,13 +51,15 @@ const CookieJarSchema = z.object({
 const EnvironmentSchema = z.object({
   name: z.string().optional(),
   data: jsonSchema.optional(),
+  dataPropertyOrder: jsonSchema.optional(),
   color: z.string().optional().nullable(),
   meta: MetaSchema.extend({
     sortKey: z.number().optional(),
   }).optional(),
   subEnvironments: z.array(z.object({
     name: z.string(),
-    data: jsonSchema,
+    data: jsonSchema.optional(),
+    dataPropertyOrder: jsonSchema.optional(),
     color: z.string().optional().nullable(),
     meta: MetaSchema.extend({
       sortKey: z.number().optional(),
@@ -97,10 +82,10 @@ export const GRPCRequestSchema = z.object({
     disabled: z.boolean().optional(),
   })).optional(),
   reflectionApi: z.object({
-    enabled: z.boolean().optional(),
-    url: z.string().optional(),
-    apiKey: z.string().optional(),
-    module: z.string().optional(),
+    enabled: z.boolean().optional().default(false),
+    url: z.string().optional().default(''),
+    apiKey: z.string().optional().default(''),
+    module: z.string().optional().default(''),
   }),
   meta: MetaSchema.extend({
     sortKey: z.number().optional(),
@@ -121,153 +106,142 @@ const MockRouteSchema = z.object({
   meta: MetaSchema.optional(),
 });
 
-// const ProtoDirectorySchema = z.object({
-//   type: z.literal('ProtoDirectory'),
-//   name: z.string(),
-//   meta: MetaSchema,
-// });
-
-// const ProtoFileSchema = z.object({
-//   type: z.literal('ProtoFile'),
-//   name: z.string(),
-//   protoText: z.string(),
-//   meta: MetaSchema,
-// });
-
 const AuthenticationSchema = z.union([
-  z.object({
-    type: z.literal('basic'),
-    useISO88591: z.boolean().default(false),
-    username: z.string(),
-    password: z.string(),
-    disabled: z.boolean().default(false),
-  }, {
-    description: 'Basic Authentication',
-  }),
-  z.object({
-    type: z.literal('apikey'),
-    key: z.string().optional(),
-    value: z.string().optional(),
-    disabled: z.boolean().default(false),
-    addTo: z.string().optional(),
-  }, {
-    description: 'API Key Authentication',
-  }),
-  z.object({
-    type: z.literal('oauth2'),
-    disabled: z.boolean().default(false),
-    grantType: z.enum(['authorization_code', 'client_credentials', 'implicit', 'password', 'refresh_token']),
-    accessTokenUrl: z.string().optional(),
-    authorizationUrl: z.string().optional(),
-    clientId: z.string().optional(),
-    clientSecret: z.string().optional(),
-    audience: z.string().optional(),
-    scope: z.string().optional(),
-    resource: z.string().optional(),
-    username: z.string().optional(),
-    password: z.string().optional(),
-    redirectUrl: z.string().optional(),
-    credentialsInBody: z.boolean().optional(),
-    state: z.string().optional(),
-    code: z.string().optional(),
-    accessToken: z.string().optional(),
-    refreshToken: z.string().optional(),
-    tokenPrefix: z.string().optional(),
-    usePkce: z.boolean().optional(),
-    pkceMethod: z.string().optional(),
-    responseType: z.enum(['code', 'token', 'none', 'id_token', 'id_token token']).optional(),
-    origin: z.string().optional(),
-  }, {
-    description: 'OAuth 2.0 Authentication',
-  }),
-  z.object({
-    type: z.literal('hawk'),
-    id: z.string(),
-    key: z.string(),
-    ext: z.string().optional(),
-    validatePayload: z.boolean().optional(),
-    algorithm: z.enum(['sha1', 'sha256']),
-    disabled: z.boolean().default(false),
-  }, {
-    description: 'Hawk Authentication',
-  }),
-  z.object({
-    type: z.literal('oauth1'),
-    disabled: z.boolean().default(false),
-    signatureMethod: z.enum(['HMAC-SHA1', 'RSA-SHA1', 'HMAC-SHA256', 'PLAINTEXT']),
-    consumerKey: z.string().optional(),
-    tokenKey: z.string().optional(),
-    tokenSecret: z.string().optional(),
-    privateKey: z.string().optional(),
-    version: z.string().optional(),
-    nonce: z.string().optional(),
-    timestamp: z.string().optional(),
-    callback: z.string().optional(),
-    realm: z.string().optional(),
-    verifier: z.string().optional(),
-    includeBodyHash: z.boolean().optional(),
-  }, {
-    description: 'OAuth 1.0 Authentication',
-  }),
-  z.object({
-    type: z.literal('digest'),
-    disabled: z.boolean().default(false),
-    username: z.string(),
-    password: z.string(),
-  }, {
-    description: 'Digest Authentication',
-  }),
-  z.object({
-    type: z.literal('ntlm'),
-    disabled: z.boolean().default(false),
-    username: z.string(),
-    password: z.string(),
-  }, {
-    description: 'NTLM Authentication',
-  }),
-  z.object({
-    type: z.literal('bearer'),
-    disabled: z.boolean().default(false),
-    token: z.string().optional(),
-    prefix: z.string().optional(),
-  }, {
-    description: 'Bearer Authentication',
-  }),
-  z.object({
-    type: z.literal('iam'),
-    disabled: z.boolean().default(false),
-    accessKeyId: z.string().optional(),
-    secretAccessKey: z.string().optional(),
-    sessionToken: z.string().optional(),
-    region: z.string().optional(),
-    service: z.string().optional(),
-  }, {
-    description: 'AWS IAM Authentication',
-  }),
-  z.object({
-    type: z.literal('netrc'),
-    disabled: z.boolean().default(false),
-  }, {
-    description: 'Netrc Authentication',
-  }),
-  z.object({
-    type: z.literal('asap'),
-    disabled: z.boolean().default(false),
-    issuer: z.string(),
-    subject: z.string().optional(),
-    audience: z.string(),
-    addintionalClaims: z.string().optional(),
-    privateKey: z.string(),
-    keyId: z.string(),
-  }, {
-    description: 'ASAP Authentication',
-  }),
-  z.object({
-    type: z.literal('none'),
-    disabled: z.boolean().default(false),
-  }, {
-    description: 'No Authentication',
-  }),
+  z.discriminatedUnion('type', [
+    z.object({
+      type: z.literal('basic'),
+      useISO88591: z.boolean().default(false),
+      username: z.string(),
+      password: z.string(),
+      disabled: z.boolean().default(false),
+    }, {
+      description: 'Basic Authentication',
+    }),
+    z.object({
+      type: z.literal('apikey'),
+      key: z.string().optional(),
+      value: z.string().optional(),
+      disabled: z.boolean().default(false),
+      addTo: z.string().optional(),
+    }, {
+      description: 'API Key Authentication',
+    }),
+    z.object({
+      type: z.literal('oauth2'),
+      disabled: z.boolean().default(false),
+      grantType: z.enum(['authorization_code', 'client_credentials', 'implicit', 'password', 'refresh_token']),
+      accessTokenUrl: z.string().optional(),
+      authorizationUrl: z.string().optional(),
+      clientId: z.string().optional(),
+      clientSecret: z.string().optional(),
+      audience: z.string().optional(),
+      scope: z.string().optional(),
+      resource: z.string().optional(),
+      username: z.string().optional(),
+      password: z.string().optional(),
+      redirectUrl: z.string().optional(),
+      credentialsInBody: z.boolean().optional(),
+      state: z.string().optional(),
+      code: z.string().optional(),
+      accessToken: z.string().optional(),
+      refreshToken: z.string().optional(),
+      tokenPrefix: z.string().optional(),
+      usePkce: z.boolean().optional(),
+      pkceMethod: z.string().optional(),
+      responseType: z.enum(['code', 'token', 'none', 'id_token', 'id_token token']).optional(),
+      origin: z.string().optional(),
+    }, {
+      description: 'OAuth 2.0 Authentication',
+    }),
+    z.object({
+      type: z.literal('hawk'),
+      id: z.string(),
+      key: z.string(),
+      ext: z.string().optional(),
+      validatePayload: z.boolean().optional(),
+      algorithm: z.enum(['sha1', 'sha256']),
+      disabled: z.boolean().default(false),
+    }, {
+      description: 'Hawk Authentication',
+    }),
+    z.object({
+      type: z.literal('oauth1'),
+      disabled: z.boolean().default(false),
+      signatureMethod: z.enum(['HMAC-SHA1', 'RSA-SHA1', 'HMAC-SHA256', 'PLAINTEXT']),
+      consumerKey: z.string().optional(),
+      tokenKey: z.string().optional(),
+      tokenSecret: z.string().optional(),
+      privateKey: z.string().optional(),
+      version: z.string().optional(),
+      nonce: z.string().optional(),
+      timestamp: z.string().optional(),
+      callback: z.string().optional(),
+      realm: z.string().optional(),
+      verifier: z.string().optional(),
+      includeBodyHash: z.boolean().optional(),
+    }, {
+      description: 'OAuth 1.0 Authentication',
+    }),
+    z.object({
+      type: z.literal('digest'),
+      disabled: z.boolean().default(false),
+      username: z.string(),
+      password: z.string(),
+    }, {
+      description: 'Digest Authentication',
+    }),
+    z.object({
+      type: z.literal('ntlm'),
+      disabled: z.boolean().default(false),
+      username: z.string(),
+      password: z.string(),
+    }, {
+      description: 'NTLM Authentication',
+    }),
+    z.object({
+      type: z.literal('bearer'),
+      disabled: z.boolean().default(false),
+      token: z.string().optional(),
+      prefix: z.string().optional(),
+    }, {
+      description: 'Bearer Authentication',
+    }),
+    z.object({
+      type: z.literal('iam'),
+      disabled: z.boolean().default(false),
+      accessKeyId: z.string().optional(),
+      secretAccessKey: z.string().optional(),
+      sessionToken: z.string().optional(),
+      region: z.string().optional(),
+      service: z.string().optional(),
+    }, {
+      description: 'AWS IAM Authentication',
+    }),
+    z.object({
+      type: z.literal('netrc'),
+      disabled: z.boolean().default(false),
+    }, {
+      description: 'Netrc Authentication',
+    }),
+    z.object({
+      type: z.literal('asap'),
+      disabled: z.boolean().default(false),
+      issuer: z.string(),
+      subject: z.string().optional(),
+      audience: z.string(),
+      addintionalClaims: z.string().optional(),
+      privateKey: z.string(),
+      keyId: z.string(),
+    }, {
+      description: 'ASAP Authentication',
+    }),
+    z.object({
+      type: z.literal('none'),
+      disabled: z.boolean().default(false),
+    }, {
+      description: 'No Authentication',
+    }),
+  ]),
   z.object({}),
 ]);
 
@@ -465,7 +439,7 @@ const globalEnvironmentsSchema = z.object({
   meta: MetaSchema.optional(),
   name: z.string().optional(),
   description: z.string().optional(),
-  environments: EnvironmentSchema,
+  environments: EnvironmentSchema.optional(),
 });
 
 export const insomniaFileSchema = z.discriminatedUnion('type', [

@@ -17,6 +17,8 @@ import { EXPORT_TYPE_API_SPEC, EXPORT_TYPE_COOKIE_JAR, EXPORT_TYPE_ENVIRONMENT, 
 import { database } from './database';
 import { type InsomniaFile, insomniaFileSchema, type Meta, WebsocketRequestSchema, type Z_GRPCRequest, type Z_Request, type Z_RequestGroup, type Z_WebsocketRequest } from './schema';
 
+type WithExportType<T extends models.BaseModel> = T & { _type: string };
+
 function filterEmptyValue(value: string | number | boolean | null | undefined) {
   return value !== null && value !== undefined && value !== '' && !(typeof value === 'object' && Object.keys(value).length === 0);
 }
@@ -43,14 +45,16 @@ function mapMetaToInsomniaMeta(meta: Meta): {
   created: number;
   modified: number;
   isPrivate: boolean;
-  description?: string;
+  description: string;
+  metaSortKey: number;
 } {
   return {
     _id: meta.id,
     created: meta.created || Date.now(),
     modified: meta.modified || Date.now(),
     isPrivate: meta.isPrivate || false,
-    description: meta.description,
+    description: meta.description || '',
+    metaSortKey: meta.sortKey || 0,
   };
 }
 
@@ -66,13 +70,12 @@ function getScope(file: InsomniaFile): WorkspaceScope {
   }
 }
 
-function getWorkspace(file: InsomniaFile): Workspace {
+function getWorkspace(file: InsomniaFile): WithExportType<Workspace> {
   return {
     ...mapMetaToInsomniaMeta(file.meta || {
       id: '__WORKSPACE_ID__',
     }),
     type: 'Workspace',
-    // @ts-expect-error -- TSCONVERSION
     _type: EXPORT_TYPE_WORKSPACE,
     name: file.name || 'Imported Collection',
     parentId: '',
@@ -80,48 +83,30 @@ function getWorkspace(file: InsomniaFile): Workspace {
   };
 }
 
-// function getCertificates(file: InsomniaFile): CaCertificate[] {
-//   if ('certificates' in file) {
-//     return file.certificates?.map(certificate => ({
-//       ...mapMetaToInsomniaMeta(certificate.meta || {
-//         id: '__CERTIFICATE_ID__',
-//       }),
-//       type: 'CaCertificate',
-//       _type: EXPORTTYPE,
-//       name: '',
-//       parentId: file.meta?.id || '',
-//       path: certificate.path,
-//       disabled: certificate.disabled,
-//     })) || [];
-//   }
-
-//   return [];
-// }
-
 function getEnvironments(file: InsomniaFile): Environment[] {
   if ('environments' in file && file.environments) {
-    const baseEnvironment: Environment = {
+    const baseEnvironment: WithExportType<Environment> = {
       ...mapMetaToInsomniaMeta(file.environments.meta || {
         id: '__ENVIRONMENT_ID__',
       }),
       type: 'Environment',
-      // @ts-expect-error -- TSCONVERSION
       _type: EXPORT_TYPE_ENVIRONMENT,
       parentId: file.meta?.id || '__WORKSPACE_ID__',
       color: file.environments.color || null,
-      data: file.environments.data || {},
+      data: file.environments.data as Record<string, any> || {},
+      dataPropertyOrder: file.environments.dataPropertyOrder as Record<string, any> || undefined,
       name: file.environments.name || 'Base Environment',
     };
 
-    const subEnvironments = file.environments.subEnvironments?.map((environment, index) => ({
+    const subEnvironments: WithExportType<Environment>[] = file.environments.subEnvironments?.map((environment, index) => ({
       ...mapMetaToInsomniaMeta(environment.meta || {
         id: '__ENVIRONMENT_ID__',
       }),
       type: 'Environment',
-      // @ts-expect-error -- TSCONVERSION
       _type: EXPORT_TYPE_ENVIRONMENT,
       color: environment.color || null,
-      data: environment.data || {},
+      data: environment.data as Record<string, any> || {},
+      dataPropertyOrder: environment.dataPropertyOrder as Record<string, any> || undefined,
       name: environment.name || `Environment ${index}`,
       parentId: baseEnvironment._id,
     })) || [];
@@ -134,12 +119,11 @@ function getEnvironments(file: InsomniaFile): Environment[] {
 
 function getCookieJar(file: InsomniaFile): [CookieJar] | [] {
   if ('cookieJar' in file && file.cookieJar) {
-    const cookieJar: CookieJar = {
+    const cookieJar: WithExportType<CookieJar> = {
       ...mapMetaToInsomniaMeta(file.cookieJar.meta || {
         id: '__COOKIE_JAR_ID__',
       }),
       type: 'CookieJar',
-      // @ts-expect-error -- TSCONVERSION
       _type: EXPORT_TYPE_COOKIE_JAR,
       name: file.cookieJar.name || 'Imported Cookie Jar',
       parentId: file.meta?.id || '__WORKSPACE_ID__',
@@ -152,14 +136,14 @@ function getCookieJar(file: InsomniaFile): [CookieJar] | [] {
   return [];
 }
 
-function getApiSpec(file: InsomniaFile): [ApiSpec] | [] {
+function getApiSpec(file: InsomniaFile): [WithExportType<ApiSpec>] | [] {
   if ('spec' in file && file.spec) {
     return [{
       ...mapMetaToInsomniaMeta(file.meta || {
         id: '__API_SPEC_ID__',
       }),
       type: 'ApiSpec',
-      // @ts-expect-error -- TSCONVERSION
+      name: file.name || 'Api Spec',
       _type: EXPORT_TYPE_API_SPEC,
       fileName: 'file' in file.spec ? file.spec.file : '',
       contentType: 'json',
@@ -171,14 +155,13 @@ function getApiSpec(file: InsomniaFile): [ApiSpec] | [] {
   return [];
 }
 
-function getMockServer(file: InsomniaFile): MockServer {
+function getMockServer(file: InsomniaFile): WithExportType<MockServer> {
   if (file.type === 'mock.insomnia.rest/5.0') {
     return {
       ...mapMetaToInsomniaMeta(file.meta || {
         id: '__MOCK_SERVER_ID__',
       }),
       type: 'MockServer',
-      // @ts-expect-error -- TSCONVERSION
       _type: EXPORT_TYPE_MOCK_SERVER,
       name: file.name || 'Imported Mock Server',
       parentId: file.meta?.id || '',
@@ -190,7 +173,7 @@ function getMockServer(file: InsomniaFile): MockServer {
   throw new Error('No Mock Server found');
 }
 
-function getMockRoutes(file: InsomniaFile): MockRoute[] {
+function getMockRoutes(file: InsomniaFile): WithExportType<MockRoute>[] {
   if (file.type === 'mock.insomnia.rest/5.0') {
     return file.routes?.map(mock => ({
       ...mapMetaToInsomniaMeta(mock.meta || {
@@ -217,12 +200,11 @@ function getTestSuites(file: InsomniaFile): (UnitTestSuite | UnitTest)[] {
     const resources: (UnitTestSuite | UnitTest)[] = [];
 
     file.testSuites?.forEach((testSuite, index) => {
-      const suite: UnitTestSuite = {
+      const suite: WithExportType<UnitTestSuite> = {
         ...mapMetaToInsomniaMeta(testSuite.meta || {
           id: '__UNIT_TEST_SUITE_ID__',
         }),
         type: 'UnitTestSuite',
-        // @ts-expect-error -- TSCONVERSION
         _type: EXPORT_TYPE_UNIT_TEST_SUITE,
         name: testSuite.name || 'Imported Test Suite',
         parentId: file.meta?.id || '__WORKSPACE_ID__',
@@ -231,7 +213,7 @@ function getTestSuites(file: InsomniaFile): (UnitTestSuite | UnitTest)[] {
 
       resources.push(suite);
 
-      const tests: UnitTest[] = testSuite.tests?.map((test, index) => ({
+      const tests: WithExportType<UnitTest>[] = testSuite.tests?.map((test, index) => ({
         ...mapMetaToInsomniaMeta(test.meta || {
           id: '__UNIT_TEST_ID__',
         }),
@@ -260,27 +242,31 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
     function walkCollection(collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'], parentId: string) {
       collection.forEach(item => {
         if ('children' in item) {
-          const requestGroup: RequestGroup = {
+          const requestGroup: WithExportType<RequestGroup> = {
             ...mapMetaToInsomniaMeta(item.meta || {
               id: '__REQUEST_GROUP_ID__',
             }),
             type: 'RequestGroup',
-            // @ts-expect-error -- TSCONVERSION
             _type: EXPORT_TYPE_REQUEST_GROUP,
             name: item.name || 'Imported Folder',
             parentId,
+            preRequestScript: item.scripts?.preRequest || '',
+            afterResponseScript: item.scripts?.afterResponse || '',
+            authentication: item.authentication || {},
+            environment: item.environment as Record<string, any> || {},
+            // 🚧 WARNING 🚧 If we set the order to an empty object instead of undefined it will remove the environment from the folder due to filtering logic
+            environmentPropertyOrder: item.environmentPropertyOrder as Record<string, any> || undefined,
           };
 
           resources.push(requestGroup);
 
           walkCollection(item.children, requestGroup._id);
         } else if ('method' in item) {
-          const request: Request = {
+          const request: WithExportType<Request> = {
             ...mapMetaToInsomniaMeta(item.meta || {
               id: '__REQUEST_ID__',
             }),
             type: 'Request',
-            // @ts-expect-error -- TSCONVERSION
             _type: EXPORT_TYPE_REQUEST,
             name: item.name || 'Imported Request',
             parentId,
@@ -303,13 +289,12 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
           };
 
           resources.push(request);
-        } else if ('protoMethodName' in item) {
-          const grpcRequest: GrpcRequest = {
+        } else if ('reflectionApi' in item) {
+          const grpcRequest: WithExportType<GrpcRequest> = {
             ...mapMetaToInsomniaMeta(item.meta || {
               id: '__GRPC_REQUEST_ID__',
             }),
             type: 'GrpcRequest',
-            // @ts-expect-error -- TSCONVERSION
             _type: EXPORT_TYPE_GRPC_REQUEST,
             name: item.name || 'Imported gRPC Request',
             parentId,
@@ -332,12 +317,11 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
           const wbRequest = WebsocketRequestSchema.safeParse(item);
           if (wbRequest.success) {
             const data = wbRequest.data;
-            const websocketRequest: WebSocketRequest = {
+            const websocketRequest: WithExportType<WebSocketRequest> = {
               ...mapMetaToInsomniaMeta(data.meta || {
                 id: '__WEBSOCKET_REQUEST_ID__',
               }),
               type: 'WebSocketRequest',
-              // @ts-expect-error -- TSCONVERSION
               _type: EXPORT_TYPE_WEBSOCKET_REQUEST,
               name: item.name || 'Imported WebSocket Request',
               parentId,
@@ -442,6 +426,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
             modified: resource.modified,
             isPrivate: resource.isPrivate,
             description: resource.description,
+            sortKey: resource.metaSortKey,
           },
           method: resource.method,
           body: resource.body,
@@ -497,6 +482,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
             modified: resource.modified,
             isPrivate: resource.isPrivate,
             description: resource.description,
+            sortKey: resource.metaSortKey,
           },
           settings: {
             encodeUrl: resource.settingEncodeUrl,
@@ -541,18 +527,19 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
   function getEnvironmentsFromResources(resources: Environment[]): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['environments'] {
     const baseEnvironment = resources.find(environment => environment.parentId.startsWith('wrk_'));
     if (!baseEnvironment) {
-      return {
-        name: 'Base Environment',
-        meta: {
-          id: '__BASE_ENVIRONMENT_ID__',
-          created: Date.now(),
-          modified: Date.now(),
-          isPrivate: false,
-        },
-        data: {},
-        color: null,
-        subEnvironments: [],
-      };
+      throw new Error('Base environment not found');
+      // return {
+      //   name: 'Base Environment',
+      //   meta: {
+      //     id: '__BASE_ENVIRONMENT_ID__',
+      //     created: Date.now(),
+      //     modified: Date.now(),
+      //     isPrivate: false,
+      //   },
+      //   data: {},
+      //   color: null,
+      //   subEnvironments: [],
+      // };
     }
 
     const subEnvironments = resources.filter(environment => environment.parentId === baseEnvironment?._id);
@@ -574,6 +561,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
           created: subEnvironment.created,
           modified: subEnvironment.modified,
           isPrivate: subEnvironment.isPrivate,
+          sortKey: subEnvironment.metaSortKey,
         },
         data: subEnvironment.data,
         color: subEnvironment.color,
@@ -590,7 +578,10 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
         modified: resource.modified,
         isPrivate: resource.isPrivate,
       },
-      cookies: resource.cookies,
+      cookies: resource.cookies.map(cookie => ({
+        ...cookie,
+        expires: cookie.expires ? new Date(cookie.expires) : null,
+      })),
     }))[0];
   }
 
@@ -607,6 +598,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
           created: testSuite.created,
           modified: testSuite.modified,
           isPrivate: testSuite.isPrivate,
+          sortKey: testSuite.metaSortKey,
         },
         tests: tests.map(test => ({
           name: test.name,
@@ -615,6 +607,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
             created: test.created,
             modified: test.modified,
             isPrivate: test.isPrivate,
+            sortKey: test.metaSortKey,
           },
           requestId: test.requestId,
           code: test.code,
@@ -699,7 +692,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
         isPrivate: workspace.isPrivate,
         description: workspace.description,
       },
-      environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)) || [],
+      environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)),
     };
 
     return stringify(removeEmptyFields(environment));
