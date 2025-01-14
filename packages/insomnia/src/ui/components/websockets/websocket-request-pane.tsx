@@ -1,5 +1,6 @@
 import React, { type FC, Fragment, useEffect, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton, Toolbar } from 'react-aria-components';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
 
@@ -328,6 +329,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
         </TabList>
         <TabPanel className='w-full flex-1 flex flex-col h-full overflow-y-auto' id='params'>
           {disabled && <PaneReadOnlyBanner />}
+
           <div className="p-4 flex-shrink-0">
             <div className="text-xs max-h-32 flex flex-col overflow-y-auto min-h-[2em] bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm]">
               <label className="label--small no-pad-top">Url Preview</label>
@@ -339,53 +341,57 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
               </ErrorBoundary>
             </div>
           </div>
-          <div className="flex-shrink-0 grid flex-1 [grid-template-rows:minmax(auto,min-content)] [grid-template-columns:100%] overflow-hidden">
-            <div className="min-h-[2rem] max-h-full flex flex-col overflow-y-auto [&_.key-value-editor]:p-0 flex-1">
-              <div className='flex items-center w-full p-4 h-4 justify-between'>
-                <Heading className='text-xs font-bold uppercase text-[--hl]'>Query parameters</Heading>
-                <div className='flex items-center gap-2'>
-                  <Button
-                    isDisabled={disabled || !urlHasQueryParameters}
-                    onPress={handleImportQueryFromUrl}
-                    className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 h-full asma-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
-                  >
-                    Import from URL
-                  </Button>
-                  <ToggleButton
-                    isDisabled={disabled}
-                    onChange={isSelected => {
-                      patchSettings({
-                        useBulkParametersEditor: isSelected,
-                      });
-                    }}
-                    isSelected={settings.useBulkParametersEditor}
-                    className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 h-full rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
-                  >
-                    {({ isSelected }) => (
-                      <Fragment>
-                        <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
-                        <span>{
-                          isSelected ? 'Regular Edit' : 'Bulk Edit'
-                        }</span>
-                      </Fragment>
-                    )}
-                  </ToggleButton>
+          <PanelGroup className='flex-1 overflow-hidden' direction={'vertical'}>
+            <Panel minSize={20}>
+              <div className='h-full flex flex-col'>
+                <div className='flex items-center w-full p-4 h-4 justify-between'>
+                  <Heading className='text-xs font-bold uppercase text-[--hl]'>Query parameters</Heading>
+                  <div className='flex items-center gap-2'>
+                    <Button
+                      isDisabled={disabled || !urlHasQueryParameters}
+                      onPress={handleImportQueryFromUrl}
+                      className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 h-full asma-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
+                    >
+                      Import from URL
+                    </Button>
+                    <ToggleButton
+                      isDisabled={disabled}
+                      onChange={isSelected => {
+                        patchSettings({
+                          useBulkParametersEditor: isSelected,
+                        });
+                      }}
+                      isSelected={settings.useBulkParametersEditor}
+                      className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 h-full rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
+                    >
+                      {({ isSelected }) => (
+                        <Fragment>
+                          <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
+                          <span>{
+                            isSelected ? 'Regular Edit' : 'Bulk Edit'
+                          }</span>
+                        </Fragment>
+                      )}
+                    </ToggleButton>
+                  </div>
                 </div>
+                <ErrorBoundary
+                  key={uniqueKey}
+                  errorClassName="tall wide vertically-align font-error pad text-center"
+                >
+                  <RequestParametersEditor
+                    bulk={settings.useBulkParametersEditor}
+                    disabled={disabled}
+                  />
+                </ErrorBoundary>
               </div>
-              <ErrorBoundary
-                key={uniqueKey}
-                errorClassName="tall wide vertically-align font-error pad text-center"
-              >
-                <RequestParametersEditor
-                  bulk={settings.useBulkParametersEditor}
-                  disabled={disabled}
-                />
-              </ErrorBoundary>
-            </div>
-            <div className='flex-1 flex flex-col gap-4 p-4 overflow-y-auto'>
-              <Heading className='text-xs font-bold uppercase text-[--hl]'>Path parameters</Heading>
+            </Panel>
+            <PanelResizeHandle className='w-full h-[1px] bg-[--hl-md]' />
+            <Panel minSize={20}>
+              <div className='h-full flex flex-col'>
+                <Heading className='text-xs font-bold uppercase text-[--hl] p-4'>Path parameters</Heading>
               {pathParameters.length > 0 && (
-                <div className="pr-[72.73px] w-full">
+                  <div className="pr-[72.73px] w-full overflow-y-auto pl-4">
                   <div className='grid gap-x-[20.8px] grid-cols-2 flex-shrink-0 w-full rounded-sm overflow-hidden'>
                     {pathParameters.map(pathParameter => (
                       <Fragment key={pathParameter.name}>
@@ -422,7 +428,8 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                 </div>
               )}
             </div>
-          </div>
+            </Panel>
+          </PanelGroup>
         </TabPanel>
         <TabPanel className='w-full flex-1 flex flex-col' id='content-type'>
           <Toolbar className="w-full flex-shrink-0 px-2 border-b border-solid border-[--hl-md] py-2 h-[--line-height-sm] flex items-center gap-2 justify-between">

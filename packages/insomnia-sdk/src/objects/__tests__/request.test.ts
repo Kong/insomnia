@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { mergeRequestBody, Request, RequestBody, toScriptRequestBody } from '../request';
+import { Header, HeaderList } from '../headers';
+import { calculateRequestSize, mergeRequestBody, Request, RequestBody, RequestBodyOptions, toScriptRequestBody } from '../request';
 
 describe('test request and response objects', () => {
     it('test RequestBody methods', () => {
@@ -113,6 +114,41 @@ describe('test request and response objects', () => {
             const originalReqBody = body;
             const scriptReqBody = new RequestBody(toScriptRequestBody(body));
             expect(mergeRequestBody(scriptReqBody, originalReqBody)).toEqual(originalReqBody);
+        });
+    });
+
+    const reqBodyTestCases: { body: RequestBodyOptions; headers: HeaderList<Header>; expectedTotal: number }[] = [
+        {
+            body: {
+                mode: 'raw',
+                raw: '1',
+            },
+            headers: new HeaderList<Header>(undefined, []),
+            expectedTotal: 1,
+        },
+        {
+            body: {
+                mode: 'raw',
+                raw: '😎',
+            },
+            headers: new HeaderList<Header>(undefined, []),
+            expectedTotal: 4,
+        },
+        {
+            body: {
+                mode: 'raw',
+                raw: '睡',
+            },
+            headers: new HeaderList<Header>(undefined, []),
+            expectedTotal: 3,
+        },
+    ];
+
+    reqBodyTestCases.forEach(({ body, headers, expectedTotal }) => {
+        it(`test calculateRequestSize: ${body.raw}`, () => {
+            const reqSize = calculateRequestSize(new RequestBody(body), headers);
+
+            expect(reqSize.total).toEqual(expectedTotal);
         });
     });
 });

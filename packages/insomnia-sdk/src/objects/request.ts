@@ -151,6 +151,10 @@ export class RequestBody extends PropertyBase {
     }
 
     override toString() {
+        if (this.mode === undefined) {
+            return '';
+        }
+
         try {
             switch (this.mode) {
                 case 'formdata':
@@ -375,9 +379,9 @@ export class Request extends Property {
         this.url.removeQueryParams(params);
     }
 
-    // TODO:
-    // size(): RequestSize {
-    // }
+    size(): RequestSize {
+        return calculateRequestSize(this.body, this.headers);
+    }
 
     override toJSON() {
         return {
@@ -655,5 +659,23 @@ export function mergeRequests(
     return {
         ...originalReq,
         ...updatedReqProperties,
+    };
+}
+
+export function calculateRequestSize(body: RequestBody | undefined, headers: HeaderList<Header>): RequestSize {
+    const bodySize = new Blob([(body || '').toString()]).size;
+    const headerSize = new Blob([
+        headers.reduce(
+            (acc, header) => (acc + header.toString() + '\n'),
+            '',
+            {},
+        ),
+    ]).size;
+
+    return {
+        body: bodySize,
+        header: headerSize,
+        total: bodySize + headerSize,
+        source: 'COMPUTED',
     };
 }

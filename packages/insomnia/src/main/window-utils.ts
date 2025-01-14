@@ -156,7 +156,7 @@ export async function createHiddenBrowserWindow() {
       });
     });
 
-    event.senderFrame.postMessage('hidden-browser-window-response-listener', null, [port2]);
+    event.senderFrame?.postMessage('hidden-browser-window-response-listener', null, [port2]);
     await mainWinPortReady;
 
     browserWindows.set('HiddenBrowserWindow', hiddenBrowserWindow);
@@ -286,8 +286,8 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
     submenu: [
       {
         label: `${MNEMONIC_SYM}Preferences`,
-        click: (_menuItem, window) => {
-          window?.webContents?.send('toggle-preferences');
+        click: () => {
+          mainBrowserWindow.webContents?.send('toggle-preferences');
         },
       },
       {
@@ -484,12 +484,8 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
       {
         label: `${MNEMONIC_SYM}Keyboard Shortcuts`,
         accelerator: 'CmdOrCtrl+Shift+?',
-        click: (_menuItem, w) => {
-          if (!w || !w.webContents) {
-            return;
-          }
-
-          w.webContents.send('toggle-preferences-shortcuts');
+        click: () => {
+          mainBrowserWindow.webContents.send('toggle-preferences-shortcuts');
         },
       },
       {
@@ -624,14 +620,14 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
       },
       {
         label: `${MNEMONIC_SYM}Clear a model`,
-        click: (_menuItem, window) => {
-          window?.webContents?.send('clear-model');
+        click: () => {
+          mainBrowserWindow.webContents?.send('clear-model');
         },
       },
       {
         label: `Clear ${MNEMONIC_SYM}all models`,
-        click: (_menuItem, window) => {
-          window?.webContents?.send('clear-all-models');
+        click: () => {
+          mainBrowserWindow.webContents?.send('clear-all-models');
         },
       },
       {
