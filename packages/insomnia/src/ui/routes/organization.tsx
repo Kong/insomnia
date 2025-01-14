@@ -579,6 +579,7 @@ const OrganizationRoute = () => {
   }, []);
 
   const [isOrganizationSidebarOpen, setIsOganizationSidebarOpen] = useLocalStorage('organizationSidebarOpen', true);
+  const [isHeaderOpen, setIsHeaderOpen] = useLocalStorage('appHeader', true);
 
   const {
     generating: loadingAI,
@@ -605,7 +606,7 @@ const OrganizationRoute = () => {
     <InsomniaEventStreamProvider>
       <div className="w-full h-full">
         <div className={`w-full h-full divide-x divide-solid divide-[--hl-md] ${isOrganizationSidebarOpen ? 'with-navbar' : ''} ${isScratchPadBannerVisible ? 'with-banner' : ''} grid-template-app-layout grid relative bg-[--color-bg]`}>
-          <header className="[grid-area:Header] grid grid-cols-3 items-center border-b border-solid border-[--hl-md]">
+          {isHeaderOpen && <header className="[grid-area:Header] grid grid-cols-3 items-center border-b border-solid border-[--hl-md]">
             <div className="flex items-center gap-2">
               <div className="flex shrink-0 w-[50px] justify-center py-2">
                 <InsomniaLogo loading={loadingAI} />
@@ -747,7 +748,7 @@ const OrganizationRoute = () => {
                 </Fragment>
               )}
             </div>
-          </header>
+          </header>}
           {isScratchPadBannerVisible ? (
             <div className="flex h-[30px] items-center [grid-area:Banner] text-white bg-gradient-to-r from-[#7400e1] to-[#4000bf]">
               <div className="flex flex-shrink-0 basis-[50px] h-full">
@@ -905,43 +906,81 @@ const OrganizationRoute = () => {
             <Outlet />
           </div>
           <div className="relative [grid-area:Statusbar] flex items-center overflow-hidden">
-            <TooltipTrigger>
-              <ToggleButton
-                className="w-[50px] flex-shrink-0 px-4 py-1 border-solid border-r border-r-[--hl-md] h-full flex items-center justify-center gap-2 text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                onChange={setIsOganizationSidebarOpen}
-                isSelected={isOrganizationSidebarOpen}
-              >
-                {({ isSelected }) => {
-                  return (
-                    <svg
-                      width={10}
-                      height={10}
-                      viewBox="0 0 16 16"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="currentColor"
-                    >
-                      {isSelected ? (
-                        <path
-                          fillRule="evenodd"
-                          clipRule="evenodd"
-                          d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm12 13H7V2h7v12z"
-                        />
-                      ) : (
-                        <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
-                      )}
-                    </svg>
-                  );
-                }}
-              </ToggleButton>
-              <Tooltip
-                placement="top"
-                offset={8}
-                className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-              >
-                Toggle organizations sidebar
-              </Tooltip>
-            </TooltipTrigger>
-            <div className='flex w-full h-full items-center justify-between'>
+            <div className='flex justify-center items-center gap-2 flex-shrink-0 h-full w-[50px] border-solid border-r border-r-[--hl-md]'>
+              <TooltipTrigger>
+                <ToggleButton
+                  className="flex-grow-0 w-[10px] h-[10px] gap-2 text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                  onChange={setIsOganizationSidebarOpen}
+                  isSelected={isOrganizationSidebarOpen}
+                >
+                  {({ isSelected }) => {
+                    return (
+                      <svg
+                        width={10}
+                        height={10}
+                        viewBox="0 0 16 16"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="currentColor"
+                      >
+                        {isSelected ? (
+                          <path
+                            fillRule="evenodd"
+                            clipRule="evenodd"
+                            d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm12 13H7V2h7v12z"
+                          />
+                        ) : (
+                          <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
+                        )}
+                      </svg>
+                    );
+                  }}
+                </ToggleButton>
+                <Tooltip
+                  placement="top"
+                  offset={8}
+                  className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                >
+                  Toggle organizations sidebar
+                </Tooltip>
+              </TooltipTrigger>
+              <TooltipTrigger>
+                <ToggleButton
+                  className="flex-grow-0 w-[10px] h-[10px] gap-2 text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all rotate-90"
+                  onChange={setIsHeaderOpen}
+                  isSelected={isHeaderOpen}
+                >
+                  {({ isSelected }) => {
+                    return (
+                      <svg
+                        width={10}
+                        height={10}
+                        viewBox="0 0 16 16"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="currentColor"
+                      >
+                        {isSelected ? (
+                          <path
+                            fillRule="evenodd"
+                            clipRule="evenodd"
+                            d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm12 13H7V2h7v12z"
+                          />
+                        ) : (
+                          <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
+                        )}
+                      </svg>
+                    );
+                  }}
+                </ToggleButton>
+                <Tooltip
+                  placement="top"
+                  offset={8}
+                  className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                >
+                  Toggle header
+                </Tooltip>
+              </TooltipTrigger>
+            </div>
+            <div className={`grid grid-cols-3 gap-2 w-full items-center ${!isHeaderOpen && 'min-w-[1100px]'}`}>
               <div className="flex h-full">
                 <TooltipTrigger>
                   <Button
@@ -964,7 +1003,7 @@ const OrganizationRoute = () => {
                     />
                   </Tooltip>
                 </TooltipTrigger>
-                {hasUntrackedData ? <div>
+                {(hasUntrackedData && isHeaderOpen) ? <div>
                   <Button
                     className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
                     onPress={() => showModal(SettingsModal, { tab: 'data' })}
@@ -972,63 +1011,86 @@ const OrganizationRoute = () => {
                     <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click here to view them.
                   </Button>
                 </div> : null}
-              </div>
-              <div className='flex items-center gap-2 divide divide-y-[--hl-sm]'>
-                {loadingAI && (
-                  <ProgressBar
-                    className="flex items-center gap-2 h-full"
-                    value={loadingAIProgress.progress}
-                    maxValue={loadingAIProgress.total}
-                    minValue={0}
-                    aria-label='AI generation'
-                  >
-                    {({ percentage }) => (
-                      <TooltipTrigger>
-                        <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">
-                          <InsomniaAI className='w-4 text-[--color-font] animate-pulse' />
-                          <div className="h-1 w-32 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-40">
-                            <div
-                              className="h-1 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100"
-                              style={{ width: percentage + '%' }}
-                            />
-                          </div>
-                        </Button>
-                        <Tooltip
-                          placement="top"
-                          offset={8}
-                          className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                        >
-                          Generating tests with Insomnia AI
-                        </Tooltip>
-                      </TooltipTrigger>
-                    )}
-                  </ProgressBar>
-                )}
-                {/* The sync indicator only show when network status is online */}
-                {/* use for show sync organization and projects status(1. first enter app 2. switch organization) */}
-                {status === 'online' && asyncTaskStatus !== 'idle' ? (
-                  <TooltipTrigger>
+                {(hasUntrackedData && !isHeaderOpen) ? (
+                  <TooltipTrigger delay={500}>
                     <Button
-                      className="px-4 py-1 h-full flex items-center justify-center gap-1 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                      onPress={() => {
-                        asyncTaskStatus === 'error' && syncOrgsAndProjects();
-                      }}
+                      className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                      onPress={() => showModal(SettingsModal, { tab: 'data' })}
                     >
-                      <Icon
-                        icon={asyncTaskStatus !== 'error' ? 'spinner' : 'circle'}
-                        className={`${asyncTaskStatus === 'error' ? 'text-[--color-danger]' : 'text-[--color-font]'} w-5 ${asyncTaskStatus !== 'error' ? 'animate-spin' : ''}`}
-                      />
-                      {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
+                      <Icon icon="exclamation-circle" />
                     </Button>
                     <Tooltip
                       placement="top"
                       offset={8}
                       className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                     >
-                      {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
+                      We have detected orphaned projects on your computer, click here to view them.
                     </Tooltip>
                   </TooltipTrigger>
-                ) : (
+                ) : null}
+              </div>
+              <div>
+                {!isHeaderOpen && (
+                  <CommandPalette style={{ width: '100%' }} />
+                )}
+              </div>
+              <div className='flex justify-end'>
+                <div className='flex items-center gap-2 divide'>
+                  {loadingAI && (
+                    <ProgressBar
+                      className="flex items-center gap-2 h-full"
+                      value={loadingAIProgress.progress}
+                      maxValue={loadingAIProgress.total}
+                      minValue={0}
+                      aria-label='AI generation'
+                    >
+                      {({ percentage }) => (
+                        <TooltipTrigger>
+                          <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">
+                            <InsomniaAI className='w-4 text-[--color-font] animate-pulse' />
+                            <div className="h-1 w-32 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-40">
+                              <div
+                                className="h-1 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100"
+                                style={{ width: percentage + '%' }}
+                              />
+                            </div>
+                          </Button>
+                          <Tooltip
+                            placement="top"
+                            offset={8}
+                            className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                          >
+                            Generating tests with Insomnia AI
+                          </Tooltip>
+                        </TooltipTrigger>
+                      )}
+                    </ProgressBar>
+                  )}
+                  {/* The sync indicator only show when network status is online */}
+                  {/* use for show sync organization and projects status(1. first enter app 2. switch organization) */}
+                  {status === 'online' && asyncTaskStatus !== 'idle' ? (
+                    <TooltipTrigger>
+                      <Button
+                        className="px-4 py-1 h-full flex items-center justify-center gap-1 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                        onPress={() => {
+                          asyncTaskStatus === 'error' && syncOrgsAndProjects();
+                        }}
+                      >
+                        <Icon
+                          icon={asyncTaskStatus !== 'error' ? 'spinner' : 'circle'}
+                          className={`${asyncTaskStatus === 'error' ? 'text-[--color-danger]' : 'text-[--color-font]'} w-5 ${asyncTaskStatus !== 'error' ? 'animate-spin' : ''}`}
+                        />
+                        {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
+                      </Button>
+                      <Tooltip
+                        placement="top"
+                        offset={8}
+                        className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                      >
+                        {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
+                      </Tooltip>
+                    </TooltipTrigger>
+                  ) : (
                     <TooltipTrigger>
                       <Button
                         className="px-4 py-1 h-full flex items-center justify-center gap-1 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
@@ -1067,18 +1129,131 @@ const OrganizationRoute = () => {
                           : 'Log in to Insomnia to unlock the full product experience.'}
                       </Tooltip>
                     </TooltipTrigger>
+                  )}
+                  {isHeaderOpen && (
+                    <Link>
+                      <a
+                        className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
+                        href="https://konghq.com/"
+                      >
+                        Made with
+                        <Icon className="text-[--color-surprise-font]" icon="heart" /> by
+                        Kong
+                      </a>
+                    </Link>
+                  )}
+                </div>
+                {!isHeaderOpen && (
+                  <div className="flex gap-[--padding-sm] items-center justify-end p-2">
+                    {user ? (
+                      <Fragment>
+                        <PresentUsers />
+                        <Button
+                          aria-label="Invite collaborators"
+                          className="px-4 text-[--color-font-surprise] py-2 h-full font-semibold flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-md hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent transition-all text-sm"
+                          onPress={() => setIsInviteModalOpen(true)}
+                        >
+                          <Icon icon="user-plus" />
+                          <span className="truncate">
+                            Invite
+                          </span>
+                        </Button>
+                        <InviteModalContainer
+                          {...{
+                            isOpen: isInviteModalOpen,
+                            setIsOpen: setIsInviteModalOpen,
+                          }}
+                        />
+                        <MenuTrigger>
+                          <Button data-testid='user-dropdown' className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                            <Avatar
+                              src={user.picture}
+                              alt={user.name}
+                            />
+                            <span className="truncate">
+                              {user.name}
+                            </span>
+                            <Icon className='w-4 pr-2' icon="caret-up" />
+                          </Button>
+                          <Popover className="min-w-max border select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
+                            {currentPlan && Boolean(currentPlan.type) && (
+                              <div className='flex gap-2 justify-between items-center pb-2 px-[--padding-md] border-b border-solid border-[--hl-sm] text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap capitalize'>
+                                <span>{currentPlan?.planName ?? formatCurrentPlanType(currentPlan.type)} Plan</span>
+                                <UpgradeButton currentPlan={currentPlan} />
+                              </div>
+                            )}
+                            <Menu
+                              className='focus:outline-none'
+                              onAction={action => {
+                                if (action === 'logout') {
+                                  logoutFetcher.submit(
+                                    {},
+                                    {
+                                      action: '/auth/logout',
+                                      method: 'POST',
+                                    },
+                                  );
+                                }
+
+                                if (action === 'account-settings') {
+                                  window.main.openInBrowser(
+                                    `${getAppWebsiteBaseURL()}/app/settings/account`,
+                                  );
+                                }
+
+                                if (action === 'manage-organizations') {
+                                  window.main.openInBrowser(
+                                    `${getAppWebsiteBaseURL()}/app/dashboard/organizations`
+                                  );
+                                }
+                              }}
+                            >
+                              <MenuItem
+                                id="manage-organizations"
+                                className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                                aria-label="Manage organizations"
+                              >
+                                <Icon icon="users" />
+                                <span>Manage Organizations</span>
+                              </MenuItem>
+                              <MenuItem
+                                id="account-settings"
+                                className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                                aria-label="Account settings"
+                              >
+                                <Icon icon="gear" />
+                                <span>Account Settings</span>
+                              </MenuItem>
+                              <MenuItem
+                                id="logout"
+                                className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                                aria-label="logout"
+                              >
+                                <Icon icon="sign-out" />
+                                <span>Log out</span>
+                              </MenuItem>
+                            </Menu>
+                          </Popover>
+                        </MenuTrigger>
+                      </Fragment>
+                    ) : (
+                      <Fragment>
+                        <NavLink
+                          to="/auth/login"
+                          className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                        >
+                          Login
+                        </NavLink>
+                        <NavLink
+                          className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)] focus:bg-[rgba(var(--color-surprise-rgb),0.9)] bg-[--color-surprise] font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                          to="/auth/login"
+                        >
+                          Sign up for free
+                        </NavLink>
+                      </Fragment>
+                    )}
+                  </div>
                 )}
-                <span className='w-[1px] h-full bg-[--hl-sm]' />
-                <Link>
-                  <a
-                    className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
-                    href="https://konghq.com/"
-                  >
-                    Made with
-                    <Icon className="text-[--color-surprise-font]" icon="heart" /> by
-                    Kong
-                  </a>
-                </Link>
               </div>
             </div>
           </div>
