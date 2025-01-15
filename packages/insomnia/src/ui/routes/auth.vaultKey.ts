@@ -195,7 +195,7 @@ export const clearVaultKeyAction: ActionFunction = async ({ request }) => {
     sessionModel.update(userSession, { vaultSalt: newVaultSalt, vaultKey: '' });
     // show notification
     const notification: ToastNotification = {
-      key: `Vault key reset ${newVaultSalt}`,
+      key: 'Vault key reset',
       message: 'Your vault key has been reset, all you local secrets have been deleted.',
     };
     ipcRenderer.emit('show-notification', null, notification);

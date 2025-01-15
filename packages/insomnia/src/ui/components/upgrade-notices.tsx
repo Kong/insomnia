@@ -14,7 +14,7 @@ export interface UpgradeNoticeProps {
 export const UpgradeNotice = (props: UpgradeNoticeProps) => {
   const { newPlan, featureName, isOwner } = props;
   const planDetail = newPlan === 'team' ? 'Team plan or above' : 'Enterprise plan';
-  const upgradeDetail = isOwner ? 'Please upgrade your plan.' : 'Please contat the organization owner to upgrade the plan.';
+  const upgradeDetail = isOwner ? 'Please upgrade your plan.' : 'Please contact the organization owner to upgrade the plan.';
   const message = `${featureName} is only enbaled for ${planDetail}.`;
   const handleUpgradePlan = () => {
     window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);

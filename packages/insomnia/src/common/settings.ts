@@ -147,6 +147,5 @@ export interface Settings {
   validateSSL: boolean;
   // vault related settings
   saveVaultKeyLocally: boolean;
-  vaultSecretCacheDuration: number;
   enableVaultInScripts: boolean;
 }
