@@ -802,7 +802,9 @@ export const setZoom = (transformer: (current: number) => number) => () => {
 
 function initElectronStorage() {
   const electronStoragePath = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'localStorage');
-  electronStorage = new ElectronStorage(electronStoragePath);
+  if (!electronStorage) {
+    electronStorage = new ElectronStorage(electronStoragePath);
+  }
   return electronStorage;
 }
 
