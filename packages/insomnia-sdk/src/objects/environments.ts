@@ -3,7 +3,7 @@ import { getInterpolator } from './interpolator';
 
 export class Environment {
     private _name: string;
-    private kvs = new Map<string, boolean | number | string>();
+    private kvs = new Map<string, boolean | number | string | undefined>();
 
     constructor(name: string, jsonObject: object | undefined) {
         this._name = name;
@@ -22,7 +22,7 @@ export class Environment {
         return this.kvs.get(variableName);
     };
 
-    set = (variableName: string, variableValue: boolean | number | string) => {
+    set = (variableName: string, variableValue: boolean | number | string | undefined | null) => {
         if (variableValue === null) {
             getConsole().warn(`Variable "${variableName}" has a null value`);
             return;
@@ -99,7 +99,7 @@ export class Variables {
         return finalVal;
     };
 
-    set = (variableName: string, variableValue: boolean | number | string) => {
+    set = (variableName: string, variableValue: boolean | number | string | undefined | null) => {
         if (variableValue === null) {
             getConsole().warn(`Variable "${variableName}" has a null value`);
             return;
