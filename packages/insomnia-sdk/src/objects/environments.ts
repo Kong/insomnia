@@ -100,6 +100,11 @@ export class Variables {
     };
 
     set = (variableName: string, variableValue: boolean | number | string) => {
+        if (variableValue === null) {
+            getConsole().warn(`Variable "${variableName}" has a null value`);
+            return;
+        }
+
         this.localVars.set(variableName, variableValue);
     };
 
