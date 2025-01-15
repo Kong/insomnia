@@ -5,6 +5,7 @@ import * as crypt from '../account/crypt';
 import { JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
+import { base64decode, base64encode } from '../utils/vault';
 import { type BaseModel, project, workspace } from './index';
 import type { Project } from './project';
 import type { Workspace } from './workspace';
@@ -135,7 +136,7 @@ export const encryptSecretValue = (rawValue: string, symmetricKey: JsonWebKey) =
     return rawValue;
   }
   const encryptResult = crypt.encryptAES(symmetricKey, rawValue);
-  const encryptedValue = Buffer.from(JSON.stringify(encryptResult), 'utf-8').toString('base64');
+  const encryptedValue = base64encode(encryptResult);
   return encryptedValue;
 };
 
@@ -145,8 +146,7 @@ export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWeb
     return encryptedValue;
   }
   try {
-    const rawValue = Buffer.from(encryptedValue, 'base64').toString('utf-8');
-    const jsonWebKey = JSON.parse(rawValue);
+    const jsonWebKey = base64decode(encryptedValue, true);
     return crypt.decryptAES(symmetricKey, jsonWebKey);
   } catch (error) {
     // return origin value if failed to decrypt
