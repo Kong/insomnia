@@ -35,6 +35,7 @@ import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { findPersonalOrganization, isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, type Organization } from '../../models/organization';
 import { type Project, type as ProjectType } from '../../models/project';
+import type { Settings } from '../../models/settings';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
@@ -501,6 +502,98 @@ const UpgradeButton = ({
   );
 };
 
+interface IndicatorProps {
+  user?: UserProfileResponse;
+  asyncTaskStatus: 'error' | 'idle' | 'loading' | 'submitting';
+  settings: Settings;
+  sync: () => void;
+}
+const NetworkAndSyncIndicator = ({ user, asyncTaskStatus, settings, sync }: IndicatorProps) => {
+  const [status, setStatus] = useState<'online' | 'offline'>('online');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleOnline = () => setStatus('online');
+    const handleOffline = () => setStatus('offline');
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return (
+    <>
+      {/* The sync indicator only show when network status is online */}
+      {/* use for show sync organization and projects status(1. first enter app 2. switch organization) */}
+      {status === 'online' && asyncTaskStatus !== 'idle' ? (
+        <TooltipTrigger>
+          <Button
+            className="px-4 py-1 h-full flex items-center justify-center gap-1 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+            onPress={() => {
+              asyncTaskStatus === 'error' && sync();
+            }}
+          >
+            <Icon
+              icon={asyncTaskStatus !== 'error' ? 'spinner' : 'circle'}
+              className={`${asyncTaskStatus === 'error' ? 'text-[--color-danger]' : 'text-[--color-font]'} w-5 ${asyncTaskStatus !== 'error' ? 'animate-spin' : ''}`}
+            />
+            {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
+          </Button>
+          <Tooltip
+            placement="top"
+            offset={8}
+            className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+          >
+            {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
+          </Tooltip>
+        </TooltipTrigger>
+      ) : (
+        <TooltipTrigger>
+          <Button
+            className="px-4 py-1 h-full flex items-center justify-center gap-1 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+            onPress={() => {
+              !user && navigate('/auth/login');
+              if (settings.proxyEnabled) {
+                showSettingsModal({
+                  tab: 'proxy',
+                });
+              }
+            }}
+          >
+            <Icon
+              icon="circle"
+              className={
+                user
+                  ? status === 'online'
+                    ? 'text-[--color-success]'
+                    : 'text-[--color-danger]'
+                  : ''
+              }
+            />{' '}
+            {user
+              ? status.charAt(0).toUpperCase() + status.slice(1)
+              : 'Log in to see your projects'}
+            {status === 'online' && settings.proxyEnabled ? ' via proxy' : ''}
+          </Button>
+          <Tooltip
+            placement="top"
+            offset={8}
+            className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+          >
+            {user
+              ? status === 'online' ? 'You have connectivity to the Internet' + (settings.proxyEnabled ? ' via the configured proxy' : '') + '.'
+                : 'You are offline. Connect to sync your data.'
+              : 'Log in to Insomnia to unlock the full product experience.'}
+          </Tooltip>
+        </TooltipTrigger>
+      )}
+    </>
+  );
+};
+
 const OrganizationRoute = () => {
   const { userSession, settings } = useRootLoaderData();
   const { billing } = useOrganizationPermissions();
@@ -565,21 +658,9 @@ const OrganizationRoute = () => {
   const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
   const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
   const hasUntrackedData = untrackedProjects.length > 0 || untrackedWorkspaces.length > 0;
-  const [status, setStatus] = useState<'online' | 'offline'>('online');
-  useEffect(() => {
-    const handleOnline = () => setStatus('online');
-    const handleOffline = () => setStatus('offline');
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
 
   const [isOrganizationSidebarOpen, setIsOganizationSidebarOpen] = useLocalStorage('organizationSidebarOpen', true);
-  const [isHeaderOpen, setIsHeaderOpen] = useLocalStorage('appHeader', true);
+  const [isMinimal, setIsMinimal] = useLocalStorage('isMinimal', true);
 
   const {
     generating: loadingAI,
@@ -606,7 +687,7 @@ const OrganizationRoute = () => {
     <InsomniaEventStreamProvider>
       <div className="w-full h-full">
         <div className={`w-full h-full divide-x divide-solid divide-[--hl-md] ${isOrganizationSidebarOpen ? 'with-navbar' : ''} ${isScratchPadBannerVisible ? 'with-banner' : ''} grid-template-app-layout grid relative bg-[--color-bg]`}>
-          {isHeaderOpen && <header className="[grid-area:Header] grid grid-cols-3 items-center border-b border-solid border-[--hl-md]">
+          {isMinimal && <header className="[grid-area:Header] grid grid-cols-3 items-center border-b border-solid border-[--hl-md]">
             <div className="flex items-center gap-2">
               <div className="flex shrink-0 w-[50px] justify-center py-2">
                 <InsomniaLogo loading={loadingAI} />
@@ -946,8 +1027,8 @@ const OrganizationRoute = () => {
               <TooltipTrigger>
                 <ToggleButton
                   className="flex-grow-0 w-[10px] h-[10px] gap-2 text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all rotate-90"
-                  onChange={setIsHeaderOpen}
-                  isSelected={isHeaderOpen}
+                  onChange={setIsMinimal}
+                  isSelected={isMinimal}
                 >
                   {({ isSelected }) => {
                     return (
@@ -980,7 +1061,7 @@ const OrganizationRoute = () => {
                 </Tooltip>
               </TooltipTrigger>
             </div>
-            <div className={`grid grid-cols-3 gap-2 w-full items-center ${!isHeaderOpen && 'min-w-[1100px]'}`}>
+            <div className={`grid grid-cols-3 gap-2 w-full items-center ${!isMinimal && 'min-w-[1100px]'}`}>
               <div className="flex h-full">
                 <TooltipTrigger>
                   <Button
@@ -1003,7 +1084,7 @@ const OrganizationRoute = () => {
                     />
                   </Tooltip>
                 </TooltipTrigger>
-                {(hasUntrackedData && isHeaderOpen) ? <div>
+                {(hasUntrackedData && isMinimal) ? <div>
                   <Button
                     className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
                     onPress={() => showModal(SettingsModal, { tab: 'data' })}
@@ -1011,7 +1092,7 @@ const OrganizationRoute = () => {
                     <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click here to view them.
                   </Button>
                 </div> : null}
-                {(hasUntrackedData && !isHeaderOpen) ? (
+                {(hasUntrackedData && !isMinimal) ? (
                   <TooltipTrigger delay={500}>
                     <Button
                       className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
@@ -1028,9 +1109,10 @@ const OrganizationRoute = () => {
                     </Tooltip>
                   </TooltipTrigger>
                 ) : null}
+                {!isMinimal && <NetworkAndSyncIndicator user={user} asyncTaskStatus={asyncTaskStatus} settings={settings} sync={syncOrgsAndProjects} />}
               </div>
               <div>
-                {!isHeaderOpen && (
+                {!isMinimal && (
                   <CommandPalette style={{ width: '100%' }} />
                 )}
               </div>
@@ -1066,71 +1148,8 @@ const OrganizationRoute = () => {
                       )}
                     </ProgressBar>
                   )}
-                  {/* The sync indicator only show when network status is online */}
-                  {/* use for show sync organization and projects status(1. first enter app 2. switch organization) */}
-                  {status === 'online' && asyncTaskStatus !== 'idle' ? (
-                    <TooltipTrigger>
-                      <Button
-                        className="px-4 py-1 h-full flex items-center justify-center gap-1 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                        onPress={() => {
-                          asyncTaskStatus === 'error' && syncOrgsAndProjects();
-                        }}
-                      >
-                        <Icon
-                          icon={asyncTaskStatus !== 'error' ? 'spinner' : 'circle'}
-                          className={`${asyncTaskStatus === 'error' ? 'text-[--color-danger]' : 'text-[--color-font]'} w-5 ${asyncTaskStatus !== 'error' ? 'animate-spin' : ''}`}
-                        />
-                        {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
-                      </Button>
-                      <Tooltip
-                        placement="top"
-                        offset={8}
-                        className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                      >
-                        {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
-                      </Tooltip>
-                    </TooltipTrigger>
-                  ) : (
-                    <TooltipTrigger>
-                      <Button
-                        className="px-4 py-1 h-full flex items-center justify-center gap-1 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                        onPress={() => {
-                          !user && navigate('/auth/login');
-                          if (settings.proxyEnabled) {
-                            showSettingsModal({
-                              tab: 'proxy',
-                            });
-                          }
-                        }}
-                      >
-                        <Icon
-                          icon="circle"
-                          className={
-                            user
-                              ? status === 'online'
-                                ? 'text-[--color-success]'
-                                : 'text-[--color-danger]'
-                              : ''
-                          }
-                        />{' '}
-                        {user
-                          ? status.charAt(0).toUpperCase() + status.slice(1)
-                          : 'Log in to see your projects'}
-                        {status === 'online' && settings.proxyEnabled ? ' via proxy' : ''}
-                      </Button>
-                      <Tooltip
-                        placement="top"
-                        offset={8}
-                        className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                      >
-                        {user
-                          ? status === 'online' ? 'You have connectivity to the Internet' + (settings.proxyEnabled ? ' via the configured proxy' : '') + '.'
-                            : 'You are offline. Connect to sync your data.'
-                          : 'Log in to Insomnia to unlock the full product experience.'}
-                      </Tooltip>
-                    </TooltipTrigger>
-                  )}
-                  {isHeaderOpen && (
+                  {isMinimal && <NetworkAndSyncIndicator user={user} asyncTaskStatus={asyncTaskStatus} settings={settings} sync={syncOrgsAndProjects} />}
+                  {isMinimal && (
                     <Link>
                       <a
                         className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
@@ -1143,7 +1162,7 @@ const OrganizationRoute = () => {
                     </Link>
                   )}
                 </div>
-                {!isHeaderOpen && (
+                {!isMinimal && (
                   <div className="flex gap-[--padding-sm] items-center justify-end p-2">
                     {user ? (
                       <Fragment>
