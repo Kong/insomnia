@@ -85,23 +85,22 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
   } | undefined;
 
   try {
+    parsed = YAML.parse(content);
 
-    const insomnia5Import = importInsomniaV5Data(content);
+    if (!parsed?.__export_format) {
+      const insomnia5Import = importInsomniaV5Data(content);
 
-    if (insomnia5Import.length > 0) {
       parsed = {
         __export_format: 5,
         // @ts-expect-error -- TSCONVERSION
         resources: insomnia5Import,
       };
-    } else {
-      parsed = YAML.parse(content);
     }
   } catch (error) {
     throw new InsoError(`Failed to parse ${fileName}.`, error);
   }
 
-  // We are supporting only v4 files
+  // We are supporting only v4 and v5 files
   if (!parsed) {
     throw new InsoError(`Failed to parse ${fileName}.`);
   } else if (!parsed.__export_format) {
