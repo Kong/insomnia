@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/electron/renderer';
 import { SENTRY_OPTIONS } from 'insomnia/src/common/sentry';
 import { initInsomniaObject, InsomniaObject } from 'insomnia-sdk';
-import { Console, mergeClientCertificates, mergeCookieJar, mergeRequests, mergeSettings, type RequestContext } from 'insomnia-sdk';
+import { getNewConsole, mergeClientCertificates, mergeCookieJar, mergeRequests, mergeSettings, type RequestContext } from 'insomnia-sdk';
 import * as _ from 'lodash';
 
 export interface HiddenBrowserWindowBridgeAPI {
@@ -48,7 +48,7 @@ function translateTestHandlers(script: string): string {
 const runScript = async (
   { script, context }: { script: string; context: RequestContext },
 ): Promise<RequestContext> => {
-  const scriptConsole = new Console();
+  const scriptConsole = getNewConsole();
 
   const executionContext = await initInsomniaObject(context, scriptConsole.log);
 

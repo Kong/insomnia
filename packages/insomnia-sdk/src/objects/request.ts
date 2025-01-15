@@ -17,10 +17,10 @@ export type RequestBodyMode = undefined | 'formdata' | 'urlencoded' | 'raw' | 'f
 export interface RequestBodyOptions {
     mode: RequestBodyMode;
     file?: string;
-    formdata?: { key: string; value: string; type?: string }[];
-    graphql?: { query: string; operationName: string; variables: object };
+    formdata?: { key: string; value: string; type?: string; disabled?: boolean }[];
+    graphql?: { query: string; operationName: string; variables: object; disabled?: boolean };
     raw?: string;
-    urlencoded?: { key: string; value: string; type?: string }[];
+    urlencoded?: { key: string; value: string; type?: string; disabled?: boolean; multiline?: boolean | string; fileName?: string }[];
     options?: object;
 }
 
@@ -29,11 +29,12 @@ export class FormParam extends Property {
     value: string;
     type?: string;
 
-    constructor(options: { key: string; value: string; type?: string }) {
+    constructor(options: { key: string; value: string; type?: string; disabled?: boolean }) {
         super();
         this.key = options.key;
         this.value = options.value;
         this.type = options.type;
+        this.disabled = options.disabled;
     }
 
     static _postman_propertyAllowsMultipleValues() {
@@ -49,7 +50,7 @@ export class FormParam extends Property {
     // }
 
     override toJSON() {
-        return { key: this.key, value: this.value, type: this.type };
+        return { key: this.key, value: this.value, type: this.type, disabled: this.disabled };
     }
 
     override toString() {
@@ -91,7 +92,14 @@ function getClassFields(opts: RequestBodyOptions) {
                 QueryParam,
                 undefined,
                 opts.urlencoded
-                    .map(entry => ({ key: entry.key, value: entry.value, type: entry.type }))
+                    .map(entry => ({
+                        key: entry.key,
+                        value: entry.value,
+                        type: entry.type,
+                        disabled: entry.disabled,
+                        fileName: entry.fileName,
+                        multiline: entry.multiline,
+                    }))
                     .map(kv => new QueryParam(kv)),
             );
         }
@@ -569,7 +577,14 @@ export function toScriptRequestBody(insomniaReqBody: InsomniaRequestBody): Reque
         reqBodyOpt = {
             mode: 'urlencoded',
             urlencoded: insomniaReqBody.params.map(
-                (param: RequestBodyParameter) => ({ key: param.name, value: param.value, type: param.type })
+                (param: RequestBodyParameter) => ({
+                    key: param.name,
+                    value: param.value,
+                    type: param.type,
+                    multiline: param.multiline,
+                    disabled: param.disabled,
+                    fileName: param.fileName,
+                })
             ),
         };
     }
@@ -621,9 +636,16 @@ export function mergeRequestBody(
             text: textContent,
             fileName: updatedReqBody?.file,
             params: updatedReqBody?.urlencoded?.map(
-                (param: { key: string; value: string; type?: string }) => (
-                    { name: param.key, value: param.value, type: param.type }
-                ),
+                (param: QueryParam) => {
+                    return {
+                        name: param.key,
+                        value: param.value,
+                        type: param.type,
+                        fileName: param.fileName,
+                        multiline: param.multiline,
+                        disabled: param.disabled,
+                    };
+                },
                 {},
             ),
         };

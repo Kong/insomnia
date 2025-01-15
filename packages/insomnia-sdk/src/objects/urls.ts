@@ -9,6 +9,10 @@ export function setUrlSearchParams(provider: any) {
 export interface QueryParamOptions {
     key: string;
     value: string;
+    type?: string;
+    multiline?: string | boolean;
+    disabled?: boolean;
+    fileName?: string;
 }
 
 export class QueryParam extends Property {
@@ -17,8 +21,12 @@ export class QueryParam extends Property {
     key: string;
     value: string;
     type?: string;
+    // the `multiline` and `fileName` are properties from Insomnia
+    // they are added here to avoid being dropped
+    multiline?: string | boolean;
+    fileName?: string;
 
-    constructor(options: { key: string; value: string; type?: string } | string) {
+    constructor(options: QueryParamOptions | string) {
         super();
 
         if (typeof options === 'string') {
@@ -27,6 +35,9 @@ export class QueryParam extends Property {
                 this.key = optionsObj.key;
                 this.value = optionsObj.value;
                 this.type = optionsObj.type;
+                this.multiline = optionsObj.multiline;
+                this.disabled = optionsObj.disabled;
+                this.fileName = optionsObj.fileName;
             } catch (e) {
                 throw Error(`invalid QueryParam options ${e}`);
             }
@@ -34,6 +45,9 @@ export class QueryParam extends Property {
             this.key = options.key;
             this.value = options.value;
             this.type = options.type;
+            this.multiline = options.multiline;
+            this.disabled = options.disabled;
+            this.fileName = options.fileName;
         } else {
             throw Error('unknown options for new QueryParam');
         }

@@ -158,7 +158,7 @@ export class Response extends Property {
             throw Error('dataURI(): response body is not defined');
         }
 
-        return `data:${contentInfo.contentType};baseg4, <base64-encoded-body>`;
+        return `data:${contentInfo.contentType};baseg4, ${bodyInBase64}`;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -184,7 +184,6 @@ export class Response extends Property {
         try {
             const contentLength = this.headers.get('Content-Length');
             // TODO: improve this by manual counting
-            console.log(this.headers.get('Content-Length'));
             return contentLength == null ? -1 : parseInt(contentLength.valueOf());
         } catch (e) {
             throw Error('size: ${e}');

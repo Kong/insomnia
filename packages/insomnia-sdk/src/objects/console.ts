@@ -14,8 +14,11 @@ export class Console {
     // TODO: support replacing substitution
     printLog = (rows: Row[], level: LogLevel, ...values: any) => {
         try {
+            const content = values.map((a: any) => JSON.stringify(a, null, 2).replace('\\n', '\n'))
+                .join(' ');
             const row = {
-                value: `${level}: ` + values.map((a: any) => JSON.stringify(a, null, 2)).join('\n'),
+                // TODO: also support formating e.g. \t
+                value: `${level}: ${content}`,
                 name: 'Text',
                 timestamp: Date.now(),
             };
@@ -65,4 +68,13 @@ export class Console {
         return this.rows
             .map(row => JSON.stringify(row) + '\n');
     };
+}
+
+let builtInConsole = new Console();
+export function getConsole() {
+    return builtInConsole;
+}
+export function getNewConsole() {
+    builtInConsole = new Console();
+    return builtInConsole;
 }
