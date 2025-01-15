@@ -239,6 +239,13 @@ async function renderApp() {
                         ),
                       },
                       {
+                        path: 'new',
+                        action: async (...args) =>
+                          (
+                            await import('./routes/actions')
+                          ).createNewProjectAction(...args),
+                      },
+                      {
                         path: ':projectId',
                         id: '/project/:projectId',
                         loader: async (...args) =>
