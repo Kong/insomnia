@@ -420,7 +420,7 @@ export class GitVCS {
         git.STAGE(),
       ],
       map: async function map(filepath, [head, workdir, stage]) {
-        const isInsomniaFile = filepath.startsWith(GIT_INSOMNIA_DIR_NAME) || filepath === '.';
+        const isInsomniaFile = filepath.startsWith(GIT_INSOMNIA_DIR_NAME) || filepath.startsWith('insomnia.') || filepath === '.';
 
         if (await git.isIgnored({
           ...baseOpts,
