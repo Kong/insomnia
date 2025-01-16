@@ -6,7 +6,7 @@ export interface Row {
     timestamp: number;
 }
 
-export class Console {
+class Console {
     rows: Row[] = [];
 
     constructor() { }
@@ -71,7 +71,7 @@ export class Console {
 }
 
 let builtInConsole = new Console();
-export function getConsole() {
+export function getExistingConsole() {
     return builtInConsole;
 }
 export function getNewConsole() {

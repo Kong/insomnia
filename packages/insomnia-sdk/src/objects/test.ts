@@ -20,7 +20,7 @@ export async function test(
             testCase: msg,
             status: 'failed',
             executionTime,
-            errorMessage: `${e}`,
+            errorMessage: `error: ${e} | ACTUAL: ${e.actual} | EXPECTED: ${e.expected}`,
             category: 'unknown',
         });
     }

@@ -1,4 +1,4 @@
-import { getConsole } from './console';
+import { getExistingConsole } from './console';
 import { getInterpolator } from './interpolator';
 
 export class Environment {
@@ -24,7 +24,7 @@ export class Environment {
 
     set = (variableName: string, variableValue: boolean | number | string | undefined | null) => {
         if (variableValue === null) {
-            getConsole().warn(`Variable "${variableName}" has a null value`);
+            getExistingConsole().warn(`Variable "${variableName}" has a null value`);
             return;
         }
         this.kvs.set(variableName, variableValue);
@@ -101,7 +101,7 @@ export class Variables {
 
     set = (variableName: string, variableValue: boolean | number | string | undefined | null) => {
         if (variableValue === null) {
-            getConsole().warn(`Variable "${variableName}" has a null value`);
+            getExistingConsole().warn(`Variable "${variableName}" has a null value`);
             return;
         }
 

@@ -1,7 +1,7 @@
 import { appendFile } from 'node:fs/promises';
 
 import { initInsomniaObject, InsomniaObject } from 'insomnia-sdk';
-import { Console, mergeClientCertificates, mergeCookieJar, mergeRequests, mergeSettings, type RequestContext } from 'insomnia-sdk';
+import { getNewConsole, mergeClientCertificates, mergeCookieJar, mergeRequests, mergeSettings, type RequestContext } from 'insomnia-sdk';
 import * as _ from 'lodash';
 
 import { invariant } from '../src/utils/invariant';
@@ -11,7 +11,7 @@ export const runScript = async (
   { script, context }: { script: string; context: RequestContext },
 ): Promise<RequestContext> => {
   // console.log(script);
-  const scriptConsole = new Console();
+  const scriptConsole = getNewConsole();
 
   const executionContext = await initInsomniaObject(context, scriptConsole.log);
 
