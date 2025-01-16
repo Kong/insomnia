@@ -38,7 +38,7 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
   const name = formData.get('name') || 'My project';
   invariant(typeof name === 'string', 'Name is required');
   const projectType = formData.get('type');
-  invariant(projectType === 'local' || projectType === 'remote', 'Project type is required');
+  invariant(projectType === 'local' || projectType === 'remote' || projectType === 'git', 'Project type is required');
 
   const user = await models.userSession.getOrCreate();
   const sessionId = user.id;
@@ -48,6 +48,18 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
     const project = await models.project.create({
       name,
       parentId: organizationId,
+    });
+
+    return redirect(`/organization/${organizationId}/project/${project._id}`);
+  }
+
+  if (projectType === 'git') {
+    const gitRepository = await models.gitRepository.create();
+
+    const project = await models.project.create({
+      name,
+      parentId: organizationId,
+      gitRepositoryId: gitRepository._id,
     });
 
     return redirect(`/organization/${organizationId}/project/${project._id}`);
