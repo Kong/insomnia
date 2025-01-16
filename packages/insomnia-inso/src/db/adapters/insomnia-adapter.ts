@@ -90,15 +90,13 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
     if (!parsed?.__export_format) {
       const insomnia5Import = importInsomniaV5Data(content);
 
-      if (!insomnia5Import.length) {
-        throw new InsoError(`Failed to parse ${fileName}.`);
+      if (insomnia5Import.length > 0) {
+        parsed = {
+          __export_format: 5,
+          // @ts-expect-error -- TSCONVERSION
+          resources: insomnia5Import,
+        };
       }
-
-      parsed = {
-        __export_format: 5,
-        // @ts-expect-error -- TSCONVERSION
-        resources: insomnia5Import,
-      };
     }
   } catch (error) {
     throw new InsoError(`Failed to parse ${fileName}.`, error);
