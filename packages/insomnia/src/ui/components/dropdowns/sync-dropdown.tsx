@@ -249,6 +249,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
         icon: pullFetcher.state !== 'idle' ? 'refresh' : 'cloud-download',
         isDisabled: behind === 0 || pullFetcher.state !== 'idle',
         action: () => {
+          // file://./../../routes/remote-collections.tsx#pullFromRemoteAction
           pullFetcher.submit({}, {
             method: 'POST',
             action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/pull`,
