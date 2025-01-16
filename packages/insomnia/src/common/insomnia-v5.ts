@@ -139,7 +139,7 @@ function getCookieJar(file: InsomniaFile): [CookieJar] | [] {
 function getApiSpec(file: InsomniaFile): [WithExportType<ApiSpec>] | [] {
   if ('spec' in file && file.spec) {
     return [{
-      ...mapMetaToInsomniaMeta(file.meta || {
+      ...mapMetaToInsomniaMeta(file.spec.meta || {
         id: '__API_SPEC_ID__',
       }),
       type: 'ApiSpec',
@@ -240,7 +240,7 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
     const resources: (Request | WebSocketRequest | GrpcRequest | RequestGroup)[] = [];
 
     function walkCollection(collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'], parentId: string) {
-      collection.forEach(item => {
+      collection?.forEach(item => {
         if ('children' in item) {
           const requestGroup: WithExportType<RequestGroup> = {
             ...mapMetaToInsomniaMeta(item.meta || {
@@ -624,6 +624,12 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
     return {
       // @TODO In the future we want to support also reading from a file like this: file: resources[0].fileName,
       contents: parser(resources[0].contents),
+      meta: {
+        id: spec._id,
+        created: spec.created,
+        modified: spec.modified,
+        isPrivate: spec.isPrivate,
+      },
     };
   }
 

@@ -369,10 +369,9 @@ type Request = z.infer<typeof RequestSchema>;
 type GRPCRequest = z.infer<typeof GRPCRequestSchema>;
 type WebsocketRequest = z.infer<typeof WebsocketRequestSchema>;
 type RequestGroup = z.infer<typeof RequestGroupSchema> & {
-  children: (Request | GRPCRequest | WebsocketRequest | RequestGroup)[];
+  children?: (Request | GRPCRequest | WebsocketRequest | RequestGroup)[];
 };
 
-// @ts-expect-error zod doesn't support recursive types
 const RequestGroupWithChildrenSchema: z.ZodType<RequestGroup> = RequestGroupSchema.extend({
   children: z.lazy(() => z.union([GRPCRequestSchema, RequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array()).optional(),
 });
@@ -395,8 +394,10 @@ const TestSuiteSchema = z.object({
 });
 
 const SpecSchema = z.union([z.object({
+  meta: MetaSchema.optional(),
   file: z.string(),
 }), z.object({
+  meta: MetaSchema.optional(),
   contents: jsonSchema,
 })]);
 
@@ -405,7 +406,7 @@ const collectionSchema = z.object({
   meta: MetaSchema.optional(),
   name: z.string().optional(),
   description: z.string().optional(),
-  collection: z.union([GRPCRequestSchema, RequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array(),
+  collection: z.union([GRPCRequestSchema, RequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array().optional(),
   certificates: z.array(CACertificateSchema).optional(),
   environments: EnvironmentSchema.optional(),
   cookieJar: CookieJarSchema.optional(),
@@ -417,7 +418,7 @@ const apiSpecSchema = z.object({
   name: z.string().optional(),
   description: z.string().optional(),
   spec: SpecSchema.optional().default({ contents: {} }),
-  collection: z.union([GRPCRequestSchema, RequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array(),
+  collection: z.union([GRPCRequestSchema, RequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array().optional(),
   certificates: z.array(CACertificateSchema).optional(),
   environments: EnvironmentSchema.optional(),
   cookieJar: CookieJarSchema.optional(),
