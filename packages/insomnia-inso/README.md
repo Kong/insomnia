@@ -68,7 +68,7 @@ npm run serve -w insomnia-smoke-test
 # watch inso
 npm run start -w insomnia-inso
 
-# run api test with dev bundle
+# run api test with dev bundle. To debug run this in a Javascript Debug Terminal in VSCode
 $PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" -w $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
 ```
 
