@@ -410,7 +410,7 @@ test.describe('pre-request features tests', async () => {
         await page.getByRole('tab', { name: 'Tests' }).click();
 
         const responsePane = page.getByTestId('response-pane');
-        expect(responsePane).toContainText('FAILunhappy tests | AssertionError: expected 199 to deeply equal 200Pre-request Test');
+        expect(responsePane).toContainText('FAILunhappy tests | error: AssertionError: expected 199 to deeply equal 200 | ACTUAL: 199 | EXPECTED: 200Pre-request Test');
         expect(responsePane).toContainText('PASShappy tests');
     });
 
