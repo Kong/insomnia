@@ -1,32 +1,20 @@
 import { fromUrl } from 'hosted-git-info';
 import { Errors } from 'isomorphic-git';
 import path from 'path';
-import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
-import YAML from 'yaml';
+import { type ActionFunction, type LoaderFunction } from 'react-router-dom';
 
-import { ACTIVITY_SPEC } from '../../common/constants';
 import { database } from '../../common/database';
 import * as models from '../../models';
 import type { GitRepository } from '../../models/git-repository';
-import { createGitRepository } from '../../models/helpers/git-repository-operations';
 import { isGitProject } from '../../models/project';
-import {
-  WorkspaceScopeKeys,
-} from '../../models/workspace';
 import { fsClient } from '../../sync/git/fs-client';
 import GitVCS, {
   GIT_CLONE_DIR,
-  GIT_INSOMNIA_DIR,
-  GIT_INSOMNIA_DIR_NAME,
   GIT_INTERNAL_DIR,
   type GitLogEntry,
 } from '../../sync/git/git-vcs';
-import { MemClient } from '../../sync/git/mem-client';
-import { NeDBClient } from '../../sync/git/ne-db-client';
 import { GitProjectNeDBClient } from '../../sync/git/project-ne-db-client';
 import { projectRoutableFSClient } from '../../sync/git/project-routable-fs-client';
-import { routableFSClient } from '../../sync/git/routable-fs-client';
-import { shallowClone } from '../../sync/git/shallow-clone';
 import {
   getOauth2FormatName,
 } from '../../sync/git/utils';
@@ -385,11 +373,6 @@ export const canPushLoader: LoaderFunction = async ({ params }): Promise<GitCanP
 };
 
 // Actions
-type CloneGitActionResult =
-  | Response
-  | {
-      errors?: string[];
-    };
 
 export function parseGitToHttpsURL(s: string) {
   // try to convert any git URL to https URL
@@ -412,270 +395,276 @@ export function parseGitToHttpsURL(s: string) {
   return parsed;
 }
 
-export const cloneGitRepoAction: ActionFunction = async ({
-  request,
-  params,
-}): Promise<CloneGitActionResult> => {
-  const { organizationId } = params;
+// @TODO - Implement clone Git project to organization
+// type CloneGitActionResult =
+//   | Response
+//   | {
+//       errors?: string[];
+//     };
+// export const cloneGitRepoAction: ActionFunction = async ({
+//   request,
+//   params,
+// }): Promise<CloneGitActionResult> => {
+//   const { organizationId } = params;
 
-  const repoSettingsPatch: Partial<GitRepository> = {};
-  const formData = await request.formData();
+//   const repoSettingsPatch: Partial<GitRepository> = {};
+//   const formData = await request.formData();
 
-  // URI
-  const uri = formData.get('uri');
-  invariant(typeof uri === 'string', 'URI is required');
-  repoSettingsPatch.uri = parseGitToHttpsURL(uri);
-  // Author
-  const authorName = formData.get('authorName');
-  invariant(typeof authorName === 'string', 'Author name is required');
-  const authorEmail = formData.get('authorEmail');
-  invariant(typeof authorEmail === 'string', 'Author email is required');
+//   // URI
+//   const uri = formData.get('uri');
+//   invariant(typeof uri === 'string', 'URI is required');
+//   repoSettingsPatch.uri = parseGitToHttpsURL(uri);
+//   // Author
+//   const authorName = formData.get('authorName');
+//   invariant(typeof authorName === 'string', 'Author name is required');
+//   const authorEmail = formData.get('authorEmail');
+//   invariant(typeof authorEmail === 'string', 'Author email is required');
 
-  repoSettingsPatch.author = {
-    name: authorName,
-    email: authorEmail,
-  };
+//   repoSettingsPatch.author = {
+//     name: authorName,
+//     email: authorEmail,
+//   };
 
-  // Git Credentials
-  const oauth2format = formData.get('oauth2format');
-  if (oauth2format) {
-    invariant(
-      oauth2format === 'gitlab' || oauth2format === 'github',
-      'OAuth2 format is required'
-    );
-    const token = formData.get('token');
-    invariant(typeof token === 'string', 'Token is required');
-    const username = formData.get('username');
-    invariant(typeof username === 'string', 'Username is required');
+//   // Git Credentials
+//   const oauth2format = formData.get('oauth2format');
+//   if (oauth2format) {
+//     invariant(
+//       oauth2format === 'gitlab' || oauth2format === 'github',
+//       'OAuth2 format is required'
+//     );
+//     const token = formData.get('token');
+//     invariant(typeof token === 'string', 'Token is required');
+//     const username = formData.get('username');
+//     invariant(typeof username === 'string', 'Username is required');
 
-    repoSettingsPatch.credentials = {
-      username,
-      token,
-      oauth2format,
-    };
-  } else {
-    const token = formData.get('token');
-    invariant(typeof token === 'string', 'Token is required');
-    const username = formData.get('username');
-    invariant(typeof username === 'string', 'Username is required');
+//     repoSettingsPatch.credentials = {
+//       username,
+//       token,
+//       oauth2format,
+//     };
+//   } else {
+//     const token = formData.get('token');
+//     invariant(typeof token === 'string', 'Token is required');
+//     const username = formData.get('username');
+//     invariant(typeof username === 'string', 'Username is required');
 
-    repoSettingsPatch.credentials = {
-      password: token,
-      username,
-    };
-  }
+//     repoSettingsPatch.credentials = {
+//       password: token,
+//       username,
+//     };
+//   }
 
-  window.main.trackSegmentEvent({
-    event: SegmentEvent.vcsSyncStart,
-    properties: vcsSegmentEventProperties('git', 'clone'),
-  });
-  repoSettingsPatch.needsFullClone = true;
+//   window.main.trackSegmentEvent({
+//     event: SegmentEvent.vcsSyncStart,
+//     properties: vcsSegmentEventProperties('git', 'clone'),
+//   });
+//   repoSettingsPatch.needsFullClone = true;
 
-  const inMemoryFsClient = MemClient.createClient();
+//   const inMemoryFsClient = MemClient.createClient();
 
-  const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
-  try {
-    await shallowClone({
-      fsClient: inMemoryFsClient,
-      gitRepository: repoSettingsPatch as GitRepository,
-    });
-  } catch (e) {
-    console.error(e);
+//   const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
+//   try {
+//     await shallowClone({
+//       fsClient: inMemoryFsClient,
+//       gitRepository: repoSettingsPatch as GitRepository,
+//     });
+//   } catch (e) {
+//     console.error(e);
 
-    if (e instanceof Errors.HttpError) {
-      return {
-        errors: [`${e.message}, ${e.data.response}`],
-      };
-    }
+//     if (e instanceof Errors.HttpError) {
+//       return {
+//         errors: [`${e.message}, ${e.data.response}`],
+//       };
+//     }
 
-    return {
-      errors: [e.message],
-    };
-  }
+//     return {
+//       errors: [e.message],
+//     };
+//   }
 
-  const containsInsomniaDir = async (
-    fsClient: Record<string, any>
-  ): Promise<boolean> => {
-    const rootDirs: string[] = await fsClient.promises.readdir(GIT_CLONE_DIR);
-    return rootDirs.includes(GIT_INSOMNIA_DIR_NAME);
-  };
+//   const containsInsomniaDir = async (
+//     fsClient: Record<string, any>
+//   ): Promise<boolean> => {
+//     const rootDirs: string[] = await fsClient.promises.readdir(GIT_CLONE_DIR);
+//     return rootDirs.includes(GIT_INSOMNIA_DIR_NAME);
+//   };
 
-  const containsInsomniaWorkspaceDir = async (
-    fsClient: Record<string, any>
-  ): Promise<boolean> => {
-    if (!(await containsInsomniaDir(fsClient))) {
-      return false;
-    }
+//   const containsInsomniaWorkspaceDir = async (
+//     fsClient: Record<string, any>
+//   ): Promise<boolean> => {
+//     if (!(await containsInsomniaDir(fsClient))) {
+//       return false;
+//     }
 
-    const rootDirs: string[] = await fsClient.promises.readdir(
-      GIT_INSOMNIA_DIR
-    );
-    return rootDirs.includes(models.workspace.type);
-  };
+//     const rootDirs: string[] = await fsClient.promises.readdir(
+//       GIT_INSOMNIA_DIR
+//     );
+//     return rootDirs.includes(models.workspace.type);
+//   };
 
-  // Stop the DB from pushing updates to the UI temporarily
-  const bufferId = await database.bufferChanges();
-  let workspaceId = '';
-  let scope: 'design' | 'collection' = WorkspaceScopeKeys.design;
-  // If no workspace exists we create a new one
-  if (!(await containsInsomniaWorkspaceDir(inMemoryFsClient))) {
-    // Create a new workspace
+//   // Stop the DB from pushing updates to the UI temporarily
+//   const bufferId = await database.bufferChanges();
+//   let workspaceId = '';
+//   let scope: 'design' | 'collection' = WorkspaceScopeKeys.design;
+//   // If no workspace exists we create a new one
+//   if (!(await containsInsomniaWorkspaceDir(inMemoryFsClient))) {
+//     // Create a new workspace
 
-    const workspace = await models.workspace.create({
-      name: repoSettingsPatch.uri.split('/').pop(),
-      scope: scope,
-      parentId: project._id,
-      description: `Insomnia Workspace for ${repoSettingsPatch.uri}}`,
-    });
-    await models.apiSpec.getOrCreateForParentId(workspace._id);
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.vcsSyncComplete, properties: {
-        ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
-        providerName,
-      },
-    });
+//     const workspace = await models.workspace.create({
+//       name: repoSettingsPatch.uri.split('/').pop(),
+//       scope: scope,
+//       parentId: project._id,
+//       description: `Insomnia Workspace for ${repoSettingsPatch.uri}}`,
+//     });
+//     await models.apiSpec.getOrCreateForParentId(workspace._id);
+//     window.main.trackSegmentEvent({
+//       event: SegmentEvent.vcsSyncComplete, properties: {
+//         ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
+//         providerName,
+//       },
+//     });
 
-    workspaceId = workspace._id;
+//     workspaceId = workspace._id;
 
-    // Store GitRepository settings and set it as active
-    await createGitRepository(workspace._id, repoSettingsPatch);
-  } else {
-    // Clone all entities from the repository
-    const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
-    const workspaces = await inMemoryFsClient.promises.readdir(workspaceBase);
+//     // Store GitRepository settings and set it as active
+//     await createGitRepository(workspace._id, repoSettingsPatch);
+//   } else {
+//     // Clone all entities from the repository
+//     const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
+//     const workspaces = await inMemoryFsClient.promises.readdir(workspaceBase);
 
-    if (workspaces.length === 0) {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.vcsSyncComplete, properties: {
-          ...vcsSegmentEventProperties('git', 'clone', 'no workspaces found'),
-          providerName,
-        },
-      });
+//     if (workspaces.length === 0) {
+//       window.main.trackSegmentEvent({
+//         event: SegmentEvent.vcsSyncComplete, properties: {
+//           ...vcsSegmentEventProperties('git', 'clone', 'no workspaces found'),
+//           providerName,
+//         },
+//       });
 
-      return {
-        errors: ['No workspaces found in repository'],
-      };
-    }
+//       return {
+//         errors: ['No workspaces found in repository'],
+//       };
+//     }
 
-    if (workspaces.length > 1) {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.vcsSyncComplete, properties: {
-          ...vcsSegmentEventProperties(
-            'git',
-            'clone',
-            'multiple workspaces found'
-          ),
-          providerName,
-        },
-      });
+//     if (workspaces.length > 1) {
+//       window.main.trackSegmentEvent({
+//         event: SegmentEvent.vcsSyncComplete, properties: {
+//           ...vcsSegmentEventProperties(
+//             'git',
+//             'clone',
+//             'multiple workspaces found'
+//           ),
+//           providerName,
+//         },
+//       });
 
-      return {
-        errors: ['Multiple workspaces found in repository. Expected one.'],
-      };
-    }
+//       return {
+//         errors: ['Multiple workspaces found in repository. Expected one.'],
+//       };
+//     }
 
-    // Only one workspace
-    const workspacePath = path.join(workspaceBase, workspaces[0]);
-    const workspaceJson = await inMemoryFsClient.promises.readFile(workspacePath);
-    const workspace = YAML.parse(workspaceJson.toString());
-    workspaceId = workspace._id;
-    scope = (workspace.scope === WorkspaceScopeKeys.collection) ? WorkspaceScopeKeys.collection : WorkspaceScopeKeys.design;
-    // Check if the workspace already exists
-    const existingWorkspace = await models.workspace.getById(workspace._id);
+//     // Only one workspace
+//     const workspacePath = path.join(workspaceBase, workspaces[0]);
+//     const workspaceJson = await inMemoryFsClient.promises.readFile(workspacePath);
+//     const workspace = YAML.parse(workspaceJson.toString());
+//     workspaceId = workspace._id;
+//     scope = (workspace.scope === WorkspaceScopeKeys.collection) ? WorkspaceScopeKeys.collection : WorkspaceScopeKeys.design;
+//     // Check if the workspace already exists
+//     const existingWorkspace = await models.workspace.getById(workspace._id);
 
-    if (existingWorkspace) {
-      const project = await models.project.getById(existingWorkspace.parentId);
-      if (!project) {
-        return {
-          errors: ['It seems that the repository being cloned is connected to an orphaned workspace. Please move that workspace to a project and try again.'],
-        };
-      }
+//     if (existingWorkspace) {
+//       const project = await models.project.getById(existingWorkspace.parentId);
+//       if (!project) {
+//         return {
+//           errors: ['It seems that the repository being cloned is connected to an orphaned workspace. Please move that workspace to a project and try again.'],
+//         };
+//       }
 
-      const organizationId = project?.parentId;
-      return redirect(`/organization/${organizationId}/project/${project._id}/workspace/${existingWorkspace._id}/debug`);
-    }
+//       const organizationId = project?.parentId;
+//       return redirect(`/organization/${organizationId}/project/${project._id}/workspace/${existingWorkspace._id}/debug`);
+//     }
 
-    // Store GitRepository settings and set it as active
-    const gitRepository = await models.gitRepository.create(repoSettingsPatch);
-    const meta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-    await models.workspaceMeta.update(meta, {
-      gitRepositoryId: gitRepository._id,
-    });
+//     // Store GitRepository settings and set it as active
+//     const gitRepository = await models.gitRepository.create(repoSettingsPatch);
+//     const meta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+//     await models.workspaceMeta.update(meta, {
+//       gitRepositoryId: gitRepository._id,
+//     });
 
-    const baseDir = path.join(
-      process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-      `version-control/git/${gitRepository._id}`
-    );
+//     const baseDir = path.join(
+//       process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+//       `version-control/git/${gitRepository._id}`
+//     );
 
-    // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
-    const neDbClient = NeDBClient.createClient(workspaceId, projectId);
+//     // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
+//     const neDbClient = NeDBClient.createClient(workspaceId, projectId);
 
-    // All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem
-    const gitDataClient = fsClient(baseDir);
+//     // All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem
+//     const gitDataClient = fsClient(baseDir);
 
-    // All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of.
-    const otherDataClient = fsClient(path.join(baseDir, 'other'));
+//     // All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of.
+//     const otherDataClient = fsClient(path.join(baseDir, 'other'));
 
-    // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
-    const routableFS = routableFSClient(otherDataClient, {
-      [GIT_INSOMNIA_DIR]: neDbClient,
-      [GIT_INTERNAL_DIR]: gitDataClient,
-    });
+//     // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
+//     const routableFS = routableFSClient(otherDataClient, {
+//       [GIT_INSOMNIA_DIR]: neDbClient,
+//       [GIT_INTERNAL_DIR]: gitDataClient,
+//     });
 
-    // Init VCS
-    const { credentials, uri, author } = gitRepository;
+//     // Init VCS
+//     const { credentials, uri, author } = gitRepository;
 
-    // Configure basic info
+//     // Configure basic info
 
-    if (gitRepository.needsFullClone) {
-      await GitVCS.initFromClone({
-        repoId: gitRepository._id,
-        url: uri,
-        gitCredentials: credentials,
-        directory: GIT_CLONE_DIR,
-        fs: routableFS,
-        gitDirectory: GIT_INTERNAL_DIR,
-      });
+//     if (gitRepository.needsFullClone) {
+//       await GitVCS.initFromClone({
+//         repoId: gitRepository._id,
+//         url: uri,
+//         gitCredentials: credentials,
+//         directory: GIT_CLONE_DIR,
+//         fs: routableFS,
+//         gitDirectory: GIT_INTERNAL_DIR,
+//       });
 
-      await models.gitRepository.update(gitRepository, {
-        needsFullClone: false,
-      });
-    } else {
-      await GitVCS.init({
-        repoId: gitRepository._id,
-        uri,
-        directory: GIT_CLONE_DIR,
-        fs: routableFS,
-        gitDirectory: GIT_INTERNAL_DIR,
-        gitCredentials: credentials,
-      });
-    }
+//       await models.gitRepository.update(gitRepository, {
+//         needsFullClone: false,
+//       });
+//     } else {
+//       await GitVCS.init({
+//         repoId: gitRepository._id,
+//         uri,
+//         directory: GIT_CLONE_DIR,
+//         fs: routableFS,
+//         gitDirectory: GIT_INTERNAL_DIR,
+//         gitCredentials: credentials,
+//       });
+//     }
 
-    await GitVCS.setAuthor(author.name, author.email);
-    await GitVCS.addRemote(uri);
-  }
+//     await GitVCS.setAuthor(author.name, author.email);
+//     await GitVCS.addRemote(uri);
+//   }
 
-  // Flush DB changes
-  await database.flushChanges(bufferId);
-  window.main.trackSegmentEvent({
-    event: SegmentEvent.vcsSyncComplete, properties: {
-      ...vcsSegmentEventProperties('git', 'clone'),
-      providerName,
-    },
-  });
+//   // Flush DB changes
+//   await database.flushChanges(bufferId);
+//   window.main.trackSegmentEvent({
+//     event: SegmentEvent.vcsSyncComplete, properties: {
+//       ...vcsSegmentEventProperties('git', 'clone'),
+//       providerName,
+//     },
+//   });
 
-  invariant(workspaceId, 'Workspace ID is required');
+//   invariant(workspaceId, 'Workspace ID is required');
 
-  // Redirect to debug for collection scope initial clone
-  if (scope === WorkspaceScopeKeys.collection) {
-    return redirect(
-      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`
-    );
-  }
-  return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_SPEC}`
-  );
-};
+//   // Redirect to debug for collection scope initial clone
+//   if (scope === WorkspaceScopeKeys.collection) {
+//     return redirect(
+//       `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`
+//     );
+//   }
+//   return redirect(
+//     `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_SPEC}`
+//   );
+// };
 
 export const updateGitRepoAction: ActionFunction = async ({
   request,
