@@ -733,6 +733,7 @@ export const updateGitRepoAction: ActionFunction = async ({
   if (gitRepositoryId) {
     const repo = await models.gitRepository.getById(gitRepositoryId);
     invariant(repo, 'GitRepository not found');
+    repoSettingsPatch.needsFullClone = true;
     await models.gitRepository.update(repo, repoSettingsPatch);
     gitRepositoryId = repo._id;
   } else {
